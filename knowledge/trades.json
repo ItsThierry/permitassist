@@ -1,0 +1,778 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "built": "2026-04-11",
+    "sources": [
+      "ICC International Code Council adoption maps",
+      "codecheck.com/code-adoption-by-state (updated Feb 2026)",
+      "PermitFlow.com permit guides",
+      "IAPMO 2024 Uniform Plumbing Code",
+      "NEC 2023 (NFPA 70)",
+      "SolSmart/NREL Residential PV Permitting 2024",
+      "Qmerit EV Charger permitting guide",
+      "energyscaperenewables.com solar PE stamp guide 2026",
+      "American Electrical Co generator permit guide",
+      "decksrusllc.com IRC deck code reference"
+    ],
+    "disclaimer": "Requirements vary by AHJ (Authority Having Jurisdiction). Always verify with the local building department. This knowledge base provides strong defaults \u2014 Tavily live search overrides these when city-specific data is available."
+  },
+  "trades": {
+    "hvac": {
+      "names": [
+        "hvac",
+        "heating",
+        "cooling",
+        "air conditioning",
+        "air handler",
+        "heat pump",
+        "furnace",
+        "mini split",
+        "minisplit",
+        "ductless"
+      ],
+      "governing_code": "International Mechanical Code (IMC) \u2014 most states. California uses Uniform Mechanical Code (UMC).",
+      "permit_type": "Mechanical Permit",
+      "permit_required": {
+        "rule": "REQUIRED in nearly all US jurisdictions for any HVAC installation or replacement",
+        "always_required": [
+          "New HVAC system installation",
+          "Full system replacement (air handler + condenser)",
+          "Furnace replacement",
+          "Ductwork modifications or extensions",
+          "Mini split installation (new refrigerant lines)",
+          "Gas line connections or modifications",
+          "Adding new HVAC zones"
+        ],
+        "usually_required": [
+          "Like-for-like condenser replacement (same tonnage, same location)",
+          "Air handler replacement only"
+        ],
+        "sometimes_exempt": [
+          "Replacing only a thermostat",
+          "Replacing a blower motor (no refrigerant work, no gas line work)",
+          "Routine maintenance and cleaning"
+        ],
+        "key_rule": "Any work involving refrigerant, gas lines, new electrical connections, or ductwork modifications requires a permit in all 50 states."
+      },
+      "who_can_pull": "Licensed mechanical or HVAC contractor required in most states. Some states allow licensed electricians to pull the electrical portion separately. Homeowners can pull in some states for owner-occupied single-family homes.",
+      "fee_range": {
+        "typical": "$75\u2013$250",
+        "low": "$50 (small towns, rural counties)",
+        "high": "$500+ (NYC, San Francisco, LA \u2014 valuation-based)"
+      },
+      "approval_timeline": {
+        "over_the_counter": "Same day in most suburban cities",
+        "plan_review": "1\u20135 business days if plans required (new construction, complex systems)",
+        "noted_slow_cities": "Los Angeles (2\u20134 weeks), New York City (2\u20136 weeks), Chicago (1\u20132 weeks)"
+      },
+      "inspections": [
+        {
+          "stage": "Rough-in Inspection",
+          "description": "Inspector checks refrigerant lines, ductwork connections, electrical rough-in, and gas piping before walls are closed. Must be done before insulating or covering any work.",
+          "timing": "Before covering any ductwork, refrigerant lines, or electrical connections",
+          "required_when": "Always on permitted HVAC work"
+        },
+        {
+          "stage": "Final Inspection",
+          "description": "Inspector verifies system is fully operational, all connections are secure, system is properly sized, and all safety shutoffs are in place.",
+          "timing": "After system is fully installed and operational",
+          "required_when": "Always"
+        },
+        {
+          "stage": "Gas Line Inspection",
+          "description": "Separate inspection for any gas piping work. Pressure test required.",
+          "timing": "Before gas is turned on, after rough-in",
+          "required_when": "When gas lines are modified or new gas connections made"
+        }
+      ],
+      "common_mistakes": [
+        "Starting work before permit is issued \u2014 results in double permit fees in many jurisdictions",
+        "Not scheduling rough-in inspection before covering ductwork",
+        "Improper refrigerant line sizing or insulation",
+        "Missing disconnect switch within sight of outdoor unit",
+        "Electrical not pulled with mechanical permit \u2014 often needs separate electrical permit for new circuits"
+      ],
+      "pro_tips": [
+        "Pull the permit before ordering equipment \u2014 some cities require equipment specs on the application",
+        "Most cities allow over-the-counter permits for like-for-like replacements \u2014 call ahead and ask",
+        "In states with tight labor boards (CA, NY, IL), verify your license is active in that specific county",
+        "If adding a mini split, check if local utility requires separate interconnection approval"
+      ],
+      "state_notes": {
+        "CA": "HVAC work requires C-20 license (Warm-Air Heating). All work under Title 24 energy code. Most jurisdictions require permit for any replacement.",
+        "FL": "Licensed CAC (Central Air Conditioning) contractor required. Strong enforcement \u2014 high-profile state for unlicensed work prosecution.",
+        "TX": "HVAC work requires TACL (Texas Air Conditioning Contractor License) or HVAC-R license. Local jurisdictions control permits.",
+        "NY": "NYC requires Licensed Master Plumber for gas work, Licensed Electrician for electrical \u2014 separate permits often required.",
+        "IL": "Chicago has its own permit system. Suburban Cook County follows state code. Downstate follows local jurisdictions.",
+        "AZ": "ROC (Registrar of Contractors) license required. Permit requirements vary widely \u2014 entirely up to local jurisdictions.",
+        "CO": "Denver has home rule \u2014 own permit system. Other CO jurisdictions vary widely.",
+        "NV": "State C-21 license (refrigeration). Clark County (Las Vegas) has own permit office."
+      }
+    },
+    "electrical": {
+      "names": [
+        "electrical",
+        "electric",
+        "panel",
+        "circuit",
+        "wiring",
+        "breaker",
+        "outlet",
+        "switch",
+        "ev charger",
+        "ev charging",
+        "level 2 charger",
+        "service upgrade"
+      ],
+      "governing_code": "National Electrical Code (NEC / NFPA 70) \u2014 adopted by all 50 states, various editions",
+      "permit_type": "Electrical Permit",
+      "permit_required": {
+        "rule": "REQUIRED for any work that adds, modifies, or extends electrical circuits",
+        "always_required": [
+          "Electrical panel upgrade (100A to 200A, or 200A to 400A)",
+          "Service entrance upgrade",
+          "Level 2 EV charger installation (new dedicated 240V circuit)",
+          "Subpanel installation",
+          "Adding new circuits to existing panel",
+          "New electrical service to an outbuilding or addition",
+          "Any work on main service equipment",
+          "Installing whole-home generator transfer switch"
+        ],
+        "usually_required": [
+          "Adding new outlets or switches on new circuits",
+          "Dedicated circuit for appliance (dryer, range, hot tub)"
+        ],
+        "sometimes_exempt": [
+          "Replacing a like-for-like outlet or switch (same circuit, no new wiring)",
+          "Replacing fixtures on existing circuits (most jurisdictions)",
+          "Minor repair work \u2014 check with AHJ"
+        ],
+        "key_rule": "Any work that touches the panel, creates new circuits, or modifies service equipment requires a permit in all 50 states."
+      },
+      "who_can_pull": "Licensed Master Electrician or Electrical Contractor in most states. Some states (TX, AZ, CO) allow homeowners to pull permits for owner-occupied residences. Always verify with local AHJ.",
+      "fee_range": {
+        "typical": "$75\u2013$300",
+        "panel_upgrade": "$150\u2013$500",
+        "ev_charger": "$75\u2013$200",
+        "low": "$50 (rural/small town)",
+        "high": "$800+ (NYC, SF, LA \u2014 valuation based)"
+      },
+      "approval_timeline": {
+        "over_the_counter": "Same day for standard panel upgrades in most cities",
+        "plan_review": "3\u201310 business days for complex commercial or service upgrades",
+        "noted_slow_cities": "NYC (1\u20134 weeks), Chicago (1\u20132 weeks), LA (2\u20133 weeks)"
+      },
+      "inspections": [
+        {
+          "stage": "Rough-in Inspection",
+          "description": "Inspector checks all new wiring, conduit, junction boxes, and panel work before drywall is closed. Wire sizing, circuit breaker sizing, and grounding/bonding checked.",
+          "timing": "Before closing walls or covering wiring",
+          "required_when": "Any new wiring in walls or ceilings"
+        },
+        {
+          "stage": "Service/Panel Inspection",
+          "description": "Inspector verifies panel installation, proper breaker sizing, neutral/ground bus connections, labeling, and AFCI/GFCI requirements per NEC.",
+          "timing": "After panel installation, before energizing",
+          "required_when": "All panel work"
+        },
+        {
+          "stage": "Final Inspection",
+          "description": "Confirms all circuits are working, proper GFCI protection in wet areas, smoke/CO detectors functional, panel is properly labeled.",
+          "timing": "After all work complete",
+          "required_when": "Always"
+        }
+      ],
+      "ev_charger_specific": {
+        "permit_required": "Yes \u2014 required in virtually all US jurisdictions for Level 2 (240V) EV charger installation",
+        "nec_reference": "NEC Article 625 (EV charging systems)",
+        "requirements": [
+          "Dedicated 240V circuit sized at 125% of charger's continuous load (NEC 625.42)",
+          "GFCI protection required (NEC 625.22)",
+          "Load calculation required \u2014 verifies panel has capacity",
+          "One-line electrical diagram showing new circuit",
+          "EVSE equipment must be UL Listed",
+          "If panel is at capacity, panel upgrade may be required"
+        ],
+        "permit_not_required_for": "Using an existing NEMA 14-50 outlet that was previously permitted \u2014 no new wiring",
+        "fee_typical": "$75\u2013$200"
+      },
+      "common_mistakes": [
+        "Not checking if panel has sufficient capacity before quoting EV charger \u2014 often triggers panel upgrade",
+        "Missing AFCI protection on bedrooms (required by NEC 2014+)",
+        "Improper grounding electrode system \u2014 common fail point on panel upgrades",
+        "Not labeling all breakers before final inspection",
+        "Pulling permit too late \u2014 work started before permit issued doubles fees in many cities"
+      ],
+      "pro_tips": [
+        "For panel upgrades, call the utility first \u2014 they need to pull the meter and may have scheduling delays (1\u20133 weeks)",
+        "EV charger permits are typically over-the-counter in most cities \u2014 fast to pull",
+        "NEC 2023 now requires EV-ready circuits in new construction \u2014 some jurisdictions have adopted this",
+        "If work involves utility-side of meter, a utility disconnect permit is separate from building department"
+      ],
+      "state_notes": {
+        "CA": "NEC 2023 adopted statewide (2023 California Electrical Code). All electrical work requires C-10 licensed electrician. Strong enforcement.",
+        "FL": "Statewide licensing \u2014 EC license required. NEC 2020 statewide.",
+        "TX": "TECL (Texas Electrical Contractor License) or Master Electrician license. Local permit requirements vary by city.",
+        "NY": "NYC uses own electrical code (based on NEC). Licensed Master Electrician required for all permit work in NYC. Upstate follows NEC.",
+        "IL": "No statewide electrical license \u2014 Chicago has own strict licensing. Most suburbs require licensed electrician.",
+        "AZ": "ROC license required. NEC adoption varies by jurisdiction \u2014 Maricopa County, Tucson have own offices.",
+        "WA": "State EL01A/EL02A license. NEC 2023 statewide. Strict enforcement.",
+        "NC": "State Electrical Contractor license required. NEC 2020. Updates delayed due to hurricane response."
+      }
+    },
+    "roofing": {
+      "names": [
+        "roofing",
+        "roof",
+        "shingles",
+        "re-roof",
+        "reroof",
+        "roof replacement",
+        "flat roof",
+        "metal roof"
+      ],
+      "governing_code": "International Residential Code (IRC) \u2014 Chapter 9 (Roof Assemblies). California uses California Building Code (Title 24).",
+      "permit_type": "Building Permit (Roofing)",
+      "permit_required": {
+        "rule": "REQUIRED in approximately 65\u201370% of US jurisdictions for a full roof replacement",
+        "always_required": [
+          "Structural roof deck repair or replacement",
+          "Rafter or truss modifications",
+          "Change in roofing material type (e.g., shingles to metal)",
+          "Adding skylights or dormers",
+          "Reroofing over more than one existing layer (in jurisdictions that limit layers)"
+        ],
+        "usually_required": [
+          "Full roof replacement (all shingles removed and replaced)",
+          "Recovering over existing roof (second layer)"
+        ],
+        "sometimes_exempt": [
+          "Minor patch repairs under 10 sq ft (varies by jurisdiction)",
+          "Replacing isolated damaged shingles without changing structure",
+          "San Diego explicitly does not require permit for 'renewal of roof covering' on CBC/CRC buildings (SDMC \u00a7129.0202)"
+        ],
+        "key_rule": "If more than 25% of the roof covering is being replaced, most jurisdictions require a permit under the IRC. Always verify locally."
+      },
+      "who_can_pull": "Licensed roofing contractor (C-39 in CA, or state-equivalent). General contractor or homeowner in many states. Requirements vary widely.",
+      "fee_range": {
+        "typical": "$100\u2013$400",
+        "low": "$50\u2013$75 (small towns)",
+        "high": "$500\u2013$1,000+ (NYC, LA, San Francisco)"
+      },
+      "approval_timeline": {
+        "over_the_counter": "Same day for standard re-roofs in most cities",
+        "plan_review": "3\u201310 business days if structural work or material change involved",
+        "noted_slow_cities": "Los Angeles (1\u20132 weeks), NYC (2\u20134 weeks)"
+      },
+      "inspections": [
+        {
+          "stage": "Deck Inspection (Pre-roofing)",
+          "description": "Inspector checks roof deck condition, sheathing integrity, flashing at penetrations and valleys before new material is applied.",
+          "timing": "After tear-off, before new underlayment and shingles",
+          "required_when": "Full roof replacement with permit"
+        },
+        {
+          "stage": "Final Inspection",
+          "description": "Inspector verifies completed installation \u2014 shingle attachment pattern, ridge cap, flashing at all penetrations, drip edge, and compliance with local wind/fire rating requirements.",
+          "timing": "After all roofing work is complete",
+          "required_when": "Always on permitted roof work"
+        }
+      ],
+      "special_requirements": {
+        "CA": "Title 24 cool roof requirements \u2014 certain climate zones require roofing with minimum solar reflectance. Wildfire-prone areas (WUI zones) require Class A fire-rated materials.",
+        "FL": "Florida Building Code is strict post-Hurricane Andrew. Hurricane straps, specific nail patterns, and wind uplift ratings required. Very strictly enforced.",
+        "TX": "Wind-rated products required in coastal counties (Galveston, Corpus Christi). No statewide license required for roofing \u2014 varies by city.",
+        "CO": "Hail-resistant ratings (Class 4) common in Front Range cities \u2014 insurance-driven. Denver may require permit for 25%+ replacement.",
+        "IL": "Chicago requires permit for all re-roofing. Specific nail pattern requirements per Chicago Building Code."
+      },
+      "common_mistakes": [
+        "Starting tear-off before permit is issued \u2014 inspector will not sign off and work may need to be uncovered",
+        "Not getting deck inspection before applying underlayment \u2014 common reason for failed final",
+        "Improper flashing at chimneys, skylights, and valleys \u2014 #1 cause of inspection failure",
+        "Not checking local wind zone requirements \u2014 wrong fastener pattern fails in FL, TX coastal counties",
+        "In CA: not verifying cool roof compliance before ordering materials"
+      ],
+      "pro_tips": [
+        "Pull the permit before tear-off \u2014 inspectors won't sign off if work is already done",
+        "In Florida, keep the permit card visibly posted on the property during work",
+        "Check if second layer is allowed \u2014 many jurisdictions limit to 2 layers maximum before full tear-off required",
+        "In hail-prone states (CO, TX, OK), document Class 4 impact resistance rating \u2014 helps homeowner with insurance"
+      ]
+    },
+    "plumbing": {
+      "names": [
+        "plumbing",
+        "water heater",
+        "pipe",
+        "drain",
+        "sewer",
+        "water supply",
+        "rough-in",
+        "fixture"
+      ],
+      "governing_code": "International Plumbing Code (IPC) or Uniform Plumbing Code (UPC \u2014 CA, AZ, NV, OR, WA, ID, HI, MN). State-specific codes in some states.",
+      "permit_type": "Plumbing Permit",
+      "permit_required": {
+        "rule": "REQUIRED for any work on a plumbing system beyond simple fixture replacement",
+        "always_required": [
+          "Water heater replacement (gas or electric)",
+          "New plumbing rough-in (new supply and drain lines)",
+          "Moving existing plumbing supply or drain lines",
+          "Adding new plumbing fixtures (sink, toilet, shower)",
+          "Water service line replacement",
+          "Sewer lateral repair or replacement",
+          "Gas line work (new or modification)"
+        ],
+        "usually_required": [
+          "Replacing a water heater (virtually all jurisdictions require permit + inspection)",
+          "Installing new bathroom or kitchen"
+        ],
+        "sometimes_exempt": [
+          "Replacing a faucet on an existing supply line (no pipe work)",
+          "Replacing a toilet on existing rough-in (some jurisdictions)",
+          "Clearing a drain clog (maintenance work)"
+        ],
+        "key_rule": "Water heater replacement requires a permit in essentially ALL US jurisdictions. Common misconception that it doesn't."
+      },
+      "water_heater_specific": {
+        "permit_required": "Yes \u2014 in virtually all US jurisdictions",
+        "inspections_required": [
+          "Final inspection: verifies proper installation, T&P valve and discharge pipe, venting (gas), seismic strapping (CA, AZ, NV, WA, OR, AK, HI)"
+        ],
+        "seismic_strapping_states": "Required in CA, NV, AZ, OR, WA, AK, HI \u2014 and many cities in other seismic zones",
+        "common_requirements": [
+          "Temperature & Pressure (T&P) relief valve with discharge pipe to within 6 inches of floor",
+          "Proper venting for gas water heaters (B-vent or PVC depending on efficiency rating)",
+          "Drip pan required where leakage could cause damage (typically 2nd floor or interior)",
+          "Expansion tank required where backflow preventer is installed (closed system)",
+          "Permit card must be posted at job site"
+        ]
+      },
+      "who_can_pull": "Licensed plumber (state-specific license) in most states. Some states allow homeowners for owner-occupied single-family homes. Plumber's license required in CA, FL, TX, NY, IL, PA, and most major states.",
+      "fee_range": {
+        "typical": "$75\u2013$250",
+        "water_heater": "$75\u2013$150",
+        "rough_in": "$150\u2013$400",
+        "low": "$50 (small towns)",
+        "high": "$500+ (NYC, SF)"
+      },
+      "approval_timeline": {
+        "over_the_counter": "Same day for water heater replacements in most cities",
+        "plan_review": "3\u201310 business days for new rough-in or major remodel"
+      },
+      "inspections": [
+        {
+          "stage": "Rough-in Inspection",
+          "description": "Inspector checks all supply and drain lines before walls are closed. Pipe material, slope of drain lines (1/4 inch per foot minimum), proper venting, and water test.",
+          "timing": "Before any plumbing work is covered",
+          "required_when": "New rough-in or relocated plumbing"
+        },
+        {
+          "stage": "Final Inspection",
+          "description": "Verifies all fixtures are installed and functioning, water heater is properly vented and strapped, T&P valve discharge is correct, no leaks.",
+          "timing": "After all plumbing work is complete",
+          "required_when": "Always on permitted work"
+        }
+      ],
+      "common_mistakes": [
+        "Skipping the permit on water heater replacement \u2014 most common unlicensed plumbing violation",
+        "Wrong T&P valve discharge pipe material (CPVC not allowed in some jurisdictions \u2014 must be copper or galvanized)",
+        "Missing expansion tank on closed systems (required when backflow preventer is present)",
+        "Not strapping water heater in seismic zones",
+        "Drain slope too steep or too shallow \u2014 causes drainage issues that fail inspection"
+      ],
+      "pro_tips": [
+        "Water heater permits are usually same-day, over the counter \u2014 takes 15 minutes to pull",
+        "In CA: seismic strapping is strictly enforced \u2014 both upper and lower straps required, specific heights",
+        "Gas water heaters need B-vent inspection before firing up \u2014 confirm with inspector",
+        "In most cities, you can pull the permit online same day \u2014 no need to go to the building department"
+      ],
+      "state_notes": {
+        "CA": "C-36 Plumbing Contractor license. Seismic strapping mandatory. Title 24 energy compliance for water heaters. UPC (Uniform Plumbing Code).",
+        "FL": "CFC (Certified Plumbing Contractor) required. IPC statewide. Very active enforcement.",
+        "TX": "Master Plumber or Journeyman Plumber under supervision. Local jurisdictions control permits.",
+        "NY": "Licensed Master Plumber required in NYC. Upstate varies by county.",
+        "CO": "Denver has strict enforcement. Outlying areas follow local jurisdictions with varying requirements."
+      }
+    },
+    "mini_split": {
+      "names": [
+        "mini split",
+        "minisplit",
+        "ductless",
+        "ductless mini split",
+        "ductless ac",
+        "split system"
+      ],
+      "governing_code": "IMC (mechanical) + NEC (electrical). Refrigerant governed by EPA Section 608.",
+      "permit_type": "Mechanical Permit + Electrical Permit (often separate)",
+      "permit_required": {
+        "rule": "REQUIRED in virtually all jurisdictions \u2014 involves refrigerant, electrical connections, and penetrations",
+        "always_required": [
+          "New mini split installation (any size)",
+          "Adding new refrigerant lines",
+          "Any electrical work (new 240V circuit for inverter compressor)"
+        ],
+        "notes": "Most mini split installations require BOTH a mechanical permit AND a separate electrical permit for the new dedicated circuit."
+      },
+      "who_can_pull": "EPA 608 certified technician required for refrigerant handling. Licensed HVAC/mechanical contractor for mechanical permit. Licensed electrician for electrical permit.",
+      "fee_range": {
+        "mechanical": "$75\u2013$200",
+        "electrical": "$75\u2013$150",
+        "combined": "$150\u2013$350 total typical"
+      },
+      "inspections": [
+        {
+          "stage": "Rough-in / Refrigerant Line Inspection",
+          "description": "Checks line set sizing, insulation, penetration sealing, electrical rough-in for disconnect and circuit.",
+          "timing": "Before covering line set or closing walls"
+        },
+        {
+          "stage": "Final Inspection",
+          "description": "System operational check, proper BTU sizing for space, refrigerant charge confirmed, electrical connections verified.",
+          "timing": "After system is installed and running"
+        }
+      ],
+      "common_mistakes": [
+        "Forgetting to pull the electrical permit separately \u2014 common missed step",
+        "Improper line set sizing for run length",
+        "Not sealing penetrations through exterior walls (energy code + pest control)",
+        "Installing oversized unit \u2014 triggers failed inspection in some jurisdictions (Manual J load calc may be required)"
+      ],
+      "pro_tips": [
+        "Many cities allow combined mechanical + electrical permit for mini split \u2014 ask at the counter",
+        "DIY mini split installs require EPA 608 cert for refrigerant \u2014 without it, work must be permitted and inspected by licensed tech",
+        "Check local ordinance on outdoor unit placement \u2014 setbacks from property lines and windows vary"
+      ],
+      "approval_timeline": {
+        "over_the_counter": "Same day for simple residential mini split installation (mechanical permit portion)",
+        "plan_review": "1\u20135 business days if both mechanical and electrical permits required simultaneously. Most jurisdictions allow combined permit.",
+        "note": "Mini split installations typically require both mechanical AND electrical permits. Call ahead to confirm if they can be combined at your local AHJ."
+      }
+    },
+    "ev_charger": {
+      "names": [
+        "ev charger",
+        "ev charging",
+        "electric vehicle charger",
+        "level 2 charger",
+        "level 2 charging",
+        "nema 14-50",
+        "tesla charger",
+        "home charger"
+      ],
+      "governing_code": "NEC Article 625 (Electric Vehicle Power Transfer Systems). Local amendments may apply.",
+      "permit_type": "Electrical Permit",
+      "permit_required": {
+        "rule": "REQUIRED for any new dedicated circuit or hardwired EV charger installation",
+        "always_required": [
+          "Installing a new 240V dedicated circuit for Level 2 charging",
+          "Hardwired EVSE (Electric Vehicle Supply Equipment) installation",
+          "Installing NEMA 14-50 outlet on new circuit"
+        ],
+        "not_required": [
+          "Plugging a portable Level 1 (120V) charger into existing outlet",
+          "Using an existing permitted NEMA 14-50 outlet \u2014 no new wiring"
+        ]
+      },
+      "who_can_pull": "Licensed Electrician in most states. Homeowners can pull in some states for owner-occupied homes.",
+      "fee_range": "$75\u2013$200 typical",
+      "key_requirements": [
+        "Dedicated 240V circuit at 125% of charger's rated continuous load (NEC 625.42)",
+        "GFCI protection required (NEC 625.22)",
+        "Load calculation required \u2014 panel must have capacity",
+        "If panel is full, subpanel or panel upgrade may be needed (separate permit)",
+        "EVSE must be UL Listed (UL 2594)",
+        "One-line electrical diagram showing new circuit for permit application"
+      ],
+      "inspections": [
+        {
+          "stage": "Rough-in Inspection",
+          "description": "Wire sizing, conduit installation, proper grounding verified before covering.",
+          "timing": "Before closing walls or covering conduit"
+        },
+        {
+          "stage": "Final Inspection",
+          "description": "EVSE unit installed and tested, GFCI functional, circuit labeled in panel.",
+          "timing": "After full installation"
+        }
+      ],
+      "pro_tips": [
+        "Most EV charger permits are over-the-counter same day \u2014 low complexity for inspectors",
+        "CA, WA, and OR have been pushing for pre-wired EV circuits in all new construction \u2014 check if rough-in already exists in newer homes",
+        "Many utilities offer rebates for EV charger installation \u2014 permit is required to claim them"
+      ],
+      "common_mistakes": [
+        "Not checking panel capacity before installing \u2014 often triggers unexpected panel upgrade",
+        "Missing GFCI protection (NEC 625.22 requirement \u2014 strictly enforced)",
+        "Incorrect wire sizing \u2014 must be 125% of charger continuous load per NEC 625.42",
+        "Not pulling a permit \u2014 common because homeowners assume plug-in = no permit",
+        "Installing EVSE that is not UL Listed \u2014 will fail inspection"
+      ],
+      "approval_timeline": {
+        "over_the_counter": "Same day in most cities \u2014 EV charger permits are low complexity for inspectors and commonly issued over the counter",
+        "plan_review": "1\u20133 business days for most jurisdictions",
+        "note": "One of the fastest permit types to obtain. Many cities have streamlined EV charger permitting due to state and utility incentive programs."
+      }
+    },
+    "generator": {
+      "names": [
+        "generator",
+        "standby generator",
+        "whole home generator",
+        "whole house generator",
+        "backup generator",
+        "generac",
+        "kohler generator"
+      ],
+      "governing_code": "NEC Articles 445 (Generators) and 702 (Optional Standby Systems). NFPA 110 for commercial. Local gas codes for gas-powered units.",
+      "permit_type": "Electrical Permit + Mechanical Permit (gas units) + sometimes Building Permit",
+      "permit_required": {
+        "rule": "REQUIRED for standby (permanently installed) generators in virtually all jurisdictions",
+        "always_required": [
+          "Standby generator permanently connected to home electrical system",
+          "Transfer switch installation (manual or automatic)",
+          "New gas line to generator (if gas-powered)"
+        ],
+        "not_required": [
+          "Portable generator plugged into an outlet (no permit needed)",
+          "Portable generator used with a manual transfer cord",
+          "Note: Transfer switch for ANY generator (portable or standby) requires permit if it involves panel work"
+        ]
+      },
+      "who_can_pull": "Licensed Electrician for electrical permit. Licensed Gas Plumber or Mechanical Contractor for gas line. General or specialty contractor for concrete pad installation.",
+      "fee_range": {
+        "electrical": "$100\u2013$300",
+        "gas": "$75\u2013$200",
+        "combined": "$200\u2013$500 total typical"
+      },
+      "inspections": [
+        {
+          "stage": "Gas Line Rough-in",
+          "description": "Gas line sizing, pressure test, proper flex connector to generator.",
+          "timing": "Before backfilling trench or covering gas line",
+          "required_when": "Gas-powered generators"
+        },
+        {
+          "stage": "Electrical Rough-in",
+          "description": "Transfer switch installation, connection to panel, wiring to generator.",
+          "timing": "Before energizing any connections"
+        },
+        {
+          "stage": "Final Inspection",
+          "description": "Full operational test, ATS functionality, proper setback from windows/doors (typically 5 feet min), exhaust direction away from openings, proper grounding.",
+          "timing": "After full installation and testing"
+        }
+      ],
+      "placement_requirements": [
+        "Minimum 5 feet from windows, doors, and openings (varies by jurisdiction)",
+        "Minimum 18 inches from combustible materials",
+        "Local ordinances may have noise restrictions on generator placement",
+        "NJ: New law (pending 2024) authorizes standby generators without zoning board approval in residential zones"
+      ],
+      "common_mistakes": [
+        "Installing generator too close to windows or HVAC return air intake \u2014 carbon monoxide hazard and code violation",
+        "Transfer switch work without permit \u2014 major code violation",
+        "Not sizing gas line for combined BTU load (if other gas appliances on same line)",
+        "Skipping the concrete pad requirement \u2014 some jurisdictions require permanent pad for standby units"
+      ],
+      "state_notes": {
+        "CA": "Strict air quality rules \u2014 some SoCal counties require CARB-compliant generators. Separate air quality permit may be required.",
+        "TX": "Post-winter storm 2021, demand is high. No statewide license for generator install \u2014 use licensed electrician for electrical portion.",
+        "FL": "Post-Hurricane, generators are common. Strong enforcement on setback requirements.",
+        "NJ": "2024 legislation streamlines permits \u2014 generators can be installed without zoning board approval in residential zones."
+      },
+      "pro_tips": [
+        "Get the electrical AND gas permits at the same time \u2014 saves a second trip to the building department",
+        "Confirm setback distance from windows and doors before ordering \u2014 some HOAs and cities are stricter than code minimum",
+        "Size the gas line for peak BTU load including all other gas appliances on the same line",
+        "In CA/SoCal: check CARB compliance before ordering the generator unit \u2014 some models are not permitted in certain air districts",
+        "Transfer switch work is always permitted \u2014 never skip this permit even for a portable generator hookup"
+      ],
+      "approval_timeline": {
+        "over_the_counter": "Electrical permit: same day to 3 days. Gas permit: same day to 3 days.",
+        "plan_review": "3\u20137 business days if both electrical and gas permits required. Some jurisdictions require building permit for concrete pad.",
+        "note": "Standby generators typically need 2\u20133 separate permits (electrical, gas, sometimes building). Pull all at once to avoid multiple trips."
+      }
+    },
+    "deck": {
+      "names": [
+        "deck",
+        "attached deck",
+        "deck addition",
+        "wood deck",
+        "composite deck",
+        "patio cover",
+        "pergola"
+      ],
+      "governing_code": "International Residential Code (IRC) Chapter 5 (Floors) and Chapter 3 (General). Section R507 specifically covers decks.",
+      "permit_type": "Building Permit",
+      "permit_required": {
+        "rule": "REQUIRED for most deck additions over 200 sq ft or 30 inches above grade",
+        "always_required": [
+          "Attached deck over 30 inches above grade at any point",
+          "Deck over 200 square feet (most jurisdictions)",
+          "Deck attached to the structure of the house",
+          "Deck with roof, pergola, or covered structure",
+          "Deck with electrical (outlets, lighting circuits)"
+        ],
+        "not_required": [
+          "Freestanding (detached) deck under 200 sq ft under 30 inches above grade (most jurisdictions)",
+          "Grade-level patio (concrete or pavers) \u2014 typically no permit",
+          "Deck repairs that don't affect structural components"
+        ],
+        "irc_rule": "IRC R105.2 exempts structures under 200 sq ft \u2014 BUT local amendments often lower this threshold. Always check locally."
+      },
+      "who_can_pull": "Licensed General Contractor or specialty contractor. Homeowner can pull in most jurisdictions for owner-occupied single-family homes.",
+      "fee_range": {
+        "typical": "$150\u2013$500",
+        "low": "$75 (small towns)",
+        "high": "$1,000+ (NYC, SF, LA \u2014 based on project valuation)"
+      },
+      "approval_timeline": {
+        "plan_review": "5\u201315 business days typical \u2014 plans and footing depths must be reviewed",
+        "over_the_counter": "Rarely \u2014 most deck permits require plan review"
+      },
+      "what_to_submit": [
+        "Site plan showing deck location relative to property lines and house",
+        "Framing plan with lumber sizes, joist spans, beam sizes",
+        "Post and footing details (depth must be below frost line)",
+        "Stair and guardrail details if deck is over 30 inches",
+        "Elevation drawings showing height above grade"
+      ],
+      "inspections": [
+        {
+          "stage": "Footing Inspection",
+          "description": "Inspector verifies hole depth reaches below frost line, correct diameter, and placement before concrete is poured.",
+          "timing": "Before pouring concrete \u2014 holes must be open for inspection"
+        },
+        {
+          "stage": "Framing Inspection",
+          "description": "Inspector checks ledger board attachment, joist hangers, post sizing, beam sizing, and connection hardware.",
+          "timing": "After framing is complete, before decking boards are installed"
+        },
+        {
+          "stage": "Final Inspection",
+          "description": "Guardrail height and spacing (4-inch balusters, 36-42 inch rail height), stair rise/run, all fasteners in place.",
+          "timing": "After all work is complete"
+        }
+      ],
+      "frost_line_depths": {
+        "note": "Footing depth must exceed local frost line depth",
+        "FL_GA_SC_AL": "0\u201312 inches",
+        "TX_LA_MS": "0\u20136 inches",
+        "TN_NC_AR": "12\u201318 inches",
+        "VA_KY_MO": "18\u201324 inches",
+        "PA_OH_IN_IL": "30\u201336 inches",
+        "MI_WI_MN_ND": "42\u201354 inches",
+        "MT_WY_CO_UT": "30\u201342 inches",
+        "WA_OR": "12\u201324 inches",
+        "AK": "60\u201372 inches+"
+      },
+      "common_mistakes": [
+        "Not opening footing holes for inspection before pouring concrete \u2014 major fail",
+        "Ledger board attachment not properly flashed \u2014 #1 deck failure point",
+        "Using non-approved hardware (galvanized vs stainless in coastal areas)",
+        "Guardrail balusters too wide \u2014 4-inch sphere rule strictly enforced",
+        "Building without considering setback requirements from property line"
+      ],
+      "pro_tips": [
+        "Open footing holes for inspection BEFORE pouring concrete \u2014 this is the single most common deck inspection failure",
+        "Submit complete plans upfront \u2014 missing ledger board details or footing depth is the #1 reason for permit delays",
+        "In coastal or wet climates, use stainless steel hardware (hot-dipped galvanized minimum) \u2014 inspectors check this",
+        "Check setback requirements from property lines before designing \u2014 some cities require 5-10 feet from property line",
+        "Composite decking and hidden fastener systems are fine \u2014 but framing must still meet IRC R507 regardless of decking material"
+      ]
+    },
+    "solar": {
+      "names": [
+        "solar",
+        "solar panels",
+        "photovoltaic",
+        "pv system",
+        "solar array",
+        "rooftop solar",
+        "solar installation"
+      ],
+      "governing_code": "NEC Article 690 (Solar PV Systems). IBC/IRC for structural. Local utility interconnection requirements.",
+      "permit_type": "Building Permit + Electrical Permit (often combined into one 'Solar Permit')",
+      "permit_required": {
+        "rule": "REQUIRED in all 50 states for solar PV installation",
+        "always_required": [
+          "Rooftop solar PV installation of any size",
+          "Ground-mounted solar arrays",
+          "Battery storage systems connected to PV"
+        ]
+      },
+      "who_can_pull": "Licensed Solar Contractor (C-46 in CA), Licensed Electrician, or licensed General Contractor depending on state. Some states require a PE (Professional Engineer) stamp on structural drawings for larger systems.",
+      "fee_range": {
+        "typical": "$200\u2013$600",
+        "CA": "$150\u2013$400 (many cities standardized)",
+        "NYC": "$800\u2013$1,500+",
+        "SolarAPP_cities": "Fee waived or $100 flat in cities using SolarAPP+ automated review"
+      },
+      "approval_timeline": {
+        "standard": "5\u201315 business days",
+        "SolarAPP_cities": "Same day or instant approval (automated plan review)",
+        "slow_jurisdictions": "LA, NYC, Chicago: 2\u20136 weeks",
+        "note": "Over 1,000 US jurisdictions now use SolarAPP+ for instant permits on standard residential systems"
+      },
+      "what_to_submit": [
+        "Site plan showing panel layout on roof",
+        "Structural loading calculations",
+        "One-line electrical diagram",
+        "Equipment spec sheets (modules, inverter, racking)",
+        "String sizing calculations",
+        "Utility interconnection application (separate \u2014 to the utility, not building dept)"
+      ],
+      "pe_stamp_requirements": {
+        "FL": "PE stamp required for virtually all solar installations",
+        "CA": "PE stamp required for systems over 10kW or on complex structures",
+        "TX": "No statewide requirement \u2014 varies by local AHJ",
+        "NJ": "Structural PE stamp required for roof-mounted systems over 10kW",
+        "NY": "PE stamp required for commercial; residential varies"
+      },
+      "inspections": [
+        {
+          "stage": "Rough-in Inspection",
+          "description": "Conduit routing, wire sizing, grounding, and electrical rough-in verified before panels are energized.",
+          "timing": "Before connecting to utility or energizing system"
+        },
+        {
+          "stage": "Structural Inspection",
+          "description": "Racking attachment to roof structure, flashing around penetrations, load distribution verified.",
+          "timing": "After racking is installed, before panels are placed"
+        },
+        {
+          "stage": "Final Inspection",
+          "description": "Full system operational test, proper labeling (NEC 690 requires specific disconnect labels), net meter application confirmed.",
+          "timing": "After complete installation, before PTO (Permission to Operate) from utility"
+        }
+      ],
+      "utility_interconnection": {
+        "note": "Building permit and utility interconnection are SEPARATE processes. Utility interconnection can take 2\u20138 weeks beyond building permit approval.",
+        "process": "Submit interconnection application to utility \u2192 utility reviews \u2192 approves \u2192 installer installs \u2192 utility installs net meter \u2192 Permission to Operate (PTO) granted"
+      },
+      "common_mistakes": [
+        "Assuming permit approval = can turn system on \u2014 need utility PTO separately",
+        "Incorrect labeling \u2014 NEC 690 requires specific labels on every disconnect, combiner box, and conduit",
+        "Not accounting for utility interconnection timeline in project schedule (adds 2\u20138 weeks)",
+        "Missing rapid shutdown requirement (NEC 690.12 \u2014 required in NEC 2017+ jurisdictions)"
+      ],
+      "state_notes": {
+        "CA": "SB 9 and state policy streamlines solar permitting. Many cities use SolarAPP+. C-46 license or C-10 required.",
+        "FL": "PE stamp often required. Strong enforcement. Active solar market.",
+        "TX": "No statewide solar license. Varies by city. Houston, Austin, Dallas have own permit offices.",
+        "AZ": "Strong solar market. Varies by county. Maricopa, Tucson have clear online portals.",
+        "NJ": "Active solar market. NJBPU approvals may be required in addition to local building permit."
+      },
+      "pro_tips": [
+        "Start the utility interconnection application the same day you pull the permit \u2014 they run in parallel and interconnection often takes longer",
+        "In cities using SolarAPP+, permit can be instant \u2014 check if your city uses it before assuming 1-2 week wait",
+        "All disconnects, conduit, and combiner boxes require specific NEC 690 labels \u2014 prepare them before final inspection",
+        "Rapid shutdown (NEC 690.12) is required in NEC 2017+ jurisdictions \u2014 verify your inverter supports it before installing",
+        "Document PE stamp requirements before quoting \u2014 in FL and some NE states this adds 00-2,000 to project cost"
+      ]
+    }
+  }
+}

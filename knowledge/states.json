@@ -1,0 +1,622 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "built": "2026-04-11",
+    "source": "codecheck.com (updated Feb 5, 2026), ICC adoption maps, state licensing board websites",
+    "disclaimer": "Codes are adopted at state level but amended locally. Always verify current local amendments with the AHJ."
+  },
+
+  "states": {
+    "AL": {
+      "name": "Alabama",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "permit_authority": "Local AHJ (city/county). Residential under Home Builders Licensure Board.",
+      "statewide_code": false,
+      "notes": "No statewide building code for residential. Each county and city adopts independently.",
+      "licensing_board_url": "https://www.hblb.alabama.gov",
+      "key_quirks": ["No statewide residential code — wide variation by county", "Rural counties may have minimal enforcement"]
+    },
+    "AK": {
+      "name": "Alaska",
+      "nec_edition": "2017",
+      "irc_edition": "2018",
+      "upc_edition": "2018",
+      "permit_authority": "Anchorage follows state code. Rest of state is per local rules — many rural areas have no code enforcement.",
+      "statewide_code": "partial",
+      "notes": "Deep frost lines require special footing depths (60+ inches in some areas). Seismic zone for many areas.",
+      "key_quirks": ["Remote areas often have no permit requirement", "Extreme climate — specific cold-weather requirements for HVAC"]
+    },
+    "AZ": {
+      "name": "Arizona",
+      "nec_edition": "2017",
+      "irc_edition": "2018",
+      "upc_edition": "2018",
+      "permit_authority": "Entirely up to local jurisdictions — varies widely",
+      "statewide_code": false,
+      "licensing_board_url": "https://roc.az.gov",
+      "key_quirks": [
+        "ROC (Registrar of Contractors) license required for all contractor work",
+        "Maricopa County and Tucson have own permit offices with online portals",
+        "Phoenix: Development Services Department — strong online permitting",
+        "Rural AZ: some areas have very limited code enforcement",
+        "Solar: strong market, most cities have streamlined solar permits"
+      ]
+    },
+    "AR": {
+      "name": "Arkansas",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "permit_authority": "State code applies to state buildings only. Local jurisdictions control residential.",
+      "statewide_code": false,
+      "key_quirks": ["Many rural areas have minimal permit requirements", "Little Rock and Fayetteville have own permit offices"]
+    },
+    "CA": {
+      "name": "California",
+      "nec_edition": "2023 (California Electrical Code)",
+      "irc_edition": "2024 (California Residential Code)",
+      "upc_edition": "2024 (California Plumbing Code)",
+      "mechanical_code": "2024 Uniform Mechanical Code (UMC — NOT IMC)",
+      "permit_authority": "Statewide minimum — local jurisdictions can be MORE restrictive",
+      "statewide_code": true,
+      "licensing_board_url": "https://www.cslb.ca.gov",
+      "key_quirks": [
+        "LA and San Francisco have amended state code — stricter in many areas",
+        "Title 24 energy code applies to all work — HVAC replacements must meet efficiency minimums",
+        "Seismic strapping mandatory for water heaters statewide",
+        "HVAC: C-20 license | Electrical: C-10 | Plumbing: C-36 | Roofing: C-39 | Solar: C-46",
+        "Wildfire (WUI) zones require Class A fire-rated roofing materials",
+        "Cool roof requirements in Title 24 climate zones — check before ordering roofing",
+        "Many cities use SolarAPP+ for instant solar permits",
+        "SoCal air districts may require CARB-compliant generator certification",
+        "Deck additions require seismic-appropriate hardware (stainless in coastal zones)"
+      ],
+      "notable_cities": {
+        "Los Angeles": "LADBS — permit times are slow (1–4 weeks for most work). Online portal: ladbs.org",
+        "San Francisco": "DBI — own code amendments, very strict. portal: sfdbi.org",
+        "San Diego": "Development Services — roof replacement may NOT require permit under CRC (verify SDMC §129.0202)",
+        "Sacramento": "CSS — moderate speed, good online portal",
+        "Fresno": "Development & Resource Management — faster than coastal cities"
+      }
+    },
+    "CO": {
+      "name": "Colorado",
+      "nec_edition": "2023",
+      "irc_edition": "2021",
+      "permit_authority": "Denver and state buildings only. Other jurisdictions have 'home rule' — each city/county sets own codes.",
+      "statewide_code": "partial",
+      "key_quirks": [
+        "Denver has its own permit system — Denver Community Planning and Development",
+        "Colorado Springs, Fort Collins, Boulder all have own permit offices",
+        "Mountain towns (Aspen, Vail) — very strict, slow permit process, high fees",
+        "Front Range: Class 4 hail-resistant roofing common due to insurance requirements",
+        "Snow load requirements important for roofing and deck projects"
+      ]
+    },
+    "CT": {
+      "name": "Connecticut",
+      "nec_edition": "2023",
+      "irc_edition": "2021",
+      "permit_authority": "Statewide with local amendments",
+      "statewide_code": true,
+      "key_quirks": ["High-cost Northeast market — permit fees and contractor rates are elevated", "Strong enforcement in most municipalities"]
+    },
+    "DC": {
+      "name": "District of Columbia",
+      "nec_edition": "2014",
+      "irc_edition": "2015",
+      "permit_authority": "DCRA (Department of Consumer and Regulatory Affairs)",
+      "statewide_code": true,
+      "key_quirks": ["Older code editions still in effect — 2014 NEC, 2015 IRC", "Slow permit process — DC is notorious for delays", "DCRA: dcra.dc.gov"]
+    },
+    "DE": {
+      "name": "Delaware",
+      "nec_edition": "2020",
+      "irc_edition": "2018",
+      "permit_authority": "Local jurisdiction — not statewide",
+      "statewide_code": false,
+      "key_quirks": ["Dover, Wilmington have own permit offices", "Many Delaware counties have limited enforcement in rural areas"]
+    },
+    "FL": {
+      "name": "Florida",
+      "nec_edition": "2020",
+      "irc_edition": "2021 (Florida Building Code)",
+      "permit_authority": "Statewide Florida Building Code — very strictly enforced",
+      "statewide_code": true,
+      "licensing_board_url": "https://www.myfloridalicense.com",
+      "key_quirks": [
+        "Florida Building Code is among the strictest in the US — post-Hurricane Andrew legacy",
+        "Hurricane-rated products required in HVHZ (High Velocity Hurricane Zone): Broward and Miami-Dade counties",
+        "Wind mitigation reports affect insurance — often requested at permit",
+        "Roofing: specific nail patterns (6d vs 8d), specific underlayment requirements by wind zone",
+        "HVAC: CAC license required statewide. Strong enforcement.",
+        "All permits must be recorded and easily accessible to inspectors",
+        "Permit cards must be posted at job site",
+        "Solar: PE stamp often required. Strong market.",
+        "Generator: standby generators common — setback requirements strict"
+      ],
+      "notable_cities": {
+        "Miami-Dade": "Strictest jurisdiction in FL — HVHZ requirements, Miami-Dade Product Approval required for many materials",
+        "Orlando": "Orange County Building Division — good online portal, moderate speed",
+        "Tampa": "Hillsborough County — online permits available, moderate speed",
+        "Jacksonville": "City of Jacksonville Building Inspection Division"
+      }
+    },
+    "GA": {
+      "name": "Georgia",
+      "nec_edition": "2023",
+      "irc_edition": "2024",
+      "permit_authority": "Statewide minimum codes. Georgia Department of Community Affairs.",
+      "statewide_code": true,
+      "licensing_board_url": "https://sos.ga.gov/index.php/licensing",
+      "key_quirks": [
+        "Atlanta metro has fast online permitting in many cities (Marietta, Sandy Springs, Alpharetta)",
+        "NEC 2023 and IRC 2024 — some of the most current codes in the US",
+        "Rural GA: limited enforcement in some counties"
+      ]
+    },
+    "HI": {
+      "name": "Hawaii",
+      "nec_edition": "2020",
+      "irc_edition": "2018",
+      "upc_edition": "2018",
+      "permit_authority": "County-level (Honolulu, Maui, Hawaii County, Kauai) — each has own DPP",
+      "statewide_code": "county-based",
+      "key_quirks": [
+        "Seismic and hurricane zone — strict structural requirements",
+        "Solar is extremely popular — permitting infrastructure is well-developed",
+        "Honolulu: DPP — permit times can be slow (2–4 weeks)"
+      ]
+    },
+    "ID": {
+      "name": "Idaho",
+      "nec_edition": "2023 (with extensive NEC amendments)",
+      "irc_edition": "2024",
+      "upc_edition": "2015",
+      "permit_authority": "Statewide building code — Division of Building Safety",
+      "statewide_code": true,
+      "licensing_board_url": "https://dbs.idaho.gov",
+      "key_quirks": ["Boise metro growing fast — permit offices can be slow due to growth", "Extensive NEC amendments — verify locally"]
+    },
+    "IL": {
+      "name": "Illinois",
+      "nec_edition": "varies by local jurisdiction",
+      "irc_edition": "varies by local jurisdiction",
+      "permit_authority": "Local jurisdictions adopt 'current' editions — varies widely. No statewide code.",
+      "statewide_code": false,
+      "key_quirks": [
+        "CHICAGO: Has own building code — Chicago Building Code. Strict. 2017 NEC, 2018 IRC with Chicago amendments.",
+        "Chicago: Licensed Electrician required for all electrical. City-specific licenses sometimes required.",
+        "Suburban Cook County: generally follows state recommendations",
+        "Downstate IL: varies widely — some rural counties have minimal enforcement",
+        "Chicago permit portal: chicago.gov/permits"
+      ]
+    },
+    "IN": {
+      "name": "Indiana",
+      "nec_edition": "2008 (very old — statewide for some work, local for others)",
+      "irc_edition": "2018",
+      "permit_authority": "Statewide for some uses, requires local adoption. Uses IRC electrical (not NEC separately).",
+      "statewide_code": "partial",
+      "key_quirks": [
+        "2008 NEC is surprisingly old — most cities have adopted newer editions locally",
+        "Indianapolis (Marion County) has own permit office — moderate enforcement",
+        "Indiana Professional Licensing Agency: pla.in.gov",
+        "Many smaller cities have limited building departments"
+      ]
+    },
+    "IA": {
+      "name": "Iowa",
+      "nec_edition": "2023",
+      "irc_edition": "2024",
+      "upc_edition": "2021",
+      "permit_authority": "Statewide",
+      "statewide_code": true,
+      "key_quirks": ["Current codes — NEC 2023, IRC 2024. Well-maintained code adoption.", "Des Moines has modern online permitting"]
+    },
+    "KS": {
+      "name": "Kansas",
+      "nec_edition": "2008 (state buildings only)",
+      "irc_edition": "2018",
+      "permit_authority": "No statewide code — local jurisdictions. 2008 NEC for state-owned buildings only.",
+      "statewide_code": false,
+      "key_quirks": ["Wichita-Sedgwick County has own permit office", "Wide variation across rural Kansas — some counties have no enforcement"]
+    },
+    "KY": {
+      "name": "Kentucky",
+      "nec_edition": "2023",
+      "irc_edition": "2015",
+      "permit_authority": "Statewide. Kentucky Building Code.",
+      "statewide_code": true,
+      "key_quirks": [
+        "Uses own Kentucky Plumbing Code — NOT IRC plumbing",
+        "No IRC electrical — uses own electrical code",
+        "Louisville Metro has own permit office",
+        "Department of Housing, Buildings and Construction: dhbc.ky.gov"
+      ]
+    },
+    "LA": {
+      "name": "Louisiana",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "permit_authority": "Statewide. Louisiana State Uniform Construction Code.",
+      "statewide_code": true,
+      "key_quirks": [
+        "Hurricane zone — wind requirements similar to Florida Gulf Coast",
+        "New Orleans has own permit office — HDLC in historic districts adds another layer",
+        "Flood zone requirements important for many parishes"
+      ]
+    },
+    "ME": {
+      "name": "Maine",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "permit_authority": "Enforceable only for cities with population over 4,000. Many rural areas have no code enforcement.",
+      "statewide_code": "partial",
+      "key_quirks": ["Many rural areas have no permit requirement", "Portland and Bangor have active building departments", "Deep frost lines (42-48 inches typical)"]
+    },
+    "MD": {
+      "name": "Maryland",
+      "nec_edition": "varies by county",
+      "irc_edition": "2021",
+      "permit_authority": "Statewide minimum, but counties set own NEC edition and amendments.",
+      "statewide_code": "partial",
+      "key_quirks": [
+        "Montgomery County and Prince George's County (DC suburbs) have own permit offices — strict",
+        "Maryland Home Improvement Commission (MHIC) license required",
+        "Baltimore City has own building code and permit office"
+      ]
+    },
+    "MA": {
+      "name": "Massachusetts",
+      "nec_edition": "2023 (527 CMR — MA Electrical Code)",
+      "irc_edition": "2021 (780 CMR — MA Building Code)",
+      "permit_authority": "Statewide with local amendments",
+      "statewide_code": true,
+      "key_quirks": [
+        "High-cost Northeast market",
+        "Board of Building Regulations and Standards (BBRS)",
+        "Licensed Electrician required for ALL electrical work — strictly enforced",
+        "Home Improvement Contractor (HIC) registration required for most work",
+        "Boston has own Inspectional Services Department — can be slow"
+      ]
+    },
+    "MI": {
+      "name": "Michigan",
+      "nec_edition": "2023",
+      "irc_edition": "2015 (residential — older edition)",
+      "permit_authority": "Statewide. Bureau of Construction Codes.",
+      "statewide_code": true,
+      "key_quirks": [
+        "Residential on 2015 IRC, commercial on 2021 IBC — gap between editions",
+        "Michigan Residential Code (MRC) is primary residential reference",
+        "Detroit has own permit office — City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED)",
+        "Grand Rapids, Lansing have own offices"
+      ]
+    },
+    "MN": {
+      "name": "Minnesota",
+      "nec_edition": "2023 (with extensive state amendments — MSEC)",
+      "irc_edition": "2018",
+      "upc_edition": "2018",
+      "permit_authority": "Statewide. Minnesota Department of Labor and Industry.",
+      "statewide_code": true,
+      "licensing_board_url": "https://www.dli.mn.gov",
+      "key_quirks": [
+        "2026 NEC currently under review — update coming",
+        "Extensive state amendments to NEC — the Minnesota State Electrical Code (MSEC) differs from NEC in meaningful ways",
+        "Licensed Electrical Contractor required",
+        "Minneapolis and St. Paul have own permit offices but follow state code",
+        "Deep frost lines (42-54 inches) — important for footings and underground work"
+      ]
+    },
+    "MS": {
+      "name": "Mississippi",
+      "nec_edition": "2017",
+      "irc_edition": "varies (2012, 2015, or 2018 adopted locally)",
+      "permit_authority": "Local level. Mississippi Insurance Department enforces some requirements.",
+      "statewide_code": false,
+      "key_quirks": ["Wide variation — some counties have no permit enforcement", "Hurricane zone along Gulf Coast — strict wind requirements in coastal counties"]
+    },
+    "MO": {
+      "name": "Missouri",
+      "nec_edition": "2017",
+      "irc_edition": "2018",
+      "permit_authority": "Local level. St. Louis example given as reference — varies by county.",
+      "statewide_code": false,
+      "key_quirks": [
+        "Kansas City and St. Louis have own permit offices and stricter enforcement",
+        "Most of Missouri is local jurisdiction — rural areas may have minimal enforcement",
+        "Missouri HVAC Authority: missourihvacauthority.com for HVAC license info"
+      ]
+    },
+    "MT": {
+      "name": "Montana",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "permit_authority": "Local jurisdictions have option to enforce. Many rural areas do not.",
+      "statewide_code": "optional",
+      "licensing_board_url": "https://bsd.dli.mt.gov",
+      "key_quirks": ["Billings, Missoula, Bozeman have active building departments", "Many rural areas have no permit requirement", "Deep frost lines in northern MT"]
+    },
+    "NE": {
+      "name": "Nebraska",
+      "nec_edition": "2023 (statewide for electrical)",
+      "irc_edition": "2018",
+      "upc_edition": "2018",
+      "permit_authority": "Electrical is statewide. Other codes per local jurisdictions.",
+      "statewide_code": "partial",
+      "key_quirks": ["Electrical code is statewide — NEC 2023 applies everywhere", "Omaha and Lincoln have own building permit offices for non-electrical work"]
+    },
+    "NV": {
+      "name": "Nevada",
+      "nec_edition": "2023",
+      "irc_edition": "2024",
+      "upc_edition": "2024",
+      "mechanical_code": "Uniform Mechanical Code (UMC — not IMC)",
+      "permit_authority": "Statewide with local amendments",
+      "statewide_code": true,
+      "key_quirks": [
+        "Clark County (Las Vegas area) has own building department — Southern Nevada Building Officials",
+        "Washoe County (Reno area) — separate permit office",
+        "Solar: very active market — streamlined permits in Clark County",
+        "NEC 2023 statewide — current"
+      ]
+    },
+    "NH": {
+      "name": "New Hampshire",
+      "nec_edition": "2023",
+      "irc_edition": "2021",
+      "permit_authority": "Statewide",
+      "statewide_code": true,
+      "key_quirks": ["NH Office of Professional Licensure and Certification (OPLC)", "Frost line: 42-48 inches in most of state"]
+    },
+    "NJ": {
+      "name": "New Jersey",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "permit_authority": "Statewide — NJ Uniform Construction Code (UCC). DCA.",
+      "statewide_code": true,
+      "key_quirks": [
+        "Uses National Standard Plumbing Code (NSPC) — not IPC",
+        "Strong enforcement statewide — NJ is known for strict code compliance",
+        "2024 legislation: standby generators can be installed without zoning board approval in residential zones",
+        "Solar: active market with strong NJBPU incentives",
+        "Licensed trades required: Electrical (NJ Electrical Contractor), Plumbing (NJ Master Plumber)"
+      ]
+    },
+    "NM": {
+      "name": "New Mexico",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "upc_edition": "2021",
+      "mechanical_code": "2021 Uniform Mechanical Code (UMC)",
+      "permit_authority": "Statewide",
+      "statewide_code": true,
+      "key_quirks": ["Albuquerque and Santa Fe have own permit offices but follow state code", "Construction Industries Division: rld.state.nm.us"]
+    },
+    "NY": {
+      "name": "New York",
+      "nec_edition": "2020 (statewide, 2020 NYC Electrical Code for NYC)",
+      "irc_edition": "2024 (statewide, NYC uses own 2015-based code)",
+      "permit_authority": "Statewide except NYC (which has its own code). NYC is extremely distinct.",
+      "statewide_code": true,
+      "key_quirks": [
+        "NYC: Licensed Master Electrician required for ALL electrical permit work. Very strict.",
+        "NYC: Licensed Master Plumber required for gas and plumbing work.",
+        "NYC permit process can take 2–6 weeks for most work — plan ahead",
+        "NYC DOB: nyc.gov/buildings",
+        "Upstate NY: follows statewide code, much faster permit process",
+        "Long Island: Nassau and Suffolk counties — active enforcement, reasonable permit speed"
+      ]
+    },
+    "NC": {
+      "name": "North Carolina",
+      "nec_edition": "2020",
+      "irc_edition": "2015 (updates delayed due to hurricane response)",
+      "permit_authority": "Statewide — NC Building Code Council",
+      "statewide_code": true,
+      "key_quirks": [
+        "Older IRC edition (2015) — code updates delayed post-hurricane response",
+        "Charlotte and Raleigh have active, efficient permit offices",
+        "Coastal counties: wind zone requirements important",
+        "NC Licensing Board for General Contractors: nclbgc.org"
+      ]
+    },
+    "ND": {
+      "name": "North Dakota",
+      "nec_edition": "2023",
+      "irc_edition": "2021",
+      "permit_authority": "Statewide",
+      "statewide_code": true,
+      "key_quirks": ["Current code editions", "Very deep frost lines in some areas (42-54 inches)"]
+    },
+    "OH": {
+      "name": "Ohio",
+      "nec_edition": "2023",
+      "irc_edition": "2018",
+      "permit_authority": "Statewide. Ohio Board of Building Standards.",
+      "statewide_code": true,
+      "key_quirks": [
+        "2021 IBC for commercial; 2018 IRC for residential",
+        "Columbus, Cleveland, Cincinnati all have own permit offices",
+        "Ohio Construction Industry Licensing Board (OCILB) for mechanical/electrical licenses"
+      ]
+    },
+    "OK": {
+      "name": "Oklahoma",
+      "nec_edition": "2023",
+      "irc_edition": "2018",
+      "permit_authority": "Statewide — moving toward 2024 I-codes",
+      "statewide_code": true,
+      "key_quirks": ["Oklahoma City and Tulsa have own permit offices", "Tornado zone — specific anchoring requirements"]
+    },
+    "OR": {
+      "name": "Oregon",
+      "nec_edition": "2023",
+      "irc_edition": "2021",
+      "upc_edition": "2021",
+      "permit_authority": "Statewide. Oregon BCD (Building Codes Division).",
+      "statewide_code": true,
+      "key_quirks": [
+        "2024 codes go into effect April 1, 2026",
+        "Portland: Bureau of Development Services — known for slow permit times",
+        "Seismic zone (Cascadia Subduction Zone) — seismic requirements for all work",
+        "Oregon CCB (Construction Contractors Board) license required"
+      ]
+    },
+    "PA": {
+      "name": "Pennsylvania",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "permit_authority": "Most jurisdictions opt in to UCC (Uniform Construction Code). Philadelphia has custom code.",
+      "statewide_code": "partial",
+      "key_quirks": [
+        "Philadelphia: own City of Philadelphia code, own L&I (Licenses and Inspections) department",
+        "Philadelphia permits are notoriously slow — plan 3–8 weeks for anything complex",
+        "Pittsburgh: Allegheny County enforcement, moderate speed",
+        "PA Home Improvement Contractor (HIC) registration required for work over $5,000"
+      ]
+    },
+    "RI": {
+      "name": "Rhode Island",
+      "nec_edition": "2023",
+      "irc_edition": "2021",
+      "permit_authority": "Statewide",
+      "statewide_code": true,
+      "key_quirks": ["Small state — most work processed through local building departments", "Providence has own permit office"]
+    },
+    "SC": {
+      "name": "South Carolina",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "permit_authority": "Statewide",
+      "statewide_code": true,
+      "key_quirks": ["SC LLR (Department of Labor, Licensing and Regulation)", "Coastal counties: wind zone requirements for roofing and HVAC"]
+    },
+    "SD": {
+      "name": "South Dakota",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "upc_edition": "2024",
+      "permit_authority": "Local jurisdictions have option to adopt",
+      "statewide_code": "optional",
+      "key_quirks": ["Many rural areas have no permit requirement", "Sioux Falls and Rapid City have active building departments"]
+    },
+    "TN": {
+      "name": "Tennessee",
+      "nec_edition": "2017",
+      "irc_edition": "2021 (residential may still be on 2018 IRC in some areas)",
+      "permit_authority": "Statewide — Tennessee Building Commission",
+      "statewide_code": true,
+      "key_quirks": [
+        "Nashville: own Metro Codes Department — active enforcement, good online portal",
+        "Memphis: own codes office",
+        "NEC 2017 — older electrical code",
+        "TN Department of Commerce & Insurance — licensing"
+      ]
+    },
+    "TX": {
+      "name": "Texas",
+      "nec_edition": "2020 (NFPA says 2023 NEC for some jurisdictions — varies widely)",
+      "irc_edition": "2021",
+      "upc_edition": "2018",
+      "permit_authority": "Local jurisdictions control everything. No statewide residential building code outside city limits.",
+      "statewide_code": "partial",
+      "licensing_board_url": "https://www.tdlr.texas.gov",
+      "key_quirks": [
+        "Major cities (Houston, Dallas, Austin, San Antonio) have strong permit offices",
+        "Unincorporated areas (no city limits): often NO permit required",
+        "HVAC: TACL license (Texas Air Conditioning Contractor License) or HVAC-R license from TDLR",
+        "Electrical: TECL license from TDLR. Master Electrician required for permit pulls.",
+        "Plumbing: Master Plumber license from TSBPE",
+        "Houston: No zoning, but strong building permit enforcement. Houston Permitting Center.",
+        "Austin: Strong sustainability requirements — Austin Energy Green Building",
+        "Solar: popular — no statewide solar license, use licensed electrician for electrical portion",
+        "Generator: high demand post-winter storm 2021 — local enforcement varies widely"
+      ],
+      "notable_cities": {
+        "Houston": "Houston Permitting Center: houstonpermittingcenter.org — online permits available",
+        "Austin": "Austin Development Services: austintexas.gov/department/development-services",
+        "Dallas": "Dallas Development Services: developdallas.dallascityhall.com",
+        "San Antonio": "City Development Services: sanantonio.gov/DSD"
+      }
+    },
+    "UT": {
+      "name": "Utah",
+      "nec_edition": "2023",
+      "irc_edition": "2024",
+      "permit_authority": "State buildings — local adoptions may lag. Salt Lake City and major cities follow current codes.",
+      "statewide_code": "partial",
+      "key_quirks": ["Salt Lake City: growing fast, modern permit office", "Seismic zone (Wasatch Fault) — seismic requirements apply", "Utah Division of Occupational and Professional Licensing (DOPL)"]
+    },
+    "VT": {
+      "name": "Vermont",
+      "nec_edition": "2023",
+      "irc_edition": "2021",
+      "permit_authority": "Statewide. Adopts IBC (not IRC) for all construction.",
+      "statewide_code": true,
+      "key_quirks": ["Uses IBC for ALL construction — no IRC for residential", "Vermont Department of Public Safety — Fire and Building Safety Division", "Deep frost lines (42 inches)"]
+    },
+    "VA": {
+      "name": "Virginia",
+      "nec_edition": "2020",
+      "irc_edition": "2021",
+      "permit_authority": "Statewide — Virginia Construction Code (USBC)",
+      "statewide_code": true,
+      "key_quirks": [
+        "Northern Virginia (NOVA): Fairfax, Arlington, Alexandria — strict, active enforcement",
+        "DPOR (Department of Professional and Occupational Regulation) for licensing",
+        "Richmond and Virginia Beach have own permit offices"
+      ]
+    },
+    "WA": {
+      "name": "Washington",
+      "nec_edition": "2023",
+      "irc_edition": "2021",
+      "upc_edition": "2021",
+      "permit_authority": "Statewide. Washington State Building Code Council.",
+      "statewide_code": true,
+      "licensing_board_url": "https://lni.wa.gov/licensing-permits",
+      "key_quirks": [
+        "Update scheduled for May 2026 — new codes coming",
+        "Seismic zone (Pacific Northwest) — seismic requirements for all work",
+        "Seattle: Seattle DCI (Department of Construction and Inspections) — known for thorough inspections",
+        "Seattle permit times: moderate to slow (2–4 weeks for complex work)",
+        "WA Electrical License required (EL01A/EL02A). Plumbing license from LNI.",
+        "Strong energy code (WSEC) — HVAC replacements must meet efficiency minimums",
+        "EV charger infrastructure: WA leading state for EV adoption"
+      ]
+    },
+    "WV": {
+      "name": "West Virginia",
+      "nec_edition": "2023",
+      "irc_edition": "2018",
+      "permit_authority": "Statewide",
+      "statewide_code": true,
+      "key_quirks": ["WV Division of Labor", "Charleston and Huntington have active building departments"]
+    },
+    "WI": {
+      "name": "Wisconsin",
+      "nec_edition": "2017",
+      "irc_edition": "2015",
+      "permit_authority": "Statewide — Wisconsin Uniform Dwelling Code (UDC). DHS.",
+      "statewide_code": true,
+      "key_quirks": [
+        "Wisconsin has own modified code — NOT the IRC or IBC directly",
+        "Older NEC (2017) and IRC (2015) base — Wisconsin code updates slowly",
+        "Wisconsin SPS (Safety and Professional Services) for licensing",
+        "Milwaukee has own permit office",
+        "Deep frost lines (42-54 inches)"
+      ]
+    },
+    "WY": {
+      "name": "Wyoming",
+      "nec_edition": "2023",
+      "irc_edition": "2024",
+      "permit_authority": "Entirely up to local jurisdictions",
+      "statewide_code": false,
+      "key_quirks": ["Many rural areas have no permit requirement", "Cheyenne and Casper have active building departments", "High altitude considerations for HVAC sizing"]
+    }
+  }
+}
