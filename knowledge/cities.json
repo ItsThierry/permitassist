@@ -4205,101 +4205,194 @@
     "harris_county_tx": {
       "county": "Harris County",
       "state": "TX",
-      "note": "Unincorporated Harris County (areas outside Houston, Pasadena, etc.)",
+      "note": "IMPORTANT: Unincorporated Harris County does NOT require residential permits for HVAC, electrical, or plumbing in most cases. Only flood plain and structural work needs county permits. Cities within Harris County (Houston, Pasadena, etc.) have their own permit requirements.",
       "permit_office": "Harris County Engineering Department",
       "phone": "(713) 274-3580",
+      "online_portal": "https://engpermits.hctx.net",
       "fees": {
-        "note": "Texas counties have VERY LIMITED permit authority. Unincorporated Harris County has NO residential building permit requirement for most work. Only plat approval, driveway, and some specific permits.",
-        "hvac": "NO PERMIT REQUIRED for HVAC replacement in unincorporated Harris County",
-        "electrical": "NO residential electrical permit required in unincorporated Harris County",
-        "plumbing": "NO residential plumbing permit required in unincorporated Harris County"
+        "residential_hvac": "NOT REQUIRED in unincorporated areas for replacement work",
+        "structural": "Varies by valuation \u2014 $0.30/sq ft minimum",
+        "fee_note": "Harris County unincorporated: HVAC replacement, electrical panel upgrade, water heater replacement do NOT require county permits. Check if address is within city limits first."
       },
       "key_notes": [
-        "MAJOR DIFFERENCE: Katy, Pearland, Sugar Land are cities with OWN permit offices",
-        "True unincorporated Harris County: no residential trade permits for HVAC/electrical/plumbing",
-        "This applies to many suburban homes just outside Houston city limits",
-        "State license (TACL/TECL) still required even if no permit needed"
+        "Always verify whether address is in city limits or unincorporated county first",
+        "Cities like Katy, Spring, Humble are in Harris County but have own permit rules",
+        "Flood plain work always requires Harris County Flood Control permit",
+        "Commercial work requires permits regardless of incorporation status"
       ]
     },
     "maricopa_county_az": {
       "county": "Maricopa County",
       "state": "AZ",
-      "note": "Unincorporated Maricopa County (areas outside Phoenix, Scottsdale, Tempe, Chandler, etc.)",
+      "note": "Maricopa County handles unincorporated areas. Incorporated cities (Phoenix, Scottsdale, Tempe, Chandler, Mesa, Gilbert, Glendale) have their own permit offices.",
       "permit_office": "Maricopa County Planning & Development Department",
-      "permit_url": "https://www.maricopa.gov/1674/Residential-Construction",
       "phone": "(602) 506-3301",
+      "online_portal": "https://aca-prod.accela.com/MCPD",
       "fees": {
-        "note": "Valuation-based. Maricopa County does require permits for unincorporated areas.",
-        "hvac": "Mechanical permit required. Valuation-based \u2014 similar to Phoenix city rates.",
-        "electrical": "Permit required. Valuation-based.",
-        "plumbing": "Permit required. Valuation-based."
+        "hvac_mechanical": "$85 minimum (unincorporated Maricopa County, 2025)",
+        "electrical": "$85 minimum",
+        "roofing": "Valuation-based \u2014 $0.35/sq ft",
+        "fee_note": "ROC (Registrar of Contractors) license required for all work in AZ"
       },
       "key_notes": [
-        "Maricopa County issues permits for unincorporated areas (outside any city)",
-        "Most suburban areas (Scottsdale, Chandler, Tempe, Mesa, Gilbert) have OWN permit offices",
-        "Fee estimator tools available at maricopa.gov/391",
-        "ROC license required statewide regardless of location"
+        "ROC license number required on all permit applications in AZ",
+        "Maricopa County has some of the strictest wind/seismic requirements in AZ",
+        "Scottsdale, Tempe, Chandler, Mesa all have their own permit offices despite being in Maricopa County",
+        "Cave Creek, Queen Creek, Fountain Hills use Maricopa County permits"
       ]
     },
     "cook_county_il": {
       "county": "Cook County",
       "state": "IL",
-      "note": "Unincorporated Cook County (suburban areas outside Chicago and incorporated suburbs)",
+      "note": "Cook County Building & Zoning handles unincorporated Cook County. Chicago and incorporated suburbs (Alsip, Oak Lawn, Evanston, etc.) have their own building departments.",
       "permit_office": "Cook County Department of Building and Zoning",
-      "permit_url": "https://www.cookcountyil.gov/service/building-permits",
+      "phone": "(708) 865-6010",
+      "online_portal": "https://www.cookcountyil.gov/service/building-permits",
       "fees": {
-        "building_residential": "Minimum $73.50. Alterations: $73.50 + $18.50 per $1,000 over $5,000.",
-        "plumbing": "Minimum permit (up to 5 fixtures): $143.60. Additional fixtures: $20 each.",
-        "electrical": "Trade permits available. Cut-over/temp/re-inspections: $150/hr (min 0.5hr).",
-        "hvac": "Mechanical permit required. Valuation-based. Minimum $73.50.",
-        "fee_note": "Cook County fees are LOWER than Chicago city. Suburban unincorporated areas use these rates."
+        "hvac_mechanical": "$73.50 minimum (2025). $18.50 per $1,000 valuation above $5,000.",
+        "electrical": "$73.50 minimum",
+        "roofing": "$73.50 minimum \u2014 commercial roof requires plan review",
+        "fee_note": "Cook County is the unincorporated areas ONLY. Most Chicago suburbs have their own building departments \u2014 Alsip, Oak Lawn, Calumet City, Dolton, etc."
       },
       "key_notes": [
-        "Most Cook County suburbs are incorporated \u2014 use their own village/city permit offices",
-        "True unincorporated Cook County is a smaller area \u2014 check your specific address",
-        "Cook County electrical code: separate from Chicago city code",
-        "Child Support Enforcement Declaration Form required with every permit application",
-        "Online e-permits available for decks, fences, pools, generators, reroofs, etc."
+        "Most Chicago suburbs have their own building departments \u2014 verify which jurisdiction",
+        "Alsip, Oak Lawn, Evanston, Calumet City, Harvey are incorporated and use their own codes",
+        "Unincorporated Cook County uses 2021 IBC/IRC and 2020 NEC",
+        "IL requires licensed electricians for all permit work \u2014 ILCS contractor licensing",
+        "HVAC contractors need IL mechanical license \u2014 not just federal EPA 608"
       ]
     },
     "king_county_wa": {
       "county": "King County",
       "state": "WA",
-      "note": "Unincorporated King County (outside Seattle, Bellevue, Redmond, Kirkland, etc.)",
+      "note": "King County Local Services handles unincorporated King County. Seattle, Bellevue, Redmond, Kirkland, Renton, etc. have their own permit offices.",
       "permit_office": "King County Department of Local Services, Permitting Division",
-      "permit_url": "https://kingcounty.gov/permits",
       "phone": "(206) 296-6600",
+      "online_portal": "https://kingcounty.gov/permits",
       "fees": {
-        "note": "2025: 49% fee increase effective January 1, 2025. 2026: additional ~14% increase.",
-        "hvac": "Permit required. Valuation-based. Budget $300\u2013$600 for residential HVAC after 2025 increases.",
-        "electrical": "King County does NOT issue electrical permits \u2014 handled by WA Labor & Industries (LNI) statewide.",
-        "plumbing": "Permit required from King County."
+        "hvac_mechanical": "49% fee increase in 2025. Additional 14% + $126 screening fee in 2026. Base HVAC: ~$180-$350 depending on valuation.",
+        "electrical": "WA State L&I handles residential electrical permits in unincorporated King County \u2014 NOT county. Call (360) 902-5269.",
+        "roofing": "$180 minimum (2025) \u2014 increased dramatically",
+        "fee_note": "MAJOR CHANGE: King County electrical permits are handled by WA State L&I (Department of Labor & Industries), NOT the county. Call L&I at (360) 902-5269 for electrical permits."
       },
       "key_notes": [
-        "IMPORTANT: King County electrical permits go to WA State Labor & Industries (LNI) \u2014 NOT King County",
-        "2025: King County fees went up 49%. 2026: additional 14% plus new $126 application screening fee.",
-        "Seattle, Bellevue, Redmond all have own permit offices separate from King County",
-        "Unincorporated King County includes rural areas east of Bellevue, parts of Issaquah area"
+        "CRITICAL: Electrical permits in King County unincorporated = WA State L&I, NOT county",
+        "49% fee increase hit in 2025 \u2014 contractors were blindsided. Budget accordingly.",
+        "WA State L&I: https://lni.wa.gov/licensing-permits/electrical/electrical-permits",
+        "Burien, Kenmore, Shoreline are incorporated cities with own permit offices",
+        "Unincorporated areas: Vashon Island, parts of Enumclaw, parts of Maple Valley"
       ]
     },
     "broward_county_fl": {
       "county": "Broward County",
       "state": "FL",
-      "note": "Broward County Building Division \u2014 serves Broward Municipal Services District (unincorporated)",
+      "note": "Broward County Building Division handles unincorporated areas. Fort Lauderdale, Pompano Beach, Deerfield Beach, Coral Springs, etc. have their own permit offices.",
       "permit_office": "Broward County Building Division",
-      "permit_url": "https://www.broward.org/Building",
+      "phone": "(954) 765-4400",
+      "online_portal": "https://www.broward.org/Building/Pages/ePermitting.aspx",
       "fees": {
-        "all_trades": "Structural, electrical, mechanical, plumbing: 1.85% of job value OR $125 minimum (whichever is greater). May 1, 2025: fee increase.",
-        "electrical": "3.0% of job value OR $125 minimum.",
-        "hvac": "1.85% of job value or $125 minimum. Typical residential HVAC ($5,000 job): ~$125 minimum.",
-        "fee_note": "Fee increase effective May 1, 2025. Job value under ~$6,750 = $125 minimum applies."
+        "hvac_mechanical": "1.85% of job value, minimum $125 (May 2025 fee increase). HVAC replacement ~$150-$280.",
+        "electrical": "1.85% of job value, minimum $125",
+        "roofing": "1.85% of job value, minimum $125. Hurricane-rated materials required.",
+        "fee_note": "Broward County increased fees May 2025. FL requires licensed contractors for all permit work. Hurricane-rated materials (HVHZ zone) required for all roofing in Broward."
       },
       "key_notes": [
-        "Most Broward County cities (Fort Lauderdale, Hollywood, Pembroke Pines, Sunrise) have OWN permit offices",
-        "Broward County Building Division serves unincorporated areas ONLY",
-        "Florida Building Code enforced \u2014 statewide standards",
-        "Hurricane zone \u2014 Miami-Dade product approval not required (that's only Dade) but wind load requirements apply",
-        "CAC/CFC/EC licenses required statewide"
+        "FL High Velocity Hurricane Zone (HVHZ) requirements apply in Broward County",
+        "Hurricane-rated roofing materials required \u2014 standard shingles often don't qualify",
+        "FL state contractor license required \u2014 local county license also required",
+        "Fort Lauderdale, Pompano Beach have own permit offices despite being in Broward County",
+        "NOA (Notice of Acceptance) required for roofing materials in HVHZ"
+      ]
+    },
+    "los_angeles_county_ca": {
+      "county": "Los Angeles County",
+      "state": "CA",
+      "note": "LA County handles unincorporated areas. City of LA, Long Beach, Pasadena, Santa Monica, etc. have their own permit offices.",
+      "permit_office": "Los Angeles County Department of Regional Planning / Building & Safety",
+      "phone": "(626) 458-3100",
+      "online_portal": "https://eservices.dpw.lacounty.gov",
+      "fees": {
+        "hvac_mechanical": "Valuation-based: typically $150-$400 for residential HVAC replacement in unincorporated areas.",
+        "electrical": "$150-$350 for panel upgrade",
+        "roofing": "Title 24 compliance required \u2014 $200-$500",
+        "fee_note": "CA Title 24 energy compliance required for HVAC replacements. C-20 license (HVAC) or C-10 (Electrical) required."
+      },
+      "key_notes": [
+        "CA Title 24 energy standards apply \u2014 new HVAC must meet current SEER2 minimums",
+        "C-20 HVAC/Air Conditioning license OR C-38 Refrigeration required",
+        "C-10 Electrical contractor license required for electrical work",
+        "Many LA County cities are NOT incorporated \u2014 verify jurisdiction",
+        "Seismic zone D \u2014 special requirements for water heater and gas line work"
+      ]
+    },
+    "dallas_county_tx": {
+      "county": "Dallas County",
+      "state": "TX",
+      "note": "Dallas County unincorporated areas. City of Dallas and suburbs (Plano, Irving, Garland, etc.) have own permit offices.",
+      "permit_office": "Dallas County Development Services",
+      "phone": "(214) 653-7601",
+      "online_portal": null,
+      "fees": {
+        "hvac_mechanical": "Varies \u2014 unincorporated Dallas County uses state minimums",
+        "fee_note": "Most Dallas area cities are incorporated. Verify address is truly in unincorporated county before calling county."
+      },
+      "key_notes": [
+        "Most Dallas area is incorporated \u2014 verify address at DCAD.org first",
+        "Plano, Irving, Garland, Mesquite, Grand Prairie all have own permit offices",
+        "TX TACL license required for HVAC. TECL for electrical. State Master Plumber for plumbing.",
+        "Unincorporated Dallas County is rare \u2014 most areas annexed by cities"
+      ]
+    },
+    "orange_county_ca": {
+      "county": "Orange County",
+      "state": "CA",
+      "note": "Orange County Building and Safety Division handles unincorporated areas. Anaheim, Santa Ana, Irvine, etc. have own permit offices.",
+      "permit_office": "OC Building and Safety Division",
+      "phone": "(714) 667-8840",
+      "online_portal": "https://www.ocpw.com/epermit",
+      "fees": {
+        "hvac_mechanical": "$150-$400 for residential HVAC replacement (valuation-based)",
+        "electrical": "$150-$300 for panel upgrade",
+        "fee_note": "CA Title 24 compliance required. HERS rater sign-off may be needed for HVAC."
+      },
+      "key_notes": [
+        "CA Title 24 energy compliance \u2014 HERS rater may be required for HVAC",
+        "Unincorporated OC: Coto de Caza, Ladera Ranch, Rancho Santa Margarita (partial)",
+        "C-20 license required for HVAC. C-10 for electrical.",
+        "Very seismically active \u2014 water heater strapping code strictly enforced"
+      ]
+    },
+    "tarrant_county_tx": {
+      "county": "Tarrant County",
+      "state": "TX",
+      "note": "Tarrant County handles unincorporated areas. Fort Worth, Arlington, Irving, Grand Prairie all have own permit offices.",
+      "permit_office": "Tarrant County Resource Connection",
+      "phone": "(817) 884-1111",
+      "online_portal": null,
+      "fees": {
+        "fee_note": "Most Tarrant County area is incorporated (Fort Worth, Arlington). Verify address jurisdiction first."
+      },
+      "key_notes": [
+        "Fort Worth and Arlington are the major cities \u2014 both have own permit offices",
+        "TX TACL, TECL, and state Master Plumber licenses required",
+        "Unincorporated Tarrant County is small \u2014 most land is in city limits"
+      ]
+    },
+    "bexar_county_tx": {
+      "county": "Bexar County",
+      "state": "TX",
+      "note": "Bexar County handles areas outside San Antonio city limits.",
+      "permit_office": "Bexar County Development Services Department",
+      "phone": "(210) 335-2150",
+      "online_portal": "https://www.bexar.org/2091/Permits",
+      "fees": {
+        "hvac_mechanical": "Valuation-based \u2014 contact for current schedule",
+        "fee_note": "TX state licenses (TACL/TECL) required for all work in county"
+      },
+      "key_notes": [
+        "San Antonio city limits are large \u2014 verify whether in city or county first",
+        "County unincorporated areas outside SA city limits use county permits",
+        "TX state licenses apply throughout \u2014 no additional county licensing"
       ]
     }
   }

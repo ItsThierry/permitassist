@@ -6,8 +6,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PermitAssist" />
-  <meta name="theme-color" content="#f97316" />
-  <meta name="description" content="AI-powered permit research for contractors. Know your permits before you start." />
+  <meta name="theme-color" content="#1a56db" />
+  <meta name="description" content="AI-powered permit research for contractors. Get exact requirements, fees, and portal links in seconds." />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
@@ -15,208 +15,469 @@
   <title>PermitAssist — Know Your Permits Before You Start</title>
   <style>
     :root {
-      --brand: #f97316; --brand-dark: #ea580c;
-      --bg: #0f172a; --surface: #1e293b; --surface2: #273449;
-      --border: #334155; --text: #f1f5f9; --muted: #94a3b8;
-      --green: #22c55e; --yellow: #eab308; --red: #ef4444; --blue: #3b82f6;
+      /* Blues — professional, trustworthy */
+      --brand:      #1a56db;
+      --brand-dark: #1648c0;
+      --brand-light: rgba(26,86,219,0.12);
+      /* Backgrounds */
+      --bg:       #0b1220;
+      --surface:  #111827;
+      --surface2: #1a2336;
+      --surface3: #1f2c42;
+      --border:   #253045;
+      --border2:  #2d3b52;
+      /* Text */
+      --text:     #f0f4ff;
+      --text2:    #b8c5e0;
+      --muted:    #7888a8;
+      /* Status */
+      --green:    #10b981;
+      --green-bg: rgba(16,185,129,0.1);
+      --yellow:   #f59e0b;
+      --yellow-bg:rgba(245,158,11,0.1);
+      --red:      #ef4444;
+      --red-bg:   rgba(239,68,68,0.1);
+      --blue-bg:  rgba(26,86,219,0.12);
+      /* Radius */
       --r: 12px;
-      --safe-top: env(safe-area-inset-top, 0px);
+      --r-sm: 8px;
+      /* Safe areas */
+      --safe-top:    env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overscroll-behavior: none; }
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overscroll-behavior: none;
+      -webkit-font-smoothing: antialiased;
+    }
 
     /* ── App shell ── */
-    #app { display: flex; flex-direction: column; min-height: 100%; max-width: 640px; margin: 0 auto; }
+    #app { display: flex; flex-direction: column; min-height: 100%; max-width: 680px; margin: 0 auto; }
 
     /* ── Nav ── */
-    .nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; padding-top: calc(12px + var(--safe-top)); border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; }
-    .logo { font-size: 20px; font-weight: 800; color: var(--brand); }
-    .logo span { color: var(--text); }
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+      padding-top: calc(14px + var(--safe-top));
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: var(--bg);
+      z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo-mark {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: var(--brand);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; line-height: 1;
+    }
+    .logo-text { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+    .logo-text em { font-style: normal; color: var(--brand); }
     .nav-right { display: flex; gap: 8px; align-items: center; }
-    .install-btn { background: var(--brand); border: none; border-radius: 20px; color: white; font-size: 12px; font-weight: 700; padding: 5px 12px; cursor: pointer; display: none; }
-    .offline-badge { background: var(--red); border-radius: 20px; color: white; font-size: 11px; font-weight: 700; padding: 3px 8px; display: none; }
+    .offline-badge { background: var(--red); border-radius: 20px; color: white; font-size: 11px; font-weight: 700; padding: 3px 10px; display: none; }
     .offline-badge.show { display: block; }
+    .install-btn { background: var(--brand); border: none; border-radius: 20px; color: white; font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; display: none; }
 
     /* ── Tabs ── */
     .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg); }
-    .tab { flex: 1; padding: 12px 8px; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab {
+      flex: 1; padding: 13px 8px; text-align: center;
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.2s; user-select: none;
+    }
     .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
 
     /* ── Pages ── */
-    .page { display: none; flex: 1; overflow-y: auto; padding: 20px; padding-bottom: calc(20px + var(--safe-bottom)); }
+    .page { display: none; flex: 1; overflow-y: auto; }
     .page.active { display: block; }
 
+    /* ── Page inner padding ── */
+    .page-inner { padding: 20px; padding-bottom: calc(24px + var(--safe-bottom)); }
+
     /* ── Hero ── */
-    .hero-compact { text-align: center; padding: 20px 0 16px; }
-    .hero-compact h1 { font-size: 24px; font-weight: 900; line-height: 1.2; }
-    .hero-compact h1 em { font-style: normal; color: var(--brand); }
-    .hero-compact p { font-size: 14px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+    .hero {
+      padding: 28px 0 20px;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: 26px; font-weight: 900; line-height: 1.15;
+      letter-spacing: -0.5px;
+    }
+    .hero h1 em { font-style: normal; color: var(--brand); }
+    .hero-sub { font-size: 14px; color: var(--text2); margin-top: 8px; line-height: 1.55; max-width: 380px; margin-inline: auto; }
 
-    /* ── Social proof badges ── */
-    .proof-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 12px 0 20px; }
-    .proof-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: var(--muted); padding: 5px 12px; white-space: nowrap; }
-    .proof-badge strong { color: var(--text); }
+    /* ── Social proof ── */
+    .proof-strip {
+      display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+      margin: 14px 0 20px;
+    }
+    .proof-chip {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 20px; font-size: 12px; color: var(--text2);
+      padding: 5px 12px; white-space: nowrap;
+    }
+    .proof-chip strong { color: var(--text); }
 
-    /* ── Form ── */
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
-    .card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 16px; }
+    /* ── Counter bar ── */
+    .counter-bar {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: var(--r-sm); padding: 10px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin-bottom: 16px; font-size: 13px;
+    }
+    .counter-dots { display: flex; gap: 4px; }
+    .c-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border2); transition: background 0.3s; }
+    .c-dot.used { background: var(--brand); }
+    .counter-text { color: var(--text2); }
+    .counter-upgrade { color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 18px 20px; margin-bottom: 14px;
+    }
+    .card-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;
+      color: var(--muted); margin-bottom: 14px;
+    }
+
+    /* ── Form inputs ── */
     .form-group { margin-bottom: 14px; }
-    label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
-    input, select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 16px; padding: 12px 14px; width: 100%; outline: none; transition: border-color 0.2s; appearance: none; -webkit-appearance: none; }
-    input:focus, select:focus { border-color: var(--brand); }
+    .form-group:last-child { margin-bottom: 0; }
+    label {
+      display: block; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    input, select {
+      background: var(--bg); border: 1px solid var(--border2);
+      border-radius: var(--r-sm); color: var(--text); font-size: 16px;
+      padding: 12px 14px; width: 100%; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(26,86,219,0.15);
+    }
     input::placeholder { color: var(--muted); }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .gps-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--brand); cursor: pointer; font-size: 18px; padding: 4px 8px; line-height: 1; }
+    .gps-btn {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px;
+      color: var(--brand); cursor: pointer; font-size: 16px; padding: 5px 9px; line-height: 1;
+    }
     .gps-btn:active { opacity: 0.7; }
 
-    /* ── Trust line ── */
-    .trust-line { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 14px; line-height: 1.5; }
-    .trust-line strong { color: var(--text); }
+    /* ── Quick chips ── */
+    .quick-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+    .chip {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 20px; color: var(--text2); cursor: pointer;
+      font-size: 12px; font-weight: 500; padding: 5px 12px;
+      transition: all 0.12s; user-select: none;
+    }
+    .chip:active, .chip.selected {
+      background: var(--blue-bg); border-color: var(--brand); color: var(--brand);
+    }
 
-    /* ── Chips ── */
-    .quick-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    .chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; color: var(--muted); cursor: pointer; font-size: 13px; padding: 5px 12px; transition: all 0.15s; white-space: nowrap; }
-    .chip:active, .chip.selected { background: rgba(249,115,22,0.15); border-color: var(--brand); color: var(--brand); }
+    /* ── Lookup button ── */
+    .lookup-btn {
+      background: var(--brand); border: none; border-radius: var(--r);
+      color: white; cursor: pointer; font-size: 16px; font-weight: 700;
+      padding: 16px; width: 100%; transition: background 0.15s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      letter-spacing: 0.1px;
+    }
+    .lookup-btn:active { transform: scale(0.98); background: var(--brand-dark); }
+    .lookup-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    /* ── CTA button ── */
-    .btn { background: var(--brand); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 16px; font-weight: 700; padding: 15px; width: 100%; transition: background 0.2s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .btn:active { transform: scale(0.98); background: var(--brand-dark); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* ── Trust note ── */
+    .trust-note {
+      font-size: 12px; color: var(--muted); text-align: center;
+      margin-bottom: 16px; line-height: 1.5;
+    }
 
-    /* ── Free lookup counter bar ── */
-    .lookup-counter-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: var(--muted); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .lookup-dots { display: flex; gap: 5px; }
-    .lookup-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
-    .lookup-dot.used { background: var(--brand); }
-    .lookup-upgrade-link { color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-
-    /* ── Loading / progress ── */
-    #loading { display: none; text-align: center; padding: 48px 20px; }
-    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+    /* ── Loading ── */
+    #loading { display: none; padding: 60px 20px; text-align: center; }
+    .spin-ring {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 3px solid var(--border2); border-top-color: var(--brand);
+      animation: spin 0.75s linear infinite; margin: 0 auto 20px;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .progress-steps { margin-top: 16px; text-align: left; max-width: 280px; margin-inline: auto; }
-    .progress-step { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; color: var(--muted); transition: color 0.3s; }
-    .progress-step.done { color: var(--green); }
+    .loading-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .loading-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+    .progress-steps { text-align: left; max-width: 300px; margin-inline: auto; }
+    .progress-step { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 13px; color: var(--muted); transition: color 0.3s; }
     .progress-step.active { color: var(--text); }
-    .step-icon { font-size: 16px; width: 20px; text-align: center; }
+    .progress-step.done { color: var(--green); }
+    .step-icon { font-size: 15px; width: 20px; text-align: center; }
 
-    /* ── Results ── */
+    /* ── Results container ── */
     #results { display: none; }
+    .results-inner { padding: 16px 20px; padding-bottom: calc(20px + var(--safe-bottom)); }
 
-    /* ── Upgrade bar ── */
-    .upgrade-bar { background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(234,179,8,0.08)); border: 1px solid rgba(249,115,22,0.35); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; display: none; }
-    .upgrade-bar.show { display: block; }
-    .upgrade-bar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-    .upgrade-bar-title { font-size: 14px; font-weight: 700; }
-    .upgrade-bar-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; }
-    .upgrade-bar-sub { font-size: 12px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
-    .upgrade-bar-btn { background: var(--brand); border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 13px; font-weight: 700; padding: 9px 18px; }
+    /* ── Result hero ── */
+    .result-hero {
+      background: linear-gradient(135deg, rgba(26,86,219,0.15) 0%, rgba(26,86,219,0.05) 100%);
+      border: 1px solid rgba(26,86,219,0.25);
+      border-radius: var(--r); padding: 18px 20px; margin-bottom: 14px;
+    }
+    .result-job { font-size: 19px; font-weight: 800; margin-bottom: 3px; letter-spacing: -0.3px; }
+    .result-loc { font-size: 13px; color: var(--text2); }
+    .result-badges { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
+    .badge {
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; white-space: nowrap;
+    }
+    .badge-green  { background: var(--green-bg);  color: var(--green); }
+    .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-red    { background: var(--red-bg);    color: var(--red); }
+    .badge-blue   { background: var(--blue-bg);   color: var(--brand); }
+    .badge-gray   { background: var(--surface2);  color: var(--text2); border: 1px solid var(--border2); }
 
-    /* ── Result cards ── */
-    .result-hero { background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.05)); border: 1px solid rgba(249,115,22,0.3); border-radius: var(--r); padding: 16px 20px; margin-bottom: 16px; }
-    .result-job { font-size: 18px; font-weight: 800; margin-bottom: 2px; }
-    .result-loc { font-size: 13px; color: var(--muted); }
-    .result-meta { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-    .badge-green  { background: rgba(34,197,94,0.15);  color: var(--green); }
-    .badge-yellow { background: rgba(234,179,8,0.15);  color: var(--yellow); }
-    .badge-red    { background: rgba(239,68,68,0.15);  color: var(--red); }
-    .badge-blue   { background: rgba(59,130,246,0.15); color: var(--blue); }
+    /* ── No permit required state ── */
+    .no-permit-card {
+      background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: var(--r); padding: 20px; margin-bottom: 14px;
+      text-align: center;
+    }
+    .no-permit-icon { font-size: 40px; margin-bottom: 10px; }
+    .no-permit-title { font-size: 20px; font-weight: 800; color: var(--green); margin-bottom: 6px; }
+    .no-permit-sub { font-size: 14px; color: var(--text2); line-height: 1.55; }
 
-    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 10px; }
-    .permit-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .permit-row:last-child { border-bottom: none; }
-    .permit-icon { font-size: 18px; }
-    .permit-name { font-weight: 600; font-size: 15px; }
-    .permit-note { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .info-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .info-row:last-child { border-bottom: none; }
-    .info-key { font-size: 12px; color: var(--muted); font-weight: 600; flex-shrink: 0; width: 100px; }
-    .info-val { font-size: 14px; font-weight: 500; text-align: right; flex: 1; }
-    .info-val a { color: var(--brand); text-decoration: none; }
+    /* ── Apply CTA (online portal) ── */
+    .apply-online {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      background: linear-gradient(135deg, #10b981, #0d9f6e);
+      border-radius: var(--r); padding: 18px 20px; margin-bottom: 10px;
+      text-decoration: none; color: #fff;
+      transition: opacity 0.15s;
+    }
+    .apply-online:active { opacity: 0.85; }
+    .apply-left { flex: 1; }
+    .apply-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.8; margin-bottom: 4px; }
+    .apply-title { font-size: 17px; font-weight: 800; line-height: 1.2; }
+    .apply-portal { font-size: 12px; opacity: 0.88; margin-top: 4px; }
+    .apply-portal strong { font-weight: 700; }
+    .apply-arrow { font-size: 26px; opacity: 0.9; flex-shrink: 0; }
+    .apply-note { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 14px; margin-top: -4px; }
+
+    /* ── Paper app / In-person ── */
+    .apply-alt {
+      display: flex; gap: 14px; align-items: flex-start;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r); padding: 18px 20px; margin-bottom: 10px; color: var(--text);
+    }
+    .apply-alt-icon { font-size: 28px; flex-shrink: 0; }
+    .apply-alt-body { flex: 1; }
+    .apply-alt-title { font-size: 15px; font-weight: 800; margin-bottom: 5px; }
+    .apply-alt-sub { font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .apply-alt-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .apply-alt-btn {
+      background: var(--brand); color: #fff; padding: 8px 16px;
+      border-radius: 7px; font-size: 13px; font-weight: 700;
+      text-decoration: none; border: none; cursor: pointer;
+    }
+    .apply-alt-btn.secondary { background: var(--surface3); border: 1px solid var(--border2); color: var(--text2); }
+
+    /* ── Maps fallback banner ── */
+    .maps-banner {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--r-sm); padding: 12px 16px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .maps-banner a { color: var(--brand); font-size: 13px; font-weight: 600; text-decoration: none; }
 
     /* ── URL warning ── */
-    .url-warning { background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); border-radius: 8px; font-size: 12px; color: var(--yellow); padding: 10px 12px; margin-bottom: 12px; line-height: 1.5; }
+    .url-warning {
+      background: var(--yellow-bg); border: 1px solid rgba(245,158,11,0.25);
+      border-radius: var(--r-sm); font-size: 12px; color: var(--yellow);
+      padding: 10px 14px; margin-bottom: 12px; line-height: 1.5;
+    }
 
-    /* ── Actions ── */
-    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    .action-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); cursor: pointer; font-size: 13px; font-weight: 600; padding: 12px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s; }
-    .action-btn:active { border-color: var(--brand); color: var(--brand); }
+    /* ── Data source banner ── */
+    .data-source-note {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--r-sm); font-size: 12px; color: var(--text2);
+      padding: 8px 14px; margin-bottom: 12px; display: flex; gap: 6px; align-items: center;
+      line-height: 1.4;
+    }
 
-    /* ── Apply CTA ── */
-    .apply-cta { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: linear-gradient(135deg, #0d9f6e, #0b8a5e); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; text-decoration: none; color: #fff; transition: opacity 0.15s; }
-    .apply-cta:active { opacity: 0.85; }
-    .apply-cta-left { flex: 1; }
-    .apply-cta-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.8; margin-bottom: 4px; }
-    .apply-cta-title { font-size: 17px; font-weight: 800; line-height: 1.2; }
-    .apply-cta-sub { font-size: 12px; opacity: 0.85; margin-top: 4px; }
-    .apply-cta-arrow { font-size: 28px; opacity: 0.9; flex-shrink: 0; }
-    .apply-cta-note { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 16px; margin-top: -10px; }
-    .paper-app-notice { display: flex; gap: 14px; align-items: flex-start; background: linear-gradient(135deg, #1e3a5f, #1a3050); border: 1px solid rgba(59,130,246,0.4); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; color: #fff; }
-    .paper-app-icon { font-size: 28px; flex-shrink: 0; }
-    .paper-app-body { flex: 1; }
-    .paper-app-title { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
-    .paper-app-sub { font-size: 13px; opacity: 0.85; line-height: 1.5; }
-    .paper-app-btn { display: inline-block; background: var(--blue); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; }
-    .paper-app-btn:hover { background: #2563eb; }
+    /* ── Action row ── */
+    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
+    .action-btn {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--r-sm); color: var(--text2); cursor: pointer;
+      font-size: 13px; font-weight: 600; padding: 12px; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.12s; user-select: none;
+    }
+    .action-btn:active { border-color: var(--brand); color: var(--brand); background: var(--blue-bg); }
+
+    /* ── Upgrade bar ── */
+    .upgrade-bar {
+      background: linear-gradient(135deg, rgba(26,86,219,0.12), rgba(26,86,219,0.05));
+      border: 1px solid rgba(26,86,219,0.3);
+      border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px; display: none;
+    }
+    .upgrade-bar.show { display: block; }
+    .upgrade-bar-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+    .upgrade-bar-title { font-size: 14px; font-weight: 700; }
+    .upgrade-bar-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; }
+    .upgrade-bar-sub { font-size: 12px; color: var(--text2); margin-bottom: 12px; line-height: 1.5; }
+    .upgrade-bar-btn {
+      background: var(--brand); border: none; border-radius: var(--r-sm);
+      color: white; cursor: pointer; font-size: 13px; font-weight: 700; padding: 10px 20px;
+    }
+
+    /* ── Section cards ── */
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;
+      color: var(--muted); margin-bottom: 12px;
+    }
+
+    /* ── Permit rows ── */
+    .permit-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .permit-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .permit-icon { font-size: 18px; line-height: 1.4; flex-shrink: 0; }
+    .permit-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .permit-portal {
+      font-size: 12px; color: var(--brand); font-weight: 600; margin-bottom: 3px;
+      background: var(--blue-bg); display: inline-block; padding: 2px 8px; border-radius: 4px;
+    }
+    .permit-note { font-size: 12px; color: var(--text2); line-height: 1.4; }
+
+    /* ── Info rows ── */
+    .info-row {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .info-key { font-size: 12px; color: var(--muted); font-weight: 600; flex-shrink: 0; width: 110px; padding-top: 1px; }
+    .info-val { font-size: 14px; color: var(--text); text-align: right; flex: 1; line-height: 1.4; }
+    .info-val a { color: var(--brand); text-decoration: none; }
+    .info-val.highlight { color: var(--green); font-weight: 700; }
+
+    /* ── Copy feedback ── */
     .copy-feedback { font-size: 12px; color: var(--green); text-align: center; padding: 4px 0 8px; display: none; }
 
-    /* ── Inspections / tips ── */
-    .insp-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .insp-item:last-child { border-bottom: none; }
-    .insp-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-    .step-dot { background: var(--brand); border-radius: 50%; color: white; font-size: 10px; font-weight: 700; height: 20px; line-height: 20px; min-width: 20px; text-align: center; }
-    .insp-name { font-weight: 600; font-size: 14px; }
-    .insp-desc { font-size: 12px; color: var(--muted); padding-left: 28px; }
-    .insp-when { font-size: 11px; color: var(--brand); font-weight: 600; padding-left: 28px; margin-top: 2px; }
-    .tip-item { font-size: 13px; color: var(--muted); padding: 6px 0 6px 16px; border-bottom: 1px solid var(--border); position: relative; }
-    .tip-item:last-child { border-bottom: none; }
-    .tip-item::before { content: '•'; position: absolute; left: 0; color: var(--brand); }
+    /* ── Inspections ── */
+    .insp-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .insp-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .insp-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+    .step-dot {
+      background: var(--brand); border-radius: 50%; color: white;
+      font-size: 10px; font-weight: 800; height: 22px; line-height: 22px;
+      min-width: 22px; text-align: center; flex-shrink: 0; margin-top: 1px;
+    }
+    .insp-name { font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .insp-desc { font-size: 12px; color: var(--text2); line-height: 1.5; padding-left: 32px; }
+    .insp-when { font-size: 11px; color: var(--brand); font-weight: 700; padding-left: 32px; margin-top: 4px; }
 
-    /* ── Feedback ── */
-    .feedback-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
-    .feedback-btn { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; font-size: 12px; padding: 7px 14px; transition: all 0.15s; }
-    .feedback-btn:active { border-color: var(--yellow); color: var(--yellow); }
+    /* ── Tips & mistakes ── */
+    .tip-item {
+      font-size: 13px; color: var(--text2); padding: 8px 0 8px 18px;
+      border-bottom: 1px solid var(--border); position: relative; line-height: 1.5;
+    }
+    .tip-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .tip-item::before { content: '▸'; position: absolute; left: 0; color: var(--brand); font-size: 11px; top: 10px; }
+
+    /* ── Feedback / disclaimer ── */
+    .feedback-row {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);
+    }
+    .flag-btn {
+      background: none; border: 1px solid var(--border2); border-radius: var(--r-sm);
+      color: var(--muted); cursor: pointer; font-size: 12px; padding: 7px 14px;
+      transition: all 0.15s;
+    }
+    .flag-btn:active { border-color: var(--yellow); color: var(--yellow); }
     .feedback-sent { font-size: 12px; color: var(--green); display: none; }
-
-    /* ── Disclaimer ── */
-    .disclaimer-box { background: rgba(249,115,22,0.06); border: 1px solid rgba(249,115,22,0.15); border-radius: 10px; font-size: 12px; color: var(--muted); line-height: 1.5; padding: 12px; }
-    .new-search-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 16px; padding: 12px; text-align: center; width: 100%; }
+    .disclaimer-box {
+      background: rgba(26,86,219,0.05); border: 1px solid rgba(26,86,219,0.15);
+      border-radius: var(--r-sm); font-size: 12px; color: var(--muted);
+      line-height: 1.5; padding: 12px 14px; margin-top: 14px;
+    }
+    .new-search-btn {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--r-sm); color: var(--text2); cursor: pointer;
+      font-size: 14px; font-weight: 600; margin-top: 12px; padding: 12px;
+      text-align: center; width: 100%; transition: all 0.12s;
+    }
     .new-search-btn:active { border-color: var(--brand); color: var(--brand); }
 
     /* ── History ── */
-    .history-empty { text-align: center; padding: 60px 20px; color: var(--muted); }
-    .history-empty .icon { font-size: 48px; margin-bottom: 12px; }
-    .history-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 12px; cursor: pointer; transition: border-color 0.15s; }
+    .history-empty { text-align: center; padding: 72px 20px; color: var(--muted); }
+    .history-empty .icon { font-size: 48px; margin-bottom: 14px; }
+    .history-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px 18px; margin-bottom: 10px;
+      cursor: pointer; transition: border-color 0.12s;
+    }
     .history-item:active { border-color: var(--brand); }
     .history-job { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
-    .history-loc { font-size: 13px; color: var(--muted); }
+    .history-loc { font-size: 13px; color: var(--text2); }
     .history-time { font-size: 11px; color: var(--muted); margin-top: 6px; }
-    .history-clear { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; font-size: 13px; padding: 8px 16px; margin-bottom: 16px; }
+    .history-clear {
+      background: none; border: 1px solid var(--border2); border-radius: var(--r-sm);
+      color: var(--muted); cursor: pointer; font-size: 13px; padding: 8px 16px; margin-bottom: 14px;
+    }
 
     /* ── Install banner ── */
     #install-banner { display: none; background: var(--surface); border-top: 1px solid var(--border); padding: 16px 20px; padding-bottom: calc(16px + var(--safe-bottom)); }
     #install-banner.show { display: flex; align-items: center; gap: 12px; }
-    .install-icon { font-size: 32px; }
-    .install-text { flex: 1; }
+    .install-icon { font-size: 30px; }
     .install-text strong { display: block; font-size: 14px; }
-    .install-text span { font-size: 12px; color: var(--muted); }
-    .install-cta { background: var(--brand); border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 13px; font-weight: 700; padding: 8px 14px; white-space: nowrap; }
+    .install-text span { font-size: 12px; color: var(--text2); }
+    .install-cta { background: var(--brand); border: none; border-radius: var(--r-sm); color: white; cursor: pointer; font-size: 13px; font-weight: 700; padding: 9px 16px; white-space: nowrap; flex-shrink: 0; }
     .install-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; padding: 4px; }
 
-    /* ── Email gate ── */
-    .gate-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; }
-    .gate-sheet { background: var(--surface); border-radius: 20px 20px 0 0; border-top: 1px solid var(--border); padding: 28px 24px calc(36px + var(--safe-bottom)); width: 100%; animation: slideUp 0.3s ease; }
+    /* ── Email gate modal ── */
+    .gate-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.75); display: flex; align-items: flex-end; }
+    .gate-sheet {
+      background: var(--surface); border-radius: 20px 20px 0 0; border-top: 1px solid var(--border2);
+      padding: 28px 24px calc(32px + var(--safe-bottom)); width: 100%; animation: slideUp 0.3s ease;
+    }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .gate-icon { font-size: 36px; margin-bottom: 10px; text-align: center; }
-    .gate-title { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 6px; }
-    .gate-sub { font-size: 14px; color: var(--muted); text-align: center; margin-bottom: 20px; line-height: 1.5; }
-    .gate-input { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 16px; padding: 14px; width: 100%; margin-bottom: 12px; outline: none; transition: border-color 0.2s; }
+    .gate-icon { font-size: 36px; text-align: center; margin-bottom: 10px; }
+    .gate-title { font-size: 21px; font-weight: 800; text-align: center; margin-bottom: 7px; }
+    .gate-sub { font-size: 14px; color: var(--text2); text-align: center; margin-bottom: 20px; line-height: 1.55; }
+    .gate-input {
+      background: var(--bg); border: 1px solid var(--border2); border-radius: var(--r-sm);
+      color: var(--text); font-size: 16px; padding: 14px; width: 100%; margin-bottom: 12px;
+      outline: none; transition: border-color 0.15s;
+    }
     .gate-input:focus { border-color: var(--brand); }
+    .gate-submit {
+      background: var(--brand); border: none; border-radius: var(--r); color: white; cursor: pointer;
+      font-size: 16px; font-weight: 700; padding: 15px; width: 100%;
+    }
     .gate-note { font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; }
     .gate-skip { display: block; text-align: center; font-size: 13px; color: var(--muted); margin-top: 14px; cursor: pointer; }
-    .gate-skip:active { color: var(--text); }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 6px 0 14px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 400px) {
+      .hero h1 { font-size: 22px; }
+      .apply-title { font-size: 15px; }
+    }
   </style>
 </head>
 <body>
@@ -224,7 +485,10 @@
 
   <!-- Nav -->
   <nav class="nav">
-    <div class="logo">🧭 Permit<span>Assist</span></div>
+    <div class="logo">
+      <div class="logo-mark">📋</div>
+      <div class="logo-text">Permit<em>Assist</em></div>
+    </div>
     <div class="nav-right">
       <div class="offline-badge" id="offline-badge">● Offline</div>
       <button class="install-btn" id="install-nav-btn" onclick="installApp()">Add to Phone</button>
@@ -237,58 +501,54 @@
     <div class="tab" id="tab-history" onclick="showTab('history')">📋 History</div>
   </div>
 
-  <!-- Search Page -->
+  <!-- ── Search Page ── -->
   <div class="page active" id="page-search">
+    <div class="page-inner" id="search-form">
 
-    <div id="search-form">
-      <div class="hero-compact">
+      <div class="hero">
         <h1>Know Your Permits<br><em>Before You Start</em></h1>
-        <p>We search live building department data + AI — not a static database.</p>
+        <p class="hero-sub">Exact requirements, real fees, and direct portal links — in under 15 seconds.</p>
       </div>
 
-      <!-- Social proof badges (populated from /api/stats) -->
-      <div class="proof-row" id="proof-row">
-        <div class="proof-badge"><strong id="stat-lookups">1,847</strong> lookups</div>
-        <div class="proof-badge"><strong id="stat-cities">312</strong> cities covered</div>
-        <div class="proof-badge">⚡ All 50 states</div>
+      <!-- Social proof -->
+      <div class="proof-strip" id="proof-row">
+        <div class="proof-chip"><strong id="stat-lookups">1,847</strong> lookups done</div>
+        <div class="proof-chip"><strong id="stat-cities">312</strong> cities covered</div>
+        <div class="proof-chip">⚡ All 50 states</div>
       </div>
 
       <!-- Free lookup counter -->
-      <div class="lookup-counter-bar" id="counter-bar">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="lookup-dots" id="lookup-dots"></div>
-          <span id="counter-text">5 free lookups remaining</span>
+      <div class="counter-bar" id="counter-bar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="counter-dots" id="counter-dots"></div>
+          <span class="counter-text" id="counter-text">5 free lookups remaining</span>
         </div>
-        <span class="lookup-upgrade-link" onclick="openUpgrade()">Upgrade →</span>
+        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade →</span>
       </div>
 
-      <!-- Trust line -->
-      <div class="trust-line">
-        Used by HVAC, electrical, roofing &amp; plumbing contractors across all 50 states.
-        Results in <strong>under 15 seconds</strong>.
-      </div>
-
+      <!-- Job type card -->
       <div class="card">
-        <div class="card-title">What's the job?</div>
+        <div class="card-label">What's the job?</div>
         <div class="form-group">
-          <input type="text" id="job_type" placeholder="e.g. HVAC replacement, panel upgrade..." autocomplete="off" />
+          <input type="text" id="job_type" placeholder="e.g. HVAC replacement, panel upgrade, re-roof..." autocomplete="off" />
         </div>
         <div class="quick-chips" id="chips">
-          <div class="chip" onclick="fillJob(this,'HVAC system replacement')">HVAC</div>
-          <div class="chip" onclick="fillJob(this,'200 amp electrical panel upgrade')">Panel Upgrade</div>
-          <div class="chip" onclick="fillJob(this,'roof replacement')">Roofing</div>
-          <div class="chip" onclick="fillJob(this,'water heater replacement')">Water Heater</div>
-          <div class="chip" onclick="fillJob(this,'new plumbing rough-in')">Plumbing</div>
-          <div class="chip" onclick="fillJob(this,'mini split installation')">Mini Split</div>
-          <div class="chip" onclick="fillJob(this,'Level 2 EV charger installation')">EV Charger</div>
-          <div class="chip" onclick="fillJob(this,'standby generator installation')">Generator</div>
-          <div class="chip" onclick="fillJob(this,'attached deck addition')">Deck</div>
-          <div class="chip" onclick="fillJob(this,'solar panel installation')">Solar</div>
+          <div class="chip" onclick="fillJob(this,'HVAC system replacement')">🌡 HVAC</div>
+          <div class="chip" onclick="fillJob(this,'200 amp electrical panel upgrade')">⚡ Panel Upgrade</div>
+          <div class="chip" onclick="fillJob(this,'roof replacement (shingles)')">🏠 Roofing</div>
+          <div class="chip" onclick="fillJob(this,'gas water heater replacement')">🚿 Water Heater</div>
+          <div class="chip" onclick="fillJob(this,'new plumbing rough-in')">🔧 Plumbing</div>
+          <div class="chip" onclick="fillJob(this,'ductless mini split installation')">❄ Mini Split</div>
+          <div class="chip" onclick="fillJob(this,'Level 2 EV charger installation')">🔌 EV Charger</div>
+          <div class="chip" onclick="fillJob(this,'standby generator installation')">⚙ Generator</div>
+          <div class="chip" onclick="fillJob(this,'attached deck addition')">🪵 Deck</div>
+          <div class="chip" onclick="fillJob(this,'residential solar PV installation')">☀ Solar</div>
         </div>
       </div>
 
+      <!-- Location card -->
       <div class="card">
-        <div class="card-title">Where's the job? <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">— tap 📍 for GPS</span></div>
+        <div class="card-label">Where's the job? <span style="font-weight:400;font-size:10px;text-transform:none;color:var(--muted)">tap 📍 for GPS</span></div>
         <div class="row-2" style="margin-bottom:12px">
           <div class="form-group" style="margin:0;position:relative">
             <label>City</label>
@@ -316,53 +576,47 @@
           </div>
         </div>
         <div class="form-group" style="margin:0">
-          <label>Zip Code <span style="font-weight:400;text-transform:none">(optional — improves accuracy)</span></label>
+          <label>ZIP Code <span style="font-weight:400;text-transform:none;font-size:10px;">(optional — improves accuracy)</span></label>
           <input type="text" id="zip" placeholder="77001" maxlength="5" inputmode="numeric" />
         </div>
       </div>
 
-      <button class="btn" id="lookup-btn" onclick="doLookup()" type="button">
-        🔍 Look Up Permits
+      <div class="trust-note">🔒 Live building department data + AI analysis — not a static database.</div>
+
+      <button class="lookup-btn" id="lookup-btn" onclick="doLookup()" type="button">
+        🔍 &nbsp;Look Up Permit Requirements
       </button>
+
     </div><!-- /search-form -->
 
-    <!-- Loading with progress steps -->
+    <!-- Loading -->
     <div id="loading">
-      <div class="spinner"></div>
-      <p style="font-size:15px;margin-bottom:4px;font-weight:700" id="loading-headline">Researching permit requirements...</p>
-      <p style="font-size:12px;color:var(--muted)" id="loading-sub">Checking your specific city &amp; county</p>
+      <div class="spin-ring"></div>
+      <div class="loading-title" id="loading-title">Researching permit requirements...</div>
+      <div class="loading-sub" id="loading-sub">Checking your city, county, and state rules</div>
       <div class="progress-steps">
-        <div class="progress-step" id="step-search">
-          <span class="step-icon">🌐</span>
-          <span>Searching building department records</span>
-        </div>
-        <div class="progress-step" id="step-analyze">
-          <span class="step-icon">🤖</span>
-          <span>Analyzing permit requirements</span>
-        </div>
-        <div class="progress-step" id="step-verify">
-          <span class="step-icon">✅</span>
-          <span>Verifying office &amp; fee info</span>
-        </div>
+        <div class="progress-step" id="step-1"><span class="step-icon">🌐</span><span>Searching building department records</span></div>
+        <div class="progress-step" id="step-2"><span class="step-icon">🤖</span><span>Analyzing permit requirements</span></div>
+        <div class="progress-step" id="step-3"><span class="step-icon">✅</span><span>Verifying fees &amp; contact info</span></div>
       </div>
     </div>
 
     <!-- Results -->
-    <div id="results"></div>
+    <div id="results"><div class="results-inner" id="results-inner"></div></div>
 
   </div><!-- /page-search -->
 
-  <!-- History Page -->
+  <!-- ── History Page ── -->
   <div class="page" id="page-history">
-    <div id="history-content"></div>
+    <div class="page-inner" id="history-content"></div>
   </div>
 
 </div><!-- /app -->
 
 <!-- Install Banner -->
 <div id="install-banner">
-  <div class="install-icon">🧭</div>
-  <div class="install-text">
+  <div class="install-icon">📋</div>
+  <div class="install-text" style="flex:1">
     <strong>Add PermitAssist to your phone</strong>
     <span>Quick access from your home screen</span>
   </div>
@@ -370,46 +624,46 @@
   <button class="install-dismiss" onclick="dismissInstall()">✕</button>
 </div>
 
-<!-- Email Gate Modal -->
+<!-- Email Gate -->
 <div class="gate-overlay" id="email-gate" style="display:none">
   <div class="gate-sheet">
-    <div class="gate-icon">🧭</div>
+    <div class="gate-icon">📋</div>
     <div class="gate-title" id="gate-title">You're clearly finding this useful</div>
-    <div class="gate-sub" id="gate-sub">Drop your email to keep going — your results are ready. Still completely free.</div>
+    <div class="gate-sub" id="gate-sub">Drop your email to keep going — results are ready. Completely free.</div>
     <input class="gate-input" type="email" id="gate-email" placeholder="your@email.com" autocomplete="email" />
-    <button class="btn" onclick="submitGateEmail()" type="button">📋 Show My Permit Requirements</button>
+    <button class="gate-submit" onclick="submitGateEmail()">Show My Permit Requirements →</button>
     <div class="gate-note">🔒 No credit card. No spam. Unsubscribe anytime.</div>
     <span class="gate-skip" id="gate-skip-link" onclick="skipGate()">Skip for now (uses 1 of 5 free lookups)</span>
   </div>
 </div>
 
 <script>
-// ── Constants ──────────────────────────────────────────────────────────────
+// ─── Constants ──────────────────────────────────────────────────────────────
 const HISTORY_KEY = 'pa_history';
 const LOOKUP_KEY  = 'pa_lookups';
 const EMAIL_KEY   = 'pa_email';
-const FREE_LIMIT  = 5;   // 5 free lookups → email capture → subscription required
+const FREE_LIMIT  = 5;
 const UPGRADE_URL = 'https://permitassist.io/#upgrade';
 
-// ── State ──────────────────────────────────────────────────────────────────
-let currentResult         = null;
+// ─── State ──────────────────────────────────────────────────────────────────
+let currentResult = null;
+let pendingResult = null;
 let deferredInstallPrompt = null;
-let pendingResult         = null;
-let progressTimer         = null;
 
-// ── Lookup counter helpers ─────────────────────────────────────────────────
-function getLookupCount() { return parseInt(localStorage.getItem(LOOKUP_KEY) || '0', 10); }
-function incrementLookup() { const n = getLookupCount() + 1; localStorage.setItem(LOOKUP_KEY, String(n)); return n; }
-function hasEmail()        { return !!localStorage.getItem(EMAIL_KEY); }
-function saveEmail(email)  {
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function getLookupCount() { return parseInt(localStorage.getItem(LOOKUP_KEY)||'0',10); }
+function incrementLookup() { const n=getLookupCount()+1; localStorage.setItem(LOOKUP_KEY,String(n)); return n; }
+function hasEmail() { return !!localStorage.getItem(EMAIL_KEY); }
+function saveEmail(email) {
   localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase());
-  fetch('/api/capture-email', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ email: email.trim().toLowerCase(), source: 'gate', ts: Date.now() })
-  }).catch(() => {});
+  fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email.trim().toLowerCase(),source:'gate'})}).catch(()=>{});
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Social proof stats ─────────────────────────────────────────────────────
+// ─── Social proof stats ───────────────────────────────────────────────────────
 async function loadStats() {
   try {
     const r = await fetch('/api/stats');
@@ -418,420 +672,373 @@ async function loadStats() {
     const ec = document.getElementById('stat-cities');
     if (el && d.total_lookups) el.textContent = Number(d.total_lookups).toLocaleString();
     if (ec && d.cities_covered) ec.textContent = Number(d.cities_covered).toLocaleString();
-  } catch(e) { /* non-fatal */ }
+  } catch {}
 }
 
-// ── Counter bar ────────────────────────────────────────────────────────────
+// ─── Counter bar ──────────────────────────────────────────────────────────────
 function refreshCounterBar() {
   const used = getLookupCount();
   const remaining = Math.max(0, FREE_LIMIT - used);
-  const bar    = document.getElementById('counter-bar');
-  const dotsEl = document.getElementById('lookup-dots');
-  const textEl = document.getElementById('counter-text');
+  const bar  = document.getElementById('counter-bar');
+  const dots = document.getElementById('counter-dots');
+  const text = document.getElementById('counter-text');
   if (!bar) return;
-  if (hasEmail()) { bar.style.display = 'none'; return; }
-
-  dotsEl.innerHTML = '';
-  for (let i = 0; i < FREE_LIMIT; i++) {
+  if (hasEmail()) { bar.style.display='none'; return; }
+  dots.innerHTML = '';
+  for (let i=0;i<FREE_LIMIT;i++) {
     const d = document.createElement('div');
-    d.className = 'lookup-dot' + (i < used ? ' used' : '');
-    dotsEl.appendChild(d);
+    d.className = 'c-dot' + (i<used?' used':'');
+    dots.appendChild(d);
   }
-
-  if (remaining === 0) {
-    textEl.textContent = 'Free lookups used — upgrade for unlimited';
+  if (remaining===0) {
+    text.textContent = 'Free lookups used — upgrade for unlimited';
     bar.style.borderColor = 'rgba(239,68,68,0.4)';
   } else {
-    textEl.textContent = `${remaining} free lookup${remaining !== 1 ? 's' : ''} remaining`;
+    text.textContent = `${remaining} free lookup${remaining!==1?'s':''} remaining`;
     bar.style.borderColor = '';
   }
 }
 
-// ── Progress animation ─────────────────────────────────────────────────────
+// ─── Progress ─────────────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 'step-search',  delay: 0,    label: 'Searching building department records...' },
-  { id: 'step-analyze', delay: 3000, label: 'Analyzing permit requirements...' },
-  { id: 'step-verify',  delay: 7000, label: 'Verifying fees & office details...' },
+  {id:'step-1', label:'Searching building department records...', delay:0},
+  {id:'step-2', label:'Analyzing permit requirements...', delay:3200},
+  {id:'step-3', label:'Verifying fees & contact info...', delay:7000},
 ];
-
 function startProgress() {
-  STEPS.forEach(s => {
-    const el = document.getElementById(s.id);
-    if (el) el.className = 'progress-step';
-  });
-  const headline = document.getElementById('loading-headline');
-  const sub      = document.getElementById('loading-sub');
-  if (headline) headline.textContent = 'Researching permit requirements...';
-  if (sub) sub.textContent = 'Live search — this takes 10–15 seconds';
-
-  STEPS.forEach((step, i) => {
-    setTimeout(() => {
-      // Mark previous as done
-      if (i > 0) {
-        const prev = document.getElementById(STEPS[i-1].id);
-        if (prev) prev.className = 'progress-step done';
-      }
-      const el = document.getElementById(step.id);
-      if (el) el.className = 'progress-step active';
-      if (headline) headline.textContent = step.label;
-    }, step.delay);
+  STEPS.forEach(s=>{const e=document.getElementById(s.id); if(e) e.className='progress-step';});
+  STEPS.forEach((s,i)=>{
+    setTimeout(()=>{
+      if (i>0) { const p=document.getElementById(STEPS[i-1].id); if(p) p.className='progress-step done'; }
+      const e=document.getElementById(s.id); if(e) e.className='progress-step active';
+      const t=document.getElementById('loading-title'); if(t) t.textContent=s.label;
+    }, s.delay);
   });
 }
-
 function stopProgress() {
-  STEPS.forEach(s => {
-    const el = document.getElementById(s.id);
-    if (el) el.className = 'progress-step done';
-  });
+  STEPS.forEach(s=>{const e=document.getElementById(s.id); if(e) e.className='progress-step done';});
 }
 
-// ── Email gate ─────────────────────────────────────────────────────────────
-function showGate(isHardBlock = false) {
-  const title    = document.getElementById('gate-title');
-  const sub      = document.getElementById('gate-sub');
-  const skipLink = document.getElementById('gate-skip-link');
-
-  if (isHardBlock) {
-    if (title) title.textContent = '5 free lookups used — upgrade to continue';
-    if (sub) sub.textContent = 'You\'ve maxed out free lookups. Upgrade for unlimited access + saved history — $19/mo, cancel anytime.';
-    if (skipLink) skipLink.style.display = 'none';
+// ─── Email gate ───────────────────────────────────────────────────────────────
+function showGate(hardBlock) {
+  const title = document.getElementById('gate-title');
+  const sub   = document.getElementById('gate-sub');
+  const skip  = document.getElementById('gate-skip-link');
+  if (hardBlock) {
+    if (title) title.textContent = '5 free lookups used';
+    if (sub) sub.textContent = 'Upgrade for unlimited access — $19/mo, cancel anytime. Or drop your email and we\'ll give you 5 more free.';
+    if (skip) skip.style.display='none';
   } else {
     if (title) title.textContent = "You're clearly finding this useful";
-    if (sub) sub.textContent = 'Drop your email to keep going — your results are ready. Still completely free.';
-    if (skipLink) skipLink.style.display = 'block';
+    if (sub) sub.textContent = "Drop your email to keep going — results are ready. Completely free.";
+    if (skip) skip.style.display='block';
   }
-
-  document.getElementById('email-gate').style.display = 'flex';
-  setTimeout(() => document.getElementById('gate-email').focus(), 350);
+  document.getElementById('email-gate').style.display='flex';
+  setTimeout(()=>document.getElementById('gate-email').focus(), 350);
 }
-
-function hideGate() { document.getElementById('email-gate').style.display = 'none'; }
-
+function hideGate() { document.getElementById('email-gate').style.display='none'; }
 function submitGateEmail() {
-  const emailInput = document.getElementById('gate-email');
-  const val = emailInput.value.trim();
+  const inp = document.getElementById('gate-email');
+  const val = inp.value.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-    emailInput.style.borderColor = 'var(--red)';
-    emailInput.placeholder = 'Please enter a valid email';
-    emailInput.focus();
-    return;
+    inp.style.borderColor='var(--red)'; inp.focus(); return;
   }
   saveEmail(val);
   incrementLookup();
-  hideGate();
-  refreshCounterBar();
+  hideGate(); refreshCounterBar();
   if (pendingResult) showPendingResult();
 }
-
 function skipGate() {
-  const used = getLookupCount();
-  if (used >= FREE_LIMIT) {
-    // Hard block — must provide email
-    const emailInput = document.getElementById('gate-email');
-    emailInput.style.borderColor = 'var(--brand)';
-    emailInput.focus();
-    return;
-  }
-  incrementLookup();
-  hideGate();
-  refreshCounterBar();
+  if (getLookupCount() >= FREE_LIMIT) { document.getElementById('gate-email').focus(); return; }
+  incrementLookup(); hideGate(); refreshCounterBar();
   if (pendingResult) showPendingResult();
 }
-
 function showPendingResult() {
   if (!pendingResult) return;
-  const { data, job, city, state } = pendingResult;
-  pendingResult = null;
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('results').style.display = 'block';
-  renderResults(data, job, city, state);
-  document.getElementById('page-search').scrollTop = 0;
+  const {data,job,city,state} = pendingResult; pendingResult = null;
+  document.getElementById('loading').style.display='none';
+  document.getElementById('results').style.display='block';
+  document.getElementById('results-inner').innerHTML='';
+  renderResults(data,job,city,state);
+  document.getElementById('page-search').scrollTop=0;
 }
 
-// ── PWA install ────────────────────────────────────────────────────────────
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
+// ─── PWA ──────────────────────────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredInstallPrompt=e;
   if (!localStorage.getItem('pa_install_dismissed')) {
     document.getElementById('install-banner').classList.add('show');
-    document.getElementById('install-nav-btn').style.display = 'block';
+    document.getElementById('install-nav-btn').style.display='block';
   }
 });
 function installApp() {
   if (!deferredInstallPrompt) return;
   deferredInstallPrompt.prompt();
-  deferredInstallPrompt.userChoice.then(() => {
-    deferredInstallPrompt = null;
+  deferredInstallPrompt.userChoice.then(()=>{
+    deferredInstallPrompt=null;
     document.getElementById('install-banner').classList.remove('show');
-    document.getElementById('install-nav-btn').style.display = 'none';
+    document.getElementById('install-nav-btn').style.display='none';
   });
 }
 function dismissInstall() {
-  localStorage.setItem('pa_install_dismissed', '1');
+  localStorage.setItem('pa_install_dismissed','1');
   document.getElementById('install-banner').classList.remove('show');
 }
 
-// ── Offline ────────────────────────────────────────────────────────────────
+// ─── Offline ──────────────────────────────────────────────────────────────────
 function updateOnline() {
-  const b = document.getElementById('offline-badge');
+  const b=document.getElementById('offline-badge');
   navigator.onLine ? b.classList.remove('show') : b.classList.add('show');
 }
-window.addEventListener('online', updateOnline);
-window.addEventListener('offline', updateOnline);
+window.addEventListener('online',updateOnline);
+window.addEventListener('offline',updateOnline);
 updateOnline();
 
-// ── Service worker ─────────────────────────────────────────────────────────
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.warn);
+// ─── Service worker ───────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 
-// ── Tabs ───────────────────────────────────────────────────────────────────
+// ─── Tabs ──────────────────────────────────────────────────────────────────────
 function showTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  document.getElementById('page-' + tab).classList.add('active');
-  if (tab === 'history') renderHistory();
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('page-'+tab).classList.add('active');
+  if (tab==='history') renderHistory();
 }
 
-// ── GPS ────────────────────────────────────────────────────────────────────
+// ─── GPS ───────────────────────────────────────────────────────────────────────
 async function useGPS() {
-  const btn = document.querySelector('.gps-btn');
-  btn.textContent = '⏳';
+  const btn=document.querySelector('.gps-btn'); btn.textContent='⏳';
   try {
-    const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000 })
-    );
-    const { latitude: lat, longitude: lng } = pos.coords;
+    const pos = await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:8000}));
+    const {latitude:lat,longitude:lng} = pos.coords;
     const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-    const d = await r.json();
-    const a = d.address || {};
-    const stateMap = {'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA','Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA','Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD','Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT','Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY'};
-    const city  = a.city || a.town || a.village || a.county || '';
-    const state = stateMap[a.state || ''] || (a.state || '').slice(0,2).toUpperCase();
-    const zip   = (a.postcode || '').slice(0,5);
-    if (city)  document.getElementById('city').value  = city;
-    if (state) document.getElementById('state').value = state;
-    if (zip)   document.getElementById('zip').value   = zip;
-    btn.textContent = '✅';
-    setTimeout(() => btn.textContent = '📍', 2000);
-  } catch {
-    btn.textContent = '📍';
-    alert('Could not get location. Please enter city manually.');
-  }
+    const d = await r.json(); const a=d.address||{};
+    const SM={'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA','Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA','Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD','Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT','Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY'};
+    const city=a.city||a.town||a.village||a.county||'';
+    const state=SM[a.state||'']||(a.state||'').slice(0,2).toUpperCase();
+    const zip=(a.postcode||'').slice(0,5);
+    if (city) document.getElementById('city').value=city;
+    if (state) document.getElementById('state').value=state;
+    if (zip) document.getElementById('zip').value=zip;
+    btn.textContent='✅'; setTimeout(()=>btn.textContent='📍',2000);
+  } catch { btn.textContent='📍'; alert('Could not get location. Enter city manually.'); }
 }
 
-// ── Job chips ──────────────────────────────────────────────────────────────
+// ─── Chips ────────────────────────────────────────────────────────────────────
 function fillJob(el, text) {
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  document.getElementById('job_type').value = text;
+  document.getElementById('job_type').value=text;
 }
 
-// ── Main lookup ────────────────────────────────────────────────────────────
+// ─── Main lookup ──────────────────────────────────────────────────────────────
 async function doLookup() {
   const job   = document.getElementById('job_type').value.trim();
   const city  = document.getElementById('city').value.trim();
   const state = document.getElementById('state').value;
   const zip   = document.getElementById('zip').value.trim();
-
-  if (!job || !city || !state) {
-    alert('Please enter the job type, city, and state.');
-    return;
-  }
+  if (!job||!city||!state) { alert('Please enter the job type, city, and state.'); return; }
 
   const used = getLookupCount();
-
-  // Hard gate — free limit exceeded and no email
   if (used >= FREE_LIMIT && !hasEmail()) {
-    pendingResult = { data: null, job, city, state };
-    showGate(true);
-    return;
+    pendingResult = {data:null,job,city,state};
+    showGate(true); return;
   }
 
-  // Hide form, show loading + progress
-  document.getElementById('search-form').style.display = 'none';
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('results').style.display = 'none';
+  document.getElementById('search-form').style.display='none';
+  document.getElementById('loading').style.display='block';
+  document.getElementById('results').style.display='none';
+  document.getElementById('results-inner').innerHTML='';
   startProgress();
 
   try {
-    const res = await fetch('/api/permit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ job_type: job, city, state, zip_code: zip }),
+    const res = await fetch('/api/permit',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({job_type:job,city,state,zip_code:zip}),
     });
-
     stopProgress();
-
-    // Handle rate limit
-    if (res.status === 429) {
-      const err = await res.json();
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('search-form').style.display = 'block';
-      alert('You\'ve hit the hourly limit for new lookups. Upgrade for unlimited access, or try again in an hour.');
+    if (res.status===429) {
+      document.getElementById('loading').style.display='none';
+      document.getElementById('search-form').style.display='block';
+      alert("You've hit the hourly limit. Upgrade for unlimited access or try again in an hour.");
       return;
     }
-
     const data = await res.json();
-    if (data.error && !data.offline) throw new Error(data.error);
+    if (data.error) throw new Error(data.error);
 
-    currentResult = { job, city, state, zip, data, ts: Date.now() };
+    currentResult = {job,city,state,zip,data,ts:Date.now()};
     saveToHistory(currentResult);
 
-    // Show email gate on 3rd lookup (soft prompt — they've proven value by now)
-    if (used === 2 && !hasEmail()) {
-      pendingResult = { data, job, city, state };
-      showGate(false);
-      return;
+    // Soft email gate at 3rd lookup
+    if (used===2 && !hasEmail()) {
+      pendingResult = {data,job,city,state};
+      showGate(false); return;
     }
 
     incrementLookup();
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('results').style.display = 'block';
-    renderResults(data, job, city, state);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('results').style.display='block';
+    renderResults(data,job,city,state);
     refreshCounterBar();
-    document.getElementById('page-search').scrollTop = 0;
-
+    document.getElementById('page-search').scrollTop=0;
   } catch(err) {
     stopProgress();
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('search-form').style.display = 'block';
-    alert('Error: ' + err.message);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('search-form').style.display='block';
+    alert('Error: '+err.message);
   }
 }
 
 function newSearch() {
-  document.getElementById('search-form').style.display = 'block';
-  document.getElementById('results').style.display = 'none';
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  document.getElementById('search-form').style.display='block';
+  document.getElementById('results').style.display='none';
+  document.getElementById('results-inner').innerHTML='';
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
   refreshCounterBar();
-  document.getElementById('page-search').scrollTop = 0;
+  document.getElementById('page-search').scrollTop=0;
 }
+function openUpgrade() { window.open(UPGRADE_URL,'_blank'); }
 
-function openUpgrade() { window.open(UPGRADE_URL, '_blank'); }
-
-// ── Render results ─────────────────────────────────────────────────────────
+// ─── Render results ───────────────────────────────────────────────────────────
 function renderResults(d, job, city, state) {
-  const conf      = (d.confidence || 'medium').toLowerCase();
-  const confLabel = { high: '✅ High Confidence', medium: '⚠️ Medium Confidence', low: '❓ Low Confidence' }[conf] || conf;
-  const confClass = { high: 'badge-green', medium: 'badge-yellow', low: 'badge-red' }[conf] || 'badge-blue';
-  const cached    = d._cached ? ' ⚡' : '';
-  const permits   = d.permits_required || [];
-  const insps     = d.inspections || [];
-  const tips      = d.pro_tips || [];
-  const mistakes  = d.common_mistakes || [];
-  const tl        = d.approval_timeline || {};
+  const conf      = (d.confidence||'medium').toLowerCase();
+  const confLabel = {high:'✅ High Confidence', medium:'⚠️ Medium Confidence', low:'❓ Low Confidence'}[conf]||conf;
+  const confClass = {high:'badge-green', medium:'badge-yellow', low:'badge-red'}[conf]||'badge-blue';
+  const permits   = d.permits_required||[];
+  const insps     = d.inspections||[];
+  const tips      = d.pro_tips||[];
+  const mistakes  = d.common_mistakes||[];
+  const tl        = d.approval_timeline||{};
   const used      = getLookupCount();
-  const remaining = Math.max(0, FREE_LIMIT - used);
+  const remaining = Math.max(0,FREE_LIMIT-used);
+  const dataSource= d.data_source||d._meta?.city_match_level||'';
+  const isCached  = d._cached||false;
+
+  // Check if job clearly doesn't require a permit
+  const noneRequired = permits.length>0 && permits.every(p=>p.required===false);
+  const anyMaybe     = permits.some(p=>p.required==='maybe');
+
+  let html = '';
 
   // Upgrade bar
-  let upgradeHtml = '';
-  // Show upgrade bar when: 3+ lookups used (regardless of email status)
-  if (used >= FREE_LIMIT - 2) {
-    const upgradeTitle = remaining > 0
-      ? `⚡ ${remaining} free lookup${remaining !== 1 ? 's' : ''} left`
-      : '🔒 Free lookups used — upgrade to continue';
-    upgradeHtml = `
-      <div class="upgrade-bar show" id="upgrade-bar">
-        <div class="upgrade-bar-header">
-          <div class="upgrade-bar-title">${upgradeTitle}</div>
-          <button class="upgrade-bar-dismiss" onclick="document.getElementById('upgrade-bar').classList.remove('show')" type="button">✕</button>
-        </div>
-        <div class="upgrade-bar-sub">Unlimited lookups + saved history for $19/mo. Cancel anytime.</div>
-        <button class="upgrade-bar-btn" onclick="openUpgrade()" type="button">Upgrade — $19/mo</button>
-      </div>`;
+  if (used >= FREE_LIMIT-2) {
+    const title = remaining>0 ? `⚡ ${remaining} free lookup${remaining!==1?'s':''} left` : '🔒 Free lookups used';
+    html += `<div class="upgrade-bar show" id="upgrade-bar">
+      <div class="upgrade-bar-top"><div class="upgrade-bar-title">${title}</div>
+      <button class="upgrade-bar-dismiss" onclick="document.getElementById('upgrade-bar').classList.remove('show')">✕</button></div>
+      <div class="upgrade-bar-sub">Unlimited lookups + saved history — $19/mo. Cancel anytime.</div>
+      <button class="upgrade-bar-btn" onclick="openUpgrade()">Upgrade — $19/mo</button>
+    </div>`;
   }
 
-  // URL warning (if server flagged a dead link)
-  const urlWarnHtml = d._url_warning
-    ? `<div class="url-warning">⚠️ ${esc(d._url_warning)}</div>` : '';
+  // URL warning
+  if (d._url_warning) {
+    html += `<div class="url-warning">⚠️ ${esc(d._url_warning)}</div>`;
+  }
 
-  let html = upgradeHtml + `
-    <div class="result-hero">
-      <div class="result-job">${esc(job)}</div>
-      <div class="result-loc">📍 ${esc(city)}, ${esc(state)}</div>
-      <div class="result-meta">
-        <span class="badge ${confClass}">${confLabel}${cached}</span>
-        ${insps.length ? `<span class="badge badge-blue">🔍 ${insps.length} Inspection${insps.length!==1?'s':''}</span>` : ''}
-        ${permits.length > 1 ? `<span class="badge badge-blue">📋 ${permits.length} Permits</span>` : ''}
-      </div>
+  // Data source note for non-city-database results
+  if (dataSource && dataSource !== 'city' && dataSource !== 'city_database') {
+    const sourceLabels = {
+      county: '📍 County-level data — city not in our database; county permit office shown',
+      state:  '🌐 State-level fallback — specific city data searched live via web',
+      web_search: '🌐 Web search data — verified via live building department search',
+      general_knowledge: '📚 General knowledge — call to verify exact requirements',
+    };
+    const note = sourceLabels[dataSource] || `📍 Data source: ${dataSource}`;
+    html += `<div class="data-source-note">ℹ️ ${esc(note)}</div>`;
+  }
+
+  // Result hero
+  html += `<div class="result-hero">
+    <div class="result-job">${esc(job)}</div>
+    <div class="result-loc">📍 ${esc(city)}, ${esc(state)}</div>
+    <div class="result-badges">
+      <span class="badge ${confClass}">${confLabel}${isCached?' ⚡':''}</span>
+      ${insps.length ? `<span class="badge badge-blue">🔍 ${insps.length} Inspection${insps.length!==1?'s':''}</span>` : ''}
+      ${permits.length>1 ? `<span class="badge badge-blue">📋 ${permits.length} Permits Needed</span>` : ''}
+      ${noneRequired ? `<span class="badge badge-green">✅ No Permit Required</span>` : ''}
     </div>
+  </div>`;
 
-    ${urlWarnHtml}
+  // No permit required — special callout
+  if (noneRequired) {
+    const reason = permits[0]?.notes || 'This job type is typically exempt from permit requirements in this jurisdiction.';
+    html += `<div class="no-permit-card">
+      <div class="no-permit-icon">✅</div>
+      <div class="no-permit-title">No Permit Required</div>
+      <div class="no-permit-sub">${esc(reason)}</div>
+    </div>`;
+    // Still show tips and disclaimer even if no permit needed
+  } else {
+    // Apply CTA — show appropriate type
+    const mainPermit = permits.find(p=>p.required===true)||permits[0];
+    const permitType = mainPermit?.permit_type||'Permit';
+    const portalSel  = mainPermit?.portal_selection||'';
 
-${ (() => {
-      const permits = d.permits_required || [];
-      const mainPermit = permits.find(p => p.required === true) || permits[0];
-      const permitType = mainPermit?.permit_type || 'Permit';
-      const portalSelection = mainPermit?.portal_selection || '';
-      // Only show green Apply button if we have a real online portal (not a PDF)
-      if (d.apply_url && !d.apply_url.toLowerCase().endsWith('.pdf')) {
-        return `
-    <a class="apply-cta" href="${esc(d.apply_url)}" target="_blank" rel="noopener" id="apply-cta-btn">
-      <div class="apply-cta-left">
-        <div class="apply-cta-label">Next Step &rarr; Apply Online</div>
-        <div class="apply-cta-title">${esc(permitType)}</div>
-        ${portalSelection ? `<div class="apply-cta-sub">Select: <strong>${esc(portalSelection)}</strong> in the portal</div>` : `<div class="apply-cta-sub">${esc(d.applying_office || 'Official permit portal')}</div>`}
-      </div>
-      <div class="apply-cta-arrow">&#128196;</div>
-    </a>
-    <div class="apply-cta-note">Opens ${esc(d.applying_office || 'official government portal')} &bull; Have your contractor license &amp; project details ready</div>
-    `;
-      } else if (d.apply_pdf || (d.apply_url && d.apply_url.toLowerCase().endsWith('.pdf'))) {
-        // PDF-only city — show paper application notice instead
-        const pdfUrl = d.apply_pdf || d.apply_url;
-        return `
-    <div class="paper-app-notice">
-      <div class="paper-app-icon">&#128203;</div>
-      <div class="paper-app-body">
-        <div class="paper-app-title">Paper Application Required</div>
-        <div class="paper-app-sub">This city uses paper permit applications. Download the form, fill it out, and bring it in person.</div>
-        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-          <a href="${esc(pdfUrl)}" target="_blank" rel="noopener" class="paper-app-btn">&#128229; Download Form</a>
-          ${d.apply_address ? `<div style="font-size:12px;color:rgba(255,255,255,0.8);padding-top:4px">&#128205; ${esc(d.apply_address)}</div>` : ''}
+    if (d.apply_url) {
+      html += `<a class="apply-online" href="${esc(d.apply_url)}" target="_blank" rel="noopener">
+        <div class="apply-left">
+          <div class="apply-label">Next Step → Apply Online</div>
+          <div class="apply-title">${esc(permitType)}</div>
+          ${portalSel ? `<div class="apply-portal">Select: <strong>${esc(portalSel)}</strong></div>` : `<div class="apply-portal">${esc(d.applying_office||'Official permit portal')}</div>`}
         </div>
-      </div>
-    </div>
-    `;
-      } else if (d.apply_address || d.apply_phone) {
-        // No online portal — in-person or phone only
-        return `
-    <div class="paper-app-notice">
-      <div class="paper-app-icon">&#127970;</div>
-      <div class="paper-app-body">
-        <div class="paper-app-title">In-Person Application</div>
-        <div class="paper-app-sub">Apply in person at ${esc(d.applying_office || 'the permit office')}.</div>
-        <div style="margin-top:8px;font-size:13px;color:rgba(255,255,255,0.85);">
-          ${d.apply_address ? `&#128205; ${esc(d.apply_address)}<br>` : ''}
-          ${d.apply_phone ? `&#128222; ${esc(d.apply_phone)}` : ''}
+        <div class="apply-arrow">→</div>
+      </a>
+      <div class="apply-note">Opens ${esc(d.applying_office||'official government portal')} &bull; Have your contractor license &amp; project details ready</div>`;
+    } else if (d.apply_pdf) {
+      html += `<div class="apply-alt">
+        <div class="apply-alt-icon">📄</div>
+        <div class="apply-alt-body">
+          <div class="apply-alt-title">Paper Application Required</div>
+          <div class="apply-alt-sub">This city uses paper permit applications. Download, fill out, and submit in person${d.apply_address ? ' at ' + esc(d.apply_address) : ''}.</div>
+          <div class="apply-alt-btns">
+            <a href="${esc(d.apply_pdf)}" target="_blank" rel="noopener" class="apply-alt-btn">⬇ Download Form</a>
+          </div>
         </div>
-      </div>
-    </div>
-    `;
-      }
-      return '';
-    })() }
+      </div>`;
+    } else {
+      // In-person / phone only
+      html += `<div class="apply-alt">
+        <div class="apply-alt-icon">🏢</div>
+        <div class="apply-alt-body">
+          <div class="apply-alt-title">Apply In Person or by Phone</div>
+          <div class="apply-alt-sub">${esc(d.applying_office||'Contact the local building department')}${d.apply_address ? '<br>📍 ' + esc(d.apply_address) : ''}</div>
+          <div class="apply-alt-btns">
+            ${d.apply_phone && d.apply_phone.match(/[\d\-\(\)\+\s]{7,}/) ? `<button class="apply-alt-btn" onclick="callOffice('${esc(d.apply_phone)}')">📞 ${esc(d.apply_phone)}</button>` : `<a href="${esc(d.apply_google_maps||'https://www.google.com/maps')}" target="_blank" class="apply-alt-btn">🗺️ Find Office</a>`}
+          </div>
+        </div>
+      </div>`;
+    }
 
-    <div class="action-row">
-      <button class="action-btn" onclick="shareResult()" type="button">📤 Share</button>
-      <button class="action-btn" onclick="copyResult()"  type="button">📋 Copy</button>
-    </div>
-    <div class="action-row" style="margin-bottom:16px">
-      <button class="action-btn" onclick="emailResult()" type="button">📧 Email to Me</button>
-      <button class="action-btn" onclick="callPermitOffice('${esc(d.apply_phone||'')}','${esc(d.applying_office||'')}')">📞 Call Office</button>
-    </div>
-    <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>`;
+    // Google Maps fallback if we have a URL but also show maps link
+    if (d.apply_google_maps && !d.apply_url && !d.apply_pdf) {
+      html += `<div class="maps-banner">🗺️ <a href="${esc(d.apply_google_maps)}" target="_blank">Find permit office on Google Maps →</a></div>`;
+    }
+  }
 
-  // Permits
-  if (permits.length) {
+  // Action buttons
+  html += `<div class="action-row">
+    <button class="action-btn" onclick="shareResult()">📤 Share</button>
+    <button class="action-btn" onclick="copyResult()">📋 Copy Summary</button>
+  </div>
+  <div class="action-row" style="margin-bottom:16px">
+    <button class="action-btn" onclick="emailResult()">📧 Email to Me</button>
+    <button class="action-btn" onclick="callOffice('${esc(d.apply_phone||'')}','${esc(d.applying_office||'')}','${esc(d.apply_google_maps||'')}')">📞 Call Office</button>
+  </div>
+  <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>`;
+
+  // Permits required card
+  if (permits.length && !noneRequired) {
     html += `<div class="card"><div class="section-label">Permits Required</div>`;
     for (const p of permits) {
-      const icon = p.required === true ? '✅' : p.required === 'maybe' ? '⚠️' : '❌';
+      const icon = p.required===true?'✅':p.required==='maybe'?'⚠️':'❌';
       html += `<div class="permit-row">
         <div class="permit-icon">${icon}</div>
         <div>
           <div class="permit-name">${esc(p.permit_type||'')}</div>
-          ${p.portal_selection ? `<div class="permit-note" style="color:var(--brand); font-weight:600;">&#128196; Select: ${esc(p.portal_selection)}</div>` : ''}
-          ${p.notes ? `<div class="permit-note">${esc(p.notes)}</div>` : ''}
+          ${p.portal_selection?`<div class="permit-portal">Select: ${esc(p.portal_selection)}</div>`:''}
+          ${p.notes?`<div class="permit-note">${esc(p.notes)}</div>`:''}
         </div>
       </div>`;
     }
@@ -839,203 +1046,205 @@ ${ (() => {
   }
 
   // Where to apply
-  html += `<div class="card"><div class="section-label">Where to Apply</div>`;
-  if (d.applying_office) html += `<div class="info-row"><div class="info-key">Department</div><div class="info-val">${esc(d.applying_office)}</div></div>`;
-  if (d.apply_url)       html += `<div class="info-row"><div class="info-key">Online Portal</div><div class="info-val"><a href="${esc(d.apply_url)}" target="_blank" rel="noopener">${esc(d.apply_url.replace('https://','').split('/')[0])}</a></div></div>`;
-  if (d.apply_address)   html += `<div class="info-row"><div class="info-key">Address</div><div class="info-val">${esc(d.apply_address)}</div></div>`;
-  if (d.fee_range)       html += `<div class="info-row"><div class="info-key">💰 Fees</div><div class="info-val">${esc(d.fee_range)}</div></div>`;
-  if (d.license_required)html += `<div class="info-row"><div class="info-key">📜 Who Pulls</div><div class="info-val">${esc(d.license_required)}</div></div>`;
-  if (tl.simple)         html += `<div class="info-row"><div class="info-key">⏱ Simple</div><div class="info-val">${esc(tl.simple)}</div></div>`;
-  if (tl.complex)        html += `<div class="info-row"><div class="info-key">⏱ Plan Review</div><div class="info-val">${esc(tl.complex)}</div></div>`;
-  html += `</div>`;
+  const hasOfficeInfo = d.applying_office||d.apply_url||d.apply_address||d.fee_range||d.license_required||tl.simple||tl.complex||d.apply_phone;
+  if (hasOfficeInfo) {
+    html += `<div class="card"><div class="section-label">Permit Details</div>`;
+    if (d.applying_office) html += row('🏢 Department', d.applying_office);
+    if (d.apply_url)       html += row('🌐 Portal', `<a href="${esc(d.apply_url)}" target="_blank">${esc(d.apply_url.replace('https://','').split('/')[0])}</a>`);
+    if (d.apply_phone && d.apply_phone.match(/[\d\-\(\)\+\s]{7,}/))
+                           html += row('📞 Phone', d.apply_phone);
+    if (d.apply_address)   html += row('📍 Address', d.apply_address);
+    if (d.fee_range)       html += row('💰 Fees', d.fee_range, 'highlight');
+    if (d.license_required)html += row('📜 Who Pulls', d.license_required);
+    if (tl.simple)         html += row('⏱ Simple Jobs', tl.simple);
+    if (tl.complex)        html += row('⏱ Plan Review', tl.complex);
+    html += `</div>`;
+  }
 
   // Inspections
   if (insps.length) {
     html += `<div class="card"><div class="section-label">Required Inspections</div>`;
-    insps.forEach((ins, i) => {
+    insps.forEach((ins,i)=>{
       html += `<div class="insp-item">
         <div class="insp-header"><div class="step-dot">${i+1}</div><div class="insp-name">${esc(ins.stage||'')}</div></div>
         <div class="insp-desc">${esc(ins.description||'')}</div>
-        ${ins.timing ? `<div class="insp-when">📅 ${esc(ins.timing)}</div>` : ''}
+        ${ins.timing?`<div class="insp-when">📅 ${esc(ins.timing)}</div>`:''}
       </div>`;
     });
     html += `</div>`;
   }
 
-  if (tips.length)    html += `<div class="card"><div class="section-label">💡 Pro Tips</div>${tips.map(t=>`<div class="tip-item">${esc(t)}</div>`).join('')}</div>`;
-  if (mistakes.length)html += `<div class="card"><div class="section-label">⚠️ Common Mistakes</div>${mistakes.map(m=>`<div class="tip-item">${esc(m)}</div>`).join('')}</div>`;
-  if (d.disclaimer)   html += `<div class="disclaimer-box">📌 ${esc(d.disclaimer)}</div>`;
+  // Pro tips
+  if (tips.length) {
+    html += `<div class="card"><div class="section-label">💡 Pro Tips</div>`;
+    tips.forEach(t=>{ html += `<div class="tip-item">${esc(t)}</div>`; });
+    html += `</div>`;
+  }
 
-  // Feedback row
-  html += `
-    <div class="feedback-row">
-      <span style="font-size:12px;color:var(--muted)">Something look wrong?</span>
-      <button class="feedback-btn" onclick="submitFeedback()" type="button">⚠️ Flag this result</button>
-      <span class="feedback-sent" id="feedback-sent">✅ Reported — we'll fix it</span>
-    </div>`;
+  // Common mistakes
+  if (mistakes.length) {
+    html += `<div class="card"><div class="section-label">⚠️ Common Mistakes</div>`;
+    mistakes.forEach(m=>{ html += `<div class="tip-item">${esc(m)}</div>`; });
+    html += `</div>`;
+  }
 
-  html += `<button class="new-search-btn" onclick="newSearch()" type="button">← New Search</button>`;
+  // Disclaimer
+  if (d.disclaimer) {
+    html += `<div class="disclaimer-box">📌 ${esc(d.disclaimer)}</div>`;
+  }
 
-  document.getElementById('results').innerHTML = html;
+  // Feedback + new search
+  html += `<div class="feedback-row">
+    <span style="font-size:12px;color:var(--muted)">Something wrong?</span>
+    <button class="flag-btn" onclick="submitFeedback()">⚠️ Flag result</button>
+    <span class="feedback-sent" id="feedback-sent">✅ Reported</span>
+  </div>
+  <button class="new-search-btn" onclick="newSearch()">← New Search</button>`;
+
+  document.getElementById('results-inner').innerHTML = html;
 }
 
-// ── Feedback ───────────────────────────────────────────────────────────────
+// ─── Helper for info rows ─────────────────────────────────────────────────────
+function row(label, val, cls) {
+  return `<div class="info-row">
+    <div class="info-key">${label}</div>
+    <div class="info-val${cls?' '+cls:''}">${typeof val==='string'&&!val.startsWith('<')?esc(val):val}</div>
+  </div>`;
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function callOffice(phone, office, mapsUrl) {
+  if (phone && phone.match(/[\d\-\(\)\+\s]{7,}/)) {
+    window.location.href = 'tel:' + phone.replace(/[^\d\+]/g,'');
+  } else if (mapsUrl) {
+    window.open(mapsUrl,'_blank');
+  } else if (office) {
+    window.open('https://www.google.com/search?q='+encodeURIComponent(office+' permit office phone'),'_blank');
+  } else {
+    window.open('https://www.google.com/search?q=local+building+permit+office','_blank');
+  }
+}
+
 function submitFeedback() {
   if (!currentResult) return;
-  const { job, city, state } = currentResult;
-  const issue = prompt('What looks wrong? (optional — helps us fix it faster)') || '';
-  fetch('/api/feedback', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ job_type: job, city, state, issue }),
-  }).catch(() => {});
-  const btn  = document.querySelector('.feedback-btn');
+  const {job,city,state} = currentResult;
+  const issue = prompt('What looks wrong? (optional)')||'';
+  fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({job_type:job,city,state,issue})}).catch(()=>{});
+  const btn = document.querySelector('.flag-btn');
   const sent = document.getElementById('feedback-sent');
-  if (btn)  btn.style.display  = 'none';
-  if (sent) sent.style.display = 'block';
+  if (btn) btn.style.display='none';
+  if (sent) sent.style.display='block';
 }
 
-// ── Share / Copy / Email ───────────────────────────────────────────────────
 function shareResult() {
   if (!currentResult) return;
-  const { job, city, state } = currentResult;
+  const {job,city,state} = currentResult;
   const text = `PermitAssist: ${job} in ${city}, ${state}\n${window.location.origin}`;
-  if (navigator.share) {
-    navigator.share({ title: 'PermitAssist', text, url: window.location.origin });
-  } else {
-    navigator.clipboard.writeText(text).then(() => showCopyFeedback('✅ Link copied!'));
-  }
+  if (navigator.share) navigator.share({title:'PermitAssist',text,url:window.location.origin});
+  else navigator.clipboard.writeText(text).then(()=>showCopy('✅ Link copied!'));
 }
 
 function copyResult() {
   if (!currentResult) return;
-  const { job, city, state, data: d } = currentResult;
+  const {job,city,state,data:d} = currentResult;
   let t = `PERMIT RESEARCH: ${job}\nLocation: ${city}, ${state}\n\n`;
   for (const p of (d.permits_required||[])) {
     const req = p.required===true?'✅ YES':p.required==='maybe'?'⚠️ MAYBE':'❌ NO';
     t += `  ${req} — ${p.permit_type}\n`;
+    if (p.portal_selection) t += `     Select: "${p.portal_selection}"\n`;
     if (p.notes) t += `     ${p.notes}\n`;
   }
   t += '\n';
-  if (d.applying_office) t += `WHERE: ${d.applying_office}\n`;
-  if (d.apply_url)       t += `APPLY: ${d.apply_url}\n`;
-  if (d.fee_range)       t += `FEE:   ${d.fee_range}\n`;
-  if (d.approval_timeline?.simple) t += `TIME:  ${d.approval_timeline.simple}\n`;
-  t += `\nPermitAssist — permitassist.io`;
-  navigator.clipboard.writeText(t)
-    .then(() => showCopyFeedback('✅ Copied to clipboard!'))
-    .catch(() => alert(t));
+  if (d.applying_office) t += `APPLY TO: ${d.applying_office}\n`;
+  if (d.apply_url) t += `PORTAL: ${d.apply_url}\n`;
+  if (d.apply_phone) t += `PHONE: ${d.apply_phone}\n`;
+  if (d.fee_range) t += `FEE: ${d.fee_range}\n`;
+  if (d.approval_timeline?.simple) t += `TIMELINE: ${d.approval_timeline.simple}\n`;
+  if (d.license_required) t += `LICENSE: ${d.license_required}\n`;
+  t += '\nPermitAssist — permitassist.io';
+  navigator.clipboard.writeText(t).then(()=>showCopy('✅ Copied!')).catch(()=>alert(t));
 }
 
-function showCopyFeedback(msg) {
+function showCopy(msg) {
   const el = document.getElementById('copy-feedback');
   if (!el) return;
-  el.textContent = msg;
-  el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 2500);
+  el.textContent=msg; el.style.display='block';
+  setTimeout(()=>el.style.display='none',2500);
 }
 
 function emailResult() {
   if (!currentResult) return;
-  const { job, city, state, data } = currentResult;
-  const stored = localStorage.getItem(EMAIL_KEY) || '';
+  const {job,city,state,data} = currentResult;
+  const stored = localStorage.getItem(EMAIL_KEY)||'';
   const doSend = (email) => {
-    fetch('/api/email-report', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ email, job, city, state, data }),
-    })
-    .then(r=>r.json())
-    .then(r=>alert(r.sent ? `✅ Report sent to ${email}` : 'Could not send — try Copy instead.'))
-    .catch(()=>alert('Could not send — try Copy instead.'));
+    fetch('/api/email-report',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,job,city,state,data})})
+    .then(r=>r.json()).then(r=>alert(r.sent?`✅ Sent to ${email}`:'Could not send — use Copy instead.'))
+    .catch(()=>alert('Could not send — use Copy instead.'));
   };
   if (stored) { doSend(stored); return; }
-  const addr = prompt('Enter your email to receive this permit report:');
+  const addr = prompt('Enter your email:');
   if (addr && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) { saveEmail(addr); doSend(addr); }
 }
 
-function callPermitOffice(phone, office) {
-  if (phone && phone.match(/[\d\-\(\)\+\s]{7,}/)) {
-    const digits = phone.replace(/[^\d\+]/g, '');
-    window.location.href = `tel:${digits}`;
-  } else if (office) {
-    // Open a Google search for the office phone number
-    const query = encodeURIComponent(office + ' permit office phone number');
-    window.open(`https://www.google.com/search?q=${query}`, '_blank');
-  } else {
-    window.open('https://www.google.com/search?q=local+building+permit+office+phone+number', '_blank');
-  }
-}
-
-// ── History ────────────────────────────────────────────────────────────────
+// ─── History ──────────────────────────────────────────────────────────────────
 function saveToHistory(entry) {
-  const h   = getHistory();
-  const key = `${entry.job}|${entry.city}|${entry.state}`;
-  const f   = h.filter(x => `${x.job}|${x.city}|${x.state}` !== key);
+  const h=getHistory(), key=`${entry.job}|${entry.city}|${entry.state}`;
+  const f=h.filter(x=>`${x.job}|${x.city}|${x.state}`!==key);
   f.unshift(entry);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(f.slice(0,50)));
+  localStorage.setItem(HISTORY_KEY,JSON.stringify(f.slice(0,50)));
 }
-function getHistory() {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); } catch { return []; }
-}
+function getHistory() { try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');}catch{return[];} }
 function renderHistory() {
-  const history = getHistory();
-  const el = document.getElementById('history-content');
+  const history=getHistory(), el=document.getElementById('history-content');
   if (!history.length) {
-    el.innerHTML = `<div class="history-empty"><div class="icon">📋</div><p>No lookups yet</p><p style="font-size:13px;margin-top:8px">Your permit lookups will appear here</p></div>`;
+    el.innerHTML=`<div class="history-empty"><div class="icon">📋</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">No lookups yet</p><p style="font-size:13px;">Your permit searches will appear here</p></div>`;
     return;
   }
-  let html = `<button class="history-clear" onclick="clearHistory()">Clear History</button>`;
-  for (let i=0;i<history.length;i++) {
-    const h = history[i];
-    const date = new Date(h.ts).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    const conf = (h.data?.confidence||'').toLowerCase();
-    const dot  = conf==='high'?'🟢':conf==='medium'?'🟡':'🔴';
-    html += `<div class="history-item" onclick="reloadResult(${i})">
+  let html=`<button class="history-clear" onclick="clearHistory()">Clear History</button>`;
+  history.forEach((h,i)=>{
+    const date=new Date(h.ts).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    const conf=(h.data?.confidence||'').toLowerCase();
+    const dot=conf==='high'?'🟢':conf==='medium'?'🟡':'🔴';
+    html+=`<div class="history-item" onclick="reloadResult(${i})">
       <div class="history-job">${dot} ${esc(h.job)}</div>
       <div class="history-loc">📍 ${esc(h.city)}, ${esc(h.state)}</div>
       <div class="history-time">${date}</div>
     </div>`;
-  }
-  el.innerHTML = html;
+  });
+  el.innerHTML=html;
 }
 function clearHistory() {
-  if (confirm('Clear all history?')) { localStorage.removeItem(HISTORY_KEY); renderHistory(); }
+  if(confirm('Clear all history?')){ localStorage.removeItem(HISTORY_KEY); renderHistory(); }
 }
 function reloadResult(i) {
-  const h = getHistory()[i];
-  if (!h) return;
-  currentResult = h;
-  document.getElementById('job_type').value = h.job;
-  document.getElementById('city').value     = h.city;
-  document.getElementById('state').value    = h.state;
-  document.getElementById('zip').value      = h.zip||'';
+  const h=getHistory()[i]; if(!h) return;
+  currentResult=h;
+  document.getElementById('job_type').value=h.job;
+  document.getElementById('city').value=h.city;
+  document.getElementById('state').value=h.state;
+  document.getElementById('zip').value=h.zip||'';
   showTab('search');
-  document.getElementById('search-form').style.display = 'none';
-  document.getElementById('results').style.display     = 'block';
-  renderResults(h.data, h.job, h.city, h.state);
+  document.getElementById('search-form').style.display='none';
+  document.getElementById('results').style.display='block';
+  document.getElementById('results-inner').innerHTML='';
+  renderResults(h.data,h.job,h.city,h.state);
 }
 
-// ── Utils ──────────────────────────────────────────────────────────────────
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Mobile keyboard submit ─────────────────────────────────────────────────
-// All inputs submit form on Enter — critical for mobile "Go" button
-['job_type','city','zip'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doLookup(); } });
+// ─── Keyboard submit ──────────────────────────────────────────────────────────
+['job_type','city','zip'].forEach(id=>{
+  const el=document.getElementById(id);
+  if (el) el.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();doLookup();} });
 });
-// State select: change + Enter both trigger lookup
-const stateEl = document.getElementById('state');
-if (stateEl) stateEl.addEventListener('change', () => {
-  // Auto-submit only if job + city already filled
-  const job  = document.getElementById('job_type').value.trim();
-  const city = document.getElementById('city').value.trim();
-  if (job && city) doLookup();
+const stateEl=document.getElementById('state');
+if (stateEl) stateEl.addEventListener('change',()=>{
+  const job=document.getElementById('job_type').value.trim();
+  const city=document.getElementById('city').value.trim();
+  if (job&&city) doLookup();
 });
 
-// ── Init ───────────────────────────────────────────────────────────────────
+// ─── Init ─────────────────────────────────────────────────────────────────────
 refreshCounterBar();
 loadStats();
 </script>
