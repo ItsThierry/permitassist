@@ -826,6 +826,23 @@ Return ONLY the JSON object."""
     if not result.get("apply_phone"):
         result["apply_phone"] = f"Search: {build_google_maps_url(city, state)}"
 
+    # Derive top-level permit_verdict from permits_required array
+    # Frontend verdictState() reads this field
+    if not result.get("permit_verdict"):
+        permits = result.get("permits_required", [])
+        if permits:
+            first_req = permits[0].get("required")
+            if first_req is True:
+                result["permit_verdict"] = "YES"
+            elif first_req is False:
+                result["permit_verdict"] = "NO"
+            elif first_req == "maybe":
+                result["permit_verdict"] = "MAYBE"
+            else:
+                result["permit_verdict"] = "MAYBE"
+        else:
+            result["permit_verdict"] = "MAYBE"
+
     # Add data_source if not set
     if not result.get("data_source"):
         result["data_source"] = city_match_level if city_match_level != "none" else "general_knowledge"

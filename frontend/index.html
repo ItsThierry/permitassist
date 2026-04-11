@@ -115,7 +115,20 @@ function parseQuery(raw){const text=(raw||'').trim();const zipMatch=text.match(/
 function fillQuery(text){document.getElementById('query').value=text;document.getElementById('query').focus()}
 function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';refreshCounterBar();document.getElementById('page-search').scrollTop=0}
 function openUpgrade(){window.open(UPGRADE_URL,'_blank')}
-function verdictState(d){const txt=(d.permit_verdict||d.verdict||d.requirement||'MAYBE').toString().toUpperCase();if(txt.includes('NO')) return 'no';if(txt.includes('YES')||txt.includes('REQUIRED')) return 'yes';return 'maybe'}
+function verdictState(d){
+  // Try top-level verdict fields first
+  const top=d.permit_verdict||d.verdict||d.requirement||'';
+  if(top){const t=top.toString().toUpperCase();if(t.includes('NO')&&!t.includes('YES')) return 'no';if(t.includes('YES')||t==='REQUIRED') return 'yes';if(t==='MAYBE') return 'maybe';}
+  // Fall back to permits_required[0].required
+  const permits=d.permits_required||[];
+  if(permits.length>0){
+    const req=permits[0].required;
+    if(req===true) return 'yes';
+    if(req===false) return 'no';
+    if(req==='maybe') return 'maybe';
+  }
+  return 'maybe';
+}
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
 function renderResults(d,job,city,state){const verdict=verdictState(d);const permits=d.permits_required||[];const insps=d.inspections||[];const tips=d.pro_tips||[];const mistakes=d.common_mistakes||[];const checklist=d.what_to_bring||d.checklist||[];const tl=d.approval_timeline||{};const office=d.applying_office||d.office_name||'';const phone=d.apply_phone||d.office_phone||'';const address=d.apply_address||d.office_address||'';const maps=d.apply_google_maps||d.maps_url||'';const fee=d.fee_range||d.fee||d.cost||'';const licenseRaw=d.license_required||'';// Rewrite ambiguous license text so it never implies "no permit needed"
 const licenseDisplay=licenseRaw.replace(/licensed\s+(plumber|electrician|contractor|hvac\s+tech(?:nician)?|roofer)/gi,(m,trade)=>`Licensed ${trade.charAt(0).toUpperCase()+trade.slice(1)} (they pull the permit for you — permit is still required)`).replace(/must\s+be\s+pulled\s+by\s+a\s+licensed/gi,'Permit is pulled by a licensed').replace(/no\s+permit\s+if\s+licensed/gi,'Licensed contractor pulls the permit — work still requires a permit');let html='';if(getLookupCount()>=FREE_LIMIT-2){const remaining=Math.max(0,FREE_LIMIT-getLookupCount());html+=`<div class="card" style="border-color:rgba(26,86,219,0.35)"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><div class="section-label">Usage</div><div style="font-size:14px;font-weight:700">${remaining>0?`${remaining} free lookup${remaining!==1?'s':''} left`:'Free lookups used'}</div></div><button class="action-btn" style="margin:0;padding:10px 14px" onclick="openUpgrade()">Upgrade</button></div></div>`}html+=`<div class="result-hero"><div class="result-job">${esc(job)}</div><div class="result-loc">📍 ${esc(city||'Unknown city')}, ${esc(state||'')}</div><div class="result-badges"><span class="badge ${verdict==='yes'?'badge-green':verdict==='no'?'badge-red':'badge-yellow'}">${verdict.toUpperCase()}</span>${fee?`<span class="badge badge-blue">💰 ${esc(fee)}</span>`:''}${office?`<span class="badge badge-gray">📞 ${esc(office)}</span>`:''}</div></div>`;html+=`<div class="summary-card"><div class="summary-top"><div><div class="section-label">📋 Permit Required</div><div class="verdict-pill ${verdict==='yes'?'verdict-yes':verdict==='no'?'verdict-no':'verdict-maybe'}">${verdict==='yes'?'YES':verdict==='no'?'NO':'MAYBE'}</div><div class="permit-name-big">${esc(d.permit_name||d.permit_type||permits[0]?.permit_type||'Permit details')}</div><div class="big-meta">${esc(d.permit_summary||d.summary||d.notes||'Review the details below before starting the job.')}</div></div></div></div>`;// For MAYBE verdicts — always show contact card so contractor can call and confirm
