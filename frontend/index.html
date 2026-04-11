@@ -176,6 +176,12 @@
     }
     .gps-btn:active { opacity: 0.7; }
 
+    /* ── Job hint ── */
+    .job-hint { font-size: 12px; color: var(--yellow); background: var(--yellow-bg); border: 1px solid rgba(245,158,11,0.2); border-radius: 6px; padding: 8px 12px; margin-top: 8px; line-height: 1.5; display: none; }
+    .job-hint.show { display: block; }
+    .job-hint-opt { display: inline-block; background: var(--surface3); border: 1px solid var(--border2); border-radius: 4px; color: var(--text); cursor: pointer; font-size: 12px; font-weight: 600; margin: 4px 4px 0 0; padding: 4px 10px; }
+    .job-hint-opt:active { background: var(--blue-bg); border-color: var(--brand); color: var(--brand); }
+
     /* ── Quick chips ── */
     .quick-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
     .chip {
@@ -530,7 +536,8 @@
       <div class="card">
         <div class="card-label">What's the job?</div>
         <div class="form-group">
-          <input type="text" id="job_type" placeholder="e.g. HVAC replacement, panel upgrade, re-roof..." autocomplete="off" />
+          <input type="text" id="job_type" placeholder="e.g. HVAC replacement, panel upgrade, re-roof..." autocomplete="off" oninput="checkJobHint(this.value)" />
+          <div class="job-hint" id="job-hint"></div>
         </div>
         <div class="quick-chips" id="chips">
           <div class="chip" onclick="fillJob(this,'HVAC system replacement')">🌡 HVAC</div>
@@ -1230,6 +1237,44 @@ function reloadResult(i) {
   document.getElementById('results').style.display='block';
   document.getElementById('results-inner').innerHTML='';
   renderResults(h.data,h.job,h.city,h.state);
+}
+
+// ─── Job disambiguation hint ────────────────────────────────────────────────────
+const JOB_HINTS = [
+  {
+    keywords: ['roof repair','roof fix','roof leak','patch roof','shingle repair'],
+    html: '⚠️ Roof <strong>repair</strong> vs <strong>replacement</strong> matters:<br>'
+      + '<span class="job-hint-opt" onclick="fillJobHint(this,\'minor roof repair (patching under 25% area)\')">' + 'Minor repair (≤25%)</span> '
+      + '<span class="job-hint-opt" onclick="fillJobHint(this,\'roof replacement (full re-roof)\')">' + 'Full re-roof</span>'
+  },
+  {
+    keywords: ['hvac repair','ac repair','furnace repair','heat pump repair'],
+    html: '⚠️ HVAC <strong>repair</strong> vs <strong>replacement</strong> matters:<br>'
+      + '<span class="job-hint-opt" onclick="fillJobHint(this,\'HVAC minor repair (capacitor, fan motor, belt)\')">Minor repair (no permit)</span> '
+      + '<span class="job-hint-opt" onclick="fillJobHint(this,\'HVAC system replacement\')">Full replacement</span>'
+  },
+  {
+    keywords: ['plumbing repair','pipe repair','fix leak','repair pipe'],
+    html: '⚠️ Plumbing <strong>repair</strong> vs <strong>new work</strong>:<br>'
+      + '<span class="job-hint-opt" onclick="fillJobHint(this,\'minor plumbing repair (faucet, drain, fixture\')">Minor repair</span> '
+      + '<span class="job-hint-opt" onclick="fillJobHint(this,\'new plumbing rough-in\')">New rough-in</span>'
+  },
+];
+function checkJobHint(val) {
+  const v = val.toLowerCase();
+  const hint = document.getElementById('job-hint');
+  if (!hint) return;
+  for (const h of JOB_HINTS) {
+    if (h.keywords.some(k => v.includes(k.split(' ')[0]) && v.includes(k.split(' ')[1]||k.split(' ')[0]))) {
+      hint.innerHTML = h.html; hint.classList.add('show'); return;
+    }
+  }
+  hint.classList.remove('show');
+}
+function fillJobHint(el, text) {
+  document.getElementById('job_type').value = text;
+  document.getElementById('job-hint').classList.remove('show');
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
 }
 
 // ─── Keyboard submit ──────────────────────────────────────────────────────────

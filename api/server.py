@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
-from research_engine import research_permit
+from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result
 
 FRONTEND_DIR   = os.path.join(os.path.dirname(__file__), "..", "frontend")
 SEO_DIR        = os.path.join(os.path.dirname(__file__), "..", "seo", "seo_pages")
@@ -410,6 +410,14 @@ class Handler(BaseHTTPRequestHandler):
                 # Validate URLs (only on fresh results — cached already verified)
                 if not is_cached:
                     result = sanitize_result_urls(result)
+                    # Strip PDF from apply_url → apply_pdf (server-side safety net)
+                    result = strip_pdf_from_result(result)
+                    # Ensure apply_google_maps always set
+                    if not result.get('apply_google_maps'):
+                        result['apply_google_maps'] = build_google_maps_url(city, state)
+                    # Ensure apply_phone is never completely empty
+                    if not result.get('apply_phone'):
+                        result['apply_phone'] = result.get('apply_google_maps', '')
 
                 # Record stats
                 record_lookup_stat(job_type, city, state, is_cached)
