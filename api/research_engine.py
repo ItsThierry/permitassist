@@ -455,7 +455,7 @@ Return ONLY a JSON object with these exact fields:
   "applying_office": "exact department name",
   "apply_url": "official ONLINE PORTAL URL or null — NEVER a PDF link. If only a PDF exists, set this to null.",
   "apply_pdf": "URL if the only application method is a PDF form, otherwise null",
-  "apply_phone": "phone number of the permit office e.g. (832) 394-8880 or null",
+  "apply_phone": "phone number of the permit office e.g. (832) 394-8880 — search web results for this, always try to return a real number",
   "apply_address": "physical address if known",
   "fee_range": "e.g. $75–$250 based on project valuation",
   "approval_timeline": {

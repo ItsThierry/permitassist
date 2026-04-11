@@ -955,13 +955,14 @@ function emailResult() {
 
 function callPermitOffice(phone, office) {
   if (phone && phone.match(/[\d\-\(\)\+\s]{7,}/)) {
-    // Strip to digits and dial
     const digits = phone.replace(/[^\d\+]/g, '');
     window.location.href = `tel:${digits}`;
   } else if (office) {
-    alert(`Call ${office} to apply for your permit.\n\nSearch online for their current phone number.`);
+    // Open a Google search for the office phone number
+    const query = encodeURIComponent(office + ' permit office phone number');
+    window.open(`https://www.google.com/search?q=${query}`, '_blank');
   } else {
-    alert('Contact your local building department to apply.');
+    window.open('https://www.google.com/search?q=local+building+permit+office+phone+number', '_blank');
   }
 }
 
