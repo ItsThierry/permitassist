@@ -240,7 +240,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     msg["From"]    = smtp_user
     msg["To"]      = to_email
     try:
-        with smtplib.SMTP_SSL(smtp_host, smtp_port) as s:
+        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=8) as s:
             s.login(smtp_user, smtp_pass)
             s.sendmail(smtp_user, to_email, msg.as_string())
         print(f"[email_report] Sent to {to_email}")
@@ -512,7 +512,15 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "Valid email required"})
                     return
                 save_email_capture(email, "email-report")
-                sent = send_email_report(email, job, city, state, rdata)
+                # Run SMTP in thread with 10s timeout to prevent handler hang
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+                    future = ex.submit(send_email_report, email, job, city, state, rdata)
+                    try:
+                        sent = future.result(timeout=10)
+                    except concurrent.futures.TimeoutError:
+                        sent = False
+                        print("[email-report] SMTP timed out")
                 self.send_json(200, {"sent": sent})
             except Exception as e:
                 print(f"[email-report] Error: {e}")
