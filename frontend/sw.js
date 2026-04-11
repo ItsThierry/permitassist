@@ -1,7 +1,7 @@
 // PermitAssist Service Worker
 // Handles offline caching and background sync
 
-const CACHE_NAME = 'permitassist-v1';
+const CACHE_NAME = 'permitassist-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

@@ -689,6 +689,10 @@ Return ONLY a JSON object with these exact fields:
     "Take photos of existing equipment nameplate before demo — inspector may ask for it",
     "Schedule rough-in inspection before the 48-hour window closes or pay re-inspection fee"
   ],
+  "code_citation": {
+    "section": "IRC R105.2.2" ,
+    "text": "Ordinary repairs to structures shall not include the cutting away of any wall, partition or portion thereof..." 
+  },
   "what_to_bring": [
     "Item 1 contractor needs at the permit counter or to submit online",
     "Item 2 — be specific: 'Equipment spec sheet with make/model/BTU/SEER2'",
@@ -710,7 +714,8 @@ DEPTH CHECKLIST — before returning your answer, verify:
 ✓ what_to_bring has 4-6 specific items for THIS job type and location
 ✓ common_mistakes are job-specific, not generic reminders
 ✓ license_required explains WHO pulls the permit and HOW, never implies 'no permit needed'
-✓ pro_tips save real time or money — not generic advice"""
+✓ pro_tips save real time or money — not generic advice
+✓ code_citation: for NO verdicts, ALWAYS include the specific code section (IRC/IPC/NEC/state code) that creates the exemption. Format: {"section": "IRC R105.2.2", "text": "first 120 chars of the relevant exemption text"}. For YES/MAYBE verdicts, set code_citation to null."""
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
@@ -824,6 +829,16 @@ Return ONLY the JSON object."""
     # Add data_source if not set
     if not result.get("data_source"):
         result["data_source"] = city_match_level if city_match_level != "none" else "general_knowledge"
+
+    # Ensure code_citation is well-formed or null
+    cc = result.get("code_citation")
+    if cc and isinstance(cc, dict) and not cc.get("section"):
+        result["code_citation"] = None
+    elif cc and isinstance(cc, str) and len(cc) > 3:
+        # GPT returned a string instead of object — wrap it
+        result["code_citation"] = {"section": cc, "text": ""}
+    elif not cc:
+        result["code_citation"] = None
 
     # Add metadata
     result["_meta"] = {
