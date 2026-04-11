@@ -830,7 +830,10 @@ Return ONLY the JSON object."""
     # Frontend verdictState() reads this field
     if not result.get("permit_verdict"):
         permits = result.get("permits_required", [])
-        if permits:
+        if not permits:
+            # Empty array = GPT said no permit needed
+            result["permit_verdict"] = "NO"
+        else:
             first_req = permits[0].get("required")
             if first_req is True:
                 result["permit_verdict"] = "YES"
@@ -839,9 +842,13 @@ Return ONLY the JSON object."""
             elif first_req == "maybe":
                 result["permit_verdict"] = "MAYBE"
             else:
-                result["permit_verdict"] = "MAYBE"
-        else:
-            result["permit_verdict"] = "MAYBE"
+                # required field missing or unknown value — check fee/summary for hints
+                fee = str(result.get("fee_range", "")).lower()
+                summary = str(result.get("job_summary", "") + result.get("permit_summary", "")).lower()
+                if "no permit" in fee or "no permit" in summary or "not required" in summary:
+                    result["permit_verdict"] = "NO"
+                else:
+                    result["permit_verdict"] = "MAYBE"
 
     # Add data_source if not set
     if not result.get("data_source"):

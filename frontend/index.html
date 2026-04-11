@@ -116,17 +116,27 @@ function fillQuery(text){document.getElementById('query').value=text;document.ge
 function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';refreshCounterBar();document.getElementById('page-search').scrollTop=0}
 function openUpgrade(){window.open(UPGRADE_URL,'_blank')}
 function verdictState(d){
-  // Try top-level verdict fields first
+  // 1. Try explicit top-level verdict
   const top=d.permit_verdict||d.verdict||d.requirement||'';
-  if(top){const t=top.toString().toUpperCase();if(t.includes('NO')&&!t.includes('YES')) return 'no';if(t.includes('YES')||t==='REQUIRED') return 'yes';if(t==='MAYBE') return 'maybe';}
-  // Fall back to permits_required[0].required
-  const permits=d.permits_required||[];
-  if(permits.length>0){
-    const req=permits[0].required;
-    if(req===true) return 'yes';
-    if(req===false) return 'no';
-    if(req==='maybe') return 'maybe';
+  if(top){
+    const t=top.toString().toUpperCase().trim();
+    if(t==='NO'||t==='NOT REQUIRED') return 'no';
+    if(t==='YES'||t==='REQUIRED') return 'yes';
+    if(t==='MAYBE') return 'maybe';
   }
+  // 2. Fall back to permits_required array
+  const permits=d.permits_required||[];
+  if(permits.length===0){
+    // Empty array = no permits needed
+    // Double-check fee/summary for 'no permit' language before confirming NO
+    const hint=(d.fee_range||'')+(d.job_summary||'')+(d.permit_summary||'');
+    if(/no permit/i.test(hint)||/not required/i.test(hint)) return 'no';
+    return 'no'; // empty permits_required = no permit
+  }
+  const req=permits[0].required;
+  if(req===true) return 'yes';
+  if(req===false) return 'no';
+  if(req==='maybe') return 'maybe';
   return 'maybe';
 }
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
