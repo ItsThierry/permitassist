@@ -153,6 +153,13 @@
     .apply-cta-sub { font-size: 12px; opacity: 0.85; margin-top: 4px; }
     .apply-cta-arrow { font-size: 28px; opacity: 0.9; flex-shrink: 0; }
     .apply-cta-note { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 16px; margin-top: -10px; }
+    .paper-app-notice { display: flex; gap: 14px; align-items: flex-start; background: linear-gradient(135deg, #1e3a5f, #1a3050); border: 1px solid rgba(59,130,246,0.4); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; color: #fff; }
+    .paper-app-icon { font-size: 28px; flex-shrink: 0; }
+    .paper-app-body { flex: 1; }
+    .paper-app-title { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+    .paper-app-sub { font-size: 13px; opacity: 0.85; line-height: 1.5; }
+    .paper-app-btn { display: inline-block; background: var(--blue); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .paper-app-btn:hover { background: #2563eb; }
     .copy-feedback { font-size: 12px; color: var(--green); text-align: center; padding: 4px 0 8px; display: none; }
 
     /* ── Inspections / tips ── */
@@ -751,12 +758,14 @@ function renderResults(d, job, city, state) {
 
     ${urlWarnHtml}
 
-${ d.apply_url ? (() => {
+${ (() => {
       const permits = d.permits_required || [];
       const mainPermit = permits.find(p => p.required === true) || permits[0];
       const permitType = mainPermit?.permit_type || 'Permit';
       const portalSelection = mainPermit?.portal_selection || '';
-      return `
+      // Only show green Apply button if we have a real online portal (not a PDF)
+      if (d.apply_url && !d.apply_url.toLowerCase().endsWith('.pdf')) {
+        return `
     <a class="apply-cta" href="${esc(d.apply_url)}" target="_blank" rel="noopener" id="apply-cta-btn">
       <div class="apply-cta-left">
         <div class="apply-cta-label">Next Step &rarr; Apply Online</div>
@@ -767,7 +776,40 @@ ${ d.apply_url ? (() => {
     </a>
     <div class="apply-cta-note">Opens ${esc(d.applying_office || 'official government portal')} &bull; Have your contractor license &amp; project details ready</div>
     `;
-    })() : '' }
+      } else if (d.apply_pdf || (d.apply_url && d.apply_url.toLowerCase().endsWith('.pdf'))) {
+        // PDF-only city — show paper application notice instead
+        const pdfUrl = d.apply_pdf || d.apply_url;
+        return `
+    <div class="paper-app-notice">
+      <div class="paper-app-icon">&#128203;</div>
+      <div class="paper-app-body">
+        <div class="paper-app-title">Paper Application Required</div>
+        <div class="paper-app-sub">This city uses paper permit applications. Download the form, fill it out, and bring it in person.</div>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <a href="${esc(pdfUrl)}" target="_blank" rel="noopener" class="paper-app-btn">&#128229; Download Form</a>
+          ${d.apply_address ? `<div style="font-size:12px;color:rgba(255,255,255,0.8);padding-top:4px">&#128205; ${esc(d.apply_address)}</div>` : ''}
+        </div>
+      </div>
+    </div>
+    `;
+      } else if (d.apply_address || d.apply_phone) {
+        // No online portal — in-person or phone only
+        return `
+    <div class="paper-app-notice">
+      <div class="paper-app-icon">&#127970;</div>
+      <div class="paper-app-body">
+        <div class="paper-app-title">In-Person Application</div>
+        <div class="paper-app-sub">Apply in person at ${esc(d.applying_office || 'the permit office')}.</div>
+        <div style="margin-top:8px;font-size:13px;color:rgba(255,255,255,0.85);">
+          ${d.apply_address ? `&#128205; ${esc(d.apply_address)}<br>` : ''}
+          ${d.apply_phone ? `&#128222; ${esc(d.apply_phone)}` : ''}
+        </div>
+      </div>
+    </div>
+    `;
+      }
+      return '';
+    })() }
 
     <div class="action-row">
       <button class="action-btn" onclick="shareResult()" type="button">📤 Share</button>
@@ -775,7 +817,7 @@ ${ d.apply_url ? (() => {
     </div>
     <div class="action-row" style="margin-bottom:16px">
       <button class="action-btn" onclick="emailResult()" type="button">📧 Email to Me</button>
-      <button class="action-btn" onclick="callPermitOffice('${esc(d.apply_url||'')}','${esc(d.applying_office||'')}')">📞 Call Office</button>
+      <button class="action-btn" onclick="callPermitOffice('${esc(d.apply_phone||'')}','${esc(d.applying_office||'')}')">📞 Call Office</button>
     </div>
     <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>`;
 
@@ -911,10 +953,16 @@ function emailResult() {
   if (addr && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) { saveEmail(addr); doSend(addr); }
 }
 
-function callPermitOffice(url, office) {
-  if (url) window.open(url, '_blank');
-  else if (office) alert(`Contact: ${office}`);
-  else alert('Contact your local building department.');
+function callPermitOffice(phone, office) {
+  if (phone && phone.match(/[\d\-\(\)\+\s]{7,}/)) {
+    // Strip to digits and dial
+    const digits = phone.replace(/[^\d\+]/g, '');
+    window.location.href = `tel:${digits}`;
+  } else if (office) {
+    alert(`Call ${office} to apply for your permit.\n\nSearch online for their current phone number.`);
+  } else {
+    alert('Contact your local building department to apply.');
+  }
 }
 
 // ── History ────────────────────────────────────────────────────────────────

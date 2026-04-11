@@ -453,7 +453,9 @@ Return ONLY a JSON object with these exact fields:
     {"permit_type": "exact permit category name (e.g. Mechanical Permit, Electrical Permit)", "portal_selection": "exact sub-type to select in the city portal (e.g. HVAC Replacement, Panel Upgrade, Gas Water Heater)", "required": true/false/"maybe", "notes": "1-sentence context"}
   ],
   "applying_office": "exact department name",
-  "apply_url": "official URL or null",
+  "apply_url": "official ONLINE PORTAL URL or null — NEVER a PDF link. If only a PDF exists, set this to null.",
+  "apply_pdf": "URL if the only application method is a PDF form, otherwise null",
+  "apply_phone": "phone number of the permit office e.g. (832) 394-8880 or null",
   "apply_address": "physical address if known",
   "fee_range": "e.g. $75–$250 based on project valuation",
   "approval_timeline": {
