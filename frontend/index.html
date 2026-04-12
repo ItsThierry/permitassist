@@ -563,6 +563,18 @@
       <div class="hero">
         <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
         <p class="hero-sub">Google sends you to a website. ChatGPT guesses. PermitAssist tells you the exact permit name, real fees, and the phone number that actually works — in 30 seconds.</p>
+        <div style="margin-top:16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:14px 18px;text-align:left;max-width:480px;margin-inline:auto">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px">✅ Built for Trade Contractors</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">⚡ Electrical</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🔧 Plumbing</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">❄️ HVAC</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🏗️ General Construction</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🔩 Mechanical</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🪟 Roofing & Exterior</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:10px">Not for zoning, business licenses, or general real estate permits.</div>
+        </div>
       </div>
 
       <!-- Trust Badges -->
@@ -1056,6 +1068,19 @@ function renderResults(d, job, city, state) {
   if (tips.length) {
     html += `<div class="card"><div class="section-label">💡 Pro Tips</div>
       <ul class="bullet-list">${tips.slice(0, 4).map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  // Before You Start — post-permit callout
+  if (d.permit_verdict === 'YES' || (top && top !== 'NO')) {
+    html += `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="section-label" style="color:var(--green)">📋 Before You Start Work</div>
+      <ul class="bullet-list" style="margin-top:8px">
+        <li><strong>Post the permit on-site</strong> before the first day of work — visible from the street or entrance</li>
+        <li><strong>Keep it there</strong> until the final inspection is signed off</li>
+        <li><strong>Have the inspection card on site</strong> so the inspector can sign each phase</li>
+        <li>No permit posted = inspector can issue a <strong>stop-work order</strong>, even if the permit was properly pulled</li>
+      </ul>
     </div>`;
   }
 
