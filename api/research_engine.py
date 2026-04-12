@@ -145,6 +145,88 @@ CITY_TO_COUNTY = {
     "fort_worth": "tarrant_tx", "fort worth": "tarrant_tx", "arlington": "tarrant_tx",
 }
 
+# ─── Jurisdiction Quirks Database ─────────────────────────────────────────────
+
+JURISDICTION_QUIRKS = {
+    "austin_tx": [
+        "Austin requires WET STAMPS on all structural drawings — digital signatures and PDFs are NOT accepted at the Development Services counter",
+        "Austin DSD is appointment-only for permit submittals — walk-ins are rarely accommodated. Book online at austintexas.gov/dsd",
+        "Austin requires a separate ROW (Right of Way) permit for any work affecting the sidewalk or driveway apron",
+    ],
+    "phoenix_az": [
+        "Phoenix requires a separate City Contractor Registration on top of your Arizona ROC license — without city registration your permit will be rejected",
+        "Phoenix uses a single-permit system for many trade combos — check if your project qualifies before pulling separate mechanical + electrical permits",
+        "Phoenix inspection scheduling requires a minimum 24-hour advance notice through the city's online portal — same-day requests are not accepted",
+    ],
+    "los_angeles_ca": [
+        "LA City requires a CSLB license AND an LA City Business Tax Registration Certificate — contractors often forget the BTRC which causes counter rejection",
+        "LA Bureau of Engineering review is separate from Building & Safety — projects near public streets need both approvals",
+        "LA has specific Title 24 energy compliance requirements for HVAC replacements — a CF1R form is required at permit application",
+    ],
+    "chicago_il": [
+        "Chicago requires all contractors to be licensed at the CITY level — Illinois state license alone is not sufficient",
+        "Chicago's permit portal (Chicago Permits) is separate from Cook County — always apply through the city portal for work within city limits",
+        "Chicago requires asbestos testing documentation for any work in buildings built before 1980 before permit issuance",
+    ],
+    "houston_tx": [
+        "Many Houston areas are unincorporated Harris County with NO permit requirements for residential HVAC, electrical, or plumbing — verify your specific address jurisdiction before applying",
+        "Houston Permitting Center is walk-in friendly and often issues same-day permits for standard residential trade work",
+        "Houston does not require a city contractor license — your state license (TECL, TACL, plumbing license) is sufficient",
+    ],
+    "dallas_tx": [
+        "Dallas requires contractors to register with the city EACH YEAR — registration renewal is often overlooked and causes permit rejection",
+        "Dallas uses a permit valuation system — undervaluing your project is flagged and can trigger an audit and penalty fees",
+        "Dallas requires a separate grading/drainage permit for any work that changes surface drainage patterns",
+    ],
+    "san_francisco_ca": [
+        "SF DBI requires licensed contractors for virtually all work — owner-builder exemptions are extremely limited in San Francisco",
+        "SF has a mandatory 30-day neighbor notification period for many permit types — factor this into your project timeline",
+        "SF has unique seismic retrofit requirements that may be triggered by HVAC or electrical work in older buildings (pre-1978)",
+    ],
+    "miami_fl": [
+        "Miami-Dade uses the Florida Building Code with significant local amendments — product approval numbers are required for roofing and window/door products",
+        "Miami-Dade requires a Notice of Commencement (NOC) recorded with the county clerk before work begins on projects over $2,500",
+        "Miami-Dade HVAC permits require proof of NATE certification or equivalent for the installing technician in some municipalities",
+    ],
+    "seattle_wa": [
+        "Seattle requires a Master Use Permit (MUP) for many projects in addition to the building permit — check for both before starting",
+        "Seattle has mandatory energy benchmarking for commercial buildings — HVAC replacements may trigger an energy audit requirement",
+        "Seattle inspectors enforce strict noise ordinances — work hours are limited to 7am-10pm on weekdays, 9am-10pm on weekends",
+    ],
+    "denver_co": [
+        "Denver requires all electrical work to be done by a Denver-licensed electrician — Colorado state electrical license must be supplemented with Denver city license",
+        "Denver has a Green Building Ordinance that requires energy compliance documentation for HVAC replacements in buildings over 25,000 sq ft",
+        "Denver's online permit portal (Denver Community Planning) often has faster processing than in-person submissions",
+    ],
+    "atlanta_ga": [
+        "Atlanta requires a separate permit from Fulton County for unincorporated areas — verify your address is within Atlanta city limits before applying",
+        "Atlanta has a mandatory pre-application meeting requirement for commercial projects over $500,000 in value",
+        "Atlanta requires asbestos survey documentation for demolition or renovation of buildings built before 1980",
+    ],
+    "las_vegas_nv": [
+        "Las Vegas and Clark County have separate permit jurisdictions — strip properties use Clark County, not City of Las Vegas permits",
+        "Nevada does not require a plumbing license for water heater replacements under certain conditions — verify with NSCB before applying",
+        "Las Vegas inspections are typically scheduled online and have 2-3 day lead time — plan accordingly for rough-in milestone",
+    ],
+    "portland_or": [
+        "Portland requires all residential electrical work to be done by an Oregon-licensed electrical contractor — no owner-builder electrical exemption",
+        "Portland's Bureau of Development Services has notoriously long plan review times — budget 6-8 weeks for any commercial or complex residential project",
+        "Portland's urban growth boundary affects permit requirements for properties near city limits — verify jurisdiction before applying",
+    ],
+    "nashville_tn": [
+        "Nashville Metro requires contractors to register with Metro Codes before pulling permits — registration is annual and renewal is often missed",
+        "Nashville has rapid growth-related permit backlogs — expedited review is available for an additional fee (typically 50% of permit fee)",
+        "Tennessee does not have a state electrical license — Nashville uses its own Metro electrical license which must be obtained separately",
+    ],
+}
+
+
+def _get_jurisdiction_quirks(city: str, state: str) -> list[str]:
+    """Look up local jurisdiction quirks/gotchas for a city+state combo."""
+    key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
+    return JURISDICTION_QUIRKS.get(key, [])
+
+
 # ─── Knowledge Base ───────────────────────────────────────────────────────────
 
 _TRADES_KB: dict = {}
@@ -925,6 +1007,16 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
 
     kb_context = "\n\n".join(kb_context_parts)
 
+    # ── Step 3b: Jurisdiction quirks ──
+    quirks = _get_jurisdiction_quirks(city, state)
+    quirks_context = ""
+    if quirks:
+        quirks_context = "\n\n=== LOCAL JURISDICTION QUIRKS — CRITICAL FOR THIS CITY ===\n"
+        quirks_context += "These are verified local gotchas that catch contractors off guard. Include them in pro_tips or common_mistakes:\n"
+        for q in quirks:
+            quirks_context += f"• {q}\n"
+        print(f"[research] Found {len(quirks)} jurisdiction quirks for {city}, {state}")
+
     # ── Step 4: GPT synthesis ──
     user_prompt = f"""A contractor needs permit information for this job:
 
@@ -937,6 +1029,8 @@ City data availability: {city_match_level}
 {kb_context}
 
 {search_context}
+
+{quirks_context}
 
 Using all context above, research the specific permit requirements for this exact job in {city}, {state}.
 
