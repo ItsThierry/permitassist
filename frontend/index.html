@@ -68,6 +68,9 @@
     .offline-badge { background: var(--red); border-radius: 20px; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; display: none; }
     .offline-badge.show { display: block; }
     .install-btn { background: var(--brand); border: none; border-radius: 20px; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; display: none; }
+    .nav-new-search { display: none; color: var(--brand); font-size: 13px; font-weight: 700; text-decoration: none; padding: 6px 12px; border: 1px solid var(--brand); border-radius: 20px; white-space: nowrap; transition: all .15s; }
+    .nav-new-search.show { display: block; }
+    .nav-new-search:active { background: var(--brand); color: #fff; }
 
     /* Tabs */
     .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg); }
@@ -346,6 +349,36 @@
       text-align: center; width: 100%; transition: all .12s; min-height: 48px;
     }
     .new-search-btn:active { border-color: var(--brand); color: var(--brand); }
+    /* Search Again hero button at top of results */
+    .search-again-hero { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface); border: 1px solid var(--brand); border-radius: var(--r); color: var(--brand); cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; padding: 14px; width: 100%; margin-bottom: 16px; transition: all .15s; min-height: 48px; }
+    .search-again-hero:active { background: var(--brand); color: #fff; }
+    /* How to Apply card */
+    .how-to-apply-card { background: var(--surface); border: 1px solid rgba(59,130,246,0.35); border-radius: var(--r); padding: 20px; margin-bottom: 14px; }
+    .how-to-apply-card .section-label { color: var(--brand); }
+    .apply-permit-name { background: var(--brand-light); border: 1px solid rgba(59,130,246,0.3); border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 14px; }
+    .apply-permit-name .label { font-size: 11px; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .apply-permit-name .value { font-size: 16px; font-weight: 800; color: var(--text); }
+    .apply-steps { counter-reset: apply-step; margin: 0; padding: 0; list-style: none; }
+    .apply-steps li { position: relative; padding: 10px 0 10px 34px; border-bottom: 1px solid var(--border); color: var(--text2); font-size: 14px; line-height: 1.5; }
+    .apply-steps li:last-child { border-bottom: none; }
+    .apply-steps li::before { counter-increment: apply-step; content: counter(apply-step); position: absolute; left: 0; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .apply-phone-note { background: var(--green-bg); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--r-sm); padding: 10px 14px; margin-top: 12px; font-size: 13px; color: var(--green); }
+    .find-office-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 600; padding: 10px 16px; margin-top: 12px; text-decoration: none; transition: all .15s; }
+    .find-office-btn:active { border-color: var(--brand); color: var(--brand); }
+    /* Watch Out callout */
+    .watchout-card { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.35); border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px; }
+    .watchout-card .section-label { color: var(--yellow); }
+    .watchout-card li { color: var(--text2); }
+    /* Timeline visual */
+    .timeline-visual { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .timeline-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--border); position: relative; overflow: hidden; }
+    .timeline-bar-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+    .timeline-bar-fill.fast { background: var(--green); width: 25%; }
+    .timeline-bar-fill.medium { background: var(--yellow); width: 55%; }
+    .timeline-bar-fill.slow { background: var(--red); width: 85%; }
+    .timeline-label { font-size: 13px; font-weight: 700; white-space: nowrap; }
+    /* Fee context */
+    .fee-context { font-size: 12px; color: var(--muted); margin-top: 4px; }
     .code-cite { background: rgba(16,185,129,.06); border: 1px solid rgba(16,185,129,.2); border-radius: var(--r-sm); padding: 12px 14px; margin-top: 10px; font-size: 12px; color: var(--text2); line-height: 1.6; }
     .code-cite strong { color: var(--green); font-family: monospace; font-size: 13px; }
     .freshness-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
@@ -459,6 +492,7 @@
       </div>
     </div>
     <div class="nav-right">
+      <a class="nav-new-search" id="nav-new-search" href="#" onclick="event.preventDefault(); newSearch();">← New Lookup</a>
       <div class="offline-badge" id="offline-badge">● Offline</div>
       <button class="install-btn" id="install-nav-btn" onclick="installApp()">Add to Phone</button>
     </div>
@@ -733,7 +767,7 @@ function parseQuery(raw){
 }
 
 // ── Navigation helpers ───────────────────────────────────────────────────────
-function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');refreshCounterBar();document.getElementById('page-search').scrollTop=0}
+function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');refreshCounterBar();document.getElementById('page-search').scrollTop=0}
 function openUpgrade(){window.open(UPGRADE_URL,'_blank')}
 
 // ── Verdict ──────────────────────────────────────────────────────────────────
@@ -775,6 +809,11 @@ function renderResults(d, job, city, state) {
 
   let html = '';
 
+  // Search Again hero button at top
+  html += `<button class="search-again-hero" onclick="newSearch()">🔍 &nbsp;New Lookup</button>`;
+  // Show nav link too
+  document.getElementById('nav-new-search').classList.add('show');
+
   // Counter warning
   if (getLookupCount() >= FREE_LIMIT - 2) {
     const remaining = Math.max(0, FREE_LIMIT - getLookupCount());
@@ -814,34 +853,52 @@ function renderResults(d, job, city, state) {
 
   // Summary card (for YES/MAYBE)
   if (verdict !== 'no') {
+    const portalSel = permits.length > 0 ? permits[0].portal_selection : null;
+    const exactPermitName = portalSel || d.permit_name || d.permit_type || permits[0]?.permit_type || 'Permit details';
     html += `<div class="summary-card">
       <div class="section-label">📋 Permit Details</div>
       <div class="verdict-pill ${verdict==='yes'?'verdict-yes':'verdict-maybe'}">${verdict==='yes'?'✅ YES — Permit Required':'⚠️ MAYBE — Check With Building Dept'}</div>
-      <div class="permit-name-big">${esc(d.permit_name || d.permit_type || permits[0]?.permit_type || 'Permit details')}</div>
-      <div class="big-meta">${esc(d.job_summary || d.permit_summary || d.summary || d.notes || 'Review the details below before starting the job.')}</div>
-      ${fee ? `<div class="big-price">${esc(fee)}</div>` : ''}
-    </div>`;
-
-    // Portal selection
-    const portalSel = permits.length > 0 ? permits[0].portal_selection : null;
+      <div class="permit-name-big">${esc(exactPermitName)}</div>`;
+    if (portalSel && (d.permit_name || d.permit_type || permits[0]?.permit_type) && portalSel !== (d.permit_name || d.permit_type || permits[0]?.permit_type)) {
+      html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">Also known as: ${esc(d.permit_name || d.permit_type || permits[0]?.permit_type)}</div>`;
+    }
+    html += `<div class="big-meta">${esc(d.job_summary || d.permit_summary || d.summary || d.notes || 'Review the details below before starting the job.')}</div>`;
+    if (fee) {
+      html += `<div class="big-price">${esc(fee)}</div><div class="fee-context">💡 Typical fee for this job type in ${esc(city || 'this area')}</div>`;
+    }
     if (portalSel) {
       html += `<div class="portal-select-box">
-        <div class="portal-select-label">Select this in the portal:</div>
+        <div class="portal-select-label">🎯 Exact permit name to ask for</div>
         <div class="portal-select-value">${esc(portalSel)}</div>
       </div>`;
     }
+    html += `</div>`;
   }
 
-  // Apply / Download buttons
-  if (applyUrl || applyPdf) {
-    html += '<div style="margin:14px 0">';
-    if (applyUrl) {
-      html += `<a class="apply-btn" href="${esc(applyUrl)}" target="_blank" rel="noopener">🌐 Apply Online →</a>`;
+  // How to Apply card (replaces misleading "Apply Online" button)
+  if (verdict !== 'no') {
+    const portalName = (permits.length > 0 && permits[0].portal_selection) ? permits[0].portal_selection : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
+    const cityName = city || 'your city';
+    html += `<div class="how-to-apply-card">`;
+    html += `<div class="section-label">📝 How to Apply</div>`;
+    html += `<div class="apply-permit-name"><div class="label">Ask for this exact permit</div><div class="value">${esc(portalName)}</div></div>`;
+    html += `<ol class="apply-steps">`;
+    html += `<li>Go to the <strong>${esc(cityName)}</strong> building department website or visit in person</li>`;
+    html += `<li>Search for or ask about <strong>"${esc(portalName)}"</strong></li>`;
+    html += `<li>Create an account if it's your first time applying online</li>`;
+    html += `<li>Upload your documents (plans, scope of work, contractor license)</li>`;
+    html += `<li>Pay the application fee and save your confirmation number</li>`;
+    html += `</ol>`;
+    if (phone) {
+      html += `<div class="apply-phone-note">📞 Or call <a href="tel:${normalizePhone(phone)}" style="color:var(--green);font-weight:700">${esc(phone)}</a> and ask for <strong>"${esc(portalName)}"</strong></div>`;
+    }
+    if (maps) {
+      html += `<a class="find-office-btn" href="${esc(maps)}" target="_blank" rel="noopener">🗺️ Find the Office</a>`;
     }
     if (applyPdf) {
-      html += `<a class="download-btn" href="${esc(applyPdf)}" target="_blank" rel="noopener">📄 Download Application (PDF)</a>`;
+      html += `<a class="download-btn" href="${esc(applyPdf)}" target="_blank" rel="noopener" style="margin-top:12px">📄 Download Application (PDF)</a>`;
     }
-    html += '</div>';
+    html += `</div>`;
   }
 
   // Contact card
@@ -859,18 +916,40 @@ function renderResults(d, job, city, state) {
 
   // Fee / Timeline / License
   if (fee || licenseDisplay || tl.simple || tl.complex) {
-    html += `<div class="card"><div class="section-label">💰 Cost · ⏱ Timeline · 🧰 Who Pulls It</div>
-      ${fee ? row('💰 Fee', fee, 'highlight') : ''}
-      ${tl.simple ? row('⏱ Timeline', esc(tl.simple)) : ''}
-      ${tl.complex ? row('Plan review', esc(tl.complex)) : ''}
-      ${licenseDisplay ? row('🧰 Who pulls it', esc(licenseDisplay)) : ''}
-    </div>`;
+    // Determine timeline speed for visual
+    const tlText = (tl.simple || tl.complex || '').toLowerCase();
+    let tlSpeed = 'medium';
+    if (/same.day|instant|immediate|1.day|next.day|over.the.counter|otc|walk.in/i.test(tlText)) tlSpeed = 'fast';
+    else if (/week|5.day|7.day|10.day/i.test(tlText)) tlSpeed = 'medium';
+    else if (/month|review|plan|30|60|90/i.test(tlText)) tlSpeed = 'slow';
+
+    html += `<div class="card"><div class="section-label">💰 Cost · ⏱ Timeline · 🧰 Who Pulls It</div>`;
+    if (fee) {
+      html += row('💰 Fee', `<span style="color:var(--green);font-weight:800;font-size:16px">${esc(fee)}</span><div class="fee-context">Typical fee for this job type</div>`);
+    }
+    if (tl.simple || tl.complex) {
+      const tlDisplay = tl.simple || tl.complex;
+      html += `<div class="info-row"><div class="info-key">⏱ Timeline</div><div class="info-val">
+        <div style="font-weight:700">${esc(tlDisplay)}</div>
+        <div class="timeline-visual"><div class="timeline-bar"><div class="timeline-bar-fill ${tlSpeed}"></div></div>
+        <span class="timeline-label" style="color:${tlSpeed==='fast'?'var(--green)':tlSpeed==='medium'?'var(--yellow)':'var(--red)'}">${tlSpeed==='fast'?'⚡ Fast':tlSpeed==='medium'?'⏳ Moderate':'🐢 Plan Ahead'}</span></div>
+      </div></div>`;
+    }
+    if (tl.complex && tl.simple) {
+      html += row('📐 Plan review', esc(tl.complex));
+    }
+    if (licenseDisplay) {
+      html += row('🧰 Who pulls it', esc(licenseDisplay));
+    }
+    html += `</div>`;
   }
 
-  // What to bring
-  if (checklist.length) {
-    html += `<div class="card"><div class="section-label">📎 What to Bring / Have Ready</div>
-      <ul class="bullet-list">${checklist.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+  // What to bring / What you'll need
+  const requirements = d.requirements || d.documents_needed || [];
+  const allBring = [...checklist, ...requirements];
+  if (allBring.length) {
+    html += `<div class="card"><div class="section-label">📎 What You'll Need (Bring These)</div>
+      <ul class="bullet-list">${[...new Set(allBring)].map(c => `<li>${esc(c)}</li>`).join('')}</ul>
     </div>`;
   }
 
@@ -888,10 +967,12 @@ function renderResults(d, job, city, state) {
     </div>`;
   }
 
-  // Common mistakes
-  if (mistakes.length) {
-    html += `<div class="card"><div class="section-label">⚠️ Common Mistakes That Get Jobs Red-Tagged</div>
-      <ul class="bullet-list">${mistakes.slice(0, 4).map(m => `<li>${esc(m)}</li>`).join('')}</ul>
+  // Watch Out / Common mistakes
+  const conditionalNotes = permits.filter(p => p.notes && /if|unless|except|conditional|may not|only when|depending/i.test(p.notes)).map(p => p.notes);
+  const allWarnings = [...mistakes.slice(0, 4), ...conditionalNotes.slice(0, 2)];
+  if (allWarnings.length) {
+    html += `<div class="watchout-card"><div class="section-label">⚠️ Watch Out — Common Mistakes & Gotchas</div>
+      <ul class="bullet-list">${[...new Set(allWarnings)].map(m => `<li>${esc(m)}</li>`).join('')}</ul>
     </div>`;
   }
 
