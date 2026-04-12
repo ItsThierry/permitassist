@@ -84,26 +84,26 @@
 
     /* Hero */
     .hero { padding: 32px 0 16px; text-align: center; }
-    .hero h1 { font-size: 28px; font-weight: 900; line-height: 1.15; letter-spacing: -0.5px; color: #fff; }
+    .hero h1 { font-size: 32px; font-weight: 900; line-height: 1.08; letter-spacing: -0.5px; color: #fff; }
     .hero h1 em { font-style: normal; color: var(--brand); }
     .hero-sub { font-size: 15px; color: var(--text2); margin-top: 10px; line-height: 1.6; max-width: 460px; margin-inline: auto; }
 
     /* Trust badges */
     .trust-badges { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
-    .trust-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: var(--text2); padding: 6px 14px; white-space: nowrap; font-weight: 600; }
+    .trust-badge { background: linear-gradient(135deg, var(--surface), var(--surface2)); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 20px; font-size: 13px; color: var(--text2); padding: 8px 16px; white-space: nowrap; font-weight: 600; }
     .trust-badge strong { color: var(--text); }
 
     /* Counter bar */
-    .counter-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; font-size: 13px; }
-    .counter-dots { display: flex; gap: 4px; }
-    .c-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); }
-    .c-dot.used { background: var(--brand); }
-    .counter-text { color: var(--text2); }
+    .counter-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 16px; font-size: 13px; }
+    .counter-bar-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .counter-progress { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+    .counter-progress-fill { height: 100%; border-radius: 2px; background: var(--brand); transition: width .4s ease; }
+    .counter-text { color: var(--text2); font-weight: 600; }
     .counter-upgrade { color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 
     /* Cards */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 14px; }
-    .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-bottom: 14px; }
+    .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 14px; }
 
     /* Form */
     .form-group { margin-bottom: 14px; }
@@ -140,7 +140,9 @@
 
     /* Location */
     .location-links { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 10px; font-size: 13px; }
-    .text-link { color: var(--brand); cursor: pointer; font-weight: 700; text-decoration: none; }
+    .text-link { color: var(--brand); cursor: pointer; font-weight: 700; text-decoration: none; background: var(--surface); border: 1px solid var(--border); padding: 8px 14px; border-radius: 20px; font-size: 13px; display: inline-block; transition: all .15s; }
+    .text-link:active { border-color: var(--brand); background: var(--brand-light); }
+    .card.input-focused { box-shadow: 0 0 0 3px rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.3); transition: box-shadow .2s, border-color .2s; }
     .location-edit { display: block; margin-top: 14px; }
     .gps-status { margin-top: 8px; font-size: 12px; color: var(--text2); }
     .gps-status.ok { color: var(--green); }
@@ -167,11 +169,17 @@
     .lookup-btn {
       background: var(--brand); border: none; border-radius: var(--r);
       color: #fff; cursor: pointer; font-family: 'Inter', system-ui, sans-serif;
-      font-size: 16px; font-weight: 700; padding: 18px; width: 100%;
+      font-size: 22px; font-weight: 700; padding: 20px; width: 100%;
       transition: background .15s, transform .1s;
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      min-height: 56px;
+      min-height: 56px; position: relative; overflow: hidden;
     }
+    .lookup-btn.shimmer::after {
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: btnShimmer 2s ease-in-out infinite;
+    }
+    @keyframes btnShimmer { 0% { left: -100%; } 100% { left: 100%; } }
     .lookup-btn:active { transform: scale(.98); background: var(--brand-dark); }
     .lookup-btn:disabled { opacity: .45; cursor: not-allowed; }
 
@@ -180,10 +188,11 @@
     /* Loading */
     #loading { display: none; padding: 60px 20px; text-align: center; }
     .spin-ring {
-      width: 48px; height: 48px; border-radius: 50%;
-      border: 3px solid var(--border); border-top-color: var(--brand);
-      animation: spin .75s linear infinite; margin: 0 auto 20px;
+      width: 64px; height: 64px; border-radius: 50%;
+      border: 4px solid var(--border); border-top-color: var(--brand);
+      animation: spin .75s linear infinite, spinnerGlow 2s ease-in-out infinite; margin: 0 auto 20px;
     }
+    @keyframes spinnerGlow { 0%,100% { box-shadow: 0 0 20px rgba(59,130,246,0.15); } 50% { box-shadow: 0 0 40px rgba(59,130,246,0.3), 0 0 80px rgba(59,130,246,0.1); } }
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
     .loading-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
@@ -200,8 +209,8 @@
     /* Result hero */
     .result-hero {
       background: linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.05) 100%);
-      border: 1px solid rgba(59,130,246,0.25); border-radius: var(--r);
-      padding: 20px; margin-bottom: 14px;
+      border: 1px solid rgba(59,130,246,0.25); border-left: 4px solid var(--brand); border-radius: var(--r);
+      padding: 24px; margin-bottom: 14px;
     }
     .result-job { font-size: 20px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.3px; }
     .result-loc { font-size: 13px; color: var(--text2); }
@@ -225,7 +234,7 @@
 
     /* Summary card */
     .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 14px; }
-    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-bottom: 12px; }
+    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 12px; }
     .verdict-pill {
       display: inline-flex; align-items: center; gap: 8px;
       border-radius: 999px; padding: 8px 14px;
@@ -249,16 +258,17 @@
     /* Info rows */
     .info-row {
       display: flex; align-items: flex-start; justify-content: space-between;
-      gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border);
+      gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border);
     }
     .info-row:last-child { border-bottom: none; padding-bottom: 0; }
     .info-key { font-size: 12px; color: var(--muted); font-weight: 600; flex-shrink: 0; width: 110px; padding-top: 1px; }
-    .info-val { font-size: 14px; color: var(--text); text-align: right; flex: 1; line-height: 1.4; }
+    .info-val { font-size: 15px; color: var(--text); text-align: right; flex: 1; line-height: 1.4; }
     .info-val a { color: var(--brand); text-decoration: none; }
     .info-val.highlight { color: var(--green); font-weight: 700; }
 
     /* Contact */
-    .contact-phone { display: block; font-size: 26px; font-weight: 900; color: var(--brand); text-decoration: none; line-height: 1.15; margin-bottom: 8px; }
+    .contact-phone { display: block; font-size: 30px; font-weight: 900; color: var(--brand); text-decoration: none; line-height: 1.15; margin-bottom: 8px; border-radius: var(--r-sm); padding: 4px 0; transition: background .15s; }
+    .contact-phone:active { background: var(--brand-light); }
     .contact-office { font-size: 14px; color: var(--text); font-weight: 700; margin-bottom: 4px; }
     .contact-address { font-size: 13px; color: var(--text2); line-height: 1.5; }
     .mini-link-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
@@ -304,14 +314,16 @@
 
     /* Actions */
     .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 10px; }
+    .action-row.action-row-3 { grid-template-columns: 1fr 1fr 1fr; }
     .action-btn {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--r-sm); color: var(--text2); cursor: pointer;
       font-family: 'Inter', system-ui, sans-serif;
       font-size: 13px; font-weight: 600; padding: 12px; text-align: center;
       display: flex; align-items: center; justify-content: center; gap: 6px;
-      transition: all .12s; user-select: none; min-height: 44px;
+      transition: all .12s; user-select: none; min-height: 52px;
     }
+    .action-btn:hover { border-color: var(--brand); }
     .action-btn:active { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
 
     /* Apply / Download buttons */
@@ -350,8 +362,8 @@
     }
     .new-search-btn:active { border-color: var(--brand); color: var(--brand); }
     /* Search Again hero button at top of results */
-    .search-again-hero { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface); border: 1px solid var(--brand); border-radius: var(--r); color: var(--brand); cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; padding: 14px; width: 100%; margin-bottom: 16px; transition: all .15s; min-height: 48px; }
-    .search-again-hero:active { background: var(--brand); color: #fff; }
+    .search-again-hero { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--brand); border: none; border-radius: var(--r); color: #fff; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; padding: 14px; width: 100%; margin-bottom: 16px; transition: all .15s; min-height: 48px; }
+    .search-again-hero:active { background: var(--brand-dark); }
     /* How to Apply card */
     .how-to-apply-card { background: var(--surface); border: 1px solid rgba(59,130,246,0.35); border-radius: var(--r); padding: 20px; margin-bottom: 14px; }
     .how-to-apply-card .section-label { color: var(--brand); }
@@ -359,9 +371,9 @@
     .apply-permit-name .label { font-size: 11px; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
     .apply-permit-name .value { font-size: 16px; font-weight: 800; color: var(--text); }
     .apply-steps { counter-reset: apply-step; margin: 0; padding: 0; list-style: none; }
-    .apply-steps li { position: relative; padding: 10px 0 10px 34px; border-bottom: 1px solid var(--border); color: var(--text2); font-size: 14px; line-height: 1.5; }
+    .apply-steps li { position: relative; padding: 10px 0 10px 38px; border-bottom: 1px solid var(--border); color: var(--text2); font-size: 14px; line-height: 1.5; }
     .apply-steps li:last-child { border-bottom: none; }
-    .apply-steps li::before { counter-increment: apply-step; content: counter(apply-step); position: absolute; left: 0; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .apply-steps li::before { counter-increment: apply-step; content: counter(apply-step); position: absolute; left: 0; top: 10px; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
     .apply-phone-note { background: var(--green-bg); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--r-sm); padding: 10px 14px; margin-top: 12px; font-size: 13px; color: var(--green); }
     .find-office-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 600; padding: 10px 16px; margin-top: 12px; text-decoration: none; transition: all .15s; }
     .find-office-btn:active { border-color: var(--brand); color: var(--brand); }
@@ -437,8 +449,18 @@
     /* Tracker */
     .tracker-modal-overlay { position: fixed; inset: 0; z-index: 250; background: rgba(0,0,0,.75); display: flex; align-items: flex-end; }
     .tracker-sheet { background: var(--surface); border-radius: 20px 20px 0 0; border-top: 1px solid var(--border); padding: 24px 20px calc(28px + var(--safe-bottom)); width: 100%; max-width: 680px; margin: 0 auto; animation: slideUp .25s ease; max-height: 85vh; overflow-y: auto; }
-    .tracker-stage { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+    .tracker-stage { display: flex; align-items: center; gap: 12px; padding: 14px 12px; min-height: 56px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; border-radius: var(--r-sm); margin-bottom: 2px; transition: background .15s; }
     .tracker-stage:last-child { border-bottom: none; }
+    .tracker-stage.stage-done { background: rgba(16,185,129,0.08); }
+    .tracker-stage.stage-active { border-left: 3px solid var(--brand); background: rgba(59,130,246,0.06); }
+    .tracker-stage-icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; }
+    .tracker-completion { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--r-sm); padding: 12px 16px; text-align: center; font-size: 15px; font-weight: 700; color: var(--green); margin-bottom: 14px; }
+    .tracker-danger-btn { width: 100%; background: none; border: 1px solid rgba(239,68,68,0.4); border-radius: 8px; color: var(--red); font-size: 13px; font-weight: 600; padding: 10px; cursor: pointer; margin-top: 16px; transition: all .15s; }
+    .tracker-danger-btn:active { background: rgba(239,68,68,0.1); }
+    .tracker-close-btn { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; margin-top: 8px; transition: all .15s; }
+    .tracker-close-btn:active { border-color: var(--brand); color: var(--brand); }
+    .tracker-progress-bar { background: var(--border); border-radius: 5px; height: 10px; overflow: hidden; }
+    .tracker-progress-fill { height: 100%; border-radius: 5px; background: var(--green); width: 0; transition: width .6s ease; }
     .tracker-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all .15s; }
     .tracker-check.done { background: var(--green); border-color: var(--green); color: #fff; }
     .tracker-stage-label { font-size: 14px; font-weight: 600; flex: 1; }
@@ -456,6 +478,7 @@
     .companion-card { background: rgba(245,158,11,0.08); border: 2px solid rgba(245,158,11,0.4); border-radius: var(--r); padding: 18px 20px; margin-bottom: 14px; }
     .companion-card .section-label { color: var(--yellow); }
     .companion-item { padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .companion-item.almost-certain { border-left: 4px solid #f97316; background: rgba(245,158,11,0.12); padding: 10px 12px; border-radius: var(--r-sm); margin-bottom: 4px; }
     .companion-item:last-child { border-bottom: none; }
     .companion-type { font-size: 14px; font-weight: 700; color: var(--text); }
     .companion-reason { font-size: 13px; color: var(--text2); margin-top: 2px; }
@@ -501,7 +524,7 @@
 
     /* Mobile */
     @media (max-width: 480px) {
-      .hero h1 { font-size: 24px; }
+      .hero h1 { font-size: 32px; }
       .permit-name-big { font-size: 18px; }
       .big-price { font-size: 24px; }
       .disambig-btns { flex-direction: column; }
@@ -553,12 +576,11 @@
 
       <!-- Counter bar -->
       <div class="counter-bar" id="counter-bar">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="counter-dots" id="counter-dots"></div>
-          <span class="counter-text" id="counter-text">5 free lookups remaining</span>
-        </div>
+        <div class="counter-bar-top">
+          <span class="counter-text" id="counter-text">0 of 5 free lookups used</span>
         <span class="counter-upgrade" onclick="openUpgrade()">Upgrade →</span>
       </div>
+      <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
 
       <!-- Search Card -->
       <div class="card">
@@ -714,18 +736,21 @@ async function loadStats(){try{const r=await fetch('/api/stats');const d=await r
 
 function refreshCounterBar(){
   const used=getLookupCount(),remaining=Math.max(0,FREE_LIMIT-used);
-  const bar=document.getElementById('counter-bar'),dots=document.getElementById('counter-dots'),text=document.getElementById('counter-text');
+  const bar=document.getElementById('counter-bar'),text=document.getElementById('counter-text');
   if(!bar) return;
   if(hasEmail()){bar.style.display='none';return}
-  dots.innerHTML='';
-  for(let i=0;i<FREE_LIMIT;i++){const d=document.createElement('div');d.className='c-dot'+(i<used?' used':'');dots.appendChild(d)}
-  text.textContent=remaining===0?'Free lookups used — upgrade for unlimited':`${remaining} free lookup${remaining!==1?'s':''} remaining`;
+  const pct=Math.round(used/FREE_LIMIT*100);
+  text.textContent=remaining===0?'Free lookups used — upgrade for unlimited':`${used} of ${FREE_LIMIT} free lookups used`;
+  let progressEl=bar.querySelector('.counter-progress');
+  if(!progressEl){progressEl=document.createElement('div');progressEl.className='counter-progress';progressEl.innerHTML='<div class="counter-progress-fill"></div>';bar.appendChild(progressEl)}
+  const fill=progressEl.querySelector('.counter-progress-fill');
+  if(fill) requestAnimationFrame(()=>fill.style.width=pct+'%');
   bar.style.borderColor=remaining===0?'rgba(239,68,68,0.4)':'';
 }
 
 // ── Progress steps ────────────────────────────────────────────────────────────
-const STEPS=[{id:'step-1',label:'Searching building department records...',delay:0},{id:'step-2',label:'Analyzing permit requirements...',delay:3200},{id:'step-3',label:'Verifying fees & contact info...',delay:7000}];
-function startProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id);if(e)e.className='progress-step'});STEPS.forEach((s,i)=>setTimeout(()=>{if(i>0){const p=document.getElementById(STEPS[i-1].id);if(p)p.className='progress-step done'}const e=document.getElementById(s.id);if(e)e.className='progress-step active';document.getElementById('loading-title').textContent=s.label},s.delay))}
+const STEPS=[{id:'step-1',label:'Searching building department records...',delay:0},{id:'step-2',label:'Analyzing permit requirements...',delay:2000},{id:'step-3',label:'Verifying fees & contact info...',delay:4000}];
+function startProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id);if(e){e.className='progress-step';e.style.opacity='0.3';e.style.transition='opacity .4s ease'}});STEPS.forEach((s,i)=>setTimeout(()=>{if(i>0){const p=document.getElementById(STEPS[i-1].id);if(p){p.className='progress-step done';p.style.opacity='1'}}const e=document.getElementById(s.id);if(e){e.className='progress-step active';e.style.opacity='1'}document.getElementById('loading-title').textContent=s.label},s.delay))}
 function stopProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id);if(e)e.className='progress-step done'})}
 
 // ── Gate ──────────────────────────────────────────────────────────────────────
@@ -934,8 +959,8 @@ function renderResults(d, job, city, state) {
   if (companionPermits.length > 0) {
     html += `<div class="companion-card">
       <div class="section-label">⚠️ You'll Likely Also Need</div>
-      ${companionPermits.map(cp => `<div class="companion-item">
-        <div class="companion-type">${esc(cp.permit_type)}</div>
+      ${companionPermits.map(cp => `<div class="companion-item${cp.certainty === 'almost_certain' ? ' almost-certain' : ''}">
+        <div class="companion-type">${cp.certainty === 'almost_certain' ? '🚨 ' : ''}${esc(cp.permit_type)}</div>
         <div class="companion-reason">${esc(cp.reason)}</div>
       </div>`).join('')}
       <div class="companion-note">💡 Running these permits together saves time and avoids stop-work orders</div>
@@ -1098,16 +1123,16 @@ function renderResults(d, job, city, state) {
 
   // Action buttons
   html += `
-    <div class="action-row" style="margin-top:14px">
-      <button class="action-btn" onclick="shareResult()">📤 Share Result</button>
-      <button class="action-btn" onclick="copyResult()">📋 Copy Summary</button>
+    <div class="action-row action-row-3" style="margin-top:14px">
+      <button class="action-btn" onclick="shareResult()">📤 Share</button>
+      <button class="action-btn" onclick="copyResult()">📋 Copy</button>
+      <button class="action-btn" onclick="printResult()">🖨️ PDF</button>
     </div>
     <div class="action-row">
       <button class="action-btn" onclick="copyForQuote()">💰 Copy for Quote</button>
       <button class="action-btn" onclick="emailResult()">📧 Email to Me</button>
     </div>
     <div class="action-row">
-      <button class="action-btn" onclick="printResult()">🖨️ Save as PDF</button>
       <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
     </div>
     <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>
@@ -1472,35 +1497,47 @@ function openTracker() {
   renderTrackerModal(entry, jobs);
 }
 
+const STAGE_ICONS = { applied: '📝', approved: '✅', posted: '📌', rough_in: '🔨', final: '🏆' };
 function renderTrackerModal(entry, jobs) {
   document.getElementById('tracker-modal')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'tracker-modal'; overlay.className = 'tracker-modal-overlay';
   const completed = TRACKER_STAGES.filter(s => entry.stages[s.id]).length;
   const pct = Math.round(completed / TRACKER_STAGES.length * 100);
+  const allDone = completed === TRACKER_STAGES.length;
+  let firstIncomplete = true;
   const stagesHtml = TRACKER_STAGES.map(s => {
     const done = !!entry.stages[s.id];
     const doneDate = entry.stages[s.id] ? new Date(entry.stages[s.id]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-    return `<div class="tracker-stage" onclick="toggleTrackerStage('${esc(entry.key)}','${s.id}')">
+    const icon = STAGE_ICONS[s.id] || '📋';
+    let stageClass = 'tracker-stage';
+    if (done) { stageClass += ' stage-done'; }
+    else if (firstIncomplete) { stageClass += ' stage-active'; firstIncomplete = false; }
+    return `<div class="${stageClass}" onclick="toggleTrackerStage('${esc(entry.key)}','${s.id}')">
+      <div class="tracker-stage-icon">${icon}</div>
       <div class="tracker-check ${done ? 'done' : ''}">✓</div>
-      <div style="flex:1"><div class="tracker-stage-label" style="${done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${s.label}</div>
-      <div class="tracker-stage-sub">${done ? 'Done ' + doneDate : s.sub}</div></div>
+      <div style="flex:1"><div class="tracker-stage-label" style="${done ? 'color:var(--green)' : ''}">${s.label}</div>
+      <div class="tracker-stage-sub">${done ? '✓ Done ' + doneDate : s.sub}</div></div>
     </div>`;
   }).join('');
+  const completionBanner = allDone ? '<div class="tracker-completion">🎉 Permit process complete!</div>' : '';
   overlay.innerHTML = `<div class="tracker-sheet">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div><div style="font-size:17px;font-weight:800">${esc(entry.job)}</div><div style="font-size:12px;color:var(--muted)">📍 ${esc(entry.city)}, ${esc(entry.state)}</div></div>
       <button onclick="document.getElementById('tracker-modal').remove()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px">✕</button>
     </div>
+    ${completionBanner}
     <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="font-weight:700">${completed}/${TRACKER_STAGES.length} stages done</span><span style="color:var(--brand);font-weight:700">${pct}%</span></div>
-      <div style="background:var(--border);border-radius:20px;height:6px"><div style="background:var(--green);border-radius:20px;height:6px;width:${pct}%;transition:width .3s"></div></div>
+      <div class="tracker-progress-bar"><div class="tracker-progress-fill" id="tracker-pbar-fill"></div></div>
     </div>
     <div id="tracker-stages">${stagesHtml}</div>
-    <button onclick="clearTrackerJob('${esc(entry.key)}')" style="width:100%;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;padding:10px;cursor:pointer;margin-top:16px">Reset this job's progress</button>
+    <button class="tracker-danger-btn" onclick="clearTrackerJob('${esc(entry.key)}')">🗑️ Reset this job's progress</button>
+    <button class="tracker-close-btn" onclick="document.getElementById('tracker-modal').remove()">Close</button>
   </div>`;
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
+  requestAnimationFrame(()=>{requestAnimationFrame(()=>{const fill=document.getElementById('tracker-pbar-fill');if(fill)fill.style.width=pct+'%';});});
 }
 
 function toggleTrackerStage(key, stageId) {
@@ -1525,6 +1562,31 @@ document.getElementById('lookup-btn').onclick = doLookupWithOffline;
 });
 // On query input change, hide disambiguation
 document.getElementById('query').addEventListener('input', () => document.getElementById('disambig-box').classList.remove('show'));
+
+// Search card focus glow
+(function(){
+  const card = document.querySelector('#search-form .card');
+  if(!card) return;
+  const inputs = card.querySelectorAll('input, textarea, select');
+  inputs.forEach(inp => {
+    inp.addEventListener('focus', () => card.classList.add('input-focused'));
+    inp.addEventListener('blur', () => card.classList.remove('input-focused'));
+  });
+})();
+
+// Lookup button shimmer when form is filled
+function checkShimmer(){
+  const city=document.getElementById('city').value.trim();
+  const state=document.getElementById('state').value.trim();
+  const query=document.getElementById('query').value.trim();
+  const btn=document.getElementById('lookup-btn');
+  if(city && state && query) btn.classList.add('shimmer'); else btn.classList.remove('shimmer');
+}
+['city','state','query'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){el.addEventListener('input',checkShimmer);el.addEventListener('change',checkShimmer)}
+});
+
 refreshCounterBar();
 loadStats();
 </script>
