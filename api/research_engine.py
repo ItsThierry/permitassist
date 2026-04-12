@@ -27,6 +27,124 @@ TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 CACHE_DB       = os.path.join(os.path.dirname(__file__), "..", "data", "cache.db")
 KNOWLEDGE_DIR  = os.path.join(os.path.dirname(__file__), "..", "knowledge")
 
+# ─── Hardcoded County Fallback Data ───────────────────────────────────────────
+
+COUNTY_DATA = {
+    "cook_il": {
+        "name": "Cook County, IL",
+        "phone": "312-603-0500",
+        "url": "https://www.cookcountyil.gov/service/building-permits",
+        "office": "Cook County Building & Zoning Department"
+    },
+    "harris_tx": {
+        "name": "Harris County, TX",
+        "phone": "713-274-3880",
+        "url": "https://permits.harriscountytx.gov",
+        "office": "Harris County Permits Office"
+    },
+    "maricopa_az": {
+        "name": "Maricopa County, AZ",
+        "phone": "602-506-3301",
+        "url": "https://mcassessor.maricopa.gov/permits",
+        "office": "Maricopa County Planning & Development"
+    },
+    "los_angeles_ca": {
+        "name": "Los Angeles County, CA",
+        "phone": "626-458-3173",
+        "url": "https://dpw.lacounty.gov/building-and-safety",
+        "office": "LA County Dept of Public Works — Building & Safety"
+    },
+    "king_wa": {
+        "name": "King County, WA",
+        "phone": "206-296-6600",
+        "url": "https://kingcounty.gov/depts/permitting",
+        "office": "King County Permitting Division"
+    },
+    "miami_dade_fl": {
+        "name": "Miami-Dade County, FL",
+        "phone": "786-315-2000",
+        "url": "https://www.miamidade.gov/permits",
+        "office": "Miami-Dade County Building Department"
+    },
+    "dallas_tx": {
+        "name": "Dallas County, TX",
+        "phone": "214-653-7399",
+        "url": "https://www.dallascounty.org/departments/perm_imp/index.php",
+        "office": "Dallas County Permits & Improvements"
+    },
+    "orange_ca": {
+        "name": "Orange County, CA",
+        "phone": "714-667-8888",
+        "url": "https://ocds.ocpublicworks.com",
+        "office": "Orange County Development Services"
+    },
+    "san_diego_ca": {
+        "name": "San Diego County, CA",
+        "phone": "858-694-3816",
+        "url": "https://www.sandiegocounty.gov/pds",
+        "office": "San Diego County Planning & Development Services"
+    },
+    "clark_nv": {
+        "name": "Clark County, NV",
+        "phone": "702-455-3000",
+        "url": "https://www.clarkcountynv.gov/government/departments/building_department",
+        "office": "Clark County Building Department"
+    },
+    "tarrant_tx": {
+        "name": "Tarrant County, TX",
+        "phone": "817-884-1111",
+        "url": "https://www.tarrantcounty.com/en/community-development.html",
+        "office": "Tarrant County Community Development"
+    },
+    "bexar_tx": {
+        "name": "Bexar County, TX",
+        "phone": "210-335-2700",
+        "url": "https://www.bexar.org/1730/Development-Services",
+        "office": "Bexar County Development Services"
+    },
+    "broward_fl": {
+        "name": "Broward County, FL",
+        "phone": "954-765-4400",
+        "url": "https://www.broward.org/PermitsLicensing",
+        "office": "Broward County Permits & Licensing"
+    },
+    "santa_clara_ca": {
+        "name": "Santa Clara County, CA",
+        "phone": "408-299-5700",
+        "url": "https://www.sccgov.org/sites/opa",
+        "office": "Santa Clara County Planning & Development"
+    },
+    "travis_tx": {
+        "name": "Travis County, TX",
+        "phone": "512-854-9188",
+        "url": "https://www.traviscountytx.gov/tnr/development-services",
+        "office": "Travis County Development Services"
+    },
+}
+
+CITY_TO_COUNTY = {
+    # Cook County, IL
+    "alsip": "cook_il", "evanston": "cook_il", "cicero": "cook_il", "oak_park": "cook_il",
+    "oak park": "cook_il",
+    # Harris County, TX
+    "sugar_land": "harris_tx", "sugar land": "harris_tx",
+    "pasadena": "harris_tx", "pearland": "harris_tx",
+    # Maricopa County, AZ
+    "scottsdale": "maricopa_az", "tempe": "maricopa_az", "mesa": "maricopa_az",
+    "chandler": "maricopa_az", "gilbert": "maricopa_az", "peoria": "maricopa_az",
+    # King County, WA
+    "bellevue": "king_wa", "redmond": "king_wa", "kirkland": "king_wa", "renton": "king_wa",
+    # Miami-Dade County, FL
+    "hialeah": "miami_dade_fl", "coral_gables": "miami_dade_fl", "coral gables": "miami_dade_fl",
+    "miami_beach": "miami_dade_fl", "miami beach": "miami_dade_fl",
+    # Dallas County, TX
+    "irving": "dallas_tx", "garland": "dallas_tx", "mesquite": "dallas_tx",
+    # Clark County, NV
+    "henderson": "clark_nv", "north_las_vegas": "clark_nv", "north las vegas": "clark_nv",
+    # Tarrant County, TX
+    "fort_worth": "tarrant_tx", "fort worth": "tarrant_tx", "arlington": "tarrant_tx",
+}
+
 # ─── Knowledge Base ───────────────────────────────────────────────────────────
 
 _TRADES_KB: dict = {}
@@ -477,16 +595,16 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
         location += f" {zip_code}"
 
     if city_match_level == "city":
-        # City in KB — search for current fees + portal-specific info
-        q1 = f"{city} {state} building permit {job_type} requirements fee 2025 2026"
+        # City in KB — search for current fees + portal-specific info + phone number
+        q1 = f"{city} {state} building permit {job_type} requirements fee phone number 2025 2026"
         q2 = f'"{city}" "{state}" permit portal apply online {job_type}'
         results1 = tavily_search(q1, max_results=3)
         results2 = tavily_search(q2, max_results=2)
         all_results = results1 + results2
     else:
-        # City NOT in KB — need to find the actual permit office
+        # City NOT in KB — need to find the actual permit office + phone number
         q1 = f"{city} {state} building permit office phone number address {job_type}"
-        q2 = f'"{city}" "{state}" building department permit how to apply online portal 2025'
+        q2 = f'"{city}" "{state}" building department permit phone number how to apply online portal 2025'
         q3 = f"{city} {state} permit fee schedule {job_type} site:.gov"
         results1 = tavily_search(q1, max_results=3)
         results2 = tavily_search(q2, max_results=2)
@@ -599,6 +717,18 @@ CRITICAL RULES:
    - For solar: "Electrical - Solar PV System" AND "Building - Solar Panel Installation"
    - For deck: "Building - Deck Addition" or "Residential Deck/Patio Cover"
    Use the most specific version you can based on city/state context.
+
+   FEW-SHOT EXAMPLES for portal_selection (use these as reference patterns):
+   - HVAC replacement → "HVAC Replacement - Residential System"
+   - HVAC repair → "HVAC Repair - Residential"
+   - Electrical service upgrade → "Electrical Permit - Service Upgrade"
+   - Electrical panel replacement → "Electrical Permit - Panel Replacement"
+   - Plumbing water heater → "Plumbing Permit - Water Heater Replacement"
+   - Roofing replacement → "Roofing Permit - Residential Re-Roof"
+   - Deck construction → "Building Permit - Residential Deck"
+   - Solar installation → "Building Permit - Solar Installation"
+   - Generator installation → "Electrical Permit - Generator Installation"
+   Always adapt these to the specific city's portal naming if you know it.
 
 3. ALWAYS include the phone number in apply_phone. If not in KB:
    - Search web results for the actual number
@@ -821,10 +951,32 @@ Return ONLY the JSON object."""
     # Ensure apply_google_maps is always set
     if not result.get("apply_google_maps"):
         result["apply_google_maps"] = build_google_maps_url(city, state)
+    # Always set maps_url as alias for frontend
+    result["maps_url"] = result["apply_google_maps"]
 
     # Ensure apply_phone is never null
     if not result.get("apply_phone"):
         result["apply_phone"] = f"Search: {build_google_maps_url(city, state)}"
+
+    # ── County fallback for small/unknown cities ──
+    if city_match_level in ("state", "none"):
+        city_key = city.lower().strip().replace(" ", "_")
+        city_key_spaces = city.lower().strip()
+        county_key = CITY_TO_COUNTY.get(city_key) or CITY_TO_COUNTY.get(city_key_spaces)
+        if county_key and county_key in COUNTY_DATA:
+            county = COUNTY_DATA[county_key]
+            # Fill in missing fields from county data
+            if not result.get("apply_phone") or result["apply_phone"].startswith("Search:"):
+                result["apply_phone"] = county["phone"]
+            if not result.get("apply_url"):
+                result["apply_url"] = county["url"]
+            if not result.get("applying_office"):
+                result["applying_office"] = county["office"]
+            result["county_fallback"] = True
+            result["county_fallback_note"] = (
+                f"We don't have exact data for {city} — showing {county['name']} "
+                f"data which covers this area."
+            )
 
     # Derive top-level permit_verdict from permits_required array
     # Frontend verdictState() reads this field

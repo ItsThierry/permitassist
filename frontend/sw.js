@@ -1,7 +1,7 @@
-// PermitAssist Service Worker
+// PermitAssist Service Worker v4
 // Handles offline caching and background sync
 
-const CACHE_NAME = 'permitassist-v3';
+const CACHE_NAME = 'permitassist-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -14,7 +14,7 @@ const STATIC_ASSETS = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(STATIC_ASSETS.filter(url => !url.includes('icon')));
+      return cache.addAll(STATIC_ASSETS);
     }).then(() => self.skipWaiting())
   );
 });
@@ -36,7 +36,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
   // API calls — network first with result caching
-  if (url.pathname === '/api/permit') {
+  if (url.pathname === '/api/permit' || url.pathname === '/api/research') {
     event.respondWith(
       fetch(event.request.clone()).then(response => {
         if (response.ok) {
@@ -85,7 +85,5 @@ self.addEventListener('sync', event => {
 });
 
 async function syncPendingLookups() {
-  // Would sync any queued lookups when back online
-  // Implementation: read from IndexedDB queue, process, notify user
   console.log('PermitAssist: syncing pending lookups');
 }
