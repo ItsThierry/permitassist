@@ -559,6 +559,14 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
+            # Prevent browser caching for HTML — always serve fresh version
+            if "text/html" in content_type:
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.send_header("Pragma", "no-cache")
+                self.send_header("Expires", "0")
+            else:
+                # Static assets (JS, CSS, images) — cache 1 hour
+                self.send_header("Cache-Control", "public, max-age=3600")
             self.end_headers()
             self.wfile.write(body)
         except FileNotFoundError:

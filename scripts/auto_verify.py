@@ -22,26 +22,132 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 OUTPUT_FILE = os.path.join(DATA_DIR, "verified_cities.json")
 
 CITIES = [
-    ("Houston",       "TX"),
-    ("Dallas",        "TX"),
-    ("Austin",        "TX"),
-    ("San Antonio",   "TX"),
-    ("Phoenix",       "AZ"),
-    ("Atlanta",       "GA"),
-    ("Charlotte",     "NC"),
-    ("Nashville",     "TN"),
-    ("Denver",        "CO"),
-    ("Las Vegas",     "NV"),
-    ("Orlando",       "FL"),
-    ("Tampa",         "FL"),
-    ("Jacksonville",  "FL"),
-    ("Columbus",      "OH"),
-    ("Indianapolis",  "IN"),
-    ("Fort Worth",    "TX"),
-    ("San Diego",     "CA"),
-    ("San Jose",      "CA"),
-    ("Seattle",       "WA"),
-    ("Portland",      "OR"),
+    # Texas (high volume, extreme city-to-city variation)
+    ("Houston",         "TX"),
+    ("Dallas",          "TX"),
+    ("Austin",          "TX"),
+    ("San Antonio",     "TX"),
+    ("Fort Worth",      "TX"),
+    ("El Paso",         "TX"),
+    ("Arlington",       "TX"),
+    ("Corpus Christi",  "TX"),
+    ("Plano",           "TX"),
+    ("Lubbock",         "TX"),
+    # Florida (complex building code, FBC)
+    ("Jacksonville",    "FL"),
+    ("Miami",           "FL"),
+    ("Tampa",           "FL"),
+    ("Orlando",         "FL"),
+    ("St Petersburg",   "FL"),
+    ("Hialeah",         "FL"),
+    ("Fort Lauderdale", "FL"),
+    ("Tallahassee",     "FL"),
+    ("Cape Coral",      "FL"),
+    ("Pembroke Pines",  "FL"),
+    # California (own code cycle, heavy amendments)
+    ("Los Angeles",     "CA"),
+    ("San Diego",       "CA"),
+    ("San Jose",        "CA"),
+    ("San Francisco",   "CA"),
+    ("Fresno",          "CA"),
+    ("Sacramento",      "CA"),
+    ("Long Beach",      "CA"),
+    ("Oakland",         "CA"),
+    ("Bakersfield",     "CA"),
+    ("Anaheim",         "CA"),
+    # Arizona
+    ("Phoenix",         "AZ"),
+    ("Tucson",          "AZ"),
+    ("Mesa",            "AZ"),
+    ("Chandler",        "AZ"),
+    ("Scottsdale",      "AZ"),
+    # Georgia
+    ("Atlanta",         "GA"),
+    ("Columbus",        "GA"),
+    ("Augusta",         "GA"),
+    ("Savannah",        "GA"),
+    # North Carolina
+    ("Charlotte",       "NC"),
+    ("Raleigh",         "NC"),
+    ("Greensboro",      "NC"),
+    ("Durham",          "NC"),
+    # Tennessee
+    ("Nashville",       "TN"),
+    ("Memphis",         "TN"),
+    ("Knoxville",       "TN"),
+    # Colorado
+    ("Denver",          "CO"),
+    ("Colorado Springs","CO"),
+    ("Aurora",          "CO"),
+    # Nevada
+    ("Las Vegas",       "NV"),
+    ("Henderson",       "NV"),
+    ("Reno",            "NV"),
+    # Ohio
+    ("Columbus",        "OH"),
+    ("Cleveland",       "OH"),
+    ("Cincinnati",      "OH"),
+    # Indiana
+    ("Indianapolis",    "IN"),
+    # Washington
+    ("Seattle",         "WA"),
+    ("Spokane",         "WA"),
+    ("Tacoma",          "WA"),
+    # Oregon
+    ("Portland",        "OR"),
+    ("Eugene",          "OR"),
+    # Michigan
+    ("Detroit",         "MI"),
+    ("Grand Rapids",    "MI"),
+    # Illinois
+    ("Chicago",         "IL"),
+    # Pennsylvania
+    ("Philadelphia",    "PA"),
+    ("Pittsburgh",      "PA"),
+    # New York
+    ("New York City",   "NY"),
+    ("Buffalo",         "NY"),
+    # Virginia
+    ("Virginia Beach",  "VA"),
+    ("Norfolk",         "VA"),
+    ("Richmond",        "VA"),
+    ("Chesapeake",      "VA"),
+    # Missouri
+    ("Kansas City",     "MO"),
+    ("St Louis",        "MO"),
+    # Minnesota
+    ("Minneapolis",     "MN"),
+    ("St Paul",         "MN"),
+    # Wisconsin
+    ("Milwaukee",       "WI"),
+    ("Madison",         "WI"),
+    # Louisiana
+    ("New Orleans",     "LA"),
+    ("Baton Rouge",     "LA"),
+    # Alabama
+    ("Birmingham",      "AL"),
+    ("Montgomery",      "AL"),
+    # South Carolina
+    ("Charleston",      "SC"),
+    ("Columbia",        "SC"),
+    # Oklahoma
+    ("Oklahoma City",   "OK"),
+    ("Tulsa",           "OK"),
+    # Kentucky
+    ("Louisville",      "KY"),
+    ("Lexington",       "KY"),
+    # Maryland
+    ("Baltimore",       "MD"),
+    # Massachusetts
+    ("Boston",          "MA"),
+    # Utah
+    ("Salt Lake City",  "UT"),
+    # New Mexico
+    ("Albuquerque",     "NM"),
+    # Nebraska
+    ("Omaha",           "NE"),
+    # Kansas
+    ("Wichita",         "KS"),
 ]
 
 TRADES = ["electrical", "plumbing", "hvac", "roofing", "general"]
@@ -181,11 +287,12 @@ def run():
                 err_count += 1
                 print(f"  ✗ Error for {key}: {e}")
 
+            # Write incrementally after every entry so progress is never lost
+            with open(OUTPUT_FILE, "w") as f:
+                json.dump(updated, f, indent=2)
+
             # Respect Tavily rate limits
             time.sleep(0.6)
-
-    with open(OUTPUT_FILE, "w") as f:
-        json.dump(updated, f, indent=2)
 
     print(f"\n[auto_verify] Done.")
     print(f"  New verified: {new_count}")
