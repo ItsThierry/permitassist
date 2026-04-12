@@ -852,7 +852,23 @@ DEPTH CHECKLIST — before returning your answer, verify:
 ✓ common_mistakes are job-specific, not generic reminders
 ✓ license_required explains WHO pulls the permit and HOW, never implies 'no permit needed'
 ✓ pro_tips save real time or money — not generic advice
-✓ companion_permits lists OTHER permits the contractor will likely also need for this job (empty array [] if none apply). Include certainty: "almost_certain", "likely", or "possible". Examples: roof replacement → electrical permit if removing solar panels; HVAC replacement → electrical permit for disconnect/reconnect; bathroom remodel → plumbing + electrical; panel upgrade → inspection permit
+✓ companion_permits is MANDATORY — always populate this field. Use the trade matrix below. Return [] ONLY if the job is truly isolated (e.g. painting, landscaping, minor repairs). For any mechanical, electrical, plumbing, or structural work, there are almost always companion permits.
+
+COMPANION PERMIT TRADE MATRIX (use this to populate companion_permits):
+- HVAC/AC/furnace/heat pump replacement → [almost_certain: Electrical Permit (disconnect/reconnect circuit), likely: Gas Permit if gas appliance]
+- Electrical panel upgrade/service change → [almost_certain: Electrical Inspection Permit, likely: Utility Coordination Permit]
+- Bathroom remodel → [almost_certain: Plumbing Permit, almost_certain: Electrical Permit (GFCI/outlets), possible: Building Permit if walls moved]
+- Kitchen remodel → [almost_certain: Plumbing Permit, almost_certain: Electrical Permit, possible: Mechanical Permit for range hood]
+- Roof replacement → [possible: Electrical Permit if solar panels present, possible: Structural Permit if decking replaced]
+- Water heater replacement → [likely: Gas Permit if gas unit, possible: Electrical Permit if converting to electric]
+- Deck/patio addition → [almost_certain: Building Permit, likely: Electrical Permit if adding outlets/lighting]
+- Garage conversion/ADU → [almost_certain: Building Permit, almost_certain: Electrical Permit, almost_certain: Plumbing Permit, likely: Mechanical Permit]
+- Solar panel installation → [almost_certain: Electrical Permit, almost_certain: Building/Structural Permit, likely: Utility Interconnection Permit]
+- EV charger installation → [almost_certain: Electrical Permit]
+- Generator installation → [almost_certain: Electrical Permit, likely: Gas/Mechanical Permit]
+- Basement finish → [almost_certain: Building Permit, almost_certain: Electrical Permit, likely: Plumbing Permit, likely: Mechanical Permit]
+- Window/door replacement → [possible: Building Permit if structural opening changes]
+- Plumbing repiping → [almost_certain: Plumbing Permit, possible: Building Permit for access openings]
 ✓ code_citation: for NO verdicts, ALWAYS include the specific code section (IRC/IPC/NEC/state code) that creates the exemption. Format: {"section": "IRC R105.2.2", "text": "first 120 chars of the relevant exemption text"}. For YES/MAYBE verdicts, set code_citation to null."""
 
 # ─── Main Research Function ───────────────────────────────────────────────────
