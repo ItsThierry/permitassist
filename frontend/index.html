@@ -834,6 +834,7 @@ function getInspectionChecklist(jobType) {
 const REPAIR_KEYWORDS = /\b(repair|fix|leak|patch|minor|small)\b/i;
 
 function checkDisambiguation() {
+  if (_skipDisambig) { _skipDisambig = false; return false; }
   const query = document.getElementById('query').value.trim();
   if (REPAIR_KEYWORDS.test(query)) {
     document.getElementById('disambig-box').classList.add('show');
@@ -843,10 +844,12 @@ function checkDisambiguation() {
   return false;
 }
 
+let _skipDisambig = false;
 function submitWithDisambig(choice) {
   const query = document.getElementById('query').value.trim();
   document.getElementById('query').value = query + ' (' + choice + ')';
   document.getElementById('disambig-box').classList.remove('show');
+  _skipDisambig = true;
   doLookupWithOffline();
 }
 
