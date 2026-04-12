@@ -1047,6 +1047,87 @@ Return ONLY the JSON object."""
     if not isinstance(result.get("companion_permits"), list):
         result["companion_permits"] = []
 
+    # Server-side companion permit injection — guarantees high-value companions
+    # even when AI omits them. Only adds if not already present (deduped by permit_type).
+    existing_types = {c.get("permit_type", "").lower() for c in result.get("companion_permits", [])}
+    job_lower = job_type.lower()
+    injected = []
+
+    COMPANION_MATRIX = [
+        # (job keywords, permit_type, reason, certainty)
+        (["hvac", "air condition", "ac unit", "heat pump", "furnace", "air handler"],
+         "Electrical Permit",
+         "Required for the electrical disconnect/reconnect circuit serving the HVAC system.",
+         "almost_certain"),
+        (["hvac", "air condition", "ac unit", "heat pump", "furnace"],
+         "Gas Permit",
+         "Required if the new unit is gas-fired or uses a gas line.",
+         "likely"),
+        (["bathroom remodel", "bath remodel", "bathroom renovation"],
+         "Plumbing Permit",
+         "Required for any fixture changes, drain relocation, or supply line work in the bathroom.",
+         "almost_certain"),
+        (["bathroom remodel", "bath remodel", "bathroom renovation"],
+         "Electrical Permit",
+         "Required for GFCI outlets, exhaust fan, and lighting circuit updates in wet areas.",
+         "almost_certain"),
+        (["kitchen remodel", "kitchen renovation"],
+         "Plumbing Permit",
+         "Required for sink, dishwasher, or gas line modifications.",
+         "almost_certain"),
+        (["kitchen remodel", "kitchen renovation"],
+         "Electrical Permit",
+         "Required for dedicated circuits (refrigerator, dishwasher, microwave, range).",
+         "almost_certain"),
+        (["panel upgrade", "panel replacement", "service upgrade", "electrical service", "200 amp", "200amp"],
+         "Utility Coordination",
+         "Your utility company must disconnect and reconnect service — coordinate before permit inspection.",
+         "almost_certain"),
+        (["solar", "solar panel"],
+         "Electrical Permit",
+         "Required for the inverter, electrical interconnection, and utility tie-in.",
+         "almost_certain"),
+        (["solar", "solar panel"],
+         "Structural / Building Permit",
+         "Required to verify roof load capacity and panel attachment method.",
+         "almost_certain"),
+        (["ev charger", "electric vehicle", "level 2 charger"],
+         "Electrical Permit",
+         "Required for the dedicated 240V circuit and panel breaker installation.",
+         "almost_certain"),
+        (["generator"],
+         "Electrical Permit",
+         "Required for the transfer switch and electrical connection to the panel.",
+         "almost_certain"),
+        (["basement finish", "basement remodel", "basement conversion"],
+         "Electrical Permit",
+         "Required for outlets, lighting, and any subpanel work in the finished space.",
+         "almost_certain"),
+        (["basement finish", "basement remodel", "basement conversion"],
+         "Plumbing Permit",
+         "Required if adding a bathroom, wet bar, or floor drain to the basement.",
+         "likely"),
+        (["water heater"],
+         "Gas Permit",
+         "Required if replacing with or converting to a gas water heater.",
+         "likely"),
+        (["deck", "patio cover", "pergola"],
+         "Electrical Permit",
+         "Required if adding outlets, lighting, or ceiling fans to the deck or patio.",
+         "likely"),
+    ]
+
+    verdict = result.get("permit_verdict", "YES")
+    if verdict != "NO":  # Don't inject companions on no-permit results
+        for keywords, ptype, reason, certainty in COMPANION_MATRIX:
+            if any(kw in job_lower for kw in keywords):
+                if ptype.lower() not in existing_types:
+                    injected.append({"permit_type": ptype, "reason": reason, "certainty": certainty})
+                    existing_types.add(ptype.lower())
+
+    if injected:
+        result["companion_permits"] = result.get("companion_permits", []) + injected
+
     # Add metadata
     result["_meta"] = {
         "generated_at":    datetime.now().isoformat(),
