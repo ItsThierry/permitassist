@@ -830,6 +830,13 @@ Return ONLY a JSON object with these exact fields:
     "Item 4 — e.g. 'Site plan showing equipment location and clearances'",
     "Item 5 — e.g. 'Homeowner signature on application if contractor is pulling'"
   ],
+  "companion_permits": [
+    {
+      "permit_type": "Name of companion permit (e.g. Electrical Permit)",
+      "reason": "One sentence explaining why this additional permit is needed for this job",
+      "certainty": "almost_certain | likely | possible"
+    }
+  ],
   "sources": ["official source URLs cited in your answer"],
   "confidence": "high|medium|low",
   "disclaimer": "Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently."
@@ -845,6 +852,7 @@ DEPTH CHECKLIST — before returning your answer, verify:
 ✓ common_mistakes are job-specific, not generic reminders
 ✓ license_required explains WHO pulls the permit and HOW, never implies 'no permit needed'
 ✓ pro_tips save real time or money — not generic advice
+✓ companion_permits lists OTHER permits the contractor will likely also need for this job (empty array [] if none apply). Include certainty: "almost_certain", "likely", or "possible". Examples: roof replacement → electrical permit if removing solar panels; HVAC replacement → electrical permit for disconnect/reconnect; bathroom remodel → plumbing + electrical; panel upgrade → inspection permit
 ✓ code_citation: for NO verdicts, ALWAYS include the specific code section (IRC/IPC/NEC/state code) that creates the exemption. Format: {"section": "IRC R105.2.2", "text": "first 120 chars of the relevant exemption text"}. For YES/MAYBE verdicts, set code_citation to null."""
 
 # ─── Main Research Function ───────────────────────────────────────────────────
@@ -862,6 +870,9 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
         cached = get_cached(key)
         if cached:
             cached["_cached"] = True
+            # Backfill companion_permits for old cache entries that predate this field
+            if "companion_permits" not in cached:
+                cached["companion_permits"] = []
             return cached
 
     location_str = f"{city}, {state}"
@@ -1015,6 +1026,10 @@ Return ONLY the JSON object."""
         result["code_citation"] = {"section": cc, "text": ""}
     elif not cc:
         result["code_citation"] = None
+
+    # Ensure companion_permits is present and well-formed
+    if not isinstance(result.get("companion_permits"), list):
+        result["companion_permits"] = []
 
     # Add metadata
     result["_meta"] = {

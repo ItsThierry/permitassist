@@ -452,22 +452,51 @@
     .footer { text-align: center; padding: 24px 20px; font-size: 12px; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--border); margin-top: 20px; }
     .footer a { color: var(--brand); text-decoration: none; }
 
+    /* Companion Permits Warning */
+    .companion-card { background: rgba(245,158,11,0.08); border: 2px solid rgba(245,158,11,0.4); border-radius: var(--r); padding: 18px 20px; margin-bottom: 14px; }
+    .companion-card .section-label { color: var(--yellow); }
+    .companion-item { padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .companion-item:last-child { border-bottom: none; }
+    .companion-type { font-size: 14px; font-weight: 700; color: var(--text); }
+    .companion-reason { font-size: 13px; color: var(--text2); margin-top: 2px; }
+    .companion-note { font-size: 12px; color: var(--yellow); margin-top: 10px; font-weight: 600; }
+    /* Confidence Badge */
+    .confidence-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; cursor: help; position: relative; }
+    .confidence-badge .conf-tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1a1a2e; color: #f0f4ff; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; white-space: nowrap; z-index: 10; margin-bottom: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+    .confidence-badge:hover .conf-tooltip, .confidence-badge:active .conf-tooltip { display: block; }
+    .flag-wrong-btn { background: none; border: 1px solid var(--border); border-radius: 16px; color: var(--muted); cursor: pointer; font-size: 11px; padding: 4px 10px; transition: all .15s; margin-left: 8px; }
+    .flag-wrong-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+    .flag-feedback-inline { font-size: 11px; color: var(--green); margin-left: 8px; display: none; }
+
     /* Print */
     @media print {
-      body { background: #fff !important; color: #000 !important; }
-      .nav,.tabs,.counter-bar,.trust-badges,.hero,.trust-note,.lookup-btn,#search-form,#loading,.action-row,.feedback-row,.new-search-btn,.gate-overlay,#install-banner,.offline-badge,.install-btn,.disambig-box,.footer { display: none !important; }
+      @page { size: letter; margin: 0.75in; }
+      body { background: #fff !important; color: #000 !important; font-size: 12px !important; }
+      #app { max-width: 100% !important; }
+      .nav,.tabs,.counter-bar,.trust-badges,.hero,.trust-note,.lookup-btn,#search-form,#loading,.action-row,.feedback-row,.new-search-btn,.gate-overlay,#install-banner,.offline-badge,.install-btn,.disambig-box,.footer,.search-again-hero,.nav-new-search,.tracker-modal-overlay,.flag-wrong-btn,.flag-feedback-inline { display: none !important; }
       #results { display: block !important; }
-      .results-inner { padding: 8px !important; }
-      .card,.summary-card,.result-hero { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; }
+      .results-inner { padding: 0 !important; }
+      .card,.summary-card,.result-hero,.how-to-apply-card,.watchout-card,.companion-card { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; margin-bottom: 10px !important; padding: 14px !important; }
       .result-hero { background: #f0f4ff !important; }
+      .companion-card { border: 2px solid #f59e0b !important; background: #fffbeb !important; }
       .section-label { color: #555 !important; } .info-key { color: #555 !important; } .info-val { color: #000 !important; }
-      .contact-phone { font-size: 20px !important; color: #2563eb !important; }
+      .contact-phone { font-size: 18px !important; color: #2563eb !important; }
       .badge-green { background: #d1fae5 !important; color: #065f46 !important; }
       .badge-blue { background: #dbeafe !important; color: #1e40af !important; }
+      .badge-yellow { background: #fef3c7 !important; color: #92400e !important; }
+      .badge-red { background: #fee2e2 !important; color: #991b1b !important; }
+      .confidence-badge { border: 1px solid #ccc !important; }
+      .confidence-badge .conf-tooltip { display: none !important; }
       .bullet-list, .ordered-list li { color: #333 !important; }
+      .checklist-items { display: block !important; }
+      .print-header { display: block !important; }
       .print-footer { display: block !important; }
       a { color: #2563eb !important; }
+      .no-print { display: none !important; }
     }
+    .print-header { display: none; text-align: center; padding: 12px 0; border-bottom: 2px solid #2563eb; margin-bottom: 16px; }
+    .print-header h2 { font-size: 20px; font-weight: 800; color: #2563eb; margin: 0; }
+    .print-header p { font-size: 12px; color: #666; margin-top: 4px; }
     .print-footer { display: none; text-align: center; font-size: 11px; color: #888; margin-top: 24px; padding-top: 12px; border-top: 1px solid #ddd; }
 
     /* Mobile */
@@ -809,6 +838,9 @@ function renderResults(d, job, city, state) {
 
   let html = '';
 
+  // Print header (only visible when printing)
+  html += `<div class="print-header"><h2>PermitAssist — permitassist.io</h2><p>Permit Research Report</p></div>`;
+
   // Search Again hero button at top
   html += `<button class="search-again-hero" onclick="newSearch()">🔍 &nbsp;New Lookup</button>`;
   // Show nav link too
@@ -841,6 +873,22 @@ function renderResults(d, job, city, state) {
     }
   }
 
+  // Data confidence badge
+  const dataSourceRaw = d.data_source || d._meta?.city_match_level || '';
+  const isCountyFB = d.county_fallback === true;
+  let confBadgeHtml = '';
+  if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.12);color:#10b981">🟢 Verified Data<span class="conf-tooltip">From our curated city database</span></span>`;
+  } else if (dataSourceRaw === 'web_search') {
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.12);color:#f59e0b">🟡 AI-Researched<span class="conf-tooltip">Researched live from official sources — verify fees before submitting</span></span>`;
+  } else if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(249,115,22,0.12);color:#f97316">🟠 County Data<span class="conf-tooltip">City not found — showing county requirements</span></span>`;
+  } else {
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(239,68,68,0.12);color:#ef4444">🔴 General Estimate<span class="conf-tooltip">Limited local data — confirm with city before applying</span></span>`;
+  }
+  const freshNow = new Date();
+  const freshMonthYear = freshNow.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
   // Result hero
   html += `<div class="result-hero">
     <div class="result-job">${esc(job)}</div>
@@ -848,6 +896,12 @@ function renderResults(d, job, city, state) {
     <div class="result-badges">
       <span class="badge ${verdict==='yes'?'badge-green':verdict==='no'?'badge-red':'badge-yellow'}">${verdict === 'yes' ? '✅ PERMIT REQUIRED' : verdict === 'no' ? '❌ NO PERMIT' : '⚠️ MAYBE'}</span>
       ${fee ? `<span class="badge badge-blue">💰 ${esc(fee)}</span>` : ''}
+      ${confBadgeHtml}
+    </div>
+    <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--muted)">Last updated: ${freshMonthYear}</span>
+      <button class="flag-wrong-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button>
+      <span class="flag-feedback-inline" id="flag-feedback-inline">Thanks for flagging. We'll review this within 30 days.</span>
     </div>
   </div>`;
 
@@ -873,6 +927,19 @@ function renderResults(d, job, city, state) {
       </div>`;
     }
     html += `</div>`;
+  }
+
+  // Companion permits warning
+  const companionPermits = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
+  if (companionPermits.length > 0) {
+    html += `<div class="companion-card">
+      <div class="section-label">⚠️ You'll Likely Also Need</div>
+      ${companionPermits.map(cp => `<div class="companion-item">
+        <div class="companion-type">${esc(cp.permit_type)}</div>
+        <div class="companion-reason">${esc(cp.reason)}</div>
+      </div>`).join('')}
+      <div class="companion-note">💡 Running these permits together saves time and avoids stop-work orders</div>
+    </div>`;
   }
 
   // How to Apply card (replaces misleading "Apply Online" button)
@@ -1032,7 +1099,7 @@ function renderResults(d, job, city, state) {
   // Action buttons
   html += `
     <div class="action-row" style="margin-top:14px">
-      <button class="action-btn" onclick="shareResult()">📤 Share</button>
+      <button class="action-btn" onclick="shareResult()">📤 Share Result</button>
       <button class="action-btn" onclick="copyResult()">📋 Copy Summary</button>
     </div>
     <div class="action-row">
@@ -1040,7 +1107,7 @@ function renderResults(d, job, city, state) {
       <button class="action-btn" onclick="emailResult()">📧 Email to Me</button>
     </div>
     <div class="action-row">
-      <button class="action-btn" onclick="printResult()">🖨️ Print / Save PDF</button>
+      <button class="action-btn" onclick="printResult()">🖨️ Save as PDF</button>
       <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
     </div>
     <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>
@@ -1051,7 +1118,7 @@ function renderResults(d, job, city, state) {
     </div>
     <button class="new-search-btn" onclick="newSearch()">← New Search</button>
     <button class="action-btn" style="width:100%;margin-top:8px;border-color:rgba(16,185,129,.3);color:var(--green)" onclick="openTracker()">✅ Track This Permit</button>
-    <div class="print-footer">Generated by PermitAssist — permitassist.io · ${freshDate || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · Always verify with your local building department before starting work.</div>`;
+    <div class="print-footer">Generated ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} | Verify with local building department before submitting<br>PermitAssist — permitassist.io</div>`;
 
   document.getElementById('results-inner').innerHTML = html;
 }
@@ -1087,7 +1154,16 @@ function submitFeedback() {
   fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job_type: job, city, state, issue }) }).catch(() => {});
   const btn = document.querySelector('.flag-btn'), sent = document.getElementById('feedback-sent');
   if (btn) btn.style.display = 'none';
-  if (sent) sent.style.display = 'block';
+  if (sent) { sent.textContent = 'Thanks for flagging. We\'ll review this within 30 days.'; sent.style.display = 'block'; }
+}
+
+function flagAsWrong(btnEl) {
+  if (!currentResult) return;
+  const { job, city, state } = currentResult;
+  fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job_type: job, city, state, issue: 'Flagged as wrong via inline button' }) }).catch(() => {});
+  btnEl.style.display = 'none';
+  const fb = document.getElementById('flag-feedback-inline');
+  if (fb) fb.style.display = 'inline';
 }
 
 async function shareResult() {
@@ -1101,7 +1177,7 @@ async function shareResult() {
     const r = await resp.json();
     if (!r.url) throw new Error(r.error || 'No URL returned');
     if (navigator.share) {
-      try { await navigator.share({ title: `Permit: ${job} in ${city}, ${state}`, text: `Permit requirements for ${job} in ${city}, ${state} — via PermitAssist`, url: r.url }); showCopy('✅ Shared!'); return; } catch (se) { if (se.name === 'AbortError') return; }
+      try { await navigator.share({ title: `Permit: ${job} in ${city}, ${state}`, text: `Permit requirements for ${job} in ${city}, ${state} — via PermitAssist`, url: r.url }); showCopy('✅ Link copied! Send to your foreman or office.'); return; } catch (se) { if (se.name === 'AbortError') return; }
     }
     await navigator.clipboard.writeText(r.url).catch(() => {});
     showShareModal(r.url);
@@ -1120,7 +1196,7 @@ function showShareModal(url) {
   m.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.78);display:flex;align-items:flex-end;';
   m.innerHTML = `<div style="background:#1E293B;border-radius:20px 20px 0 0;border-top:1px solid #334155;padding:24px 20px 36px;width:100%;max-width:680px;margin:0 auto;animation:slideUp .25s ease">
     <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔗 Share this result</div>
-    <div style="font-size:13px;color:#94A3B8;margin-bottom:14px">Send to your homeowner or save it. Expires in 7 days.</div>
+    <div style="font-size:13px;color:#94A3B8;margin-bottom:14px">Send to your foreman or office. Link expires in 7 days.</div>
     <div id="share-url-box" style="background:#0F172A;border:1px solid #334155;border-radius:8px;padding:11px 14px;font-size:12px;color:#F8FAFC;word-break:break-all;margin-bottom:14px;user-select:all">${url}</div>
     <button id="share-copy-btn" style="width:100%;background:#3B82F6;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:10px">📋 Copy Link</button>
     <button onclick="document.getElementById('share-modal').remove()" style="width:100%;background:none;border:1px solid #334155;border-radius:10px;color:#64748B;font-size:14px;padding:11px;cursor:pointer">Close</button>
@@ -1135,18 +1211,18 @@ function showShareModal(url) {
 function copyResult() {
   if (!currentResult) return;
   const { job, city, state, data: d } = currentResult;
-  let t = `PERMIT RESEARCH: ${job}\nLocation: ${city}, ${state}\n\n`;
-  for (const p of (d.permits_required || [])) {
-    const req = p.required === true ? '✅ YES' : p.required === 'maybe' ? '⚠️ MAYBE' : '❌ NO';
-    t += `  ${req} — ${p.permit_type}\n`;
-    if (p.notes) t += `     ${p.notes}\n`;
-  }
-  if (d.applying_office) t += `OFFICE: ${d.applying_office}\n`;
-  if (d.apply_phone) t += `PHONE: ${d.apply_phone}\n`;
-  if (d.apply_address) t += `ADDRESS: ${d.apply_address}\n`;
-  if (d.fee_range) t += `FEE: ${d.fee_range}\n`;
-  if (d.approval_timeline?.simple) t += `TIMELINE: ${d.approval_timeline.simple}\n`;
-  t += '\nPermitAssist — permitassist.io';
+  const permits = d.permits_required || [];
+  const permitName = permits.length > 0 ? permits[0].permit_type : 'See details';
+  const fee = d.fee_range || 'Contact building dept';
+  const timeline = d.approval_timeline?.simple || d.approval_timeline?.complex || 'Varies';
+  const office = d.applying_office || '';
+  const phone = d.apply_phone || '';
+  let t = `PERMIT SUMMARY — ${job} in ${city}, ${state}\n`;
+  t += `Permit needed: ${permitName}\n`;
+  t += `Fee: ${fee}\n`;
+  t += `Timeline: ${timeline}\n`;
+  if (office || phone) t += `Apply at: ${office}${office && phone ? ' — ' : ''}${phone}\n`;
+  t += `Generated by PermitAssist (permitassist.io)`;
   navigator.clipboard.writeText(t).then(() => showCopy('✅ Copied!')).catch(() => alert(t));
 }
 
