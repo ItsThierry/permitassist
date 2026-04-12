@@ -17,11 +17,12 @@ import smtplib
 import sqlite3
 import requests
 import threading
+import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result
 
 FRONTEND_DIR   = os.path.join(os.path.dirname(__file__), "..", "frontend")
@@ -157,6 +158,27 @@ def init_db():
             created_at  TEXT,
             expires_at  TEXT,
             views       INTEGER DEFAULT 0
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS jobs (
+            id           TEXT PRIMARY KEY,
+            email        TEXT NOT NULL,
+            job_name     TEXT,
+            address      TEXT,
+            city         TEXT,
+            state        TEXT,
+            trade        TEXT,
+            permit_name  TEXT,
+            status       TEXT DEFAULT 'planning',
+            applied_date TEXT,
+            approved_date TEXT,
+            permit_number TEXT,
+            expiry_date  TEXT,
+            notes        TEXT,
+            result_json  TEXT,
+            created_at   TEXT,
+            updated_at   TEXT
         )
     """)
     conn.commit()
@@ -413,6 +435,102 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
         print(f"[email_report] Failed: {e}")
         return False
 
+# ── Job Tracker helpers ──────────────────────────────────────────────────────
+
+def create_job(email: str, job_name: str, city: str, state: str, **kwargs) -> dict:
+    job_id = str(uuid.uuid4())
+    now = datetime.utcnow().isoformat()
+    fields = {
+        "id": job_id, "email": email.lower().strip(), "job_name": job_name,
+        "city": city, "state": state, "created_at": now, "updated_at": now,
+        "address": kwargs.get("address", ""),
+        "trade": kwargs.get("trade", ""),
+        "permit_name": kwargs.get("permit_name", ""),
+        "status": kwargs.get("status", "planning"),
+        "applied_date": kwargs.get("applied_date", ""),
+        "approved_date": kwargs.get("approved_date", ""),
+        "permit_number": kwargs.get("permit_number", ""),
+        "expiry_date": kwargs.get("expiry_date", ""),
+        "notes": kwargs.get("notes", ""),
+        "result_json": json.dumps(kwargs.get("result_json", {})) if kwargs.get("result_json") else "",
+    }
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            "INSERT INTO jobs (id,email,job_name,address,city,state,trade,permit_name,"
+            "status,applied_date,approved_date,permit_number,expiry_date,notes,result_json,"
+            "created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (fields["id"], fields["email"], fields["job_name"], fields["address"],
+             fields["city"], fields["state"], fields["trade"], fields["permit_name"],
+             fields["status"], fields["applied_date"], fields["approved_date"],
+             fields["permit_number"], fields["expiry_date"], fields["notes"],
+             fields["result_json"], fields["created_at"], fields["updated_at"])
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[jobs] Create error: {e}")
+    return fields
+
+
+def list_jobs(email: str) -> list:
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        rows = conn.execute(
+            "SELECT id,email,job_name,address,city,state,trade,permit_name,status,"
+            "applied_date,approved_date,permit_number,expiry_date,notes,result_json,"
+            "created_at,updated_at FROM jobs WHERE email=? ORDER BY created_at DESC",
+            (email.lower().strip(),)
+        ).fetchall()
+        conn.close()
+        cols = ["id","email","job_name","address","city","state","trade","permit_name",
+                "status","applied_date","approved_date","permit_number","expiry_date",
+                "notes","result_json","created_at","updated_at"]
+        result = []
+        for row in rows:
+            d = dict(zip(cols, row))
+            if d.get("result_json"):
+                try: d["result_json"] = json.loads(d["result_json"])
+                except: d["result_json"] = {}
+            result.append(d)
+        return result
+    except Exception as e:
+        print(f"[jobs] List error: {e}")
+        return []
+
+
+def update_job(job_id: str, updates: dict) -> bool:
+    allowed = ["job_name","address","trade","permit_name","status",
+               "applied_date","approved_date","permit_number","expiry_date","notes"]
+    fields = {k: v for k, v in updates.items() if k in allowed}
+    if not fields:
+        return False
+    fields["updated_at"] = datetime.utcnow().isoformat()
+    set_clause = ", ".join(f"{k}=?" for k in fields)
+    values = list(fields.values()) + [job_id]
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute(f"UPDATE jobs SET {set_clause} WHERE id=?", values)
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[jobs] Update error: {e}")
+        return False
+
+
+def delete_job(job_id: str) -> bool:
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute("DELETE FROM jobs WHERE id=?", (job_id,))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[jobs] Delete error: {e}")
+        return False
+
+
 # ── Request handler ───────────────────────────────────────────────────────────
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
@@ -454,9 +572,37 @@ class Handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
+
+    def do_PATCH(self):
+        path = urlparse(self.path).path
+        if path.startswith("/api/jobs/"):
+            job_id = path[len("/api/jobs/"):].strip("/")
+            if not job_id:
+                self.send_json(400, {"error": "Job ID required"})
+                return
+            try:
+                updates = self.read_json_body()
+                ok = update_job(job_id, updates)
+                self.send_json(200 if ok else 404, {"updated": ok})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+        else:
+            self.send_json(404, {"error": "Not found"})
+
+    def do_DELETE(self):
+        path = urlparse(self.path).path
+        if path.startswith("/api/jobs/"):
+            job_id = path[len("/api/jobs/"):].strip("/")
+            if not job_id:
+                self.send_json(400, {"error": "Job ID required"})
+                return
+            ok = delete_job(job_id)
+            self.send_json(200 if ok else 404, {"deleted": ok})
+        else:
+            self.send_json(404, {"error": "Not found"})
 
     def do_GET(self):
         path = urlparse(self.path).path
@@ -507,6 +653,24 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
             self.wfile.write(html.encode())
         elif path == "/api/stats":
             self.send_json(200, get_lookup_stats())
+
+        elif path == "/api/verified-cities":
+            try:
+                import sys
+                sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
+                from auto_verify import get_verified_cities
+                cities = get_verified_cities()
+                self.send_json(200, {"verified_cities": cities, "count": len(cities)})
+            except Exception as e:
+                self.send_json(200, {"verified_cities": [], "count": 0, "note": str(e)})
+
+        elif path == "/api/jobs":
+            qs = parse_qs(urlparse(self.path).query)
+            email = (qs.get("email", [""])[0] or "").strip().lower()
+            if not email or "@" not in email:
+                self.send_json(400, {"error": "email query param required"})
+                return
+            self.send_json(200, {"jobs": list_jobs(email)})
 
         # ── SEO: sitemap.xml ──────────────────────────────────────────────
         elif path == "/sitemap.xml":
@@ -573,10 +737,11 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
         if path == "/api/permit":
             try:
                 data     = self.read_json_body()
-                job_type = data.get("job_type", "").strip()
-                city     = data.get("city", "").strip()
-                state    = data.get("state", "").strip()
-                zip_code = data.get("zip_code", "").strip()
+                job_type     = data.get("job_type", "").strip()
+                city         = data.get("city", "").strip()
+                state        = data.get("state", "").strip()
+                zip_code     = data.get("zip_code", "").strip()
+                job_category = data.get("job_category", "residential").strip() or "residential"
 
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
@@ -587,9 +752,9 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 # Rate limit check (only applies to fresh lookups — handled below)
                 limited, remaining = is_rate_limited(ip)
 
-                print(f"[permit] {job_type} in {city}, {state} — IP={ip} remaining={remaining}")
+                print(f"[permit] {job_type} in {city}, {state} ({job_category}) — IP={ip} remaining={remaining}")
 
-                result = research_permit(job_type, city, state, zip_code)
+                result = research_permit(job_type, city, state, zip_code, job_category=job_category)
                 is_cached = result.get("_cached", False)
 
                 if not is_cached:
@@ -738,6 +903,30 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 self.send_json(200, {"sent": sent})
             except Exception as e:
                 print(f"[email-report] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
+        # ── Jobs API POST ────────────────────────────────────────────────
+        elif path == "/api/jobs":
+            try:
+                data  = self.read_json_body()
+                email = data.get("email", "").strip().lower()
+                job_name = data.get("job_name", "").strip()
+                city  = data.get("city", "").strip()
+                state = data.get("state", "").strip()
+                if not email or "@" not in email or not job_name or not city or not state:
+                    self.send_json(400, {"error": "email, job_name, city, state required"})
+                    return
+                job = create_job(
+                    email, job_name, city, state,
+                    address=data.get("address", ""),
+                    trade=data.get("trade", ""),
+                    permit_name=data.get("permit_name", ""),
+                    status=data.get("status", "planning"),
+                    notes=data.get("notes", ""),
+                    result_json=data.get("result_json"),
+                )
+                self.send_json(201, {"job": job})
+            except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
         else:

@@ -955,12 +955,16 @@ COMPANION PERMIT TRADE MATRIX (use this to populate companion_permits):
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
-def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True) -> dict:
+def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential") -> dict:
     """
     Research permit requirements for a job + location.
     v3: Better advice depth, small city fallback, PDF stripping, Google Maps fallback.
     """
     init_cache()
+
+    job_category = job_category.lower().strip() if job_category else "residential"
+    if job_category not in ("residential", "commercial"):
+        job_category = "residential"
 
     key = cache_key(job_type, city, state)
 
@@ -972,6 +976,30 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             if "companion_permits" not in cached:
                 cached["companion_permits"] = []
             return cached
+
+    # ── Check auto-verified data first ──
+    _verified_entry = None
+    try:
+        import sys
+        import os as _os
+        _scripts_dir = _os.path.join(_os.path.dirname(__file__), "..", "scripts")
+        if _scripts_dir not in sys.path:
+            sys.path.insert(0, _scripts_dir)
+        from auto_verify import get_verified_for_city_trade
+        # Detect trade from job_type for lookup key
+        _job_lower = job_type.lower()
+        _trade_guess = "general"
+        if any(w in _job_lower for w in ["hvac", "ac unit", "air condition", "heat pump", "furnace", "mini split", "ductless"]):
+            _trade_guess = "hvac"
+        elif any(w in _job_lower for w in ["electric", "panel", "wiring", "ev charger", "solar", "generator"]):
+            _trade_guess = "electrical"
+        elif any(w in _job_lower for w in ["plumb", "water heater", "pipe", "drain", "sewer"]):
+            _trade_guess = "plumbing"
+        elif any(w in _job_lower for w in ["roof", "shingle", "gutter"]):
+            _trade_guess = "roofing"
+        _verified_entry = get_verified_for_city_trade(city, state, _trade_guess)
+    except Exception as _e:
+        print(f"[research] auto_verify check failed (non-fatal): {_e}")
 
     location_str = f"{city}, {state}"
     if zip_code:
@@ -1018,15 +1046,33 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
         print(f"[research] Found {len(quirks)} jurisdiction quirks for {city}, {state}")
 
     # ── Step 4: GPT synthesis ──
+    # Build verified data context if available
+    _verified_context = ""
+    if _verified_entry:
+        vd = _verified_entry.get("data", {})
+        _verified_context = (
+            f"\n\n=== PRE-VERIFIED DATA (confidence: verified, source: {_verified_entry.get('source_url','')}) ===\n"
+            f"Trade: {_verified_entry.get('trade','')}\n"
+            f"Verified at: {_verified_entry.get('verified_at','')}\n"
+            f"Phone: {vd.get('phone','(not found)')}\n"
+            f"Fee range: {vd.get('fee_range','(not found)')}\n"
+            f"Summary: {vd.get('summary','')}\n"
+            "Use this verified data in your response — it's from official sources."
+        )
+        print(f"[research] Using auto-verified data for {city}, {state} ({_trade_guess})")
+
     user_prompt = f"""A contractor needs permit information for this job:
 
 Job: {job_type}
 Location: {location_str}
+Job Category: {job_category.upper()} (important: tailor requirements and fees for {job_category} work — requirements differ between residential and commercial)
 City data availability: {city_match_level}
 
 {f"IMPORTANT HINTS FOR THIS JOB TYPE:{chr(10)}{job_hints}" if job_hints else ""}
 
 {kb_context}
+
+{_verified_context}
 
 {search_context}
 
@@ -1234,6 +1280,8 @@ Return ONLY the JSON object."""
         "city":            city,
         "state":           state,
         "zip_code":        zip_code,
+        "job_category":    job_category,
+        "auto_verified":   bool(_verified_entry),
     }
 
     save_cache(key, job_type, city, state, zip_code, result)

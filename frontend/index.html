@@ -491,6 +491,52 @@
     .flag-wrong-btn:hover { border-color: var(--yellow); color: var(--yellow); }
     .flag-feedback-inline { font-size: 11px; color: var(--green); margin-left: 8px; display: none; }
 
+    /* Residential/Commercial Toggle */
+    .toggle-row { display: flex; gap: 8px; }
+    .toggle-btn {
+      flex: 1; padding: 11px 14px; border-radius: var(--r-sm); border: 1px solid var(--border);
+      background: var(--bg); color: var(--text2); font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s;
+      text-align: center;
+    }
+    .toggle-btn.active { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
+    .toggle-btn:not(.active):hover { border-color: var(--brand); color: var(--brand); }
+
+    /* Autocomplete */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-dropdown {
+      position: absolute; left: 0; right: 0; top: 100%; z-index: 50;
+      background: var(--surface); border: 1px solid var(--border); border-top: none;
+      border-radius: 0 0 var(--r-sm) var(--r-sm); max-height: 200px; overflow-y: auto;
+    }
+    .autocomplete-item {
+      padding: 10px 14px; font-size: 14px; color: var(--text2); cursor: pointer;
+      border-bottom: 1px solid var(--border);
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: var(--brand-light); color: var(--brand); }
+
+    /* Expiry reminder */
+    .expiry-reminder-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px; }
+
+    /* Jobs page */
+    .jobs-empty { text-align: center; padding: 72px 20px; color: var(--muted); }
+    .jobs-empty .icon { font-size: 48px; margin-bottom: 14px; }
+    .job-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; margin-bottom: 10px; }
+    .job-item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .job-item-name { font-weight: 700; font-size: 15px; }
+    .job-status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .status-planning { background: var(--yellow-bg); color: var(--yellow); }
+    .status-applied { background: var(--brand-light); color: var(--brand); }
+    .status-approved { background: var(--green-bg); color: var(--green); }
+    .status-active { background: rgba(139,92,246,0.12); color: #a78bfa; }
+    .status-closed { background: var(--surface2); color: var(--muted); }
+    .job-item-meta { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+    .job-item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .job-action-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text2); cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 600; padding: 7px 12px; transition: all .12s; }
+    .job-action-btn:hover { border-color: var(--brand); color: var(--brand); }
+    .job-expiry-warn { background: var(--yellow-bg); border: 1px solid rgba(245,158,11,0.3); border-radius: var(--r-sm); font-size: 12px; color: var(--yellow); padding: 6px 10px; margin-top: 8px; }
+
     /* Print */
     @media print {
       @page { size: letter; margin: 0.75in; }
@@ -554,6 +600,7 @@
   <div class="tabs">
     <div class="tab active" id="tab-search" onclick="showTab('search')">🔍 Look Up</div>
     <div class="tab" id="tab-history" onclick="showTab('history')">📋 History</div>
+    <div class="tab" id="tab-jobs" onclick="showTab('jobs')">📁 Jobs</div>
   </div>
 
   <!-- Search Page -->
@@ -562,7 +609,7 @@
       <!-- Hero -->
       <div class="hero">
         <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
-        <p class="hero-sub">Google sends you to a website. ChatGPT guesses. PermitAssist tells you the exact permit name, real fees, and the phone number that actually works — in 30 seconds.</p>
+        <p class="hero-sub">Stop-work orders cost $2,000–$10,000. Wrong permit = failed inspection + double fees. PermitAssist tells you the exact permit name to ask for, current fees, and the phone number that actually works — before you touch the job.</p>
         <div style="margin-top:16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:14px 18px;text-align:left;max-width:480px;margin-inline:auto">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px">✅ Built for Trade Contractors</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px">
@@ -607,10 +654,20 @@
           <input type="text" id="state" placeholder="e.g. TX" maxlength="2" style="text-transform:uppercase" autocomplete="off" />
         </div>
         <div class="form-group">
+          <label>Job Type</label>
+          <div class="toggle-row" id="job-category-toggle">
+            <button class="toggle-btn active" id="btn-residential" onclick="setJobCategory('residential')">🏠 Residential</button>
+            <button class="toggle-btn" id="btn-commercial" onclick="setJobCategory('commercial')">🏢 Commercial</button>
+          </div>
+        </div>
+        <div class="form-group">
           <label>Describe the job</label>
-          <div class="query-wrap">
-            <textarea class="hero-input" id="query" placeholder="e.g. HVAC replacement, residential furnace swap, 3-ton unit" autocomplete="off" rows="3"></textarea>
-            <button class="mic-btn" id="mic-btn" type="button" title="Speak your question" onclick="toggleVoice()">🎤</button>
+          <div class="autocomplete-wrap">
+            <div class="query-wrap">
+              <textarea class="hero-input" id="query" placeholder="e.g. HVAC replacement, residential furnace swap, 3-ton unit" autocomplete="off" rows="3"></textarea>
+              <button class="mic-btn" id="mic-btn" type="button" title="Speak your question" onclick="toggleVoice()">🎤</button>
+            </div>
+            <div class="autocomplete-dropdown" id="autocomplete-dropdown" style="display:none"></div>
           </div>
         </div>
         <div class="form-group" style="margin-bottom:0">
@@ -660,6 +717,9 @@
   <!-- History Page -->
   <div class="page" id="page-history"><div class="page-inner" id="history-content"></div></div>
 
+  <!-- Jobs Page -->
+  <div class="page" id="page-jobs"><div class="page-inner" id="jobs-inner"></div></div>
+
   <!-- Footer -->
   <div class="footer">
     <p>⚠️ PermitAssist provides guidance only. Always verify requirements with your local building department before starting work.</p>
@@ -684,9 +744,18 @@
     <div class="gate-icon">📋</div>
     <div class="gate-title" id="gate-title">You're clearly finding this useful</div>
     <div class="gate-sub" id="gate-sub">Drop your email to keep going — results are ready. Completely free.</div>
+    <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left">
+      <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:8px">💰 The math is simple:</div>
+      <div style="font-size:12px;color:#94a3b8;line-height:1.7">
+        • 1 stop-work order avoided = <strong style="color:#f0f4ff">$2,000–$10,000 saved</strong><br>
+        • 2 hrs/week research saved = <strong style="color:#f0f4ff">$300–$600/mo value</strong><br>
+        • PermitAssist costs <strong style="color:#10b981">$19/month</strong>
+      </div>
+    </div>
     <input class="gate-input" type="email" id="gate-email" placeholder="your@email.com" autocomplete="email" />
     <button class="gate-submit" onclick="submitGateEmail()">Show My Permit Requirements →</button>
     <div class="gate-note">🔒 No credit card. No spam. Unsubscribe anytime.</div>
+    <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 2 months: <strong style="color:#94a3b8">Annual plan = $190/yr</strong> (vs $228)</div>
     <span class="gate-skip" id="gate-skip-link" onclick="skipGate()">Skip for now (uses 1 of 5 free lookups)</span>
   </div>
 </div>
@@ -695,7 +764,49 @@
 // ── Constants & State ─────────────────────────────────────────────────────────
 const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',FREE_LIMIT=5,UPGRADE_URL='https://permitassist.io/#upgrade';
 const IS_ADMIN=new URLSearchParams(window.location.search).get('admin')==='boban2026';
-let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null;
+let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential';
+
+// ── Job Types for Autocomplete ────────────────────────────────────────────────
+const JOB_TYPES_ALL = [
+  // HVAC
+  'HVAC system replacement','HVAC replacement residential','Air conditioner replacement',
+  'Furnace replacement','Heat pump installation','Mini split installation',
+  'Ductless mini split','Central air conditioning installation','Gas furnace installation',
+  'Electric furnace installation','HVAC repair','Air handler replacement',
+  'Condenser replacement','Ductwork installation','Ductwork replacement',
+  'Boiler replacement','Heat pump water heater installation',
+  // Electrical
+  'Electrical panel upgrade','Electrical panel replacement','Service upgrade 200 amp',
+  'Service upgrade 400 amp','Sub panel installation','EV charger installation',
+  'Electric vehicle charger Level 2','Solar panel installation','Solar PV system',
+  'Generator installation','Standby generator','Whole house generator',
+  'New circuit installation','GFCI outlet installation','Ceiling fan installation',
+  'Transfer switch installation',
+  // Plumbing
+  'Water heater replacement','Tankless water heater installation',
+  'Gas water heater replacement','Plumbing repiping','Whole house repipe',
+  'Sewer line replacement','Water line replacement','Main water line replacement',
+  'Bathroom remodel plumbing','Kitchen remodel plumbing','Bathroom addition',
+  'Gas line installation','Gas line extension','Water softener installation',
+  'Sump pump installation','Irrigation system installation',
+  // Roofing
+  'Roof replacement','Roof re-roof','Shingle roof replacement','Metal roof installation',
+  'Tile roof replacement','Flat roof replacement','TPO roof installation',
+  'Skylight installation','Gutter installation','Roof repair','Roof leak repair',
+  // General
+  'Deck construction','Deck addition','Patio cover installation','Pergola installation',
+  'Fence installation','Room addition','Garage conversion','ADU construction',
+  'Accessory dwelling unit','Basement finish','Basement remodel','Garage addition',
+  'Pool installation','Inground pool','Hot tub installation','Kitchen remodel',
+  'Bathroom remodel','Window replacement','Door replacement','Retaining wall construction',
+  'Commercial tenant improvement','Foundation repair','Load bearing wall removal',
+];
+
+function setJobCategory(c) {
+  jobCategory = c;
+  document.getElementById('btn-residential').classList.toggle('active', c === 'residential');
+  document.getElementById('btn-commercial').classList.toggle('active', c === 'commercial');
+}
 const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
@@ -784,7 +895,7 @@ window.addEventListener('online',updateOnline);window.addEventListener('offline'
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
-function showTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.getElementById('page-'+tab).classList.add('active');if(tab==='history') renderHistory()}
+function showTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.getElementById('page-'+tab).classList.add('active');if(tab==='history') renderHistory();if(tab==='jobs') renderJobsPage();}
 
 // ── GPS ──────────────────────────────────────────────────────────────────────
 async function useGPS(){
@@ -1160,6 +1271,15 @@ function renderResults(d, job, city, state) {
     </div>
     <div class="action-row">
       <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
+      <button class="action-btn" style="border-color:rgba(59,130,246,.4);color:var(--brand)" onclick="saveJobToTracker()">📁 Save to Job Tracker</button>
+    </div>
+    <div class="expiry-reminder-card" id="expiry-reminder">
+      <div class="section-label">🔔 Get a Reminder Before Your Permit Expires</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input type="email" id="reminder-email" placeholder="your@email.com" style="flex:1;font-size:14px;padding:10px 14px" />
+        <button onclick="submitExpiryReminder()" style="background:var(--brand);border:none;border-radius:8px;color:#fff;font-weight:700;padding:10px 16px;cursor:pointer;white-space:nowrap">Remind Me</button>
+      </div>
+      <div id="reminder-confirm" style="display:none;color:var(--green);font-size:13px;margin-top:8px;font-weight:600">✓ We'll remind you 30 days before expiry.</div>
     </div>
     <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>
     <div class="feedback-row">
@@ -1377,7 +1497,7 @@ async function doLookup() {
   try {
     const res = await fetch('/api/permit', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code })
+      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, job_category: jobCategory })
     });
     stopProgress();
     if (res.status === 429) {
@@ -1580,6 +1700,109 @@ function clearTrackerJob(key) {
   saveTrackerJobs(jobs); document.getElementById('tracker-modal')?.remove();
 }
 
+
+// ── Autocomplete ──────────────────────────────────────────────────────────────
+function initAutocomplete() {
+  const textarea = document.getElementById('query');
+  const dropdown = document.getElementById('autocomplete-dropdown');
+  if (!textarea || !dropdown) return;
+  textarea.addEventListener('input', () => {
+    const val = textarea.value.trim().toLowerCase();
+    if (val.length < 3) { dropdown.style.display = 'none'; return; }
+    const matches = JOB_TYPES_ALL.filter(j => j.toLowerCase().includes(val)).slice(0, 7);
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
+    dropdown.innerHTML = matches.map(m =>
+      `<div class="autocomplete-item" onclick="selectAutocomplete(${JSON.stringify(m)})">${esc(m)}</div>`
+    ).join('');
+    dropdown.style.display = 'block';
+  });
+  document.addEventListener('click', e => {
+    if (!dropdown.contains(e.target) && e.target !== textarea) dropdown.style.display = 'none';
+  });
+}
+function selectAutocomplete(text) {
+  const textarea = document.getElementById('query');
+  if (textarea) textarea.value = text;
+  const dropdown = document.getElementById('autocomplete-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
+  checkShimmer();
+}
+
+// ── Expiry Reminder ───────────────────────────────────────────────────────────
+function submitExpiryReminder() {
+  const emailEl = document.getElementById('reminder-email');
+  const email = emailEl ? emailEl.value.trim() : '';
+  if (!email || !email.includes('@')) { alert('Please enter a valid email'); return; }
+  fetch('/api/capture-email', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email, source: 'expiry-reminder'})
+  }).then(() => {
+    const confirm = document.getElementById('reminder-confirm');
+    if (confirm) confirm.style.display = 'block';
+    if (emailEl) emailEl.disabled = true;
+  }).catch(() => {});
+}
+
+// ── Job Tracker API ───────────────────────────────────────────────────────────
+function getJobsEmail() { return localStorage.getItem(EMAIL_KEY) || ''; }
+function saveJobToTracker() {
+  if (!currentResult) return;
+  const { job, city, state, data } = currentResult;
+  let email = getJobsEmail();
+  if (!email) {
+    email = prompt('Enter your email to save this job:');
+    if (!email || !email.includes('@')) return;
+    localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase());
+  }
+  const permits = data.permits_required || [];
+  const permitName = permits.length > 0 ? permits[0].permit_type : '';
+  fetch('/api/jobs', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ email, job_name: job, city, state, permit_name: permitName, result_json: data, status: 'planning' })
+  }).then(r => r.json()).then(r => {
+    if (r.job) showCopy('\ud83d\udcc1 Saved to Job Tracker!');
+    else alert('Error: ' + (r.error || 'Unknown'));
+  }).catch(e => alert('Could not save: ' + e.message));
+}
+async function renderJobsPage() {
+  const el = document.getElementById('jobs-inner');
+  const email = getJobsEmail();
+  if (!email) {
+    el.innerHTML = '<div class="jobs-empty"><div class="icon">\ud83d\udcc1</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">No jobs yet</p><p style="font-size:13px;">Look up a permit and click &quot;Save to Job Tracker&quot; to track jobs here.</p></div>';
+    return;
+  }
+  el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--muted)">Loading...</div>';
+  try {
+    const r = await fetch('/api/jobs?email=' + encodeURIComponent(email));
+    const data = await r.json();
+    const jobs = data.jobs || [];
+    if (!jobs.length) { el.innerHTML = '<div class="jobs-empty"><div class="icon">\ud83d\udcc1</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">No saved jobs</p><p style="font-size:13px;">Click &quot;\ud83d\udcc1 Save to Job Tracker&quot; from any result.</p></div>'; return; }
+    const SL = { planning:'\ud83d\udcd0 Planning', applied:'\ud83d\udce8 Applied', approved:'\u2705 Approved', active:'\ud83d\udee0\ufe0f Active', closed:'\ud83d\udfe5 Closed' };
+    const SC = { planning:'status-planning', applied:'status-applied', approved:'status-approved', active:'status-active', closed:'status-closed' };
+    let html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">' + jobs.length + ' saved job' + (jobs.length!==1?'s':'') + ' for ' + esc(email) + '</div>';
+    jobs.forEach(j => {
+      const warn = j.expiry_date ? checkExpiryWarn(j.expiry_date) : '';
+      const opts = ['planning','applied','approved','active','closed'].map(s=>'<option value="'+s+'" '+(j.status===s?'selected':'')+'>'+(SL[s]||s)+'</option>').join('');
+      html += '<div class="job-item"><div class="job-item-header"><div class="job-item-name">'+esc(j.job_name)+'</div><span class="job-status-badge '+(SC[j.status]||'status-planning')+'">'+(SL[j.status]||j.status)+'</span></div><div class="job-item-meta">\ud83d\udccd '+esc(j.city)+', '+esc(j.state)+(j.permit_name?' \u2022 '+esc(j.permit_name):'')+' </div>'+warn+'<div class="job-item-actions"><select onchange="updateJobStatus(\'' + esc(j.id) + '\',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;cursor:pointer">'+opts+'</select>'+(j.expiry_date?'<span class="job-action-btn" style="font-size:11px">\u23f0 '+esc(j.expiry_date)+'</span>':'<button class="job-action-btn" onclick="setJobExpiry(\'' + esc(j.id) + '\')">Set Expiry</button>')+'<button class="job-action-btn" style="color:var(--red);border-color:rgba(239,68,68,.3)" onclick="deleteJobItem(\'' + esc(j.id) + '\')">Delete</button></div></div>';
+    });
+    el.innerHTML = html;
+  } catch(e) { el.innerHTML = '<div class="jobs-empty"><div class="icon">\u26a0\ufe0f</div><p>'+esc(e.message)+'</p></div>'; }
+}
+function checkExpiryWarn(d) {
+  try { const days=Math.ceil((new Date(d)-Date.now())/(86400000)); if(days<0) return '<div class="job-expiry-warn">\u26a0\ufe0f Permit EXPIRED '+Math.abs(days)+' days ago</div>'; if(days<=30) return '<div class="job-expiry-warn">\u26a0\ufe0f Expires in '+days+' days</div>'; } catch{} return '';
+}
+async function updateJobStatus(id, status) {
+  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}); renderJobsPage(); } catch{}
+}
+async function setJobExpiry(id) {
+  const d = prompt('Enter expiry date (YYYY-MM-DD):'); if(!d) return;
+  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({expiry_date:d})}); renderJobsPage(); } catch{}
+}
+async function deleteJobItem(id) {
+  if(!confirm('Delete this job?')) return;
+  try { await fetch('/api/jobs/'+id,{method:'DELETE'}); renderJobsPage(); } catch{}
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────────
 document.getElementById('lookup-btn').onclick = doLookupWithOffline;
 ['query', 'city', 'zip'].forEach(id => {
@@ -1615,6 +1838,7 @@ function checkShimmer(){
 
 refreshCounterBar();
 loadStats();
+initAutocomplete();
 </script>
 </body>
 </html>
