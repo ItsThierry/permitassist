@@ -109,11 +109,15 @@
           body: JSON.stringify({ email })
         });
         const d = await res.json();
-        if (d.sent || d.ok) {
+        if (d.sent || d.ok || d.code) {
           userEmail = email;
           document.getElementById('step1').style.display = 'none';
           document.getElementById('step2').style.display = 'block';
-          document.getElementById('step2-sub').textContent = `We sent a 6-character code to ${email}. Enter it below.`;
+          if (d.code) {
+            document.getElementById('step2-sub').innerHTML = `Email delivery is not working right now. Use this code instead:<br><strong style="font-size:28px;letter-spacing:6px;color:#2563EB;display:inline-block;margin-top:10px">${d.code}</strong>`;
+          } else {
+            document.getElementById('step2-sub').textContent = `We sent a 6-character code to ${email}. Enter it below.`;
+          }
           setTimeout(() => document.getElementById('code').focus(), 100);
         } else {
           showMsg('msg1', d.error || 'Something went wrong. Try again.', 'error');

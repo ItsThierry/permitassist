@@ -436,7 +436,7 @@ def send_magic_link_email(to_email: str, token: str) -> bool:
     """Send magic link / login code email via Resend."""
     if not RESEND_API_KEY:
         print(f"[magic-link] RESEND_API_KEY not set — token for {to_email}: {token}")
-        return True  # Don't show error on frontend
+        return False  # Let frontend show the fallback code on screen
     verify_url = f"https://permitassist.io/api/verify-magic?token={token}"
     subject = f"Your PermitAssist login code: {token}"
     text_body = (
