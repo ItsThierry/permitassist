@@ -402,6 +402,19 @@ def increment_monthly_lookup(email: str) -> int:
         return 1
 
 
+def smtp_send(smtp_host, smtp_port, smtp_user, smtp_pass, from_addr, to_addr, msg_str):
+    """Send email supporting both SSL (port 465) and STARTTLS (port 587)."""
+    if int(smtp_port) == 587 or os.environ.get("SMTP_MODE") == "starttls":
+        with smtplib.SMTP(smtp_host, int(smtp_port), timeout=8) as s:
+            s.starttls()
+            s.login(smtp_user, smtp_pass)
+            s.sendmail(from_addr, to_addr, msg_str)
+    else:
+        with smtplib.SMTP_SSL(smtp_host, int(smtp_port), timeout=8) as s:
+            s.login(smtp_user, smtp_pass)
+            s.sendmail(from_addr, to_addr, msg_str)
+
+
 def send_magic_link_email(to_email: str, token: str) -> bool:
     """Send magic link / login code email."""
     smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
@@ -425,9 +438,7 @@ def send_magic_link_email(to_email: str, token: str) -> bool:
     msg["From"]    = smtp_user
     msg["To"]      = to_email
     try:
-        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=8) as s:
-            s.login(smtp_user, smtp_pass)
-            s.sendmail(smtp_user, to_email, msg.as_string())
+        smtp_send(smtp_host, smtp_port, smtp_user, smtp_pass, smtp_user, to_email, msg.as_string())
         print(f"[magic-link] Sent to {to_email}")
         return True
     except Exception as e:
@@ -464,9 +475,7 @@ def send_confirmation_email(to_email: str, plan: str) -> bool:
     msg["From"]    = smtp_user
     msg["To"]      = to_email
     try:
-        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=8) as s:
-            s.login(smtp_user, smtp_pass)
-            s.sendmail(smtp_user, to_email, msg.as_string())
+        smtp_send(smtp_host, smtp_port, smtp_user, smtp_pass, smtp_user, to_email, msg.as_string())
         print(f"[confirm-email] Sent to {to_email} (plan={plan})")
         return True
     except Exception as e:
@@ -741,9 +750,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     msg["From"]    = smtp_user
     msg["To"]      = to_email
     try:
-        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=8) as s:
-            s.login(smtp_user, smtp_pass)
-            s.sendmail(smtp_user, to_email, msg.as_string())
+        smtp_send(smtp_host, smtp_port, smtp_user, smtp_pass, smtp_user, to_email, msg.as_string())
         print(f"[email_report] Sent to {to_email}")
         return True
     except Exception as e:
@@ -1343,9 +1350,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                     msg["From"]    = smtp_user
                     msg["To"]     = email
                     try:
-                        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=8) as s:
-                            s.login(smtp_user, smtp_pass)
-                            s.sendmail(smtp_user, email, msg.as_string())
+                        smtp_send(smtp_host, smtp_port, smtp_user, smtp_pass, smtp_user, email, msg.as_string())
                         print(f"[expiry-reminder] Confirmation sent to {email}")
                     except Exception as e:
                         print(f"[expiry-reminder] Email failed: {e}")
