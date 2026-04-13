@@ -76,13 +76,23 @@ def check_frontend_content() -> None:
     assert "PermitAssist Review Queue" in review_page
 
 
-def http_get(url: str, headers: dict | None = None) -> tuple[int, str]:
-    req = urllib.request.Request(url, headers=headers or {})
+def http_request(url: str, method: str = "GET", headers: dict | None = None, data: dict | None = None) -> tuple[int, str]:
+    payload = None
+    req_headers = headers.copy() if headers else {}
+    if data is not None:
+        payload = json.dumps(data).encode()
+        req_headers.setdefault("Content-Type", "application/json")
+    req = urllib.request.Request(url, headers=req_headers, data=payload, method=method)
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
             return resp.getcode(), resp.read().decode()
     except urllib.error.HTTPError as e:
         return e.code, e.read().decode()
+
+
+
+def http_get(url: str, headers: dict | None = None) -> tuple[int, str]:
+    return http_request(url, headers=headers)
 
 
 
@@ -94,7 +104,9 @@ def check_backend_helpers() -> None:
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
     try:
+        capture_csv = db_path + ".emails.csv"
         server.CACHE_DB = db_path
+        server.EMAILS_CSV = capture_csv
         research.CACHE_DB = db_path
         server.init_db()
         research.init_cache()
@@ -182,6 +194,12 @@ def check_backend_helpers() -> None:
         )
         assert "permit_details" in missing and "fee_range" in missing
 
+        conn = sqlite3.connect(db_path)
+        conn.execute("UPDATE users SET plan='team' WHERE email=?", ("owner@example.com",))
+        conn.commit()
+        conn.close()
+        owner_session = server.create_session_token("owner@example.com")
+
         httpd = server.HTTPServer(("127.0.0.1", 0), server.Handler)
         port = httpd.server_address[1]
         thread = threading.Thread(target=httpd.serve_forever, daemon=True)
@@ -195,15 +213,67 @@ def check_backend_helpers() -> None:
             assert status == 200 and "No password needed" in body
             status, body = http_get(f"http://127.0.0.1:{port}/account")
             assert status == 200 and "Manage Subscription" in body
+
+            status, body = http_get(f"http://127.0.0.1:{port}/api/account")
+            assert status == 401 and "Not authenticated" in body
+            status, body = http_request(
+                f"http://127.0.0.1:{port}/api/account",
+                headers={"X-Session-Token": owner_session},
+            )
+            account_data = json.loads(body)
+            assert status == 200 and account_data["email"] == "owner@example.com"
+            assert "crew@example.com" in account_data["team_members"]
+
             status, body = http_get(f"http://127.0.0.1:{port}/review")
             assert status == 200 and "PermitAssist Review Queue" in body
-            slug = server.create_share("Roof replacement", "Houston", "TX", share_payload)
-            status, body = http_get(f"http://127.0.0.1:{port}/s/{slug}")
+            status, body = http_request(
+                f"http://127.0.0.1:{port}/api/share",
+                method="POST",
+                data={
+                    "job_type": "Roof replacement",
+                    "city": "Houston",
+                    "state": "TX",
+                    "result": share_payload,
+                },
+            )
+            share_data = json.loads(body)
+            assert status == 200 and share_data["expires_days"] == 30 and share_data["slug"]
+            status, body = http_get(f"http://127.0.0.1:{port}/s/{share_data['slug']}")
             assert status == 200 and "city.example/permit" in body and "Roof replacement" in body
+            status, body = http_request(
+                f"http://127.0.0.1:{port}/api/team/invite",
+                method="POST",
+                headers={"X-Session-Token": owner_session},
+                data={"invite_email": "newcrew@example.com"},
+            )
+            invite_data = json.loads(body)
+            assert status == 200 and invite_data["invited"] is True
+            status, body = http_request(
+                f"http://127.0.0.1:{port}/api/expiry-reminder",
+                method="POST",
+                data={
+                    "email": "owner@example.com",
+                    "job_type": "Roof replacement",
+                    "city": "Houston",
+                    "state": "TX",
+                    "expiry_date": "2026-05-20",
+                },
+            )
+            reminder_data = json.loads(body)
+            assert status == 200 and reminder_data["saved"] is True and reminder_data["reminder_id"]
             status, body = http_get(f"http://127.0.0.1:{port}/api/jobs")
             assert status == 401 and "Not authenticated" in body
             status, body = http_get(f"http://127.0.0.1:{port}/api/billing-portal")
             assert status == 401 and "Not authenticated" in body
+            status, body = http_request(
+                f"http://127.0.0.1:{port}/api/billing-portal",
+                headers={"X-Session-Token": owner_session},
+            )
+            assert status == 400 and "No Stripe customer" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/api/verify-magic")
+            assert status == 400 and "missing a token" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/api/verify-magic?token=BAD123")
+            assert status == 400 and "not recognised" in body
             status, body = http_get(f"http://127.0.0.1:{port}/api/review-queue")
             assert status == 403 and "not configured" in body.lower()
         finally:
@@ -212,6 +282,8 @@ def check_backend_helpers() -> None:
             thread.join(timeout=5)
     finally:
         os.unlink(db_path)
+        if os.path.exists(capture_csv):
+            os.unlink(capture_csv)
 
 
 def main() -> int:
