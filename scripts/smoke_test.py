@@ -33,7 +33,7 @@ def load_module(name: str, path: Path):
 
 
 def check_frontend_js() -> None:
-    for html in [FRONTEND_DIR / "index.html", FRONTEND_DIR / "account.html", FRONTEND_DIR / "help.html"]:
+    for html in [FRONTEND_DIR / "index.html", FRONTEND_DIR / "account.html", FRONTEND_DIR / "help.html", FRONTEND_DIR / "review.html"]:
         text = html.read_text()
         scripts = "\n".join(re.findall(r"<script>(.*?)</script>", text, flags=re.S))
         if not scripts.strip():
@@ -53,6 +53,7 @@ def check_frontend_content() -> None:
     index = (FRONTEND_DIR / "index.html").read_text()
     account = (FRONTEND_DIR / "account.html").read_text()
     help_page = (FRONTEND_DIR / "help.html").read_text()
+    review_page = (FRONTEND_DIR / "review.html").read_text()
 
     required_index = [
         "Official Sources",
@@ -72,6 +73,7 @@ def check_frontend_content() -> None:
         assert needle in account, f"Missing account feature: {needle}"
 
     assert "PermitAssist Help" in help_page
+    assert "PermitAssist Review Queue" in review_page
 
 
 def http_get(url: str, headers: dict | None = None) -> tuple[int, str]:
