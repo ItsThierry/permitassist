@@ -1036,7 +1036,8 @@ const DISAMBIG_RULES = [
     options: ['100 amp', '200 amp', '400 amp']
   },
   {
-    test: q => /\b(kitchen remodel|kitchen redesign|kitchen renovation|cabinet redesign|cabinet replacement|new cabinets)\b/i.test(q),
+    test: q => /\b(kitchen remodel|kitchen redesign|kitchen renovation|cabinet redesign|cabinet replacement|new cabinets)\b/i.test(q)
+      && !/cosmetic cabinets\/counters only|layout\/plumbing\/electrical\/wall changes/i.test(q),
     title: '⚠️ Is this cosmetic cabinets/counters only, or are you changing layout / plumbing / electrical / walls?',
     options: ['cosmetic cabinets/counters only, no plumbing/electrical/walls', 'layout/plumbing/electrical/wall changes']
   }
@@ -1315,9 +1316,19 @@ async function geocodeAddress(address){
 
 // ── Query parsing ────────────────────────────────────────────────────────────
 function normalizeState(raw){if(!raw) return '';const t=raw.trim();if(STATES[t.toUpperCase()]) return t.toUpperCase();const found=Object.entries(STATES).find(([,name])=>name.toLowerCase()===t.toLowerCase());return found?found[0]:t.toUpperCase()}
+function normalizeJobClarifiers(text){
+  let out=(text||'').trim();
+  if (/\b(kitchen remodel|kitchen redesign|kitchen renovation|cabinet redesign|cabinet replacement|new cabinets)\b/i.test(out)
+    && !/cosmetic cabinets\/counters only|layout\/plumbing\/electrical\/wall changes/i.test(out)
+    && (/\b(just cabinet|just cabinets|cabinet only|cabinets only|cosmetic)\b/i.test(out)
+      || /\bno plumbing|without plumbing|no plumbing changes?\b/i.test(out))) {
+    out += ' (cosmetic cabinets/counters only, no plumbing/electrical/walls)';
+  }
+  return out;
+}
 
 function parseQuery(raw){
-  const text=(raw||'').trim();
+  const text=normalizeJobClarifiers((raw||'').trim());
   const zipMatch=text.match(/\b(\d{5})\b/);
   const zip=zipMatch?zipMatch[1]:document.getElementById('zip').value.trim();
   let city=document.getElementById('city').value.trim();
