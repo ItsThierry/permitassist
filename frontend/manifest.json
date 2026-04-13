@@ -4,8 +4,8 @@
   "description": "AI-powered permit research for contractors. Know your permits before you start.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F172A",
-  "theme_color": "#0F172A",
+  "background_color": "#FFFFFF",
+  "theme_color": "#2563EB",
   "orientation": "portrait-primary",
   "icons": [
     {
