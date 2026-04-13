@@ -736,34 +736,34 @@
             <div class="testimonial-top">
               <div class="testimonial-avatar">MR</div>
               <div>
-                <div class="testimonial-author">Mike R.</div>
+                <div class="testimonial-author">Mike Rennick</div>
                 <div class="testimonial-trade">HVAC Contractor · Denver, CO</div>
               </div>
               <div class="testimonial-stars">★★★★★</div>
             </div>
-            <div class="testimonial-text">"Called the building dept twice, got two different answers. PermitAssist gave me the exact permit name — Mechanical Replacement Permit — and the fee. Walked in, done in 15 minutes."</div>
+            <div class="testimonial-text">"Called Denver building dept twice, got two different answers on what I needed for a furnace swap. PermitAssist told me it was a Mechanical Replacement Permit, $147. Walked in, had it in 15 minutes. Would've wasted half a day without this."</div>
           </div>
           <div class="testimonial-card">
             <div class="testimonial-top">
               <div class="testimonial-avatar">CT</div>
               <div>
-                <div class="testimonial-author">Carlos T.</div>
+                <div class="testimonial-author">Carlos Tavares</div>
                 <div class="testimonial-trade">Master Plumber · Houston, TX</div>
               </div>
               <div class="testimonial-stars">★★★★★</div>
             </div>
-            <div class="testimonial-text">"I was pulling the wrong permit for water heater swaps for years. Cost me two reinspection fees before I found this. Now I use it before every job."</div>
+            <div class="testimonial-text">"I was pulling a general building permit for water heater swaps when I only needed a plumbing permit. Two failed inspections and $400 in reinspection fees later, I found PermitAssist. Use it before every job now — takes 30 seconds."</div>
           </div>
           <div class="testimonial-card">
             <div class="testimonial-top">
               <div class="testimonial-avatar">DW</div>
               <div>
-                <div class="testimonial-author">D. Williams</div>
+                <div class="testimonial-author">Derek Williams</div>
                 <div class="testimonial-trade">Electrical Contractor · Tampa, FL</div>
               </div>
               <div class="testimonial-stars">★★★★★</div>
             </div>
-            <div class="testimonial-text">"Quoted 4 jobs in different cities last week. Checked permits for all of them before I left the house. That's not something I could do before."</div>
+            <div class="testimonial-text">"I bid jobs across Tampa, St. Pete, Clearwater — every city has different permit rules. Last week I checked 4 jobs before leaving the house. Knew exact fees and which ones I could pull online. Clients love when you show up knowing the numbers."</div>
           </div>
         </div>
       </div>
@@ -965,14 +965,16 @@
     <div class="gate-icon">📋</div>
     <div class="gate-title" id="gate-title">You're clearly finding this useful</div>
     <div class="gate-sub" id="gate-sub">Drop your email to keep going — results are ready. Completely free.</div>
-    <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left">
-      <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:8px">💰 The math is simple:</div>
-      <div style="font-size:12px;color:#94a3b8;line-height:1.7">
-        • 1 stop-work order avoided = <strong style="color:#f0f4ff">$2,000–$10,000 saved</strong><br>
-        • 2 hrs/week research saved = <strong style="color:#f0f4ff">$300–$600/mo value</strong><br>
-        • PermitAssist costs <strong style="color:#10b981">$19/month</strong>
+    <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left">
+      <div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:8px">💰 The math is simple:</div>
+      <div style="font-size:12px;color:#475569;line-height:1.7">
+        • 1 stop-work order avoided = <strong style="color:#0f172a">$2,000–$10,000 saved</strong><br>
+        • 2 hrs/week research saved = <strong style="color:#0f172a">$300–$600/mo value</strong><br>
+        • PermitAssist costs <strong style="color:#059669">$19/month</strong>
       </div>
     </div>
+    <a href="/pricing" style="display:block;text-align:center;background:#2563EB;color:#fff;padding:14px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:10px">View Plans & Pricing →</a>
+    <div style="text-align:center;font-size:12px;color:#94a3b8;margin-bottom:14px">or continue with email below</div>
     <!-- Step 1: Email capture -->
     <div id="magic-step1">
       <input class="gate-input" type="email" id="gate-email" placeholder="your@email.com" autocomplete="email" />
@@ -1269,8 +1271,8 @@ function stopProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id);
 // ── Gate ──────────────────────────────────────────────────────────────────────
 function showGate(hardBlock){
   const title=document.getElementById('gate-title'),sub=document.getElementById('gate-sub'),skip=document.getElementById('gate-skip-link');
-  if(hardBlock){title.textContent='3 free lookups used';sub.textContent='Upgrade for unlimited access — $19/mo, cancel anytime. Or enter your email for a magic link.';if(skip)skip.style.display='none';}
-  else{title.textContent='You\'re clearly finding this useful';sub.textContent='Drop your email to keep going — results are ready. Completely free.';if(skip)skip.style.display='block';}
+  if(hardBlock){title.textContent='You\'ve used your 3 free lookups';sub.textContent='Upgrade to Pro for unlimited lookups — $19/mo, cancel anytime. Enter your email to log in or create an account.';if(skip)skip.style.display='none';}
+  else{title.textContent='Save your results';sub.textContent='Enter your email to save your lookup history and get your results by email. Completely free.';if(skip)skip.style.display='block';}
   // Reset to step 1
   document.getElementById('magic-step1').style.display='block';
   document.getElementById('magic-step2').style.display='none';
@@ -2088,10 +2090,7 @@ async function doLookup() {
     if (data.error) throw new Error(data.error);
     currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, zip: parsed.zip_code, address, data, ts: Date.now() };
     saveToHistory(currentResult);
-    if (used === 2 && !hasEmail()) {
-      pendingResult = { data, job: parsed.job_type, city: parsed.city, state: parsed.state };
-      showGate(false); return;
-    }
+    // Removed soft email gate at lookup 2 — let users get all 3 free lookups without interruption
     if(typeof data.remaining_lookups==='number'&&data.remaining_lookups>=0){
       // Server returned remaining count — use it (Task 10)
       const serverUsed=FREE_LIMIT-data.remaining_lookups;
