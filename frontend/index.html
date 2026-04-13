@@ -1851,7 +1851,18 @@ async function doLookup() {
       pendingResult = { data, job: parsed.job_type, city: parsed.city, state: parsed.state };
       showGate(false); return;
     }
-    if(typeof data.remaining_lookups==='number'){updateCounterBarFromServer(isLoggedIn()?null:(getLookupCount()+1),data.remaining_lookups,'free');}else{incrementLookup();refreshCounterBar();}
+    if(typeof data.remaining_lookups==='number'&&data.remaining_lookups>=0){
+      // Server returned remaining count — use it (Task 10)
+      const serverUsed=FREE_LIMIT-data.remaining_lookups;
+      updateCounterBarFromServer(Math.max(0,serverUsed),data.remaining_lookups,'free');
+      // Also sync localStorage so counter bar stays consistent
+      if(!isLoggedIn())localStorage.setItem(LOOKUP_KEY,String(serverUsed));
+    } else if(typeof data.remaining_lookups==='number'&&data.remaining_lookups===-1){
+      // Paid user — hide counter bar
+      updateCounterBarFromServer(0,-1,'solo');
+    } else {
+      incrementLookup();refreshCounterBar();
+    }
     document.getElementById('loading').style.display = 'none';
     document.getElementById('results').style.display = 'block';
     renderResults(data, parsed.job_type, parsed.city, parsed.state);
