@@ -791,8 +791,8 @@
       <!-- Counter bar -->
       <div class="counter-bar" id="counter-bar">
         <div class="counter-bar-top">
-          <span class="counter-text" id="counter-text">0 of 5 free lookups used</span>
-        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade →</span>
+          <span class="counter-text" id="counter-text">0 of 3 free lookups used</span>
+        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $19/mo →</span>
       </div>
       <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
       </div>
@@ -915,13 +915,13 @@
       <button onclick="openUpgrade('team')" style="background:rgba(37,99,235,0.15);color:var(--brand);border:1px solid rgba(37,99,235,0.4);border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Team — $49/mo<br><span style="font-size:10px;font-weight:400">3 seats</span></button>
     </div>
     <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 2 months: <strong style="color:#94a3b8">Annual plan = $190/yr</strong> (vs $228)</div>
-    <span class="gate-skip" id="gate-skip-link" onclick="skipGate()">Skip for now (uses 1 of 5 free lookups)</span>
+    <span class="gate-skip" id="gate-skip-link" onclick="skipGate()">Skip for now (uses 1 of 3 free lookups)</span>
   </div>
 </div>
 
 <script>
 // ── Constants & State ─────────────────────────────────────────────────────────
-const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',FREE_LIMIT=5,UPGRADE_URL='https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a',UPGRADE_URL_TEAM='https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b';
+const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',FREE_LIMIT=3,UPGRADE_URL='https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a',UPGRADE_URL_TEAM='https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b';
 const IS_ADMIN=new URLSearchParams(window.location.search).get('admin')==='boban2026';
 let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential';
 
@@ -1060,7 +1060,7 @@ function startProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id)
 function stopProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id);if(e)e.className='progress-step done'})}
 
 // ── Gate ──────────────────────────────────────────────────────────────────────
-function showGate(hardBlock){const title=document.getElementById('gate-title'),sub=document.getElementById('gate-sub'),skip=document.getElementById('gate-skip-link');if(hardBlock){title.textContent='5 free lookups used';sub.textContent='Upgrade for unlimited access — $19/mo, cancel anytime. Or drop your email and we\'ll give you 5 more free.';skip.style.display='none'}else{title.textContent='You\'re clearly finding this useful';sub.textContent='Drop your email to keep going — results are ready. Completely free.';skip.style.display='block'}document.getElementById('email-gate').style.display='flex';setTimeout(()=>document.getElementById('gate-email').focus(),350)}
+function showGate(hardBlock){const title=document.getElementById('gate-title'),sub=document.getElementById('gate-sub'),skip=document.getElementById('gate-skip-link');if(hardBlock){title.textContent='3 free lookups used';sub.textContent='Upgrade for unlimited access — $19/mo, cancel anytime. Or drop your email and we\'ll give you 3 more free.';skip.style.display='none'}else{title.textContent='You\'re clearly finding this useful';sub.textContent='Drop your email to keep going — results are ready. Completely free.';skip.style.display='block'}document.getElementById('email-gate').style.display='flex';setTimeout(()=>document.getElementById('gate-email').focus(),350)}
 function hideGate(){document.getElementById('email-gate').style.display='none'}
 function submitGateEmail(){const inp=document.getElementById('gate-email'),val=inp.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){inp.style.borderColor='var(--red)';inp.focus();return}saveEmail(val);incrementLookup();hideGate();refreshCounterBar();if(pendingResult) showPendingResult()}
 function skipGate(){if(getLookupCount()>=FREE_LIMIT){document.getElementById('gate-email').focus();return}incrementLookup();hideGate();refreshCounterBar();if(pendingResult) showPendingResult()}
