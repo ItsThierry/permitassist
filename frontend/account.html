@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>My Account — PermitAssist</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #F0F4FF; color: #0F172A; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 640px; margin: 0 auto; padding: 0 0 48px; }
+
+    /* Nav */
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid #E2E8F0; position: sticky; top: 0; z-index: 100; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-mark { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #2563EB, #1D4ED8); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; font-weight: 800; }
+    .logo-text { font-size: 18px; font-weight: 800; color: #0F172A; }
+    .logo-text em { font-style: normal; color: #2563EB; }
+    .nav-back { color: #2563EB; font-size: 13px; font-weight: 700; text-decoration: none; padding: 6px 12px; border: 1px solid #2563EB; border-radius: 20px; }
+
+    /* Content */
+    .inner { padding: 24px 20px; }
+
+    /* Cards */
+    .card { background: #fff; border: 1px solid #E2E8F0; border-radius: 14px; padding: 22px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(15,23,42,0.06); }
+    .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #475569; margin-bottom: 14px; }
+
+    /* Plan badge */
+    .plan-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 800; }
+    .plan-free { background: rgba(148,163,184,0.15); color: #475569; border: 1px solid #CBD5E1; }
+    .plan-solo { background: rgba(37,99,235,0.12); color: #2563EB; border: 1px solid rgba(37,99,235,0.3); }
+    .plan-team { background: rgba(5,150,105,0.12); color: #059669; border: 1px solid rgba(5,150,105,0.3); }
+
+    /* Usage bar */
+    .usage-bar { height: 8px; border-radius: 4px; background: #E2E8F0; overflow: hidden; margin: 12px 0 8px; }
+    .usage-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #2563EB, #3B82F6); transition: width .4s; }
+    .usage-fill.full { background: linear-gradient(90deg, #EF4444, #F97316); }
+
+    /* Upgrade buttons */
+    .btn { display: block; width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; transition: all .15s; }
+    .btn-primary { background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #fff; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+    .btn-primary:hover { box-shadow: 0 6px 20px rgba(37,99,235,0.4); transform: translateY(-1px); }
+    .btn-secondary { background: rgba(37,99,235,0.08); color: #2563EB; border: 1px solid rgba(37,99,235,0.3); }
+    .btn-secondary:hover { background: rgba(37,99,235,0.14); }
+    .btn-danger { background: transparent; color: #EF4444; border: 1px solid rgba(239,68,68,0.3); font-size: 13px; padding: 10px; margin-top: 8px; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* Row */
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #F1F5F9; font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #475569; font-weight: 500; }
+    .info-value { font-weight: 700; color: #0F172A; }
+
+    /* Team members */
+    .team-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #F1F5F9; }
+    .team-row:last-child { border-bottom: none; }
+    .team-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #EEF2FF, #DBEAFE); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #2563EB; }
+    .team-email { font-size: 13px; font-weight: 600; color: #0F172A; }
+    .team-status { font-size: 11px; color: #059669; background: rgba(5,150,105,0.1); padding: 2px 8px; border-radius: 20px; margin-left: auto; }
+
+    /* Login form */
+    .login-card { max-width: 400px; margin: 60px auto; padding: 32px; background: #fff; border-radius: 14px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(15,23,42,0.08); text-align: center; }
+    .login-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .login-sub { font-size: 14px; color: #475569; margin-bottom: 24px; line-height: 1.6; }
+    .login-input { width: 100%; padding: 14px; border: 1.5px solid #E2E8F0; border-radius: 10px; font-size: 16px; font-family: inherit; outline: none; transition: border-color .15s; margin-bottom: 12px; }
+    .login-input:focus { border-color: #2563EB; }
+    .login-input.code { text-transform: uppercase; letter-spacing: 4px; text-align: center; font-size: 24px; font-weight: 700; }
+    .login-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .login-note { font-size: 12px; color: #94A3B8; margin-top: 10px; }
+    .login-back { font-size: 13px; color: #2563EB; cursor: pointer; margin-top: 12px; display: inline-block; }
+    #login-step2 { display: none; }
+    .success-icon { font-size: 48px; margin-bottom: 16px; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 60px 20px; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #E2E8F0; border-top-color: #2563EB; border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Invite form */
+    .invite-form { display: flex; gap: 8px; margin-top: 14px; }
+    .invite-input { flex: 1; padding: 11px 14px; border: 1.5px solid #E2E8F0; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; }
+    .invite-input:focus { border-color: #2563EB; }
+    .invite-btn { padding: 11px 18px; background: #2563EB; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav">
+    <a href="/" class="logo">
+      <div class="logo-mark">📋</div>
+      <span class="logo-text">Permit<em>Assist</em></span>
+    </a>
+    <a href="/" class="nav-back">← Look Up Permits</a>
+  </nav>
+
+  <!-- Login form (shown when not authenticated) -->
+  <div id="login-section" style="display:none">
+    <div class="login-card">
+      <div id="login-step1">
+        <div class="success-icon">🔐</div>
+        <div class="login-title">Log in to your account</div>
+        <div class="login-sub">Enter your email and we'll send you a magic link — no password needed.</div>
+        <input class="login-input" type="email" id="login-email" placeholder="your@email.com" autocomplete="email" />
+        <button class="login-btn" id="login-send-btn" onclick="accountSendMagicLink()">Send Magic Link →</button>
+        <div class="login-note">🔒 Secure, passwordless login. Link expires in 15 minutes.</div>
+      </div>
+      <div id="login-step2">
+        <div class="success-icon">📧</div>
+        <div class="login-title">Check your email</div>
+        <div class="login-sub">We sent a 6-character code to <strong id="login-email-sent"></strong>. Enter it below.</div>
+        <input class="login-input code" type="text" id="login-code" placeholder="AB3X7Q" maxlength="6" autocomplete="one-time-code" />
+        <button class="login-btn" id="login-verify-btn" onclick="accountVerifyCode()">Verify Code →</button>
+        <span class="login-back" onclick="accountShowStep1()">← Back</span>
+        <div class="login-note" id="login-resend">Didn't get it? <span onclick="accountResend()" style="color:#2563EB;cursor:pointer">Resend code</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account dashboard (shown when authenticated) -->
+  <div id="account-section" style="display:none">
+    <div class="inner">
+      <h1 style="font-size:24px;font-weight:900;margin-bottom:20px">My Account</h1>
+
+      <!-- Plan overview -->
+      <div class="card">
+        <div class="card-label">Account</div>
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value" id="acct-email">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Plan</span>
+          <span id="acct-plan-badge" class="plan-badge plan-free">Free</span>
+        </div>
+        <div class="info-row" id="acct-exp-row" style="display:none">
+          <span class="info-label">Renews</span>
+          <span class="info-value" id="acct-expires">—</span>
+        </div>
+      </div>
+
+      <!-- Usage (free users) -->
+      <div class="card" id="acct-usage-card">
+        <div class="card-label">This Month's Usage</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:22px;font-weight:900" id="acct-used">0</div>
+            <div style="font-size:13px;color:#475569" id="acct-used-label">lookups used</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13px;color:#475569">Resets</div>
+            <div style="font-size:14px;font-weight:700" id="acct-reset">—</div>
+          </div>
+        </div>
+        <div class="usage-bar"><div class="usage-fill" id="acct-usage-fill" style="width:0%"></div></div>
+        <div style="font-size:12px;color:#475569" id="acct-usage-text">0 of 3 free lookups used</div>
+      </div>
+
+      <!-- Upgrade buttons (free users) -->
+      <div id="acct-upgrade-section">
+        <div class="card">
+          <div class="card-label">Upgrade for Unlimited Access</div>
+          <div style="font-size:14px;color:#475569;margin-bottom:16px;line-height:1.6">
+            Stop worrying about limits. <strong>$19/mo Solo</strong> or <strong>$49/mo Team</strong> (3 seats). Cancel anytime.
+          </div>
+          <div class="btn-row">
+            <a id="btn-upgrade-solo" href="#" class="btn btn-primary" onclick="event.preventDefault();upgradeAccount('solo')">Solo — $19/mo</a>
+            <a id="btn-upgrade-team" href="#" class="btn btn-secondary" onclick="event.preventDefault();upgradeAccount('team')">Team — $49/mo</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paid section: manage subscription -->
+      <div id="acct-manage-section" style="display:none">
+        <div class="card">
+          <div class="card-label">Subscription</div>
+          <div style="font-size:14px;color:#475569;margin-bottom:16px;">
+            You have <strong>unlimited lookups</strong> on your plan. No monthly limits.
+          </div>
+          <a href="https://billing.stripe.com/p/login/test_00g000000" target="_blank" class="btn btn-secondary">Manage Subscription →</a>
+        </div>
+      </div>
+
+      <!-- Team seats (team plan only) -->
+      <div id="acct-team-section" style="display:none">
+        <div class="card">
+          <div class="card-label">Team Seats (up to 3)</div>
+          <div id="acct-team-members"></div>
+          <div id="acct-invite-form" style="margin-top:14px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">Invite a team member:</div>
+            <div class="invite-form">
+              <input class="invite-input" type="email" id="invite-email" placeholder="crew@company.com" />
+              <button class="invite-btn" onclick="inviteTeamMember()">Invite</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="card">
+        <div class="card-label">Actions</div>
+        <button class="btn btn-danger" onclick="accountLogout()">Log Out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SESSION_KEY = 'pa_session';
+const EMAIL_KEY = 'pa_email';
+const UPGRADE_URL_SOLO = 'https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a';
+const UPGRADE_URL_TEAM = 'https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b';
+
+function getSessionToken() { return localStorage.getItem(SESSION_KEY) || ''; }
+function setSessionToken(t) { if (t) localStorage.setItem(SESSION_KEY, t); }
+function clearSessionToken() { localStorage.removeItem(SESSION_KEY); }
+
+// Check URL for session token from magic link redirect
+(function(){
+  const p = new URLSearchParams(window.location.search);
+  const t = p.get('t'), v = p.get('verified');
+  if (t && v) {
+    setSessionToken(t);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('t'); url.searchParams.delete('verified');
+    window.history.replaceState({}, '', url.toString());
+  }
+})();
+
+async function loadAccount() {
+  const token = getSessionToken();
+  if (!token) {
+    document.getElementById('login-section').style.display = 'block';
+    return;
+  }
+  try {
+    const r = await fetch('/api/account', { headers: { 'X-Session-Token': token } });
+    if (r.status === 401) {
+      clearSessionToken();
+      document.getElementById('login-section').style.display = 'block';
+      return;
+    }
+    const d = await r.json();
+    renderAccount(d);
+  } catch (e) {
+    document.getElementById('login-section').style.display = 'block';
+  }
+}
+
+function renderAccount(d) {
+  document.getElementById('login-section').style.display = 'none';
+  document.getElementById('account-section').style.display = 'block';
+
+  document.getElementById('acct-email').textContent = d.email || '—';
+
+  // Plan badge
+  const badge = document.getElementById('acct-plan-badge');
+  const plan = d.plan || 'free';
+  badge.className = 'plan-badge plan-' + plan;
+  badge.textContent = plan === 'free' ? 'Free' : plan === 'solo' ? '⭐ Solo' : '🏆 Team';
+
+  // Expiry
+  if (d.plan_expires_at && d.paid) {
+    document.getElementById('acct-exp-row').style.display = 'flex';
+    document.getElementById('acct-expires').textContent = new Date(d.plan_expires_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  // Usage
+  const used = d.lookups_this_month || 0;
+  const remaining = d.lookups_remaining;
+  document.getElementById('acct-used').textContent = used;
+  if (d.paid) {
+    document.getElementById('acct-used-label').textContent = 'lookups this month (unlimited)';
+    document.getElementById('acct-usage-fill').style.width = '10%';
+    document.getElementById('acct-usage-text').textContent = 'Unlimited plan — no monthly cap';
+  } else {
+    const total = 3;
+    const pct = Math.min(100, Math.round(used / total * 100));
+    document.getElementById('acct-used-label').textContent = `of ${total} free lookups used`;
+    const fill = document.getElementById('acct-usage-fill');
+    fill.style.width = pct + '%';
+    if (pct >= 100) fill.classList.add('full');
+    document.getElementById('acct-usage-text').textContent = remaining === 0 ? 'Monthly limit reached — upgrade for unlimited' : `${remaining} lookup${remaining !== 1 ? 's' : ''} remaining this month`;
+  }
+
+  // Reset date
+  if (d.reset_date) {
+    document.getElementById('acct-reset').textContent = new Date(d.reset_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // Upgrade vs manage
+  if (d.paid) {
+    document.getElementById('acct-upgrade-section').style.display = 'none';
+    document.getElementById('acct-manage-section').style.display = 'block';
+    document.getElementById('acct-usage-card').style.display = 'none';
+  } else {
+    document.getElementById('acct-upgrade-section').style.display = 'block';
+    document.getElementById('acct-manage-section').style.display = 'none';
+    // Prefill email in upgrade URLs
+    const email = d.email || '';
+    if (email) {
+      document.getElementById('btn-upgrade-solo').href = UPGRADE_URL_SOLO + '?prefilled_email=' + encodeURIComponent(email);
+      document.getElementById('btn-upgrade-team').href = UPGRADE_URL_TEAM + '?prefilled_email=' + encodeURIComponent(email);
+    }
+  }
+
+  // Team section
+  if (plan === 'team') {
+    document.getElementById('acct-team-section').style.display = 'block';
+    const members = d.team_members || [];
+    const el = document.getElementById('acct-team-members');
+    if (members.length === 0) {
+      el.innerHTML = '<div style="font-size:13px;color:#94A3B8;padding:8px 0">No team members yet. Invite up to 3.</div>';
+    } else {
+      el.innerHTML = members.map(m => {
+        const initials = m.split('@')[0].slice(0, 2).toUpperCase();
+        return `<div class="team-row"><div class="team-avatar">${initials}</div><div class="team-email">${m}</div><span class="team-status">Active</span></div>`;
+      }).join('');
+    }
+    if (members.length >= 3) {
+      document.getElementById('acct-invite-form').style.display = 'none';
+    }
+  }
+}
+
+function upgradeAccount(plan) {
+  const email = localStorage.getItem(EMAIL_KEY) || document.getElementById('acct-email').textContent || '';
+  const base = plan === 'team' ? UPGRADE_URL_TEAM : UPGRADE_URL_SOLO;
+  const url = email ? `${base}?prefilled_email=${encodeURIComponent(email)}` : base;
+  window.open(url, '_blank');
+}
+
+async function inviteTeamMember() {
+  const email = document.getElementById('invite-email').value.trim().toLowerCase();
+  if (!email || !email.includes('@')) { alert('Enter a valid email address.'); return; }
+  const token = getSessionToken();
+  try {
+    const r = await fetch('/api/team/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Session-Token': token },
+      body: JSON.stringify({ invite_email: email })
+    });
+    const d = await r.json();
+    if (d.invited) {
+      document.getElementById('invite-email').value = '';
+      alert(`✅ Invited ${email} to your team!`);
+      loadAccount(); // Refresh
+    } else {
+      alert(d.error || 'Could not invite member.');
+    }
+  } catch { alert('Network error. Try again.'); }
+}
+
+function accountLogout() {
+  if (confirm('Log out of PermitAssist?')) {
+    clearSessionToken();
+    document.getElementById('account-section').style.display = 'none';
+    document.getElementById('login-section').style.display = 'block';
+    document.getElementById('login-step1').style.display = 'block';
+    document.getElementById('login-step2').style.display = 'none';
+  }
+}
+
+// Login flow
+async function accountSendMagicLink() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  if (!email || !email.includes('@')) { document.getElementById('login-email').style.borderColor = '#EF4444'; return; }
+  const btn = document.getElementById('login-send-btn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    const r = await fetch('/api/magic-link', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const d = await r.json();
+    if (d.sent) {
+      localStorage.setItem(EMAIL_KEY, email);
+      document.getElementById('login-email-sent').textContent = email;
+      document.getElementById('login-step1').style.display = 'none';
+      document.getElementById('login-step2').style.display = 'block';
+      document.getElementById('login-code').focus();
+    } else {
+      alert('Could not send login email. Please try again.');
+      btn.disabled = false; btn.textContent = 'Send Magic Link →';
+    }
+  } catch { alert('Network error. Try again.'); btn.disabled = false; btn.textContent = 'Send Magic Link →'; }
+}
+
+async function accountVerifyCode() {
+  const code = document.getElementById('login-code').value.trim().toUpperCase();
+  if (code.length !== 6) { alert('Enter the 6-character code from your email.'); return; }
+  const btn = document.getElementById('login-verify-btn');
+  btn.disabled = true; btn.textContent = 'Verifying...';
+  try {
+    const r = await fetch('/api/verify-magic?token=' + encodeURIComponent(code), { redirect: 'follow' });
+    const url = new URL(r.url);
+    const t = url.searchParams.get('t');
+    if (t) {
+      setSessionToken(t);
+      await loadAccount();
+    } else {
+      alert('Invalid or expired code. Please try again or request a new one.');
+      btn.disabled = false; btn.textContent = 'Verify Code →';
+    }
+  } catch { alert('Network error.'); btn.disabled = false; btn.textContent = 'Verify Code →'; }
+}
+
+function accountShowStep1() {
+  document.getElementById('login-step1').style.display = 'block';
+  document.getElementById('login-step2').style.display = 'none';
+}
+
+async function accountResend() {
+  const email = document.getElementById('login-email-sent').textContent;
+  if (!email) return;
+  await fetch('/api/magic-link', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  alert('New code sent to ' + email);
+}
+
+// Init
+loadAccount();
+</script>
+</body>
+</html>

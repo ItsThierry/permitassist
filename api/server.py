@@ -13,10 +13,14 @@ Improvements:
 import json
 import os
 import csv
+import hmac
+import hashlib
 import smtplib
 import sqlite3
+import string
 import requests
 import threading
+import time
 import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -36,6 +40,16 @@ SHARE_TTL_DAYS = 7   # shareable links expire after 7 days
 # Telegram notification config (optional — set env vars to enable)
 TG_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TG_CHAT_ID   = os.environ.get("TELEGRAM_NOTIFY_CHAT_ID", "")
+
+# ── Auth & plan constants ─────────────────────────────────────────────────────
+SESSION_SECRET         = os.environ.get("SESSION_SECRET", "pa-dev-secret-CHANGE-IN-PROD")
+STRIPE_WEBHOOK_SECRET  = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+FREE_LOOKUPS_PER_MONTH = 3
+UPGRADE_URL_SOLO       = "https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a"
+UPGRADE_URL_TEAM       = "https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b"
+PRICE_SOLO             = "price_1TLkkQ43XpvaBuPhhxdSRoID"
+PRICE_TEAM             = "price_1TLkkQ43XpvaBuPh0vL7MnY4"
+SMTP_USER_DEFAULT      = "hello@itsthierry.com"
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -181,8 +195,309 @@ def init_db():
             updated_at   TEXT
         )
     """)
+    # ── Auth tables (Task 1) ────────────────────────────────────────────────
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+            email                TEXT NOT NULL UNIQUE,
+            plan                 TEXT DEFAULT 'free',
+            plan_expires_at      TEXT,
+            stripe_customer_id   TEXT,
+            stripe_subscription_id TEXT,
+            created_at           TEXT,
+            last_login           TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_sessions (
+            token      TEXT PRIMARY KEY,
+            email      TEXT NOT NULL,
+            expires_at TEXT,
+            created_at TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS magic_tokens (
+            token      TEXT PRIMARY KEY,
+            email      TEXT NOT NULL,
+            expires_at TEXT,
+            created_at TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS lookup_counts (
+            email  TEXT NOT NULL,
+            month  TEXT NOT NULL,
+            count  INTEGER DEFAULT 0,
+            PRIMARY KEY (email, month)
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS team_members (
+            owner_email  TEXT NOT NULL,
+            member_email TEXT NOT NULL,
+            joined_at    TEXT,
+            PRIMARY KEY (owner_email, member_email)
+        )
+    """)
     conn.commit()
     conn.close()
+
+# ── Auth / Session helpers ─────────────────────────────────────────────────
+
+def create_session_token(email: str) -> str:
+    """Create a signed 30-day session token and store in DB."""
+    raw = secrets.token_urlsafe(32)
+    sig = hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
+    token = f"{raw}.{sig}"
+    now = datetime.utcnow()
+    exp = now + timedelta(days=30)
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            "INSERT OR REPLACE INTO user_sessions (token, email, expires_at, created_at) VALUES (?,?,?,?)",
+            (token, email.lower().strip(), exp.isoformat(), now.isoformat())
+        )
+        conn.execute(
+            "INSERT OR IGNORE INTO users (email, plan, created_at, last_login) VALUES (?,?,?,?)",
+            (email.lower().strip(), "free", now.isoformat(), now.isoformat())
+        )
+        conn.execute(
+            "UPDATE users SET last_login=? WHERE email=?",
+            (now.isoformat(), email.lower().strip())
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[session] Create error: {e}")
+    return token
+
+
+def validate_session_token(token: str) -> str | None:
+    """Validate HMAC-signed session token. Returns email or None."""
+    if not token or "." not in token:
+        return None
+    try:
+        raw, sig = token.rsplit(".", 1)
+        expected = hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected):
+            return None
+        conn = sqlite3.connect(CACHE_DB)
+        row = conn.execute(
+            "SELECT email, expires_at FROM user_sessions WHERE token=?", [token]
+        ).fetchone()
+        conn.close()
+        if not row:
+            return None
+        email_db, expires_at = row
+        if datetime.utcnow() > datetime.fromisoformat(expires_at):
+            return None
+        return email_db
+    except Exception as e:
+        print(f"[session] Validate error: {e}")
+        return None
+
+
+def get_user(email: str) -> dict | None:
+    """Get user record from DB."""
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        row = conn.execute(
+            "SELECT id,email,plan,plan_expires_at,stripe_customer_id,"
+            "stripe_subscription_id,created_at,last_login FROM users WHERE email=?",
+            [email.lower().strip()]
+        ).fetchone()
+        conn.close()
+        if not row:
+            return None
+        cols = ["id","email","plan","plan_expires_at","stripe_customer_id",
+                "stripe_subscription_id","created_at","last_login"]
+        return dict(zip(cols, row))
+    except Exception as e:
+        print(f"[user] Get error: {e}")
+        return None
+
+
+def get_or_create_user(email: str) -> dict:
+    """Get or create user. Always returns a dict."""
+    user = get_user(email)
+    if user:
+        return user
+    now = datetime.utcnow().isoformat()
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            "INSERT OR IGNORE INTO users (email, plan, created_at, last_login) VALUES (?,?,?,?)",
+            (email.lower().strip(), "free", now, now)
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[user] Create error: {e}")
+    return get_user(email) or {"email": email, "plan": "free"}
+
+
+def is_paid_user(email: str) -> bool:
+    """Check if user has active paid plan (solo or team) or is a team member."""
+    email = email.lower().strip()
+    user = get_user(email)
+    if user and user.get("plan") in ("solo", "team"):
+        exp = user.get("plan_expires_at")
+        if exp:
+            try:
+                if datetime.utcnow() > datetime.fromisoformat(exp):
+                    return False
+            except Exception:
+                pass
+        return True
+    # Check if user is a team member under a paid owner
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        row = conn.execute(
+            "SELECT owner_email FROM team_members WHERE member_email=?", [email]
+        ).fetchone()
+        conn.close()
+        if row:
+            return is_paid_user(row[0])
+    except Exception:
+        pass
+    return False
+
+
+def get_monthly_lookup_count(email: str) -> int:
+    """Get current month's fresh lookup count for an email."""
+    month = datetime.utcnow().strftime("%Y-%m")
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        row = conn.execute(
+            "SELECT count FROM lookup_counts WHERE email=? AND month=?",
+            [email.lower().strip(), month]
+        ).fetchone()
+        conn.close()
+        return row[0] if row else 0
+    except Exception as e:
+        print(f"[lookup_count] Get error: {e}")
+        return 0
+
+
+def increment_monthly_lookup(email: str) -> int:
+    """Increment monthly lookup count. Returns new count."""
+    month = datetime.utcnow().strftime("%Y-%m")
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            "INSERT INTO lookup_counts (email, month, count) VALUES (?,?,1) "
+            "ON CONFLICT(email, month) DO UPDATE SET count = count + 1",
+            [email.lower().strip(), month]
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT count FROM lookup_counts WHERE email=? AND month=?",
+            [email.lower().strip(), month]
+        ).fetchone()
+        conn.close()
+        return row[0] if row else 1
+    except Exception as e:
+        print(f"[lookup_count] Increment error: {e}")
+        return 1
+
+
+def send_magic_link_email(to_email: str, token: str) -> bool:
+    """Send magic link / login code email."""
+    smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
+    smtp_port = int(os.environ.get("SMTP_PORT", "465"))
+    smtp_user = os.environ.get("SMTP_USER", SMTP_USER_DEFAULT)
+    smtp_pass = os.environ.get("SMTP_PASS", "")
+    if not smtp_pass:
+        print(f"[magic-link] SMTP not configured — token for {to_email}: {token}")
+        return True  # Don't show error on frontend
+    verify_url = f"https://permitassist.io/api/verify-magic?token={token}"
+    body = (
+        f"Hi,\n\n"
+        f"Your PermitAssist login code is: {token}\n\n"
+        f"Or click this link to log in automatically (expires in 15 minutes):\n"
+        f"{verify_url}\n\n"
+        f"— PermitAssist\n"
+        f"permitassist.io"
+    )
+    msg = MIMEText(body, "plain")
+    msg["Subject"] = f"Your PermitAssist login code: {token}"
+    msg["From"]    = smtp_user
+    msg["To"]      = to_email
+    try:
+        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=8) as s:
+            s.login(smtp_user, smtp_pass)
+            s.sendmail(smtp_user, to_email, msg.as_string())
+        print(f"[magic-link] Sent to {to_email}")
+        return True
+    except Exception as e:
+        print(f"[magic-link] Failed: {e}")
+        return False
+
+
+def send_confirmation_email(to_email: str, plan: str) -> bool:
+    """Send plan upgrade confirmation email."""
+    smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
+    smtp_port = int(os.environ.get("SMTP_PORT", "465"))
+    smtp_user = os.environ.get("SMTP_USER", SMTP_USER_DEFAULT)
+    smtp_pass = os.environ.get("SMTP_PASS", "")
+    if not smtp_pass:
+        print(f"[confirm-email] SMTP not configured — skipping for {to_email}")
+        return False
+    plan_name = "Team" if plan == "team" else "Solo"
+    team_line = "\n\u2022 Up to 3 team seats — invite your crew at no extra cost" if plan == "team" else ""
+    body = (
+        f"Hi,\n\n"
+        f"You're now on PermitAssist {plan_name}! 🎉{team_line}\n\n"
+        f"Unlimited permit lookups are now active on your account.\n\n"
+        f"What you have now:\n"
+        f"\u2022 Unlimited lookups every month, any job, any city\n"
+        f"\u2022 Exact permit names, current fees, and office contacts\n"
+        f"\u2022 Job tracker to manage all your permits in one place\n\n"
+        f"Go look up your permits: https://permitassist.io\n\n"
+        f"Questions? Just reply to this email.\n\n"
+        f"— PermitAssist\n"
+        f"permitassist.io"
+    )
+    msg = MIMEText(body, "plain")
+    msg["Subject"] = f"You're now on PermitAssist {plan_name} — unlimited lookups unlocked"
+    msg["From"]    = smtp_user
+    msg["To"]      = to_email
+    try:
+        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=8) as s:
+            s.login(smtp_user, smtp_pass)
+            s.sendmail(smtp_user, to_email, msg.as_string())
+        print(f"[confirm-email] Sent to {to_email} (plan={plan})")
+        return True
+    except Exception as e:
+        print(f"[confirm-email] Failed: {e}")
+        return False
+
+
+def verify_stripe_signature(payload: bytes, sig_header: str, secret: str) -> bool:
+    """Verify Stripe webhook signature using HMAC-SHA256."""
+    if not secret:
+        print("[stripe-webhook] No STRIPE_WEBHOOK_SECRET — skipping signature check")
+        return True
+    try:
+        parts: dict[str, list] = {}
+        for item in sig_header.split(","):
+            item = item.strip()
+            if "=" in item:
+                k, v = item.split("=", 1)
+                k = k.strip()
+                parts.setdefault(k, []).append(v.strip())
+        ts = parts.get("t", [""])[0]
+        sigs = parts.get("v1", [])
+        signed_payload = f"{ts}.{payload.decode('utf-8')}"
+        expected = hmac.new(secret.encode(), signed_payload.encode(), hashlib.sha256).hexdigest()
+        return any(hmac.compare_digest(expected, s) for s in sigs)
+    except Exception as e:
+        print(f"[stripe-webhook] Signature verify error: {e}")
+        return False
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 def record_lookup_stat(job_type: str, city: str, state: str, cached: bool):
     try:
@@ -584,7 +899,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Session-Token")
         self.end_headers()
 
     def do_PATCH(self):
@@ -638,6 +953,97 @@ class Handler(BaseHTTPRequestHandler):
             self.send_file(os.path.join(FRONTEND_DIR, "privacy.html"), "text/html; charset=utf-8")
         elif path == "/health":
             self.send_json(200, {"status": "ok", "service": "PermitAssist"})
+
+        # ── Account page (Task 5) ───────────────────────────────────────────────
+        elif path in ("/account", "/account/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "account.html"), "text/html; charset=utf-8")
+
+        # ── GET /api/account ──────────────────────────────────────────────────
+        elif path == "/api/account":
+            session_token = self.headers.get("X-Session-Token", "")
+            user_email = validate_session_token(session_token) if session_token else None
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
+                return
+            user  = get_or_create_user(user_email)
+            count = get_monthly_lookup_count(user_email)
+            paid  = is_paid_user(user_email)
+            now_dt = datetime.utcnow()
+            if now_dt.month == 12:
+                reset_date = f"{now_dt.year + 1}-01-01"
+            else:
+                reset_date = f"{now_dt.year}-{now_dt.month + 1:02d}-01"
+            try:
+                conn = sqlite3.connect(CACHE_DB)
+                team_rows = conn.execute(
+                    "SELECT member_email FROM team_members WHERE owner_email=?",
+                    [user_email]
+                ).fetchall()
+                conn.close()
+                team_members = [r[0] for r in team_rows]
+            except Exception:
+                team_members = []
+            self.send_json(200, {
+                "email":              user_email,
+                "plan":               user.get("plan", "free"),
+                "paid":               paid,
+                "lookups_this_month": count,
+                "lookups_remaining":  -1 if paid else max(0, FREE_LOOKUPS_PER_MONTH - count),
+                "reset_date":         reset_date,
+                "plan_expires_at":    user.get("plan_expires_at"),
+                "team_members":       team_members,
+            })
+
+        # ── GET /api/verify-magic (Task 1) ───────────────────────────────────
+        elif path == "/api/verify-magic":
+            qs    = parse_qs(urlparse(self.path).query)
+            token = (qs.get("token", [""])[0] or "").strip().upper()
+            def _magic_page(title, icon, msg, link_label, link_href, color):
+                return (
+                    f"<!DOCTYPE html><html><head><meta charset='UTF-8'/>"
+                    f"<meta name='viewport' content='width=device-width,initial-scale=1'/>"
+                    f"<title>{title} — PermitAssist</title>"
+                    f"<style>body{{font-family:system-ui,sans-serif;background:#0b1220;color:#f0f4ff;"
+                    f"display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;margin:0}}"
+                    f".box{{max-width:420px;padding:40px 20px}}"
+                    f".icon{{font-size:56px;margin-bottom:16px}}"
+                    f"h1{{font-size:24px;font-weight:800;color:{color};margin-bottom:12px}}"
+                    f"p{{color:#b8c5e0;margin-bottom:24px;line-height:1.6}}"
+                    f"a{{display:inline-block;background:#1a56db;color:#fff;padding:12px 28px;border-radius:8px;font-weight:700;text-decoration:none}}"
+                    f"</style></head><body><div class='box'><div class='icon'>{icon}</div>"
+                    f"<h1>{title}</h1><p>{msg}</p><a href='{link_href}'>{link_label}</a></div></body></html>"
+                )
+            if not token:
+                html = _magic_page("Invalid Link", "⚠️", "This magic link is missing a token.", "Back to PermitAssist", "/", "#ef4444")
+                self.send_response(400); self.send_header("Content-Type", "text/html; charset=utf-8"); self.end_headers(); self.wfile.write(html.encode()); return
+            try:
+                conn = sqlite3.connect(CACHE_DB)
+                row = conn.execute(
+                    "SELECT email, expires_at FROM magic_tokens WHERE token=?", [token]
+                ).fetchone()
+                if not row:
+                    conn.close()
+                    html = _magic_page("Invalid Code", "❌", "This login code is not recognised. Check the code or request a new one.", "Back to PermitAssist", "/", "#ef4444")
+                    self.send_response(400); self.send_header("Content-Type", "text/html; charset=utf-8"); self.end_headers(); self.wfile.write(html.encode()); return
+                email_m, exp_m = row
+                if datetime.utcnow() > datetime.fromisoformat(exp_m):
+                    conn.execute("DELETE FROM magic_tokens WHERE token=?", [token])
+                    conn.commit(); conn.close()
+                    html = _magic_page("Link Expired", "⏰", "This login link has expired. Request a new one from the homepage.", "Get New Link", "/", "#f59e0b")
+                    self.send_response(410); self.send_header("Content-Type", "text/html; charset=utf-8"); self.end_headers(); self.wfile.write(html.encode()); return
+                conn.execute("DELETE FROM magic_tokens WHERE token=?", [token])
+                conn.commit(); conn.close()
+                session = create_session_token(email_m)
+                from urllib.parse import quote as _quote
+                redirect_url = f"/?t={_quote(session, safe='')}&verified=1"
+                self.send_response(302)
+                self.send_header("Location", redirect_url)
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+            except Exception as e:
+                print(f"[verify-magic] Error: {e}")
+                import traceback; traceback.print_exc()
+                self.send_json(500, {"error": "Server error"})
 
         # ── Shared result pages /s/[slug] ────────────────────────────────────────
         elif path.startswith("/s/"):
@@ -766,22 +1172,61 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
 
                 ip = self.client_ip()
 
-                # Rate limit check (only applies to fresh lookups — handled below)
-                limited, remaining = is_rate_limited(ip)
+                # ── Session-based auth (email → server-side monthly limit) ──────
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email    = validate_session_token(session_token) if session_token else None
 
-                print(f"[permit] {job_type} in {city}, {state} ({job_category}) — IP={ip} remaining={remaining}")
+                if user_email:
+                    paid          = is_paid_user(user_email)
+                    monthly_count = get_monthly_lookup_count(user_email)
+                    email_limited = (not paid) and (monthly_count >= FREE_LOOKUPS_PER_MONTH)
+                    print(f"[permit] {job_type} in {city}, {state} — user={user_email} plan={'paid' if paid else 'free'} count={monthly_count}")
+                    limited = False  # IP limit not used for authenticated users
+                else:
+                    # IP-based rate limiting (guests / unauthenticated)
+                    limited, _    = is_rate_limited(ip)
+                    email_limited = False
+                    paid          = False
+                    print(f"[permit] {job_type} in {city}, {state} ({job_category}) — IP={ip}")
 
-                result = research_permit(job_type, city, state, zip_code, job_category=job_category)
+                result    = research_permit(job_type, city, state, zip_code, job_category=job_category)
                 is_cached = result.get("_cached", False)
 
                 if not is_cached:
-                    if limited:
-                        self.send_json(429, {
-                            "error": "Too many lookups. Please try again in an hour or upgrade for unlimited access.",
-                            "retry_after": RATE_WINDOW_SECONDS,
-                        })
-                        return
-                    record_fresh_lookup(ip)
+                    if user_email:
+                        if email_limited:
+                            self.send_json(429, {
+                                "error": "Monthly lookup limit reached. Upgrade for unlimited access.",
+                                "retry_after": 0,
+                                "upgrade_url": UPGRADE_URL_SOLO,
+                            })
+                            return
+                        if not paid:
+                            new_count         = increment_monthly_lookup(user_email)
+                            remaining_lookups = max(0, FREE_LOOKUPS_PER_MONTH - new_count)
+                        else:
+                            remaining_lookups = -1  # unlimited
+                    else:
+                        if limited:
+                            self.send_json(429, {
+                                "error": "Too many lookups. Please try again in an hour or upgrade for unlimited access.",
+                                "retry_after": RATE_WINDOW_SECONDS,
+                            })
+                            return
+                        record_fresh_lookup(ip)
+                        remaining_lookups = None
+                else:
+                    # Cached lookup — always free, compute remaining for display
+                    if user_email and not paid:
+                        remaining_lookups = max(0, FREE_LOOKUPS_PER_MONTH - get_monthly_lookup_count(user_email))
+                    elif user_email and paid:
+                        remaining_lookups = -1
+                    else:
+                        remaining_lookups = None
+
+                # Inject server-side lookup count into result
+                if remaining_lookups is not None:
+                    result["remaining_lookups"] = remaining_lookups
 
                 # Validate URLs (only on fresh results — cached already verified)
                 if not is_cached:
@@ -996,6 +1441,164 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
+        # ── Magic link auth (Task 1) ─────────────────────────────────────
+        elif path == "/api/magic-link":
+            try:
+                data  = self.read_json_body()
+                email = data.get("email", "").strip().lower()
+                if not email or "@" not in email:
+                    self.send_json(400, {"error": "Valid email required"})
+                    return
+                # Generate 6-char uppercase alphanumeric token
+                chars = string.ascii_uppercase + string.digits
+                token = "".join(secrets.choice(chars) for _ in range(6))
+                now   = datetime.utcnow()
+                exp   = now + timedelta(minutes=15)
+                conn  = sqlite3.connect(CACHE_DB)
+                conn.execute(
+                    "INSERT OR REPLACE INTO magic_tokens (token, email, expires_at, created_at) VALUES (?,?,?,?)",
+                    (token, email, exp.isoformat(), now.isoformat())
+                )
+                conn.commit()
+                conn.close()
+                get_or_create_user(email)
+                sent = send_magic_link_email(email, token)
+                self.send_json(200, {"sent": sent, "expires_in": 900})
+            except Exception as e:
+                print(f"[magic-link] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
+        # ── Stripe webhook (Task 2) ──────────────────────────────────────
+        elif path == "/api/stripe-webhook":
+            try:
+                length    = int(self.headers.get("Content-Length", 0))
+                raw_body  = self.rfile.read(length)
+                sig_header = self.headers.get("Stripe-Signature", "")
+                if not verify_stripe_signature(raw_body, sig_header, STRIPE_WEBHOOK_SECRET):
+                    self.send_json(400, {"error": "Invalid signature"})
+                    return
+                event  = json.loads(raw_body)
+                etype  = event.get("type", "")
+                obj    = event.get("data", {}).get("object", {})
+                print(f"[stripe-webhook] Event: {etype}")
+
+                if etype in ("checkout.session.completed", "customer.subscription.created"):
+                    # Extract email
+                    email = (
+                        obj.get("customer_details", {}).get("email")
+                        or obj.get("customer_email")
+                        or obj.get("metadata", {}).get("email")
+                        or ""
+                    )
+                    # Extract price ID to determine plan
+                    price_id = ""
+                    if etype == "checkout.session.completed":
+                        line_items = obj.get("line_items", {}).get("data") or []
+                        if line_items:
+                            price_id = line_items[0].get("price", {}).get("id", "")
+                        if not price_id:
+                            price_id = obj.get("metadata", {}).get("price_id", "")
+                    elif etype == "customer.subscription.created":
+                        items = obj.get("items", {}).get("data") or []
+                        if items:
+                            price_id = items[0].get("price", {}).get("id", "")
+                    plan = "team" if price_id == PRICE_TEAM else "solo"
+
+                    if email:
+                        email = email.lower().strip()
+                        now_dt = datetime.utcnow()
+                        exp_dt = now_dt + timedelta(days=365)
+                        stripe_cust = obj.get("customer", "")
+                        stripe_sub  = obj.get("subscription", "") or obj.get("id", "")
+                        conn = sqlite3.connect(CACHE_DB)
+                        conn.execute(
+                            "INSERT OR IGNORE INTO users (email, plan, created_at, last_login) VALUES (?,?,?,?)",
+                            (email, "free", now_dt.isoformat(), now_dt.isoformat())
+                        )
+                        conn.execute(
+                            "UPDATE users SET plan=?, plan_expires_at=?, stripe_customer_id=?, "
+                            "stripe_subscription_id=?, last_login=? WHERE email=?",
+                            (plan, exp_dt.isoformat(), stripe_cust, stripe_sub, now_dt.isoformat(), email)
+                        )
+                        conn.commit()
+                        conn.close()
+                        print(f"[stripe-webhook] Upgraded {email} to {plan}")
+                        notify_telegram(f"💰 <b>New Subscription</b>\nEmail: {email}\nPlan: {plan}")
+                        threading.Thread(
+                            target=send_confirmation_email, args=(email, plan), daemon=True
+                        ).start()
+                    else:
+                        print(f"[stripe-webhook] Could not extract email from event")
+
+                elif etype == "customer.subscription.deleted":
+                    email = obj.get("customer_email", "")
+                    if not email:
+                        cust_id = obj.get("customer", "")
+                        if cust_id:
+                            conn = sqlite3.connect(CACHE_DB)
+                            row = conn.execute(
+                                "SELECT email FROM users WHERE stripe_customer_id=?", [cust_id]
+                            ).fetchone()
+                            conn.close()
+                            if row:
+                                email = row[0]
+                    if email:
+                        conn = sqlite3.connect(CACHE_DB)
+                        conn.execute(
+                            "UPDATE users SET plan='free', plan_expires_at=NULL WHERE email=?",
+                            [email.lower()]
+                        )
+                        conn.commit()
+                        conn.close()
+                        print(f"[stripe-webhook] Downgraded {email} to free")
+                        notify_telegram(f"📉 <b>Subscription Cancelled</b>\nEmail: {email}")
+
+                self.send_json(200, {"received": True})
+            except json.JSONDecodeError:
+                self.send_json(400, {"error": "Invalid JSON"})
+            except Exception as e:
+                print(f"[stripe-webhook] Error: {e}")
+                import traceback; traceback.print_exc()
+                self.send_json(500, {"error": str(e)})
+
+        # ── Team invite (Task 7) ─────────────────────────────────────────
+        elif path == "/api/team/invite":
+            try:
+                session_token = self.headers.get("X-Session-Token", "")
+                owner_email   = validate_session_token(session_token) if session_token else None
+                if not owner_email:
+                    self.send_json(401, {"error": "Not authenticated"})
+                    return
+                user = get_user(owner_email)
+                if not user or user.get("plan") != "team":
+                    self.send_json(403, {"error": "Team plan required to invite members"})
+                    return
+                data         = self.read_json_body()
+                invite_email = data.get("invite_email", "").strip().lower()
+                if not invite_email or "@" not in invite_email:
+                    self.send_json(400, {"error": "Valid invite_email required"})
+                    return
+                conn = sqlite3.connect(CACHE_DB)
+                seat_count = conn.execute(
+                    "SELECT COUNT(*) FROM team_members WHERE owner_email=?", [owner_email]
+                ).fetchone()[0]
+                if seat_count >= 3:
+                    conn.close()
+                    self.send_json(400, {"error": "Team seat limit reached (max 3 members)"})
+                    return
+                now_iso = datetime.utcnow().isoformat()
+                conn.execute(
+                    "INSERT OR IGNORE INTO team_members (owner_email, member_email, joined_at) VALUES (?,?,?)",
+                    (owner_email, invite_email, now_iso)
+                )
+                conn.commit()
+                conn.close()
+                get_or_create_user(invite_email)
+                self.send_json(200, {"invited": True, "member_email": invite_email})
+            except Exception as e:
+                print(f"[team/invite] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
         else:
             self.send_json(404, {"error": "Not found"})
 
@@ -1003,8 +1606,10 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
 if __name__ == "__main__":
     init_db()
     print(f"🚀 PermitAssist server starting on port {PORT}")
-    print(f"   Rate limit: {RATE_MAX_FRESH} fresh lookups / {RATE_WINDOW_SECONDS//3600}h per IP")
-    print(f"   Telegram notifications: {'enabled' if TG_BOT_TOKEN else 'disabled (set TELEGRAM_BOT_TOKEN + TELEGRAM_NOTIFY_CHAT_ID)'}")
+    print(f"   Rate limit: {RATE_MAX_FRESH} fresh lookups / {RATE_WINDOW_SECONDS//3600}h per IP (guests)")
+    print(f"   Free tier: {FREE_LOOKUPS_PER_MONTH} lookups/month per email (auth users)")
+    print(f"   Stripe webhook: {'configured' if STRIPE_WEBHOOK_SECRET else 'no STRIPE_WEBHOOK_SECRET'}")
+    print(f"   Telegram: {'enabled' if TG_BOT_TOKEN else 'disabled'}")
     print(f"   Open: http://localhost:{PORT}")
     server = HTTPServer(("0.0.0.0", PORT), Handler)
     server.serve_forever()
