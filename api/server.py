@@ -1468,7 +1468,12 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 conn.close()
                 get_or_create_user(email)
                 sent = send_magic_link_email(email, token)
-                self.send_json(200, {"sent": sent, "expires_in": 900})
+                # If email failed (Railway SMTP blocked), return token in response
+                # so frontend can show it on screen as fallback
+                resp = {"sent": sent, "expires_in": 900}
+                if not sent:
+                    resp["code"] = token  # show code on screen
+                self.send_json(200, resp)
             except Exception as e:
                 print(f"[magic-link] Error: {e}")
                 self.send_json(500, {"error": str(e)})
