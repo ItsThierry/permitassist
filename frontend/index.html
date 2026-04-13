@@ -1034,6 +1034,11 @@ const DISAMBIG_RULES = [
     test: q => /\b(panel upgrade|service upgrade|electrical service)\b/i.test(q) && !/\b(100 amp|125 amp|150 amp|200 amp|400 amp)\b/i.test(q),
     title: '⚠️ What size service are you upgrading to?',
     options: ['100 amp', '200 amp', '400 amp']
+  },
+  {
+    test: q => /\b(kitchen remodel|kitchen redesign|kitchen renovation|cabinet redesign|cabinet replacement|new cabinets)\b/i.test(q),
+    title: '⚠️ Is this cosmetic cabinets/counters only, or are you changing layout / plumbing / electrical / walls?',
+    options: ['cosmetic cabinets/counters only, no plumbing/electrical/walls', 'layout/plumbing/electrical/wall changes']
   }
 ];
 

@@ -68,6 +68,7 @@ def check_frontend_content() -> None:
         "Jurisdiction Match",
         "Next Steps",
         "Foreman Brief",
+        "cosmetic cabinets/counters only, no plumbing/electrical/walls",
         "Log in to use Job Tracker",
     ]
     for needle in required_index:
