@@ -51,6 +51,7 @@ PRICE_TEAM             = "price_1TLkkQ43XpvaBuPh0vL7MnY4"
 RESEND_API_KEY         = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL             = "hello@itsthierryai.com"
 APP_BASE_URL           = os.environ.get("APP_BASE_URL", "https://permitassist.io").rstrip("/")
+ADMIN_TOKEN            = os.environ.get("PERMITASSIST_ADMIN_TOKEN", "")
 REMINDER_LOOKAHEAD_DAYS = 30
 REMINDER_CHECK_SECONDS  = 3600
 
@@ -494,6 +495,61 @@ def reminder_worker():
         except Exception as e:
             print(f"[reminders] Worker error: {e}")
         time.sleep(REMINDER_CHECK_SECONDS)
+
+
+def get_review_queue(limit: int = 50) -> dict:
+    feedback_items = []
+    needs_review_items = []
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        rows = conn.execute(
+            "SELECT job_type, city, state, issue, submitted_at FROM feedback ORDER BY submitted_at DESC LIMIT ?",
+            [limit],
+        ).fetchall()
+        for job_type, city, state, issue, submitted_at in rows:
+            feedback_items.append({
+                "job_type": job_type,
+                "city": city,
+                "state": state,
+                "issue": issue,
+                "submitted_at": submitted_at,
+            })
+
+        cache_rows = conn.execute(
+            "SELECT job_type, city, state, result_json, created_at FROM permit_cache ORDER BY created_at DESC LIMIT ?",
+            [max(limit * 4, 100)],
+        ).fetchall()
+        conn.close()
+
+        for job_type, city, state, result_json, created_at in cache_rows:
+            try:
+                data = json.loads(result_json or "{}")
+            except Exception:
+                continue
+            if not data.get("needs_review"):
+                continue
+            needs_review_items.append({
+                "job_type": job_type,
+                "city": city,
+                "state": state,
+                "created_at": created_at,
+                "confidence": data.get("confidence", ""),
+                "missing_fields": data.get("missing_fields", []),
+                "confidence_reason": data.get("confidence_reason", ""),
+            })
+            if len(needs_review_items) >= limit:
+                break
+    except Exception as e:
+        print(f"[review-queue] Error: {e}")
+
+    return {
+        "feedback": feedback_items,
+        "needs_review": needs_review_items,
+        "counts": {
+            "feedback": len(feedback_items),
+            "needs_review": len(needs_review_items),
+        },
+    }
 
 
 def get_monthly_lookup_count(email: str) -> int:
@@ -1307,6 +1363,19 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 self.send_json(500, {"error": "Billing portal unavailable"})
                 return
             self.send_json(200, {"url": portal_url})
+
+        elif path == "/api/review-queue":
+            admin_token = self.headers.get("X-Admin-Token", "")
+            if not ADMIN_TOKEN:
+                self.send_json(403, {"error": "Admin review queue not configured"})
+                return
+            if admin_token != ADMIN_TOKEN:
+                self.send_json(401, {"error": "Invalid admin token"})
+                return
+            qs = parse_qs(urlparse(self.path).query)
+            limit = int((qs.get("limit", ["50"])[0] or "50").strip() or "50")
+            limit = max(1, min(limit, 200))
+            self.send_json(200, get_review_queue(limit=limit))
 
         # ── SEO: sitemap.xml ──────────────────────────────────────────────
         elif path == "/sitemap.xml":

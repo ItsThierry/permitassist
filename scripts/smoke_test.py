@@ -80,7 +80,9 @@ def check_backend_helpers() -> None:
         db_path = tmp.name
     try:
         server.CACHE_DB = db_path
+        research.CACHE_DB = db_path
         server.init_db()
+        research.init_cache()
 
         server.get_or_create_user("owner@example.com")
         server.get_or_create_user("crew@example.com")
@@ -104,6 +106,30 @@ def check_backend_helpers() -> None:
             "owner@example.com", "Roof replacement", "Houston", "TX", "2026-05-20"
         )
         assert reminder["id"] and reminder["remind_at"]
+
+        conn = sqlite3.connect(db_path)
+        conn.execute(
+            "INSERT INTO feedback (job_type, city, state, issue, submitted_at) VALUES (?,?,?,?,?)",
+            ("Roof replacement", "Houston", "TX", "wrong fee", "2026-04-13T00:00:00"),
+        )
+        conn.execute(
+            "INSERT INTO permit_cache (cache_key, job_type, city, state, zip_code, result_json, created_at, hits) VALUES (?,?,?,?,?,?,?,?)",
+            (
+                "test-key",
+                "Roof replacement",
+                "Houston",
+                "TX",
+                "77001",
+                json.dumps({"needs_review": True, "missing_fields": ["fee_range"], "confidence": "low", "confidence_reason": "Needs review for fee_range"}),
+                "2026-04-13T00:00:00",
+                0,
+            ),
+        )
+        conn.commit()
+        conn.close()
+        queue = server.get_review_queue(limit=10)
+        assert queue["counts"]["feedback"] == 1
+        assert queue["counts"]["needs_review"] == 1
 
         shared_html = server.render_share_page(
             {
