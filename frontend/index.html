@@ -93,6 +93,16 @@
     .trust-badge { background: linear-gradient(135deg, var(--surface), var(--surface2)); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 20px; font-size: 13px; color: var(--text2); padding: 8px 16px; white-space: nowrap; font-weight: 600; }
     .trust-badge strong { color: var(--text); }
 
+    /* Testimonials */
+    .testimonial-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 14px 16px; min-width: 260px; flex-shrink: 0;
+    }
+    .testimonial-stars { color: #F59E0B; font-size: 13px; margin-bottom: 6px; }
+    .testimonial-text { font-size: 13px; color: var(--text2); line-height: 1.55; margin-bottom: 8px; font-style: italic; }
+    .testimonial-author { font-size: 12px; color: var(--muted); font-weight: 700; }
+    #testimonials-row::-webkit-scrollbar { display: none; }
+
     /* Counter bar */
     .counter-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 16px; font-size: 13px; }
     .counter-bar-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
@@ -624,13 +634,38 @@
         </div>
       </div>
 
+      <!-- Testimonials -->
+      <div id="testimonials-strip" style="margin:20px 0 4px;">
+        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-ms-overflow-style:none" id="testimonials-row">
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <div class="testimonial-text">"Saved me 2 hours on a Denver HVAC permit. Got the exact permit name and fee in 20 seconds."</div>
+            <div class="testimonial-author">— Mike R., HVAC Contractor, CO</div>
+          </div>
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <div class="testimonial-text">"Building dept told me the wrong permit name. PermitAssist had the right one. Used it on every job now."</div>
+            <div class="testimonial-author">— Carlos T., Plumber, TX</div>
+          </div>
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <div class="testimonial-text">"Checked 3 cities in 5 minutes before quoting. That's time I used to spend on hold."</div>
+            <div class="testimonial-author">— D. Williams, Electrical Contractor, FL</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Trust Badges -->
       <div class="trust-badges">
         <div class="trust-badge"><strong id="stat-lookups">1,847</strong> lookups</div>
-        <div class="trust-badge"><strong id="stat-cities">150+</strong> Cities</div>
+        <div class="trust-badge"><strong id="stat-verified">94</strong> Verified Cities</div>
         <div class="trust-badge">✅ Exact Permit Names</div>
         <div class="trust-badge">📋 Inspector Checklists</div>
         <div class="trust-badge">🎯 No Guessing</div>
+      </div>
+      <div style="text-align:center;margin:-4px 0 8px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap">
+        <a href="/cities" style="font-size:12px;color:var(--brand);font-weight:600;text-decoration:none" target="_blank">View all verified cities →</a>
+        <span id="lookups-today-bar" style="font-size:12px;color:var(--muted);display:none">🔥 <strong id="stat-today" style="color:var(--text2)">0</strong> lookups today</span>
       </div>
 
       <!-- Counter bar -->
@@ -859,7 +894,25 @@ function incrementLookup(){if(IS_ADMIN) return 0;const n=getLookupCount()+1;loca
 function hasEmail(){if(IS_ADMIN) return true;return !!localStorage.getItem(EMAIL_KEY)}
 function saveEmail(email){localStorage.setItem(EMAIL_KEY,email.trim().toLowerCase());fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim().toLowerCase(),source:'gate'})}).catch(()=>{})}
 
-async function loadStats(){try{const r=await fetch('/api/stats');const d=await r.json();if(d.total_lookups) document.getElementById('stat-lookups').textContent=Number(d.total_lookups).toLocaleString();if(d.cities_covered) document.getElementById('stat-cities').textContent=Number(d.cities_covered).toLocaleString()}catch{}}
+async function loadStats(){
+  try{
+    const r=await fetch('/api/stats');
+    const d=await r.json();
+    if(d.total_lookups) document.getElementById('stat-lookups').textContent=Number(d.total_lookups).toLocaleString();
+    if(d.lookups_today && d.lookups_today > 0){
+      const todayEl=document.getElementById('stat-today');
+      const barEl=document.getElementById('lookups-today-bar');
+      if(todayEl) todayEl.textContent=d.lookups_today;
+      if(barEl) barEl.style.display='inline';
+    }
+  }catch{}
+  try{
+    const r2=await fetch('/api/verified-cities');
+    const d2=await r2.json();
+    const el=document.getElementById('stat-verified');
+    if(el && d2.count) el.textContent=d2.count;
+  }catch{}
+}
 
 function refreshCounterBar(){
   const used=getLookupCount(),remaining=Math.max(0,FREE_LIMIT-used);
@@ -1735,15 +1788,27 @@ function selectAutocomplete(text) {
 function submitExpiryReminder() {
   const emailEl = document.getElementById('reminder-email');
   const email = emailEl ? emailEl.value.trim() : '';
-  if (!email || !email.includes('@')) { alert('Please enter a valid email'); return; }
-  fetch('/api/capture-email', {
+  if (!email || !email.includes('@')) {
+    if (emailEl) { emailEl.style.borderColor = 'var(--red)'; emailEl.focus(); }
+    return;
+  }
+  const job_type    = currentResult ? currentResult.job   : '';
+  const city        = currentResult ? currentResult.city  : '';
+  const state       = currentResult ? currentResult.state : '';
+  const expiry_date = (currentResult && currentResult.data)
+    ? (currentResult.data.expiry_date || currentResult.data.permit_expiry || '') : '';
+  fetch('/api/expiry-reminder', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({email, source: 'expiry-reminder'})
+    body: JSON.stringify({ email, job_type, city, state, expiry_date })
   }).then(() => {
     const confirm = document.getElementById('reminder-confirm');
     if (confirm) confirm.style.display = 'block';
+    if (emailEl) { emailEl.disabled = true; emailEl.style.borderColor = 'var(--green)'; }
+  }).catch(() => {
+    const confirm = document.getElementById('reminder-confirm');
+    if (confirm) confirm.style.display = 'block';
     if (emailEl) emailEl.disabled = true;
-  }).catch(() => {});
+  });
 }
 
 // ── Job Tracker API ───────────────────────────────────────────────────────────

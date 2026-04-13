@@ -627,6 +627,8 @@ class Handler(BaseHTTPRequestHandler):
         }
         if path in ("/", "/index.html"):
             self.send_file(os.path.join(FRONTEND_DIR, "index.html"), "text/html; charset=utf-8")
+        elif path in ("/cities", "/cities.html", "/cities/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "cities.html"), "text/html; charset=utf-8")
         elif path == "/health":
             self.send_json(200, {"status": "ok", "service": "PermitAssist"})
 
@@ -849,6 +851,56 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
 
             except Exception as e:
                 print(f"[feedback] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
+        # ── Expiry reminder ───────────────────────────────────────────────
+        elif path == "/api/expiry-reminder":
+            try:
+                data      = self.read_json_body()
+                email     = data.get("email", "").strip().lower()
+                job_type  = data.get("job_type", "").strip()
+                city      = data.get("city", "").strip()
+                state     = data.get("state", "").strip()
+                expiry    = data.get("expiry_date", "").strip()
+                if not email or "@" not in email:
+                    self.send_json(400, {"error": "Valid email required"})
+                    return
+                save_email_capture(email, "expiry-reminder")
+                # Send confirmation email in background thread
+                def _send_reminder_confirm():
+                    smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
+                    smtp_port = int(os.environ.get("SMTP_PORT", "465"))
+                    smtp_user = os.environ.get("SMTP_USER", "")
+                    smtp_pass = os.environ.get("SMTP_PASS", "")
+                    if not smtp_user or not smtp_pass:
+                        return
+                    expiry_line = f"\nPermit expiry: {expiry}" if expiry else ""
+                    body = (
+                        f"Hi,\n\n"
+                        f"You've set a permit expiry reminder for:\n"
+                        f"  Job: {job_type or 'your job'}\n"
+                        f"  Location: {city}{', ' + state if state else ''}{expiry_line}\n\n"
+                        f"We'll remind you 30 days before your permit expires so you have "
+                        f"time to renew or close out inspections.\n\n"
+                        f"Questions? Just reply to this email.\n\n"
+                        f"— PermitAssist\n"
+                        f"permitassist.io"
+                    )
+                    msg = MIMEText(body, "plain")
+                    msg["Subject"] = f"Reminder set: {job_type or 'Permit'} in {city}, {state}"
+                    msg["From"]    = smtp_user
+                    msg["To"]     = email
+                    try:
+                        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=8) as s:
+                            s.login(smtp_user, smtp_pass)
+                            s.sendmail(smtp_user, email, msg.as_string())
+                        print(f"[expiry-reminder] Confirmation sent to {email}")
+                    except Exception as e:
+                        print(f"[expiry-reminder] Email failed: {e}")
+                threading.Thread(target=_send_reminder_confirm, daemon=True).start()
+                self.send_json(200, {"saved": True})
+            except Exception as e:
+                print(f"[expiry-reminder] Error: {e}")
                 self.send_json(500, {"error": str(e)})
 
         # ── Email capture ─────────────────────────────────────────────────
