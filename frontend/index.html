@@ -1353,6 +1353,64 @@ function verdictState(d){
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
 
 // ── Render Results ───────────────────────────────────────────────────────────
+function getPermitDisplayName(d) {
+  const permits = d.permits_required || [];
+  return (permits.length > 0 && permits[0].portal_selection)
+    ? permits[0].portal_selection
+    : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
+}
+
+function getJurisdictionDisplay(d, city, state, jobAddress) {
+  const levelRaw = d.data_source || d._meta?.city_match_level || '';
+  const level = ['city_database', 'city'].includes(levelRaw) ? 'city'
+    : ['county_fallback', 'county'].includes(levelRaw) || d.county_fallback === true ? 'county'
+    : levelRaw === 'web_search' ? 'web'
+    : ['state', 'state_rules'].includes(levelRaw) ? 'state'
+    : 'general';
+  const matchedTo = level === 'county'
+    ? `County-level match for ${city}, ${state}`
+    : level === 'city'
+      ? `City match for ${city}, ${state}`
+      : level === 'web'
+        ? `Live official-source match for ${city}, ${state}`
+        : level === 'state'
+          ? `State/fallback match for ${city}, ${state}`
+          : `General jurisdiction estimate for ${city}, ${state}`;
+  const badge = level === 'city'
+    ? '🟢 Exact jurisdiction'
+    : level === 'county'
+      ? '🟠 County fallback'
+      : level === 'web'
+        ? '🟡 Official-source match'
+        : level === 'state'
+          ? '🟡 State fallback'
+          : '🔴 Needs manual verify';
+  const why = d.confidence_reason || d.county_fallback_note || 'Verify this jurisdiction with the building department before starting work.';
+  return {
+    badge,
+    matchedTo,
+    why,
+    lookupBasis: jobAddress ? `Used job address: ${jobAddress}` : 'Used city/state lookup only',
+  };
+}
+
+function getNextSteps(d, job, city, state) {
+  const permitName = getPermitDisplayName(d);
+  const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])].slice(0, 3);
+  const steps = [
+    `Ask for \"${permitName}\" with the ${d.applying_office || `${city} building department`}.`,
+    d.fee_range ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Confirm the fee and save the receipt / confirmation number.',
+    docs.length ? `Bring or upload: ${docs.join(', ')}.` : 'Bring your scope of work, any required plans, and contractor/license details.',
+  ];
+  if (d.approval_timeline?.simple || d.approval_timeline?.complex) {
+    steps.push(`Plan around the approval timeline: ${d.approval_timeline.simple || d.approval_timeline.complex}.`);
+  }
+  if ((d.inspections || []).length) {
+    steps.push('Post the permit on site and schedule inspections in the right order.');
+  }
+  return steps.slice(0, 4);
+}
+
 function renderResults(d, job, city, state) {
   const verdict = verdictState(d);
   const permits = d.permits_required || [];
@@ -1363,7 +1421,8 @@ function renderResults(d, job, city, state) {
   const tl = d.approval_timeline || {};
   const office = d.applying_office || d.office_name || '';
   const phone = d.apply_phone || d.office_phone || '';
-  const address = d.apply_address || d.office_address || '';
+  const officeAddress = d.apply_address || d.office_address || '';
+  const jobAddress = currentResult?.address || '';
   const maps = d.apply_google_maps || d.maps_url || '';
   const fee = d.fee_range || d.fee || d.cost || '';
   const applyUrl = d.apply_url || '';
@@ -1429,6 +1488,8 @@ function renderResults(d, job, city, state) {
   const heroUpdatedRaw = d.last_verified_at || d._meta?.generated_at || '';
   const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown';
   const confidenceReason = d.confidence_reason || '';
+  const jurisdiction = getJurisdictionDisplay(d, city, state, jobAddress);
+  const nextSteps = getNextSteps(d, job, city, state);
 
   // Result hero
   html += `<div class="result-hero">
@@ -1445,6 +1506,13 @@ function renderResults(d, job, city, state) {
       <button class="flag-wrong-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button>
       <span class="flag-feedback-inline" id="flag-feedback-inline">Thanks for flagging. We'll review this within 30 days.</span>
     </div>
+  </div>`;
+
+  html += `<div class="card"><div class="section-label">📍 Jurisdiction Match</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span class="freshness-badge">${esc(jurisdiction.badge)}</span>${jobAddress ? `<span class="freshness-badge">🏠 Address-assisted</span>` : `<span class="freshness-badge">🏙️ City/state lookup</span>`}</div>
+    <div class="info-row"><div class="info-key">Matched to</div><div class="info-val">${esc(jurisdiction.matchedTo)}</div></div>
+    <div class="info-row"><div class="info-key">Lookup basis</div><div class="info-val">${esc(jurisdiction.lookupBasis)}</div></div>
+    <div class="info-row"><div class="info-key">Why this match</div><div class="info-val">${esc(jurisdiction.why)}</div></div>
   </div>`;
 
   // Summary card (for YES/MAYBE)
@@ -1510,13 +1578,17 @@ function renderResults(d, job, city, state) {
     html += `</div>`;
   }
 
+  if (nextSteps.length) {
+    html += `<div class="card"><div class="section-label">✅ Next Steps</div><ol class="ordered-list">${nextSteps.map(step => `<li>${esc(step)}</li>`).join('')}</ol></div>`;
+  }
+
   // Contact card
   if (phone || office || maps) {
     html += `<div class="card" style="${verdict==='maybe'?'border-color:rgba(245,158,11,0.4);':''}">
       ${verdict === 'maybe' ? '<div class="section-label" style="color:var(--yellow)">⚠️ Not sure? Call to confirm — takes 2 minutes</div>' : '<div class="section-label">📞 Contact</div>'}
       ${phone ? `<a class="contact-phone" href="tel:${normalizePhone(phone)}">${esc(phone)}</a>` : ''}
       ${office ? `<div class="contact-office">${esc(office)}</div>` : ''}
-      ${address ? `<div class="contact-address">${esc(address)}</div>` : ''}
+      ${officeAddress ? `<div class="contact-address">${esc(officeAddress)}</div>` : ''}
       <div class="mini-link-row">
         ${maps ? `<a class="mini-link" href="${esc(maps)}" target="_blank" rel="noopener">🗺️ Find Building Department →</a>` : ''}
       </div>
@@ -1666,7 +1738,7 @@ function renderResults(d, job, city, state) {
     <div class="action-row action-row-3">
       <button class="action-btn" onclick="copyForQuote()">💰 Copy for Quote</button>
       <button class="action-btn" onclick="emailResult()">📧 Email to Me</button>
-      <button class="action-btn" onclick="downloadReport()">⬇️ Report</button>
+      <button class="action-btn" onclick="downloadReport()">⬇️ Foreman Brief</button>
     </div>
     <div class="action-row">
       <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
@@ -1828,10 +1900,14 @@ function copyForQuote() {
 
 function downloadReport() {
   if (!currentResult) return;
-  const { job, city, state, data } = currentResult;
+  const { job, city, state, address, data } = currentResult;
+  const permitName = getPermitDisplayName(data);
+  const jurisdiction = getJurisdictionDisplay(data, city, state, address || '');
+  const nextSteps = getNextSteps(data, job, city, state);
   const permits = (data.permits_required || []).map(p => `<li><strong>${esc(p.permit_type || 'Permit')}</strong>${p.notes ? `: ${esc(p.notes)}` : ''}</li>`).join('');
+  const docs = [...new Set([...(data.what_to_bring || data.checklist || []), ...(data.requirements || data.documents_needed || [])])].map(item => `<li>${esc(item)}</li>`).join('');
   const sources = (data.sources || []).slice(0, 5).map(s => `<li><a href="${esc(s)}">${esc(s)}</a></li>`).join('');
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(job)} - PermitAssist Report</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;color:#0f172a;line-height:1.6}h1{font-size:28px;margin-bottom:8px}h2{font-size:18px;margin-top:28px;margin-bottom:10px}a{color:#2563eb}ul{padding-left:20px}hr{margin:28px 0;border:none;border-top:1px solid #cbd5e1}.muted{color:#64748b;font-size:13px}</style></head><body><h1>${esc(job)}</h1><div class="muted">${esc(city)}, ${esc(state)} | Generated ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div><hr><h2>Permit Summary</h2><p>${esc(data.job_summary || data.permit_summary || data.confidence_reason || '')}</p>${permits ? `<h2>Permit Details</h2><ul>${permits}</ul>` : ''}${data.applying_office ? `<h2>Where to Apply</h2><p><strong>${esc(data.applying_office)}</strong><br>${esc(data.apply_address || '')}<br>${esc(data.apply_phone || '')}</p>` : ''}${data.fee_range ? `<h2>Fees</h2><p>${esc(data.fee_range)}</p>` : ''}${data.approval_timeline?.simple ? `<h2>Timeline</h2><p>${esc(data.approval_timeline.simple)}</p>` : ''}${sources ? `<h2>Sources</h2><ul>${sources}</ul>` : ''}<hr><div class="muted">Always verify requirements directly with your local building department before starting work. PermitAssist — permitassist.io</div></body></html>`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(job)} - PermitAssist Foreman Brief</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;color:#0f172a;line-height:1.6}h1{font-size:28px;margin-bottom:8px}h2{font-size:18px;margin-top:28px;margin-bottom:10px}a{color:#2563eb}ul,ol{padding-left:20px}hr{margin:28px 0;border:none;border-top:1px solid #cbd5e1}.muted{color:#64748b;font-size:13px}.box{background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:14px 16px;margin:16px 0}</style></head><body><h1>${esc(job)} — Foreman / Office Brief</h1><div class="muted">${esc(city)}, ${esc(state)} | Generated ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div><div class="box"><strong>Permit to ask for:</strong> ${esc(permitName)}<br><strong>Jurisdiction:</strong> ${esc(jurisdiction.matchedTo)}<br><strong>Lookup basis:</strong> ${esc(jurisdiction.lookupBasis)}${address ? `<br><strong>Job address:</strong> ${esc(address)}` : ''}</div><h2>Permit Summary</h2><p>${esc(data.job_summary || data.permit_summary || data.confidence_reason || '')}</p><h2>Next Steps</h2><ol>${nextSteps.map(step => `<li>${esc(step)}</li>`).join('')}</ol>${permits ? `<h2>Permit Details</h2><ul>${permits}</ul>` : ''}${data.applying_office ? `<h2>Where to Apply</h2><p><strong>${esc(data.applying_office)}</strong><br>${esc(data.apply_address || '')}<br>${esc(data.apply_phone || '')}</p>` : ''}${data.fee_range ? `<h2>Fees</h2><p>${esc(data.fee_range)}</p>` : ''}${data.approval_timeline?.simple ? `<h2>Timeline</h2><p>${esc(data.approval_timeline.simple)}</p>` : ''}${docs ? `<h2>What to Bring</h2><ul>${docs}</ul>` : ''}${sources ? `<h2>Sources</h2><ul>${sources}</ul>` : ''}<hr><div class="muted">Always verify requirements directly with your local building department before starting work. PermitAssist — permitassist.io</div></body></html>`;
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const a = document.createElement('a');
   const safeJob = (job || 'permit-report').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');

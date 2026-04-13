@@ -65,6 +65,9 @@ def check_frontend_content() -> None:
         "Print / PDF",
         "downloadReport()",
         "Job Address",
+        "Jurisdiction Match",
+        "Next Steps",
+        "Foreman Brief",
         "Log in to use Job Tracker",
     ]
     for needle in required_index:
