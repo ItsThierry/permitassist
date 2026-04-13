@@ -14,6 +14,9 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import threading
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -69,6 +72,16 @@ def check_frontend_content() -> None:
         assert needle in account, f"Missing account feature: {needle}"
 
     assert "PermitAssist Help" in help_page
+
+
+def http_get(url: str, headers: dict | None = None) -> tuple[int, str]:
+    req = urllib.request.Request(url, headers=headers or {})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.getcode(), resp.read().decode()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode()
+
 
 
 def check_backend_helpers() -> None:
@@ -165,6 +178,24 @@ def check_backend_helpers() -> None:
             }
         )
         assert "permit_details" in missing and "fee_range" in missing
+
+        httpd = server.HTTPServer(("127.0.0.1", 0), server.Handler)
+        port = httpd.server_address[1]
+        thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+        thread.start()
+        try:
+            status, body = http_get(f"http://127.0.0.1:{port}/")
+            assert status == 200 and "Job Address" in body and "Official Sources" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/help")
+            assert status == 200 and "PermitAssist Help" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/api/jobs")
+            assert status == 401 and "Not authenticated" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/api/billing-portal")
+            assert status == 401 and "Not authenticated" in body
+        finally:
+            httpd.shutdown()
+            httpd.server_close()
+            thread.join(timeout=5)
     finally:
         os.unlink(db_path)
 

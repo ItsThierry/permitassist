@@ -1314,7 +1314,7 @@ class Handler(BaseHTTPRequestHandler):
 h1{font-size:24px;font-weight:800;margin-bottom:10px}p{color:#b8c5e0;margin-bottom:24px;line-height:1.6}
 a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-radius:8px;font-weight:700;text-decoration:none}</style></head>
 <body><div class='box'><div class='icon'>⏰</div><h1>Link Expired</h1>
-<p>This shared result link is no longer active. Shared links expire after 7 days.</p>
+<p>This shared result link is no longer active. Shared links expire after 30 days.</p>
 <a href='/'>Look Up Your Permits →</a></div></body></html>"""
                 self.send_response(410)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -1432,6 +1432,14 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
             root   = os.path.realpath(FRONTEND_DIR)
             if not full.startswith(root):
                 self.send_response(403); self.end_headers(); return
+            if os.path.isdir(full):
+                full = os.path.join(full, "index.html")
+            elif not os.path.exists(full) and not os.path.splitext(full)[1]:
+                html_full = full + ".html"
+                if os.path.exists(html_full):
+                    full = html_full
+            if not os.path.exists(full):
+                self.send_response(404); self.end_headers(); return
             ext = os.path.splitext(full)[1].lower()
             self.send_file(full, mime_map.get(ext, "application/octet-stream"))
 
