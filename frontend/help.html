@@ -2,73 +2,187 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PermitAssist Help</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="How PermitAssist works — search tips, confidence labels, saved jobs, and getting the most accurate results." />
+  <title>Help — PermitAssist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; }
-    .wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 64px; }
-    .card { background: #111827; border: 1px solid #334155; border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; }
-    h1 { font-size: 30px; margin: 0 0 8px; }
-    h2 { font-size: 18px; margin: 0 0 10px; }
-    p, li { line-height: 1.6; color: #cbd5e1; }
-    ul { margin: 10px 0 0 20px; }
-    a { color: #60a5fa; text-decoration: none; }
-    .muted { color: #94a3b8; font-size: 14px; }
-    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 18px; border-radius: 10px; font-weight: 700; text-decoration: none; }
+    :root {
+      --bg: #F0F4FF; --surface: #FFFFFF; --brand: #2563EB; --brand-dark: #1D4ED8;
+      --brand-light: rgba(37,99,235,0.08); --green: #059669; --green-bg: rgba(5,150,105,0.08);
+      --yellow: #D97706; --yellow-bg: rgba(217,119,6,0.08);
+      --text: #0F172A; --text2: #475569; --muted: #94A3B8; --border: #E2E8F0;
+      --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+      --r: 14px; --r-sm: 10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
+      -webkit-font-smoothing: antialiased; font-size: 16px;
+    }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 0 20px; }
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(16px); z-index: 100;
+    }
+    .nav a { text-decoration: none; color: var(--text); }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #2563EB, #1D4ED8); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; }
+    .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-text em { font-style: normal; color: var(--brand); }
+    .nav-link { color: var(--brand); font-size: 14px; font-weight: 700; text-decoration: none; padding: 8px 16px; border: 1px solid var(--brand); border-radius: 20px; }
+    .hero { padding: 40px 0 24px; }
+    .hero h1 { font-size: 30px; font-weight: 900; letter-spacing: -0.5px; }
+    .hero-sub { font-size: 15px; color: var(--text2); margin-top: 8px; line-height: 1.6; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 22px 24px; margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card h2 { font-size: 17px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .card p, .card li { font-size: 14px; color: var(--text2); line-height: 1.65; }
+    .card ul { margin: 8px 0 0 20px; }
+    .card li { padding: 4px 0; }
+    .badge-example {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 16px; font-size: 12px; font-weight: 700;
+      margin-right: 6px; margin-bottom: 6px;
+    }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-blue { background: var(--brand-light); color: var(--brand); }
+    .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-gray { background: #f1f5f9; color: var(--muted); border: 1px solid var(--border); }
+    .tip-box {
+      background: var(--brand-light); border: 1px solid rgba(37,99,235,0.2);
+      border-radius: var(--r-sm); padding: 14px 16px; margin-top: 12px;
+      font-size: 13px; color: var(--brand);
+    }
+    .warn-box {
+      background: var(--yellow-bg); border: 1px solid rgba(217,119,6,0.25);
+      border-radius: var(--r-sm); padding: 14px 16px; margin-top: 12px;
+      font-size: 13px; color: var(--yellow);
+    }
+    .cta-btn {
+      display: inline-block; background: var(--brand); color: #fff;
+      padding: 12px 20px; border-radius: var(--r-sm); font-weight: 700;
+      text-decoration: none; font-size: 14px; margin-top: 12px;
+    }
+    .footer { text-align: center; padding: 28px 20px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 24px; background: var(--surface); }
+    .footer a { color: var(--brand); text-decoration: none; }
   </style>
 </head>
 <body>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <div class="logo-mark">P</div>
+      <div class="logo-text">Permit<em>Assist</em></div>
+    </a>
+    <a href="/" class="nav-link">← Look Up Permits</a>
+  </nav>
+
   <div class="wrap">
-    <div class="card">
-      <h1>PermitAssist Help</h1>
-      <p class="muted">How PermitAssist works, what the confidence labels mean, and how to get the most reliable result.</p>
+    <div class="hero">
+      <h1>Help & How It Works</h1>
+      <p class="hero-sub">Everything you need to know about getting accurate permit information from PermitAssist.</p>
     </div>
 
     <div class="card">
-      <h2>1. Best way to search</h2>
+      <h2>🔍 How to Get the Best Results</h2>
       <ul>
-        <li>Add the full job type, not just the trade. Example: “200 amp panel upgrade” instead of “electrical work”.</li>
-        <li>Add the job address when you have it, especially for county and unincorporated jobs.</li>
-        <li>Use the residential/commercial toggle correctly.</li>
+        <li><strong>Be specific about the job</strong> — "200 amp electrical panel upgrade" beats "electrical work." The more detail, the more precise the permit match.</li>
+        <li><strong>Include the job address</strong> when possible, especially for county and unincorporated areas where jurisdiction can vary by street.</li>
+        <li><strong>Use the Residential / Commercial toggle correctly</strong> — commercial permits are often different (higher fees, more inspections, plan review required).</li>
+        <li><strong>Answer the follow-up questions</strong> — when we ask "minor repair or full replacement?" it changes whether you need a permit at all.</li>
+      </ul>
+      <div class="tip-box">💡 <strong>Pro tip:</strong> If you're quoting multiple jobs, look up each one separately. Permit requirements can vary by city, even for the same type of work.</div>
+    </div>
+
+    <div class="card">
+      <h2>🏷️ What the Confidence Labels Mean</h2>
+      <p style="margin-bottom:12px">Every result includes a confidence badge so you know how much to trust it:</p>
+      <div>
+        <span class="badge-example badge-green">✓ Verified Data</span>
+        <p style="margin-bottom:10px">Matched against our curated database of verified city + trade data. Cross-checked against official building department sources. <strong>Highest confidence.</strong></p>
+      </div>
+      <div>
+        <span class="badge-example badge-blue">🔍 AI-Researched</span>
+        <p style="margin-bottom:10px">Researched live from current web sources including building department websites. Good data, but not pre-verified — double-check fees before you drive to the office.</p>
+      </div>
+      <div>
+        <span class="badge-example badge-yellow">⚠️ County Fallback</span>
+        <p style="margin-bottom:10px">Your exact city wasn't in our database, so we used county-level data. Usually close, but call the local building department to confirm.</p>
+      </div>
+      <div>
+        <span class="badge-example badge-gray">General Estimate</span>
+        <p>Limited local data available. Use this as a starting point and verify everything directly with the building department.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📋 What to Verify Before You Submit</h2>
+      <p>PermitAssist gets you 90% of the way there, but always confirm these details with the building department before submitting your application:</p>
+      <ul>
+        <li><strong>Permit type and name</strong> — make sure you're applying for the right one</li>
+        <li><strong>Current fee amount</strong> — fees change, especially at the start of the year</li>
+        <li><strong>Who can pull the permit</strong> — some cities require a licensed contractor, others let homeowners pull their own</li>
+        <li><strong>Required documents</strong> — plans, engineering calcs, contractor license, insurance</li>
+        <li><strong>Inspection stages</strong> — know what inspections happen and in what order</li>
+      </ul>
+      <div class="warn-box">⚠️ <strong>Important:</strong> Permit rules change. Our data is updated regularly, but your local building department is always the final authority. One phone call can save you from a failed inspection.</div>
+    </div>
+
+    <div class="card">
+      <h2>💼 Saved Jobs & Reminders</h2>
+      <p>When you save a lookup as a job, it's tied to your account. You can:</p>
+      <ul>
+        <li>Track which permits you've researched across all your projects</li>
+        <li>Set permit expiry dates and get email reminders before they expire</li>
+        <li>Add a job address for better record-keeping</li>
+        <li>Come back and re-check requirements anytime</li>
       </ul>
     </div>
 
     <div class="card">
-      <h2>2. Confidence labels</h2>
+      <h2>📤 Sharing & Exporting</h2>
+      <p>From any result screen, you can:</p>
       <ul>
-        <li><strong>Verified Data</strong>: matched against curated city/trade data.</li>
-        <li><strong>AI-Researched</strong>: researched live from current web sources.</li>
-        <li><strong>County Data</strong>: exact city data was limited, county fallback used.</li>
-        <li><strong>General Estimate</strong>: limited local data, confirm directly with the city.</li>
+        <li><strong>Share via link</strong> — Send a shareable link to a coworker, office manager, or client. Links expire after 30 days.</li>
+        <li><strong>Foreman Brief</strong> — One-page summary designed to hand to your foreman or leave on the job site.</li>
+        <li><strong>Print / PDF</strong> — Print the full result or save as PDF for your records.</li>
+        <li><strong>Email to yourself</strong> — Get a copy in your inbox for easy reference.</li>
       </ul>
     </div>
 
     <div class="card">
-      <h2>3. What to verify before submitting</h2>
+      <h2>🏘️ Verified Cities</h2>
+      <p>We maintain a curated database of permit data for major cities across the US, verified against official building department sources. <a href="/cities" style="color:var(--brand);font-weight:700">View all verified cities →</a></p>
+      <p style="margin-top:8px">Don't see your city? We add new cities every week. On Pro and Team plans, you can request priority additions.</p>
+    </div>
+
+    <div class="card">
+      <h2>💰 Plans & Pricing</h2>
+      <p>Every account gets <strong>3 free lookups per month</strong> — no credit card required. Need more? <a href="/pricing" style="color:var(--brand);font-weight:700">See our plans →</a></p>
       <ul>
-        <li>Permit type</li>
-        <li>Fee amount</li>
-        <li>Who can pull the permit</li>
-        <li>Inspection steps</li>
-        <li>Portal or application link</li>
+        <li><strong>Free:</strong> 3 lookups/month with full results</li>
+        <li><strong>Pro ($19/mo):</strong> Unlimited lookups, job tracking, reminders, priority city requests</li>
+        <li><strong>Team ($49/mo):</strong> Everything in Pro + 5 seats, shared job board, 48hr city requests</li>
       </ul>
     </div>
 
     <div class="card">
-      <h2>4. Saved jobs and reminders</h2>
-      <p>Saved jobs are tied to your account. If you set an expiry date, PermitAssist can remind you before the permit expires.</p>
+      <h2>🚨 Something Wrong?</h2>
+      <p>If you see incorrect permit info, hit the <strong>"Flag as Wrong"</strong> button on any result. We review every flag and update our data. You can also reach us at <a href="mailto:hello@itsthierryai.com" style="color:var(--brand);font-weight:700">hello@itsthierryai.com</a>.</p>
+      <a href="/" class="cta-btn">← Back to Permit Search</a>
     </div>
+  </div>
 
-    <div class="card">
-      <h2>5. Need to share or send a report?</h2>
-      <p>Use Share, Email to Me, Print / PDF, or Download Report from the result screen.</p>
-    </div>
-
-    <div class="card">
-      <h2>6. Important note</h2>
-      <p>PermitAssist is built to save time and reduce mistakes, but permit rules change often. Always verify final requirements directly with the local building department before starting work.</p>
-      <p><a class="btn" href="/">Back to Permit Search</a></p>
-    </div>
+  <div class="footer">
+    <a href="/">PermitAssist</a> · <a href="/pricing">Pricing</a> · <a href="/cities">Cities</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a><br/>
+    © 2026 PermitAssist
   </div>
 </body>
 </html>

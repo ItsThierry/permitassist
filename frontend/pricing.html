@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="PermitAssist pricing — 3 free lookups, then $19/mo for unlimited permit research. Team plans available." />
+  <title>Pricing — PermitAssist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #F0F4FF; --surface: #FFFFFF; --brand: #2563EB; --brand-dark: #1D4ED8;
+      --brand-light: rgba(37,99,235,0.08); --green: #059669; --green-bg: rgba(5,150,105,0.08);
+      --text: #0F172A; --text2: #475569; --muted: #94A3B8; --border: #E2E8F0;
+      --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+      --shadow: 0 4px 6px -1px rgba(15,23,42,0.07), 0 2px 4px -2px rgba(15,23,42,0.05);
+      --shadow-md: 0 10px 15px -3px rgba(15,23,42,0.08), 0 4px 6px -4px rgba(15,23,42,0.04);
+      --r: 14px; --r-sm: 10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
+      -webkit-font-smoothing: antialiased; font-size: 16px;
+    }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 0 20px; }
+
+    /* Nav */
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(16px); z-index: 100;
+    }
+    .nav a { text-decoration: none; color: var(--text); }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #2563EB, #1D4ED8); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; }
+    .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-text em { font-style: normal; color: var(--brand); }
+    .nav-link { color: var(--brand); font-size: 14px; font-weight: 700; text-decoration: none; padding: 8px 16px; border: 1px solid var(--brand); border-radius: 20px; }
+
+    /* Hero */
+    .hero { text-align: center; padding: 48px 0 24px; }
+    .hero h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.8px; line-height: 1.15; }
+    .hero h1 em { font-style: normal; color: var(--brand); }
+    .hero-sub { font-size: 15px; color: var(--text2); margin-top: 10px; line-height: 1.6; max-width: 440px; margin-inline: auto; }
+
+    /* Plan cards */
+    .plans { display: grid; gap: 16px; margin-top: 28px; }
+    .plan {
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: var(--r); padding: 28px 24px; box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .plan.featured { border-color: var(--brand); box-shadow: var(--shadow-md), 0 0 0 1px rgba(37,99,235,0.1); }
+    .plan-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--brand); color: #fff; font-size: 11px; font-weight: 800;
+      padding: 4px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .plan-name { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 8px; }
+    .plan-price { font-size: 42px; font-weight: 900; letter-spacing: -1px; }
+    .plan-price .period { font-size: 16px; font-weight: 600; color: var(--muted); }
+    .plan-price .free { color: var(--green); }
+    .plan-desc { font-size: 14px; color: var(--text2); margin-top: 6px; line-height: 1.5; }
+    .plan-features { list-style: none; margin-top: 18px; }
+    .plan-features li {
+      padding: 8px 0; font-size: 14px; color: var(--text2); line-height: 1.5;
+      border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px;
+    }
+    .plan-features li:last-child { border-bottom: none; }
+    .plan-features li::before { content: "✓"; color: var(--green); font-weight: 800; flex-shrink: 0; }
+    .plan-cta {
+      display: block; width: 100%; margin-top: 20px; padding: 16px;
+      border-radius: var(--r-sm); font-size: 16px; font-weight: 700;
+      text-align: center; text-decoration: none; cursor: pointer; border: none;
+      font-family: inherit; transition: all .15s;
+    }
+    .plan-cta-primary {
+      background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #fff;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+    }
+    .plan-cta-primary:hover { box-shadow: 0 6px 20px rgba(37,99,235,0.4); transform: translateY(-1px); }
+    .plan-cta-secondary {
+      background: var(--bg); color: var(--brand); border: 1px solid var(--border);
+    }
+    .plan-cta-secondary:hover { border-color: var(--brand); }
+
+    /* Compare table */
+    .compare { margin-top: 40px; }
+    .compare h2 { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 16px; }
+    .compare-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .compare-table th { text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); border-bottom: 2px solid var(--border); }
+    .compare-table td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text2); }
+    .compare-table td:first-child { font-weight: 600; color: var(--text); }
+    .compare-table .check { color: var(--green); font-weight: 800; }
+    .compare-table .dash { color: var(--muted); }
+
+    /* FAQ */
+    .faq { margin-top: 40px; padding-bottom: 48px; }
+    .faq h2 { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 16px; }
+    .faq-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 18px 20px; margin-bottom: 10px; }
+    .faq-q { font-size: 15px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .faq-a { font-size: 14px; color: var(--text2); line-height: 1.6; margin-top: 10px; display: none; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-arrow { font-size: 12px; color: var(--muted); transition: transform .2s; }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+
+    /* Footer */
+    .footer { text-align: center; padding: 24px 20px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); background: var(--surface); }
+    .footer a { color: var(--brand); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <div class="logo-mark">P</div>
+      <div class="logo-text">Permit<em>Assist</em></div>
+    </a>
+    <a href="/" class="nav-link">← Look Up Permits</a>
+  </nav>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1>Simple, <em>Honest</em> Pricing</h1>
+      <p class="hero-sub">Start free. Upgrade when you need unlimited lookups. Cancel anytime — no contracts, no hidden fees.</p>
+    </div>
+
+    <div class="plans">
+      <!-- Free -->
+      <div class="plan">
+        <div class="plan-name">Free</div>
+        <div class="plan-price"><span class="free">$0</span></div>
+        <div class="plan-desc">Try it out — no credit card required.</div>
+        <ul class="plan-features">
+          <li>3 permit lookups per month</li>
+          <li>Full results with fees, contacts & checklists</li>
+          <li>Share results via link</li>
+          <li>Save lookups to your account</li>
+        </ul>
+        <a href="/" class="plan-cta plan-cta-secondary">Start Free →</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="plan featured">
+        <div class="plan-badge">Most Popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$19 <span class="period">/ month</span></div>
+        <div class="plan-desc">For contractors who work across multiple cities.</div>
+        <ul class="plan-features">
+          <li><strong>Unlimited</strong> permit lookups</li>
+          <li>Full results with fees, contacts & checklists</li>
+          <li>Foreman Brief PDF export</li>
+          <li>Jurisdiction Match cards</li>
+          <li>Job tracking & permit reminders</li>
+          <li>Priority data — new cities added on request</li>
+          <li>Share results with your team</li>
+          <li>Email support</li>
+        </ul>
+        <a href="https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a" class="plan-cta plan-cta-primary">Upgrade to Pro →</a>
+      </div>
+
+      <!-- Team -->
+      <div class="plan">
+        <div class="plan-name">Team</div>
+        <div class="plan-price">$49 <span class="period">/ month</span></div>
+        <div class="plan-desc">For offices with multiple estimators or project managers.</div>
+        <ul class="plan-features">
+          <li>Everything in Pro</li>
+          <li>Up to 5 team seats</li>
+          <li>Team invite & management</li>
+          <li>Shared job board across your team</li>
+          <li>Billing portal for your office manager</li>
+          <li>Priority city requests (48hr turnaround)</li>
+        </ul>
+        <a href="https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b" class="plan-cta plan-cta-secondary">Start Team Plan →</a>
+      </div>
+    </div>
+
+    <!-- Feature comparison -->
+    <div class="compare">
+      <h2>Compare Plans</h2>
+      <table class="compare-table">
+        <thead>
+          <tr><th>Feature</th><th>Free</th><th>Pro</th><th>Team</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Monthly lookups</td><td>3</td><td class="check">Unlimited</td><td class="check">Unlimited</td></tr>
+          <tr><td>Permit fees & contacts</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>Inspection checklists</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>Share via link</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>Foreman Brief export</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>Job tracking</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>Permit reminders</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>Priority city requests</td><td class="dash">—</td><td class="check">✓</td><td class="check">48hr</td></tr>
+          <tr><td>Team seats</td><td class="dash">—</td><td class="dash">1</td><td class="check">Up to 5</td></tr>
+          <tr><td>Shared job board</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq">
+      <h2>Questions?</h2>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          Can I try it before paying?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">Yes — every account gets 3 free lookups per month, no credit card required. Just do a lookup on the homepage and we'll create your account automatically.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          How do I cancel?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">Go to your Account page and click "Manage Billing." You can cancel anytime — your access continues until the end of your billing period. No cancellation fees.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          What payment methods do you accept?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">All major credit and debit cards (Visa, Mastercard, Amex) through Stripe. Your card info never touches our servers.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          What if my city isn't covered?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">We still research your permit requirements in real-time using AI, pulling from official building department sources. Pro and Team users can also request specific cities to be added to our verified database — we add them within a week.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          Is the data accurate?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">Our verified city data is cross-checked against official building department sources. Every result shows its confidence level and sources. We always recommend confirming final details with the local building department before submitting — permit rules change, and we want you to be 100% sure.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          Can my office manager handle billing?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">Yes — on the Team plan, any team member with account access can manage billing through the billing portal. Invite your office manager via the Account page.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="/">← Back to PermitAssist</a> · <a href="/help">Help</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a><br/>
+    © 2026 PermitAssist
+  </div>
+</body>
+</html>

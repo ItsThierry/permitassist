@@ -1213,6 +1213,12 @@ class Handler(BaseHTTPRequestHandler):
             self.send_file(os.path.join(FRONTEND_DIR, "privacy.html"), "text/html; charset=utf-8")
         elif path in ("/login", "/login.html", "/login/"):
             self.send_file(os.path.join(FRONTEND_DIR, "login.html"), "text/html; charset=utf-8")
+        elif path in ("/help", "/help.html", "/help/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "help.html"), "text/html; charset=utf-8")
+        elif path in ("/pricing", "/pricing.html", "/pricing/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "pricing.html"), "text/html; charset=utf-8")
+        elif path in ("/review", "/review.html", "/review/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "review.html"), "text/html; charset=utf-8")
         elif path == "/health":
             self.send_json(200, {"status": "ok", "service": "PermitAssist"})
 
