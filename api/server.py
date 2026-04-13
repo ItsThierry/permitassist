@@ -1470,6 +1470,36 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 print(f"[magic-link] Error: {e}")
                 self.send_json(500, {"error": str(e)})
 
+        elif path == "/api/verify-magic":
+            try:
+                data  = self.read_json_body()
+                token = (data.get("token", "") or "").strip().upper()
+                if not token:
+                    self.send_json(400, {"error": "Login code required"})
+                    return
+                conn = sqlite3.connect(CACHE_DB)
+                row = conn.execute(
+                    "SELECT email, expires_at FROM magic_tokens WHERE token=?", [token]
+                ).fetchone()
+                if not row:
+                    conn.close()
+                    self.send_json(400, {"error": "Invalid or expired code"})
+                    return
+                email_m, exp_m = row
+                if datetime.utcnow() > datetime.fromisoformat(exp_m):
+                    conn.execute("DELETE FROM magic_tokens WHERE token=?", [token])
+                    conn.commit(); conn.close()
+                    self.send_json(410, {"error": "Code expired"})
+                    return
+                conn.execute("DELETE FROM magic_tokens WHERE token=?", [token])
+                conn.commit(); conn.close()
+                session = create_session_token(email_m)
+                self.send_json(200, {"session_token": session, "email": email_m})
+            except Exception as e:
+                print(f"[verify-magic-post] Error: {e}")
+                import traceback; traceback.print_exc()
+                self.send_json(500, {"error": "Server error"})
+
         # ── Stripe webhook (Task 2) ──────────────────────────────────────
         elif path == "/api/stripe-webhook":
             try:
