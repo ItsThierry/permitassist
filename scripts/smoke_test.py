@@ -19,6 +19,11 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+
+class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
 ROOT = Path(__file__).resolve().parents[1]
 API_DIR = ROOT / "api"
 FRONTEND_DIR = ROOT / "frontend"
@@ -76,23 +81,31 @@ def check_frontend_content() -> None:
     assert "PermitAssist Review Queue" in review_page
 
 
-def http_request(url: str, method: str = "GET", headers: dict | None = None, data: dict | None = None) -> tuple[int, str]:
+def http_request(
+    url: str,
+    method: str = "GET",
+    headers: dict | None = None,
+    data: dict | None = None,
+    follow_redirects: bool = True,
+) -> tuple[int, str, object]:
     payload = None
     req_headers = headers.copy() if headers else {}
     if data is not None:
         payload = json.dumps(data).encode()
         req_headers.setdefault("Content-Type", "application/json")
     req = urllib.request.Request(url, headers=req_headers, data=payload, method=method)
+    opener = urllib.request.build_opener() if follow_redirects else urllib.request.build_opener(NoRedirectHandler)
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return resp.getcode(), resp.read().decode()
+        with opener.open(req, timeout=10) as resp:
+            return resp.getcode(), resp.read().decode(), resp.headers
     except urllib.error.HTTPError as e:
-        return e.code, e.read().decode()
+        return e.code, e.read().decode(), e.headers
 
 
 
 def http_get(url: str, headers: dict | None = None) -> tuple[int, str]:
-    return http_request(url, headers=headers)
+    status, body, _ = http_request(url, headers=headers)
+    return status, body
 
 
 
@@ -219,7 +232,7 @@ def check_backend_helpers() -> None:
 
             status, body = http_get(f"http://127.0.0.1:{port}/api/account")
             assert status == 401 and "Not authenticated" in body
-            status, body = http_request(
+            status, body, _ = http_request(
                 f"http://127.0.0.1:{port}/api/account",
                 headers={"X-Session-Token": owner_session},
             )
@@ -229,7 +242,7 @@ def check_backend_helpers() -> None:
 
             status, body = http_get(f"http://127.0.0.1:{port}/review")
             assert status == 200 and "PermitAssist Review Queue" in body
-            status, body = http_request(
+            status, body, _ = http_request(
                 f"http://127.0.0.1:{port}/api/share",
                 method="POST",
                 data={
@@ -252,7 +265,7 @@ def check_backend_helpers() -> None:
             conn.close()
             status, body = http_get(f"http://127.0.0.1:{port}/s/{share_data['slug']}")
             assert status == 410 and "Link Expired" in body
-            status, body = http_request(
+            status, body, _ = http_request(
                 f"http://127.0.0.1:{port}/api/team/invite",
                 method="POST",
                 headers={"X-Session-Token": owner_session},
@@ -260,21 +273,21 @@ def check_backend_helpers() -> None:
             )
             invite_data = json.loads(body)
             assert status == 200 and invite_data["invited"] is True
-            status, body = http_request(
+            status, body, _ = http_request(
                 f"http://127.0.0.1:{port}/api/team/invite",
                 method="POST",
                 headers={"X-Session-Token": owner_session},
                 data={"invite_email": "crew3@example.com"},
             )
             assert status == 200
-            status, body = http_request(
+            status, body, _ = http_request(
                 f"http://127.0.0.1:{port}/api/team/invite",
                 method="POST",
                 headers={"X-Session-Token": owner_session},
                 data={"invite_email": "crew4@example.com"},
             )
             assert status == 400 and "seat limit" in body.lower()
-            status, body = http_request(
+            status, body, _ = http_request(
                 f"http://127.0.0.1:{port}/api/expiry-reminder",
                 method="POST",
                 data={
@@ -291,7 +304,7 @@ def check_backend_helpers() -> None:
             assert status == 401 and "Not authenticated" in body
             status, body = http_get(f"http://127.0.0.1:{port}/api/billing-portal")
             assert status == 401 and "Not authenticated" in body
-            status, body = http_request(
+            status, body, _ = http_request(
                 f"http://127.0.0.1:{port}/api/billing-portal",
                 headers={"X-Session-Token": owner_session},
             )
@@ -300,6 +313,18 @@ def check_backend_helpers() -> None:
             assert status == 400 and "missing a token" in body
             status, body = http_get(f"http://127.0.0.1:{port}/api/verify-magic?token=BAD123")
             assert status == 400 and "not recognised" in body
+            conn = sqlite3.connect(db_path)
+            conn.execute(
+                "INSERT INTO magic_tokens (token, email, expires_at) VALUES (?,?,?)",
+                ("GOOD12", "owner@example.com", (server.utc_now() + server.timedelta(minutes=10)).isoformat()),
+            )
+            conn.commit()
+            conn.close()
+            status, _, headers = http_request(
+                f"http://127.0.0.1:{port}/api/verify-magic?token=GOOD12",
+                follow_redirects=False,
+            )
+            assert status == 302 and headers.get("Location", "").startswith("/?t=")
             status, body = http_get(f"http://127.0.0.1:{port}/api/review-queue")
             assert status == 403 and "not configured" in body.lower()
         finally:
