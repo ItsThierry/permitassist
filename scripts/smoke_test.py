@@ -100,6 +100,7 @@ def check_backend_helpers() -> None:
     sys.path.insert(0, str(API_DIR))
     server = load_module("pa_server", API_DIR / "server.py")
     research = load_module("pa_research", API_DIR / "research_engine.py")
+    server.resend_send = lambda *args, **kwargs: True
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
