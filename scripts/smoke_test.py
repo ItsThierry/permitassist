@@ -210,6 +210,8 @@ def check_backend_helpers() -> None:
             assert status == 200 and "Job Address" in body and "Official Sources" in body
             status, body = http_get(f"http://127.0.0.1:{port}/help")
             assert status == 200 and "PermitAssist Help" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/index.html.backup")
+            assert status == 404
             status, body = http_get(f"http://127.0.0.1:{port}/login")
             assert status == 200 and "No password needed" in body
             status, body = http_get(f"http://127.0.0.1:{port}/account")

@@ -1447,6 +1447,9 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 html_full = full + ".html"
                 if os.path.exists(html_full):
                     full = html_full
+            base_name = os.path.basename(full)
+            if base_name.startswith('.') or base_name.endswith('.backup'):
+                self.send_response(404); self.end_headers(); return
             if not os.path.exists(full):
                 self.send_response(404); self.end_headers(); return
             ext = os.path.splitext(full)[1].lower()
