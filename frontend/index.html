@@ -910,6 +910,10 @@
     <input class="gate-input" type="email" id="gate-email" placeholder="your@email.com" autocomplete="email" />
     <button class="gate-submit" onclick="submitGateEmail()">Show My Permit Requirements →</button>
     <div class="gate-note">🔒 No credit card. No spam. Unsubscribe anytime.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+      <button onclick="openUpgrade('solo')" style="background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Solo — $19/mo</button>
+      <button onclick="openUpgrade('team')" style="background:rgba(37,99,235,0.15);color:var(--brand);border:1px solid rgba(37,99,235,0.4);border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Team — $49/mo<br><span style="font-size:10px;font-weight:400">3 seats</span></button>
+    </div>
     <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 2 months: <strong style="color:#94a3b8">Annual plan = $190/yr</strong> (vs $228)</div>
     <span class="gate-skip" id="gate-skip-link" onclick="skipGate()">Skip for now (uses 1 of 5 free lookups)</span>
   </div>
@@ -917,7 +921,7 @@
 
 <script>
 // ── Constants & State ─────────────────────────────────────────────────────────
-const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',FREE_LIMIT=5,UPGRADE_URL='https://permitassist.io/#upgrade';
+const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',FREE_LIMIT=5,UPGRADE_URL='https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a',UPGRADE_URL_TEAM='https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b';
 const IS_ADMIN=new URLSearchParams(window.location.search).get('admin')==='boban2026';
 let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential';
 
@@ -1124,7 +1128,7 @@ function parseQuery(raw){
 
 // ── Navigation helpers ───────────────────────────────────────────────────────
 function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');refreshCounterBar();document.getElementById('page-search').scrollTop=0}
-function openUpgrade(){window.open(UPGRADE_URL,'_blank')}
+function openUpgrade(plan){window.open(plan==='team'?UPGRADE_URL_TEAM:UPGRADE_URL,'_blank')}
 
 // ── Verdict ──────────────────────────────────────────────────────────────────
 function verdictState(d){
