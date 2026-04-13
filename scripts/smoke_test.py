@@ -241,6 +241,15 @@ def check_backend_helpers() -> None:
             assert status == 200 and share_data["expires_days"] == 30 and share_data["slug"]
             status, body = http_get(f"http://127.0.0.1:{port}/s/{share_data['slug']}")
             assert status == 200 and "city.example/permit" in body and "Roof replacement" in body
+            conn = sqlite3.connect(db_path)
+            conn.execute(
+                "UPDATE shared_results SET expires_at=? WHERE slug=?",
+                ((server.utc_now() - server.timedelta(days=1)).isoformat(), share_data["slug"]),
+            )
+            conn.commit()
+            conn.close()
+            status, body = http_get(f"http://127.0.0.1:{port}/s/{share_data['slug']}")
+            assert status == 410 and "Link Expired" in body
             status, body = http_request(
                 f"http://127.0.0.1:{port}/api/team/invite",
                 method="POST",
@@ -249,6 +258,20 @@ def check_backend_helpers() -> None:
             )
             invite_data = json.loads(body)
             assert status == 200 and invite_data["invited"] is True
+            status, body = http_request(
+                f"http://127.0.0.1:{port}/api/team/invite",
+                method="POST",
+                headers={"X-Session-Token": owner_session},
+                data={"invite_email": "crew3@example.com"},
+            )
+            assert status == 200
+            status, body = http_request(
+                f"http://127.0.0.1:{port}/api/team/invite",
+                method="POST",
+                headers={"X-Session-Token": owner_session},
+                data={"invite_email": "crew4@example.com"},
+            )
+            assert status == 400 and "seat limit" in body.lower()
             status, body = http_request(
                 f"http://127.0.0.1:{port}/api/expiry-reminder",
                 method="POST",
