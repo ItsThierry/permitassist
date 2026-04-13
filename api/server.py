@@ -15,7 +15,6 @@ import os
 import csv
 import hmac
 import hashlib
-import smtplib
 import sqlite3
 import string
 import requests
@@ -24,7 +23,6 @@ import time
 import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta
-from email.mime.text import MIMEText
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result
@@ -49,7 +47,8 @@ UPGRADE_URL_SOLO       = "https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a"
 UPGRADE_URL_TEAM       = "https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b"
 PRICE_SOLO             = "price_1TLkkQ43XpvaBuPhhxdSRoID"
 PRICE_TEAM             = "price_1TLkkQ43XpvaBuPh0vL7MnY4"
-SMTP_USER_DEFAULT      = "hello@itsthierry.com"
+RESEND_API_KEY         = os.environ.get("RESEND_API_KEY", "")
+FROM_EMAIL             = "hello@itsthierryai.com"
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -402,30 +401,45 @@ def increment_monthly_lookup(email: str) -> int:
         return 1
 
 
-def smtp_send(smtp_host, smtp_port, smtp_user, smtp_pass, from_addr, to_addr, msg_str):
-    """Send email supporting both SSL (port 465) and STARTTLS (port 587)."""
-    if int(smtp_port) == 587 or os.environ.get("SMTP_MODE") == "starttls":
-        with smtplib.SMTP(smtp_host, int(smtp_port), timeout=8) as s:
-            s.starttls()
-            s.login(smtp_user, smtp_pass)
-            s.sendmail(from_addr, to_addr, msg_str)
-    else:
-        with smtplib.SMTP_SSL(smtp_host, int(smtp_port), timeout=8) as s:
-            s.login(smtp_user, smtp_pass)
-            s.sendmail(from_addr, to_addr, msg_str)
+def resend_send(to_addr: str, subject: str, text_body: str, html_body: str = None) -> bool:
+    """Send email via Resend API."""
+    if not RESEND_API_KEY:
+        print(f"[resend] RESEND_API_KEY not set — skipping email to {to_addr}")
+        return False
+    payload = {
+        "from": f"PermitAssist <{FROM_EMAIL}>",
+        "to": [to_addr],
+        "subject": subject,
+        "text": text_body,
+    }
+    if html_body:
+        payload["html"] = html_body
+    try:
+        resp = requests.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
+            json=payload,
+            timeout=10
+        )
+        if resp.status_code in (200, 201):
+            print(f"[resend] Sent to {to_addr} — id: {resp.json().get('id')}")
+            return True
+        else:
+            print(f"[resend] Failed {resp.status_code}: {resp.text}")
+            return False
+    except Exception as e:
+        print(f"[resend] Exception: {e}")
+        return False
 
 
 def send_magic_link_email(to_email: str, token: str) -> bool:
-    """Send magic link / login code email."""
-    smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
-    smtp_port = int(os.environ.get("SMTP_PORT", "465"))
-    smtp_user = os.environ.get("SMTP_USER", SMTP_USER_DEFAULT)
-    smtp_pass = os.environ.get("SMTP_PASS", "")
-    if not smtp_pass:
-        print(f"[magic-link] SMTP not configured — token for {to_email}: {token}")
+    """Send magic link / login code email via Resend."""
+    if not RESEND_API_KEY:
+        print(f"[magic-link] RESEND_API_KEY not set — token for {to_email}: {token}")
         return True  # Don't show error on frontend
     verify_url = f"https://permitassist.io/api/verify-magic?token={token}"
-    body = (
+    subject = f"Your PermitAssist login code: {token}"
+    text_body = (
         f"Hi,\n\n"
         f"Your PermitAssist login code is: {token}\n\n"
         f"Or click this link to log in automatically (expires in 15 minutes):\n"
@@ -433,33 +447,30 @@ def send_magic_link_email(to_email: str, token: str) -> bool:
         f"— PermitAssist\n"
         f"permitassist.io"
     )
-    msg = MIMEText(body, "plain")
-    msg["Subject"] = f"Your PermitAssist login code: {token}"
-    msg["From"]    = smtp_user
-    msg["To"]      = to_email
-    try:
-        smtp_send(smtp_host, smtp_port, smtp_user, smtp_pass, smtp_user, to_email, msg.as_string())
-        print(f"[magic-link] Sent to {to_email}")
-        return True
-    except Exception as e:
-        print(f"[magic-link] Failed: {e}")
-        return False
+    html_body = f"""
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
+      <h2 style="color:#1e3a5f;margin-bottom:8px;">Your login code</h2>
+      <p style="font-size:15px;color:#374151;">Use this code to sign in to PermitAssist:</p>
+      <div style="background:#f0f4ff;border-radius:8px;padding:20px;text-align:center;margin:24px 0;">
+        <span style="font-size:32px;font-weight:700;letter-spacing:6px;color:#2563eb;">{token}</span>
+      </div>
+      <p style="font-size:14px;color:#6b7280;">Or <a href="{verify_url}" style="color:#2563eb;">click here to log in automatically</a> (expires in 15 minutes).</p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
+      <p style="font-size:12px;color:#9ca3af;">PermitAssist · permitassist.io</p>
+    </div>
+    """
+    return resend_send(to_email, subject, text_body, html_body)
 
 
 def send_confirmation_email(to_email: str, plan: str) -> bool:
-    """Send plan upgrade confirmation email."""
-    smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
-    smtp_port = int(os.environ.get("SMTP_PORT", "465"))
-    smtp_user = os.environ.get("SMTP_USER", SMTP_USER_DEFAULT)
-    smtp_pass = os.environ.get("SMTP_PASS", "")
-    if not smtp_pass:
-        print(f"[confirm-email] SMTP not configured — skipping for {to_email}")
-        return False
+    """Send plan upgrade confirmation email via Resend."""
     plan_name = "Team" if plan == "team" else "Solo"
-    team_line = "\n\u2022 Up to 3 team seats — invite your crew at no extra cost" if plan == "team" else ""
-    body = (
+    team_line_text = "\n\u2022 Up to 3 team seats — invite your crew at no extra cost" if plan == "team" else ""
+    team_line_html = "<li>Up to 3 team seats — invite your crew at no extra cost</li>" if plan == "team" else ""
+    subject = f"You're now on PermitAssist {plan_name} — unlimited lookups unlocked"
+    text_body = (
         f"Hi,\n\n"
-        f"You're now on PermitAssist {plan_name}! 🎉{team_line}\n\n"
+        f"You're now on PermitAssist {plan_name}! 🎉{team_line_text}\n\n"
         f"Unlimited permit lookups are now active on your account.\n\n"
         f"What you have now:\n"
         f"\u2022 Unlimited lookups every month, any job, any city\n"
@@ -470,17 +481,22 @@ def send_confirmation_email(to_email: str, plan: str) -> bool:
         f"— PermitAssist\n"
         f"permitassist.io"
     )
-    msg = MIMEText(body, "plain")
-    msg["Subject"] = f"You're now on PermitAssist {plan_name} — unlimited lookups unlocked"
-    msg["From"]    = smtp_user
-    msg["To"]      = to_email
-    try:
-        smtp_send(smtp_host, smtp_port, smtp_user, smtp_pass, smtp_user, to_email, msg.as_string())
-        print(f"[confirm-email] Sent to {to_email} (plan={plan})")
-        return True
-    except Exception as e:
-        print(f"[confirm-email] Failed: {e}")
-        return False
+    html_body = f"""
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
+      <h2 style="color:#1e3a5f;">You're on PermitAssist {plan_name}! 🎉</h2>
+      <p style="color:#374151;">Unlimited permit lookups are now active on your account.</p>
+      <ul style="color:#374151;line-height:1.8;">
+        <li>Unlimited lookups every month, any job, any city</li>
+        <li>Exact permit names, current fees, and office contacts</li>
+        <li>Job tracker to manage all your permits in one place</li>
+        {team_line_html}
+      </ul>
+      <a href="https://permitassist.io" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0;">Look Up Your Permits →</a>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
+      <p style="font-size:12px;color:#9ca3af;">PermitAssist · permitassist.io</p>
+    </div>
+    """
+    return resend_send(to_email, subject, text_body, html_body)
 
 
 def verify_stripe_signature(payload: bytes, sig_header: str, secret: str) -> bool:
@@ -718,14 +734,7 @@ def render_share_page(share: dict) -> str:
 </html>"""
 
 def send_email_report(to_email: str, job: str, city: str, state: str, data: dict) -> bool:
-    smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
-    smtp_port = int(os.environ.get("SMTP_PORT", "465"))
-    smtp_user = os.environ.get("SMTP_USER", "")
-    smtp_pass = os.environ.get("SMTP_PASS", "")
-    if not smtp_user or not smtp_pass:
-        print("[email_report] SMTP not configured — skipping")
-        return False
-
+    """Send permit research report via Resend."""
     lines = [
         "PERMIT RESEARCH REPORT",
         f"Job:      {job}",
@@ -744,18 +753,8 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     tl = data.get("approval_timeline", {})
     if tl.get("simple"):            lines.append(f"TIMELINE: {tl['simple']}")
     lines += ["", "---", "PermitAssist — permitassist.io", "Questions? Reply to this email."]
-
-    msg = MIMEText("\n".join(lines), "plain")
-    msg["Subject"] = f"Permit Research: {job} in {city}, {state}"
-    msg["From"]    = smtp_user
-    msg["To"]      = to_email
-    try:
-        smtp_send(smtp_host, smtp_port, smtp_user, smtp_pass, smtp_user, to_email, msg.as_string())
-        print(f"[email_report] Sent to {to_email}")
-        return True
-    except Exception as e:
-        print(f"[email_report] Failed: {e}")
-        return False
+    subject = f"Permit Research: {job} in {city}, {state}"
+    return resend_send(to_email, subject, "\n".join(lines))
 
 # ── Job Tracker helpers ──────────────────────────────────────────────────────
 
@@ -1327,12 +1326,6 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 save_email_capture(email, "expiry-reminder")
                 # Send confirmation email in background thread
                 def _send_reminder_confirm():
-                    smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
-                    smtp_port = int(os.environ.get("SMTP_PORT", "465"))
-                    smtp_user = os.environ.get("SMTP_USER", "")
-                    smtp_pass = os.environ.get("SMTP_PASS", "")
-                    if not smtp_user or not smtp_pass:
-                        return
                     expiry_line = f"\nPermit expiry: {expiry}" if expiry else ""
                     body = (
                         f"Hi,\n\n"
@@ -1345,15 +1338,12 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                         f"— PermitAssist\n"
                         f"permitassist.io"
                     )
-                    msg = MIMEText(body, "plain")
-                    msg["Subject"] = f"Reminder set: {job_type or 'Permit'} in {city}, {state}"
-                    msg["From"]    = smtp_user
-                    msg["To"]     = email
-                    try:
-                        smtp_send(smtp_host, smtp_port, smtp_user, smtp_pass, smtp_user, email, msg.as_string())
+                    subject = f"Reminder set: {job_type or 'Permit'} in {city}, {state}"
+                    result = resend_send(email, subject, body)
+                    if result:
                         print(f"[expiry-reminder] Confirmation sent to {email}")
-                    except Exception as e:
-                        print(f"[expiry-reminder] Email failed: {e}")
+                    else:
+                        print(f"[expiry-reminder] Email failed for {email}")
                 threading.Thread(target=_send_reminder_confirm, daemon=True).start()
                 self.send_json(200, {"saved": True})
             except Exception as e:
