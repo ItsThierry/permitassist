@@ -33,7 +33,7 @@ DATA_DIR       = os.path.join(os.path.dirname(__file__), "..", "data")
 PORT           = int(os.environ.get("PORT", 8766))
 EMAILS_CSV     = os.path.join(DATA_DIR, "captured_emails.csv")
 CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
-SHARE_TTL_DAYS = 7   # shareable links expire after 7 days
+SHARE_TTL_DAYS = 30  # shareable links expire after 30 days
 
 # Telegram notification config (optional — set env vars to enable)
 TG_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")

@@ -883,7 +883,7 @@
   <!-- Footer -->
   <div class="footer">
     <p>⚠️ PermitAssist provides AI-generated guidance for reference only. Always verify requirements with your local building department before starting work.</p>
-    <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved. &nbsp;·&nbsp; <a href="/terms" style="color:var(--brand)">Terms</a> &nbsp;·&nbsp; <a href="/privacy" style="color:var(--brand)">Privacy</a></p>
+    <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved. &nbsp;·&nbsp; <a href="/help" style="color:var(--brand)">Help</a> &nbsp;·&nbsp; <a href="/terms" style="color:var(--brand)">Terms</a> &nbsp;·&nbsp; <a href="/privacy" style="color:var(--brand)">Privacy</a></p>
   </div>
 </div>
 
@@ -1661,11 +1661,12 @@ function renderResults(d, job, city, state) {
     <div class="action-row action-row-3" style="margin-top:14px">
       <button class="action-btn" onclick="shareResult()">📤 Share</button>
       <button class="action-btn" onclick="copyResult()">📋 Copy</button>
-      <button class="action-btn" onclick="printResult()">🖨️ PDF</button>
+      <button class="action-btn" onclick="printResult()">🖨️ Print / PDF</button>
     </div>
-    <div class="action-row">
+    <div class="action-row action-row-3">
       <button class="action-btn" onclick="copyForQuote()">💰 Copy for Quote</button>
       <button class="action-btn" onclick="emailResult()">📧 Email to Me</button>
+      <button class="action-btn" onclick="downloadReport()">⬇️ Report</button>
     </div>
     <div class="action-row">
       <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
@@ -1823,6 +1824,21 @@ function copyForQuote() {
   navigator.clipboard.writeText(t).then(() => showCopy('✅ Quote line copied!')).catch(() => {
     const box = document.createElement('textarea'); box.value = t; document.body.appendChild(box); box.select(); document.execCommand('copy'); document.body.removeChild(box); showCopy('✅ Quote line copied!');
   });
+}
+
+function downloadReport() {
+  if (!currentResult) return;
+  const { job, city, state, data } = currentResult;
+  const permits = (data.permits_required || []).map(p => `<li><strong>${esc(p.permit_type || 'Permit')}</strong>${p.notes ? `: ${esc(p.notes)}` : ''}</li>`).join('');
+  const sources = (data.sources || []).slice(0, 5).map(s => `<li><a href="${esc(s)}">${esc(s)}</a></li>`).join('');
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(job)} - PermitAssist Report</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;color:#0f172a;line-height:1.6}h1{font-size:28px;margin-bottom:8px}h2{font-size:18px;margin-top:28px;margin-bottom:10px}a{color:#2563eb}ul{padding-left:20px}hr{margin:28px 0;border:none;border-top:1px solid #cbd5e1}.muted{color:#64748b;font-size:13px}</style></head><body><h1>${esc(job)}</h1><div class="muted">${esc(city)}, ${esc(state)} | Generated ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div><hr><h2>Permit Summary</h2><p>${esc(data.job_summary || data.permit_summary || data.confidence_reason || '')}</p>${permits ? `<h2>Permit Details</h2><ul>${permits}</ul>` : ''}${data.applying_office ? `<h2>Where to Apply</h2><p><strong>${esc(data.applying_office)}</strong><br>${esc(data.apply_address || '')}<br>${esc(data.apply_phone || '')}</p>` : ''}${data.fee_range ? `<h2>Fees</h2><p>${esc(data.fee_range)}</p>` : ''}${data.approval_timeline?.simple ? `<h2>Timeline</h2><p>${esc(data.approval_timeline.simple)}</p>` : ''}${sources ? `<h2>Sources</h2><ul>${sources}</ul>` : ''}<hr><div class="muted">Always verify requirements directly with your local building department before starting work. PermitAssist — permitassist.io</div></body></html>`;
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  const safeJob = (job || 'permit-report').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${safeJob || 'permit-report'}-${(city || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 function printResult() { if (!currentResult) return; window.print(); }
