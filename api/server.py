@@ -564,6 +564,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
                 self.send_header("Pragma", "no-cache")
                 self.send_header("Expires", "0")
+                # Tell Railway/CDN edge NOT to cache HTML pages
+                self.send_header("Surrogate-Control", "no-store")
+                self.send_header("CDN-Cache-Control", "no-store")
             else:
                 # Static assets (JS, CSS, images) — cache 1 hour
                 self.send_header("Cache-Control", "public, max-age=3600")

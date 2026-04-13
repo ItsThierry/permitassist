@@ -96,14 +96,16 @@
     /* Testimonials */
     .testimonial-row {
       display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px;
+      padding-left: 2px; padding-right: 16px;
       scrollbar-width: none; -ms-overflow-style: none;
       -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
+      width: 100%; box-sizing: border-box;
     }
     .testimonial-row::-webkit-scrollbar { display: none; }
     .testimonial-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--r); padding: 16px; min-width: 280px; max-width: 320px;
-      flex-shrink: 0; scroll-snap-align: start;
+      flex-shrink: 0; scroll-snap-align: start; box-sizing: border-box;
     }
     .testimonial-top {
       display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
@@ -627,7 +629,7 @@
     @media (max-width: 480px) {
       .hero h1 { font-size: 26px; }
       .hero-sub { font-size: 14px; }
-      .testimonial-card { min-width: 88vw; max-width: 88vw; padding: 14px; }
+      .testimonial-card { min-width: calc(88vw - 16px); max-width: calc(88vw - 16px); padding: 14px; }
       .trust-badges { gap: 6px; }
       .trust-badge { font-size: 12px; padding: 6px 12px; }
       .free-paid-bar { font-size: 12px; gap: 6px; }
@@ -659,6 +661,7 @@
     /* Smooth scroll snap for testimonials on mobile */
     @media (max-width: 600px) {
       .testimonial-card { scroll-snap-align: center; }
+      .testimonial-row { padding-left: 4px; padding-right: 20px; }
     }
   </style>
 </head>
@@ -709,7 +712,7 @@
       </div>
 
       <!-- Testimonials -->
-      <div id="testimonials-strip" style="margin:20px 0 4px;">
+      <div id="testimonials-strip" style="margin:20px 0 4px;overflow:hidden;">
         <div class="testimonial-row" id="testimonials-row">
           <div class="testimonial-card">
             <div class="testimonial-top">
