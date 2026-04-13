@@ -22,7 +22,7 @@ import threading
 import time
 import uuid
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result
@@ -34,6 +34,15 @@ PORT           = int(os.environ.get("PORT", 8766))
 EMAILS_CSV     = os.path.join(DATA_DIR, "captured_emails.csv")
 CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
 SHARE_TTL_DAYS = 30  # shareable links expire after 30 days
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def parse_timestamp(value: str) -> datetime:
+    dt = datetime.fromisoformat(value)
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 # Telegram notification config (optional — set env vars to enable)
 TG_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -69,7 +78,7 @@ def is_rate_limited(ip: str) -> tuple[bool, int]:
     Returns (is_limited, remaining).
     Only counts fresh (non-cached) lookups toward the limit.
     """
-    now = datetime.utcnow()
+    now = utc_now()
     cutoff = now - timedelta(seconds=RATE_WINDOW_SECONDS)
     with _rate_lock:
         hits = _rate_store[ip]
@@ -80,7 +89,7 @@ def is_rate_limited(ip: str) -> tuple[bool, int]:
 
 def record_fresh_lookup(ip: str):
     with _rate_lock:
-        _rate_store[ip].append(datetime.utcnow())
+        _rate_store[ip].append(utc_now())
 
 # ── URL validation ────────────────────────────────────────────────────────────
 def validate_url(url: str, timeout: int = 4) -> bool:
@@ -268,7 +277,7 @@ def create_session_token(email: str) -> str:
     raw = secrets.token_urlsafe(32)
     sig = hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
     token = f"{raw}.{sig}"
-    now = datetime.utcnow()
+    now = utc_now()
     exp = now + timedelta(days=30)
     try:
         conn = sqlite3.connect(CACHE_DB)
@@ -308,7 +317,7 @@ def validate_session_token(token: str) -> str | None:
         if not row:
             return None
         email_db, expires_at = row
-        if datetime.utcnow() > datetime.fromisoformat(expires_at):
+        if utc_now() > parse_timestamp(expires_at):
             return None
         return email_db
     except Exception as e:
@@ -341,7 +350,7 @@ def get_or_create_user(email: str) -> dict:
     user = get_user(email)
     if user:
         return user
-    now = datetime.utcnow().isoformat()
+    now = utc_now().isoformat()
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
@@ -363,7 +372,7 @@ def is_paid_user(email: str) -> bool:
         exp = user.get("plan_expires_at")
         if exp:
             try:
-                if datetime.utcnow() > datetime.fromisoformat(exp):
+                if utc_now() > parse_timestamp(exp):
                     return False
             except Exception:
                 pass
@@ -424,7 +433,7 @@ def create_billing_portal_session(customer_id: str, return_url: str) -> str | No
 
 
 def upsert_permit_reminder(email: str, job_type: str, city: str, state: str, expiry_date: str) -> dict:
-    now = datetime.utcnow()
+    now = utc_now()
     reminder_id = str(uuid.uuid4())
     remind_at = ""
     if expiry_date:
@@ -456,7 +465,7 @@ def upsert_permit_reminder(email: str, job_type: str, city: str, state: str, exp
 
 
 def process_due_reminders(now: datetime | None = None) -> int:
-    now = now or datetime.utcnow()
+    now = now or utc_now()
     sent = 0
     try:
         conn = sqlite3.connect(CACHE_DB)
@@ -554,7 +563,7 @@ def get_review_queue(limit: int = 50) -> dict:
 
 def get_monthly_lookup_count(email: str) -> int:
     """Get current month's fresh lookup count for an email."""
-    month = datetime.utcnow().strftime("%Y-%m")
+    month = utc_now().strftime("%Y-%m")
     try:
         conn = sqlite3.connect(CACHE_DB)
         row = conn.execute(
@@ -570,7 +579,7 @@ def get_monthly_lookup_count(email: str) -> int:
 
 def increment_monthly_lookup(email: str) -> int:
     """Increment monthly lookup count. Returns new count."""
-    month = datetime.utcnow().strftime("%Y-%m")
+    month = utc_now().strftime("%Y-%m")
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
@@ -718,7 +727,7 @@ def record_lookup_stat(job_type: str, city: str, state: str, cached: bool):
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
             "INSERT INTO lookup_stats (job_type, city, state, cached, looked_up_at) VALUES (?,?,?,?,?)",
-            (job_type, city, state, int(cached), datetime.utcnow().isoformat())
+            (job_type, city, state, int(cached), utc_now().isoformat())
         )
         conn.commit()
         conn.close()
@@ -733,7 +742,7 @@ def get_lookup_stats() -> dict:
         cities  = conn.execute("SELECT COUNT(DISTINCT city||state) FROM lookup_stats").fetchone()[0]
         today   = conn.execute(
             "SELECT COUNT(*) FROM lookup_stats WHERE looked_up_at >= ?",
-            [(datetime.utcnow() - timedelta(hours=24)).isoformat()]
+            [(utc_now() - timedelta(hours=24)).isoformat()]
         ).fetchone()[0]
         conn.close()
         # Seed with a realistic-looking base so day-1 isn't "0 lookups"
@@ -749,7 +758,7 @@ def get_lookup_stats() -> dict:
 
 # ── Email helpers ─────────────────────────────────────────────────────────────
 def save_email_capture(email: str, source: str = "gate"):
-    ts = datetime.utcnow().isoformat()
+    ts = utc_now().isoformat()
     file_exists = os.path.exists(EMAILS_CSV)
     try:
         with open(EMAILS_CSV, "a", newline="") as f:
@@ -777,7 +786,7 @@ import secrets
 def create_share(job_type: str, city: str, state: str, result: dict) -> str:
     """Store a result and return a short slug. Expires in SHARE_TTL_DAYS days."""
     slug = secrets.token_urlsafe(8)  # e.g. 'aB3xY7qR'
-    now  = datetime.utcnow()
+    now  = utc_now()
     exp  = now + timedelta(days=SHARE_TTL_DAYS)
     # Strip internal metadata before storing
     clean = {k: v for k, v in result.items() if not k.startswith('_')}
@@ -807,7 +816,7 @@ def get_share(slug: str) -> dict | None:
             conn.close()
             return None
         result_json, expires_at, job_type, city, state = row
-        if datetime.utcnow() > datetime.fromisoformat(expires_at):
+        if utc_now() > parse_timestamp(expires_at):
             # Expired — delete and return None
             conn.execute("DELETE FROM shared_results WHERE slug=?", [slug])
             conn.commit()
@@ -959,7 +968,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
 
 def create_job(email: str, job_name: str, city: str, state: str, **kwargs) -> dict:
     job_id = str(uuid.uuid4())
-    now = datetime.utcnow().isoformat()
+    now = utc_now().isoformat()
     fields = {
         "id": job_id, "email": email.lower().strip(), "job_name": job_name,
         "city": city, "state": state, "created_at": now, "updated_at": now,
@@ -1045,7 +1054,7 @@ def update_job(job_id: str, updates: dict, email: str | None = None) -> bool:
         return False
     if email and not user_can_access_job(job_id, email):
         return False
-    fields["updated_at"] = datetime.utcnow().isoformat()
+    fields["updated_at"] = utc_now().isoformat()
     set_clause = ", ".join(f"{k}=?" for k in fields)
     values = list(fields.values()) + [job_id]
     try:
@@ -1221,7 +1230,7 @@ class Handler(BaseHTTPRequestHandler):
             user  = get_or_create_user(user_email)
             count = get_monthly_lookup_count(user_email)
             paid  = is_paid_user(user_email)
-            now_dt = datetime.utcnow()
+            now_dt = utc_now()
             if now_dt.month == 12:
                 reset_date = f"{now_dt.year + 1}-01-01"
             else:
@@ -1279,7 +1288,7 @@ class Handler(BaseHTTPRequestHandler):
                     html = _magic_page("Invalid Code", "❌", "This login code is not recognised. Check the code or request a new one.", "Back to PermitAssist", "/", "#ef4444")
                     self.send_response(400); self.send_header("Content-Type", "text/html; charset=utf-8"); self.end_headers(); self.wfile.write(html.encode()); return
                 email_m, exp_m = row
-                if datetime.utcnow() > datetime.fromisoformat(exp_m):
+                if utc_now() > parse_timestamp(exp_m):
                     conn.execute("DELETE FROM magic_tokens WHERE token=?", [token])
                     conn.commit(); conn.close()
                     html = _magic_page("Link Expired", "⏰", "This login link has expired. Request a new one from the homepage.", "Get New Link", "/", "#f59e0b")
@@ -1564,7 +1573,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                     self.send_json(400, {"error": "job_type, city, state required"})
                     return
 
-                ts = datetime.utcnow().isoformat()
+                ts = utc_now().isoformat()
                 conn = sqlite3.connect(CACHE_DB)
 
                 # Flag cache entry as stale so next request forces fresh lookup
@@ -1740,7 +1749,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 # Generate 6-char uppercase alphanumeric token
                 chars = string.ascii_uppercase + string.digits
                 token = "".join(secrets.choice(chars) for _ in range(6))
-                now   = datetime.utcnow()
+                now   = utc_now()
                 exp   = now + timedelta(minutes=15)
                 conn  = sqlite3.connect(CACHE_DB)
                 conn.execute(
@@ -1777,7 +1786,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                     self.send_json(400, {"error": "Invalid or expired code"})
                     return
                 email_m, exp_m = row
-                if datetime.utcnow() > datetime.fromisoformat(exp_m):
+                if utc_now() > parse_timestamp(exp_m):
                     conn.execute("DELETE FROM magic_tokens WHERE token=?", [token])
                     conn.commit(); conn.close()
                     self.send_json(410, {"error": "Code expired"})
@@ -1829,7 +1838,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
 
                     if email:
                         email = email.lower().strip()
-                        now_dt = datetime.utcnow()
+                        now_dt = utc_now()
                         exp_dt = now_dt + timedelta(days=365)
                         stripe_cust = obj.get("customer", "")
                         stripe_sub  = obj.get("subscription", "") or obj.get("id", "")
@@ -1909,7 +1918,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                     conn.close()
                     self.send_json(400, {"error": "Team seat limit reached (max 3 members)"})
                     return
-                now_iso = datetime.utcnow().isoformat()
+                now_iso = utc_now().isoformat()
                 conn.execute(
                     "INSERT OR IGNORE INTO team_members (owner_email, member_email, joined_at) VALUES (?,?,?)",
                     (owner_email, invite_email, now_iso)

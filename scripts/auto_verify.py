@@ -15,7 +15,7 @@ import os
 import re
 import time
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
@@ -230,7 +230,7 @@ def verify_city_trade(city: str, state: str, trade: str) -> dict | None:
         "state":       state,
         "trade":       trade,
         "data":        data,
-        "verified_at": datetime.utcnow().isoformat(),
+        "verified_at": datetime.now(timezone.utc).isoformat(),
         "source_url":  source_url,
         "confidence":  "verified",
     }
@@ -249,7 +249,9 @@ def load_existing() -> dict:
 def is_fresh(entry: dict, max_days: int = 90) -> bool:
     try:
         verified_at = datetime.fromisoformat(entry.get("verified_at", ""))
-        return (datetime.utcnow() - verified_at) < timedelta(days=max_days)
+        if verified_at.tzinfo is None:
+            verified_at = verified_at.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - verified_at) < timedelta(days=max_days)
     except Exception:
         return False
 
