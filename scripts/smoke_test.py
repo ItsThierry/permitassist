@@ -146,21 +146,22 @@ def check_backend_helpers() -> None:
         assert queue["counts"]["feedback"] == 1
         assert queue["counts"]["needs_review"] == 1
 
+        share_payload = {
+            "permit_verdict": "YES",
+            "fee_range": "$120",
+            "apply_phone": "555-555-5555",
+            "applying_office": "City Permit Office",
+            "apply_address": "123 Main",
+            "approval_timeline": {"simple": "2 days"},
+            "permits_required": [{"permit_type": "Building Permit", "required": True}],
+            "sources": ["https://city.example/permit"],
+        }
         shared_html = server.render_share_page(
             {
                 "job_type": "Roof replacement",
                 "city": "Houston",
                 "state": "TX",
-                "data": {
-                    "permit_verdict": "YES",
-                    "fee_range": "$120",
-                    "apply_phone": "555-555-5555",
-                    "applying_office": "City Permit Office",
-                    "apply_address": "123 Main",
-                    "approval_timeline": {"simple": "2 days"},
-                    "permits_required": [{"permit_type": "Building Permit", "required": True}],
-                    "sources": ["https://city.example/permit"],
-                },
+                "data": share_payload,
             }
         )
         assert "🔗 Sources" in shared_html and "city.example/permit" in shared_html
@@ -190,14 +191,21 @@ def check_backend_helpers() -> None:
             assert status == 200 and "Job Address" in body and "Official Sources" in body
             status, body = http_get(f"http://127.0.0.1:{port}/help")
             assert status == 200 and "PermitAssist Help" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/login")
+            assert status == 200 and "No password needed" in body
             status, body = http_get(f"http://127.0.0.1:{port}/account")
             assert status == 200 and "Manage Subscription" in body
             status, body = http_get(f"http://127.0.0.1:{port}/review")
             assert status == 200 and "PermitAssist Review Queue" in body
+            slug = server.create_share("Roof replacement", "Houston", "TX", share_payload)
+            status, body = http_get(f"http://127.0.0.1:{port}/s/{slug}")
+            assert status == 200 and "city.example/permit" in body and "Roof replacement" in body
             status, body = http_get(f"http://127.0.0.1:{port}/api/jobs")
             assert status == 401 and "Not authenticated" in body
             status, body = http_get(f"http://127.0.0.1:{port}/api/billing-portal")
             assert status == 401 and "Not authenticated" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/api/review-queue")
+            assert status == 403 and "not configured" in body.lower()
         finally:
             httpd.shutdown()
             httpd.server_close()
