@@ -1,10 +1,8 @@
-// PermitAssist Service Worker v4
+// PermitAssist Service Worker v5
 // Handles offline caching and background sync
 
-const CACHE_NAME = 'permitassist-v4';
+const CACHE_NAME = 'permitassist-v5';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
@@ -34,6 +32,20 @@ self.addEventListener('activate', event => {
 // - Permit results: cache for 24h (contractor may re-check on job site without signal)
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
+
+  // HTML navigations — network first, cache fallback only when offline
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(event.request).then(cached => cached || caches.match('/')))
+    );
+    return;
+  }
 
   // API calls — network first with result caching
   if (url.pathname === '/api/permit' || url.pathname === '/api/research') {
