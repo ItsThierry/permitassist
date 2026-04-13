@@ -802,6 +802,10 @@
       <div class="card">
         <div class="card-label">What do you need a permit for?</div>
         <div class="form-group">
+          <label>Job Address <span style="font-weight:400;text-transform:none;font-size:10px;">(optional, helps with tricky jurisdictions)</span></label>
+          <input type="text" id="address" placeholder="e.g. 123 Main St" autocomplete="off" />
+        </div>
+        <div class="form-group">
           <label>City</label>
           <input type="text" id="city" placeholder="e.g. Houston" autocomplete="off" />
         </div>
@@ -1010,17 +1014,44 @@ function getInspectionChecklist(jobType) {
 }
 
 // ── Disambiguation Logic ──────────────────────────────────────────────────────
-const REPAIR_KEYWORDS = /\b(repair|fix|leak|patch|minor|small)\b/i;
+const DISAMBIG_RULES = [
+  {
+    test: q => /\b(repair|fix|leak|patch|minor|small)\b/i.test(q),
+    title: '⚠️ Is this a minor repair or full replacement?',
+    options: ['minor repair', 'full replacement']
+  },
+  {
+    test: q => /\b(water heater|furnace|boiler)\b/i.test(q) && !/\b(gas|electric)\b/i.test(q),
+    title: '⚠️ Is the equipment gas or electric?',
+    options: ['gas unit', 'electric unit']
+  },
+  {
+    test: q => /\b(ev charger|electric vehicle charger|level 2 charger)\b/i.test(q) && !/\b(level 1|level 2|240v|120v)\b/i.test(q),
+    title: '⚠️ What kind of charger install is this?',
+    options: ['Level 1 charger', 'Level 2 charger']
+  },
+  {
+    test: q => /\b(panel upgrade|service upgrade|electrical service)\b/i.test(q) && !/\b(100 amp|125 amp|150 amp|200 amp|400 amp)\b/i.test(q),
+    title: '⚠️ What size service are you upgrading to?',
+    options: ['100 amp', '200 amp', '400 amp']
+  }
+];
 
 function checkDisambiguation() {
   if (_skipDisambig) { _skipDisambig = false; return false; }
   const query = document.getElementById('query').value.trim();
-  if (REPAIR_KEYWORDS.test(query)) {
-    document.getElementById('disambig-box').classList.add('show');
-    return true;
+  const rule = DISAMBIG_RULES.find(r => r.test(query));
+  const box = document.getElementById('disambig-box');
+  if (!rule) {
+    box.classList.remove('show');
+    return false;
   }
-  document.getElementById('disambig-box').classList.remove('show');
-  return false;
+  const title = document.querySelector('#disambig-box .disambig-title');
+  const btns = document.querySelector('#disambig-box .disambig-btns');
+  if (title) title.textContent = rule.title;
+  if (btns) btns.innerHTML = rule.options.map(opt => `<button class="disambig-btn" onclick="submitWithDisambig(${JSON.stringify(opt)})">${esc(opt)}</button>`).join('');
+  box.classList.add('show');
+  return true;
 }
 
 let _skipDisambig = false;
@@ -1261,6 +1292,22 @@ async function useGPS(){
   }catch{status.className='gps-status bad';status.textContent='Could not get location. Enter city and state manually.'}
 }
 
+async function geocodeAddress(address){
+  if(!address) return null;
+  try{
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&q=' + encodeURIComponent(address));
+    const rows = await r.json();
+    if(!Array.isArray(rows) || !rows.length) return null;
+    const a = rows[0].address || {};
+    return {
+      city: a.city || a.town || a.village || a.county || '',
+      state: (STATES[a.state]||'')||((a.state||'').slice(0,2).toUpperCase()),
+      zip: (a.postcode||'').slice(0,5),
+      display: rows[0].display_name || address
+    };
+  }catch{return null;}
+}
+
 // ── Query parsing ────────────────────────────────────────────────────────────
 function normalizeState(raw){if(!raw) return '';const t=raw.trim();if(STATES[t.toUpperCase()]) return t.toUpperCase();const found=Object.entries(STATES).find(([,name])=>name.toLowerCase()===t.toLowerCase());return found?found[0]:t.toUpperCase()}
 
@@ -1289,7 +1336,7 @@ function parseQuery(raw){
 }
 
 // ── Navigation helpers ───────────────────────────────────────────────────────
-function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');refreshCounterBar();document.getElementById('page-search').scrollTop=0}
+function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('address').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');refreshCounterBar();document.getElementById('page-search').scrollTop=0}
 function openUpgrade(plan){window.open(getUpgradeUrl(plan||'solo'),'_blank')}
 
 // ── Verdict ──────────────────────────────────────────────────────────────────
@@ -1379,8 +1426,9 @@ function renderResults(d, job, city, state) {
   } else {
     confBadgeHtml = `<span class="confidence-badge" style="background:rgba(239,68,68,0.12);color:#ef4444">🔴 General Estimate<span class="conf-tooltip">Limited local data — confirm with city before applying</span></span>`;
   }
-  const freshNow = new Date();
-  const freshMonthYear = freshNow.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const heroUpdatedRaw = d.last_verified_at || d._meta?.generated_at || '';
+  const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown';
+  const confidenceReason = d.confidence_reason || '';
 
   // Result hero
   html += `<div class="result-hero">
@@ -1391,8 +1439,9 @@ function renderResults(d, job, city, state) {
       ${fee ? `<span class="badge badge-blue">💰 ${esc(fee)}</span>` : ''}
       ${confBadgeHtml}
     </div>
+    ${confidenceReason ? `<div style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.5">${esc(confidenceReason)}</div>` : ''}
     <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span style="font-size:11px;color:var(--muted)">Last updated: ${freshMonthYear}</span>
+      <span style="font-size:11px;color:var(--muted)">Last updated: ${heroUpdatedLabel}</span>
       <button class="flag-wrong-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button>
       <span class="flag-feedback-inline" id="flag-feedback-inline">Thanks for flagging. We'll review this within 30 days.</span>
     </div>
@@ -1586,12 +1635,13 @@ function renderResults(d, job, city, state) {
   }
 
   // Cache disclaimer
-  const genAt = d._meta?.generated_at || '';
+  const genAt = d.last_verified_at || d._meta?.generated_at || '';
   const dataSource = d.data_source || d._meta?.city_match_level || '';
   const webSrcs = d._meta?.web_sources || 0;
   const isCached = d._cached || d._meta?.cached;
   const freshDate = genAt ? new Date(genAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const isStale = genAt && (Date.now() - new Date(genAt).getTime()) > 30 * 24 * 60 * 60 * 1000;
+  const sourceLinks = Array.isArray(d.sources) ? d.sources.filter(Boolean).slice(0, 5) : [];
 
   if (freshDate) {
     html += `<div class="cache-disclaimer">Data current as of ${freshDate}. Always verify fees with your local building department.</div>`;
@@ -1599,7 +1649,11 @@ function renderResults(d, job, city, state) {
       <span class="freshness-badge"><span class="freshness-dot${isStale ? ' stale' : ''}"></span>${isCached ? 'Cached result — verified ' : 'Generated '} ${freshDate}</span>
       ${webSrcs > 0 ? `<span class="freshness-badge">🌐 ${webSrcs} live web source${webSrcs !== 1 ? 's' : ''}</span>` : ''}
       <span class="freshness-badge">${dataSource === 'city' ? '📍 City-verified' : dataSource === 'county' ? '🏛️ County data' : dataSource === 'web_search' ? '🔍 Web search' : '📚 State rules'}</span>
+      ${d.needs_review ? `<span class="freshness-badge" style="border-color:rgba(239,68,68,.35);color:#ef4444">⚠️ Needs review</span>` : ''}
     </div>`;
+  }
+  if (sourceLinks.length) {
+    html += `<div class="card"><div class="section-label">🔗 Official Sources</div><ul class="bullet-list">${sourceLinks.map(src => `<li><a href="${esc(src)}" target="_blank" rel="noopener">${esc(src)}</a></li>`).join('')}</ul></div>`;
   }
 
   // Action buttons
@@ -1815,15 +1869,27 @@ function reloadResult(i) {
 // ── Main lookup ──────────────────────────────────────────────────────────────
 async function doLookup() {
   const raw = document.getElementById('query').value.trim();
+  const address = document.getElementById('address')?.value.trim() || '';
   const parsed = parseQuery(raw);
   if (!parsed.job_type) { alert('Please describe the job.'); return; }
+  if (address && (!parsed.city || !parsed.state)) {
+    const geo = await geocodeAddress(address);
+    if (geo) {
+      parsed.city = parsed.city || geo.city;
+      parsed.state = parsed.state || geo.state;
+      parsed.zip_code = parsed.zip_code || geo.zip;
+      if (geo.city) document.getElementById('city').value = geo.city;
+      if (geo.state) document.getElementById('state').value = geo.state;
+      if (geo.zip && !document.getElementById('zip').value) document.getElementById('zip').value = geo.zip;
+    }
+  }
   if (!parsed.city || !parsed.state) {
     await useGPS();
     const fallback = parseQuery(raw);
     parsed.city = parsed.city || fallback.city;
     parsed.state = parsed.state || fallback.state;
   }
-  if (!parsed.city || !parsed.state) { alert('Please add a city and state, or use your location.'); return; }
+  if (!parsed.city || !parsed.state) { alert('Please add a city and state, a full address, or use your location.'); return; }
 
   const used = getLookupCount();
   if (used >= FREE_LIMIT && !hasEmail()) {
@@ -1851,7 +1917,7 @@ async function doLookup() {
     }
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, zip: parsed.zip_code, data, ts: Date.now() };
+    currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, zip: parsed.zip_code, address, data, ts: Date.now() };
     saveToHistory(currentResult);
     if (used === 2 && !hasEmail()) {
       pendingResult = { data, job: parsed.job_type, city: parsed.city, state: parsed.state };
@@ -2113,18 +2179,17 @@ function submitExpiryReminder() {
 function getJobsEmail() { return localStorage.getItem(EMAIL_KEY) || ''; }
 function saveJobToTracker() {
   if (!currentResult) return;
-  const { job, city, state, data } = currentResult;
-  let email = getJobsEmail();
-  if (!email) {
-    email = prompt('Enter your email to save this job:');
-    if (!email || !email.includes('@')) return;
-    localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase());
+  if (!isLoggedIn()) {
+    alert('Please log in first so your saved jobs stay tied to your account.');
+    showGate(true);
+    return;
   }
+  const { job, city, state, address, data } = currentResult;
   const permits = data.permits_required || [];
   const permitName = permits.length > 0 ? permits[0].permit_type : '';
   fetch('/api/jobs', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ email, job_name: job, city, state, permit_name: permitName, result_json: data, status: 'planning' })
+    method: 'POST', headers: getAuthHeaders(),
+    body: JSON.stringify({ job_name: job, address: address || '', city, state, permit_name: permitName, result_json: data, status: 'planning' })
   }).then(r => r.json()).then(r => {
     if (r.job) showCopy('\ud83d\udcc1 Saved to Job Tracker!');
     else alert('Error: ' + (r.error || 'Unknown'));
@@ -2132,20 +2197,19 @@ function saveJobToTracker() {
 }
 async function renderJobsPage() {
   const el = document.getElementById('jobs-inner');
-  const email = getJobsEmail();
-  if (!email) {
-    el.innerHTML = '<div class="jobs-empty"><div class="icon">\ud83d\udcc1</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">No jobs yet</p><p style="font-size:13px;">Look up a permit and click &quot;Save to Job Tracker&quot; to track jobs here.</p></div>';
+  if (!isLoggedIn()) {
+    el.innerHTML = '<div class="jobs-empty"><div class="icon">\ud83d\udcc1</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">Log in to use Job Tracker</p><p style="font-size:13px;">Your saved jobs are now tied to your account for privacy and team access.</p></div>';
     return;
   }
   el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--muted)">Loading...</div>';
   try {
-    const r = await fetch('/api/jobs?email=' + encodeURIComponent(email));
+    const r = await fetch('/api/jobs', { headers: getAuthHeaders() });
     const data = await r.json();
     const jobs = data.jobs || [];
     if (!jobs.length) { el.innerHTML = '<div class="jobs-empty"><div class="icon">\ud83d\udcc1</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">No saved jobs</p><p style="font-size:13px;">Click &quot;\ud83d\udcc1 Save to Job Tracker&quot; from any result.</p></div>'; return; }
     const SL = { planning:'\ud83d\udcd0 Planning', applied:'\ud83d\udce8 Applied', approved:'\u2705 Approved', active:'\ud83d\udee0\ufe0f Active', closed:'\ud83d\udfe5 Closed' };
     const SC = { planning:'status-planning', applied:'status-applied', approved:'status-approved', active:'status-active', closed:'status-closed' };
-    let html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">' + jobs.length + ' saved job' + (jobs.length!==1?'s':'') + ' for ' + esc(email) + '</div>';
+    let html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">' + jobs.length + ' saved job' + (jobs.length!==1?'s':'') + '</div>';
     jobs.forEach(j => {
       const warn = j.expiry_date ? checkExpiryWarn(j.expiry_date) : '';
       const opts = ['planning','applied','approved','active','closed'].map(s=>'<option value="'+s+'" '+(j.status===s?'selected':'')+'>'+(SL[s]||s)+'</option>').join('');
@@ -2158,20 +2222,20 @@ function checkExpiryWarn(d) {
   try { const days=Math.ceil((new Date(d)-Date.now())/(86400000)); if(days<0) return '<div class="job-expiry-warn">\u26a0\ufe0f Permit EXPIRED '+Math.abs(days)+' days ago</div>'; if(days<=30) return '<div class="job-expiry-warn">\u26a0\ufe0f Expires in '+days+' days</div>'; } catch{} return '';
 }
 async function updateJobStatus(id, status) {
-  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}); renderJobsPage(); } catch{}
+  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:getAuthHeaders(),body:JSON.stringify({status})}); renderJobsPage(); } catch{}
 }
 async function setJobExpiry(id) {
   const d = prompt('Enter expiry date (YYYY-MM-DD):'); if(!d) return;
-  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({expiry_date:d})}); renderJobsPage(); } catch{}
+  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:getAuthHeaders(),body:JSON.stringify({expiry_date:d})}); renderJobsPage(); } catch{}
 }
 async function deleteJobItem(id) {
   if(!confirm('Delete this job?')) return;
-  try { await fetch('/api/jobs/'+id,{method:'DELETE'}); renderJobsPage(); } catch{}
+  try { await fetch('/api/jobs/'+id,{method:'DELETE',headers:getAuthHeaders()}); renderJobsPage(); } catch{}
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 document.getElementById('lookup-btn').onclick = doLookupWithOffline;
-['query', 'city', 'zip'].forEach(id => {
+['query', 'address', 'city', 'zip'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doLookupWithOffline(); } });
 });

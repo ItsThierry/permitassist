@@ -42,6 +42,7 @@ TG_CHAT_ID   = os.environ.get("TELEGRAM_NOTIFY_CHAT_ID", "")
 # ── Auth & plan constants ─────────────────────────────────────────────────────
 SESSION_SECRET         = os.environ.get("SESSION_SECRET", "pa-dev-secret-CHANGE-IN-PROD")
 STRIPE_WEBHOOK_SECRET  = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_SECRET_KEY      = os.environ.get("STRIPE_SECRET_KEY", "")
 FREE_LOOKUPS_PER_MONTH = 3
 UPGRADE_URL_SOLO       = "https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a"
 UPGRADE_URL_TEAM       = "https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b"
@@ -49,6 +50,9 @@ PRICE_SOLO             = "price_1TLkkQ43XpvaBuPhhxdSRoID"
 PRICE_TEAM             = "price_1TLkkQ43XpvaBuPh0vL7MnY4"
 RESEND_API_KEY         = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL             = "hello@itsthierryai.com"
+APP_BASE_URL           = os.environ.get("APP_BASE_URL", "https://permitassist.io").rstrip("/")
+REMINDER_LOOKAHEAD_DAYS = 30
+REMINDER_CHECK_SECONDS  = 3600
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -239,6 +243,20 @@ def init_db():
             PRIMARY KEY (owner_email, member_email)
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS permit_reminders (
+            id           TEXT PRIMARY KEY,
+            email        TEXT NOT NULL,
+            job_type     TEXT,
+            city         TEXT,
+            state        TEXT,
+            expiry_date  TEXT,
+            remind_at    TEXT,
+            sent_at      TEXT,
+            created_at   TEXT,
+            UNIQUE(email, job_type, city, state, expiry_date)
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -361,6 +379,121 @@ def is_paid_user(email: str) -> bool:
     except Exception:
         pass
     return False
+
+
+def get_team_scope_emails(email: str) -> list[str]:
+    """Return emails whose jobs this user can see/manage."""
+    email = email.lower().strip()
+    scope = {email}
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        owner_row = conn.execute(
+            "SELECT owner_email FROM team_members WHERE member_email=?", [email]
+        ).fetchone()
+        owner_email = owner_row[0].lower().strip() if owner_row and owner_row[0] else email
+        scope.add(owner_email)
+        member_rows = conn.execute(
+            "SELECT member_email FROM team_members WHERE owner_email=?", [owner_email]
+        ).fetchall()
+        conn.close()
+        for row in member_rows:
+            if row and row[0]:
+                scope.add(row[0].lower().strip())
+    except Exception:
+        pass
+    return sorted(scope)
+
+
+def create_billing_portal_session(customer_id: str, return_url: str) -> str | None:
+    if not STRIPE_SECRET_KEY or not customer_id:
+        return None
+    try:
+        resp = requests.post(
+            "https://api.stripe.com/v1/billing_portal/sessions",
+            headers={"Authorization": f"Bearer {STRIPE_SECRET_KEY}"},
+            data={"customer": customer_id, "return_url": return_url},
+            timeout=20,
+        )
+        if resp.ok:
+            return (resp.json() or {}).get("url")
+        print(f"[stripe-portal] Failed {resp.status_code}: {resp.text}")
+    except Exception as e:
+        print(f"[stripe-portal] Error: {e}")
+    return None
+
+
+def upsert_permit_reminder(email: str, job_type: str, city: str, state: str, expiry_date: str) -> dict:
+    now = datetime.utcnow()
+    reminder_id = str(uuid.uuid4())
+    remind_at = ""
+    if expiry_date:
+        try:
+            exp_dt = datetime.fromisoformat(expiry_date)
+            remind_dt = exp_dt - timedelta(days=REMINDER_LOOKAHEAD_DAYS)
+            remind_at = remind_dt.isoformat()
+        except Exception:
+            remind_at = ""
+    conn = sqlite3.connect(CACHE_DB)
+    existing = conn.execute(
+        "SELECT id,sent_at FROM permit_reminders WHERE email=? AND job_type=? AND city=? AND state=? AND expiry_date=?",
+        [email, job_type, city, state, expiry_date],
+    ).fetchone()
+    if existing:
+        reminder_id = existing[0]
+        conn.execute(
+            "UPDATE permit_reminders SET remind_at=?, sent_at=NULL, created_at=? WHERE id=?",
+            [remind_at, now.isoformat(), reminder_id],
+        )
+    else:
+        conn.execute(
+            "INSERT INTO permit_reminders (id,email,job_type,city,state,expiry_date,remind_at,sent_at,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
+            [reminder_id, email, job_type, city, state, expiry_date, remind_at, None, now.isoformat()],
+        )
+    conn.commit()
+    conn.close()
+    return {"id": reminder_id, "remind_at": remind_at}
+
+
+def process_due_reminders(now: datetime | None = None) -> int:
+    now = now or datetime.utcnow()
+    sent = 0
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        rows = conn.execute(
+            "SELECT id,email,job_type,city,state,expiry_date,remind_at FROM permit_reminders "
+            "WHERE sent_at IS NULL AND remind_at IS NOT NULL AND remind_at<>'' AND remind_at<=?",
+            [now.isoformat()],
+        ).fetchall()
+        for rid, email, job_type, city, state, expiry_date, remind_at in rows:
+            subject = f"Permit reminder: {job_type or 'Permit'} in {city}, {state}"
+            body = (
+                f"Hi,\n\n"
+                f"This is your PermitAssist reminder that your permit is coming up on expiry.\n\n"
+                f"Job: {job_type or 'your job'}\n"
+                f"Location: {city}{', ' + state if state else ''}\n"
+                f"Expiry date: {expiry_date or 'Unknown'}\n"
+                f"Reminder date: {remind_at}\n\n"
+                f"If the permit is still active, make sure renewal or inspection closeout is handled in time.\n\n"
+                f"— PermitAssist\n"
+                f"{APP_BASE_URL}"
+            )
+            if resend_send(email, subject, body):
+                conn.execute("UPDATE permit_reminders SET sent_at=? WHERE id=?", [now.isoformat(), rid])
+                sent += 1
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[reminders] Process error: {e}")
+    return sent
+
+
+def reminder_worker():
+    while True:
+        try:
+            process_due_reminders()
+        except Exception as e:
+            print(f"[reminders] Worker error: {e}")
+        time.sleep(REMINDER_CHECK_SECONDS)
 
 
 def get_monthly_lookup_count(email: str) -> int:
@@ -660,6 +793,7 @@ def render_share_page(share: dict) -> str:
     permits = d.get("permits_required", [])
     tips    = d.get("pro_tips", [])[:3]
     bring   = d.get("what_to_bring", [])[:5]
+    sources = [esc(s) for s in (d.get("sources") or [])[:4] if s]
     permit_name = esc(d.get("permit_name") or (permits[0].get("permit_type") if permits else "") or "")
     summary = esc(d.get("job_summary") or d.get("permit_summary") or "")
     license_r = esc(d.get("license_required", ""))
@@ -673,6 +807,7 @@ def render_share_page(share: dict) -> str:
 
     tips_html = "".join(f"<li>{esc(t)}</li>" for t in tips)
     bring_html = "".join(f"<li>{esc(b)}</li>" for b in bring)
+    sources_html = "".join(f"<li><a href=\"{s}\" target=\"_blank\" rel=\"noopener\" style=\"color:#1a56db\">{s}</a></li>" for s in sources)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -723,6 +858,7 @@ def render_share_page(share: dict) -> str:
   {'<div class="card"><div class="card-label">📞 Contact</div><a class="contact-phone" href="tel:' + phone_raw + '">' + phone + '</a><div class="contact-office">' + office + '</div><div class="contact-addr">' + addr + '</div>' + ('<a class="maps-link" href="' + maps + '" target="_blank" rel="noopener">Find on Google Maps →</a>' if maps else '') + '</div>' if phone or office else ''}
   {'<div class="card"><div class="card-label">💰 Cost · ⏱ Timeline · 🧰 Who Pulls It</div><table>' + rows + '</table></div>' if rows else ''}
   {'<div class="card"><div class="card-label">📎 What to Bring</div><ul>' + bring_html + '</ul></div>' if bring_html else ''}
+  {'<div class="card"><div class="card-label">🔗 Sources</div><ul>' + sources_html + '</ul></div>' if sources_html else ''}
   {'<div class="card"><div class="card-label">💡 Pro Tips</div><ul>' + tips_html + '</ul></div>' if tips_html else ''}
   <div class="cta">
     <p>Look up permit requirements for your own jobs — free, no signup needed.</p>
@@ -752,6 +888,13 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     if data.get("fee_range"):       lines.append(f"FEE:      {data['fee_range']}")
     tl = data.get("approval_timeline", {})
     if tl.get("simple"):            lines.append(f"TIMELINE: {tl['simple']}")
+    if data.get("confidence_reason"):
+        lines.append(f"CONFIDENCE: {data['confidence_reason']}")
+    sources = [s for s in (data.get("sources") or [])[:4] if s]
+    if sources:
+        lines.append("")
+        lines.append("SOURCES:")
+        lines.extend([f"- {s}" for s in sources])
     lines += ["", "---", "PermitAssist — permitassist.io", "Questions? Reply to this email."]
     subject = f"Permit Research: {job} in {city}, {state}"
     return resend_send(to_email, subject, "\n".join(lines))
@@ -795,13 +938,15 @@ def create_job(email: str, job_name: str, city: str, state: str, **kwargs) -> di
 
 
 def list_jobs(email: str) -> list:
+    scope = get_team_scope_emails(email)
+    placeholders = ",".join("?" for _ in scope)
     try:
         conn = sqlite3.connect(CACHE_DB)
         rows = conn.execute(
-            "SELECT id,email,job_name,address,city,state,trade,permit_name,status,"
-            "applied_date,approved_date,permit_number,expiry_date,notes,result_json,"
-            "created_at,updated_at FROM jobs WHERE email=? ORDER BY created_at DESC",
-            (email.lower().strip(),)
+            f"SELECT id,email,job_name,address,city,state,trade,permit_name,status,"
+            f"applied_date,approved_date,permit_number,expiry_date,notes,result_json,"
+            f"created_at,updated_at FROM jobs WHERE email IN ({placeholders}) ORDER BY created_at DESC",
+            scope,
         ).fetchall()
         conn.close()
         cols = ["id","email","job_name","address","city","state","trade","permit_name",
@@ -820,11 +965,29 @@ def list_jobs(email: str) -> list:
         return []
 
 
-def update_job(job_id: str, updates: dict) -> bool:
+def user_can_access_job(job_id: str, email: str) -> bool:
+    scope = get_team_scope_emails(email)
+    placeholders = ",".join("?" for _ in scope)
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        row = conn.execute(
+            f"SELECT 1 FROM jobs WHERE id=? AND email IN ({placeholders})",
+            [job_id, *scope],
+        ).fetchone()
+        conn.close()
+        return bool(row)
+    except Exception as e:
+        print(f"[jobs] Access check error: {e}")
+        return False
+
+
+def update_job(job_id: str, updates: dict, email: str | None = None) -> bool:
     allowed = ["job_name","address","trade","permit_name","status",
                "applied_date","approved_date","permit_number","expiry_date","notes"]
     fields = {k: v for k, v in updates.items() if k in allowed}
     if not fields:
+        return False
+    if email and not user_can_access_job(job_id, email):
         return False
     fields["updated_at"] = datetime.utcnow().isoformat()
     set_clause = ", ".join(f"{k}=?" for k in fields)
@@ -834,13 +997,29 @@ def update_job(job_id: str, updates: dict) -> bool:
         conn.execute(f"UPDATE jobs SET {set_clause} WHERE id=?", values)
         conn.commit()
         conn.close()
+        if email and fields.get("expiry_date"):
+            try:
+                user_jobs = [j for j in list_jobs(email) if j.get("id") == job_id]
+                if user_jobs:
+                    j = user_jobs[0]
+                    upsert_permit_reminder(
+                        j.get("email", email),
+                        j.get("job_name", ""),
+                        j.get("city", ""),
+                        j.get("state", ""),
+                        fields.get("expiry_date", ""),
+                    )
+            except Exception as e:
+                print(f"[jobs] Reminder sync error: {e}")
         return True
     except Exception as e:
         print(f"[jobs] Update error: {e}")
         return False
 
 
-def delete_job(job_id: str) -> bool:
+def delete_job(job_id: str, email: str | None = None) -> bool:
+    if email and not user_can_access_job(job_id, email):
+        return False
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute("DELETE FROM jobs WHERE id=?", (job_id,))
@@ -911,13 +1090,18 @@ class Handler(BaseHTTPRequestHandler):
     def do_PATCH(self):
         path = urlparse(self.path).path
         if path.startswith("/api/jobs/"):
+            session_token = self.headers.get("X-Session-Token", "")
+            user_email = validate_session_token(session_token) if session_token else None
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
+                return
             job_id = path[len("/api/jobs/"):].strip("/")
             if not job_id:
                 self.send_json(400, {"error": "Job ID required"})
                 return
             try:
                 updates = self.read_json_body()
-                ok = update_job(job_id, updates)
+                ok = update_job(job_id, updates, email=user_email)
                 self.send_json(200 if ok else 404, {"updated": ok})
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
@@ -927,11 +1111,16 @@ class Handler(BaseHTTPRequestHandler):
     def do_DELETE(self):
         path = urlparse(self.path).path
         if path.startswith("/api/jobs/"):
+            session_token = self.headers.get("X-Session-Token", "")
+            user_email = validate_session_token(session_token) if session_token else None
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
+                return
             job_id = path[len("/api/jobs/"):].strip("/")
             if not job_id:
                 self.send_json(400, {"error": "Job ID required"})
                 return
-            ok = delete_job(job_id)
+            ok = delete_job(job_id, email=user_email)
             self.send_json(200 if ok else 404, {"deleted": ok})
         else:
             self.send_json(404, {"error": "Not found"})
@@ -1096,12 +1285,28 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 self.send_json(200, {"verified_cities": [], "count": 0, "note": str(e)})
 
         elif path == "/api/jobs":
-            qs = parse_qs(urlparse(self.path).query)
-            email = (qs.get("email", [""])[0] or "").strip().lower()
-            if not email or "@" not in email:
-                self.send_json(400, {"error": "email query param required"})
+            session_token = self.headers.get("X-Session-Token", "")
+            user_email = validate_session_token(session_token) if session_token else None
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
                 return
-            self.send_json(200, {"jobs": list_jobs(email)})
+            self.send_json(200, {"jobs": list_jobs(user_email)})
+
+        elif path == "/api/billing-portal":
+            session_token = self.headers.get("X-Session-Token", "")
+            user_email = validate_session_token(session_token) if session_token else None
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
+                return
+            user = get_user(user_email)
+            if not user or not user.get("stripe_customer_id"):
+                self.send_json(400, {"error": "No Stripe customer found for this account"})
+                return
+            portal_url = create_billing_portal_session(user["stripe_customer_id"], APP_BASE_URL + "/account.html")
+            if not portal_url:
+                self.send_json(500, {"error": "Billing portal unavailable"})
+                return
+            self.send_json(200, {"url": portal_url})
 
         # ── SEO: sitemap.xml ──────────────────────────────────────────────
         elif path == "/sitemap.xml":
@@ -1326,15 +1531,17 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                     self.send_json(400, {"error": "Valid email required"})
                     return
                 save_email_capture(email, "expiry-reminder")
+                reminder = upsert_permit_reminder(email, job_type, city, state, expiry)
                 # Send confirmation email in background thread
                 def _send_reminder_confirm():
                     expiry_line = f"\nPermit expiry: {expiry}" if expiry else ""
+                    remind_line = f"\nReminder date: {reminder.get('remind_at', '')[:10]}" if reminder.get('remind_at') else ""
                     body = (
                         f"Hi,\n\n"
                         f"You've set a permit expiry reminder for:\n"
                         f"  Job: {job_type or 'your job'}\n"
-                        f"  Location: {city}{', ' + state if state else ''}{expiry_line}\n\n"
-                        f"We'll remind you 30 days before your permit expires so you have "
+                        f"  Location: {city}{', ' + state if state else ''}{expiry_line}{remind_line}\n\n"
+                        f"We'll remind you {REMINDER_LOOKAHEAD_DAYS} days before your permit expires so you have "
                         f"time to renew or close out inspections.\n\n"
                         f"Questions? Just reply to this email.\n\n"
                         f"— PermitAssist\n"
@@ -1347,7 +1554,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                     else:
                         print(f"[expiry-reminder] Email failed for {email}")
                 threading.Thread(target=_send_reminder_confirm, daemon=True).start()
-                self.send_json(200, {"saved": True})
+                self.send_json(200, {"saved": True, "reminder_id": reminder["id"], "remind_at": reminder.get("remind_at", "")})
             except Exception as e:
                 print(f"[expiry-reminder] Error: {e}")
                 self.send_json(500, {"error": str(e)})
@@ -1417,23 +1624,30 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
         # ── Jobs API POST ────────────────────────────────────────────────
         elif path == "/api/jobs":
             try:
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else None
+                if not user_email:
+                    self.send_json(401, {"error": "Not authenticated"})
+                    return
                 data  = self.read_json_body()
-                email = data.get("email", "").strip().lower()
                 job_name = data.get("job_name", "").strip()
                 city  = data.get("city", "").strip()
                 state = data.get("state", "").strip()
-                if not email or "@" not in email or not job_name or not city or not state:
-                    self.send_json(400, {"error": "email, job_name, city, state required"})
+                if not job_name or not city or not state:
+                    self.send_json(400, {"error": "job_name, city, state required"})
                     return
                 job = create_job(
-                    email, job_name, city, state,
+                    user_email, job_name, city, state,
                     address=data.get("address", ""),
                     trade=data.get("trade", ""),
                     permit_name=data.get("permit_name", ""),
                     status=data.get("status", "planning"),
                     notes=data.get("notes", ""),
+                    expiry_date=data.get("expiry_date", ""),
                     result_json=data.get("result_json"),
                 )
+                if job.get("expiry_date"):
+                    upsert_permit_reminder(user_email, job_name, city, state, job.get("expiry_date", ""))
                 self.send_json(201, {"job": job})
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
@@ -1626,6 +1840,22 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 conn.commit()
                 conn.close()
                 get_or_create_user(invite_email)
+
+                def _send_team_invite():
+                    owner_label = owner_email
+                    subject = f"You've been invited to PermitAssist"
+                    body = (
+                        f"Hi,\n\n"
+                        f"{owner_label} added you to their PermitAssist team.\n\n"
+                        f"You can log in with this email at:\n"
+                        f"{APP_BASE_URL}/account.html\n\n"
+                        f"Once you log in, you'll be able to access the shared team workspace for permit jobs.\n\n"
+                        f"— PermitAssist\n"
+                        f"{APP_BASE_URL}"
+                    )
+                    resend_send(invite_email, subject, body)
+
+                threading.Thread(target=_send_team_invite, daemon=True).start()
                 self.send_json(200, {"invited": True, "member_email": invite_email})
             except Exception as e:
                 print(f"[team/invite] Error: {e}")
@@ -1637,10 +1867,13 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
 
 if __name__ == "__main__":
     init_db()
+    process_due_reminders()
+    threading.Thread(target=reminder_worker, daemon=True).start()
     print(f"🚀 PermitAssist server starting on port {PORT}")
     print(f"   Rate limit: {RATE_MAX_FRESH} fresh lookups / {RATE_WINDOW_SECONDS//3600}h per IP (guests)")
     print(f"   Free tier: {FREE_LOOKUPS_PER_MONTH} lookups/month per email (auth users)")
     print(f"   Stripe webhook: {'configured' if STRIPE_WEBHOOK_SECRET else 'no STRIPE_WEBHOOK_SECRET'}")
+    print(f"   Stripe portal: {'configured' if STRIPE_SECRET_KEY else 'no STRIPE_SECRET_KEY'}")
     print(f"   Telegram: {'enabled' if TG_BOT_TOKEN else 'disabled'}")
     print(f"   Open: http://localhost:{PORT}")
     server = HTTPServer(("0.0.0.0", PORT), Handler)

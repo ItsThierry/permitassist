@@ -17,6 +17,7 @@ import time
 import re
 import sqlite3
 import hashlib
+from copy import deepcopy
 import requests
 from datetime import datetime, timedelta
 from openai import OpenAI
@@ -26,6 +27,110 @@ client = OpenAI()
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 CACHE_DB       = os.path.join(os.path.dirname(__file__), "..", "data", "cache.db")
 KNOWLEDGE_DIR  = os.path.join(os.path.dirname(__file__), "..", "knowledge")
+
+SUMMARY_JUNK_PATTERNS = [
+    r'\*\s*Email;\s*"Click to submit an email[^\n]*',
+    r'\*\s*Facebook\s*"Click to share with Facebook[^\n]*',
+    r'\*\s*LinkedIn\s*"Click to share with LinkedIn[^\n]*',
+    r'\*\s*Twitter\s*"Click to share with Twitter[^\n]*',
+    r'\*\s*Reddit\s*"Click to share with Reddit[^\n]*',
+    r'Feedback;\s*"Click to submit an email to feedback[^\n]*',
+    r'Print;\s*"Click to print this page[^\n]*',
+    r'Helpful Links\.',
+]
+
+
+def clean_summary_text(text: str, max_len: int = 700) -> str:
+    if not text:
+        return ""
+    cleaned = str(text)
+    for pat in SUMMARY_JUNK_PATTERNS:
+        cleaned = re.sub(pat, " ", cleaned, flags=re.I)
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip(" \n\t;,-")
+    if len(cleaned) > max_len:
+        cleaned = cleaned[:max_len].rsplit(' ', 1)[0].rstrip(' ,;:-') + '…'
+    return cleaned
+
+
+def clean_verified_entry(entry: dict | None) -> dict | None:
+    if not entry:
+        return entry
+    clean = deepcopy(entry)
+    data = clean.get("data") or {}
+    if isinstance(data, dict):
+        data["summary"] = clean_summary_text(data.get("summary", ""))
+        srcs = data.get("sources") or []
+        data["sources"] = [s for s in srcs if isinstance(s, str) and s.startswith("http")]
+        clean["data"] = data
+    return clean
+
+
+def normalize_sources(*groups) -> list[str]:
+    seen = set()
+    out = []
+    for group in groups:
+        if not group:
+            continue
+        if isinstance(group, str):
+            group = [group]
+        for src in group:
+            if not isinstance(src, str):
+                continue
+            src = src.strip()
+            if not src.startswith("http"):
+                continue
+            if src in seen:
+                continue
+            seen.add(src)
+            out.append(src)
+    return out[:8]
+
+
+def compute_missing_fields(result: dict) -> list[str]:
+    missing = []
+    permits = result.get("permits_required")
+    verdict = str(result.get("permit_verdict") or "").upper()
+    if not isinstance(permits, list):
+        missing.append("permits_required")
+        permits = []
+    if not permits and verdict != "NO":
+        missing.append("permit_details")
+    if not result.get("applying_office"):
+        missing.append("applying_office")
+    if not result.get("fee_range"):
+        missing.append("fee_range")
+    tl = result.get("approval_timeline") or {}
+    if not isinstance(tl, dict) or not (tl.get("simple") or tl.get("complex")):
+        missing.append("approval_timeline")
+    insps = result.get("inspections") or []
+    if not isinstance(insps, list) or not insps:
+        missing.append("inspections")
+    return missing
+
+
+def downgrade_confidence(confidence: str, steps: int = 1) -> str:
+    levels = ["low", "medium", "high"]
+    conf = str(confidence or "medium").lower()
+    if conf not in levels:
+        conf = "medium"
+    idx = levels.index(conf)
+    return levels[max(0, idx - steps)]
+
+
+def derive_confidence_reason(result: dict, city_match_level: str, auto_verified: bool, missing_fields: list[str], web_sources: int) -> str:
+    if auto_verified:
+        reason = "Verified city/trade data found from official sources"
+    elif city_match_level == "city" and web_sources > 0:
+        reason = "City-specific match supported by live web research"
+    elif city_match_level == "county":
+        reason = "County-level fallback used because exact city data was limited"
+    elif web_sources > 0:
+        reason = "Live web research found partial local guidance"
+    else:
+        reason = "Limited local data, answer relies on fallback rules"
+    if missing_fields:
+        reason += f". Needs review for: {', '.join(missing_fields[:3])}"
+    return reason
 
 # ─── Hardcoded County Fallback Data ───────────────────────────────────────────
 
@@ -972,9 +1077,23 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
         cached = get_cached(key)
         if cached:
             cached["_cached"] = True
-            # Backfill companion_permits for old cache entries that predate this field
-            if "companion_permits" not in cached:
+            if not isinstance(cached.get("companion_permits"), list):
                 cached["companion_permits"] = []
+            if not isinstance(cached.get("sources"), list):
+                cached["sources"] = []
+            cached["sources"] = normalize_sources(cached.get("sources", []), cached.get("apply_url", ""), cached.get("apply_pdf", ""))
+            if "missing_fields" not in cached:
+                cached["missing_fields"] = compute_missing_fields(cached)
+            cached["needs_review"] = bool(cached.get("missing_fields"))
+            if not cached.get("confidence_reason"):
+                meta = cached.get("_meta", {})
+                cached["confidence_reason"] = derive_confidence_reason(
+                    cached,
+                    meta.get("city_match_level", cached.get("data_source", "general_knowledge")),
+                    bool(meta.get("auto_verified")),
+                    cached.get("missing_fields", []),
+                    meta.get("web_sources", 0),
+                )
             return cached
 
     # ── Check auto-verified data first ──
@@ -997,7 +1116,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             _trade_guess = "plumbing"
         elif any(w in _job_lower for w in ["roof", "shingle", "gutter"]):
             _trade_guess = "roofing"
-        _verified_entry = get_verified_for_city_trade(city, state, _trade_guess)
+        _verified_entry = clean_verified_entry(get_verified_for_city_trade(city, state, _trade_guess))
     except Exception as _e:
         print(f"[research] auto_verify check failed (non-fatal): {_e}")
 
@@ -1183,7 +1302,21 @@ Return ONLY the JSON object."""
     elif not cc:
         result["code_citation"] = None
 
-    # Ensure companion_permits is present and well-formed
+    # Ensure list fields are present and well-formed
+    if not isinstance(result.get("permits_required"), list):
+        result["permits_required"] = []
+    if not isinstance(result.get("inspections"), list):
+        result["inspections"] = []
+    if not isinstance(result.get("what_to_bring"), list):
+        result["what_to_bring"] = []
+    if not isinstance(result.get("requirements"), list):
+        result["requirements"] = []
+    if not isinstance(result.get("common_mistakes"), list):
+        result["common_mistakes"] = []
+    if not isinstance(result.get("pro_tips"), list):
+        result["pro_tips"] = []
+    if not isinstance(result.get("sources"), list):
+        result["sources"] = []
     if not isinstance(result.get("companion_permits"), list):
         result["companion_permits"] = []
 
@@ -1268,13 +1401,47 @@ Return ONLY the JSON object."""
     if injected:
         result["companion_permits"] = result.get("companion_permits", []) + injected
 
+    # Normalize sources / trust metadata
+    verified_data = (_verified_entry or {}).get("data", {}) if _verified_entry else {}
+    verified_sources = verified_data.get("sources", []) if isinstance(verified_data, dict) else []
+    result["sources"] = normalize_sources(
+        result.get("sources", []),
+        verified_sources,
+        (_verified_entry or {}).get("source_url", "") if _verified_entry else "",
+        result.get("apply_url", ""),
+        result.get("apply_pdf", ""),
+    )
+    if _verified_entry and _verified_entry.get("verified_at"):
+        result["last_verified_at"] = _verified_entry.get("verified_at")
+
+    if not result.get("disclaimer"):
+        result["disclaimer"] = (
+            "Always verify current requirements directly with your local building department "
+            "before starting work. Permit fees and requirements change frequently."
+        )
+
+    web_source_count = search_context.count("Source:") if search_context else 0
+    missing_fields = compute_missing_fields(result)
+    result["needs_review"] = bool(missing_fields)
+    result["missing_fields"] = missing_fields
+
+    confidence = str(result.get("confidence") or "medium").lower()
+    if len(missing_fields) >= 3:
+        confidence = downgrade_confidence(confidence, 2)
+    elif missing_fields:
+        confidence = downgrade_confidence(confidence, 1)
+    result["confidence"] = confidence
+    result["confidence_reason"] = derive_confidence_reason(
+        result, city_match_level, bool(_verified_entry), missing_fields, web_source_count
+    )
+
     # Add metadata
     result["_meta"] = {
         "generated_at":    datetime.now().isoformat(),
         "response_ms":     elapsed,
         "cached":          False,
         "model":           "gpt-4o",
-        "web_sources":     search_context.count("Source:") if search_context else 0,
+        "web_sources":     web_source_count,
         "city_match_level": city_match_level,
         "job_type":        job_type,
         "city":            city,
@@ -1282,6 +1449,7 @@ Return ONLY the JSON object."""
         "zip_code":        zip_code,
         "job_category":    job_category,
         "auto_verified":   bool(_verified_entry),
+        "missing_fields":  missing_fields,
     }
 
     save_cache(key, job_type, city, state, zip_code, result)

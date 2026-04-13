@@ -179,7 +179,7 @@
           <div style="font-size:14px;color:#475569;margin-bottom:16px;">
             You have <strong>unlimited lookups</strong> on your plan. No monthly limits.
           </div>
-          <a href="https://billing.stripe.com/p/login/test_00g000000" target="_blank" class="btn btn-secondary">Manage Subscription →</a>
+          <button id="btn-manage-billing" class="btn btn-secondary" onclick="manageSubscription()">Manage Subscription →</button>
         </div>
       </div>
 
@@ -330,6 +330,26 @@ function upgradeAccount(plan) {
   const base = plan === 'team' ? UPGRADE_URL_TEAM : UPGRADE_URL_SOLO;
   const url = email ? `${base}?prefilled_email=${encodeURIComponent(email)}` : base;
   window.open(url, '_blank');
+}
+
+async function manageSubscription() {
+  const token = getSessionToken();
+  const btn = document.getElementById('btn-manage-billing');
+  if (!token) { alert('Please log in again.'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Opening...'; }
+  try {
+    const r = await fetch('/api/billing-portal', { headers: { 'X-Session-Token': token } });
+    const d = await r.json();
+    if (d.url) {
+      window.open(d.url, '_blank');
+    } else {
+      alert(d.error || 'Billing portal unavailable right now.');
+    }
+  } catch {
+    alert('Could not open billing portal right now.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Manage Subscription →'; }
+  }
 }
 
 async function inviteTeamMember() {
