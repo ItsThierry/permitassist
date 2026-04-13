@@ -38,7 +38,7 @@ def load_module(name: str, path: Path):
 
 
 def check_frontend_js() -> None:
-    for html in [FRONTEND_DIR / "index.html", FRONTEND_DIR / "account.html", FRONTEND_DIR / "help.html", FRONTEND_DIR / "review.html"]:
+    for html in [FRONTEND_DIR / "index.html", FRONTEND_DIR / "account.html", FRONTEND_DIR / "help.html", FRONTEND_DIR / "review.html", FRONTEND_DIR / "pricing.html"]:
         text = html.read_text()
         scripts = "\n".join(re.findall(r"<script>(.*?)</script>", text, flags=re.S))
         if not scripts.strip():
@@ -70,6 +70,8 @@ def check_frontend_content() -> None:
         "Foreman Brief",
         "cosmetic cabinets/counters only, no plumbing/electrical/walls",
         "Log in to use Job Tracker",
+        "See a Sample Result",
+        "/pricing",
     ]
     for needle in required_index:
         assert needle in index, f"Missing index feature: {needle}"
@@ -81,7 +83,7 @@ def check_frontend_content() -> None:
     for needle in required_account:
         assert needle in account, f"Missing account feature: {needle}"
 
-    assert "PermitAssist Help" in help_page
+    assert "Help" in help_page and "How It Works" in help_page
     assert "PermitAssist Review Queue" in review_page
 
 
@@ -226,13 +228,17 @@ def check_backend_helpers() -> None:
             status, body = http_get(f"http://127.0.0.1:{port}/")
             assert status == 200 and "Job Address" in body and "Official Sources" in body
             status, body = http_get(f"http://127.0.0.1:{port}/help")
-            assert status == 200 and "PermitAssist Help" in body
+            assert status == 200 and "How It Works" in body
             status, body = http_get(f"http://127.0.0.1:{port}/index.html.backup")
             assert status == 404
             status, body = http_get(f"http://127.0.0.1:{port}/login")
             assert status == 200 and "No password needed" in body
             status, body = http_get(f"http://127.0.0.1:{port}/account")
             assert status == 200 and "Manage Subscription" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/pricing")
+            assert status == 200 and "$19" in body and "$49" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/review")
+            assert status == 200
 
             status, body = http_get(f"http://127.0.0.1:{port}/api/account")
             assert status == 401 and "Not authenticated" in body
