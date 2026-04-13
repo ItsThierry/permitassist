@@ -957,6 +957,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_file(os.path.join(FRONTEND_DIR, "terms.html"), "text/html; charset=utf-8")
         elif path in ("/privacy", "/privacy.html", "/privacy/"):
             self.send_file(os.path.join(FRONTEND_DIR, "privacy.html"), "text/html; charset=utf-8")
+        elif path in ("/login", "/login.html", "/login/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "login.html"), "text/html; charset=utf-8")
         elif path == "/health":
             self.send_json(200, {"status": "ok", "service": "PermitAssist"})
 

@@ -694,6 +694,7 @@
     <div class="nav-right">
       <a class="nav-new-search" id="nav-new-search" href="#" onclick="event.preventDefault(); newSearch();">← New Lookup</a>
       <div class="offline-badge" id="offline-badge">● Offline</div>
+      <a href="/login" id="nav-login-btn" style="color:#2563EB;font-size:13px;font-weight:700;text-decoration:none;padding:6px 12px;border:1px solid #2563EB;border-radius:20px;white-space:nowrap;">Log in</a>
       <button class="install-btn" id="install-nav-btn" onclick="installApp()">Add to Phone</button>
     </div>
   </nav>
@@ -1078,6 +1079,9 @@ async function refreshAccountBadge(){
       a.style.cssText='color:var(--brand);font-size:12px;font-weight:700;text-decoration:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;white-space:nowrap';
       a.textContent=d.paid?'⭐ Account':'Account';
       navRight.prepend(a);
+      // Hide login btn when logged in
+      const loginBtn=document.getElementById('nav-login-btn');
+      if(loginBtn) loginBtn.style.display='none';
     }
   }catch{}
 }

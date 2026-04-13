@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In — PermitAssist</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #F0F4FF; color: #0F172A; min-height: 100vh; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
+
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid #E2E8F0; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-mark-img { width: 36px; height: 36px; border-radius: 10px; }
+    .logo-text { font-size: 18px; font-weight: 800; color: #0F172A; }
+    .logo-text em { font-style: normal; color: #2563EB; }
+
+    .page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px 20px; }
+
+    .card { background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 40px 36px; width: 100%; max-width: 420px; box-shadow: 0 4px 24px rgba(15,23,42,0.08); text-align: center; }
+
+    .icon { font-size: 40px; margin-bottom: 16px; }
+    .title { font-size: 24px; font-weight: 800; color: #0F172A; margin-bottom: 8px; }
+    .sub { font-size: 14px; color: #64748B; line-height: 1.6; margin-bottom: 28px; }
+
+    .input { width: 100%; padding: 14px 16px; border: 1.5px solid #E2E8F0; border-radius: 10px; font-size: 16px; font-family: inherit; outline: none; transition: border-color .15s; color: #0F172A; background: #fff; }
+    .input:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    .input.code { letter-spacing: 6px; text-align: center; font-size: 28px; font-weight: 700; text-transform: uppercase; }
+
+    .btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 12px; transition: all .15s; box-shadow: 0 4px 12px rgba(37,99,235,.3); }
+    .btn:hover { box-shadow: 0 6px 20px rgba(37,99,235,.4); transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .note { font-size: 12px; color: #94A3B8; margin-top: 12px; line-height: 1.5; }
+    .back-link { font-size: 13px; color: #2563EB; cursor: pointer; margin-top: 16px; display: inline-block; font-weight: 600; }
+    .back-link:hover { text-decoration: underline; }
+
+    .msg { font-size: 14px; font-weight: 600; margin-top: 12px; padding: 10px; border-radius: 8px; display: none; }
+    .msg.success { background: rgba(5,150,105,0.1); color: #059669; }
+    .msg.error { background: rgba(239,68,68,0.1); color: #EF4444; }
+
+    #step2 { display: none; }
+
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 480px) { .card { padding: 28px 20px; } }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <img src="/icons/icon-192.png" alt="PA" class="logo-mark-img" />
+      <div class="logo-text">Permit<em>Assist</em></div>
+    </a>
+  </nav>
+
+  <div class="page">
+    <div class="card">
+
+      <!-- Step 1: Email -->
+      <div id="step1">
+        <div class="icon">🔑</div>
+        <div class="title">Log in to PermitAssist</div>
+        <div class="sub">Enter your email and we'll send you a login code. No password needed.</div>
+        <input class="input" type="email" id="email" placeholder="your@email.com" autocomplete="email" />
+        <button class="btn" id="send-btn" onclick="sendCode()">Send Login Code →</button>
+        <div class="msg" id="msg1"></div>
+        <div class="note">No account yet? Just do a lookup on the <a href="/" style="color:#2563EB">homepage</a> — we'll create one automatically.</div>
+      </div>
+
+      <!-- Step 2: Code -->
+      <div id="step2">
+        <div class="icon">📬</div>
+        <div class="title">Check your email</div>
+        <div class="sub" id="step2-sub">We sent a 6-character code to your email. Enter it below.</div>
+        <input class="input code" type="text" id="code" placeholder="ABC123" maxlength="6" autocomplete="one-time-code" oninput="this.value=this.value.toUpperCase()" />
+        <button class="btn" id="verify-btn" onclick="verifyCode()">Log In →</button>
+        <div class="msg" id="msg2"></div>
+        <span class="back-link" onclick="backToStep1()">← Use a different email</span>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // If already logged in, redirect to account
+    const token = localStorage.getItem('pa_session');
+    if (token) window.location.href = '/account';
+
+    let userEmail = '';
+
+    async function sendCode() {
+      const email = document.getElementById('email').value.trim();
+      if (!email || !email.includes('@')) {
+        showMsg('msg1', 'Please enter a valid email address.', 'error');
+        return;
+      }
+      const btn = document.getElementById('send-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Sending...';
+
+      try {
+        const res = await fetch('/api/magic-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const d = await res.json();
+        if (d.sent || d.ok) {
+          userEmail = email;
+          document.getElementById('step1').style.display = 'none';
+          document.getElementById('step2').style.display = 'block';
+          document.getElementById('step2-sub').textContent = `We sent a 6-character code to ${email}. Enter it below.`;
+          setTimeout(() => document.getElementById('code').focus(), 100);
+        } else {
+          showMsg('msg1', d.error || 'Something went wrong. Try again.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Send Login Code →';
+        }
+      } catch(e) {
+        showMsg('msg1', 'Network error. Please try again.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Send Login Code →';
+      }
+    }
+
+    async function verifyCode() {
+      const code = document.getElementById('code').value.trim();
+      if (code.length < 6) {
+        showMsg('msg2', 'Enter the full 6-character code.', 'error');
+        return;
+      }
+      const btn = document.getElementById('verify-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Verifying...';
+
+      try {
+        const res = await fetch('/api/verify-magic', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: code, email: userEmail })
+        });
+        const d = await res.json();
+        if (d.session_token) {
+          localStorage.setItem('pa_session', d.session_token);
+          showMsg('msg2', '✅ Logged in! Redirecting...', 'success');
+          setTimeout(() => window.location.href = '/account', 800);
+        } else {
+          showMsg('msg2', d.error || 'Invalid or expired code. Try again.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Log In →';
+        }
+      } catch(e) {
+        showMsg('msg2', 'Network error. Please try again.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Log In →';
+      }
+    }
+
+    function backToStep1() {
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('step1').style.display = 'block';
+      document.getElementById('send-btn').disabled = false;
+      document.getElementById('send-btn').textContent = 'Send Login Code →';
+      hideMsg('msg1');
+    }
+
+    function showMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = `msg ${type}`;
+      el.style.display = 'block';
+    }
+    function hideMsg(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (document.getElementById('step2').style.display === 'block') verifyCode();
+        else sendCode();
+      }
+    });
+  </script>
+</body>
+</html>
