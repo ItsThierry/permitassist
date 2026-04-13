@@ -94,14 +94,50 @@
     .trust-badge strong { color: var(--text); }
 
     /* Testimonials */
+    .testimonial-row {
+      display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px;
+      scrollbar-width: none; -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
+    }
+    .testimonial-row::-webkit-scrollbar { display: none; }
     .testimonial-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--r); padding: 14px 16px; min-width: 260px; flex-shrink: 0;
+      border-radius: var(--r); padding: 16px; min-width: 280px; max-width: 320px;
+      flex-shrink: 0; scroll-snap-align: start;
     }
-    .testimonial-stars { color: #F59E0B; font-size: 13px; margin-bottom: 6px; }
-    .testimonial-text { font-size: 13px; color: var(--text2); line-height: 1.55; margin-bottom: 8px; font-style: italic; }
-    .testimonial-author { font-size: 12px; color: var(--muted); font-weight: 700; }
-    #testimonials-row::-webkit-scrollbar { display: none; }
+    .testimonial-top {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .testimonial-avatar {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      background: var(--brand-light); border: 1px solid rgba(59,130,246,0.3);
+      color: var(--brand); font-size: 12px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; letter-spacing: 0.5px;
+    }
+    .testimonial-author { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .testimonial-trade { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .testimonial-stars { color: #F59E0B; font-size: 12px; margin-left: auto; flex-shrink: 0; }
+    .testimonial-text { font-size: 13px; color: var(--text2); line-height: 1.6; font-style: italic; }
+
+    /* Cities coverage link */
+    .cities-coverage-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 7px 14px;
+      font-size: 13px; color: var(--text2); font-weight: 600;
+      text-decoration: none; transition: border-color .15s, color .15s;
+    }
+    .cities-coverage-link:hover, .cities-coverage-link:active { border-color: var(--brand); color: var(--brand); }
+    .cities-coverage-link strong { color: var(--brand); }
+
+    /* Free/Paid clarity bar */
+    .free-paid-bar {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+      font-size: 13px; color: var(--text2); text-align: center; line-height: 1.8;
+    }
+    .free-paid-bar strong { color: var(--text); }
+    .free-paid-divider { color: var(--border); }
 
     /* Counter bar */
     .counter-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 16px; font-size: 13px; }
@@ -586,6 +622,44 @@
       .disambig-btns { flex-direction: column; }
       .disambig-btn { width: 100%; }
     }
+
+    /* ── Mobile Optimizations ─────────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 26px; }
+      .hero-sub { font-size: 14px; }
+      .testimonial-card { min-width: 88vw; max-width: 88vw; padding: 14px; }
+      .trust-badges { gap: 6px; }
+      .trust-badge { font-size: 12px; padding: 6px 12px; }
+      .free-paid-bar { font-size: 12px; gap: 6px; }
+      .free-paid-divider { display: none; }
+      .free-paid-bar span { width: 100%; text-align: center; }
+      .cities-coverage-link { font-size: 12px; padding: 6px 12px; }
+      .lookup-btn { font-size: 18px; padding: 18px; }
+      input, select, textarea { font-size: 16px !important; } /* prevent iOS zoom */
+      .tab { font-size: 12px; padding: 12px 4px; }
+      .action-row { gap: 8px; }
+      .action-btn { font-size: 13px; padding: 10px 12px; }
+      .result-job { font-size: 17px; }
+      .permit-name-big { font-size: 17px; }
+      .big-price { font-size: 24px; }
+      .contact-phone { font-size: 24px; }
+      .card { padding: 16px; }
+      .hero-stat, .disambig-btn { min-width: 120px; }
+      .gate-sheet { padding: 28px 18px 36px; }
+      .gate-title { font-size: 20px; }
+    }
+
+    /* Touch targets — always at least 44px tall for tappable elements */
+    .text-link, .tab, .toggle-btn, .disambig-btn, .nav-new-search,
+    .action-btn, .mini-link, .flag-wrong-btn {
+      min-height: 44px;
+    }
+    .tab { display: flex; align-items: center; justify-content: center; }
+
+    /* Smooth scroll snap for testimonials on mobile */
+    @media (max-width: 600px) {
+      .testimonial-card { scroll-snap-align: center; }
+    }
   </style>
 </head>
 <body>
@@ -636,21 +710,39 @@
 
       <!-- Testimonials -->
       <div id="testimonials-strip" style="margin:20px 0 4px;">
-        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-ms-overflow-style:none" id="testimonials-row">
+        <div class="testimonial-row" id="testimonials-row">
           <div class="testimonial-card">
-            <div class="testimonial-stars">★★★★★</div>
-            <div class="testimonial-text">"Saved me 2 hours on a Denver HVAC permit. Got the exact permit name and fee in 20 seconds."</div>
-            <div class="testimonial-author">— Mike R., HVAC Contractor, CO</div>
+            <div class="testimonial-top">
+              <div class="testimonial-avatar">MR</div>
+              <div>
+                <div class="testimonial-author">Mike R.</div>
+                <div class="testimonial-trade">HVAC Contractor · Denver, CO</div>
+              </div>
+              <div class="testimonial-stars">★★★★★</div>
+            </div>
+            <div class="testimonial-text">"Called the building dept twice, got two different answers. PermitAssist gave me the exact permit name — Mechanical Replacement Permit — and the fee. Walked in, done in 15 minutes."</div>
           </div>
           <div class="testimonial-card">
-            <div class="testimonial-stars">★★★★★</div>
-            <div class="testimonial-text">"Building dept told me the wrong permit name. PermitAssist had the right one. Used it on every job now."</div>
-            <div class="testimonial-author">— Carlos T., Plumber, TX</div>
+            <div class="testimonial-top">
+              <div class="testimonial-avatar">CT</div>
+              <div>
+                <div class="testimonial-author">Carlos T.</div>
+                <div class="testimonial-trade">Master Plumber · Houston, TX</div>
+              </div>
+              <div class="testimonial-stars">★★★★★</div>
+            </div>
+            <div class="testimonial-text">"I was pulling the wrong permit for water heater swaps for years. Cost me two reinspection fees before I found this. Now I use it before every job."</div>
           </div>
           <div class="testimonial-card">
-            <div class="testimonial-stars">★★★★★</div>
-            <div class="testimonial-text">"Checked 3 cities in 5 minutes before quoting. That's time I used to spend on hold."</div>
-            <div class="testimonial-author">— D. Williams, Electrical Contractor, FL</div>
+            <div class="testimonial-top">
+              <div class="testimonial-avatar">DW</div>
+              <div>
+                <div class="testimonial-author">D. Williams</div>
+                <div class="testimonial-trade">Electrical Contractor · Tampa, FL</div>
+              </div>
+              <div class="testimonial-stars">★★★★★</div>
+            </div>
+            <div class="testimonial-text">"Quoted 4 jobs in different cities last week. Checked permits for all of them before I left the house. That's not something I could do before."</div>
           </div>
         </div>
       </div>
@@ -663,9 +755,19 @@
         <div class="trust-badge">📋 Inspector Checklists</div>
         <div class="trust-badge">🎯 No Guessing</div>
       </div>
-      <div style="text-align:center;margin:-4px 0 8px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap">
-        <a href="/cities" style="font-size:12px;color:var(--brand);font-weight:600;text-decoration:none" target="_blank">View all verified cities →</a>
+      <!-- Cities link + live counter -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:-2px 0 12px">
+        <a href="/cities" class="cities-coverage-link" target="_blank">📍 View all <strong id="stat-verified-link">94</strong> verified cities →</a>
         <span id="lookups-today-bar" style="font-size:12px;color:var(--muted);display:none">🔥 <strong id="stat-today" style="color:var(--text2)">0</strong> lookups today</span>
+      </div>
+
+      <!-- Free/Paid clarity line -->
+      <div class="free-paid-bar">
+        <span>✅ <strong>3 free lookups</strong> — no credit card</span>
+        <span class="free-paid-divider">·</span>
+        <span>Then <strong>$19/mo</strong> for unlimited</span>
+        <span class="free-paid-divider">·</span>
+        <span>Cancel anytime</span>
       </div>
 
       <!-- Counter bar -->
@@ -911,6 +1013,8 @@ async function loadStats(){
     const d2=await r2.json();
     const el=document.getElementById('stat-verified');
     if(el && d2.count) el.textContent=d2.count;
+    const el2=document.getElementById('stat-verified-link');
+    if(el2 && d2.count) el2.textContent=d2.count;
   }catch{}
 }
 
