@@ -1358,7 +1358,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
             if not user or not user.get("stripe_customer_id"):
                 self.send_json(400, {"error": "No Stripe customer found for this account"})
                 return
-            portal_url = create_billing_portal_session(user["stripe_customer_id"], APP_BASE_URL + "/account.html")
+            portal_url = create_billing_portal_session(user["stripe_customer_id"], APP_BASE_URL + "/account")
             if not portal_url:
                 self.send_json(500, {"error": "Billing portal unavailable"})
                 return
@@ -1925,7 +1925,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                         f"Hi,\n\n"
                         f"{owner_label} added you to their PermitAssist team.\n\n"
                         f"You can log in with this email at:\n"
-                        f"{APP_BASE_URL}/account.html\n\n"
+                        f"{APP_BASE_URL}/account\n\n"
                         f"Once you log in, you'll be able to access the shared team workspace for permit jobs.\n\n"
                         f"— PermitAssist\n"
                         f"{APP_BASE_URL}"

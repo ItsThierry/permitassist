@@ -190,6 +190,10 @@ def check_backend_helpers() -> None:
             assert status == 200 and "Job Address" in body and "Official Sources" in body
             status, body = http_get(f"http://127.0.0.1:{port}/help")
             assert status == 200 and "PermitAssist Help" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/account")
+            assert status == 200 and "Manage Subscription" in body
+            status, body = http_get(f"http://127.0.0.1:{port}/review")
+            assert status == 200 and "PermitAssist Review Queue" in body
             status, body = http_get(f"http://127.0.0.1:{port}/api/jobs")
             assert status == 401 and "Not authenticated" in body
             status, body = http_get(f"http://127.0.0.1:{port}/api/billing-portal")
