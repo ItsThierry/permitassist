@@ -139,6 +139,7 @@
     .offline-badge { background: var(--red); border-radius: 20px; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; display: none; }
     .offline-badge.show { display: block; }
     .install-btn { background: var(--brand); border: none; border-radius: 20px; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; display: none; }
+    @media (max-width: 600px) { .install-btn { display: none !important; } }
     .nav-new-search { display: none; color: var(--brand); font-size: 13px; font-weight: 700; text-decoration: none; padding: 6px 12px; border: 1px solid var(--brand); border-radius: 20px; white-space: nowrap; transition: all .15s; }
     .nav-new-search.show { display: block; }
     .nav-new-search:active { background: var(--brand); color: #fff; }
@@ -542,13 +543,14 @@
     .history-clear { background: none; border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--muted); cursor: pointer; font-size: 13px; padding: 8px 16px; margin-bottom: 14px; }
 
     /* Install banner */
-    #install-banner { display: none; background: var(--surface); border-top: 1px solid var(--border); padding: 16px 20px; padding-bottom: calc(16px + var(--safe-bottom)); }
+    #install-banner { display: none; background: var(--surface); border-top: 2px solid var(--brand); padding: 14px 20px; padding-bottom: calc(14px + var(--safe-bottom)); position: sticky; bottom: 0; z-index: 90; box-shadow: 0 -4px 16px rgba(37,99,235,0.10); }
     #install-banner.show { display: flex; align-items: center; gap: 12px; }
-    .install-icon { font-size: 30px; }
-    .install-text strong { display: block; font-size: 14px; }
+    .install-icon { font-size: 28px; flex-shrink: 0; }
+    .install-text { flex: 1; min-width: 0; }
+    .install-text strong { display: block; font-size: 14px; font-weight: 700; }
     .install-text span { font-size: 12px; color: var(--text2); }
-    .install-cta { background: var(--brand); border: none; border-radius: var(--r-sm); color: #fff; cursor: pointer; font-size: 13px; font-weight: 700; padding: 9px 16px; white-space: nowrap; flex-shrink: 0; }
-    .install-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; padding: 4px; }
+    .install-cta { background: var(--brand); border: none; border-radius: var(--r-sm); color: #fff; cursor: pointer; font-size: 13px; font-weight: 700; padding: 10px 18px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
+    .install-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; padding: 4px; flex-shrink: 0; }
 
     /* Gate overlay */
     .gate-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(15,23,42,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: flex-end; }
