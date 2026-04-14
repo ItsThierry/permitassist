@@ -1110,7 +1110,7 @@
       <div class="counter-bar" id="counter-bar">
         <div class="counter-bar-top">
           <span class="counter-text" id="counter-text">0 of 3 free lookups used</span>
-        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $19/mo →</span>
+        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $24.99/mo →</span>
       </div>
       <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
       </div>
@@ -1513,7 +1513,7 @@
       <div style="font-size:12px;color:#475569;line-height:1.7">
         • 1 stop-work order avoided = <strong style="color:#0f172a">$2,000–$10,000 saved</strong><br>
         • 2 hrs/week research saved = <strong style="color:#0f172a">$300–$600/mo value</strong><br>
-        • PermitAssist costs <strong style="color:#059669">$19/month</strong>
+        • PermitAssist costs <strong style="color:#059669">$24.99/month</strong>
       </div>
     </div>
     <a href="/pricing" style="display:block;text-align:center;background:#2563EB;color:#fff;padding:14px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:10px">View Plans & Pricing →</a>
@@ -1554,6 +1554,7 @@
 const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESSION_KEY='pa_session',FREE_LIMIT=3,UPGRADE_URL='https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c',UPGRADE_URL_TEAM='https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b',UPGRADE_URL_ANNUAL='https://buy.stripe.com/fZueV63DlfIo5JX7i53VC0d',UPGRADE_COUPON_CODE='LAUNCH16';
 const IS_ADMIN=new URLSearchParams(window.location.search).get('admin')==='boban2026';
 let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false};
+let _skipDisambig=false;
 
 // ── Job Types for Autocomplete ────────────────────────────────────────────────
 const JOB_TYPES_ALL = [
@@ -1666,7 +1667,6 @@ function checkDisambiguation() {
   return true;
 }
 
-let _skipDisambig = false;
 function submitWithDisambig(choice) {
   const query = document.getElementById('query').value.trim();
   document.getElementById('query').value = query + ' (' + choice + ')';
@@ -1901,7 +1901,7 @@ function stopProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id);
 // ── Gate ──────────────────────────────────────────────────────────────────────
 function showGate(hardBlock){
   const title=document.getElementById('gate-title'),sub=document.getElementById('gate-sub'),skip=document.getElementById('gate-skip-link');
-  if(hardBlock){title.textContent='You\'ve used your 3 free lookups';sub.textContent='Upgrade to Pro for unlimited lookups — $19/mo, cancel anytime. Enter your email to log in or create an account.';if(skip)skip.style.display='none';}
+  if(hardBlock){title.textContent='You\'ve used your 3 free lookups';sub.textContent='Upgrade to Pro for unlimited lookups — $24.99/mo, cancel anytime. Enter your email to log in or create an account.';if(skip)skip.style.display='none';}
   else{title.textContent='Save your results';sub.textContent='Enter your email to save your lookup history and get your results by email. Completely free.';if(skip)skip.style.display='block';}
   // Reset to step 1
   document.getElementById('magic-step1').style.display='block';
@@ -2849,9 +2849,12 @@ function stopVoice() {
 function runSampleLookup() {
   document.getElementById('city').value = 'Austin';
   document.getElementById('state').value = 'TX';
-  document.getElementById('query').value = 'HVAC replacement, residential furnace swap';
+  // Use a query that won't trigger any disambiguation rules
+  document.getElementById('query').value = 'HVAC replacement, residential AC unit swap, 3-ton split system';
   setJobCategory('residential');
   checkShimmer();
+  // Skip disambiguation — this is a known clean demo query
+  _skipDisambig = true;
   doLookupWithOffline();
 }
 
