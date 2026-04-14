@@ -1084,6 +1084,24 @@
         <div style="font-size:12px;color:var(--muted);margin-top:10px">Not for zoning, business licenses, or general real estate permits.</div>
       </div>
 
+      <!-- Free/Paid clarity line -->
+      <div class="free-paid-bar">
+        <span>✅ <strong>3 free lookups</strong> — no credit card</span>
+        <span class="free-paid-divider">·</span>
+        <span>Then <strong>$19/mo</strong> for unlimited</span>
+        <span class="free-paid-divider">·</span>
+        <span>Cancel anytime</span>
+      </div>
+
+      <!-- Counter bar -->
+      <div class="counter-bar" id="counter-bar">
+        <div class="counter-bar-top">
+          <span class="counter-text" id="counter-text">0 of 3 free lookups used</span>
+        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $19/mo →</span>
+      </div>
+      <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
+      </div>
+
       <!-- Search Action Zone -->
       <div class="search-action-zone">
         <div class="search-section-label">🔍 Look Up Your Permit</div>
@@ -1141,24 +1159,6 @@
 
         <div class="trust-note">🔒 Real permit data, not a Google search. Updated fees, verified contacts, inspection checklists.</div>
         <button class="lookup-btn" id="lookup-btn" type="button">🔍 &nbsp;Look Up Permit Requirements</button>
-      </div>
-
-      <!-- Free/Paid clarity line -->
-      <div class="free-paid-bar">
-        <span>✅ <strong>3 free lookups</strong> — no credit card</span>
-        <span class="free-paid-divider">·</span>
-        <span>Then <strong>$19/mo</strong> for unlimited</span>
-        <span class="free-paid-divider">·</span>
-        <span>Cancel anytime</span>
-      </div>
-
-      <!-- Counter bar -->
-      <div class="counter-bar" id="counter-bar">
-        <div class="counter-bar-top">
-          <span class="counter-text" id="counter-text">0 of 3 free lookups used</span>
-        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $19/mo →</span>
-      </div>
-      <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
       </div>
 
       <!-- How It Works 3-Step -->
