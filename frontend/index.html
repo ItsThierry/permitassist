@@ -77,7 +77,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #F0F4FF;
@@ -110,12 +110,14 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body {
       height: 100%;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       overscroll-behavior: none;
       -webkit-font-smoothing: antialiased;
-      font-size: 16px;
+      font-size: 17px;
+      line-height: 1.65;
+      font-weight: 500;
     }
     #app { display: flex; flex-direction: column; min-height: 100%; max-width: 680px; margin: 0 auto; }
 
@@ -146,7 +148,7 @@
 
     /* Tabs */
     .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
-    .tab { flex: 1; padding: 13px 8px; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; user-select: none; }
+    .tab { flex: 1; padding: 13px 8px; text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; user-select: none; }
     .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
 
     /* Pages */
@@ -155,7 +157,7 @@
     .page-inner { padding: 20px; padding-bottom: calc(24px + var(--safe-bottom)); }
 
     /* Hero */
-    .hero { padding: 36px 0 20px; text-align: center; }
+    .hero { padding: 24px 0 12px; text-align: center; }
     .hero h1 { font-size: 34px; font-weight: 900; line-height: 1.1; letter-spacing: -0.8px; color: var(--text); }
     .hero h1 em { font-style: normal; color: var(--brand); }
     .hero-sub { font-size: 15px; color: var(--text2); margin-top: 10px; line-height: 1.6; max-width: 460px; margin-inline: auto; }
@@ -233,7 +235,7 @@
     input, select, textarea {
       background: var(--surface); border: 1.5px solid var(--border);
       border-radius: var(--r-sm); color: var(--text);
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       font-size: 16px; padding: 14px 16px; width: 100%;
       outline: none; transition: border-color .15s, box-shadow .15s;
       -webkit-appearance: none; appearance: none;
@@ -289,7 +291,7 @@
     /* Lookup button */
     .lookup-btn {
       background: linear-gradient(135deg, #2563EB, #1D4ED8); border: none; border-radius: var(--r);
-      color: #fff; cursor: pointer; font-family: 'Inter', system-ui, sans-serif;
+      color: #fff; cursor: pointer; font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       font-size: 20px; font-weight: 800; padding: 20px; width: 100%;
       transition: all .15s;
       display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -357,7 +359,7 @@
 
     /* Summary card */
     .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
-    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 12px; }
+    .section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text2); margin-bottom: 12px; }
     .verdict-pill {
       display: inline-flex; align-items: center; gap: 8px;
       border-radius: 999px; padding: 8px 14px;
@@ -366,7 +368,7 @@
     .verdict-yes { background: var(--green-bg); color: var(--green); }
     .verdict-no { background: var(--red-bg); color: var(--red); }
     .verdict-maybe { background: var(--yellow-bg); color: var(--yellow); }
-    .permit-name-big { font-size: 20px; font-weight: 900; line-height: 1.2; margin-top: 12px; }
+    .permit-name-big { font-size: 20px; font-weight: 900; line-height: 1.2; margin-top: 12px; letter-spacing: -0.5px; }
     .big-meta { margin-top: 10px; font-size: 14px; color: var(--text2); line-height: 1.5; }
     .big-price { font-size: 28px; font-weight: 900; letter-spacing: -0.6px; color: var(--text); margin-top: 10px; }
 
@@ -441,7 +443,7 @@
     .action-btn {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--r-sm); color: var(--text2); cursor: pointer;
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       font-size: 13px; font-weight: 600; padding: 12px; text-align: center;
       display: flex; align-items: center; justify-content: center; gap: 6px;
       transition: all .12s; user-select: none; min-height: 52px;
@@ -453,7 +455,7 @@
     .apply-btn {
       display: block; background: var(--brand); border: none;
       border-radius: var(--r-sm); color: #fff; cursor: pointer;
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       font-size: 15px; font-weight: 700; padding: 14px; width: 100%;
       text-align: center; text-decoration: none; margin-bottom: 8px;
       min-height: 48px;
@@ -462,7 +464,7 @@
     .download-btn {
       display: block; background: var(--surface2); border: 1px solid var(--border);
       border-radius: var(--r-sm); color: var(--text2); cursor: pointer;
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       font-size: 14px; font-weight: 600; padding: 12px; width: 100%;
       text-align: center; text-decoration: none; margin-bottom: 8px;
       min-height: 44px;
@@ -479,13 +481,13 @@
     .new-search-btn {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--r-sm); color: var(--text2); cursor: pointer;
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       font-size: 14px; font-weight: 600; margin-top: 12px; padding: 14px;
       text-align: center; width: 100%; transition: all .12s; min-height: 48px;
     }
     .new-search-btn:active { border-color: var(--brand); color: var(--brand); }
     /* Search Again hero button at top of results */
-    .search-again-hero { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--brand); border: none; border-radius: var(--r); color: #fff; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; padding: 14px; width: 100%; margin-bottom: 16px; transition: all .15s; min-height: 48px; }
+    .search-again-hero { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--brand); border: none; border-radius: var(--r); color: #fff; cursor: pointer; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 15px; font-weight: 700; padding: 14px; width: 100%; margin-bottom: 16px; transition: all .15s; min-height: 48px; }
     .search-again-hero:active { background: var(--brand-dark); }
     /* How to Apply card */
     .how-to-apply-card { background: var(--surface); border: 1px solid rgba(59,130,246,0.35); border-radius: var(--r); padding: 20px; margin-bottom: 14px; }
@@ -498,7 +500,7 @@
     .apply-steps li:last-child { border-bottom: none; }
     .apply-steps li::before { counter-increment: apply-step; content: counter(apply-step); position: absolute; left: 0; top: 10px; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
     .apply-phone-note { background: var(--green-bg); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--r-sm); padding: 10px 14px; margin-top: 12px; font-size: 13px; color: var(--green); }
-    .find-office-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 600; padding: 10px 16px; margin-top: 12px; text-decoration: none; transition: all .15s; }
+    .find-office-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); cursor: pointer; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; padding: 10px 16px; margin-top: 12px; text-decoration: none; transition: all .15s; }
     .find-office-btn:active { border-color: var(--brand); color: var(--brand); }
     /* Watch Out callout */
     .watchout-card { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.35); border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px; }
@@ -619,7 +621,7 @@
     .toggle-row { display: flex; gap: 8px; }
     .toggle-btn {
       flex: 1; padding: 11px 14px; border-radius: var(--r-sm); border: 1px solid var(--border);
-      background: var(--bg); color: var(--text2); font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg); color: var(--text2); font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s;
       text-align: center;
     }
@@ -657,7 +659,7 @@
     .status-closed { background: var(--surface2); color: var(--muted); }
     .job-item-meta { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
     .job-item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .job-action-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text2); cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 600; padding: 7px 12px; transition: all .12s; }
+    .job-action-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text2); cursor: pointer; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; padding: 7px 12px; transition: all .12s; }
     .job-action-btn:hover { border-color: var(--brand); color: var(--brand); }
     .job-expiry-warn { background: var(--yellow-bg); border: 1px solid rgba(245,158,11,0.3); border-radius: var(--r-sm); font-size: 12px; color: var(--yellow); padding: 6px 10px; margin-top: 8px; }
 
@@ -694,7 +696,7 @@
 
     /* Mobile */
     @media (max-width: 480px) {
-      .hero h1 { font-size: 32px; }
+      .hero h1 { font-size: 36px; }
       .permit-name-big { font-size: 18px; }
       .big-price { font-size: 24px; }
       .disambig-btns { flex-direction: column; }
@@ -725,7 +727,7 @@
     .compare-col-features li { font-size: 11px; color: var(--text2); padding: 2px 0; line-height: 1.4; }
 
     @media (max-width: 480px) {
-      .hero h1 { font-size: 26px; }
+      .hero h1 { font-size: 36px; }
       .hero-sub { font-size: 14px; }
       .testimonial-card { min-width: calc(88vw - 16px); max-width: calc(88vw - 16px); padding: 14px; }
       .trust-badges { gap: 6px; }
@@ -838,6 +840,42 @@
       .testimonial-card { scroll-snap-align: center; }
       .testimonial-row { padding-left: 4px; padding-right: 20px; }
     }
+
+    /* Typography overhaul additions */
+    .summary-text, .card p, .watchout-card li, .card li { font-size: 15px; line-height: 1.7; font-weight: 500; }
+    .result-hero h2 { font-weight: 900; letter-spacing: -0.5px; }
+    input::placeholder, textarea::placeholder { font-weight: 500; color: #7B8CA6; }
+    .action-btn, .apply-btn, .download-btn, .new-search-btn, .search-again-hero { font-weight: 800; }
+
+    /* Search action zone */
+    .search-action-zone {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    .search-section-label {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--brand);
+      margin-bottom: 14px;
+    }
+    .search-action-zone .card {
+      box-shadow: none;
+      border: none;
+      padding: 0;
+      margin-bottom: 14px;
+    }
+    .search-action-zone .lookup-btn {
+      font-size: 17px;
+      font-weight: 800;
+      padding: 16px;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.35), 0 2px 4px rgba(37,99,235,0.2);
+    }
   </style>
 </head>
 <body>
@@ -872,46 +910,123 @@
   <div class="page active" id="page-search">
     <div class="page-inner" id="search-form">
       <!-- Hero -->
-      <div class="hero">
+      <div class="hero" style="padding:24px 0 12px">
         <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
-        <p class="hero-sub">Stop-work orders cost $2,000–$10,000. Wrong permit = failed inspection + double fees. PermitAssist tells you the exact permit name, current fees, and the phone that actually works — before you touch the job. <strong style="color:var(--brand);">No demo calls. No sales team. No $500/hr expediter.</strong></p>
+        <p class="hero-sub" style="max-width:420px">AI-powered permit research for contractors. Exact requirements, fees, and contacts in 30 seconds.</p>
+      </div>
 
-        <!-- How It Works 3-Step -->
-        <div class="how-it-works">
-          <div class="how-it-works-eyebrow">✅ How It Works</div>
-          <div class="how-steps">
-            <div class="how-step">
-              <div class="how-step-icon">📍</div>
-              <div class="how-step-num">Step 1</div>
-              <div class="how-step-label">Enter your job type &amp; city</div>
+      <!-- Search Action Zone -->
+      <div class="search-action-zone">
+        <div class="search-section-label">🔍 Look Up Your Permit</div>
+              <div class="card">
+          <div class="card-label">What do you need a permit for?</div>
+          <div class="form-group">
+            <label>Job Address <span style="font-weight:400;text-transform:none;font-size:10px;">(optional, helps with tricky jurisdictions)</span></label>
+            <input type="text" id="address" placeholder="e.g. 123 Main St" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" id="city" placeholder="e.g. Houston" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <input type="text" id="state" placeholder="e.g. TX" maxlength="2" style="text-transform:uppercase" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>Job Type</label>
+            <div class="toggle-row" id="job-category-toggle">
+              <button class="toggle-btn active" id="btn-residential" onclick="setJobCategory('residential')">🏠 Residential</button>
+              <button class="toggle-btn" id="btn-commercial" onclick="setJobCategory('commercial')">🏢 Commercial</button>
             </div>
-            <div class="how-connector"></div>
-            <div class="how-step">
-              <div class="how-step-icon">🔍</div>
-              <div class="how-step-num">Step 2</div>
-              <div class="how-step-label">AI researches your exact jurisdiction</div>
+          </div>
+          <div class="form-group">
+            <label>Describe the job</label>
+            <div class="autocomplete-wrap">
+              <div class="query-wrap">
+                <textarea class="hero-input" id="query" placeholder="e.g. HVAC replacement, residential furnace swap, 3-ton unit" autocomplete="off" rows="3"></textarea>
+                <button class="mic-btn" id="mic-btn" type="button" title="Speak your question" onclick="toggleVoice()">🎤</button>
+              </div>
+              <div class="autocomplete-dropdown" id="autocomplete-dropdown" style="display:none"></div>
             </div>
-            <div class="how-connector"></div>
-            <div class="how-step">
-              <div class="how-step-icon">✅</div>
-              <div class="how-step-num">Step 3</div>
-              <div class="how-step-label">Get permit name, fees, timeline &amp; where to apply</div>
-            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>ZIP Code <span style="font-weight:400;text-transform:none;font-size:10px;">(optional)</span></label>
+            <input type="text" id="zip" placeholder="77001" maxlength="5" inputmode="numeric" />
+          </div>
+          <div class="gps-status" id="gps-status"></div>
+          <div class="location-links">
+            <a class="text-link" href="#" onclick="event.preventDefault(); useGPS();">📍 Auto-detect my location</a>
+          </div>
+          <!-- Hidden location-edit for backwards compat -->
+          <div id="location-edit" style="display:none"></div>
+        </div>
+
+      <!-- Disambiguation box -->
+        <div class="disambig-box" id="disambig-box">
+          <div class="disambig-title">⚠️ Is this a minor repair or full replacement?</div>
+          <div class="disambig-btns">
+            <button class="disambig-btn" onclick="submitWithDisambig('minor repair')">🔧 Minor Repair</button>
+            <button class="disambig-btn" onclick="submitWithDisambig('full replacement')">🔄 Full Replacement</button>
           </div>
         </div>
 
-        <div style="margin-top:16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:14px 18px;text-align:left;max-width:480px;margin-inline:auto">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px">✅ Built for Trade Contractors</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">⚡ Electrical</span>
-            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🔧 Plumbing</span>
-            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">❄️ HVAC</span>
-            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🏗️ General Construction</span>
-            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🔩 Mechanical</span>
-            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🪟 Roofing & Exterior</span>
+        <div class="trust-note">🔒 Real permit data, not a Google search. Updated fees, verified contacts, inspection checklists.</div>
+        <button class="lookup-btn" id="lookup-btn" type="button">🔍 &nbsp;Look Up Permit Requirements</button>
+      </div>
+
+      <!-- Free/Paid clarity line -->
+      <div class="free-paid-bar">
+        <span>✅ <strong>3 free lookups</strong> — no credit card</span>
+        <span class="free-paid-divider">·</span>
+        <span>Then <strong>$19/mo</strong> for unlimited</span>
+        <span class="free-paid-divider">·</span>
+        <span>Cancel anytime</span>
+      </div>
+
+      <!-- Counter bar -->
+      <div class="counter-bar" id="counter-bar">
+        <div class="counter-bar-top">
+          <span class="counter-text" id="counter-text">0 of 3 free lookups used</span>
+        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $19/mo →</span>
+      </div>
+      <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
+      </div>
+
+      <!-- How It Works 3-Step -->
+      <div class="how-it-works" style="margin-top:20px">
+        <div class="how-it-works-eyebrow">✅ How It Works</div>
+        <div class="how-steps">
+          <div class="how-step">
+            <div class="how-step-icon">📍</div>
+            <div class="how-step-num">Step 1</div>
+            <div class="how-step-label">Enter your job type &amp; city</div>
           </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:10px">Not for zoning, business licenses, or general real estate permits.</div>
+          <div class="how-connector"></div>
+          <div class="how-step">
+            <div class="how-step-icon">🔍</div>
+            <div class="how-step-num">Step 2</div>
+            <div class="how-step-label">AI researches your exact jurisdiction</div>
+          </div>
+          <div class="how-connector"></div>
+          <div class="how-step">
+            <div class="how-step-icon">✅</div>
+            <div class="how-step-num">Step 3</div>
+            <div class="how-step-label">Get permit name, fees, timeline &amp; where to apply</div>
+          </div>
         </div>
+      </div>
+
+      <div style="margin-top:16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:14px 18px;text-align:left;max-width:480px;margin-inline:auto">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px">✅ Built for Trade Contractors</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">⚡ Electrical</span>
+          <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🔧 Plumbing</span>
+          <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">❄️ HVAC</span>
+          <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🏗️ General Construction</span>
+          <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🔩 Mechanical</span>
+          <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🪟 Roofing & Exterior</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px">Not for zoning, business licenses, or general real estate permits.</div>
       </div>
 
       <!-- Testimonials -->
@@ -1127,80 +1242,7 @@
         </div>
       </div>
 
-      <!-- Free/Paid clarity line -->
-      <div class="free-paid-bar">
-        <span>✅ <strong>3 free lookups</strong> — no credit card</span>
-        <span class="free-paid-divider">·</span>
-        <span>Then <strong>$19/mo</strong> for unlimited</span>
-        <span class="free-paid-divider">·</span>
-        <span>Cancel anytime</span>
-      </div>
-
-      <!-- Counter bar -->
-      <div class="counter-bar" id="counter-bar">
-        <div class="counter-bar-top">
-          <span class="counter-text" id="counter-text">0 of 3 free lookups used</span>
-        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $19/mo →</span>
-      </div>
-      <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
-      </div>
-
-      <!-- Search Card -->
-      <div class="card">
-        <div class="card-label">What do you need a permit for?</div>
-        <div class="form-group">
-          <label>Job Address <span style="font-weight:400;text-transform:none;font-size:10px;">(optional, helps with tricky jurisdictions)</span></label>
-          <input type="text" id="address" placeholder="e.g. 123 Main St" autocomplete="off" />
-        </div>
-        <div class="form-group">
-          <label>City</label>
-          <input type="text" id="city" placeholder="e.g. Houston" autocomplete="off" />
-        </div>
-        <div class="form-group">
-          <label>State</label>
-          <input type="text" id="state" placeholder="e.g. TX" maxlength="2" style="text-transform:uppercase" autocomplete="off" />
-        </div>
-        <div class="form-group">
-          <label>Job Type</label>
-          <div class="toggle-row" id="job-category-toggle">
-            <button class="toggle-btn active" id="btn-residential" onclick="setJobCategory('residential')">🏠 Residential</button>
-            <button class="toggle-btn" id="btn-commercial" onclick="setJobCategory('commercial')">🏢 Commercial</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Describe the job</label>
-          <div class="autocomplete-wrap">
-            <div class="query-wrap">
-              <textarea class="hero-input" id="query" placeholder="e.g. HVAC replacement, residential furnace swap, 3-ton unit" autocomplete="off" rows="3"></textarea>
-              <button class="mic-btn" id="mic-btn" type="button" title="Speak your question" onclick="toggleVoice()">🎤</button>
-            </div>
-            <div class="autocomplete-dropdown" id="autocomplete-dropdown" style="display:none"></div>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label>ZIP Code <span style="font-weight:400;text-transform:none;font-size:10px;">(optional)</span></label>
-          <input type="text" id="zip" placeholder="77001" maxlength="5" inputmode="numeric" />
-        </div>
-        <div class="gps-status" id="gps-status"></div>
-        <div class="location-links">
-          <a class="text-link" href="#" onclick="event.preventDefault(); useGPS();">📍 Auto-detect my location</a>
-        </div>
-        <!-- Hidden location-edit for backwards compat -->
-        <div id="location-edit" style="display:none"></div>
-      </div>
-
-      <!-- Disambiguation box -->
-      <div class="disambig-box" id="disambig-box">
-        <div class="disambig-title">⚠️ Is this a minor repair or full replacement?</div>
-        <div class="disambig-btns">
-          <button class="disambig-btn" onclick="submitWithDisambig('minor repair')">🔧 Minor Repair</button>
-          <button class="disambig-btn" onclick="submitWithDisambig('full replacement')">🔄 Full Replacement</button>
-        </div>
-      </div>
-
-      <div class="trust-note">🔒 Real permit data, not a Google search. Updated fees, verified contacts, inspection checklists.</div>
-      <button class="lookup-btn" id="lookup-btn" type="button">🔍 &nbsp;Look Up Permit Requirements</button>
-    </div>
+</div>
 
     <!-- Loading -->
     <div id="loading">
