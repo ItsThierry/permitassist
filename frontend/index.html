@@ -755,6 +755,77 @@
       .gate-title { font-size: 20px; }
     }
 
+    /* ── How It Works 3-Step ──────────────────────────────────────── */
+    .how-it-works { margin: 24px 0 8px; }
+    .how-it-works-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); text-align: center; margin-bottom: 14px; }
+    .how-steps { display: flex; align-items: flex-start; justify-content: center; gap: 0; position: relative; }
+    .how-step { flex: 1; max-width: 200px; text-align: center; position: relative; z-index: 1; }
+    .how-step-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--brand-light); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 10px; border: 2px solid rgba(37,99,235,0.2); }
+    .how-step-num { font-size: 11px; font-weight: 800; color: var(--brand); margin-bottom: 4px; }
+    .how-step-label { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.4; }
+    .how-connector { width: 40px; height: 2px; background: var(--border); margin-top: 28px; flex-shrink: 0; }
+    @media (max-width: 480px) {
+      .how-steps { flex-direction: column; align-items: center; gap: 0; }
+      .how-step { max-width: 100%; }
+      .how-connector { width: 2px; height: 24px; margin: 0 auto; }
+    }
+
+    /* ── Old Way vs PermitAssist ──────────────────────────────────── */
+    .old-vs-new { margin: 16px 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow-sm); }
+    .old-vs-new-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); text-align: center; padding: 16px 16px 10px; }
+    .old-vs-new-cols { display: grid; grid-template-columns: 1fr 1fr; }
+    .old-col, .new-col { padding: 14px 16px; }
+    .old-col { background: rgba(239,68,68,0.04); }
+    .new-col { background: rgba(37,99,235,0.04); border-left: 2px solid var(--brand); }
+    .old-col-title { font-size: 12px; font-weight: 800; color: var(--red); margin-bottom: 10px; }
+    .new-col-title { font-size: 12px; font-weight: 800; color: var(--brand); margin-bottom: 10px; }
+    .vs-item { font-size: 13px; color: var(--text2); line-height: 1.5; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .vs-item:last-child { border-bottom: none; }
+    @media (max-width: 480px) {
+      .old-vs-new-cols { grid-template-columns: 1fr; }
+      .new-col { border-left: none; border-top: 2px solid var(--brand); }
+    }
+
+    /* ── ROI Calculator ───────────────────────────────────────────── */
+    .roi-calc { margin: 16px 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; box-shadow: var(--shadow-sm); text-align: center; }
+    .roi-calc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 14px; }
+    .roi-calc-question { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .roi-slider { width: 100%; max-width: 400px; margin: 0 auto; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 3px; background: var(--border); outline: none; }
+    .roi-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--brand); cursor: pointer; box-shadow: 0 2px 6px rgba(37,99,235,0.35); }
+    .roi-slider::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--brand); cursor: pointer; border: none; }
+    .roi-slider-val { font-size: 14px; color: var(--brand); font-weight: 700; margin-top: 8px; }
+    .roi-calc-results { display: flex; justify-content: center; gap: 32px; margin-top: 16px; flex-wrap: wrap; }
+    .roi-calc-stat { text-align: center; }
+    .roi-calc-big { font-size: 28px; font-weight: 900; color: var(--brand); letter-spacing: -0.5px; }
+    .roi-calc-label { font-size: 12px; color: var(--text2); margin-top: 4px; font-weight: 600; }
+
+    /* ── Citation Badges ──────────────────────────────────────────── */
+    .citation-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .citation-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(37,99,235,0.06); border: 1px solid rgba(37,99,235,0.25); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--brand); padding: 5px 12px; }
+    .source-links { margin-top: 10px; }
+    .source-link { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--brand); text-decoration: none; padding: 4px 0; margin-right: 12px; font-weight: 600; }
+    .source-link:hover { text-decoration: underline; }
+
+    /* ── Jurisdiction Alert Opt-in ────────────────────────────────── */
+    .juris-alert { background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.2); border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px; position: relative; }
+    .juris-alert-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .juris-alert-row { display: flex; gap: 8px; }
+    .juris-alert-row input { flex: 1; font-size: 14px; padding: 10px 14px; }
+    .juris-alert-btn { background: var(--brand); border: none; border-radius: var(--r-sm); color: #fff; font-weight: 700; padding: 10px 16px; cursor: pointer; white-space: nowrap; font-size: 13px; }
+    .juris-alert-dismiss { position: absolute; top: 10px; right: 12px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px; }
+    .juris-alert-success { color: var(--green); font-size: 13px; font-weight: 600; margin-top: 8px; }
+
+    /* ── Follow-up Q&A Chat ───────────────────────────────────────── */
+    .followup-qa { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow-sm); }
+    .followup-qa-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+    .followup-qa-row { display: flex; gap: 8px; }
+    .followup-qa-row input { flex: 1; font-size: 14px; padding: 10px 14px; }
+    .followup-qa-btn { background: var(--brand); border: none; border-radius: var(--r-sm); color: #fff; font-weight: 700; padding: 10px 16px; cursor: pointer; white-space: nowrap; font-size: 13px; }
+    .followup-qa-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .qa-bubble { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm) var(--r-sm) var(--r-sm) 4px; padding: 12px 14px; margin-top: 10px; font-size: 14px; color: var(--text2); line-height: 1.6; }
+    .qa-bubble-q { background: rgba(37,99,235,0.06); border-color: rgba(37,99,235,0.2); border-radius: var(--r-sm) var(--r-sm) 4px var(--r-sm); color: var(--text); font-weight: 600; margin-top: 12px; }
+    .qa-loading { color: var(--muted); font-size: 13px; margin-top: 10px; }
+
     /* Touch targets — always at least 44px tall for tappable elements */
     .text-link, .tab, .toggle-btn, .disambig-btn, .nav-new-search,
     .action-btn, .mini-link, .flag-wrong-btn {
@@ -804,6 +875,31 @@
       <div class="hero">
         <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
         <p class="hero-sub">Stop-work orders cost $2,000–$10,000. Wrong permit = failed inspection + double fees. PermitAssist tells you the exact permit name, current fees, and the phone that actually works — before you touch the job. <strong style="color:var(--brand);">No demo calls. No sales team. No $500/hr expediter.</strong></p>
+
+        <!-- How It Works 3-Step -->
+        <div class="how-it-works">
+          <div class="how-it-works-eyebrow">✅ How It Works</div>
+          <div class="how-steps">
+            <div class="how-step">
+              <div class="how-step-icon">📍</div>
+              <div class="how-step-num">Step 1</div>
+              <div class="how-step-label">Enter your job type &amp; city</div>
+            </div>
+            <div class="how-connector"></div>
+            <div class="how-step">
+              <div class="how-step-icon">🔍</div>
+              <div class="how-step-num">Step 2</div>
+              <div class="how-step-label">AI researches your exact jurisdiction</div>
+            </div>
+            <div class="how-connector"></div>
+            <div class="how-step">
+              <div class="how-step-icon">✅</div>
+              <div class="how-step-num">Step 3</div>
+              <div class="how-step-label">Get permit name, fees, timeline &amp; where to apply</div>
+            </div>
+          </div>
+        </div>
+
         <div style="margin-top:16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:14px 18px;text-align:left;max-width:480px;margin-inline:auto">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px">✅ Built for Trade Contractors</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px">
@@ -876,6 +972,47 @@
           <div class="roi-stat" role="listitem">
             <div class="roi-stat-number">$19/mo</div>
             <div class="roi-stat-label">vs. $500+/hr permit expediter</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Old Way vs PermitAssist -->
+      <div class="old-vs-new">
+        <div class="old-vs-new-eyebrow">🔄 The difference is obvious</div>
+        <div class="old-vs-new-cols">
+          <div class="old-col">
+            <div class="old-col-title">❌ The Old Way</div>
+            <div class="vs-item">Call the building dept and get put on hold</div>
+            <div class="vs-item">Google it and find outdated PDFs</div>
+            <div class="vs-item">Drive to city hall just to find out</div>
+            <div class="vs-item">Get the wrong permit and waste $200+</div>
+            <div class="vs-item">Spend half a day on one job</div>
+          </div>
+          <div class="new-col">
+            <div class="new-col-title">✅ With PermitAssist</div>
+            <div class="vs-item">Instant answer in under 60 seconds</div>
+            <div class="vs-item">AI-verified, jurisdiction-specific results</div>
+            <div class="vs-item">Know fees &amp; timeline before you show up</div>
+            <div class="vs-item">Exact permit name the clerk recognizes</div>
+            <div class="vs-item">Back on the job in minutes</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROI Savings Calculator -->
+      <div class="roi-calc">
+        <div class="roi-calc-title">💰 See Your Savings</div>
+        <div class="roi-calc-question">How many permit lookups do you do per month?</div>
+        <input type="range" class="roi-slider" id="roi-slider" min="1" max="50" value="10" oninput="updateROICalc(this.value)" />
+        <div class="roi-slider-val"><span id="roi-slider-num">10</span> lookups/month</div>
+        <div class="roi-calc-results">
+          <div class="roi-calc-stat">
+            <div class="roi-calc-big" id="roi-hours">40</div>
+            <div class="roi-calc-label">hours saved/month</div>
+          </div>
+          <div class="roi-calc-stat">
+            <div class="roi-calc-big" id="roi-money">$3,400</div>
+            <div class="roi-calc-label">in recovered time</div>
           </div>
         </div>
       </div>
@@ -1956,6 +2093,45 @@ function renderResults(d, job, city, state) {
     html += `<div class="card"><div class="section-label">🔗 Official Sources</div><ul class="bullet-list">${sourceLinks.map(src => `<li><a href="${esc(src)}" target="_blank" rel="noopener">${esc(src)}</a></li>`).join('')}</ul></div>`;
   }
 
+  // Enhanced citation badges (Feature 3)
+  const codeCite = d.code_citation;
+  if (codeCite && verdict !== 'no') {
+    const cc = typeof codeCite === 'string' ? { section: codeCite, text: '' } : codeCite;
+    if (cc && cc.section) {
+      html += `<div class="card"><div class="section-label">📌 Source Citations</div>`;
+      html += `<div class="citation-badges"><span class="citation-badge">📌 ${esc(cc.section)}</span></div>`;
+      if (cc.text) html += `<div style="font-size:13px;color:var(--text2);margin-top:8px;line-height:1.5">${esc(String(cc.text).slice(0, 300))}</div>`;
+      if (sourceLinks.length) {
+        html += `<div class="source-links">`;
+        sourceLinks.forEach(src => { html += `<a class="source-link" href="${esc(src)}" target="_blank" rel="noopener">🔗 ${esc(new URL(src).hostname)}</a>`; });
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
+  }
+
+  // Jurisdiction change alert opt-in (Feature 5)
+  if (city && state && !isJurisAlertDismissed(city, state)) {
+    html += `<div class="juris-alert" id="juris-alert-banner">
+      <button class="juris-alert-dismiss" onclick="dismissJurisAlert('${esc(city)}','${esc(state)}')">\u00d7</button>
+      <div class="juris-alert-title">📬 Get notified if ${esc(city)}, ${esc(state)} permit rules change</div>
+      <div class="juris-alert-row">
+        <input type="email" id="juris-alert-email" placeholder="your@email.com" />
+        <button class="juris-alert-btn" onclick="submitJurisAlert()">Notify Me</button>
+      </div>
+    </div>`;
+  }
+
+  // Follow-up AI Q&A (Feature 6)
+  html += `<div class="followup-qa">
+    <div class="followup-qa-title">💬 Have a question about this permit?</div>
+    <div class="followup-qa-row">
+      <input type="text" id="followup-qa-input" placeholder="Ask anything about this permit..." onkeydown="if(event.key==='Enter'){event.preventDefault();submitFollowupQA();}" />
+      <button class="followup-qa-btn" id="followup-qa-btn" onclick="submitFollowupQA()">Ask</button>
+    </div>
+    <div id="followup-qa-chat"></div>
+  </div>`;
+
   // Action buttons
   html += `
     <div class="action-row action-row-3" style="margin-top:14px">
@@ -2586,6 +2762,75 @@ function checkShimmer(){
 refreshCounterBar();
 loadStats();
 initAutocomplete();
+
+// ── ROI Calculator ────────────────────────────────────────────────────────
+function updateROICalc(val) {
+  const n = parseInt(val, 10);
+  document.getElementById('roi-slider-num').textContent = n;
+  const hours = n * 4;
+  const money = n * 340;
+  document.getElementById('roi-hours').textContent = hours;
+  document.getElementById('roi-money').textContent = '$' + money.toLocaleString();
+}
+
+// ── Jurisdiction Change Alert ───────────────────────────────────────────
+function dismissJurisAlert(city, state) {
+  const key = 'pa_juris_dismissed_' + (city + '_' + state).toLowerCase().replace(/\s+/g, '_');
+  localStorage.setItem(key, String(Date.now()));
+  const el = document.getElementById('juris-alert-banner');
+  if (el) el.style.display = 'none';
+}
+function isJurisAlertDismissed(city, state) {
+  const key = 'pa_juris_dismissed_' + (city + '_' + state).toLowerCase().replace(/\s+/g, '_');
+  const ts = localStorage.getItem(key);
+  if (!ts) return false;
+  return (Date.now() - parseInt(ts, 10)) < 24 * 60 * 60 * 1000;
+}
+function submitJurisAlert() {
+  const emailEl = document.getElementById('juris-alert-email');
+  const email = emailEl ? emailEl.value.trim() : '';
+  if (!email || !email.includes('@')) { if (emailEl) { emailEl.style.borderColor = 'var(--red)'; emailEl.focus(); } return; }
+  const city = currentResult ? currentResult.city : '';
+  const state = currentResult ? currentResult.state : '';
+  fetch('/api/capture-email', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, city, state, alert_type: 'jurisdiction_change', source: 'juris_alert' })
+  }).catch(() => {});
+  const banner = document.getElementById('juris-alert-banner');
+  if (banner) banner.innerHTML = '<div class="juris-alert-success">✓ You\'re on the list. We\'ll email you if rules change.</div>';
+}
+
+// ── Follow-up Q&A ─────────────────────────────────────────────────────
+function submitFollowupQA() {
+  const inputEl = document.getElementById('followup-qa-input');
+  const question = inputEl ? inputEl.value.trim() : '';
+  if (!question) return;
+  const btn = document.getElementById('followup-qa-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Asking...'; }
+  const chatArea = document.getElementById('followup-qa-chat');
+  chatArea.innerHTML += '<div class="qa-bubble qa-bubble-q">' + esc(question) + '</div>';
+  chatArea.innerHTML += '<div class="qa-loading" id="qa-loading">⏳ Thinking...</div>';
+  inputEl.value = '';
+  const city = currentResult ? currentResult.city : '';
+  const state = currentResult ? currentResult.state : '';
+  const permitName = currentResult ? getPermitDisplayName(currentResult.data) : '';
+  const jobType = currentResult ? currentResult.job : '';
+  fetch('/api/chat', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question, context: { city, state, permit_name: permitName, job_type: jobType } })
+  }).then(r => r.json()).then(r => {
+    const loadEl = document.getElementById('qa-loading');
+    if (loadEl) loadEl.remove();
+    const answer = r.answer || r.error || 'Sorry, I could not answer that.';
+    chatArea.innerHTML += '<div class="qa-bubble">' + esc(answer) + '</div>';
+    if (btn) { btn.disabled = false; btn.textContent = 'Ask'; }
+  }).catch(e => {
+    const loadEl = document.getElementById('qa-loading');
+    if (loadEl) loadEl.remove();
+    chatArea.innerHTML += '<div class="qa-bubble" style="color:var(--red)">Error: ' + esc(e.message) + '</div>';
+    if (btn) { btn.disabled = false; btn.textContent = 'Ask'; }
+  });
+}
 </script>
 </body>
 </html>

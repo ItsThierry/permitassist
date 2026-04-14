@@ -1907,6 +1907,42 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 self.send_json(500, {"error": str(e)})
 
         # ── Team invite (Task 7) ─────────────────────────────────────────
+        elif path == "/api/chat":
+            try:
+                data = self.read_json_body()
+                question = data.get("question", "").strip()
+                context  = data.get("context", {})
+                if not question:
+                    self.send_json(400, {"error": "question is required"})
+                    return
+                city        = context.get("city", "")
+                state       = context.get("state", "")
+                permit_name = context.get("permit_name", "")
+                job_type    = context.get("job_type", "")
+                from openai import OpenAI
+                client = OpenAI()
+                system_msg = (
+                    f"You are a helpful permit assistant for contractors. "
+                    f"The user just looked up permit requirements for '{job_type}' in {city}, {state}. "
+                    f"The permit name is '{permit_name}'. "
+                    f"Answer the user's follow-up question concisely and accurately. "
+                    f"If you're unsure, say so. Keep answers under 200 words."
+                )
+                resp = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system_msg},
+                        {"role": "user", "content": question}
+                    ],
+                    max_tokens=300,
+                    temperature=0.3
+                )
+                answer = resp.choices[0].message.content.strip()
+                self.send_json(200, {"answer": answer})
+            except Exception as e:
+                print(f"[chat] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
         elif path == "/api/team/invite":
             try:
                 session_token = self.headers.get("X-Session-Token", "")
