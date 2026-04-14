@@ -189,6 +189,18 @@ def html_base(title: str, desc: str, canonical: str, body: str,
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
+  <!-- Organization schema (brand signal) -->
+  <script type="application/ld+json">
+  {{
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://permitassist.io/#organization",
+    "name": "PermitAssist",
+    "url": "https://permitassist.io",
+    "logo": {{ "@type": "ImageObject", "url": "https://permitassist.io/icons/icon-512.png", "width": 512, "height": 512 }},
+    "description": "AI-powered permit research for contractors. Get exact permit requirements, fees, and contacts in 30 seconds."
+  }}
+  </script>
   {f'<script type="application/ld+json">{schema_json}</script>' if schema_json else ''}
 
   <style>
@@ -423,21 +435,24 @@ def html_base(title: str, desc: str, canonical: str, body: str,
     <img src="{SITE_URL}/logo.png" alt="PermitAssist Logo" onerror="this.style.display='none'" />
     PermitAssist
   </a>
-  <a class="nav-cta" href="{TOOL_URL}">Check a Permit Free →</a>
+  <a class="nav-cta" href="{TOOL_URL}">Try PermitAssist Free →</a>
 </nav>
 
 {body}
 
 <footer>
   <div class="footer-links">
-    <a href="{SITE_URL}">Home</a>
-    <a href="{SITE_URL}/permits/">All Permits</a>
-    <a href="{SITE_URL}/permits/guide/hvac">HVAC Guide</a>
-    <a href="{SITE_URL}/permits/guide/electrical">Electrical Guide</a>
-    <a href="{SITE_URL}/permits/guide/roofing">Roofing Guide</a>
-    <a href="{UPGRADE_URL}">Pro Plan</a>
+    <a href="{SITE_URL}">PermitAssist Home</a>
+    <a href="{SITE_URL}/permits/">All PermitAssist Permits</a>
+    <a href="{SITE_URL}/pricing">PermitAssist Pricing</a>
+    <a href="{SITE_URL}/cities">Verified Cities</a>
+    <a href="{SITE_URL}/permits/guide/hvac">HVAC Permit Guide</a>
+    <a href="{SITE_URL}/permits/guide/electrical">Electrical Permit Guide</a>
+    <a href="{SITE_URL}/permits/guide/plumbing">Plumbing Permit Guide</a>
+    <a href="{SITE_URL}/permits/guide/roofing">Roofing Permit Guide</a>
+    <a href="{UPGRADE_URL}">PermitAssist Pro Plan</a>
   </div>
-  <p>© {datetime.now().year} PermitAssist · AI-powered permit research for contractors · Data updated {TODAY}</p>
+  <p><a href="{SITE_URL}" style="color:rgba(255,255,255,0.85);font-weight:600;">PermitAssist</a> · AI-powered permit research for contractors · © {datetime.now().year} · Data updated {TODAY}</p>
   <p style="margin-top:6px; font-size:11px; opacity:0.5;">
     Information is for reference only. Always verify with your local AHJ before starting work.
   </p>
@@ -616,7 +631,7 @@ def build_city_trade_page(city_key: str, trade_key: str) -> str:
       Exact fees, requirements, and timelines for {city_name} — verified from official sources.
       Use our free AI tool to get a permit report in 5 seconds.
     </p>
-    <a class="hero-cta" href="{TOOL_URL}">Check My Permit Requirements Free →</a>
+    <a class="hero-cta" href="{TOOL_URL}">Check My Permit on PermitAssist — Free →</a>
   </div>
 </div>
 
@@ -778,7 +793,13 @@ def build_city_trade_page(city_key: str, trade_key: str) -> str:
         returning the exact permit requirements, fees, and application links for your job.
         No hold music. No guessing.
       </p>
-      <a href="{TOOL_URL}">Run a Free Permit Check →</a>
+      <a href="{TOOL_URL}">Run a Free Permit Check on PermitAssist →</a>
+    </div>
+
+    <!-- Brand trust bar -->
+    <div style="background:#e8f0fe;border:1px solid rgba(26,86,219,0.2);border-radius:10px;padding:16px 20px;margin-bottom:16px;text-align:center;">
+      <p style="font-size:14px;color:#0f2044;font-weight:700;margin-bottom:4px;">Powered by <a href="{SITE_URL}" style="color:#1a56db;">PermitAssist</a> — AI Permit Research for Contractors</p>
+      <p style="font-size:12px;color:#4b5563;">Trusted by contractors in {city_name} and 90+ US cities · <a href="{SITE_URL}/pricing" style="color:#1a56db;">$19/mo unlimited lookups</a> · <a href="{SITE_URL}/cities" style="color:#1a56db;">See all PermitAssist cities</a></p>
     </div>
 
     <!-- FAQ -->

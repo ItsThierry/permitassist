@@ -10,12 +10,71 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PermitAssist" />
   <meta name="theme-color" content="#2563EB" />
-  <meta name="description" content="AI-powered permit research for contractors. Get exact requirements, fees, and contact details in seconds." />
+  <meta name="description" content="PermitAssist — AI-powered permit research for contractors. Get exact requirements, fees, and contact details in seconds. No demo calls, no sales team." />
+  <link rel="canonical" href="https://permitassist.io/" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="PermitAssist — Know Your Permits Before You Start" />
+  <meta property="og:description" content="AI-powered permit research for contractors. Exact requirements, fees, and contacts in 30 seconds. $19/mo unlimited." />
+  <meta property="og:url" content="https://permitassist.io/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="PermitAssist" />
+  <meta property="og:image" content="https://permitassist.io/icons/icon-512.png" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="PermitAssist — Know Your Permits Before You Start" />
+  <meta name="twitter:description" content="AI-powered permit research for contractors. Exact fees, requirements, and contacts in 30 seconds." />
+  <meta name="twitter:image" content="https://permitassist.io/icons/icon-512.png" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
   <link rel="shortcut icon" href="/icons/icon-192.png" />
   <title>PermitAssist — Know Your Permits Before You Start</title>
+  <!-- Organization + WebSite + SitelinksSearchbox schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://permitassist.io/#organization",
+        "name": "PermitAssist",
+        "url": "https://permitassist.io",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://permitassist.io/icons/icon-512.png",
+          "width": 512,
+          "height": 512
+        },
+        "description": "AI-powered permit research for contractors. Get exact permit requirements, fees, and contacts in 30 seconds.",
+        "sameAs": []
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://permitassist.io/#website",
+        "name": "PermitAssist",
+        "url": "https://permitassist.io",
+        "publisher": { "@id": "https://permitassist.io/#organization" },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://permitassist.io/?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://permitassist.io/#webpage",
+        "url": "https://permitassist.io/",
+        "name": "PermitAssist — Know Your Permits Before You Start",
+        "isPartOf": { "@id": "https://permitassist.io/#website" },
+        "about": { "@id": "https://permitassist.io/#organization" },
+        "description": "AI-powered permit research for contractors. Get exact requirements, fees, and contact details in seconds."
+      }
+    ]
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
