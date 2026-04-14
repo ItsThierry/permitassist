@@ -54,8 +54,11 @@
     .nav a { text-decoration: none; color: var(--text); }
     .logo { display: flex; align-items: center; gap: 10px; }
     .logo-mark { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #2563EB, #1D4ED8); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; }
-    .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-mark-img { width: 42px; height: 42px; border-radius: 11px; object-fit: cover; flex-shrink: 0; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
+    @media (max-width: 480px) { .logo-mark-img { width: 36px; height: 36px; border-radius: 9px; } }
+    .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); }
     .logo-text em { font-style: normal; color: var(--brand); }
+    .logo-tagline { font-size: 11px; color: var(--text2); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
     .nav-link { color: var(--brand); font-size: 14px; font-weight: 700; text-decoration: none; padding: 8px 16px; border: 1px solid var(--brand); border-radius: 20px; }
 
     /* Hero */
@@ -133,8 +136,11 @@
 <body>
   <nav class="nav">
     <a href="/" class="logo">
-      <div class="logo-mark">P</div>
-      <div class="logo-text">Permit<em>Assist</em></div>
+      <img src="/icons/icon-192.png" alt="PA" class="logo-mark-img" />
+      <div>
+        <div class="logo-text">Permit<em>Assist</em></div>
+        <div class="logo-tagline">For Contractors</div>
+      </div>
     </a>
     <a href="/" class="nav-link">← Look Up Permits</a>
   </nav>
@@ -228,7 +234,8 @@
           PermitAssist costs <strong style="color:var(--green);">$19/mo for unlimited lookups</strong> and pays for itself
           the first time it saves you 30 minutes.
         </p>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px;">
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px;min-width:540px;">
           <thead>
             <tr style="background:var(--bg);">
               <th style="text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);">Method</th>
@@ -264,6 +271,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
         <div style="background:var(--green-bg);border:1px solid rgba(5,150,105,0.25);border-radius:var(--r-sm);padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:0;">
           💡 <strong style="color:var(--text);">The math:</strong> One avoided stop-work order saves $2,000–$10,000.
           One avoided re-inspection saves $150–$500. PermitAssist pays for itself with a single time-save.
