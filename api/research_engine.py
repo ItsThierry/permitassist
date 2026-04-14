@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
-PermitAssist — AI Research Engine v3
-Improvements over v2:
-  - Much more detailed, trade-specific advice (not generic "mechanical permit")
-  - Smart small-city fallback: city → county → state level
-  - Server-side PDF URL stripping (apply_url vs apply_pdf)
-  - Google Maps fallback for office location
-  - Better phone number retrieval from web search
-  - Job type disambiguation hints
-  - portal_selection few-shot examples in system prompt
+PermitAssist — AI Research Engine v4
+Improvements over v3:
+  - Upgraded main model to gpt-4.1 for better instruction-following and JSON accuracy
+  - Added .gov-biased search query for all city lookups (not just small cities)
+  - Added fee_range hallucination guard (blocks vague 'varies'/'contact us' non-answers)
+  - Enforces data freshness note in disclaimer when result is cached
+  - Tightened confidence downgrade: vague fee_range now counts as a missing field
 """
 
 import os
@@ -785,18 +783,22 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
         # City in KB — search for current fees + portal-specific info + phone number
         q1 = f"{city} {state} building permit {job_type} requirements fee phone number 2025 2026"
         q2 = f'"{city}" "{state}" permit portal apply online {job_type}'
+        q3 = f"{city} {state} building permit fee schedule {job_type} site:.gov"
         results1 = tavily_search(q1, max_results=3)
         results2 = tavily_search(q2, max_results=2)
-        all_results = results1 + results2
+        results3 = tavily_search(q3, max_results=2)
+        all_results = results1 + results2 + results3
     else:
         # City NOT in KB — need to find the actual permit office + phone number
         q1 = f"{city} {state} building permit office phone number address {job_type}"
         q2 = f'"{city}" "{state}" building department permit phone number how to apply online portal 2025'
         q3 = f"{city} {state} permit fee schedule {job_type} site:.gov"
+        q4 = f"{city} {state} building department contact address hours"
         results1 = tavily_search(q1, max_results=3)
         results2 = tavily_search(q2, max_results=2)
         results3 = tavily_search(q3, max_results=2)
-        all_results = results1 + results2 + results3
+        results4 = tavily_search(q4, max_results=2)
+        all_results = results1 + results2 + results3 + results4
 
     if not all_results:
         return ""
@@ -1215,13 +1217,13 @@ Return ONLY the JSON object."""
     start = time.time()
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4.1",
         messages=[
             {"role": "system",  "content": SYSTEM_PROMPT},
             {"role": "user",    "content": user_prompt},
         ],
         temperature=0.1,
-        max_tokens=2500,
+        max_tokens=3000,
         response_format={"type": "json_object"},
     )
 
@@ -1233,6 +1235,22 @@ Return ONLY the JSON object."""
 
     # Strip PDF URLs from apply_url
     result = strip_pdf_from_result(result)
+
+    # ── Hallucination guard: reject vague fee_range non-answers ──
+    _fee = str(result.get("fee_range") or "").lower().strip()
+    _VAGUE_FEE_PHRASES = [
+        "varies", "contact", "call", "check with", "depends on", "consult",
+        "not available", "unknown", "n/a", "tbd", "to be determined",
+        "see website", "visit website", "refer to"
+    ]
+    if not _fee or any(p in _fee for p in _VAGUE_FEE_PHRASES):
+        # Replace vague answers with a clear fallback
+        result["fee_range"] = (
+            f"Fee not confirmed — call the {result.get('applying_office') or city + ' building dept'} "
+            f"or check their online fee schedule before applying."
+        )
+        result["_fee_unverified"] = True
+        print(f"[fee_guard] Vague fee_range replaced for {city}, {state}: '{_fee}'") 
 
     # Ensure apply_google_maps is always set
     if not result.get("apply_google_maps"):
@@ -1414,11 +1432,16 @@ Return ONLY the JSON object."""
     if _verified_entry and _verified_entry.get("verified_at"):
         result["last_verified_at"] = _verified_entry.get("verified_at")
 
-    if not result.get("disclaimer"):
-        result["disclaimer"] = (
-            "Always verify current requirements directly with your local building department "
-            "before starting work. Permit fees and requirements change frequently."
-        )
+    # Build disclaimer with freshness note
+    _generated_at = result.get("_meta", {}).get("generated_at") or datetime.now().isoformat()
+    try:
+        _gen_date = datetime.fromisoformat(_generated_at).strftime("%b %d, %Y")
+    except Exception:
+        _gen_date = datetime.now().strftime("%b %d, %Y")
+    result["disclaimer"] = (
+        f"Data sourced {_gen_date}. Always verify current requirements directly with your "
+        "local building department before starting work. Permit fees and requirements change frequently."
+    )
 
     web_source_count = search_context.count("Source:") if search_context else 0
     missing_fields = compute_missing_fields(result)
@@ -1426,6 +1449,11 @@ Return ONLY the JSON object."""
     result["missing_fields"] = missing_fields
 
     confidence = str(result.get("confidence") or "medium").lower()
+    # Vague fee also counts as a quality gap for confidence scoring
+    if result.get("_fee_unverified"):
+        missing_fields = list(set(missing_fields + ["fee_range"]))
+        result["missing_fields"] = missing_fields
+        result["needs_review"] = True
     if len(missing_fields) >= 3:
         confidence = downgrade_confidence(confidence, 2)
     elif missing_fields:
@@ -1440,7 +1468,7 @@ Return ONLY the JSON object."""
         "generated_at":    datetime.now().isoformat(),
         "response_ms":     elapsed,
         "cached":          False,
-        "model":           "gpt-4o",
+        "model":           "gpt-4.1",
         "web_sources":     web_source_count,
         "city_match_level": city_match_level,
         "job_type":        job_type,
