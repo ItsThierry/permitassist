@@ -10,6 +10,10 @@ Improvements:
   - /api/capture-email + /api/email-report (v2 retained)
 """
 
+import sys, os
+# Ensure the api/ directory is on the path regardless of working directory
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import json
 import os
 import csv
