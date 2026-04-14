@@ -641,6 +641,28 @@
     }
 
     /* ── Mobile Optimizations ─────────────────────────────────────────────── */
+    /* ── ROI Stats Row ─────────────────────────────────────────────────────── */
+    .roi-stats-section { margin: 20px 0 16px; }
+    .roi-stats-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); text-align: center; margin-bottom: 10px; }
+    .roi-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow-sm); overflow: hidden; }
+    .roi-stat { text-align: center; padding: 18px 10px; border-right: 1px solid var(--border); }
+    .roi-stat:last-child { border-right: none; }
+    .roi-stat-number { font-size: 20px; font-weight: 900; color: var(--brand); letter-spacing: -0.5px; line-height: 1.1; }
+    .roi-stat-label { font-size: 11px; color: var(--text2); margin-top: 6px; line-height: 1.4; font-weight: 600; }
+
+    /* ── Compare Strip ───────────────────────────────────────────────────────── */
+    .compare-strip { margin: 0 0 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; box-shadow: var(--shadow-sm); }
+    .compare-strip-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); text-align: center; margin-bottom: 10px; }
+    .compare-strip-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .compare-col { border: 1px solid var(--border); border-radius: var(--r-sm); padding: 12px; }
+    .compare-col-winner { border-color: var(--brand); background: var(--brand-light); }
+    .compare-col-name { font-weight: 800; font-size: 12px; margin-bottom: 3px; color: var(--text); }
+    .compare-col-winner .compare-col-name { color: var(--brand); }
+    .compare-col-price { font-size: 11px; color: var(--text2); font-weight: 700; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .compare-col-winner .compare-col-price { color: var(--brand); }
+    .compare-col-features { list-style: none; padding: 0; margin: 0; }
+    .compare-col-features li { font-size: 11px; color: var(--text2); padding: 2px 0; line-height: 1.4; }
+
     @media (max-width: 480px) {
       .hero h1 { font-size: 26px; }
       .hero-sub { font-size: 14px; }
@@ -652,6 +674,12 @@
       .free-paid-bar span { width: 100%; text-align: center; }
       .cities-coverage-link { font-size: 12px; padding: 6px 12px; }
       .lookup-btn { font-size: 18px; padding: 18px; }
+      .roi-stats-row { grid-template-columns: 1fr 1fr; }
+      .roi-stat { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+      .roi-stat:nth-child(even) { border-right: none; }
+      .roi-stat:nth-child(3), .roi-stat:nth-child(4) { border-bottom: none; }
+      .roi-stat-number { font-size: 17px; }
+      .compare-strip-cols { grid-template-columns: 1fr; gap: 6px; }
       input, select, textarea { font-size: 16px !important; } /* prevent iOS zoom */
       .tab { font-size: 12px; padding: 12px 4px; }
       .action-row { gap: 8px; }
@@ -714,7 +742,7 @@
       <!-- Hero -->
       <div class="hero">
         <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
-        <p class="hero-sub">Stop-work orders cost $2,000–$10,000. Wrong permit = failed inspection + double fees. PermitAssist tells you the exact permit name to ask for, current fees, and the phone number that actually works — before you touch the job.</p>
+        <p class="hero-sub">Stop-work orders cost $2,000–$10,000. Wrong permit = failed inspection + double fees. PermitAssist tells you the exact permit name, current fees, and the phone that actually works — before you touch the job. <strong style="color:var(--brand);">No demo calls. No sales team. No $500/hr expediter.</strong></p>
         <div style="margin-top:16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:14px 18px;text-align:left;max-width:480px;margin-inline:auto">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px">✅ Built for Trade Contractors</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px">
@@ -764,6 +792,66 @@
               <div class="testimonial-stars">★★★★★</div>
             </div>
             <div class="testimonial-text">"I bid jobs across Tampa, St. Pete, Clearwater — every city has different permit rules. Last week I checked 4 jobs before leaving the house. Knew exact fees and which ones I could pull online. Clients love when you show up knowing the numbers."</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROI Stats Row -->
+      <div class="roi-stats-section">
+        <div class="roi-stats-eyebrow">💰 The ROI is obvious</div>
+        <div class="roi-stats-row" role="list" aria-label="Key statistics">
+          <div class="roi-stat" role="listitem">
+            <div class="roi-stat-number">6–30 hrs</div>
+            <div class="roi-stat-label">saved per permit lookup vs. calling building departments</div>
+          </div>
+          <div class="roi-stat" role="listitem">
+            <div class="roi-stat-number">$2K–$10K</div>
+            <div class="roi-stat-label">in stop-work orders avoided per job</div>
+          </div>
+          <div class="roi-stat" role="listitem">
+            <div class="roi-stat-number">90%</div>
+            <div class="roi-stat-label">less research time vs. calling building departments</div>
+          </div>
+          <div class="roi-stat" role="listitem">
+            <div class="roi-stat-number">$19/mo</div>
+            <div class="roi-stat-label">vs. $500+/hr permit expediter</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why PermitAssist Comparison Strip -->
+      <div class="compare-strip">
+        <div class="compare-strip-eyebrow">Why PermitAssist?</div>
+        <div class="compare-strip-cols">
+          <div class="compare-col compare-col-winner">
+            <div class="compare-col-name">✅ PermitAssist</div>
+            <div class="compare-col-price">$19/mo · unlimited</div>
+            <ul class="compare-col-features">
+              <li>⚡ Instant — 30 seconds</li>
+              <li>🔍 100% self-serve</li>
+              <li>📋 No demo call needed</li>
+              <li>✓ Checklists &amp; exact fees</li>
+            </ul>
+          </div>
+          <div class="compare-col">
+            <div class="compare-col-name">🤵 Permit Expediter</div>
+            <div class="compare-col-price">$500–$2,000 / project</div>
+            <ul class="compare-col-features">
+              <li>⏳ Days to weeks</li>
+              <li>📞 Phone tag required</li>
+              <li>💸 Per-project cost</li>
+              <li>❌ Overkill for most jobs</li>
+            </ul>
+          </div>
+          <div class="compare-col">
+            <div class="compare-col-name">🔍 Googling It</div>
+            <div class="compare-col-price">Free (but costly)</div>
+            <ul class="compare-col-features">
+              <li>⏰ 2–6 hours wasted</li>
+              <li>⚠️ Often wrong info</li>
+              <li>❌ No checklists</li>
+              <li>❌ No verified fees</li>
+            </ul>
           </div>
         </div>
       </div>

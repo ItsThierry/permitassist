@@ -476,6 +476,9 @@ def build_city_trade_page(city_key: str, trade_key: str) -> str:
         f"Exact fees, permit requirements, timelines, and how to apply — verified {TODAY[:4]} data."
     )
 
+    # City hours (used in comparison table)
+    city_hours = city.get("hours", "Mon–Fri 8am–4pm (call to confirm)")
+
     # FAQ schema for Google rich results
     faqs = [
         {
@@ -496,7 +499,7 @@ def build_city_trade_page(city_key: str, trade_key: str) -> str:
         },
     ]
 
-    schema = {
+    faq_schema = {
         "@context": "https://schema.org",
         "@type": "FAQPage",
         "mainEntity": [
@@ -508,6 +511,35 @@ def build_city_trade_page(city_key: str, trade_key: str) -> str:
             for faq in faqs
         ]
     }
+
+    service_schema = {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": f"{tmeta['display']} Permit Research \u2014 {city_name}, {state_abbr}",
+        "description": desc,
+        "url": canonical,
+        "provider": {
+            "@type": "Organization",
+            "name": "PermitAssist",
+            "url": SITE_URL,
+            "logo": f"{SITE_URL}/logo.png"
+        },
+        "areaServed": {
+            "@type": "City",
+            "name": city_name,
+            "containedInPlace": {"@type": "State", "name": state_name}
+        },
+        "serviceType": f"{tmeta['display']} Permit Research",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "description": "3 free permit lookups, then $19/mo unlimited"
+        }
+    }
+
+    # Combined structured data for rich results
+    schema = [faq_schema, service_schema]
 
     # Build always/exempt lists
     always_list = "".join(f"<li>{item}</li>" for item in trade.get("permit_required", {}).get("always_required", []))
@@ -546,6 +578,17 @@ def build_city_trade_page(city_key: str, trade_key: str) -> str:
         f'<a href="{SITE_URL}/permits/{slug(trade_key.replace("_","-"))}/{k.replace("_","-")}">'
         f'{CITIES[k]["city"]}</a>'
         for k in other_cities_same_state
+    )
+
+    # Enriched trade links (with icons)
+    other_trades_enriched = " ".join(
+        f'<a href="{SITE_URL}/permits/{slug(t.replace("_","-"))}/{city_key.replace("_","-")}">{TRADE_META[t]["icon"]} {TRADE_META[t]["display"]}</a>'
+        for t in [x for x in TRADE_META if x != trade_key]
+    )
+    # Cross-state city links for same trade
+    cross_state_city_links = " ".join(
+        f'<a href="{SITE_URL}/permits/{slug(trade_key.replace("_","-"))}/{k.replace("_","-")}">{CITIES[k]["city"]}, {CITIES[k]["state"]}</a>'
+        for k in [x for x in list(CITIES.keys()) if x != city_key][:12]
     )
 
     faq_html = ""
@@ -681,11 +724,44 @@ def build_city_trade_page(city_key: str, trade_key: str) -> str:
       <p style="margin-top:8px;"><a href="{state_data.get('licensing_board_url','#')}" target="_blank" rel="noopener">→ {state_name} Licensing Board</a></p>
     </div>""" if state_quirks else ""}
 
-    <!-- Common Mistakes -->
+    <!-- Why Contractors in [City] Use PermitAssist -->
+    <div class="card">
+      <h2>🏗️ Why Contractors in {city_name} Use PermitAssist</h2>
+      <ul>
+        <li><strong>Skip the hold music:</strong> {city_name}'s {city.get("permit_office", "building department")} is busy —
+          AI research takes 30 seconds vs. 30–45 minutes on hold or waiting for a callback.</li>
+        <li><strong>Know before you bid:</strong> Include exact {tmeta["display"].lower()} permit costs in estimates
+          before the job is won — no surprise fees eating into your margin.</li>
+        <li><strong>Multi-city {state_name} coverage:</strong> If you work across {state_name}, get permit
+          requirements for every AHJ in one tool — no per-city learning curve.</li>
+        <li><strong>Avoid the $2K–$10K mistake:</strong> One stop-work order costs more than years of PermitAssist.
+          Know the {tmeta["display"].lower()} permit rules before you start — every time.</li>
+      </ul>
+    </div>
+
+    <!-- Common Permit Mistakes -->
     {f"""<div class="card">
       <h2>🚫 Common {tmeta["display"]} Permit Mistakes in {city_name}</h2>
+      <p style="font-size:14px;color:#4b5563;margin-bottom:12px;">These are the most frequent errors contractors
+        make when pulling {tmeta["display"].lower()} permits in {city_name} and the surrounding {state_name} area:</p>
       <ul>{mistakes}</ul>
     </div>""" if mistakes else ""}
+
+    <!-- Compare: PermitAssist vs. Calling [City] Building Department -->
+    <div class="card">
+      <h2>⚡ PermitAssist vs. Calling {city_name} Building Department</h2>
+      <table class="fee-table">
+        <thead><tr><th></th><th>PermitAssist</th><th>Calling {city_name}</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Time to answer</strong></td><td style="color:#0d9f6e;font-weight:700;">30 seconds</td><td>30–60 min (hold + callback)</td></tr>
+          <tr><td><strong>Cost</strong></td><td style="color:#0d9f6e;font-weight:700;">$19/mo unlimited</td><td>Free + $50–$150/hr of your time</td></tr>
+          <tr><td><strong>Hours available</strong></td><td style="color:#0d9f6e;font-weight:700;">24/7</td><td>{city_hours}</td></tr>
+          <tr><td><strong>Answer consistency</strong></td><td style="color:#0d9f6e;font-weight:700;">Consistent, structured</td><td>Varies by who answers</td></tr>
+          <tr><td><strong>Inspector checklist</strong></td><td style="color:#0d9f6e;font-weight:700;">✓ Included</td><td>✗ Must ask the right questions</td></tr>
+          <tr><td><strong>Exact permit name</strong></td><td style="color:#0d9f6e;font-weight:700;">✓ Every time</td><td>Sometimes (depends on staff)</td></tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Pro Tips -->
     {f"""<div class="card">
@@ -711,15 +787,23 @@ def build_city_trade_page(city_key: str, trade_key: str) -> str:
       {faq_html}
     </div>
 
-    <!-- Related -->
+    <!-- Related — enriched internal linking -->
     <div class="card">
       <h2>🔗 Related Permit Pages</h2>
-      <h3>Other trades in {city_name}:</h3>
-      <div class="related-links">{other_trade_links}</div>
-      {f'<h3 style="margin-top:16px;">Other cities in {state_name}:</h3><div class="related-links">{other_city_links}</div>' if other_city_links else ""}
+
+      <h3>Other permit types in {city_name}:</h3>
+      <div class="related-links">{other_trades_enriched}</div>
+
+      {f'<h3 style="margin-top:16px;">{tmeta["display"]} permits in other {state_name} cities:</h3><div class="related-links">{other_city_links}</div>' if other_city_links else ""}
+
       <div style="margin-top:16px;">
         <a href="{SITE_URL}/permits/state/{slug(state_name)}" class="badge badge-blue">→ Full {state_name} Permit Guide</a>
+        &nbsp;
+        <a href="{SITE_URL}/permits/guide/{slug(trade_key.replace('_','-'))}" class="badge badge-blue">→ Full {tmeta["display"]} Permit Guide</a>
       </div>
+
+      <h3 style="margin-top:16px;">More cities — {tmeta["display"]} permits nationwide:</h3>
+      <div class="related-links">{cross_state_city_links}</div>
     </div>
 
   </div>
