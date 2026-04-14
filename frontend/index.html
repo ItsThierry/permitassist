@@ -1555,6 +1555,7 @@ const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESS
 const IS_ADMIN=new URLSearchParams(window.location.search).get('admin')==='boban2026';
 let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false};
 let _skipDisambig=false;
+let _isSampleLookup=false;
 
 // ── Job Types for Autocomplete ────────────────────────────────────────────────
 const JOB_TYPES_ALL = [
@@ -1677,7 +1678,7 @@ function submitWithDisambig(choice) {
 
 // ── Lookup count & email gate ─────────────────────────────────────────────────
 function getLookupCount(){if(IS_ADMIN) return 0;return parseInt(localStorage.getItem(LOOKUP_KEY)||'0',10)}
-function incrementLookup(){if(IS_ADMIN) return 0;const n=getLookupCount()+1;localStorage.setItem(LOOKUP_KEY,String(n));return n}
+function incrementLookup(){if(IS_ADMIN||_isSampleLookup) return 0;const n=getLookupCount()+1;localStorage.setItem(LOOKUP_KEY,String(n));return n}
 function hasEmail(){if(IS_ADMIN) return true;return !!localStorage.getItem(EMAIL_KEY)}
 function saveEmail(email){localStorage.setItem(EMAIL_KEY,email.trim().toLowerCase());fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim().toLowerCase(),source:'gate'})}).catch(()=>{})}
 
@@ -1686,7 +1687,7 @@ function getSessionToken(){return localStorage.getItem(SESSION_KEY)||''}
 function setSessionToken(t){if(t)localStorage.setItem(SESSION_KEY,t)}
 function clearSessionToken(){localStorage.removeItem(SESSION_KEY)}
 function isLoggedIn(){return !!getSessionToken()}
-function getAuthHeaders(){const t=getSessionToken();const h={'Content-Type':'application/json'};if(t)h['X-Session-Token']=t;return h;}
+function getAuthHeaders(){const t=getSessionToken();const h={'Content-Type':'application/json'};if(t)h['X-Session-Token']=t;if(_isSampleLookup)h['X-Sample-Demo']='1';return h;}
 
 // Pick up session token from URL on page load (after magic link redirect)
 (function(){
@@ -2853,9 +2854,10 @@ function runSampleLookup() {
   document.getElementById('query').value = 'HVAC replacement, residential AC unit swap, 3-ton split system';
   setJobCategory('residential');
   checkShimmer();
-  // Skip disambiguation — this is a known clean demo query
+  // Skip disambiguation and don't count as a free lookup
   _skipDisambig = true;
-  doLookupWithOffline();
+  _isSampleLookup = true;
+  doLookupWithOffline().finally(() => { _isSampleLookup = false; });
 }
 
 // ── History Tab Discoverability ───────────────────────────────────────────────

@@ -1771,6 +1771,9 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
 
                 ip = self.client_ip()
 
+                # ── Sample demo flag — skip all counting/rate-limiting ──────────
+                is_sample_demo = self.headers.get("X-Sample-Demo") == "1"
+
                 # ── Session-based auth (email → server-side monthly limit) ──────
                 session_token = self.headers.get("X-Session-Token", "")
                 user_email    = validate_session_token(session_token) if session_token else None
@@ -1791,7 +1794,11 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 result    = research_permit(job_type, city, state, zip_code, job_category=job_category)
                 is_cached = result.get("_cached", False)
 
-                if not is_cached:
+                if is_sample_demo:
+                    # Demo lookup — never count against any limit
+                    remaining_lookups = None
+                    print(f"[permit] sample demo lookup — skipping all rate/count logic")
+                elif not is_cached:
                     if user_email:
                         if email_limited:
                             self.send_json(429, {
