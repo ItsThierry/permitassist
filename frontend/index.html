@@ -592,6 +592,102 @@
     .gate-note { font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; }
     .gate-skip { display: block; text-align: center; font-size: 13px; color: var(--muted); margin-top: 14px; cursor: pointer; }
 
+    /* Upgrade modal */
+    body.upgrade-modal-open { overflow: hidden; }
+    .upgrade-modal {
+      position: fixed; inset: 0; z-index: 240;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity .22s ease, visibility .22s ease;
+    }
+    .upgrade-modal.show { opacity: 1; visibility: visible; pointer-events: auto; }
+    .upgrade-modal-card {
+      width: min(100%, 480px);
+      background: var(--surface);
+      border-radius: 20px;
+      border: 1px solid rgba(226,232,240,0.92);
+      box-shadow: 0 28px 80px rgba(15,23,42,0.32);
+      padding: 28px;
+      position: relative;
+      transform: scale(.95) translateY(12px);
+      opacity: 0;
+      transition: transform .22s ease, opacity .22s ease;
+    }
+    .upgrade-modal.show .upgrade-modal-card { transform: scale(1) translateY(0); opacity: 1; }
+    .upgrade-modal-close {
+      position: absolute; top: 14px; right: 14px;
+      width: 36px; height: 36px;
+      border: none; border-radius: 50%;
+      background: rgba(148,163,184,0.14); color: var(--text2);
+      font-size: 22px; cursor: pointer; transition: all .18s ease;
+    }
+    .upgrade-modal-close:hover, .upgrade-modal-close:active { background: rgba(37,99,235,0.12); color: var(--brand); }
+    .upgrade-modal-title { font-size: 28px; font-weight: 900; line-height: 1.08; letter-spacing: -0.7px; }
+    .upgrade-modal-accent {
+      width: 86px; height: 5px; border-radius: 999px; margin: 12px 0 14px;
+      background: linear-gradient(135deg, #2563EB, #60A5FA);
+    }
+    .upgrade-modal-sub { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 18px; }
+    .upgrade-plan-toggle {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      padding: 6px; border-radius: 999px; margin-bottom: 18px;
+      background: var(--surface2); border: 1px solid var(--border);
+    }
+    .upgrade-plan-btn {
+      border: none; border-radius: 999px; background: transparent;
+      color: var(--text2); cursor: pointer; font-size: 13px; font-weight: 800;
+      padding: 12px 14px; transition: all .18s ease;
+    }
+    .upgrade-plan-btn.active {
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      color: #fff; box-shadow: 0 10px 24px rgba(37,99,235,0.25);
+    }
+    .upgrade-feature-list { list-style: none; display: grid; gap: 10px; margin: 0 0 20px; }
+    .upgrade-feature-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 14px; color: var(--text); line-height: 1.55;
+      padding: 12px 14px; border-radius: 14px;
+      background: var(--brand-lighter); border: 1px solid rgba(37,99,235,0.08);
+    }
+    .upgrade-feature-check {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--green-bg); color: var(--green); font-size: 12px; font-weight: 800;
+    }
+    .upgrade-coupon-wrap { margin-bottom: 18px; }
+    .upgrade-coupon-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; }
+    .upgrade-coupon-input {
+      margin-bottom: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .upgrade-coupon-btn {
+      border: none; border-radius: 12px; cursor: pointer;
+      background: var(--text); color: #fff;
+      font-size: 14px; font-weight: 700; padding: 0 18px;
+      min-width: 84px;
+    }
+    .upgrade-coupon-status {
+      display: none; margin-top: 10px; font-size: 13px; font-weight: 700;
+      padding: 10px 12px; border-radius: 12px;
+    }
+    .upgrade-coupon-status.show { display: block; }
+    .upgrade-coupon-status.success { background: var(--green-bg); color: var(--green); border: 1px solid rgba(5,150,105,0.18); }
+    .upgrade-coupon-status.error { background: rgba(220,38,38,0.08); color: var(--red); border: 1px solid rgba(220,38,38,0.14); }
+    .upgrade-cta {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; padding: 16px 18px; border-radius: 16px;
+      text-decoration: none; font-size: 16px; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      box-shadow: 0 14px 30px rgba(37,99,235,0.28);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .upgrade-cta:hover, .upgrade-cta:active { transform: translateY(-1px); box-shadow: 0 18px 36px rgba(37,99,235,0.34); }
+    .upgrade-cta-note { margin-top: 12px; font-size: 12px; color: var(--text2); text-align: center; }
+
     /* Tracker */
     .tracker-modal-overlay { position: fixed; inset: 0; z-index: 250; background: rgba(15,23,42,0.5); display: flex; align-items: flex-end; }
     .tracker-sheet { background: var(--surface); border-radius: 20px 20px 0 0; border-top: 1px solid var(--border); padding: 24px 20px calc(28px + var(--safe-bottom)); width: 100%; max-width: 680px; margin: 0 auto; animation: slideUp .25s ease; max-height: 85vh; overflow-y: auto; }
@@ -1343,6 +1439,49 @@
   <button class="install-dismiss" onclick="dismissInstall()">✕</button>
 </div>
 
+<!-- Upgrade Modal -->
+<div class="upgrade-modal" id="upgrade-modal" aria-hidden="true" onclick="handleUpgradeOverlayClick(event)">
+  <div class="upgrade-modal-card" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title">
+    <button class="upgrade-modal-close" type="button" aria-label="Close upgrade modal" onclick="closeUpgrade()">×</button>
+    <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Pro</div>
+    <div class="upgrade-modal-accent"></div>
+    <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
+
+    <div class="upgrade-plan-toggle" role="tablist" aria-label="Choose a plan">
+      <button class="upgrade-plan-btn active" id="upgrade-plan-pro" type="button" onclick="setUpgradePlan('pro')">Pro — $19/mo</button>
+      <button class="upgrade-plan-btn" id="upgrade-plan-team" type="button" onclick="setUpgradePlan('team')">Team — $49/mo</button>
+    </div>
+
+    <ul class="upgrade-feature-list" id="upgrade-features-pro">
+      <li><span class="upgrade-feature-check">✓</span><span>Unlimited lookups</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Foreman Brief PDF export</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Job tracking &amp; reminders</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Priority city requests</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Email support</span></li>
+    </ul>
+
+    <ul class="upgrade-feature-list" id="upgrade-features-team" hidden>
+      <li><span class="upgrade-feature-check">✓</span><span>Everything in Pro</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Up to 5 team seats</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Shared job board</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>48hr city requests</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Office billing portal</span></li>
+    </ul>
+
+    <div class="upgrade-coupon-wrap">
+      <label for="upgrade-coupon-input">Have a promo code?</label>
+      <div class="upgrade-coupon-row">
+        <input class="upgrade-coupon-input" type="text" id="upgrade-coupon-input" placeholder="Enter promo code" autocomplete="off" />
+        <button class="upgrade-coupon-btn" type="button" onclick="applyUpgradeCoupon()">Apply</button>
+      </div>
+      <div class="upgrade-coupon-status" id="upgrade-coupon-status"></div>
+    </div>
+
+    <a class="upgrade-cta" id="upgrade-modal-cta" href="https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a" target="_blank" rel="noopener">Upgrade Now →</a>
+    <div class="upgrade-cta-note">🔒 Secure payment via Stripe · Cancel anytime · No contracts</div>
+  </div>
+</div>
+
 <!-- Email Gate -->
 <div class="gate-overlay" id="email-gate" style="display:none">
   <div class="gate-sheet">
@@ -1382,8 +1521,8 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
-      <button onclick="openUpgrade('solo')" style="background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Solo — $19/mo</button>
-      <button onclick="openUpgrade('team')" style="background:rgba(37,99,235,0.15);color:var(--brand);border:1px solid rgba(37,99,235,0.4);border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Team — $49/mo<br><span style="font-size:10px;font-weight:400">3 seats</span></button>
+      <button onclick="openUpgrade('pro')" style="background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Pro — $19/mo</button>
+      <button onclick="openUpgrade('team')" style="background:rgba(37,99,235,0.15);color:var(--brand);border:1px solid rgba(37,99,235,0.4);border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Team — $49/mo<br><span style="font-size:10px;font-weight:400">Up to 5 seats</span></button>
     </div>
     <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 2 months: <strong style="color:#94a3b8">Annual plan = $190/yr</strong> (vs $228)</div>
     <span class="gate-skip" id="gate-skip-link" onclick="skipGate()">Skip for now (uses 1 of 3 free lookups)</span>
@@ -1392,9 +1531,9 @@
 
 <script>
 // ── Constants & State ─────────────────────────────────────────────────────────
-const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESSION_KEY='pa_session',FREE_LIMIT=3,UPGRADE_URL='https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a',UPGRADE_URL_TEAM='https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b';
+const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESSION_KEY='pa_session',FREE_LIMIT=3,UPGRADE_URL='https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a',UPGRADE_URL_TEAM='https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b',UPGRADE_COUPON_CODE='LAUNCH16';
 const IS_ADMIN=new URLSearchParams(window.location.search).get('admin')==='boban2026';
-let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential';
+let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false};
 
 // ── Job Types for Autocomplete ────────────────────────────────────────────────
 const JOB_TYPES_ALL = [
@@ -1604,10 +1743,97 @@ async function sendMagicLink(email){
   finally{if(btn)btn.disabled=false;}
 }
 
-function getUpgradeUrl(plan){
+function normalizeUpgradePlan(plan){
+  return plan==='team' ? 'team' : 'pro';
+}
+
+function getUpgradeUrl(plan, couponApplied=false){
   const email=localStorage.getItem(EMAIL_KEY)||'';
-  const base=plan==='team'?UPGRADE_URL_TEAM:UPGRADE_URL;
-  return email?`${base}?prefilled_email=${encodeURIComponent(email)}`:base;
+  const base=normalizeUpgradePlan(plan)==='team' ? UPGRADE_URL_TEAM : UPGRADE_URL;
+  const url=new URL(base);
+  if(email) url.searchParams.set('prefilled_email', email);
+  if(couponApplied) url.searchParams.set('prefilled_promo_code', UPGRADE_COUPON_CODE);
+  return url.toString();
+}
+
+function refreshUpgradeModal(){
+  const plan=normalizeUpgradePlan(upgradeModalState.plan);
+  const proBtn=document.getElementById('upgrade-plan-pro');
+  const teamBtn=document.getElementById('upgrade-plan-team');
+  const proList=document.getElementById('upgrade-features-pro');
+  const teamList=document.getElementById('upgrade-features-team');
+  const cta=document.getElementById('upgrade-modal-cta');
+  const sub=document.getElementById('upgrade-modal-sub');
+  if(proBtn) proBtn.classList.toggle('active', plan==='pro');
+  if(teamBtn) teamBtn.classList.toggle('active', plan==='team');
+  if(proList) proList.hidden=plan!=='pro';
+  if(teamList) teamList.hidden=plan!=='team';
+  if(cta) cta.href=getUpgradeUrl(plan, upgradeModalState.couponApplied);
+  if(sub) sub.textContent=plan==='team'
+    ? 'Bring your office and field crew onto one shared permit workflow with faster city-request turnaround.'
+    : 'Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.';
+}
+
+function setUpgradePlan(plan){
+  upgradeModalState.plan=normalizeUpgradePlan(plan);
+  refreshUpgradeModal();
+}
+
+function setUpgradeCouponStatus(message, type){
+  const status=document.getElementById('upgrade-coupon-status');
+  if(!status) return;
+  if(!message){
+    status.textContent='';
+    status.className='upgrade-coupon-status';
+    return;
+  }
+  status.textContent=message;
+  status.className=`upgrade-coupon-status show ${type}`;
+}
+
+function applyUpgradeCoupon(){
+  const input=document.getElementById('upgrade-coupon-input');
+  if(!input) return;
+  const code=input.value.trim().toUpperCase();
+  if(code===UPGRADE_COUPON_CODE){
+    input.value=UPGRADE_COUPON_CODE;
+    upgradeModalState.couponApplied=true;
+    setUpgradeCouponStatus('✓ 16% off applied — expires April 28','success');
+  } else if(code){
+    upgradeModalState.couponApplied=false;
+    setUpgradeCouponStatus('Promo code not recognized','error');
+  } else {
+    upgradeModalState.couponApplied=false;
+    setUpgradeCouponStatus('Enter a promo code to apply it','error');
+  }
+  refreshUpgradeModal();
+}
+
+function openUpgrade(plan){
+  const modal=document.getElementById('upgrade-modal');
+  if(!modal) return;
+  const couponInput=document.getElementById('upgrade-coupon-input');
+  upgradeModalState.plan=normalizeUpgradePlan(plan);
+  if(couponInput){
+    if(upgradeModalState.couponApplied) couponInput.value=UPGRADE_COUPON_CODE;
+    else if(couponInput.value.trim().toUpperCase()!==UPGRADE_COUPON_CODE) couponInput.value='';
+  }
+  refreshUpgradeModal();
+  modal.setAttribute('aria-hidden','false');
+  document.body.classList.add('upgrade-modal-open');
+  requestAnimationFrame(()=>modal.classList.add('show'));
+}
+
+function closeUpgrade(){
+  const modal=document.getElementById('upgrade-modal');
+  if(!modal) return;
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden','true');
+  document.body.classList.remove('upgrade-modal-open');
+}
+
+function handleUpgradeOverlayClick(event){
+  if(event.target===event.currentTarget) closeUpgrade();
 }
 
 async function loadStats(){
@@ -1800,7 +2026,29 @@ function parseQuery(raw){
 
 // ── Navigation helpers ───────────────────────────────────────────────────────
 function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('address').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');refreshCounterBar();document.getElementById('page-search').scrollTop=0}
-function openUpgrade(plan){window.open(getUpgradeUrl(plan||'solo'),'_blank')}
+
+const upgradeCouponInput=document.getElementById('upgrade-coupon-input');
+if(upgradeCouponInput){
+  upgradeCouponInput.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      applyUpgradeCoupon();
+    }
+  });
+  upgradeCouponInput.addEventListener('input',()=>{
+    if(upgradeCouponInput.value.trim().toUpperCase()!==UPGRADE_COUPON_CODE && upgradeModalState.couponApplied){
+      upgradeModalState.couponApplied=false;
+      setUpgradeCouponStatus('','');
+      refreshUpgradeModal();
+    }
+  });
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.getElementById('upgrade-modal')?.classList.contains('show')) closeUpgrade();
+});
+
+refreshUpgradeModal();
 
 // ── Verdict ──────────────────────────────────────────────────────────────────
 function verdictState(d){
