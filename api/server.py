@@ -57,9 +57,12 @@ SESSION_SECRET         = os.environ.get("SESSION_SECRET", "pa-dev-secret-CHANGE-
 STRIPE_WEBHOOK_SECRET  = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_SECRET_KEY      = os.environ.get("STRIPE_SECRET_KEY", "")
 FREE_LOOKUPS_PER_MONTH = 3
-UPGRADE_URL_SOLO       = "https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a"
+UPGRADE_URL_SOLO       = "https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c"
+UPGRADE_URL_ANNUAL     = "https://buy.stripe.com/fZueV63DlfIo5JX7i53VC0d"
 UPGRADE_URL_TEAM       = "https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b"
-PRICE_SOLO             = "price_1TLkkQ43XpvaBuPhhxdSRoID"
+PRICE_SOLO             = "price_1TME9k43XpvaBuPhmXKDc2YC"  # $24.99/mo
+PRICE_SOLO_LEGACY      = "price_1TLkkQ43XpvaBuPhhxdSRoID"   # old $19/mo (deactivated)
+PRICE_SOLO_ANNUAL      = "price_1TME9y43XpvaBuPhfj9W8hgG"   # $199/yr
 PRICE_TEAM             = "price_1TLkkQ43XpvaBuPh0vL7MnY4"
 RESEND_API_KEY         = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL             = "hello@itsthierryai.com"
@@ -269,6 +272,47 @@ def init_db():
             sent_at      TEXT,
             created_at   TEXT,
             UNIQUE(email, job_type, city, state, expiry_date)
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS onboarding_emails (
+            id          TEXT PRIMARY KEY,
+            email       TEXT NOT NULL,
+            day_num     INTEGER NOT NULL,
+            scheduled_at TEXT NOT NULL,
+            sent_at      TEXT,
+            created_at   TEXT,
+            UNIQUE(email, day_num)
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS referrals (
+            id              TEXT PRIMARY KEY,
+            ref_code        TEXT NOT NULL,
+            referrer_email  TEXT NOT NULL,
+            referred_email  TEXT,
+            referred_at     TEXT,
+            subscribed_at   TEXT,
+            credit_flagged  INTEGER DEFAULT 0,
+            created_at      TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_referrals_code ON referrals(ref_code)
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS permit_issued_reminders (
+            id          TEXT PRIMARY KEY,
+            email       TEXT NOT NULL,
+            job_id      TEXT,
+            job_name    TEXT,
+            city        TEXT,
+            state       TEXT,
+            issued_date TEXT NOT NULL,
+            remind_at   TEXT NOT NULL,
+            sent_at     TEXT,
+            created_at  TEXT,
+            UNIQUE(email, job_id)
         )
     """)
     conn.commit()
@@ -699,6 +743,238 @@ def send_confirmation_email(to_email: str, plan: str) -> bool:
     </div>
     """
     return resend_send(to_email, subject, text_body, html_body)
+
+
+# ── Onboarding Email Drip ────────────────────────────────────────────────────────
+ONBOARDING_SCHEDULE = [
+    (0,  "Welcome to PermitAssist — here's how to get the most out of it"),
+    (1,  "One thing most contractors miss about permits"),
+    (3,  "Save your jobs, save your time"),
+    (7,  "How are your lookups going?"),
+    (14, "Upgrade to unlimited — you've earned it"),
+]
+
+ONBOARDING_BODIES = {
+    0: (
+        "Welcome to PermitAssist! Here are 3 quick tips to get the most out of it:\n\n"
+        "1. 🔍 BE SPECIFIC with your job description. Instead of 'HVAC work', try 'Residential furnace replacement, gas, 3-ton unit'. You'll get a more exact permit name and fee.\n\n"
+        "2. 📌 ADD THE CITY + STATE. Every jurisdiction has different rules. The building department in one city may require a permit that the next city over doesn't.\n\n"
+        "3. 📁 SAVE YOUR LOOKUPS. After your first lookup, check the History tab (📋) to find past results instantly — no need to look up the same job twice.\n\n"
+        "Start your first lookup now: https://permitassist.io\n\n"
+        "— PermitAssist\n"
+        "permitassist.io"
+    ),
+    1: (
+        "Quick tip from the PermitAssist team:\n\n"
+        "The biggest permit mistake contractors make: assuming the city handles everything.\n\n"
+        "Many jurisdictions are split — your job may fall under city, county, OR state jurisdiction depending on location and type of work. A permit pulled at the wrong office = delays, re-submissions, and sometimes fines.\n\n"
+        "PermitAssist always looks up the exact authority having jurisdiction (AHJ) for your job so you show up at the right counter.\n\n"
+        "Try a lookup for your next job: https://permitassist.io\n\n"
+        "— PermitAssist\n"
+        "permitassist.io"
+    ),
+    3: (
+        "Did you know PermitAssist has a Job Tracker?\n\n"
+        "After any permit lookup, click '📁 Save to Job Tracker' to keep all your permits in one place.\n\n"
+        "You can track status (Planning → Applied → Approved → Active → Closed), set expiry dates, add notes, and get reminders before permits expire.\n\n"
+        "It's free for all users. Log in and try it: https://permitassist.io\n\n"
+        "— PermitAssist\n"
+        "permitassist.io"
+    ),
+    7: (
+        "Hey, just checking in — how are your permit lookups going?\n\n"
+        "If you've run into any issues or got a result that didn't look right, just reply to this email and we'll look into it.\n\n"
+        "Also — you can look up any job, any city, any time. Try a job you've been meaning to research: https://permitassist.io\n\n"
+        "— PermitAssist\n"
+        "permitassist.io"
+    ),
+    14: (
+        "You've been with PermitAssist for 2 weeks now.\n\n"
+        "Free accounts get 3 lookups per month. If you're hitting that limit or doing more than 3 jobs/month, upgrading to Pro for $24.99/mo gets you:\n\n"
+        "• Unlimited lookups, every month\n"
+        "• Job tracker for all your permits\n"
+        "• Permit expiry reminders\n"
+        "• Priority city requests\n\n"
+        "Upgrade here (cancel anytime): https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c\n\n"
+        "Or get the annual plan ($199/yr — saves $100): https://buy.stripe.com/fZueV63DlfIo5JX7i53VC0d\n\n"
+        "— PermitAssist\n"
+        "permitassist.io"
+    ),
+}
+
+
+def schedule_onboarding_emails(email: str):
+    """Schedule 5 onboarding emails for a new user."""
+    now = utc_now()
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        for day_num, subject in ONBOARDING_SCHEDULE:
+            scheduled_at = (now + timedelta(days=day_num)).isoformat()
+            onboarding_id = str(uuid.uuid4())
+            conn.execute(
+                "INSERT OR IGNORE INTO onboarding_emails (id, email, day_num, scheduled_at, sent_at, created_at) VALUES (?,?,?,?,NULL,?)",
+                [onboarding_id, email.lower().strip(), day_num, scheduled_at, now.isoformat()]
+            )
+        conn.commit()
+        conn.close()
+        print(f"[onboarding] Scheduled 5 emails for {email}")
+    except Exception as e:
+        print(f"[onboarding] Schedule error: {e}")
+
+
+def process_onboarding_emails(now: datetime = None) -> int:
+    """Send due onboarding emails. Returns count sent."""
+    now = now or utc_now()
+    sent = 0
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        rows = conn.execute(
+            "SELECT id, email, day_num FROM onboarding_emails "
+            "WHERE sent_at IS NULL AND scheduled_at <= ?",
+            [now.isoformat()]
+        ).fetchall()
+        for eid, email, day_num in rows:
+            subject_text = dict(ONBOARDING_SCHEDULE).get(day_num, "PermitAssist Update")
+            body = ONBOARDING_BODIES.get(day_num, "")
+            if not body:
+                continue
+            if resend_send(email, subject_text, body):
+                conn.execute("UPDATE onboarding_emails SET sent_at=? WHERE id=?", [now.isoformat(), eid])
+                sent += 1
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[onboarding] Process error: {e}")
+    return sent
+
+
+# ── Referral System ─────────────────────────────────────────────────────────────────────
+def generate_ref_code(email: str) -> str:
+    """Generate deterministic 8-char ref code from email using SHA256."""
+    h = hashlib.sha256(email.lower().strip().encode()).hexdigest()
+    # Use uppercase alphanumeric chars from the hash
+    chars = ''.join(c for c in h.upper() if c.isalnum())[:8]
+    return chars
+
+
+def ensure_referral_record(email: str) -> str:
+    """Ensure a referral record exists for this email. Returns ref_code."""
+    ref_code = generate_ref_code(email)
+    now = utc_now().isoformat()
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            "INSERT OR IGNORE INTO referrals (id, ref_code, referrer_email, created_at) VALUES (?,?,?,?)",
+            [str(uuid.uuid4()), ref_code, email.lower().strip(), now]
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[referral] Ensure error: {e}")
+    return ref_code
+
+
+def record_referral_signup(ref_code: str, referred_email: str):
+    """Record when a referred user signs up."""
+    if not ref_code:
+        return
+    now = utc_now().isoformat()
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            "UPDATE referrals SET referred_email=?, referred_at=? WHERE ref_code=? AND referred_email IS NULL",
+            [referred_email.lower().strip(), now, ref_code]
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[referral] Record signup error: {e}")
+
+
+def flag_referral_credit(referred_email: str):
+    """Flag the referring user for 1 free month credit when referred user subscribes."""
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            "UPDATE referrals SET subscribed_at=?, credit_flagged=1 WHERE referred_email=? AND credit_flagged=0",
+            [utc_now().isoformat(), referred_email.lower().strip()]
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[referral] Flag credit error: {e}")
+
+
+# ── 90-day permit issued reminders ────────────────────────────────────────────────────
+def process_permit_issued_reminders(now: datetime = None) -> int:
+    """Send 90-day permit expiry reminders for saved jobs with issued_date set."""
+    now = now or utc_now()
+    sent = 0
+    try:
+        # Find records where remind_at has passed and not yet sent
+        conn = sqlite3.connect(CACHE_DB)
+        rows = conn.execute(
+            "SELECT id, email, job_name, city, state, issued_date FROM permit_issued_reminders "
+            "WHERE sent_at IS NULL AND remind_at <= ?",
+            [now.isoformat()]
+        ).fetchall()
+        for rid, email, job_name, city, state, issued_date in rows:
+            subject = f"Your permit for {job_name or 'your job'} in {city}, {state} may be expiring soon"
+            body = (
+                f"Hi,\n\n"
+                f"Heads up \u2014 your permit may be approaching the 90-day mark, which is when many jurisdictions require a final inspection or renewal.\n\n"
+                f"Job: {job_name or 'your job'}\n"
+                f"Location: {city}{', ' + state if state else ''}\n"
+                f"Permit issued: {issued_date}\n\n"
+                f"Action: Book your final inspection or contact the building department to confirm your permit status.\n\n"
+                f"\u26a0\ufe0f Don't let it expire \u2014 an expired permit can result in stop-work orders, re-application fees, and failed final inspections.\n\n"
+                f"\u2014 PermitAssist\n"
+                f"permitassist.io"
+            )
+            if resend_send(email, subject, body):
+                conn.execute("UPDATE permit_issued_reminders SET sent_at=? WHERE id=?", [now.isoformat(), rid])
+                sent += 1
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[permit-issued-reminders] Error: {e}")
+    return sent
+
+
+def upsert_permit_issued_reminder(email: str, job_id: str, job_name: str, city: str, state: str, issued_date: str) -> dict:
+    """Store a 90-day reminder for a permit issued date."""
+    now = utc_now()
+    reminder_id = str(uuid.uuid4())
+    remind_at = ""
+    if issued_date:
+        try:
+            issued_dt = datetime.fromisoformat(issued_date)
+            remind_dt = issued_dt + timedelta(days=85)  # Remind at ~85 days
+            remind_at = remind_dt.isoformat()
+        except Exception:
+            pass
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        existing = conn.execute(
+            "SELECT id FROM permit_issued_reminders WHERE email=? AND job_id=?",
+            [email, job_id]
+        ).fetchone()
+        if existing:
+            reminder_id = existing[0]
+            conn.execute(
+                "UPDATE permit_issued_reminders SET issued_date=?, remind_at=?, sent_at=NULL WHERE id=?",
+                [issued_date, remind_at, reminder_id]
+            )
+        else:
+            conn.execute(
+                "INSERT INTO permit_issued_reminders (id,email,job_id,job_name,city,state,issued_date,remind_at,sent_at,created_at) VALUES (?,?,?,?,?,?,?,?,NULL,?)",
+                [reminder_id, email, job_id, job_name, city, state, issued_date, remind_at, now.isoformat()]
+            )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[permit-issued-reminders] Upsert error: {e}")
+    return {"id": reminder_id, "remind_at": remind_at}
 
 
 def verify_stripe_signature(payload: bytes, sig_header: str, secret: str) -> bool:
@@ -1367,6 +1643,17 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 return
             self.send_json(200, {"jobs": list_jobs(user_email)})
 
+        # ── GET /api/referral-link ────────────────────────────────────────────────────
+        elif path == "/api/referral-link":
+            session_token = self.headers.get("X-Session-Token", "")
+            user_email = validate_session_token(session_token) if session_token else None
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
+                return
+            ref_code = ensure_referral_record(user_email)
+            ref_url = f"{APP_BASE_URL}/?ref={ref_code}"
+            self.send_json(200, {"ref_code": ref_code, "ref_url": ref_url})
+
         elif path == "/api/billing-portal":
             session_token = self.headers.get("X-Session-Token", "")
             user_email = validate_session_token(session_token) if session_token else None
@@ -1771,6 +2058,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 )
                 conn.commit()
                 conn.close()
+                is_new_user = get_user(email) is None
                 get_or_create_user(email)
                 sent = send_magic_link_email(email, token)
                 # If email failed (Railway SMTP blocked), return token in response
@@ -1778,6 +2066,13 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 resp = {"sent": sent, "expires_in": 900}
                 if not sent:
                     resp["code"] = token  # show code on screen
+                # Schedule onboarding drip for new users
+                if is_new_user:
+                    threading.Thread(target=schedule_onboarding_emails, args=(email,), daemon=True).start()
+                    # Also record referral if ref_code in request
+                    ref_code = (data or {}).get("ref_code", "").strip()
+                    if ref_code:
+                        threading.Thread(target=record_referral_signup, args=(ref_code, email), daemon=True).start()
                 self.send_json(200, resp)
             except Exception as e:
                 print(f"[magic-link] Error: {e}")
@@ -1872,6 +2167,10 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                         threading.Thread(
                             target=send_confirmation_email, args=(email, plan), daemon=True
                         ).start()
+                        # Flag referral credit if this user was referred
+                        threading.Thread(
+                            target=flag_referral_credit, args=(email,), daemon=True
+                        ).start()
                     else:
                         print(f"[stripe-webhook] Could not extract email from event")
 
@@ -1904,6 +2203,75 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
             except Exception as e:
                 print(f"[stripe-webhook] Error: {e}")
                 import traceback; traceback.print_exc()
+                self.send_json(500, {"error": str(e)})
+
+
+        # ── Onboarding emails processing ──────────────────────────────────
+        elif path == "/api/process-onboarding-emails":
+            try:
+                admin_token = self.headers.get("X-Admin-Token", "")
+                if ADMIN_TOKEN and admin_token != ADMIN_TOKEN:
+                    self.send_json(401, {"error": "Invalid admin token"})
+                    return
+                sent = process_onboarding_emails()
+                self.send_json(200, {"sent": sent, "status": "ok"})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        # ── Check permit issued reminders ─────────────────────────────────
+        elif path == "/api/check-permit-reminders":
+            try:
+                admin_token = self.headers.get("X-Admin-Token", "")
+                if ADMIN_TOKEN and admin_token != ADMIN_TOKEN:
+                    self.send_json(401, {"error": "Invalid admin token"})
+                    return
+                sent = process_permit_issued_reminders()
+                self.send_json(200, {"sent": sent, "status": "ok"})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        # ── Save permit issued date (90-day reminder) ─────────────────────
+        elif path == "/api/permit-issued-date":
+            try:
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else None
+                if not user_email:
+                    self.send_json(401, {"error": "Not authenticated"})
+                    return
+                body = self.read_json_body()
+                job_id = body.get("job_id", "").strip()
+                job_name = body.get("job_name", "").strip()
+                city = body.get("city", "").strip()
+                state = body.get("state", "").strip()
+                issued_date = body.get("issued_date", "").strip()
+                if not job_id or not issued_date:
+                    self.send_json(400, {"error": "job_id and issued_date required"})
+                    return
+                result = upsert_permit_issued_reminder(user_email, job_id, job_name, city, state, issued_date)
+                self.send_json(200, {"saved": True, "remind_at": result.get("remind_at", "")})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        # ── Admin: referral credits ───────────────────────────────────────
+        elif path == "/api/admin/referral-credits":
+            try:
+                admin_token = self.headers.get("X-Admin-Token", "")
+                if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+                    self.send_json(401, {"error": "Admin token required"})
+                    return
+                import sqlite3 as _sqlite3
+                conn = _sqlite3.connect(CACHE_DB)
+                rows = conn.execute(
+                    "SELECT ref_code, referrer_email, referred_email, subscribed_at "
+                    "FROM referrals WHERE credit_flagged=1 ORDER BY subscribed_at DESC"
+                ).fetchall()
+                conn.close()
+                credits = [{
+                    "ref_code": r[0], "referrer_email": r[1],
+                    "referred_email": r[2], "subscribed_at": r[3]
+                } for r in rows]
+                self.send_json(200, {"pending_credits": credits, "count": len(credits)})
+            except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
         # ── Team invite (Task 7) ─────────────────────────────────────────
@@ -2000,10 +2368,25 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
             self.send_json(404, {"error": "Not found"})
 
 
+def background_task_worker():
+    """Background worker: runs onboarding emails + permit issued reminders hourly."""
+    while True:
+        try:
+            process_onboarding_emails()
+        except Exception as e:
+            print(f"[bg-worker] Onboarding error: {e}")
+        try:
+            process_permit_issued_reminders()
+        except Exception as e:
+            print(f"[bg-worker] Permit issued reminders error: {e}")
+        time.sleep(REMINDER_CHECK_SECONDS)
+
+
 if __name__ == "__main__":
     init_db()
     process_due_reminders()
     threading.Thread(target=reminder_worker, daemon=True).start()
+    threading.Thread(target=background_task_worker, daemon=True).start()
     print(f"🚀 PermitAssist server starting on port {PORT}")
     print(f"   Rate limit: {RATE_MAX_FRESH} fresh lookups / {RATE_WINDOW_SECONDS//3600}h per IP (guests)")
     print(f"   Free tier: {FREE_LOOKUPS_PER_MONTH} lookups/month per email (auth users)")

@@ -166,7 +166,7 @@
             Stop worrying about limits. <strong>$19/mo Solo</strong> or <strong>$49/mo Team</strong> (3 seats). Cancel anytime.
           </div>
           <div class="btn-row">
-            <a id="btn-upgrade-solo" href="#" class="btn btn-primary" onclick="event.preventDefault();upgradeAccount('solo')">Solo — $19/mo</a>
+            <a id="btn-upgrade-solo" href="#" class="btn btn-primary" onclick="event.preventDefault();upgradeAccount('solo')">Solo — $24.99/mo</a>
             <a id="btn-upgrade-team" href="#" class="btn btn-secondary" onclick="event.preventDefault();upgradeAccount('team')">Team — $49/mo</a>
           </div>
         </div>
@@ -198,6 +198,20 @@
         </div>
       </div>
 
+      <!-- Referral Link -->
+      <div class="card" id="referral-section">
+        <div class="card-label">🤝 Refer a Contractor</div>
+        <div style="font-size:14px;color:#475569;margin-bottom:12px;line-height:1.6">
+          Share your referral link. When a contractor signs up and subscribes, you both get 1 free month.
+        </div>
+        <div style="background:#F0F4FF;border:1px solid #CBD5E1;border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          <span id="referral-link-text" style="flex:1;font-size:13px;color:#0F172A;word-break:break-all;font-weight:600">Loading...</span>
+          <button onclick="copyReferralLink()" style="background:#2563EB;color:#fff;border:none;border-radius:6px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Copy</button>
+        </div>
+        <div id="referral-copy-msg" style="display:none;font-size:12px;color:#059669;font-weight:600">✅ Copied to clipboard!</div>
+        <div style="font-size:12px;color:#94A3B8;margin-top:6px">Both you and the referred contractor get 1 free month when they subscribe.</div>
+      </div>
+
       <!-- Actions -->
       <div class="card">
         <div class="card-label">Actions</div>
@@ -210,7 +224,7 @@
 <script>
 const SESSION_KEY = 'pa_session';
 const EMAIL_KEY = 'pa_email';
-const UPGRADE_URL_SOLO = 'https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a';
+const UPGRADE_URL_SOLO = 'https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c';
 const UPGRADE_URL_TEAM = 'https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b';
 
 function getSessionToken() { return localStorage.getItem(SESSION_KEY) || ''; }
@@ -442,8 +456,32 @@ async function accountResend() {
   alert('New code sent to ' + email);
 }
 
+// Referral link
+async function loadReferralLink() {
+  const token = getSessionToken();
+  if (!token) return;
+  try {
+    const r = await fetch('/api/referral-link', { headers: { 'X-Session-Token': token } });
+    const d = await r.json();
+    if (d.ref_url) {
+      document.getElementById('referral-link-text').textContent = d.ref_url;
+    }
+  } catch {
+    document.getElementById('referral-link-text').textContent = 'Could not load referral link';
+  }
+}
+
+function copyReferralLink() {
+  const text = document.getElementById('referral-link-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const msg = document.getElementById('referral-copy-msg');
+    if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 2500); }
+  }).catch(() => alert(text));
+}
+
 // Init
 loadAccount();
+loadReferralLink();
 </script>
 </body>
 </html>

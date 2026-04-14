@@ -14,7 +14,7 @@
   <link rel="canonical" href="https://permitassist.io/" />
   <!-- Open Graph -->
   <meta property="og:title" content="PermitAssist — Know Your Permits Before You Start" />
-  <meta property="og:description" content="AI-powered permit research for contractors. Exact requirements, fees, and contacts in 30 seconds. $19/mo unlimited." />
+  <meta property="og:description" content="AI-powered permit research for contractors. Exact requirements, fees, and contacts in 30 seconds. $24.99/mo unlimited." />
   <meta property="og:url" content="https://permitassist.io/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PermitAssist" />
@@ -22,7 +22,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="PermitAssist — Know Your Permits Before You Start" />
-  <meta name="twitter:description" content="AI-powered permit research for contractors. Exact fees, requirements, and contacts in 30 seconds." />
+  <meta name="twitter:description" content="AI-powered permit research for contractors. Exact fees, requirements, and contacts in 30 seconds. $24.99/mo unlimited." />
   <meta name="twitter:image" content="https://permitassist.io/icons/icon-512.png" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -955,6 +955,19 @@
     }
     .tab { display: flex; align-items: center; justify-content: center; }
 
+    /* History tab pulse */
+    @keyframes historyPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.3); } }
+
+    /* Toast notification */
+    .pa-toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1e293b; color:#f0f4ff; padding:12px 20px; border-radius:12px; font-size:14px; font-weight:600; z-index:9999; white-space:nowrap; box-shadow:0 8px 24px rgba(0,0,0,0.25); animation:toastIn .3s ease forwards; pointer-events:none; }
+    @keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(16px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+    .pa-toast.out { animation:toastOut .3s ease forwards; }
+    @keyframes toastOut { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(8px); } }
+
+    /* Referral banner */
+    .referral-banner { background:rgba(5,150,105,0.08); border:1px solid rgba(5,150,105,0.25); border-radius:var(--r-sm); padding:12px 16px; margin-bottom:16px; font-size:13px; color:var(--text2); display:flex; align-items:center; gap:10px; }
+    .referral-banner strong { color:var(--green); }
+
     /* Smooth scroll snap for testimonials on mobile */
     @media (max-width: 600px) {
       .testimonial-card { scroll-snap-align: center; }
@@ -1057,7 +1070,7 @@
   <!-- Tabs -->
   <div class="tabs">
     <div class="tab active" id="tab-search" onclick="showTab('search')">🔍 Look Up</div>
-    <div class="tab" id="tab-history" onclick="showTab('history')">📋 History</div>
+    <div class="tab" id="tab-history" onclick="showTab('history');dismissHistoryDot()">📋 History<span id="history-tab-dot" style="display:inline-block;width:8px;height:8px;background:var(--brand);border-radius:50%;margin-left:5px;vertical-align:middle;animation:historyPulse 1.4s ease-in-out infinite"></span></div>
     <div class="tab" id="tab-jobs" onclick="showTab('jobs')">📁 Jobs</div>
   </div>
 
@@ -1088,7 +1101,7 @@
       <div class="free-paid-bar">
         <span>✅ <strong>3 free lookups</strong> — no credit card</span>
         <span class="free-paid-divider">·</span>
-        <span>Then <strong>$19/mo</strong> for unlimited</span>
+        <span>Then <strong>$24.99/mo</strong> for unlimited</span>
         <span class="free-paid-divider">·</span>
         <span>Cancel anytime</span>
       </div>
@@ -1104,7 +1117,10 @@
 
       <!-- Search Action Zone -->
       <div class="search-action-zone">
-        <div class="search-section-label">🔍 Look Up Your Permit</div>
+        <div class="search-section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>🔍 Look Up Your Permit</span>
+          <a href="#" onclick="event.preventDefault();runSampleLookup()" style="font-size:12px;color:var(--text2);text-decoration:none;font-weight:600;letter-spacing:0;text-transform:none;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;transition:all .15s" onmouseover="this.style.borderColor='var(--brand)';this.style.color='var(--brand)'" onmouseout="this.style.borderColor='';this.style.color='var(--text2)'">See a sample result →</a>
+        </div>
               <div class="card">
           <div class="card-label">What do you need a permit for?</div>
           <div class="form-group">
@@ -1241,7 +1257,7 @@
             <div class="roi-stat-label">less research time vs. calling building departments</div>
           </div>
           <div class="roi-stat" role="listitem">
-            <div class="roi-stat-number">$19/mo</div>
+            <div class="roi-stat-number">$24.99/mo</div>
             <div class="roi-stat-label">vs. $500+/hr permit expediter</div>
           </div>
         </div>
@@ -1294,7 +1310,7 @@
         <div class="compare-strip-cols">
           <div class="compare-col compare-col-winner">
             <div class="compare-col-name">✅ PermitAssist</div>
-            <div class="compare-col-price">$19/mo · unlimited</div>
+            <div class="compare-col-price">$24.99/mo · unlimited</div>
             <ul class="compare-col-features">
               <li>⚡ Instant — 30 seconds</li>
               <li>🔍 100% self-serve</li>
@@ -1452,7 +1468,7 @@
     <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
 
     <div class="upgrade-plan-toggle" role="tablist" aria-label="Choose a plan">
-      <button class="upgrade-plan-btn active" id="upgrade-plan-pro" type="button" onclick="setUpgradePlan('pro')">Pro — $19/mo</button>
+      <button class="upgrade-plan-btn active" id="upgrade-plan-pro" type="button" onclick="setUpgradePlan('pro')">Pro — $24.99/mo</button>
       <button class="upgrade-plan-btn" id="upgrade-plan-team" type="button" onclick="setUpgradePlan('team')">Team — $49/mo</button>
     </div>
 
@@ -1481,7 +1497,7 @@
       <div class="upgrade-coupon-status" id="upgrade-coupon-status"></div>
     </div>
 
-    <a class="upgrade-cta" id="upgrade-modal-cta" href="https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a" target="_blank" rel="noopener">Upgrade Now →</a>
+    <a class="upgrade-cta" id="upgrade-modal-cta" href="https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c" target="_blank" rel="noopener">Upgrade Now →</a>
     <div class="upgrade-cta-note">🔒 Secure payment via Stripe · Cancel anytime · No contracts</div>
   </div>
 </div>
@@ -1525,17 +1541,17 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
-      <button onclick="openUpgrade('pro')" style="background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Pro — $19/mo</button>
+      <button onclick="openUpgrade('pro')" style="background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Pro — $24.99/mo</button>
       <button onclick="openUpgrade('team')" style="background:rgba(37,99,235,0.15);color:var(--brand);border:1px solid rgba(37,99,235,0.4);border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Team — $49/mo<br><span style="font-size:10px;font-weight:400">Up to 5 seats</span></button>
     </div>
-    <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 2 months: <strong style="color:#94a3b8">Annual plan = $190/yr</strong> (vs $228)</div>
+    <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 3 months free: <strong style="color:#059669">Annual plan = $199/yr</strong> (vs $299.88)</div>
     <span class="gate-skip" id="gate-skip-link" onclick="skipGate()">Skip for now (uses 1 of 3 free lookups)</span>
   </div>
 </div>
 
 <script>
 // ── Constants & State ─────────────────────────────────────────────────────────
-const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESSION_KEY='pa_session',FREE_LIMIT=3,UPGRADE_URL='https://buy.stripe.com/8x28wI3DldAg3BP8m93VC0a',UPGRADE_URL_TEAM='https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b',UPGRADE_COUPON_CODE='LAUNCH16';
+const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESSION_KEY='pa_session',FREE_LIMIT=3,UPGRADE_URL='https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c',UPGRADE_URL_TEAM='https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b',UPGRADE_URL_ANNUAL='https://buy.stripe.com/fZueV63DlfIo5JX7i53VC0d',UPGRADE_COUPON_CODE='LAUNCH16';
 const IS_ADMIN=new URLSearchParams(window.location.search).get('admin')==='boban2026';
 let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false};
 
@@ -1972,7 +1988,21 @@ async function useGPS(){
     if(zip) document.getElementById('zip').value=zip;
     gpsLocation={city,state,zip};
     status.className='gps-status ok';status.textContent='Location detected and ready.';
-  }catch{status.className='gps-status bad';status.textContent='Could not get location. Enter city and state manually.'}
+  }catch(err){
+    status.className='gps-status bad';
+    status.textContent='⚠️ Location access denied — just type your city above ↑';
+    // Focus city input and show tooltip
+    const cityInput=document.getElementById('city');
+    if(cityInput){
+      cityInput.focus();
+      cityInput.style.borderColor='var(--brand)';
+      cityInput.setAttribute('placeholder','Type your city here...');
+      setTimeout(()=>{
+        cityInput.style.borderColor='';
+        cityInput.setAttribute('placeholder','e.g. Houston');
+      },4000);
+    }
+  }
 }
 
 async function geocodeAddress(address){
@@ -2815,6 +2845,52 @@ function stopVoice() {
   voiceRecognition = null;
 }
 
+// ── Sample Lookup Demo ───────────────────────────────────────────────────────
+function runSampleLookup() {
+  document.getElementById('city').value = 'Austin';
+  document.getElementById('state').value = 'TX';
+  document.getElementById('query').value = 'HVAC replacement, residential furnace swap';
+  setJobCategory('residential');
+  checkShimmer();
+  doLookupWithOffline();
+}
+
+// ── History Tab Discoverability ───────────────────────────────────────────────
+function dismissHistoryDot() {
+  const dot = document.getElementById('history-tab-dot');
+  if (dot) dot.style.display = 'none';
+  localStorage.setItem('pa_history_dot_seen', '1');
+}
+
+function showHistorySavedToast() {
+  if (localStorage.getItem('pa_history_toast_shown')) return;
+  localStorage.setItem('pa_history_toast_shown', '1');
+  const toast = document.createElement('div');
+  toast.className = 'pa-toast';
+  toast.textContent = '\u2705 Saved to History \u2014 find it in the \ud83d\udccb History tab';
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('out');
+    setTimeout(() => toast.remove(), 350);
+  }, 3500);
+}
+
+// ── Referral Landing Message ──────────────────────────────────────────────────
+(function() {
+  const ref = new URLSearchParams(window.location.search).get('ref');
+  if (!ref) return;
+  localStorage.setItem('pa_referral_code', ref);
+  // Show trust message above hero when DOM is ready
+  document.addEventListener('DOMContentLoaded', function() {
+    const heroDiv = document.querySelector('.hero');
+    if (!heroDiv) return;
+    const banner = document.createElement('div');
+    banner.className = 'referral-banner';
+    banner.innerHTML = '\ud83e\udd1d <span><strong>A contractor recommended PermitAssist to you.</strong> They use it before every permit job \u2014 so should you.</span>';
+    heroDiv.parentNode.insertBefore(banner, heroDiv);
+  });
+})();
+
 // ── Offline IndexedDB ────────────────────────────────────────────────────────
 const IDB_NAME = 'permitassist-offline', IDB_STORE = 'results', IDB_VERSION = 1;
 function openIDB() {
@@ -2880,6 +2956,8 @@ async function doLookupWithOffline() {
 function saveToHistory(entry) {
   _saveToHistoryCore(entry);
   saveToIDB(entry.job, entry.city, entry.state, entry.data).catch(() => {});
+  showHistorySavedToast();
+  dismissHistoryDot();
 }
 
 // ── Permit Tracker ───────────────────────────────────────────────────────────
@@ -3055,8 +3133,13 @@ async function renderJobsPage() {
     let html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">' + jobs.length + ' saved job' + (jobs.length!==1?'s':'') + '</div>';
     jobs.forEach(j => {
       const warn = j.expiry_date ? checkExpiryWarn(j.expiry_date) : '';
+      const issuedDate = getPermitIssuedDate(j.id);
+      const issuedWarn = checkIssuedDateWarn(issuedDate);
+      const issuedSection = issuedDate
+        ? `<span class="job-action-btn" style="font-size:11px">\ud83d\udcc5 Issued: ${esc(issuedDate)}</span>`
+        : `<button class="job-action-btn" onclick="setPermitIssuedDate('${esc(j.id)}','${esc(j.job_name)}','${esc(j.city)}','${esc(j.state)}')">Set Issued Date</button>`;
       const opts = ['planning','applied','approved','active','closed'].map(s=>'<option value="'+s+'" '+(j.status===s?'selected':'')+'>'+(SL[s]||s)+'</option>').join('');
-      html += '<div class="job-item"><div class="job-item-header"><div class="job-item-name">'+esc(j.job_name)+'</div><span class="job-status-badge '+(SC[j.status]||'status-planning')+'">'+(SL[j.status]||j.status)+'</span></div><div class="job-item-meta">\ud83d\udccd '+esc(j.city)+', '+esc(j.state)+(j.permit_name?' \u2022 '+esc(j.permit_name):'')+' </div>'+warn+'<div class="job-item-actions"><select onchange="updateJobStatus(\'' + esc(j.id) + '\',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;cursor:pointer">'+opts+'</select>'+(j.expiry_date?'<span class="job-action-btn" style="font-size:11px">\u23f0 '+esc(j.expiry_date)+'</span>':'<button class="job-action-btn" onclick="setJobExpiry(\'' + esc(j.id) + '\')">Set Expiry</button>')+'<button class="job-action-btn" style="color:var(--red);border-color:rgba(239,68,68,.3)" onclick="deleteJobItem(\'' + esc(j.id) + '\')">Delete</button></div></div>';
+      html += '<div class="job-item"><div class="job-item-header"><div class="job-item-name">'+esc(j.job_name)+'</div><span class="job-status-badge '+(SC[j.status]||'status-planning')+'">'+(SL[j.status]||j.status)+'</span></div><div class="job-item-meta">\ud83d\udccd '+esc(j.city)+', '+esc(j.state)+(j.permit_name?' \u2022 '+esc(j.permit_name):'')+' </div>'+warn+issuedWarn+'<div class="job-item-actions"><select onchange="updateJobStatus(\'' + esc(j.id) + '\',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;cursor:pointer">'+opts+'</select>'+issuedSection+(j.expiry_date?'<span class="job-action-btn" style="font-size:11px">\u23f0 '+esc(j.expiry_date)+'</span>':'<button class="job-action-btn" onclick="setJobExpiry(\'' + esc(j.id) + '\')">Set Expiry</button>')+'<button class="job-action-btn" style="color:var(--red);border-color:rgba(239,68,68,.3)" onclick="deleteJobItem(\'' + esc(j.id) + '\')">Delete</button></div></div>';
     });
     el.innerHTML = html;
   } catch(e) { el.innerHTML = '<div class="jobs-empty"><div class="icon">\u26a0\ufe0f</div><p>'+esc(e.message)+'</p></div>'; }
@@ -3064,12 +3147,49 @@ async function renderJobsPage() {
 function checkExpiryWarn(d) {
   try { const days=Math.ceil((new Date(d)-Date.now())/(86400000)); if(days<0) return '<div class="job-expiry-warn">\u26a0\ufe0f Permit EXPIRED '+Math.abs(days)+' days ago</div>'; if(days<=30) return '<div class="job-expiry-warn">\u26a0\ufe0f Expires in '+days+' days</div>'; } catch{} return '';
 }
+
+function checkIssuedDateWarn(issuedDate) {
+  if (!issuedDate) return '';
+  try {
+    const issued = new Date(issuedDate);
+    const daysSince = Math.floor((Date.now() - issued.getTime()) / 86400000);
+    if (daysSince >= 90) return '<div class="job-expiry-warn">⚠️ Permit may be expiring soon — book your final inspection ('+daysSince+' days since issued)</div>';
+  } catch {}
+  return '';
+}
+
+async function savePermitIssuedDate(jobId, jobName, city, state, issuedDate) {
+  if (!issuedDate) return;
+  // Save to localStorage for quick display
+  const key = 'pa_issued_' + jobId;
+  localStorage.setItem(key, issuedDate);
+  // Send to backend if logged in
+  if (isLoggedIn()) {
+    try {
+      await fetch('/api/permit-issued-date', {
+        method: 'POST', headers: getAuthHeaders(),
+        body: JSON.stringify({ job_id: jobId, job_name: jobName, city, state, issued_date: issuedDate })
+      });
+    } catch {}
+  }
+}
+
+function getPermitIssuedDate(jobId) {
+  return localStorage.getItem('pa_issued_' + jobId) || '';
+}
 async function updateJobStatus(id, status) {
   try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:getAuthHeaders(),body:JSON.stringify({status})}); renderJobsPage(); } catch{}
 }
 async function setJobExpiry(id) {
   const d = prompt('Enter expiry date (YYYY-MM-DD):'); if(!d) return;
   try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:getAuthHeaders(),body:JSON.stringify({expiry_date:d})}); renderJobsPage(); } catch{}
+}
+
+async function setPermitIssuedDate(jobId, jobName, city, state) {
+  const d = prompt('Enter permit issued date (YYYY-MM-DD):');
+  if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d)) { if(d) alert('Use YYYY-MM-DD format, e.g. 2026-01-15'); return; }
+  await savePermitIssuedDate(jobId, jobName, city, state, d);
+  renderJobsPage();
 }
 async function deleteJobItem(id) {
   if(!confirm('Delete this job?')) return;
@@ -3112,6 +3232,14 @@ function checkShimmer(){
 refreshCounterBar();
 loadStats();
 initAutocomplete();
+
+// Hide history dot if user has already seen it
+(function() {
+  if (localStorage.getItem('pa_history_dot_seen') || getHistory().length > 0) {
+    const dot = document.getElementById('history-tab-dot');
+    if (dot) dot.style.display = 'none';
+  }
+})();
 
 // ── ROI Calculator ────────────────────────────────────────────────────────
 function updateROICalc(val) {
