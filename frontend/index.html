@@ -111,16 +111,20 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body {
       height: 100%;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
-      overscroll-behavior: none;
+      overscroll-behavior-x: none;
+      overscroll-behavior-y: none;
       -webkit-font-smoothing: antialiased;
       font-size: 17px;
       line-height: 1.65;
       font-weight: 500;
     }
-    #app { display: flex; flex-direction: column; min-height: 100%; max-width: 680px; margin: 0 auto; }
+    #app { display: flex; flex-direction: column; min-height: 100%; width: 100%; max-width: 680px; margin: 0 auto; overflow-x: hidden; }
 
     /* Navbar */
     .nav {
