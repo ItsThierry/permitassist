@@ -2076,6 +2076,8 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 # Schedule onboarding drip for new users
                 if is_new_user:
                     threading.Thread(target=schedule_onboarding_emails, args=(email,), daemon=True).start()
+                    # Notify Boban on Telegram for every new signup
+                    notify_telegram(f"🎉 <b>New PermitAssist Signup!</b>\nEmail: {email}\n\nFirst customer alert 🚀")
                     # Also record referral if ref_code in request
                     ref_code = (data or {}).get("ref_code", "").strip()
                     if ref_code:
