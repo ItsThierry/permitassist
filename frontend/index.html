@@ -1460,10 +1460,10 @@
 <div id="install-banner">
   <div class="install-icon">📋</div>
   <div class="install-text" style="flex:1">
-    <strong>Add PermitAssist to your phone</strong>
-    <span>Quick access from your home screen</span>
+    <strong id="install-banner-title">Add PermitAssist to your phone</strong>
+    <span id="install-banner-sub">Quick access from your home screen</span>
   </div>
-  <button class="install-cta" onclick="installApp()">Install</button>
+  <button class="install-cta" id="install-banner-btn" onclick="installApp()">Install</button>
   <button class="install-dismiss" onclick="dismissInstall()">✕</button>
 </div>
 
@@ -1968,7 +1968,22 @@ function skipGate(){if(getLookupCount()>=FREE_LIMIT){document.getElementById('ga
 function showPendingResult(){if(!pendingResult) return;const {data,job,city,state}=pendingResult;pendingResult=null;document.getElementById('loading').style.display='none';document.getElementById('results').style.display='block';document.getElementById('results-inner').innerHTML='';renderResults(data,job,city,state);document.getElementById('page-search').scrollTop=0}
 
 // ── Install ──────────────────────────────────────────────────────────────────
+const _isIOS=(/iphone|ipad|ipod/i).test(navigator.userAgent)&&!window.MSStream;
+const _isInStandalone=('standalone' in navigator && navigator.standalone);
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;if(!localStorage.getItem('pa_install_dismissed')){document.getElementById('install-banner').classList.add('show');document.getElementById('install-nav-btn').style.display='block'}});
+// iOS Safari: show banner with tap-share instructions (no beforeinstallprompt on iOS)
+(function(){
+  if(_isIOS && !_isInStandalone && !localStorage.getItem('pa_install_dismissed')){
+    const banner=document.getElementById('install-banner');
+    const btn=document.getElementById('install-banner-btn');
+    const sub=document.getElementById('install-banner-sub');
+    document.getElementById('install-banner-title').textContent='Add to Home Screen';
+    sub.textContent='Tap the Share button \u2193 then "Add to Home Screen"';
+    btn.textContent='Got it';
+    btn.onclick=function(){dismissInstall();};
+    banner.classList.add('show');
+  }
+})();
 function installApp(){if(!deferredInstallPrompt) return;deferredInstallPrompt.prompt();deferredInstallPrompt.userChoice.then(()=>{deferredInstallPrompt=null;document.getElementById('install-banner').classList.remove('show');document.getElementById('install-nav-btn').style.display='none'})}
 function dismissInstall(){localStorage.setItem('pa_install_dismissed','1');document.getElementById('install-banner').classList.remove('show')}
 
