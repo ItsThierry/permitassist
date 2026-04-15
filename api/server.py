@@ -1849,14 +1849,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 # Record stats
                 record_lookup_stat(job_type, city, state, is_cached)
 
-                # Telegram notification (fresh lookups only — don't spam on cache hits)
-                if not is_cached:
-                    notify_telegram(
-                        f"🔍 <b>New Lookup</b>\n"
-                        f"Job: {job_type}\n"
-                        f"Location: {city}, {state}\n"
-                        f"Confidence: {result.get('confidence','?').upper()}"
-                    )
+                # No Telegram on lookups — only notify on paying customers
 
                 self.send_json(200, result)
 
@@ -2076,8 +2069,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 # Schedule onboarding drip for new users
                 if is_new_user:
                     threading.Thread(target=schedule_onboarding_emails, args=(email,), daemon=True).start()
-                    # Notify Boban on Telegram for every new signup
-                    notify_telegram(f"🎉 <b>New PermitAssist Signup!</b>\nEmail: {email}\n\nFirst customer alert 🚀")
+                    # Free signups — no Telegram alert (only notify on paid conversions)
                     # Also record referral if ref_code in request
                     ref_code = (data or {}).get("ref_code", "").strip()
                     if ref_code:
