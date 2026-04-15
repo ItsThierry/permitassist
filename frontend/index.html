@@ -233,7 +233,7 @@
     .counter-upgrade { color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 
     /* Cards */
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow-sm); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.15s ease; animation: slideIn 0.4s ease forwards; max-width: 100%; overflow: hidden; box-sizing: border-box; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow-sm); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.15s ease; animation: slideIn 0.4s ease forwards; max-width: 100%; overflow-x: hidden; overflow-y: visible; box-sizing: border-box; }
     .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: rgba(37,99,235,0.15); }
     .card:nth-child(1) { animation-delay: 0s; }
     .card:nth-child(2) { animation-delay: 0.06s; }
@@ -352,7 +352,7 @@
       background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, var(--surface) 100%);
       border: 1px solid rgba(59,130,246,0.2); border-radius: var(--r);
       padding: 28px 24px; margin-bottom: 16px;
-      position: relative; overflow: hidden;
+      position: relative; overflow-x: hidden; overflow-y: visible;
     }
     .result-hero::before {
       content: ''; position: absolute; top: 0; left: -100%; right: 0; height: 3px;
@@ -821,9 +821,13 @@
     @media (max-width: 480px) {
       .hero h1 { font-size: 36px; }
       .permit-name-big { font-size: 18px; }
-      .big-price { font-size: 24px; }
+      .big-price { font-size: 22px; }
       .disambig-btns { flex-direction: column; }
       .disambig-btn { width: 100%; }
+      /* On small screens, switch info rows to vertical stack so long values don't overflow */
+      .info-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+      .info-key { width: auto; }
+      .info-val { text-align: left; font-size: 14px; }
     }
 
     /* ── Mobile Optimizations ─────────────────────────────────────────────── */
