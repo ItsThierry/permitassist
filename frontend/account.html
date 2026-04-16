@@ -169,6 +169,10 @@
             <a id="btn-upgrade-solo" href="#" class="btn btn-primary" onclick="event.preventDefault();upgradeAccount('solo')">Solo — $24.99/mo</a>
             <a id="btn-upgrade-team" href="#" class="btn btn-secondary" onclick="event.preventDefault();upgradeAccount('team')">Team — $49/mo</a>
           </div>
+          <div style="margin-top:10px;text-align:center;padding:10px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.2);border-radius:10px;">
+            <span style="font-size:13px;color:#374151;">💚 <strong>Best value:</strong> Annual Solo — </span>
+            <a href="#" id="btn-upgrade-annual" onclick="event.preventDefault();upgradeAccount('annual')" style="color:#059669;font-weight:700;font-size:13px;">$199/yr — save $100 →</a>
+          </div>
         </div>
       </div>
 
@@ -224,8 +228,9 @@
 <script>
 const SESSION_KEY = 'pa_session';
 const EMAIL_KEY = 'pa_email';
-const UPGRADE_URL_SOLO = 'https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c';
-const UPGRADE_URL_TEAM = 'https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b';
+const UPGRADE_URL_SOLO   = 'https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c';
+const UPGRADE_URL_ANNUAL = 'https://buy.stripe.com/fZueV63DlfIo5JX7i53VC0d';
+const UPGRADE_URL_TEAM   = 'https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b';
 
 function getSessionToken() { return localStorage.getItem(SESSION_KEY) || ''; }
 function setSessionToken(t) { if (t) localStorage.setItem(SESSION_KEY, t); }
@@ -341,7 +346,10 @@ function renderAccount(d) {
 
 function upgradeAccount(plan) {
   const email = localStorage.getItem(EMAIL_KEY) || document.getElementById('acct-email').textContent || '';
-  const base = plan === 'team' ? UPGRADE_URL_TEAM : UPGRADE_URL_SOLO;
+  let base;
+  if (plan === 'team') base = UPGRADE_URL_TEAM;
+  else if (plan === 'annual') base = UPGRADE_URL_ANNUAL;
+  else base = UPGRADE_URL_SOLO;
   const url = email ? `${base}?prefilled_email=${encodeURIComponent(email)}` : base;
   window.open(url, '_blank');
 }
@@ -409,14 +417,19 @@ async function accountSendMagicLink() {
       body: JSON.stringify({ email })
     });
     const d = await r.json();
-    if (d.sent) {
+    if (d.sent || d.code) {
       localStorage.setItem(EMAIL_KEY, email);
       document.getElementById('login-email-sent').textContent = email;
       document.getElementById('login-step1').style.display = 'none';
       document.getElementById('login-step2').style.display = 'block';
+      if (d.code) {
+        // Email delivery failed — show code on screen
+        const sub = document.getElementById('login-step2').querySelector('.login-sub');
+        if (sub) sub.innerHTML = 'Email delivery is unavailable right now. Use this code instead:<br><strong style="font-size:28px;letter-spacing:6px;color:#2563eb;display:inline-block;margin-top:8px">' + d.code + '</strong>';
+      }
       document.getElementById('login-code').focus();
     } else {
-      alert('Could not send login email. Please try again.');
+      alert('Could not send login code. Please try again.');
       btn.disabled = false; btn.textContent = 'Send Magic Link →';
     }
   } catch { alert('Network error. Try again.'); btn.disabled = false; btn.textContent = 'Send Magic Link →'; }
