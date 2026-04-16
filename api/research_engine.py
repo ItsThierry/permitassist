@@ -1458,6 +1458,10 @@ Return ONLY the JSON object."""
         confidence = downgrade_confidence(confidence, 2)
     elif missing_fields:
         confidence = downgrade_confidence(confidence, 1)
+    # Web-search-only results (city not in KB) must never be "high" confidence
+    # regardless of missing fields — the data source itself is unverified
+    if city_match_level == "state" and confidence == "high":
+        confidence = "medium"
     result["confidence"] = confidence
     result["confidence_reason"] = derive_confidence_reason(
         result, city_match_level, bool(_verified_entry), missing_fields, web_source_count
