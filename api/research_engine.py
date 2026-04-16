@@ -23,7 +23,10 @@ from openai import OpenAI
 client = OpenAI()
 
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
-CACHE_DB       = os.path.join(os.path.dirname(__file__), "..", "data", "cache.db")
+# Support RAILWAY_VOLUME_MOUNT_PATH or CACHE_DIR env var for persistent volumes
+_default_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+_data_dir = os.environ.get("CACHE_DIR") or os.environ.get("RAILWAY_VOLUME_MOUNT_PATH") or _default_data_dir
+CACHE_DB       = os.path.join(_data_dir, "cache.db")
 KNOWLEDGE_DIR  = os.path.join(os.path.dirname(__file__), "..", "knowledge")
 
 SUMMARY_JUNK_PATTERNS = [

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PermitAssist Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 24px; }
+    h1 { font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+    .login-box { max-width: 400px; margin: 80px auto; background: #1e293b; border-radius: 12px; padding: 32px; border: 1px solid #334155; }
+    .login-box h2 { font-size: 18px; margin-bottom: 20px; color: #f1f5f9; }
+    input[type=password], input[type=text] { width: 100%; padding: 10px 14px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #f1f5f9; font-size: 14px; margin-bottom: 12px; outline: none; }
+    input:focus { border-color: #3b82f6; }
+    button { background: #3b82f6; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s; }
+    button:hover { background: #2563eb; }
+    button.danger { background: #ef4444; }
+    button.danger:hover { background: #dc2626; }
+    button.ghost { background: transparent; border: 1px solid #334155; color: #94a3b8; }
+    button.ghost:hover { border-color: #3b82f6; color: #3b82f6; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
+    .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: #f8fafc; }
+    .stat-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .section-title { font-size: 14px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; margin-top: 28px; }
+    .table-wrap { background: #1e293b; border: 1px solid #334155; border-radius: 10px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 16px; background: #0f172a; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #334155; }
+    td { padding: 10px 16px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(59,130,246,.05); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .badge-red { background: rgba(239,68,68,.15); color: #ef4444; }
+    .badge-green { background: rgba(16,185,129,.15); color: #10b981; }
+    .badge-blue { background: rgba(59,130,246,.15); color: #60a5fa; }
+    .badge-yellow { background: rgba(245,158,11,.15); color: #f59e0b; }
+    .empty-state { text-align: center; padding: 48px 24px; color: #475569; }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+    .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; color: #64748b; background: transparent; border: 1px solid transparent; transition: all .15s; }
+    .tab.active { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+    .tab:hover:not(.active) { color: #94a3b8; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .refresh-btn { font-size: 12px; }
+    .issue-text { max-width: 320px; word-break: break-word; }
+    .deleted { opacity: .4; pointer-events: none; text-decoration: line-through; }
+    #error-msg { background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3); border-radius: 8px; padding: 10px 14px; color: #ef4444; font-size: 13px; margin-bottom: 16px; display: none; }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen" class="login-box">
+  <h2>🔐 PermitAssist Admin</h2>
+  <div id="error-msg"></div>
+  <input type="password" id="token-input" placeholder="Admin token" autocomplete="current-password">
+  <button onclick="doLogin()">Sign In</button>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" style="display:none; max-width:1100px; margin:0 auto;">
+  <div class="top-bar">
+    <div>
+      <h1>PermitAssist Admin</h1>
+      <div class="subtitle">Internal dashboard — keep this private</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="ghost refresh-btn" onclick="loadAll()">↻ Refresh</button>
+      <button class="ghost refresh-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="s-users">—</div></div>
+    <div class="stat-card"><div class="stat-label">Paid Users</div><div class="stat-value" id="s-paid">—</div><div class="stat-sub">Active subscriptions</div></div>
+    <div class="stat-card"><div class="stat-label">Cache Entries</div><div class="stat-value" id="s-cache">—</div><div class="stat-sub">Cached lookups</div></div>
+    <div class="stat-card"><div class="stat-label">Cache Hits</div><div class="stat-value" id="s-hits">—</div><div class="stat-sub">Served from cache</div></div>
+    <div class="stat-card"><div class="stat-label">Flags Submitted</div><div class="stat-value" id="s-flags">—</div><div class="stat-sub">User corrections</div></div>
+    <div class="stat-card"><div class="stat-label">Referral Credits</div><div class="stat-value" id="s-credits">—</div><div class="stat-sub">Pending credits</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('flags')">🚩 Flagged Results</div>
+    <div class="tab" onclick="switchTab('top-queries')">📊 Top Queries</div>
+    <div class="tab" onclick="switchTab('referrals')">🎁 Referral Credits</div>
+  </div>
+
+  <!-- Flags Tab -->
+  <div id="tab-flags" class="tab-content active">
+    <div class="section-title">User-Flagged Results</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Job Type</th>
+            <th>Location</th>
+            <th>Issue Reported</th>
+            <th>Submitted</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="flags-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Top Queries Tab -->
+  <div id="tab-top-queries" class="tab-content">
+    <div class="section-title">Most Looked-Up Queries (Cache Hits)</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Job Type</th>
+            <th>Location</th>
+            <th>Cache Hits</th>
+          </tr>
+        </thead>
+        <tbody id="queries-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Referrals Tab -->
+  <div id="tab-referrals" class="tab-content">
+    <div class="section-title">Pending Referral Credits</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Ref Code</th>
+            <th>Referrer</th>
+            <th>Referred User</th>
+            <th>Subscribed At</th>
+          </tr>
+        </thead>
+        <tbody id="referrals-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let ADMIN_TOKEN = '';
+const BASE = '';
+
+function doLogin() {
+  const token = document.getElementById('token-input').value.trim();
+  if (!token) return;
+  ADMIN_TOKEN = token;
+  loadAll();
+}
+
+function doLogout() {
+  ADMIN_TOKEN = '';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'block';
+  document.getElementById('token-input').value = '';
+}
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(BASE + path, {
+    ...opts,
+    headers: { 'X-Admin-Token': ADMIN_TOKEN, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+  });
+  if (res.status === 401) throw new Error('Invalid admin token');
+  return res.json();
+}
+
+async function loadAll() {
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
+  try {
+    const [stats, flags, credits] = await Promise.all([
+      apiFetch('/api/admin/stats'),
+      apiFetch('/api/admin/flags'),
+      apiFetch('/api/admin/referral-credits'),
+    ]);
+
+    // Stats
+    document.getElementById('s-users').textContent   = stats.total_users ?? '—';
+    document.getElementById('s-paid').textContent    = stats.paid_users ?? '—';
+    document.getElementById('s-cache').textContent   = stats.cache_entries ?? '—';
+    document.getElementById('s-hits').textContent    = stats.cache_hits_total ?? '—';
+    document.getElementById('s-flags').textContent   = stats.feedback_flags ?? '—';
+    document.getElementById('s-credits').textContent = credits.count ?? '—';
+
+    // Flags
+    const ftbody = document.getElementById('flags-tbody');
+    if (!flags.flags || flags.flags.length === 0) {
+      ftbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">✅</div>No flags yet — all results looking good</div></td></tr>';
+    } else {
+      ftbody.innerHTML = flags.flags.map((f, i) => `
+        <tr id="flag-row-${f.id}">
+          <td><span class="badge badge-red">${f.id}</span></td>
+          <td><strong>${esc(f.job_type || '—')}</strong></td>
+          <td>${esc(f.city || '—')}, ${esc(f.state || '—')}</td>
+          <td><div class="issue-text">${esc(f.issue || 'Flagged via button')}</div></td>
+          <td style="white-space:nowrap;color:#64748b;">${formatDate(f.submitted_at)}</td>
+          <td>
+            <button class="danger" style="font-size:11px;padding:4px 10px;" onclick="deleteFlag(${f.id})">Dismiss</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Top queries
+    const qtbody = document.getElementById('queries-tbody');
+    if (!stats.top_queries || stats.top_queries.length === 0) {
+      qtbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="icon">📊</div>No cached queries yet</div></td></tr>';
+    } else {
+      qtbody.innerHTML = stats.top_queries.map((q, i) => `
+        <tr>
+          <td><span class="badge badge-blue">#${i+1}</span></td>
+          <td>${esc(q.job_type)}</td>
+          <td>${esc(q.city)}, ${esc(q.state)}</td>
+          <td><span class="badge badge-green">${q.hits} hits</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // Referrals
+    const rtbody = document.getElementById('referrals-tbody');
+    if (!credits.pending_credits || credits.pending_credits.length === 0) {
+      rtbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="icon">🎁</div>No pending referral credits</div></td></tr>';
+    } else {
+      rtbody.innerHTML = credits.pending_credits.map(r => `
+        <tr>
+          <td><span class="badge badge-yellow">${esc(r.ref_code)}</span></td>
+          <td>${esc(r.referrer_email)}</td>
+          <td>${esc(r.referred_email)}</td>
+          <td style="color:#64748b;">${formatDate(r.subscribed_at)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Show dashboard
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+  } catch (e) {
+    errEl.textContent = e.message || 'Login failed';
+    errEl.style.display = 'block';
+    document.getElementById('login-screen').style.display = 'block';
+    document.getElementById('dashboard').style.display = 'none';
+  }
+}
+
+async function deleteFlag(id) {
+  try {
+    await apiFetch('/api/admin/flags/delete', { method: 'POST', body: JSON.stringify({ id }) });
+    const row = document.getElementById('flag-row-' + id);
+    if (row) row.classList.add('deleted');
+    // Update count
+    const cur = parseInt(document.getElementById('s-flags').textContent) || 0;
+    document.getElementById('s-flags').textContent = Math.max(0, cur - 1);
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  const tabs = ['flags','top-queries','referrals'];
+  const idx = tabs.indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) + ' ' +
+         d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+}
+
+// Allow Enter key on password field
+document.getElementById('token-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>

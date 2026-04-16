@@ -33,7 +33,10 @@ from research_engine import research_permit, build_google_maps_url, strip_pdf_fr
 
 FRONTEND_DIR   = os.path.join(os.path.dirname(__file__), "..", "frontend")
 SEO_DIR        = os.path.join(os.path.dirname(__file__), "..", "seo", "seo_pages")
-DATA_DIR       = os.path.join(os.path.dirname(__file__), "..", "data")
+# Support RAILWAY_VOLUME_MOUNT_PATH or CACHE_DIR env var for persistent volumes
+# Railway volumes are configured in the dashboard and mounted at a custom path
+_default_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+DATA_DIR = os.environ.get("CACHE_DIR") or os.environ.get("RAILWAY_VOLUME_MOUNT_PATH") or _default_data_dir
 PORT           = int(os.environ.get("PORT", 8766))
 EMAILS_CSV     = os.path.join(DATA_DIR, "captured_emails.csv")
 CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
@@ -1581,6 +1584,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_file(os.path.join(FRONTEND_DIR, "pricing.html"), "text/html; charset=utf-8")
         elif path in ("/review", "/review.html", "/review/"):
             self.send_file(os.path.join(FRONTEND_DIR, "review.html"), "text/html; charset=utf-8")
+        elif path in ("/admin", "/admin.html", "/admin/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "admin.html"), "text/html; charset=utf-8")
         elif path == "/health":
             self.send_json(200, {"status": "ok", "service": "PermitAssist"})
 
@@ -2410,6 +2415,89 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                     "referred_email": r[2], "subscribed_at": r[3]
                 } for r in rows]
                 self.send_json(200, {"pending_credits": credits, "count": len(credits)})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        # ── Admin: feedback flags ──────────────────────────────────────────
+        elif path == "/api/admin/flags":
+            try:
+                admin_token = self.headers.get("X-Admin-Token", "")
+                if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+                    self.send_json(401, {"error": "Admin token required"})
+                    return
+                import sqlite3 as _sqlite3
+                conn = _sqlite3.connect(CACHE_DB)
+                # Ensure feedback table exists
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS feedback (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        job_type TEXT, city TEXT, state TEXT,
+                        issue TEXT, submitted_at TEXT
+                    )
+                """)
+                rows = conn.execute(
+                    "SELECT id, job_type, city, state, issue, submitted_at "
+                    "FROM feedback ORDER BY submitted_at DESC LIMIT 200"
+                ).fetchall()
+                total = conn.execute("SELECT COUNT(*) FROM feedback").fetchone()[0]
+                conn.close()
+                flags = [{
+                    "id": r[0], "job_type": r[1], "city": r[2],
+                    "state": r[3], "issue": r[4], "submitted_at": r[5]
+                } for r in rows]
+                self.send_json(200, {"flags": flags, "total": total})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        # ── Admin: delete a flag ───────────────────────────────────────────
+        elif path == "/api/admin/flags/delete":
+            try:
+                admin_token = self.headers.get("X-Admin-Token", "")
+                if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+                    self.send_json(401, {"error": "Admin token required"})
+                    return
+                body = self.read_json_body()
+                flag_id = body.get("id")
+                if not flag_id:
+                    self.send_json(400, {"error": "id required"})
+                    return
+                import sqlite3 as _sqlite3
+                conn = _sqlite3.connect(CACHE_DB)
+                conn.execute("DELETE FROM feedback WHERE id = ?", [flag_id])
+                conn.commit()
+                conn.close()
+                self.send_json(200, {"deleted": True})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        # ── Admin: cache stats ─────────────────────────────────────────────
+        elif path == "/api/admin/stats":
+            try:
+                admin_token = self.headers.get("X-Admin-Token", "")
+                if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+                    self.send_json(401, {"error": "Admin token required"})
+                    return
+                import sqlite3 as _sqlite3
+                conn = _sqlite3.connect(CACHE_DB)
+                cache_count = conn.execute("SELECT COUNT(*) FROM permit_cache").fetchone()[0]
+                cache_hits  = conn.execute("SELECT SUM(hits) FROM permit_cache").fetchone()[0] or 0
+                top_queries = conn.execute(
+                    "SELECT job_type, city, state, hits FROM permit_cache ORDER BY hits DESC LIMIT 20"
+                ).fetchall()
+                feedback_count = conn.execute("SELECT COUNT(*) FROM feedback").fetchone()[0]
+                user_count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+                sub_count  = conn.execute(
+                    "SELECT COUNT(*) FROM users WHERE plan != 'free'"
+                ).fetchone()[0]
+                conn.close()
+                self.send_json(200, {
+                    "cache_entries": cache_count,
+                    "cache_hits_total": cache_hits,
+                    "feedback_flags": feedback_count,
+                    "total_users": user_count,
+                    "paid_users": sub_count,
+                    "top_queries": [{"job_type": r[0], "city": r[1], "state": r[2], "hits": r[3]} for r in top_queries]
+                })
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
