@@ -1557,6 +1557,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        # Admin API GET endpoints
+        if path.startswith("/api/admin/"):
+            self.do_GET_admin(path)
+            return
         mime_map = {
             ".html": "text/html; charset=utf-8",
             ".js":   "application/javascript",
@@ -1838,6 +1842,82 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 self.send_response(404); self.end_headers(); return
             ext = os.path.splitext(full)[1].lower()
             self.send_file(full, mime_map.get(ext, "application/octet-stream"))
+
+    def do_GET_admin(self, path):
+        """Handle GET requests for admin API endpoints."""
+        admin_token = self.headers.get("X-Admin-Token", "")
+        if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+            self.send_json(401, {"error": "Admin token required"})
+            return True
+
+        if path == "/api/admin/stats":
+            try:
+                import sqlite3 as _sqlite3
+                conn = _sqlite3.connect(CACHE_DB)
+                cache_count    = conn.execute("SELECT COUNT(*) FROM permit_cache").fetchone()[0]
+                cache_hits     = conn.execute("SELECT SUM(hits) FROM permit_cache").fetchone()[0] or 0
+                top_queries    = conn.execute(
+                    "SELECT job_type, city, state, hits FROM permit_cache ORDER BY hits DESC LIMIT 20"
+                ).fetchall()
+                feedback_count = conn.execute("SELECT COUNT(*) FROM feedback").fetchone()[0]
+                user_count     = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+                sub_count      = conn.execute(
+                    "SELECT COUNT(*) FROM users WHERE plan != 'free'"
+                ).fetchone()[0]
+                conn.close()
+                self.send_json(200, {
+                    "cache_entries":    cache_count,
+                    "cache_hits_total": cache_hits,
+                    "feedback_flags":   feedback_count,
+                    "total_users":      user_count,
+                    "paid_users":       sub_count,
+                    "top_queries":      [{"job_type": r[0], "city": r[1], "state": r[2], "hits": r[3]} for r in top_queries]
+                })
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+            return True
+
+        if path == "/api/admin/flags":
+            try:
+                import sqlite3 as _sqlite3
+                conn = _sqlite3.connect(CACHE_DB)
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS feedback (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        job_type TEXT, city TEXT, state TEXT,
+                        issue TEXT, submitted_at TEXT
+                    )
+                """)
+                rows  = conn.execute(
+                    "SELECT id, job_type, city, state, issue, submitted_at "
+                    "FROM feedback ORDER BY submitted_at DESC LIMIT 200"
+                ).fetchall()
+                total = conn.execute("SELECT COUNT(*) FROM feedback").fetchone()[0]
+                conn.close()
+                flags = [{"id": r[0], "job_type": r[1], "city": r[2],
+                          "state": r[3], "issue": r[4], "submitted_at": r[5]} for r in rows]
+                self.send_json(200, {"flags": flags, "total": total})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+            return True
+
+        if path == "/api/admin/referral-credits":
+            try:
+                import sqlite3 as _sqlite3
+                conn = _sqlite3.connect(CACHE_DB)
+                rows = conn.execute(
+                    "SELECT ref_code, referrer_email, referred_email, subscribed_at "
+                    "FROM referrals WHERE credit_flagged=1 ORDER BY subscribed_at DESC"
+                ).fetchall()
+                conn.close()
+                credits = [{"ref_code": r[0], "referrer_email": r[1],
+                            "referred_email": r[2], "subscribed_at": r[3]} for r in rows]
+                self.send_json(200, {"pending_credits": credits, "count": len(credits)})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+            return True
+
+        return False  # not handled
 
     def do_POST(self):
         path = urlparse(self.path).path
