@@ -1264,14 +1264,6 @@ def render_share_page(share: dict) -> str:
       --hero-bg:linear-gradient(135deg,rgba(26,86,219,.08),rgba(26,86,219,.03));
       --hero-border:rgba(26,86,219,.2);--td-border:#e2e8f0;
     }}
-    @media(prefers-color-scheme:dark){{
-      :root{{
-        --bg:#0b1220;--bg2:#111827;--border:#253045;--text:#f0f4ff;--text2:#b8c5e0;
-        --text3:#7888a8;--card-bg:#111827;--badge-bg:#1a2336;--badge-border:#253045;
-        --hero-bg:linear-gradient(135deg,rgba(26,86,219,.15),rgba(26,86,219,.05));
-        --hero-border:rgba(26,86,219,.25);--td-border:#253045;
-      }}
-    }}
     body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}}
     .wrap{{max-width:640px;margin:0 auto;padding:24px 20px 48px}}
     .nav{{display:flex;align-items:center;gap:10px;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border)}}
