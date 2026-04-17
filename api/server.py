@@ -30,6 +30,16 @@ from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result
+from openai import OpenAI as _OpenAI
+import google.generativeai as _genai
+import requests as _requests
+
+# Module-level AI clients for /api/chat
+_chat_openai_client = _OpenAI()
+_GEMINI_API_KEY_SERVER = os.environ.get("GEMINI_API_KEY", "")
+if _GEMINI_API_KEY_SERVER:
+    _genai.configure(api_key=_GEMINI_API_KEY_SERVER)
+_CHAT_MODEL = "gemini-2.5-flash"  # Gemini 2.5 Flash with thinking disabled (fastest, cheapest)
 
 FRONTEND_DIR   = os.path.join(os.path.dirname(__file__), "..", "frontend")
 SEO_DIR        = os.path.join(os.path.dirname(__file__), "..", "seo", "seo_pages")
@@ -2594,8 +2604,6 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 state       = context.get("state", "")
                 permit_name = context.get("permit_name", "")
                 job_type    = context.get("job_type", "")
-                from openai import OpenAI
-                client = OpenAI()
                 system_msg = (
                     f"You are a helpful permit assistant for contractors. "
                     f"The user just looked up permit requirements for '{job_type}' in {city}, {state}. "
@@ -2603,16 +2611,38 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                     f"Answer the user's follow-up question concisely and accurately. "
                     f"If you're unsure, say so. Keep answers under 200 words."
                 )
-                resp = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": system_msg},
-                        {"role": "user", "content": question}
-                    ],
-                    max_tokens=300,
-                    temperature=0.3
-                )
-                answer = resp.choices[0].message.content.strip()
+                answer = None
+                # Use Gemini 2.5 Flash (thinking disabled) — faster and cleaner for simple Q&A
+                if _GEMINI_API_KEY_SERVER:
+                    try:
+                        _chat_gemini = _genai.GenerativeModel(
+                            model_name=_CHAT_MODEL,
+                            generation_config=_genai.GenerationConfig(
+                                temperature=0.3,
+                                max_output_tokens=350,
+                                thinking_config=_genai.types.ThinkingConfig(thinking_budget=0),
+                            ),
+                            system_instruction=system_msg,
+                        )
+                        gemini_resp = _chat_gemini.generate_content(question)
+                        answer = gemini_resp.text.strip()
+                        print(f"[chat] Gemini 2.5 Flash answered ({len(answer)} chars)")
+                    except Exception as ge:
+                        print(f"[chat] Gemini failed ({ge}), falling back to OpenAI")
+                        answer = None
+                if answer is None:
+                    # Fallback to GPT-4o-mini if Gemini unavailable
+                    resp = _chat_openai_client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[
+                            {"role": "system", "content": system_msg},
+                            {"role": "user", "content": question}
+                        ],
+                        max_tokens=300,
+                        temperature=0.3
+                    )
+                    answer = resp.choices[0].message.content.strip()
+                    print(f"[chat] GPT-4o-mini fallback answered ({len(answer)} chars)")
                 self.send_json(200, {"answer": answer})
             except Exception as e:
                 print(f"[chat] Error: {e}")

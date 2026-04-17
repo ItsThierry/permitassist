@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
-PermitAssist — AI Research Engine v4
-Improvements over v3:
-  - Upgraded main model to gpt-4.1 for better instruction-following and JSON accuracy
-  - Added .gov-biased search query for all city lookups (not just small cities)
-  - Added fee_range hallucination guard (blocks vague 'varies'/'contact us' non-answers)
-  - Enforces data freshness note in disclaimer when result is cached
-  - Tightened confidence downgrade: vague fee_range now counts as a missing field
+PermitAssist — AI Research Engine v5
+Improvements over v4:
+  - Added Gemini 3 Pro as fallback if OpenAI is unavailable
+  - Fallback uses Gemini JSON mode (response_mime_type: application/json)
+  - Fallback is transparent — same result structure, same post-processing
 """
 
 import os
@@ -19,8 +17,15 @@ from copy import deepcopy
 import requests
 from datetime import datetime, timedelta
 from openai import OpenAI
+import google.generativeai as genai
 
 client = OpenAI()
+
+# Gemini fallback client (used if OpenAI is unavailable)
+_GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+if _GEMINI_API_KEY:
+    genai.configure(api_key=_GEMINI_API_KEY)
+_gemini_fallback_model = "gemini-3-pro-preview"
 
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 # Support RAILWAY_VOLUME_MOUNT_PATH or CACHE_DIR env var for persistent volumes
@@ -1218,20 +1223,42 @@ Include the apply_google_maps URL even if you have other contact info.
 Return ONLY the JSON object."""
 
     start = time.time()
+    raw = None
 
-    response = client.chat.completions.create(
-        model="gpt-4.1",
-        messages=[
-            {"role": "system",  "content": SYSTEM_PROMPT},
-            {"role": "user",    "content": user_prompt},
-        ],
-        temperature=0.1,
-        max_tokens=3000,
-        response_format={"type": "json_object"},
-    )
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4.1",
+            messages=[
+                {"role": "system",  "content": SYSTEM_PROMPT},
+                {"role": "user",    "content": user_prompt},
+            ],
+            temperature=0.1,
+            max_tokens=3000,
+            response_format={"type": "json_object"},
+        )
+        raw = response.choices[0].message.content
+        print(f"[engine] OpenAI gpt-4.1 responded in {round((time.time()-start)*1000)}ms")
+    except Exception as openai_err:
+        print(f"[engine] OpenAI failed ({openai_err}), trying Gemini 3 Pro fallback...")
+        if not _GEMINI_API_KEY:
+            raise RuntimeError(f"OpenAI failed and no GEMINI_API_KEY set: {openai_err}")
+        try:
+            gemini_model = genai.GenerativeModel(
+                model_name=_gemini_fallback_model,
+                generation_config=genai.GenerationConfig(
+                    temperature=0.1,
+                    max_output_tokens=3000,
+                    response_mime_type="application/json",
+                )
+            )
+            gemini_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
+            gemini_resp = gemini_model.generate_content(gemini_prompt)
+            raw = gemini_resp.text
+            print(f"[engine] Gemini 3 Pro fallback responded in {round((time.time()-start)*1000)}ms")
+        except Exception as gemini_err:
+            raise RuntimeError(f"Both OpenAI and Gemini failed. OpenAI: {openai_err} | Gemini: {gemini_err}")
 
     elapsed = round((time.time() - start) * 1000)
-    raw = response.choices[0].message.content
     result = json.loads(raw)
 
     # ── Post-processing ──
