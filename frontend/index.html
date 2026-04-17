@@ -2631,15 +2631,56 @@ function showCopy(msg) { const el = document.getElementById('copy-feedback'); if
 
 function emailResult() {
   if (!currentResult) return;
-  const { job, city, state, data } = currentResult, stored = localStorage.getItem(EMAIL_KEY) || '';
+  const { job, city, state, data } = currentResult;
+  const stored = localStorage.getItem(EMAIL_KEY) || '';
+
   const doSend = email => {
+    // Show sending state
+    const modal = document.getElementById('email-report-modal');
+    const btn = document.getElementById('email-report-send-btn');
+    if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
     fetch('/api/email-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, job, city, state, data }) })
-      .then(r => r.json()).then(r => alert(r.sent ? `✅ Sent to ${email}` : 'Could not send — use Copy instead.'))
-      .catch(() => alert('Could not send — use Copy instead.'));
+      .then(r => r.json()).then(r => {
+        if (modal) modal.remove();
+        if (r.sent) {
+          showCopy(`✅ Emailed to ${email}`);
+        } else {
+          showCopy('⚠️ Could not send — try Copy instead.');
+        }
+      })
+      .catch(() => {
+        if (modal) modal.remove();
+        showCopy('⚠️ Could not send — try Copy instead.');
+      });
   };
+
+  // If email already known, send immediately without asking
   if (stored) { doSend(stored); return; }
-  const addr = prompt('Enter your email:');
-  if (addr && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) { saveEmail(addr); doSend(addr); }
+
+  // Show a clean inline modal to collect email
+  document.getElementById('email-report-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'email-report-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+  m.innerHTML = `
+    <div style="background:var(--surface,#1a2336);border:1px solid var(--border2,#334155);border-radius:16px;padding:24px 22px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px">📧 Email this Report</div>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:16px">We'll send the full permit breakdown — fees, timeline, contacts — straight to your inbox.</div>
+      <input id="email-report-input" type="email" placeholder="your@email.com" autocomplete="email"
+        style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#f8fafc;font-size:15px;margin-bottom:12px;outline:none"/>
+      <button id="email-report-send-btn"
+        style="width:100%;background:#1a56db;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:10px"
+        onclick="(function(){
+          const inp=document.getElementById('email-report-input'),val=inp?inp.value.trim():'';
+          if(!val||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val)){inp.style.border='1px solid #ef4444';inp.focus();return;}
+          saveEmail(val);emailResult();
+        })()">
+        Send Report
+      </button>
+      <button onclick="document.getElementById('email-report-modal').remove()" style="width:100%;background:none;border:1px solid #334155;border-radius:10px;color:#64748b;font-size:14px;padding:11px;cursor:pointer">Cancel</button>
+    </div>`;
+  document.body.appendChild(m);
+  setTimeout(() => document.getElementById('email-report-input')?.focus(), 100);
 }
 
 function copyForQuote() {

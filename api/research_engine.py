@@ -853,9 +853,20 @@ def strip_pdf_from_result(result: dict) -> dict:
     return result
 
 
-def build_google_maps_url(city: str, state: str) -> str:
-    """Build a Google Maps search URL for the building permit office."""
-    query = f"{city}+{state}+building+permit+office".replace(" ", "+")
+def build_google_maps_url(city: str, state: str, address: str = "", office: str = "") -> str:
+    """Build the best possible Google Maps URL — pinned address if available, else office+city search."""
+    # If we have a real street address, use maps?q= for a pin
+    if address and address.strip():
+        q = address.strip()
+        # Append city/state if not already present
+        if city.lower() not in q.lower():
+            q = f"{q}, {city}, {state}"
+        return f"https://www.google.com/maps?q={q.replace(' ', '+')}"
+    # Otherwise use a more targeted search: office name + city
+    if office and office.strip():
+        query = f"{office}, {city}, {state}".replace(" ", "+")
+    else:
+        query = f"{city}+{state}+building+permit+office".replace(" ", "+")
     return f"https://www.google.com/maps/search/{query}"
 
 # ─── System Prompt ────────────────────────────────────────────────────────────
@@ -1282,15 +1293,26 @@ Return ONLY the JSON object."""
         result["_fee_unverified"] = True
         print(f"[fee_guard] Vague fee_range replaced for {city}, {state}: '{_fee}'") 
 
-    # Ensure apply_google_maps is always set
+    # Ensure apply_google_maps is always set (use address + office for best pin)
     if not result.get("apply_google_maps"):
-        result["apply_google_maps"] = build_google_maps_url(city, state)
+        result["apply_google_maps"] = build_google_maps_url(
+            city, state,
+            address=result.get("apply_address", ""),
+            office=result.get("applying_office", "")
+        )
+    else:
+        # Upgrade existing search URLs to pinned address URLs when we have address data
+        existing = result["apply_google_maps"]
+        addr = result.get("apply_address", "")
+        office = result.get("applying_office", "")
+        if "/maps/search/" in existing and (addr or office):
+            result["apply_google_maps"] = build_google_maps_url(city, state, address=addr, office=office)
     # Always set maps_url as alias for frontend
     result["maps_url"] = result["apply_google_maps"]
 
     # Ensure apply_phone is never null
     if not result.get("apply_phone"):
-        result["apply_phone"] = f"Search: {build_google_maps_url(city, state)}"
+        result["apply_phone"] = f"Search: {build_google_maps_url(city, state, office=result.get('applying_office',''))}"
 
     # ── County fallback for small/unknown cities ──
     if city_match_level in ("state", "none"):

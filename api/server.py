@@ -1258,28 +1258,43 @@ def render_share_page(share: dict) -> str:
   <meta name="description" content="Permit requirements for {esc(job)} in {esc(city)}, {esc(state)}. Shared via PermitAssist."/>
   <style>
     *{{box-sizing:border-box;margin:0;padding:0}}
-    body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#0b1220;color:#f0f4ff;min-height:100vh}}
+    :root{{
+      --bg:#ffffff;--bg2:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text2:#475569;
+      --text3:#64748b;--card-bg:#f8fafc;--badge-bg:#f1f5f9;--badge-border:#e2e8f0;
+      --hero-bg:linear-gradient(135deg,rgba(26,86,219,.08),rgba(26,86,219,.03));
+      --hero-border:rgba(26,86,219,.2);--td-border:#e2e8f0;
+    }}
+    @media(prefers-color-scheme:dark){{
+      :root{{
+        --bg:#0b1220;--bg2:#111827;--border:#253045;--text:#f0f4ff;--text2:#b8c5e0;
+        --text3:#7888a8;--card-bg:#111827;--badge-bg:#1a2336;--badge-border:#253045;
+        --hero-bg:linear-gradient(135deg,rgba(26,86,219,.15),rgba(26,86,219,.05));
+        --hero-border:rgba(26,86,219,.25);--td-border:#253045;
+      }}
+    }}
+    body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}}
     .wrap{{max-width:640px;margin:0 auto;padding:24px 20px 48px}}
-    .nav{{display:flex;align-items:center;gap:10px;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid #253045}}
+    .nav{{display:flex;align-items:center;gap:10px;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border)}}
     .logo-mark{{width:32px;height:32px;border-radius:7px;background:#1a56db;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}}
-    .logo-text{{font-size:17px;font-weight:800}}.logo-text em{{font-style:normal;color:#1a56db}}
-    .shared-badge{{margin-left:auto;font-size:11px;color:#7888a8;background:#1a2336;border:1px solid #253045;border-radius:20px;padding:4px 10px}}
-    .result-hero{{background:linear-gradient(135deg,rgba(26,86,219,.15),rgba(26,86,219,.05));border:1px solid rgba(26,86,219,.25);border-radius:12px;padding:18px 20px;margin-bottom:14px}}
-    .result-job{{font-size:19px;font-weight:800;margin-bottom:3px}}
-    .result-loc{{font-size:13px;color:#b8c5e0}}
+    .logo-text{{font-size:17px;font-weight:800;color:var(--text)}}.logo-text em{{font-style:normal;color:#1a56db}}
+    .shared-badge{{margin-left:auto;font-size:11px;color:var(--text3);background:var(--badge-bg);border:1px solid var(--badge-border);border-radius:20px;padding:4px 10px}}
+    .result-hero{{background:var(--hero-bg);border:1px solid var(--hero-border);border-radius:12px;padding:18px 20px;margin-bottom:14px}}
+    .result-job{{font-size:19px;font-weight:800;margin-bottom:3px;color:var(--text)}}
+    .result-loc{{font-size:13px;color:var(--text2)}}
     .verdict-pill{{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:800;margin-top:10px;background:{verdict_bg};color:{verdict_color}}}
-    .card{{background:#111827;border:1px solid #253045;border-radius:12px;padding:16px 18px;margin-bottom:12px}}
-    .card-label{{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#7888a8;margin-bottom:10px}}
-    table{{width:100%;border-collapse:collapse}}td{{padding:9px 0;border-bottom:1px solid #253045;font-size:14px;color:#b8c5e0;vertical-align:top}}td:first-child{{width:120px;font-size:12px;color:#7888a8;font-weight:600}}tr:last-child td{{border-bottom:none}}
+    .card{{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px}}
+    .card-label{{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:10px}}
+    table{{width:100%;border-collapse:collapse}}td{{padding:9px 0;border-bottom:1px solid var(--td-border);font-size:14px;color:var(--text2);vertical-align:top}}td:first-child{{width:120px;font-size:12px;color:var(--text3);font-weight:600}}tr:last-child td{{border-bottom:none}}
     .contact-phone{{display:block;font-size:24px;font-weight:900;color:#1a56db;text-decoration:none;margin-bottom:6px}}
-    .contact-office{{font-size:14px;font-weight:700;color:#f0f4ff;margin-bottom:4px}}
-    .contact-addr{{font-size:13px;color:#b8c5e0}}
-    .maps-link{{display:inline-block;margin-top:8px;font-size:13px;color:#1a56db;font-weight:700;text-decoration:none}}
-    ul{{margin-left:18px;color:#b8c5e0;line-height:1.6}}li{{padding:4px 0}}
+    .contact-office{{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}}
+    .contact-addr{{font-size:13px;color:var(--text2)}}
+    .maps-link{{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-size:13px;color:#1a56db;font-weight:700;text-decoration:none;background:rgba(26,86,219,.08);border:1px solid rgba(26,86,219,.2);border-radius:8px;padding:7px 12px}}
+    .maps-link:hover{{background:rgba(26,86,219,.15)}}
+    ul{{margin-left:18px;color:var(--text2);line-height:1.6}}li{{padding:4px 0}}
     .cta{{background:#1a56db;border-radius:12px;padding:18px 20px;text-align:center;margin-top:24px}}
     .cta p{{font-size:13px;color:rgba(255,255,255,.75);margin-bottom:12px}}
     .cta a{{background:#fff;color:#1a56db;font-weight:800;font-size:15px;padding:11px 28px;border-radius:8px;text-decoration:none;display:inline-block}}
-    .disclaimer{{font-size:11px;color:#7888a8;text-align:center;margin-top:20px;line-height:1.6}}
+    .disclaimer{{font-size:11px;color:var(--text3);text-align:center;margin-top:20px;line-height:1.6}}
   </style>
 </head>
 <body>
@@ -1295,7 +1310,7 @@ def render_share_page(share: dict) -> str:
     <div class="verdict-pill">{pv}</div>
   </div>
   {'<div class="card"><div class="card-label">Permit Info</div><div style="font-size:18px;font-weight:900;margin-bottom:8px">' + permit_name + '</div><div style="font-size:13px;color:#b8c5e0">' + summary + '</div></div>' if permit_name or summary else ''}
-  {'<div class="card"><div class="card-label">📞 Contact</div><a class="contact-phone" href="tel:' + phone_raw + '">' + phone + '</a><div class="contact-office">' + office + '</div><div class="contact-addr">' + addr + '</div>' + ('<a class="maps-link" href="' + maps + '" target="_blank" rel="noopener">Find on Google Maps →</a>' if maps else '') + '</div>' if phone or office else ''}
+  {'<div class="card"><div class="card-label">📞 Contact</div><a class="contact-phone" href="tel:' + phone_raw + '">' + phone + '</a><div class="contact-office">' + office + '</div><div class="contact-addr">' + addr + '</div>' + ('<a class="maps-link" href="' + maps + '" target="_blank" rel="noopener">📍 Open in Google Maps</a>' if maps else '') + '</div>' if phone or office else ''}
   {'<div class="card"><div class="card-label">💰 Cost · ⏱ Timeline · 🧰 Who Pulls It</div><table>' + rows + '</table></div>' if rows else ''}
   {'<div class="card"><div class="card-label">📎 What to Bring</div><ul>' + bring_html + '</ul></div>' if bring_html else ''}
   {'<div class="card"><div class="card-label">🔗 Sources</div><ul>' + sources_html + '</ul></div>' if sources_html else ''}
@@ -1310,34 +1325,123 @@ def render_share_page(share: dict) -> str:
 </html>"""
 
 def send_email_report(to_email: str, job: str, city: str, state: str, data: dict) -> bool:
-    """Send permit research report via Resend."""
-    lines = [
-        "PERMIT RESEARCH REPORT",
-        f"Job:      {job}",
-        f"Location: {city}, {state}",
-        "",
-    ]
-    for p in data.get("permits_required", []):
-        req = "YES" if p.get("required") is True else ("MAYBE" if p.get("required") == "maybe" else "NO")
-        lines.append(f"  [{req}] {p.get('permit_type','')}")
-        if p.get("notes"):
-            lines.append(f"       {p['notes']}")
-    lines.append("")
-    if data.get("applying_office"): lines.append(f"WHERE:    {data['applying_office']}")
-    if data.get("apply_url"):       lines.append(f"ONLINE:   {data['apply_url']}")
-    if data.get("fee_range"):       lines.append(f"FEE:      {data['fee_range']}")
-    tl = data.get("approval_timeline", {})
-    if tl.get("simple"):            lines.append(f"TIMELINE: {tl['simple']}")
-    if data.get("confidence_reason"):
-        lines.append(f"CONFIDENCE: {data['confidence_reason']}")
-    sources = [s for s in (data.get("sources") or [])[:4] if s]
-    if sources:
-        lines.append("")
-        lines.append("SOURCES:")
-        lines.extend([f"- {s}" for s in sources])
-    lines += ["", "---", "PermitAssist — permitassist.io", "Questions? Reply to this email."]
+    """Send a beautiful HTML permit research report via Resend."""
+    def esc(s):
+        return str(s or "").replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace('"',"&quot;")
+
     subject = f"Permit Research: {job} in {city}, {state}"
-    return resend_send(to_email, subject, "\n".join(lines))
+    pv  = data.get("permit_verdict", "MAYBE")
+    verdict_color = {"YES": "#10b981", "NO": "#ef4444", "MAYBE": "#f59e0b"}.get(pv, "#f59e0b")
+    verdict_bg    = {"YES": "rgba(16,185,129,.12)", "NO": "rgba(239,68,68,.12)", "MAYBE": "rgba(245,158,11,.12)"}.get(pv, "rgba(245,158,11,.12)")
+
+    fee    = esc(data.get("fee_range", ""))
+    office = esc(data.get("applying_office", ""))
+    addr   = esc(data.get("apply_address", ""))
+    phone  = esc(data.get("apply_phone", ""))
+    portal = esc(data.get("apply_url", ""))
+    maps   = esc(data.get("apply_google_maps", ""))
+    tl     = data.get("approval_timeline", {})
+    timeline = esc(tl.get("simple", ""))
+    permits  = data.get("permits_required", [])
+    tips     = data.get("pro_tips", [])[:4]
+    bring    = data.get("what_to_bring", [])[:5]
+    sources  = [s for s in (data.get("sources") or [])[:4] if s]
+    license_r = esc(data.get("license_required", ""))
+
+    # Build permit rows
+    permit_rows = ""
+    for p in permits:
+        req = "YES" if p.get("required") is True else ("MAYBE" if p.get("required") == "maybe" else "NO")
+        req_color = {"YES": "#10b981", "MAYBE": "#f59e0b", "NO": "#ef4444"}.get(req, "#94a3b8")
+        permit_rows += f"""
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #e2e8f0;vertical-align:top;width:60px">
+            <span style="display:inline-block;background:{req_color}22;color:{req_color};border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700">{req}</span>
+          </td>
+          <td style="padding:10px 0 10px 12px;border-bottom:1px solid #e2e8f0;vertical-align:top">
+            <strong style="color:#0f172a;font-size:14px">{esc(p.get('permit_type',''))}</strong>
+            {('<br><span style="font-size:12px;color:#64748b;margin-top:3px;display:block">' + esc(p.get('notes','')) + '</span>') if p.get('notes') else ''}
+          </td>
+        </tr>"""
+
+    tips_html    = "".join(f'<li style="padding:3px 0;color:#475569;font-size:13px">{esc(t)}</li>' for t in tips)
+    bring_html   = "".join(f'<li style="padding:3px 0;color:#475569;font-size:13px">{esc(b)}</li>' for b in bring)
+    sources_html = "".join(f'<li style="padding:3px 0"><a href="{esc(s)}" style="color:#1a56db;font-size:12px">{esc(s)}</a></li>' for s in sources)
+
+    contact_section = ""
+    if office or phone or addr:
+        contact_section = f"""
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 18px;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:10px">📞 Contact</div>
+          {('<a href="tel:' + ''.join(c for c in phone if c.isdigit() or c == '+') + '" style="font-size:22px;font-weight:900;color:#1a56db;text-decoration:none;display:block;margin-bottom:5px">' + phone + '</a>') if phone else ''}
+          {('<div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:3px">' + office + '</div>') if office else ''}
+          {('<div style="font-size:13px;color:#64748b;margin-bottom:8px">' + addr + '</div>') if addr else ''}
+          {('<a href="' + maps + '" style="display:inline-flex;align-items:center;gap:5px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 12px;font-size:13px;color:#1a56db;font-weight:700;text-decoration:none">📍 Open in Google Maps</a>') if maps else ''}
+        </div>"""
+
+    # Plain text fallback
+    text_lines = [f"PERMIT RESEARCH REPORT\nJob: {job}\nLocation: {city}, {state}\n"]
+    for p in permits:
+        req = "YES" if p.get("required") is True else ("MAYBE" if p.get("required") == "maybe" else "NO")
+        text_lines.append(f"[{req}] {p.get('permit_type','')}")
+        if p.get("notes"): text_lines.append(f"  {p['notes']}")
+    if fee:      text_lines.append(f"\nFee: {data.get('fee_range','')}")
+    if timeline: text_lines.append(f"Timeline: {tl.get('simple','')}")
+    if office:   text_lines.append(f"Where: {data.get('applying_office','')}")
+    if portal:   text_lines.append(f"Online: {data.get('apply_url','')}")
+    if maps:     text_lines.append(f"Maps: {data.get('apply_google_maps','')}")
+    text_lines.append("\n---\nPermitAssist — permitassist.io")
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
+  <div style="max-width:600px;margin:32px auto;padding:0 16px 48px">
+    <!-- Header -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-bottom:12px">
+      <div style="background:#1a56db;padding:20px 24px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">📋</span>
+        <span style="font-size:18px;font-weight:800;color:#ffffff">Permit<span style="opacity:.8">Assist</span></span>
+      </div>
+      <div style="padding:20px 24px">
+        <div style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:4px">{esc(job)}</div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:12px">📍 {esc(city)}, {esc(state)}</div>
+        <span style="display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:800;background:{verdict_bg};color:{verdict_color}">{pv}</span>
+      </div>
+    </div>
+
+    <!-- Permits Required -->
+    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:10px">Permits Required</div><table style="width:100%;border-collapse:collapse">' + permit_rows + '</table></div>') if permits else ''}
+
+    <!-- Key Info -->
+    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:10px">💰 Cost · ⏱ Timeline</div><table style="width:100%;border-collapse:collapse">' + (f'<tr><td style="padding:9px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#94a3b8;font-weight:600;width:120px">Fee</td><td style="padding:9px 0;border-bottom:1px solid #e2e8f0;font-size:14px;color:#10b981;font-weight:700">' + fee + '</td></tr>' if fee else '') + (f'<tr><td style="padding:9px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#94a3b8;font-weight:600">Timeline</td><td style="padding:9px 0;border-bottom:1px solid #e2e8f0;font-size:14px;color:#475569">' + timeline + '</td></tr>' if timeline else '') + (f'<tr><td style="padding:9px 0;font-size:12px;color:#94a3b8;font-weight:600">Who Pulls It</td><td style="padding:9px 0;font-size:14px;color:#475569">' + license_r + '</td></tr>' if license_r else '') + '</table></div>') if fee or timeline or license_r else ''}
+
+    <!-- Contact / Maps -->
+    {contact_section}
+
+    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:10px">🌐 Online Portal</div><a href="' + data.get('apply_url','') + '" style="color:#1a56db;font-size:13px;font-weight:600;word-break:break-all">' + portal + '</a></div>') if portal else ''}
+
+    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:8px">📎 What to Bring</div><ul style="margin-left:18px;padding:0">' + bring_html + '</ul></div>') if bring_html else ''}
+
+    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:8px">💡 Pro Tips</div><ul style="margin-left:18px;padding:0">' + tips_html + '</ul></div>') if tips_html else ''}
+
+    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:8px">🔗 Sources</div><ul style="margin-left:18px;padding:0">' + sources_html + '</ul></div>') if sources_html else ''}
+
+    <!-- CTA -->
+    <div style="background:#1a56db;border-radius:12px;padding:20px;text-align:center;margin-top:8px">
+      <p style="font-size:13px;color:rgba(255,255,255,.75);margin:0 0 12px">Look up more permits — free, no signup needed.</p>
+      <a href="https://permitassist.io" style="background:#ffffff;color:#1a56db;font-weight:800;font-size:15px;padding:12px 28px;border-radius:8px;text-decoration:none;display:inline-block">Open PermitAssist →</a>
+    </div>
+
+    <p style="font-size:11px;color:#94a3b8;text-align:center;margin-top:20px;line-height:1.6">
+      📌 Always verify requirements with your local building department before starting work.<br>
+      You're receiving this because you requested it at <a href="https://permitassist.io" style="color:#1a56db">permitassist.io</a>
+    </p>
+  </div>
+</body>
+</html>"""
+
+    return resend_send(to_email, subject, "\n".join(text_lines), html)
 
 # ── Job Tracker helpers ──────────────────────────────────────────────────────
 
@@ -2016,9 +2120,13 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                     result = sanitize_result_urls(result)
                     # Strip PDF from apply_url → apply_pdf (server-side safety net)
                     result = strip_pdf_from_result(result)
-                    # Ensure apply_google_maps always set
+                    # Ensure apply_google_maps always set (prefer pinned address)
                     if not result.get('apply_google_maps'):
-                        result['apply_google_maps'] = build_google_maps_url(city, state)
+                        result['apply_google_maps'] = build_google_maps_url(
+                            city, state,
+                            address=result.get('apply_address', ''),
+                            office=result.get('applying_office', '')
+                        )
                     # Ensure apply_phone is never completely empty
                     if not result.get('apply_phone'):
                         result['apply_phone'] = result.get('apply_google_maps', '')
