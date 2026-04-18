@@ -1378,6 +1378,33 @@ Return ONLY the JSON object."""
             if not result.get("apply_address"):
                 result["apply_address"] = _city_data.get("address")
 
+    # ── Total Cost Estimate fallback (hardcoded industry averages if AI skipped it) ──
+    if not result.get("total_cost_estimate"):
+        _job_lower = job_type.lower()
+        _COST_TABLE = {
+            "hvac":             "$4,000 – $12,000 (unit + labor + permit)",
+            "mini split":       "$2,000 – $7,000 (unit + labor + permit)",
+            "electrical panel": "$1,500 – $4,000 (labor + materials + permit)",
+            "panel upgrade":    "$1,500 – $4,000 (labor + materials + permit)",
+            "ev charger":       "$800 – $2,500 (charger + labor + permit)",
+            "solar":            "$15,000 – $30,000 (system + install + permits)",
+            "generator":        "$5,000 – $15,000 (unit + install + permits)",
+            "water heater":     "$900 – $2,500 (unit + labor + permit)",
+            "roof":             "$8,000 – $20,000 (materials + labor + permit)",
+            "deck":             "$5,000 – $15,000 (materials + labor + permit)",
+            "bathroom remodel": "$8,000 – $25,000 (labor + materials + permits)",
+            "kitchen remodel":  "$15,000 – $50,000 (labor + materials + permits)",
+            "window":           "$400 – $1,000 per window (unit + install + permit)",
+            "fence":            "$2,000 – $8,000 (materials + labor + permit)",
+            "pool":             "$35,000 – $75,000 (construction + permits)",
+            "plumbing":         "$1,000 – $5,000 (labor + materials + permit)",
+            "shed":             "$3,000 – $10,000 (structure + permit)",
+        }
+        for _keyword, _range in _COST_TABLE.items():
+            if _keyword in _job_lower:
+                result["total_cost_estimate"] = _range
+                break
+
     # Add data_source if not set
     if not result.get("data_source"):
         result["data_source"] = city_match_level if city_match_level != "none" else "general_knowledge"
