@@ -2785,7 +2785,7 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
 
         elif path == '/api/fix-rejection':
             if method != 'POST':
-                self._send(405, 'text/plain', b'Method Not Allowed')
+                self.send_json(405, {'error': 'Method Not Allowed'})
                 return
             try:
                 body = json.loads(raw_body)
@@ -2794,13 +2794,14 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 city = (body.get('city') or '').strip()
                 state = (body.get('state') or '').strip()
                 if not rejection_text:
-                    self._send(400, 'application/json', json.dumps({'error': 'rejection_text is required'}).encode())
+                    self.send_json(400, {'error': 'rejection_text is required'})
                     return
 
                 # Require login for this feature
-                user = self._get_session_user()
-                if not user:
-                    self._send(401, 'application/json', json.dumps({'error': 'Login required'}).encode())
+                _fix_session_token = self.headers.get('X-Session-Token', '')
+                _fix_user = validate_session_token(_fix_session_token) if _fix_session_token else None
+                if not _fix_user:
+                    self.send_json(401, {'error': 'Login required'})
                     return
 
                 system_prompt = """You are PermitAssist, an expert permit consultant helping contractors respond to city permit rejection letters.
@@ -2839,7 +2840,7 @@ Analyze this rejection and generate a complete response letter and fix plan."""
                     )
                     resp = model.generate_content(f"{system_prompt}\n\n{user_prompt}")
                     result_text = resp.text
-                except Exception as gemini_err:
+                except Exception:
                     # Fallback to OpenAI
                     oai = _OpenAI()
                     resp = oai.chat.completions.create(
@@ -2854,10 +2855,10 @@ Analyze this rejection and generate a complete response letter and fix plan."""
                     result_text = resp.choices[0].message.content
 
                 parsed = json.loads(result_text)
-                self._send(200, 'application/json', json.dumps({'ok': True, 'result': parsed}).encode())
+                self.send_json(200, {'ok': True, 'result': parsed})
 
             except Exception as e:
-                self._send(500, 'application/json', json.dumps({'error': str(e)}).encode())
+                self.send_json(500, {'error': str(e)})
             return
 
         # ── Team invite (Task 7) ─────────────────────────────────────────
