@@ -981,6 +981,7 @@ CRITICAL RULES:
 Return ONLY a JSON object with these exact fields:
 {
   "job_summary": "clear description of what the job involves and what permits it triggers",
+  "total_cost_estimate": "MANDATORY: realistic total project cost range including labor/materials/permit, e.g. '$2,500 - $4,500'",
   "location": "city, state",
   "data_source": "city_database" | "web_search" | "state_rules" | "general_knowledge",
   "permits_required": [
