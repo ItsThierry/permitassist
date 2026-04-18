@@ -2784,9 +2784,6 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 self.send_json(500, {"error": str(e)})
 
         elif path == '/api/fix-rejection':
-            if method != 'POST':
-                self.send_json(405, {'error': 'Method Not Allowed'})
-                return
             try:
                 _fix_length = int(self.headers.get('Content-Length', 0))
                 _fix_raw = self.rfile.read(_fix_length)
