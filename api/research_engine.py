@@ -1081,7 +1081,7 @@ COMPANION PERMIT TRADE MATRIX (use this to populate companion_permits):
 - Window/door replacement → [possible: Building Permit if structural opening changes]
 - Plumbing repiping → [almost_certain: Plumbing Permit, possible: Building Permit for access openings]
 ✓ apply_url: ALWAYS provide the direct online permit portal URL if one exists (e.g. "https://abc.austintexas.gov"). Do not leave null if you found a portal in your research.
-✓ total_cost_estimate: Provide a realistic total project cost range for this job in this city (including labor, materials, and permit fees). Example: "$2,500 - $4,500".
+✓ total_cost_estimate: Provide a realistic total project cost range for this job in this city (including labor, materials, and permit fees). Example: "$2,500 - $4,500". NEVER leave this field null — use your training knowledge to provide a best-estimate range for the contractor.
 ✓ approval_timeline: Always provide a 'simple' (over-the-counter) and 'complex' (plan review) estimate.
 ✓ code_citation: ALWAYS include the specific code section (IRC/IPC/NEC/state code) that applies. Format: {"section": "IRC R105.2.2", "text": "first 120 chars of the relevant rule or exemption text"}. For NO verdicts: cite the exemption clause. For YES/MAYBE verdicts: cite the primary code section that REQUIRES the permit (e.g. "IRC R105.1", "NEC 210.12", "IPC 106.1"). Never set code_citation to null — always provide a relevant code reference."""
 
