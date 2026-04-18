@@ -1366,12 +1366,13 @@ Return ONLY the JSON object."""
 
     # ── City Database Fallbacks for Missing Fields ──
     if city_match_level == "city":
+        _load_knowledge()
         _city_key = city.lower().strip().replace(" ", "_") + "_" + state.lower().strip()
         _city_data = _CITIES_KB.get("cities", {}).get(_city_key)
         if _city_data:
             if not result.get("apply_url"):
                 result["apply_url"] = _city_data.get("online_portal") or _city_data.get("permit_url")
-            if not result.get("apply_phone"):
+            if not result.get("apply_phone") or result["apply_phone"].startswith("Search:"):
                 result["apply_phone"] = _city_data.get("phone")
             if not result.get("apply_address"):
                 result["apply_address"] = _city_data.get("address")
