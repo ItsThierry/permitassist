@@ -2788,7 +2788,9 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 self.send_json(405, {'error': 'Method Not Allowed'})
                 return
             try:
-                body = json.loads(raw_body)
+                _fix_length = int(self.headers.get('Content-Length', 0))
+                _fix_raw = self.rfile.read(_fix_length)
+                body = json.loads(_fix_raw)
                 rejection_text = (body.get('rejection_text') or '').strip()
                 job_type = (body.get('job_type') or '').strip()
                 city = (body.get('city') or '').strip()
