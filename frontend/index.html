@@ -3022,12 +3022,12 @@ async function doLookup() {
   }
   if (!parsed.city || !parsed.state) { alert('Please add a city and state, a full address, or use your location.'); return; }
 
-  if (!_preLookupPassed && !hasEmail() && !localStorage.getItem(SESSION_KEY)) {
+  if (!_isSampleLookup && !_preLookupPassed && !hasEmail() && !localStorage.getItem(SESSION_KEY)) {
     showPreLookupGate();
     return;
   }
   const used = getLookupCount();
-  if (used >= FREE_LIMIT && !hasEmail()) {
+  if (!_isSampleLookup && used >= FREE_LIMIT && !hasEmail()) {
     pendingResult = { data: null, job: parsed.job_type, city: parsed.city || '', state: parsed.state || '' };
     showGate(true); return;
   }
