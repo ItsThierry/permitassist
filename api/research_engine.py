@@ -1010,6 +1010,7 @@ Return ONLY a JSON object with these exact fields:
     }
   ],
   "license_required": "Licensed HVAC contractor (TACL in TX) pulls the permit — their license # must appear on the mechanical permit application. Owner-builders cannot pull HVAC permits in TX.",
+  "city_contractor_registration": "If this city requires a SEPARATE city-level contractor registration (on top of state license), describe it here with renewal frequency and how to get it. Return null if no city registration required.",
   "what_to_bring": [
     "Completed permit application (available online or at counter)",
     "TACL license number and expiration date",
@@ -1059,6 +1060,7 @@ DEPTH CHECKLIST — before returning your answer, verify:
 ✓ what_to_bring has 4-6 specific items for THIS job type and location
 ✓ common_mistakes are job-specific, not generic reminders
 ✓ license_required explains WHO pulls the permit and HOW, never implies 'no permit needed'
+✓ city_contractor_registration: populate ONLY when city requires separate city-level contractor registration beyond state license (e.g. Dallas annual registration, Phoenix city contractor registration, Chicago city license, Nashville Metro Codes registration). Set to null if only state license required.
 ✓ pro_tips save real time or money — not generic advice
 ✓ companion_permits is MANDATORY — always populate this field. Use the trade matrix below. Return [] ONLY if the job is truly isolated (e.g. painting, landscaping, minor repairs). For any mechanical, electrical, plumbing, or structural work, there are almost always companion permits.
 
