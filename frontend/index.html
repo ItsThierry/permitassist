@@ -2569,7 +2569,7 @@ function renderResults(d, job, city, state) {
   }
 
   // Fix It — Rejection Response Generator
-  if (currentUser) {
+  if (isLoggedIn()) {
     html += `<div class="fixit-card">
       <div class="fixit-card-title">🔧 Got a Rejection Letter?</div>
       <div class="fixit-card-desc">Paste your city's rejection notice below — we'll generate the exact response letter to send back and get your permit approved.</div>
