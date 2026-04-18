@@ -43,6 +43,7 @@ _CHAT_MODEL = "gemini-2.5-flash"  # Gemini 2.5 Flash with thinking disabled (fas
 
 FRONTEND_DIR   = os.path.join(os.path.dirname(__file__), "..", "frontend")
 SEO_DIR        = os.path.join(os.path.dirname(__file__), "..", "seo", "seo_pages")
+BLOG_DIR       = os.path.join(os.path.dirname(__file__), "..", "seo", "blog")
 # Support RAILWAY_VOLUME_MOUNT_PATH or CACHE_DIR env var for persistent volumes
 # Railway volumes are configured in the dashboard and mounted at a custom path
 _default_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
@@ -1928,6 +1929,25 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
 <div class='sub'>This page doesn't exist, but we can still look up your permit requirements in 5 seconds.</div>
 <a class='btn' href='/'>Check My Permits &rarr;</a></div></body></html>"""
                 self.wfile.write(html_404.encode('utf-8'))
+
+        # ── SEO: /blog/* pages ──────────────────────────────────────────
+        elif path.startswith("/blog"):
+            safe_blog = path.lstrip("/blog").lstrip("/")
+            if not safe_blog:
+                safe_blog = "index.html"
+            candidate = os.path.realpath(os.path.join(BLOG_DIR, safe_blog))
+            blog_root = os.path.realpath(BLOG_DIR)
+            # Security check
+            if not candidate.startswith(blog_root):
+                self.send_response(403); self.end_headers(); return
+            # Try with .html extension
+            if not os.path.exists(candidate) and not candidate.endswith(".html"):
+                candidate = candidate + ".html"
+            if os.path.isfile(candidate):
+                ext = os.path.splitext(candidate)[1].lower()
+                self.send_file(candidate, mime_map.get(ext, "text/html; charset=utf-8"))
+            else:
+                self.send_response(404); self.end_headers()
 
         else:
             safe   = path.lstrip("/")
