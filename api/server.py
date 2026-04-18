@@ -1664,6 +1664,56 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self.send_json(404, {"error": "Not found"})
 
+    def do_HEAD(self):
+        # Delegate to do_GET but suppress the response body so HEAD requests
+        # return proper status codes + headers (monitors, SEO crawlers, curl -I).
+        # Python's default BaseHTTPRequestHandler returns 501 for HEAD, which
+        # made the site look broken to health checkers even though GET worked.
+        import io
+        real_wfile = self.wfile
+        dummy = io.BytesIO()
+        class _HeadWriter:
+            def __init__(self, inner):
+                self._inner = inner
+            def write(self, data):
+                # Swallow body writes, but still count bytes if anything cares
+                return len(data) if isinstance(data, (bytes, bytearray)) else 0
+            def flush(self):
+                try:
+                    self._inner.flush()
+                except Exception:
+                    pass
+            def __getattr__(self, name):
+                return getattr(self._inner, name)
+        # Replace wfile so headers go through (they use write_string etc via
+        # send_response/send_header which go to wfile) — but body writes are dropped.
+        # send_response/send_header actually write to self.wfile too, so we need
+        # a smarter proxy: allow writes until end_headers, then drop.
+        original_end_headers = self.end_headers
+        state = {"headers_done": False}
+        def wrapped_end_headers():
+            original_end_headers()
+            state["headers_done"] = True
+        self.end_headers = wrapped_end_headers
+        class _SmartWriter:
+            def write(self, data):
+                if state["headers_done"]:
+                    return len(data) if isinstance(data, (bytes, bytearray)) else 0
+                return real_wfile.write(data)
+            def flush(self):
+                try:
+                    real_wfile.flush()
+                except Exception:
+                    pass
+            def __getattr__(self, name):
+                return getattr(real_wfile, name)
+        self.wfile = _SmartWriter()
+        try:
+            self.do_GET()
+        finally:
+            self.wfile = real_wfile
+            self.end_headers = original_end_headers
+
     def do_GET(self):
         path = urlparse(self.path).path
         # Admin API GET endpoints
