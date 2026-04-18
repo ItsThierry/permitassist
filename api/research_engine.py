@@ -998,6 +998,7 @@ Return ONLY a JSON object with these exact fields:
   "apply_address": "123 Main St, City, ST 00000",
   "apply_google_maps": "https://www.google.com/maps/search/City+State+building+permit+office",
   "fee_range": "specific dollar amounts when known, e.g. '$68 first system, $19 each additional (Austin 2025)'",
+  "total_cost_estimate": "realistic total project cost range including labor/materials/permit, e.g. '$2,500 - $4,500'",
   "approval_timeline": {
     "simple": "e.g. Same day OTC for residential trade work",
     "complex": "e.g. 5-10 business days if plan review required"
@@ -1079,6 +1080,9 @@ COMPANION PERMIT TRADE MATRIX (use this to populate companion_permits):
 - Basement finish → [almost_certain: Building Permit, almost_certain: Electrical Permit, likely: Plumbing Permit, likely: Mechanical Permit]
 - Window/door replacement → [possible: Building Permit if structural opening changes]
 - Plumbing repiping → [almost_certain: Plumbing Permit, possible: Building Permit for access openings]
+✓ apply_url: ALWAYS provide the direct online permit portal URL if one exists (e.g. "https://abc.austintexas.gov"). Do not leave null if you found a portal in your research.
+✓ total_cost_estimate: Provide a realistic total project cost range for this job in this city (including labor, materials, and permit fees). Example: "$2,500 - $4,500".
+✓ approval_timeline: Always provide a 'simple' (over-the-counter) and 'complex' (plan review) estimate.
 ✓ code_citation: ALWAYS include the specific code section (IRC/IPC/NEC/state code) that applies. Format: {"section": "IRC R105.2.2", "text": "first 120 chars of the relevant rule or exemption text"}. For NO verdicts: cite the exemption clause. For YES/MAYBE verdicts: cite the primary code section that REQUIRES the permit (e.g. "IRC R105.1", "NEC 210.12", "IPC 106.1"). Never set code_citation to null — always provide a relevant code reference."""
 
 # ─── Main Research Function ───────────────────────────────────────────────────
@@ -1359,6 +1363,18 @@ Return ONLY the JSON object."""
                     result["permit_verdict"] = "NO"
                 else:
                     result["permit_verdict"] = "MAYBE"
+
+    # ── City Database Fallbacks for Missing Fields ──
+    if city_match_level == "city":
+        _city_key = city.lower().strip().replace(" ", "_") + "_" + state.lower().strip()
+        _city_data = _CITIES_KB.get("cities", {}).get(_city_key)
+        if _city_data:
+            if not result.get("apply_url"):
+                result["apply_url"] = _city_data.get("online_portal") or _city_data.get("permit_url")
+            if not result.get("apply_phone"):
+                result["apply_phone"] = _city_data.get("phone")
+            if not result.get("apply_address"):
+                result["apply_address"] = _city_data.get("address")
 
     # Add data_source if not set
     if not result.get("data_source"):
