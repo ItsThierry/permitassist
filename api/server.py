@@ -2770,6 +2770,83 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
+        elif path == '/api/fix-rejection':
+            if method != 'POST':
+                self._send(405, 'text/plain', b'Method Not Allowed')
+                return
+            try:
+                body = json.loads(raw_body)
+                rejection_text = (body.get('rejection_text') or '').strip()
+                job_type = (body.get('job_type') or '').strip()
+                city = (body.get('city') or '').strip()
+                state = (body.get('state') or '').strip()
+                if not rejection_text:
+                    self._send(400, 'application/json', json.dumps({'error': 'rejection_text is required'}).encode())
+                    return
+
+                # Require login for this feature
+                user = self._get_session_user()
+                if not user:
+                    self._send(401, 'application/json', json.dumps({'error': 'Login required'}).encode())
+                    return
+
+                system_prompt = """You are PermitAssist, an expert permit consultant helping contractors respond to city permit rejection letters.
+
+Your job: analyze the rejection letter and generate a professional, specific response letter the contractor can send to the building department to resolve the rejection and get their permit approved.
+
+Response format (JSON only):
+{
+  "rejection_reasons": ["list of specific reasons the city rejected the permit"],
+  "fix_steps": ["numbered action items the contractor must complete before resubmitting"],
+  "response_letter": "Full professional letter text ready to send to the building department. Address it To: Building Department. Include: acknowledgment of rejection, specific corrections being made, resubmission statement. Professional tone. No placeholders — write it as if ready to send.",
+  "code_refs": ["any relevant code sections mentioned or implied in the rejection"],
+  "resubmission_tips": "1-2 sentences of practical advice for the resubmission"
+}"""
+
+                user_prompt = f"""Rejection letter from building department:
+---
+{rejection_text}
+---
+
+Job type: {job_type or 'not specified'}
+City: {city or 'not specified'}, {state or 'not specified'}
+
+Analyze this rejection and generate a complete response letter and fix plan."""
+
+                result_text = ''
+                try:
+                    import google.generativeai as genai
+                    genai.configure(api_key=_GEMINI_API_KEY_SERVER)
+                    model = genai.GenerativeModel(
+                        'gemini-2.5-flash',
+                        generation_config=genai.types.GenerationConfig(
+                            response_mime_type='application/json',
+                            temperature=0.3
+                        )
+                    )
+                    resp = model.generate_content(f"{system_prompt}\n\n{user_prompt}")
+                    result_text = resp.text
+                except Exception as gemini_err:
+                    # Fallback to OpenAI
+                    oai = _OpenAI()
+                    resp = oai.chat.completions.create(
+                        model='gpt-4.1',
+                        messages=[
+                            {'role': 'system', 'content': system_prompt},
+                            {'role': 'user', 'content': user_prompt}
+                        ],
+                        response_format={'type': 'json_object'},
+                        temperature=0.3
+                    )
+                    result_text = resp.choices[0].message.content
+
+                parsed = json.loads(result_text)
+                self._send(200, 'application/json', json.dumps({'ok': True, 'result': parsed}).encode())
+
+            except Exception as e:
+                self._send(500, 'application/json', json.dumps({'error': str(e)}).encode())
+            return
+
         # ── Team invite (Task 7) ─────────────────────────────────────────
         elif path == "/api/chat":
             try:

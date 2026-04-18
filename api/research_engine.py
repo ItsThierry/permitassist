@@ -1079,7 +1079,7 @@ COMPANION PERMIT TRADE MATRIX (use this to populate companion_permits):
 - Basement finish → [almost_certain: Building Permit, almost_certain: Electrical Permit, likely: Plumbing Permit, likely: Mechanical Permit]
 - Window/door replacement → [possible: Building Permit if structural opening changes]
 - Plumbing repiping → [almost_certain: Plumbing Permit, possible: Building Permit for access openings]
-✓ code_citation: for NO verdicts, ALWAYS include the specific code section (IRC/IPC/NEC/state code) that creates the exemption. Format: {"section": "IRC R105.2.2", "text": "first 120 chars of the relevant exemption text"}. For YES/MAYBE verdicts, set code_citation to null."""
+✓ code_citation: ALWAYS include the specific code section (IRC/IPC/NEC/state code) that applies. Format: {"section": "IRC R105.2.2", "text": "first 120 chars of the relevant rule or exemption text"}. For NO verdicts: cite the exemption clause. For YES/MAYBE verdicts: cite the primary code section that REQUIRES the permit (e.g. "IRC R105.1", "NEC 210.12", "IPC 106.1"). Never set code_citation to null — always provide a relevant code reference."""
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 

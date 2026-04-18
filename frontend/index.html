@@ -937,6 +937,22 @@
     .source-link { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--brand); text-decoration: none; padding: 4px 0; margin-right: 12px; font-weight: 600; }
     .source-link:hover { text-decoration: underline; }
 
+    /* ── Fix It Generator ─────────────────────────────────────────────────── */
+    .fixit-card { background: linear-gradient(135deg, rgba(239,68,68,0.06) 0%, rgba(249,115,22,0.04) 100%); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--r); padding: 20px; margin: 12px 0; }
+    .fixit-card-title { font-size: 13px; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .fixit-card-desc { font-size: 13px; color: var(--text2); margin-bottom: 14px; line-height: 1.5; }
+    .fixit-textarea { width: 100%; min-height: 120px; border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 12px; font-family: 'Plus Jakarta Sans', system-ui; font-size: 13px; color: var(--text); background: var(--bg); resize: vertical; box-sizing: border-box; }
+    .fixit-textarea:focus { outline: none; border-color: #dc2626; box-shadow: 0 0 0 3px rgba(239,68,68,0.12); }
+    .fixit-btn { background: #dc2626; color: #fff; border: none; border-radius: 10px; font-family: 'Plus Jakarta Sans', system-ui; font-size: 14px; font-weight: 700; padding: 12px 20px; cursor: pointer; margin-top: 10px; width: 100%; transition: background 0.15s; }
+    .fixit-btn:hover { background: #b91c1c; }
+    .fixit-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .fixit-result { margin-top: 16px; display: none; }
+    .fixit-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin: 14px 0 6px; }
+    .fixit-step { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; font-size: 13px; color: var(--text); line-height: 1.5; }
+    .fixit-letter { background: #f8faff; border: 1px solid rgba(37,99,235,0.2); border-radius: 10px; padding: 16px; font-size: 13px; color: var(--text); line-height: 1.7; white-space: pre-wrap; font-family: Georgia, serif; margin-top: 6px; }
+    .fixit-copy-btn { background: var(--brand); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; padding: 8px 16px; cursor: pointer; margin-top: 10px; transition: background 0.15s; }
+    .fixit-copy-btn:hover { background: var(--brand-dark); }
+
     /* ── Jurisdiction Alert Opt-in ────────────────────────────────── */
     .juris-alert { background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.2); border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px; position: relative; }
     .juris-alert-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
@@ -1090,6 +1106,7 @@
       <div class="hero" style="padding:32px 0 16px">
         <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
         <p class="hero-sub" style="max-width:460px">AI-powered permit research for contractors. Exact requirements, fees, and contacts in 30 seconds. <strong style="color:var(--brand);">No demo calls. No sales team. No $500/hr expediter.</strong></p>
+        <p style="margin-top:10px;font-size:13px;font-weight:700;color:var(--brand)">💡 One permit rejection costs 2–4 weeks. PermitAssist pays for itself on your first lookup.</p>
       </div>
 
       <!-- Trade Contractor Types -->
@@ -2176,6 +2193,7 @@ function getNextSteps(d, job, city, state) {
 }
 
 function renderResults(d, job, city, state) {
+  window._lastLookupResult = d;
   const verdict = verdictState(d);
   const permits = d.permits_required || [];
   const insps = d.inspections || [];
@@ -2531,14 +2549,15 @@ function renderResults(d, job, city, state) {
     html += `<div class="card"><div class="section-label">🔗 Official Sources</div><ul class="bullet-list">${sourceLinks.map(src => `<li><a href="${esc(src)}" target="_blank" rel="noopener">${esc(src)}</a></li>`).join('')}</ul></div>`;
   }
 
-  // Enhanced citation badges (Feature 3)
+  // Enhanced citation badges (Feature 3) — evidence-first for all verdicts
   const codeCite = d.code_citation;
-  if (codeCite && verdict !== 'no') {
+  if (codeCite) {
     const cc = typeof codeCite === 'string' ? { section: codeCite, text: '' } : codeCite;
-    if (cc && cc.section) {
-      html += `<div class="card"><div class="section-label">📌 Source Citations</div>`;
-      html += `<div class="citation-badges"><span class="citation-badge">📌 ${esc(cc.section)}</span></div>`;
+    if (cc && cc.section && verdict !== 'no') {  // 'no' verdict already handled above in its own card
+      html += `<div class="card"><div class="section-label">📌 Code Authority</div>`;
+      html += `<div class="citation-badges"><span class="citation-badge" title="Cite this section to your building department">📋 ${esc(cc.section)}</span></div>`;
       if (cc.text) html += `<div style="font-size:13px;color:var(--text2);margin-top:8px;line-height:1.5">${esc(String(cc.text).slice(0, 300))}</div>`;
+      html += `<div style="margin-top:8px;font-size:12px;color:var(--muted);font-style:italic">💬 Show this section to your building department if they question the requirement.</div>`;
       if (sourceLinks.length) {
         html += `<div class="source-links">`;
         sourceLinks.forEach(src => { html += `<a class="source-link" href="${esc(src)}" target="_blank" rel="noopener">🔗 ${esc(new URL(src).hostname)}</a>`; });
@@ -2546,6 +2565,22 @@ function renderResults(d, job, city, state) {
       }
       html += `</div>`;
     }
+  }
+
+  // Fix It — Rejection Response Generator
+  if (currentUser) {
+    html += `<div class="fixit-card">
+      <div class="fixit-card-title">🔧 Got a Rejection Letter?</div>
+      <div class="fixit-card-desc">Paste your city's rejection notice below — we'll generate the exact response letter to send back and get your permit approved.</div>
+      <textarea class="fixit-textarea" id="fixit-rejection-text" placeholder="Paste the rejection letter or rejection reason from the building department here..."></textarea>
+      <button class="fixit-btn" id="fixit-submit-btn" onclick="submitFixIt()">🔧 Generate Response Letter</button>
+      <div class="fixit-result" id="fixit-result"></div>
+    </div>`;
+  } else {
+    html += `<div class="fixit-card">
+      <div class="fixit-card-title">🔧 Got a Rejection Letter?</div>
+      <div class="fixit-card-desc">Paste your city's rejection and get an exact response letter. <strong><a href="/login.html" style="color:#dc2626">Sign in</a> to use this feature.</strong></div>
+    </div>`;
   }
 
   // Jurisdiction change alert opt-in (Feature 5)
@@ -3536,6 +3571,72 @@ function submitFollowupQA() {
     if (btn) { btn.disabled = false; btn.textContent = 'Ask'; }
   });
 }
+
+  async function submitFixIt() {
+    const btn = document.getElementById('fixit-submit-btn');
+    const textarea = document.getElementById('fixit-rejection-text');
+    const resultDiv = document.getElementById('fixit-result');
+    const rejection = (textarea.value || '').trim();
+    if (!rejection) { textarea.focus(); return; }
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating response letter...';
+    resultDiv.style.display = 'none';
+    try {
+      const lastResult = window._lastLookupResult || {};
+      const resp = await fetch('/api/fix-rejection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rejection_text: rejection,
+          job_type: lastResult.job_type || '',
+          city: lastResult.city || '',
+          state: lastResult.state || ''
+        })
+      });
+      if (resp.status === 401) {
+        showGate('fix-it');
+        btn.disabled = false; btn.textContent = '🔧 Generate Response Letter';
+        return;
+      }
+      const data = await resp.json();
+      if (!data.ok) throw new Error(data.error || 'Unknown error');
+      const r = data.result;
+      let html = '';
+      if (r.rejection_reasons && r.rejection_reasons.length) {
+        html += `<div class="fixit-section-label">❌ Why They Rejected It</div>`;
+        r.rejection_reasons.forEach(reason => { html += `<div class="fixit-step">• ${esc(reason)}</div>`; });
+      }
+      if (r.fix_steps && r.fix_steps.length) {
+        html += `<div class="fixit-section-label">✅ What You Need to Fix</div>`;
+        r.fix_steps.forEach((step, i) => { html += `<div class="fixit-step"><strong>${i+1}.</strong> ${esc(step)}</div>`; });
+      }
+      if (r.resubmission_tips) {
+        html += `<div class="fixit-section-label">💡 Resubmission Tips</div><div class="fixit-step">${esc(r.resubmission_tips)}</div>`;
+      }
+      if (r.response_letter) {
+        html += `<div class="fixit-section-label">📄 Your Response Letter</div>`;
+        html += `<div class="fixit-letter" id="fixit-letter-text">${esc(r.response_letter)}</div>`;
+        html += `<button class="fixit-copy-btn" onclick="copyFixitLetter()">📋 Copy Letter</button>`;
+      }
+      resultDiv.innerHTML = html;
+      resultDiv.style.display = 'block';
+    } catch(e) {
+      resultDiv.innerHTML = `<div style="color:#dc2626;font-size:13px">⚠️ Error: ${esc(e.message)}. Please try again.</div>`;
+      resultDiv.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = '🔧 Generate Response Letter';
+  }
+
+  function copyFixitLetter() {
+    const el = document.getElementById('fixit-letter-text');
+    if (!el) return;
+    navigator.clipboard.writeText(el.textContent).then(() => {
+      const btn = event.target;
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => { btn.textContent = '📋 Copy Letter'; }, 2000);
+    });
+  }
 </script>
 </body>
 </html>
