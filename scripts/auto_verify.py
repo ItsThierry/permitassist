@@ -18,7 +18,8 @@ import requests
 from datetime import datetime, timedelta, timezone
 
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
-DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+_default_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+DATA_DIR = os.environ.get("CACHE_DIR") or os.environ.get("RAILWAY_VOLUME_MOUNT_PATH") or _default_data_dir
 OUTPUT_FILE = os.path.join(DATA_DIR, "verified_cities.json")
 
 CITIES = [

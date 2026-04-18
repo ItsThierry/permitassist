@@ -1888,6 +1888,19 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
                 from auto_verify import get_verified_cities
                 cities = get_verified_cities()
+                # Fallback: if volume file missing (e.g. fresh Railway deploy), use knowledge/cities.json
+                if not cities:
+                    _kb_cities_path = os.path.join(os.path.dirname(__file__), "..", "knowledge", "cities.json")
+                    if os.path.exists(_kb_cities_path):
+                        with open(_kb_cities_path) as _f:
+                            _kb = json.load(_f)
+                        _seen = set()
+                        for _entry in _kb.get("cities", {}).values():
+                            _k = f"{_entry.get('city','')}|{_entry.get('state','')}"
+                            if _k not in _seen:
+                                _seen.add(_k)
+                                cities.append({"city": _entry["city"], "state": _entry["state"]})
+                        cities = sorted(cities, key=lambda x: (x["state"], x["city"]))
                 self.send_json(200, {"verified_cities": cities, "count": len(cities)})
             except Exception as e:
                 self.send_json(200, {"verified_cities": [], "count": 0, "note": str(e)})
