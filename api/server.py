@@ -1888,7 +1888,20 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
                 from auto_verify import get_verified_cities
                 cities = get_verified_cities()
-                # Fallback: if volume file missing (e.g. fresh Railway deploy), use knowledge/cities.json
+                # Fallback 1: check knowledge/verified_cities.json (full 263-city list, baked into git)
+                if not cities:
+                    _vk_path = os.path.join(os.path.dirname(__file__), "..", "knowledge", "verified_cities.json")
+                    if os.path.exists(_vk_path):
+                        with open(_vk_path) as _f:
+                            _vk_data = json.load(_f)
+                        _seen = set()
+                        for _entry in _vk_data.values():
+                            _k = f"{_entry.get('city','')}|{_entry.get('state','')}"
+                            if _k not in _seen and _entry.get('city') and _entry.get('state'):
+                                _seen.add(_k)
+                                cities.append({"city": _entry["city"], "state": _entry["state"]})
+                        cities = sorted(cities, key=lambda x: (x["state"], x["city"]))
+                # Fallback 2: knowledge/cities.json (150-city curated set)
                 if not cities:
                     _kb_cities_path = os.path.join(os.path.dirname(__file__), "..", "knowledge", "cities.json")
                     if os.path.exists(_kb_cities_path):
@@ -1900,7 +1913,8 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                             if _k not in _seen:
                                 _seen.add(_k)
                                 cities.append({"city": _entry["city"], "state": _entry["state"]})
-                        cities = sorted(cities, key=lambda x: (x["state"], x["city"]))
+                        cities = sorted(cities, key=lambda x: (x["state"], x["city"])
+                        )
                 self.send_json(200, {"verified_cities": cities, "count": len(cities)})
             except Exception as e:
                 self.send_json(200, {"verified_cities": [], "count": 0, "note": str(e)})
