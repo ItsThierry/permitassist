@@ -1433,6 +1433,17 @@
 </div>
 
 <!-- Email Gate -->
+<!-- Pre-Lookup Email Capture Gate -->
+<div class="gate-overlay" id="pre-lookup-gate" style="display:none">
+  <div class="gate-sheet">
+    <div class="gate-icon">✉️</div>
+    <div class="gate-title">Where should we send your permit checklist?</div>
+    <div class="gate-sub">Drop your email and we'll email you a copy of your results — free. No credit card, no spam.</div>
+    <input class="gate-input" type="email" id="pre-gate-email" placeholder="your@email.com" autocomplete="email" />
+    <button class="gate-submit" onclick="submitPreLookupEmail()">Get My Results &rarr;</button>
+    <a href="#" id="pre-gate-skip" onclick="skipPreLookupGate(); return false;" style="display:block; text-align:center; font-size:14px; color:#64748b; margin-top:15px; text-decoration:none;">Skip — just show me the results</a>
+  </div>
+</div>
 <div class="gate-overlay" id="email-gate" style="display:none">
   <div class="gate-sheet">
     <div class="gate-icon">📋</div>
@@ -1863,6 +1874,35 @@ function startProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id)
 function stopProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id);if(e)e.className='progress-step done'})}
 
 // ── Gate ──────────────────────────────────────────────────────────────────────
+// --- Pre-Lookup Email Capture ---
+let _preLookupPassed = false;
+function showPreLookupGate() {
+  document.getElementById('pre-lookup-gate').style.display = 'flex';
+  setTimeout(() => document.getElementById('pre-gate-email').focus(), 350);
+}
+function hidePreLookupGate() {
+  document.getElementById('pre-lookup-gate').style.display = 'none';
+}
+function submitPreLookupEmail() {
+  const inp = document.getElementById('pre-gate-email'), val = inp.value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { inp.style.borderColor = 'var(--red)'; inp.focus(); return; }
+  localStorage.setItem(EMAIL_KEY, val.toLowerCase());
+  fetch('/api/capture-email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: val, source: 'pre-lookup' })
+  }).catch(() => {});
+  if (typeof gtag === 'function') gtag('event', 'conversion', {'send_to': 'AW-18087945418/SIGNUP_LABEL'});
+  hidePreLookupGate();
+  _preLookupPassed = true;
+  doLookupWithOffline();
+}
+function skipPreLookupGate() {
+  hidePreLookupGate();
+  _preLookupPassed = true;
+  doLookupWithOffline();
+}
+
 function showGate(hardBlock){
   const title=document.getElementById('gate-title'),sub=document.getElementById('gate-sub'),skip=document.getElementById('gate-skip-link');
   if(hardBlock){title.textContent='You\'ve used your 3 free lookups';sub.textContent='Upgrade to Pro for unlimited lookups — $24.99/mo, cancel anytime. Enter your email to log in or create an account.';if(skip)skip.style.display='none';}
@@ -1877,7 +1917,7 @@ function hideGate(){document.getElementById('email-gate').style.display='none'}
 function submitGateEmail(){
   const inp=document.getElementById('gate-email'),val=inp.value.trim();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){inp.style.borderColor='var(--red)';inp.focus();return}
-  saveEmail(val);
+  localStorage.setItem(EMAIL_KEY, val.toLowerCase());
   // Send magic link in background for login (non-blocking — user gets results immediately)
   const emailSentEl=document.getElementById('magic-email-sent');if(emailSentEl)emailSentEl.textContent=val;
   fetch('/api/magic-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:val})}).catch(()=>{});
@@ -2722,7 +2762,7 @@ function emailResult() {
         onclick="(function(){
           const inp=document.getElementById('email-report-input'),val=inp?inp.value.trim():'';
           if(!val||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val)){inp.style.border='1px solid #ef4444';inp.focus();return;}
-          saveEmail(val);emailResult();
+          localStorage.setItem(EMAIL_KEY, val.toLowerCase());emailResult();
         })()">
         Send Report
       </button>
@@ -2946,6 +2986,10 @@ async function doLookup() {
   }
   if (!parsed.city || !parsed.state) { alert('Please add a city and state, a full address, or use your location.'); return; }
 
+  if (!_preLookupPassed && !hasEmail() && !localStorage.getItem(SESSION_KEY)) {
+    showPreLookupGate();
+    return;
+  }
   const used = getLookupCount();
   if (used >= FREE_LIMIT && !hasEmail()) {
     pendingResult = { data: null, job: parsed.job_type, city: parsed.city || '', state: parsed.state || '' };
