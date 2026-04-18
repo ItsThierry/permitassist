@@ -75,6 +75,8 @@ if not SESSION_SECRET or SESSION_SECRET == "pa-dev-secret-CHANGE-IN-PROD":
     print("   Sessions will be invalidated on restart. Set SESSION_SECRET in Railway env!")
 STRIPE_WEBHOOK_SECRET  = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_SECRET_KEY      = os.environ.get("STRIPE_SECRET_KEY", "")
+GOOGLE_CLIENT_ID       = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET   = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 FREE_LOOKUPS_PER_MONTH = 3
 UPGRADE_URL_SOLO       = "https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c"
 UPGRADE_URL_ANNUAL     = "https://buy.stripe.com/fZueV63DlfIo5JX7i53VC0d"
@@ -1790,6 +1792,63 @@ class Handler(BaseHTTPRequestHandler):
                 print(f"[verify-magic] Error: {e}")
                 import traceback; traceback.print_exc()
                 self.send_json(500, {"error": "Server error"})
+
+        # ── Google SSO (Fix 6) ────────────────────────────────────────
+        elif path == "/api/auth/google":
+            if not GOOGLE_CLIENT_ID:
+                self.send_json(500, {"error": "Google SSO not configured"})
+                return
+            redirect_uri = f"{APP_BASE_URL}/api/auth/google/callback"
+            auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={redirect_uri}&response_type=code&scope=email profile&access_type=online"
+            self.send_response(302)
+            self.send_header("Location", auth_url)
+            self.end_headers()
+
+        elif path == "/api/auth/google/callback":
+            qs = parse_qs(urlparse(self.path).query)
+            code = qs.get("code", [""])[0]
+            if not code:
+                self.send_response(302)
+                self.send_header("Location", "/login?error=google_missing_code")
+                self.end_headers()
+                return
+            
+            redirect_uri = f"{APP_BASE_URL}/api/auth/google/callback"
+            token_url = "https://oauth2.googleapis.com/token"
+            token_data = {
+                "code": code,
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "redirect_uri": redirect_uri,
+                "grant_type": "authorization_code"
+            }
+            try:
+                r = requests.post(token_url, data=token_data, timeout=10)
+                r.raise_for_status()
+                token_info = r.json()
+                access_token = token_info.get("access_token")
+                
+                user_info_r = requests.get("https://www.googleapis.com/oauth2/v2/userinfo", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
+                user_info_r.raise_for_status()
+                user_info = user_info_r.json()
+                email = user_info.get("email", "").lower().strip()
+                
+                if not email:
+                    raise Exception("No email provided by Google")
+                    
+                get_or_create_user(email)
+                session = create_session_token(email)
+                from urllib.parse import quote as _quote
+                final_redirect = f"/?t={_quote(session, safe='')}&verified=1"
+                self.send_response(302)
+                self.send_header("Location", final_redirect)
+                self.end_headers()
+                
+            except Exception as e:
+                print(f"[google-sso] Error: {e}")
+                self.send_response(302)
+                self.send_header("Location", "/login?error=google_failed")
+                self.end_headers()
 
         # ── Shared result pages /s/[slug] ────────────────────────────────────────
         elif path.startswith("/s/"):

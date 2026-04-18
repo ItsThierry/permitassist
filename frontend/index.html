@@ -1215,45 +1215,10 @@
         </div>
       </div>
 
-      <!-- Testimonials -->
-      <div id="testimonials-strip" style="margin:20px 0 4px;overflow:hidden;">
-        <div class="testimonial-row" id="testimonials-row">
-          <div class="testimonial-card">
-            <div class="testimonial-top">
-              <div class="testimonial-avatar">MR</div>
-              <div>
-                <div class="testimonial-author">Mike Rennick</div>
-                <div class="testimonial-trade">HVAC Contractor · Denver, CO</div>
-              </div>
-              <div class="testimonial-stars">★★★★★</div>
-            </div>
-            <div class="testimonial-text">"Called Denver building dept twice, got two different answers on what I needed for a furnace swap. PermitAssist told me it was a Mechanical Replacement Permit, $147. Walked in, had it in 15 minutes. Would've wasted half a day without this."</div>
-          </div>
-          <div class="testimonial-card">
-            <div class="testimonial-top">
-              <div class="testimonial-avatar">CT</div>
-              <div>
-                <div class="testimonial-author">Carlos Tavares</div>
-                <div class="testimonial-trade">Master Plumber · Houston, TX</div>
-              </div>
-              <div class="testimonial-stars">★★★★★</div>
-            </div>
-            <div class="testimonial-text">"I was pulling a general building permit for water heater swaps when I only needed a plumbing permit. Two failed inspections and $400 in reinspection fees later, I found PermitAssist. Use it before every job now — takes 30 seconds."</div>
-          </div>
-          <div class="testimonial-card">
-            <div class="testimonial-top">
-              <div class="testimonial-avatar">DW</div>
-              <div>
-                <div class="testimonial-author">Derek Williams</div>
-                <div class="testimonial-trade">Electrical Contractor · Tampa, FL</div>
-              </div>
-              <div class="testimonial-stars">★★★★★</div>
-            </div>
-            <div class="testimonial-text">"I bid jobs across Tampa, St. Pete, Clearwater — every city has different permit rules. Last week I checked 4 jobs before leaving the house. Knew exact fees and which ones I could pull online. Clients love when you show up knowing the numbers."</div>
-          </div>
-        </div>
+      <!-- Social Proof -->
+      <div id="social-proof-strip" style="margin:20px 0 4px; text-align: center; padding: 20px;">
+        <div style="font-size: 16px; font-weight: 700; color: var(--text);">Join contractors saving time on every job</div>
       </div>
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px;margin-bottom:4px;">* Based on expected typical contractor experience</div>
 
       <!-- ROI Stats Row -->
       <div class="roi-stats-section">
@@ -1408,7 +1373,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <p>⚠️ PermitAssist provides AI-generated guidance for reference only. Always verify requirements with your local building department before starting work.</p>
+    <p>⚠️ <strong>Disclaimer:</strong> PermitAssist provides AI-generated guidance based on publicly available data. Permit requirements change frequently, and fees shown are estimates. The contractor is strictly responsible for verifying all exact requirements, fees, and timelines directly with the local building department (Authority Having Jurisdiction) prior to starting any work.</p>
     <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved. &nbsp;·&nbsp; <a href="/help" style="color:var(--brand)">Help</a> &nbsp;·&nbsp; <a href="/terms" style="color:var(--brand)">Terms</a> &nbsp;·&nbsp; <a href="/privacy" style="color:var(--brand)">Privacy</a></p>
   </div>
 </div>
@@ -2322,13 +2287,12 @@ function renderResults(d, job, city, state) {
   // Companion permits warning
   const companionPermits = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
   if (companionPermits.length > 0) {
-    html += `<div class="companion-card">
-      <div class="section-label">⚠️ You'll Likely Also Need</div>
-      ${companionPermits.map(cp => `<div class="companion-item${cp.certainty === 'almost_certain' ? ' almost-certain' : ''}">
-        <div class="companion-type">${cp.certainty === 'almost_certain' ? '🚨 ' : ''}${esc(cp.permit_type)}</div>
-        <div class="companion-reason">${esc(cp.reason)}</div>
+    html += `<div class="companion-card" style="background:#fffbeb; border:2px solid #f59e0b; border-radius:12px; padding:18px 20px; margin-bottom:16px;">
+      ${companionPermits.map(cp => `<div style="margin-bottom:12px;">
+        <div style="font-size:16px; font-weight:800; color:#92400e; margin-bottom:4px;">⚠️ Companion Permit Required: ${esc(cp.permit_type)}</div>
+        <div style="font-size:14px; color:#b45309; font-weight:600;">Contractors are often cited for missing this.</div>
+        <div style="font-size:13px; color:#78350f; margin-top:6px;">${esc(cp.reason)}</div>
       </div>`).join('')}
-      <div class="companion-note">💡 Running these permits together saves time and avoids stop-work orders</div>
     </div>`;
   }
 
@@ -2555,6 +2519,12 @@ function renderResults(d, job, city, state) {
       <button class="followup-qa-btn" id="followup-qa-btn" onclick="submitFollowupQA()">Ask</button>
     </div>
     <div id="followup-qa-chat"></div>
+  </div>`;
+
+  // AHJ Disclaimer (Fix 2)
+  html += `<div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:12px; padding:16px 18px; margin-bottom:14px; display:flex; gap:10px; align-items:flex-start;">
+    <div style="font-size:18px;">ℹ️</div>
+    <div style="font-size:13px; color:var(--text2); line-height:1.5;">Results are estimates based on publicly available data. Always verify requirements directly with your local Authority Having Jurisdiction (AHJ) before starting work.</div>
   </div>`;
 
   // Action buttons
