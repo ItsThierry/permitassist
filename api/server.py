@@ -96,7 +96,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
 RATE_WINDOW_SECONDS = 3600   # 1 hour
-RATE_MAX_FRESH      = 10     # max fresh lookups per IP per hour
+RATE_MAX_FRESH      = 3      # max fresh lookups per IP per hour (guests get same limit as free tier)
 
 def is_rate_limited(ip: str) -> tuple[bool, int]:
     """SQLite-backed rate limiting. Survives deploys."""
@@ -1741,6 +1741,11 @@ class Handler(BaseHTTPRequestHandler):
             self.send_file(os.path.join(FRONTEND_DIR, "privacy.html"), "text/html; charset=utf-8")
         elif path in ("/login", "/login.html", "/login/"):
             self.send_file(os.path.join(FRONTEND_DIR, "login.html"), "text/html; charset=utf-8")
+        elif path in ("/signup", "/signup.html", "/signup/", "/register", "/register/"):
+            self.send_response(301)
+            self.send_header("Location", "/login")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
         elif path in ("/help", "/help.html", "/help/"):
             self.send_file(os.path.join(FRONTEND_DIR, "help.html"), "text/html; charset=utf-8")
         elif path in ("/pricing", "/pricing.html", "/pricing/"):
