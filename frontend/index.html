@@ -3061,7 +3061,7 @@ function downloadReport() {
 function printResult() {
   if (!currentResult) return;
   // Hide checklist section during print, show only permit result
-  const cl = document.getElementById('compliance-checklist-section');
+  const cl = document.getElementById('compliance-checklist-card');
   if (cl) cl.style.display = 'none';
   window.print();
   if (cl) cl.style.display = '';
