@@ -472,6 +472,19 @@ def init_db():
         )
     """)
     conn.execute("""
+        CREATE TABLE IF NOT EXISTS city_watch (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            email            TEXT NOT NULL,
+            city             TEXT NOT NULL,
+            state            TEXT NOT NULL,
+            job_type         TEXT NOT NULL,
+            created_at       TEXT NOT NULL,
+            last_notified_at TEXT,
+            last_hash        TEXT,
+            UNIQUE(email, city, state, job_type)
+        )
+    """)
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS api_keys (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT NOT NULL,
@@ -1782,7 +1795,7 @@ def create_job(email: str, job_name: str, city: str, state: str, **kwargs) -> di
         "id": job_id, "email": email.lower().strip(), "job_name": job_name,
         "city": city, "state": state, "created_at": now, "updated_at": now,
         "address": kwargs.get("address", ""),
-        "trade": kwargs.get("trade", ""),
+        "trade": kwargs.get("trade", "") or kwargs.get("job_type", ""),
         "permit_name": kwargs.get("permit_name", ""),
         "status": kwargs.get("status", "planning"),
         "applied_date": kwargs.get("applied_date", ""),
@@ -1903,6 +1916,170 @@ def delete_job(job_id: str, email: str | None = None) -> bool:
     except Exception as e:
         print(f"[jobs] Delete error: {e}")
         return False
+
+
+def _city_watch_payload_hash(result: dict) -> str:
+    permits = result.get("permits_required") or []
+    fees = result.get("fee_range") or result.get("fee") or result.get("cost") or ""
+    key_requirements = (
+        result.get("what_to_bring")
+        or result.get("requirements")
+        or result.get("documents_needed")
+        or result.get("key_requirements")
+        or []
+    )
+    payload = {
+        "required_permits": permits,
+        "fees": fees,
+        "key_requirements": key_requirements,
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+
+
+def create_city_watch(email: str, city: str, state: str, job_type: str) -> dict:
+    now = utc_now().isoformat()
+    normalized_email = email.lower().strip()
+    normalized_city = city.strip()
+    normalized_state = state.strip().upper()
+    normalized_job = job_type.strip()
+    result = research_permit(normalized_job, normalized_city, normalized_state)
+    initial_hash = _city_watch_payload_hash(result)
+    conn = sqlite3.connect(CACHE_DB)
+    conn.execute(
+        """
+        INSERT INTO city_watch (email, city, state, job_type, created_at, last_hash)
+        VALUES (?,?,?,?,?,?)
+        ON CONFLICT(email, city, state, job_type)
+        DO UPDATE SET last_hash=excluded.last_hash
+        """,
+        (normalized_email, normalized_city, normalized_state, normalized_job, now, initial_hash)
+    )
+    conn.commit()
+    row = conn.execute(
+        "SELECT id,email,city,state,job_type,created_at,last_notified_at,last_hash FROM city_watch WHERE email=? AND city=? AND state=? AND job_type=?",
+        (normalized_email, normalized_city, normalized_state, normalized_job)
+    ).fetchone()
+    conn.close()
+    cols = ["id", "email", "city", "state", "job_type", "created_at", "last_notified_at", "last_hash"]
+    return dict(zip(cols, row)) if row else {}
+
+
+def list_city_watches(email: str) -> list[dict]:
+    conn = sqlite3.connect(CACHE_DB)
+    rows = conn.execute(
+        "SELECT id,email,city,state,job_type,created_at,last_notified_at,last_hash FROM city_watch WHERE email=? ORDER BY created_at DESC",
+        [email.lower().strip()]
+    ).fetchall()
+    conn.close()
+    cols = ["id", "email", "city", "state", "job_type", "created_at", "last_notified_at", "last_hash"]
+    return [dict(zip(cols, row)) for row in rows]
+
+
+def delete_city_watch(watch_id: str, email: str) -> bool:
+    conn = sqlite3.connect(CACHE_DB)
+    cur = conn.execute(
+        "DELETE FROM city_watch WHERE id=? AND email=?",
+        [watch_id, email.lower().strip()]
+    )
+    conn.commit()
+    conn.close()
+    return cur.rowcount > 0
+
+
+def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict:
+    normalized_email = email.lower().strip()
+    normalized_city = city.strip()
+    normalized_state = state.strip().upper()
+    normalized_job = job_type.strip()
+    conn = sqlite3.connect(CACHE_DB)
+    row = conn.execute(
+        "SELECT id,last_hash FROM city_watch WHERE email=? AND city=? AND state=? AND job_type=?",
+        [normalized_email, normalized_city, normalized_state, normalized_job]
+    ).fetchone()
+    if not row:
+        conn.close()
+        return {"watched": False, "changed": False}
+    watch_id, last_hash = row
+    result = research_permit(normalized_job, normalized_city, normalized_state)
+    current_hash = _city_watch_payload_hash(result)
+    changed = bool(last_hash and last_hash != current_hash)
+    now = utc_now().isoformat()
+    if changed:
+        requirements = result.get("what_to_bring") or result.get("requirements") or result.get("documents_needed") or []
+        permits = result.get("permits_required") or []
+        body_lines = [
+            "Hi,",
+            "",
+            "PermitAssist detected a change in permit requirements for:",
+            f"Job: {normalized_job}",
+            f"Location: {normalized_city}, {normalized_state}",
+            "",
+            "Required permits:",
+        ]
+        body_lines.extend([f"- {p.get('permit_type', 'Permit')}" for p in permits] or ["- Review latest result in PermitAssist"])
+        body_lines.extend([
+            "",
+            f"Fees: {result.get('fee_range') or result.get('fee') or 'Check with city'}",
+        ])
+        if requirements:
+            body_lines.extend(["", "Key requirements:"])
+            body_lines.extend([f"- {item}" for item in requirements[:8]])
+        body_lines.extend(["", "Open PermitAssist to review the latest full result.", "", "- PermitAssist"])
+        resend_send(normalized_email, f"Permit requirements changed: {normalized_job} in {normalized_city}, {normalized_state}", "\n".join(body_lines))
+        conn.execute(
+            "UPDATE city_watch SET last_hash=?, last_notified_at=? WHERE id=?",
+            [current_hash, now, watch_id]
+        )
+    else:
+        conn.execute("UPDATE city_watch SET last_hash=? WHERE id=?", [current_hash, watch_id])
+    conn.commit()
+    conn.close()
+    return {"watched": True, "changed": changed, "last_hash": current_hash}
+
+
+def get_rejection_fix_plan(job_id: str, rejection_text: str, city: str, state: str, job_type: str) -> str:
+    cache_key = hashlib.sha256(f"rejection-fix|{rejection_text}|{city}|{state}|{job_type}".encode()).hexdigest()
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        row = conn.execute(
+            "SELECT checklist_json FROM checklist_cache WHERE result_hash=?",
+            [cache_key]
+        ).fetchone()
+        conn.close()
+        if row and row[0]:
+            cached = json.loads(row[0])
+            if cached.get("fix_plan"):
+                return cached["fix_plan"]
+    except Exception as e:
+        print(f"[rejection-fix] Cache read error: {e}")
+
+    prompt = (
+        f"A contractor received this permit rejection comment: {rejection_text}. "
+        f"The project is {job_type} in {city}, {state}. Give a clear, actionable fix plan: "
+        f"what documents to resubmit, what to correct, and what to say when resubmitting. "
+        f"Be specific and practical."
+    )
+    resp = _chat_openai_client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[
+            {"role": "system", "content": "You are a permit consultant helping contractors resolve permit rejections. Return plain text only."},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.3,
+        max_tokens=700,
+    )
+    fix_plan = (resp.choices[0].message.content or "").strip()
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            "INSERT OR REPLACE INTO checklist_cache (result_hash, checklist_json, created_at) VALUES (?,?,?)",
+            (cache_key, json.dumps({"job_id": job_id, "fix_plan": fix_plan}), utc_now().isoformat())
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[rejection-fix] Cache write error: {e}")
+    return fix_plan
 
 
 # ── Request handler ───────────────────────────────────────────────────────────
@@ -2027,6 +2204,16 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(400, {"error": "Job ID required"})
                 return
             ok = delete_job(job_id, email=user_email)
+            self.send_json(200 if ok else 404, {"deleted": ok})
+        elif path.startswith("/api/city-watch/"):
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
+                return
+            watch_id = path[len("/api/city-watch/"):].strip("/")
+            if not watch_id:
+                self.send_json(400, {"error": "Watch ID required"})
+                return
+            ok = delete_city_watch(watch_id, user_email)
             self.send_json(200 if ok else 404, {"deleted": ok})
         elif path.startswith("/api/integrations/api-key/"):
             if not user_email:
@@ -2381,6 +2568,14 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(401, {"error": "Not authenticated"})
                 return
             self.send_json(200, {"jobs": list_jobs(user_email)})
+
+        elif path == "/api/city-watch":
+            session_token = self.headers.get("X-Session-Token", "")
+            user_email = validate_session_token(session_token) if session_token else None
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
+                return
+            self.send_json(200, {"watches": list_city_watches(user_email)})
 
         # ── GET /api/referral-link ────────────────────────────────────────────────────
         elif path == "/api/referral-link":
@@ -2988,7 +3183,7 @@ class Handler(BaseHTTPRequestHandler):
                 job = create_job(
                     user_email, job_name, city, state,
                     address=data.get("address", ""),
-                    trade=data.get("trade", ""),
+                    trade=data.get("trade", "") or data.get("job_type", ""),
                     permit_name=data.get("permit_name", ""),
                     status=data.get("status", "planning"),
                     notes=data.get("notes", ""),
@@ -2998,6 +3193,49 @@ class Handler(BaseHTTPRequestHandler):
                 if job.get("expiry_date"):
                     upsert_permit_reminder(user_email, job_name, city, state, job.get("expiry_date", ""))
                 self.send_json(201, {"job": job})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/city-watch":
+            try:
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else None
+                if not user_email:
+                    self.send_json(401, {"error": "Not authenticated"})
+                    return
+                data = self.read_json_body()
+                city = data.get("city", "").strip()
+                state = data.get("state", "").strip()
+                job_type = data.get("job_type", "").strip()
+                if not city or not state or not job_type:
+                    self.send_json(400, {"error": "city, state, job_type required"})
+                    return
+                watch = create_city_watch(user_email, city, state, job_type)
+                self.send_json(201, {"watch": watch, "checked": check_city_changes(user_email, city, state, job_type)})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/rejection-fix":
+            try:
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else None
+                if not user_email:
+                    self.send_json(401, {"error": "Not authenticated"})
+                    return
+                data = self.read_json_body()
+                job_id = data.get("job_id", "").strip()
+                rejection_text = data.get("rejection_text", "").strip()
+                city = data.get("city", "").strip()
+                state = data.get("state", "").strip()
+                job_type = data.get("job_type", "").strip()
+                if not rejection_text or not city or not state or not job_type:
+                    self.send_json(400, {"error": "rejection_text, city, state, job_type required"})
+                    return
+                if job_id and not user_can_access_job(job_id, user_email):
+                    self.send_json(403, {"error": "Access denied"})
+                    return
+                fix_plan = get_rejection_fix_plan(job_id, rejection_text, city, state, job_type)
+                self.send_json(200, {"fix_plan": fix_plan})
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
 

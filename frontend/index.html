@@ -178,8 +178,18 @@
 
     /* Tabs */
     .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
-    .tab { flex: 1; padding: 13px 8px; text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; user-select: none; }
+    .tab { flex: 1; padding: 13px 8px; text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; user-select: none; position: relative; }
     .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+    .tab.pulse-highlight { animation: jobsTabPulse 1s ease-in-out 3; }
+    .tab-tooltip {
+      position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+      width: min(240px, calc(100vw - 32px)); background: var(--text); color: #fff; border-radius: 12px;
+      padding: 12px 14px; font-size: 12px; line-height: 1.5; box-shadow: var(--shadow-lg); z-index: 30;
+    }
+    .tab-tooltip::before {
+      content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%) rotate(45deg);
+      width: 12px; height: 12px; background: var(--text);
+    }
 
     /* Pages */
     .page { display: none; flex: 1; overflow-y: auto; }
@@ -817,11 +827,37 @@
     .status-approved { background: var(--green-bg); color: var(--green); }
     .status-active { background: rgba(139,92,246,0.12); color: #a78bfa; }
     .status-closed { background: var(--surface2); color: var(--muted); }
+    .status-rejected { background: var(--red-bg); color: var(--red); }
     .job-item-meta { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
     .job-item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .job-action-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text2); cursor: pointer; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; padding: 7px 12px; transition: all .12s; }
     .job-action-btn:hover { border-color: var(--brand); color: var(--brand); }
     .job-expiry-warn { background: var(--yellow-bg); border: 1px solid rgba(245,158,11,0.3); border-radius: var(--r-sm); font-size: 12px; color: var(--yellow); padding: 6px 10px; margin-top: 8px; }
+    .jobs-section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px; }
+    .jobs-section-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+    .watching-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); }
+    .watching-item:first-of-type { border-top: none; padding-top: 0; }
+    .watching-item-meta { font-size: 12px; color: var(--text2); margin-top: 4px; }
+    .result-save-prompt { position: sticky; top: 12px; z-index: 15; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow-md); }
+    .result-save-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+    .result-save-sub { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
+    .result-save-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .result-save-input { flex: 1 1 220px; min-width: 0; border: 1px solid var(--border); background: var(--surface2); color: var(--text); border-radius: 12px; padding: 12px 14px; font: inherit; }
+    .result-save-btn, .result-secondary-btn { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font: inherit; font-weight: 700; cursor: pointer; transition: all .15s ease; }
+    .result-save-btn { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .result-secondary-btn { background: var(--surface2); color: var(--text); }
+    .result-save-confirm { display: none; margin-top: 10px; font-size: 13px; font-weight: 700; }
+    .result-save-confirm.show { display: block; }
+    .result-save-confirm.success { color: var(--green); }
+    .result-save-confirm.info { color: var(--brand); }
+    .result-save-confirm.error { color: var(--red); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.58); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 9999; }
+    .modal-card { width: min(560px, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: var(--shadow-lg); }
+    .modal-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 14px; }
+    .modal-textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid var(--border); border-radius: 14px; padding: 14px; font: inherit; background: var(--surface2); color: var(--text); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+    .modal-result { margin-top: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 14px; white-space: pre-wrap; font-size: 13px; line-height: 1.65; color: var(--text); }
 
     /* Print */
     @media print {
@@ -1084,6 +1120,10 @@
     @keyframes slideIn {
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes jobsTabPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(37,99,235,0); }
+      50% { transform: scale(1.04); box-shadow: 0 0 0 8px rgba(37,99,235,0.12); }
     }
     .hero { animation: fadeUp 0.5s ease forwards; }
     .search-action-zone { animation: fadeUp 0.6s ease 0.1s both; }
@@ -1617,8 +1657,9 @@
 <script>
 // ── Constants & State ─────────────────────────────────────────────────────────
 const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESSION_KEY='pa_session',FREE_LIMIT=3,UPGRADE_URL='https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c',UPGRADE_URL_TEAM='https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b',UPGRADE_URL_ANNUAL='https://buy.stripe.com/fZueV63DlfIo5JX7i53VC0d',UPGRADE_COUPON_CODE='LAUNCH16';
+const JOB_SAVE_SESSION_KEY='pa_saved_jobs_session',JOBS_TOOLTIP_KEY='pa_jobs_tooltip_seen';
 const IS_ADMIN=new URLSearchParams(window.location.search).get('_dev')==='pa_internal_2026_xk9';
-let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false};
+let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false},jobsCache=[],watchesCache=[];
 let _skipDisambig=false;
 let _isSampleLookup=false;
 
@@ -1851,6 +1892,8 @@ async function refreshAccountBadge(){
     if(drawerLogin) drawerLogin.style.display='none';
     if(drawerAccount){ drawerAccount.style.display=''; drawerAccount.textContent=d.paid?'⭐ Account':'Account'; }
     if(drawerInt) drawerInt.style.display=d.paid?'':'none';
+    maybeShowJobsTooltip();
+    refreshJobsAndWatches();
   }catch{}
 }
 
@@ -2367,6 +2410,8 @@ function renderResults(d, job, city, state) {
     html += `<div class="card" style="border-color:rgba(59,130,246,0.35)"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><div class="section-label">Usage</div><div style="font-size:14px;font-weight:700">${remaining > 0 ? `${remaining} free lookup${remaining!==1?'s':''} left` : 'Free lookups used'}</div></div><button class="action-btn" style="margin:0;padding:10px 14px" onclick="openUpgrade()">Upgrade</button></div></div>`;
   }
 
+  html += buildResultSavePrompt(job, city, state, getResultPermitName(d));
+
   // County fallback notice
   if (countyNote) {
     html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
@@ -2794,6 +2839,8 @@ function renderResults(d, job, city, state) {
 
   document.getElementById('results-inner').innerHTML = html;
   loadComplianceChecklist(job, city, state, d);
+  pulseJobsTab();
+  maybeShowJobsTooltip();
 }
 
 function toggleChecklist(el) {
@@ -2900,6 +2947,184 @@ function copyResult() {
 }
 
 function showCopy(msg) { const el = document.getElementById('copy-feedback'); if (!el) return; el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 2500); }
+function getResultPermitName(data) {
+  const permits = data?.permits_required || [];
+  return permits[0]?.permit_type || data?.permit_name || data?.permit_type || '';
+}
+function getSavedJobSessionMap() {
+  try { return JSON.parse(sessionStorage.getItem(JOB_SAVE_SESSION_KEY) || '{}'); } catch { return {}; }
+}
+function markJobSavedThisSession(jobType, city, state) {
+  const map = getSavedJobSessionMap();
+  map[[jobType || '', city || '', state || ''].join('|').toLowerCase()] = true;
+  sessionStorage.setItem(JOB_SAVE_SESSION_KEY, JSON.stringify(map));
+}
+function wasJobSavedThisSession(jobType, city, state) {
+  const map = getSavedJobSessionMap();
+  return !!map[[jobType || '', city || '', state || ''].join('|').toLowerCase()];
+}
+function setInlinePromptMessage(type, message) {
+  const el = document.getElementById('result-save-confirm');
+  if (!el) return;
+  el.className = `result-save-confirm show ${type}`;
+  el.textContent = message;
+}
+function updateJobsTabLabel() {
+  const tab = document.getElementById('tab-jobs');
+  if (!tab) return;
+  const count = isLoggedIn() ? (jobsCache || []).length : 0;
+  tab.textContent = isLoggedIn() ? `📁 Jobs (${count})` : '📁 Jobs';
+}
+function pulseJobsTab() {
+  const tab = document.getElementById('tab-jobs');
+  if (!tab) return;
+  tab.classList.remove('pulse-highlight');
+  void tab.offsetWidth;
+  tab.classList.add('pulse-highlight');
+  setTimeout(() => tab.classList.remove('pulse-highlight'), 3000);
+}
+function maybeShowJobsTooltip() {
+  if (localStorage.getItem(JOBS_TOOLTIP_KEY)) return;
+  const tab = document.getElementById('tab-jobs');
+  if (!tab) return;
+  tab.querySelector('.tab-tooltip')?.remove();
+  const tip = document.createElement('div');
+  tip.className = 'tab-tooltip';
+  tip.textContent = '💡 Save your lookups to Jobs to track status, get expiry alerts, and share with your team';
+  tab.appendChild(tip);
+  localStorage.setItem(JOBS_TOOLTIP_KEY, '1');
+  setTimeout(() => tip.remove(), 5500);
+}
+async function refreshJobsAndWatches() {
+  if (!isLoggedIn()) {
+    jobsCache = [];
+    watchesCache = [];
+    updateJobsTabLabel();
+    return;
+  }
+  try {
+    const [jobsResp, watchesResp] = await Promise.all([
+      fetch('/api/jobs', { headers: getAuthHeaders() }),
+      fetch('/api/city-watch', { headers: getAuthHeaders() })
+    ]);
+    jobsCache = jobsResp.ok ? ((await jobsResp.json()).jobs || []) : [];
+    watchesCache = watchesResp.ok ? ((await watchesResp.json()).watches || []) : [];
+  } catch {
+    jobsCache = jobsCache || [];
+    watchesCache = watchesCache || [];
+  }
+  updateJobsTabLabel();
+}
+async function saveLookupToJobPrompt() {
+  if (!currentResult) return;
+  if (!isLoggedIn()) {
+    showGate(false);
+    return;
+  }
+  const { job, city, state, address, data } = currentResult;
+  if (wasJobSavedThisSession(job, city, state)) {
+    setInlinePromptMessage('info', '✅ Already saved — view in Jobs tab');
+    pulseJobsTab();
+    return;
+  }
+  const input = document.getElementById('save-job-name-input');
+  const button = document.getElementById('save-job-btn');
+  const jobName = (input?.value || '').trim() || `${job} — ${city}, ${state}`;
+  const permitName = getResultPermitName(data);
+  if (button) { button.disabled = true; button.textContent = 'Saving...'; }
+  try {
+    const resp = await fetch('/api/jobs', {
+      method: 'POST', headers: getAuthHeaders(),
+      body: JSON.stringify({ job_name: jobName, address: address || '', city, state, job_type: job, permit_name: permitName, result_json: data, status: 'planning' })
+    });
+    const payload = await resp.json();
+    if (!resp.ok || !payload.job) throw new Error(payload.error || 'Could not save job');
+    markJobSavedThisSession(job, city, state);
+    setInlinePromptMessage('success', '✅ Saved to Jobs');
+    await refreshJobsAndWatches();
+    pulseJobsTab();
+  } catch (e) {
+    setInlinePromptMessage('error', e.message || 'Could not save job');
+  }
+  if (button) { button.disabled = false; button.textContent = 'Save Job'; }
+}
+async function toggleCityWatch() {
+  if (!currentResult) return;
+  if (!isLoggedIn()) {
+    showGate(false);
+    return;
+  }
+  const { job, city, state } = currentResult;
+  const button = document.getElementById('city-watch-btn');
+  if (button) { button.disabled = true; button.textContent = 'Saving...'; }
+  try {
+    const resp = await fetch('/api/city-watch', {
+      method: 'POST', headers: getAuthHeaders(),
+      body: JSON.stringify({ city, state, job_type: job })
+    });
+    const payload = await resp.json();
+    if (!resp.ok || !payload.watch) throw new Error(payload.error || 'Could not start watch');
+    await refreshJobsAndWatches();
+    setInlinePromptMessage('success', `✅ Watching — you'll be emailed if ${city} updates permit requirements`);
+  } catch (e) {
+    setInlinePromptMessage('error', e.message || 'Could not start watch');
+  }
+  if (button) { button.disabled = false; button.textContent = '🔔 Alert me if requirements change'; }
+}
+function buildResultSavePrompt(job, city, state, permitName) {
+  const defaultName = `${job} — ${city}, ${state}`;
+  const loggedIn = isLoggedIn();
+  return `<div class="result-save-prompt"><div class="result-save-title">📁 Save this to a Job?</div><div class="result-save-sub">${loggedIn ? 'Keep this lookup in your Jobs tab so you can track status and come back to it later.' : 'Log in to save jobs, track status, and share permit details with your team.'}</div><div class="result-save-row">${loggedIn ? `<input id="save-job-name-input" class="result-save-input" value="${esc(defaultName)}" aria-label="Job name" /> <button id="save-job-btn" class="result-save-btn" onclick="saveLookupToJobPrompt()">Save Job</button>` : `<button class="result-save-btn" onclick="showGate(false)">Log in to save jobs</button>`}</div><div class="result-save-row" style="margin-top:10px"><button id="city-watch-btn" class="result-secondary-btn" onclick="toggleCityWatch()">🔔 Alert me if requirements change</button></div><div id="result-save-confirm" class="result-save-confirm ${wasJobSavedThisSession(job, city, state) ? 'show info' : ''}">${wasJobSavedThisSession(job, city, state) ? '✅ Already saved — view in Jobs tab' : ''}</div></div>`;
+}
+function closeModal(modalId) { document.getElementById(modalId)?.remove(); }
+function openRejectionFixModalById(jobId) {
+  const job = (jobsCache || []).find(item => String(item.id) === String(jobId));
+  if (!job) return;
+  openRejectionFixModal(job);
+}
+function openRejectionFixModal(job) {
+  closeModal('rejection-fix-modal');
+  const modal = document.createElement('div');
+  modal.id = 'rejection-fix-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `<div class="modal-card"><div class="modal-title">📋 Get Fix Plan</div><div class="modal-sub">Paste the rejection comment from the building department:</div><textarea id="rejection-fix-text" class="modal-textarea" placeholder="Paste the rejection comment from the building department:"></textarea><div class="modal-actions"><button class="result-secondary-btn" onclick="closeModal('rejection-fix-modal')">Close</button><button id="rejection-fix-submit" class="result-save-btn" onclick="submitRejectionFixById('${esc(job.id)}')">Get Fix Plan</button></div><div id="rejection-fix-result" class="modal-result" style="display:none"></div></div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal('rejection-fix-modal'); });
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('rejection-fix-text')?.focus(), 50);
+}
+function submitRejectionFixById(jobId) {
+  const job = (jobsCache || []).find(item => String(item.id) === String(jobId));
+  if (!job) return;
+  return submitRejectionFix(job);
+}
+async function submitRejectionFix(job) {
+  const textEl = document.getElementById('rejection-fix-text');
+  const resultEl = document.getElementById('rejection-fix-result');
+  const btn = document.getElementById('rejection-fix-submit');
+  const rejectionText = (textEl?.value || '').trim();
+  if (!rejectionText) { textEl?.focus(); return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Getting fix plan...'; }
+  if (resultEl) { resultEl.style.display = 'none'; resultEl.textContent = ''; }
+  try {
+    const resp = await fetch('/api/rejection-fix', {
+      method: 'POST', headers: getAuthHeaders(),
+      body: JSON.stringify({ job_id: job.id, rejection_text: rejectionText, city: job.city, state: job.state, job_type: job.trade || job.job_name || '' })
+    });
+    const payload = await resp.json();
+    if (!resp.ok || !payload.fix_plan) throw new Error(payload.error || 'Could not generate fix plan');
+    if (resultEl) { resultEl.style.display = 'block'; resultEl.textContent = payload.fix_plan; }
+  } catch (e) {
+    if (resultEl) { resultEl.style.display = 'block'; resultEl.textContent = `Error: ${e.message || 'Could not generate fix plan'}`; }
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Get Fix Plan'; }
+}
+async function deleteCityWatchItem(id) {
+  try {
+    await fetch('/api/city-watch/' + id, { method: 'DELETE', headers: getAuthHeaders() });
+    await refreshJobsAndWatches();
+    renderJobsPage();
+  } catch {}
+}
 
 function emailResult() {
   if (!currentResult) return;
@@ -3778,52 +4003,48 @@ function printChecklistSection(){
   const w = window.open('', '_blank');
   if (w) { w.document.write(html); w.document.close(); }
 }
-function saveChecklistToJob(){ saveJobToTracker(); }
-function saveJobToTracker() {
-  if (!currentResult) return;
-  if (!isLoggedIn()) {
-    alert('Please log in first so your saved jobs stay tied to your account.');
-    showGate(true);
-    return;
-  }
-  const { job, city, state, address, data } = currentResult;
-  const permits = data.permits_required || [];
-  const permitName = permits.length > 0 ? permits[0].permit_type : '';
-  fetch('/api/jobs', {
-    method: 'POST', headers: getAuthHeaders(),
-    body: JSON.stringify({ job_name: job, address: address || '', city, state, permit_name: permitName, result_json: data, status: 'planning' })
-  }).then(r => r.json()).then(r => {
-    if (r.job) showCopy('\ud83d\udcc1 Saved to Job Tracker!');
-    else alert('Error: ' + (r.error || 'Unknown'));
-  }).catch(e => alert('Could not save: ' + e.message));
+function saveChecklistToJob(){ saveLookupToJobPrompt(); }
+async function saveJobToTracker() {
+  await saveLookupToJobPrompt();
 }
 async function renderJobsPage() {
   const el = document.getElementById('jobs-inner');
   if (!isLoggedIn()) {
-    el.innerHTML = '<div class="jobs-empty"><div class="icon">\ud83d\udcc1</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">Log in to use Job Tracker</p><p style="font-size:13px;">Your saved jobs are now tied to your account for privacy and team access.</p></div>';
+    jobsCache = [];
+    watchesCache = [];
+    updateJobsTabLabel();
+    el.innerHTML = '<div class="jobs-empty"><div class="icon">📁</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">Log in to use Job Tracker</p><p style="font-size:13px;">Your saved jobs are now tied to your account for privacy and team access.</p></div>';
     return;
   }
   el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--muted)">Loading...</div>';
   try {
-    const r = await fetch('/api/jobs', { headers: getAuthHeaders() });
-    const data = await r.json();
-    const jobs = data.jobs || [];
-    if (!jobs.length) { el.innerHTML = '<div class="jobs-empty"><div class="icon">\ud83d\udcc1</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">No saved jobs</p><p style="font-size:13px;">Click &quot;\ud83d\udcc1 Save to Job Tracker&quot; from any result.</p></div>'; return; }
-    const SL = { planning:'\ud83d\udcd0 Planning', applied:'\ud83d\udce8 Applied', approved:'\u2705 Approved', active:'\ud83d\udee0\ufe0f Active', closed:'\ud83d\udfe5 Closed' };
-    const SC = { planning:'status-planning', applied:'status-applied', approved:'status-approved', active:'status-active', closed:'status-closed' };
+    await refreshJobsAndWatches();
+    const jobs = jobsCache || [];
+    const watches = watchesCache || [];
+    const SL = { planning:'📐 Planning', applied:'📨 Applied', approved:'✅ Approved', active:'🛠️ Active', rejected:'❌ Rejected', closed:'🟥 Closed' };
+    const SC = { planning:'status-planning', applied:'status-applied', approved:'status-approved', active:'status-active', rejected:'status-rejected', closed:'status-closed' };
     let html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">' + jobs.length + ' saved job' + (jobs.length!==1?'s':'') + '</div>';
+    if (watches.length) {
+      html += '<div class="jobs-section-card"><div class="jobs-section-title">🔔 Watching</div>' + watches.map(w => '<div class="watching-item"><div><div style="font-size:14px;font-weight:700;color:var(--text)">' + esc(w.job_type) + ' in ' + esc(w.city) + ', ' + esc(w.state) + '</div><div class="watching-item-meta">We will email you if permit requirements change.</div></div><button class="job-action-btn" onclick="deleteCityWatchItem(\'' + esc(w.id) + '\')">Delete</button></div>').join('') + '</div>';
+    }
+    if (!jobs.length) {
+      html += '<div class="jobs-empty"><div class="icon">📁</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">No saved jobs</p><p style="font-size:13px;">Save a lookup from your results page to start tracking it here.</p></div>';
+      el.innerHTML = html;
+      return;
+    }
     jobs.forEach(j => {
       const warn = j.expiry_date ? checkExpiryWarn(j.expiry_date) : '';
       const issuedDate = getPermitIssuedDate(j.id);
       const issuedWarn = checkIssuedDateWarn(issuedDate);
       const issuedSection = issuedDate
-        ? `<span class="job-action-btn" style="font-size:11px">\ud83d\udcc5 Issued: ${esc(issuedDate)}</span>`
+        ? `<span class="job-action-btn" style="font-size:11px">📅 Issued: ${esc(issuedDate)}</span>`
         : `<button class="job-action-btn" onclick="setPermitIssuedDate('${esc(j.id)}','${esc(j.job_name)}','${esc(j.city)}','${esc(j.state)}')">Set Issued Date</button>`;
-      const opts = ['planning','applied','approved','active','closed'].map(s=>'<option value="'+s+'" '+(j.status===s?'selected':'')+'>'+(SL[s]||s)+'</option>').join('');
-      html += '<div class="job-item"><div class="job-item-header"><div class="job-item-name">'+esc(j.job_name)+'</div><span class="job-status-badge '+(SC[j.status]||'status-planning')+'">'+(SL[j.status]||j.status)+'</span></div><div class="job-item-meta">\ud83d\udccd '+esc(j.city)+', '+esc(j.state)+(j.permit_name?' \u2022 '+esc(j.permit_name):'')+' </div>'+warn+issuedWarn+'<div class="job-item-actions"><select onchange="updateJobStatus(\'' + esc(j.id) + '\',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;cursor:pointer">'+opts+'</select>'+issuedSection+(j.expiry_date?'<span class="job-action-btn" style="font-size:11px">\u23f0 '+esc(j.expiry_date)+'</span>':'<button class="job-action-btn" onclick="setJobExpiry(\'' + esc(j.id) + '\')">Set Expiry</button>')+'<button class="job-action-btn" style="color:var(--red);border-color:rgba(239,68,68,.3)" onclick="deleteJobItem(\'' + esc(j.id) + '\')">Delete</button></div></div>';
+      const opts = ['planning','applied','approved','active','rejected','closed'].map(s=>'<option value="'+s+'" '+(j.status===s?'selected':'')+'>'+(SL[s]||s)+'</option>').join('');
+      const fixBtn = j.status === 'rejected' ? `<button class="job-action-btn" onclick="openRejectionFixModalById('${esc(j.id)}')">📋 Get Fix Plan</button>` : '';
+      html += '<div class="job-item"><div class="job-item-header"><div class="job-item-name">'+esc(j.job_name)+'</div><span class="job-status-badge '+(SC[j.status]||'status-planning')+'">'+(SL[j.status]||j.status)+'</span></div><div class="job-item-meta">📍 '+esc(j.city)+', '+esc(j.state)+(j.permit_name?' • '+esc(j.permit_name):'')+' </div>'+warn+issuedWarn+'<div class="job-item-actions"><select onchange="updateJobStatus(\'' + esc(j.id) + '\',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;cursor:pointer">'+opts+'</select>'+issuedSection+(j.expiry_date?'<span class="job-action-btn" style="font-size:11px">⏰ '+esc(j.expiry_date)+'</span>':'<button class="job-action-btn" onclick="setJobExpiry(\'' + esc(j.id) + '\')">Set Expiry</button>')+fixBtn+'<button class="job-action-btn" style="color:var(--red);border-color:rgba(239,68,68,.3)" onclick="deleteJobItem(\'' + esc(j.id) + '\')">Delete</button></div></div>';
     });
     el.innerHTML = html;
-  } catch(e) { el.innerHTML = '<div class="jobs-empty"><div class="icon">\u26a0\ufe0f</div><p>'+esc(e.message)+'</p></div>'; }
+  } catch(e) { el.innerHTML = '<div class="jobs-empty"><div class="icon">⚠️</div><p>'+esc(e.message)+'</p></div>'; }
 }
 function checkExpiryWarn(d) {
   try { const days=Math.ceil((new Date(d)-Date.now())/(86400000)); if(days<0) return '<div class="job-expiry-warn">\u26a0\ufe0f Permit EXPIRED '+Math.abs(days)+' days ago</div>'; if(days<=30) return '<div class="job-expiry-warn">\u26a0\ufe0f Expires in '+days+' days</div>'; } catch{} return '';
@@ -3859,11 +4080,11 @@ function getPermitIssuedDate(jobId) {
   return localStorage.getItem('pa_issued_' + jobId) || '';
 }
 async function updateJobStatus(id, status) {
-  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:getAuthHeaders(),body:JSON.stringify({status})}); renderJobsPage(); } catch{}
+  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:getAuthHeaders(),body:JSON.stringify({status})}); await refreshJobsAndWatches(); renderJobsPage(); } catch{}
 }
 async function setJobExpiry(id) {
   const d = prompt('Enter expiry date (YYYY-MM-DD):'); if(!d) return;
-  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:getAuthHeaders(),body:JSON.stringify({expiry_date:d})}); renderJobsPage(); } catch{}
+  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:getAuthHeaders(),body:JSON.stringify({expiry_date:d})}); await refreshJobsAndWatches(); renderJobsPage(); } catch{}
 }
 
 async function setPermitIssuedDate(jobId, jobName, city, state) {
@@ -3874,7 +4095,7 @@ async function setPermitIssuedDate(jobId, jobName, city, state) {
 }
 async function deleteJobItem(id) {
   if(!confirm('Delete this job?')) return;
-  try { await fetch('/api/jobs/'+id,{method:'DELETE',headers:getAuthHeaders()}); renderJobsPage(); } catch{}
+  try { await fetch('/api/jobs/'+id,{method:'DELETE',headers:getAuthHeaders()}); await refreshJobsAndWatches(); renderJobsPage(); } catch{}
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
@@ -3910,6 +4131,7 @@ function checkShimmer(){
   if(el){el.addEventListener('input',checkShimmer);el.addEventListener('change',checkShimmer)}
 });
 
+updateJobsTabLabel();
 refreshCounterBar();
 loadStats();
 initAutocomplete();
