@@ -25,7 +25,7 @@ client = OpenAI()
 _GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 if _GEMINI_API_KEY:
     genai.configure(api_key=_GEMINI_API_KEY)
-_gemini_fallback_model = "gemini-3-pro-preview"
+_gemini_fallback_model = "gemini-2.5-pro"
 
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 # Support RAILWAY_VOLUME_MOUNT_PATH or CACHE_DIR env var for persistent volumes
@@ -1405,7 +1405,7 @@ Return ONLY the JSON object."""
                 {"role": "user",    "content": user_prompt},
             ],
             temperature=0.1,
-            max_tokens=6000,
+            max_tokens=8000,
             response_format={"type": "json_object"},
         )
         raw = response.choices[0].message.content
