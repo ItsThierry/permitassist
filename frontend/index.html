@@ -3609,14 +3609,61 @@ async function loadComplianceChecklist(job, city, state, result){
   }
 }
 function printChecklistSection(){
-  // Hide main result during print, show only checklist
-  const ri = document.getElementById('results-inner');
-  const rb = document.getElementById('results');
-  const prevDisplay = rb ? rb.style.display : '';
-  // Temporarily mark everything except checklist as no-print
-  if (ri) ri.classList.add('no-print');
-  window.print();
-  if (ri) ri.classList.remove('no-print');
+  if (!currentResult) return;
+  const { job, city, state } = currentResult;
+  // Grab rendered checklist items from the DOM
+  const contentEl = document.getElementById('compliance-checklist-content');
+  const checklistHTML = contentEl ? contentEl.innerHTML : '<p>No checklist available.</p>';
+  const generated = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  function efn(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Pre-Construction Checklist &mdash; PermitAssist</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  @page{margin:18mm 16mm}
+  body{font-family:'Segoe UI',Arial,sans-serif;color:#0f172a;background:#fff;font-size:14px;line-height:1.5}
+  .page{max-width:720px;margin:0 auto;padding:28px 24px 48px}
+  .header{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:3px solid #2563eb;margin-bottom:20px}
+  .logo-box{background:#2563eb;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .header-text h1{font-size:18px;font-weight:900;color:#0f172a}
+  .header-text .sub{font-size:11px;color:#64748b}
+  .header-date{margin-left:auto;font-size:11px;color:#94a3b8;text-align:right}
+  .job-label{font-size:16px;font-weight:800;margin-bottom:4px}
+  .loc-label{font-size:13px;color:#475569;margin-bottom:20px}
+  .compliance-checklist-header{margin-bottom:12px}
+  .compliance-checklist-summary{font-size:13px;color:#475569;margin-bottom:16px;line-height:1.6}
+  .compliance-checklist-list{display:flex;flex-direction:column;gap:10px}
+  .compliance-checklist-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #e2e8f0}
+  .compliance-checklist-row:last-child{border-bottom:none}
+  .compliance-checklist-box{width:16px;height:16px;border:1.5px solid #94a3b8;border-radius:3px;flex-shrink:0;margin-top:2px;-webkit-print-color-adjust:exact}
+  .compliance-checklist-label{font-size:14px;font-weight:600;color:#0f172a}
+  .compliance-checklist-meta{font-size:11px;color:#94a3b8;margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+  .compliance-checklist-actions{display:none}
+  .checklist-hint{font-size:11px;color:#94a3b8;margin-top:12px}
+  .footer{margin-top:28px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8}
+  @media print{body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="logo-box">&#128203;</div>
+    <div class="header-text"><h1>Pre-Construction Checklist</h1><div class="sub">permitassist.io &mdash; AI-powered permit research</div></div>
+    <div class="header-date">${efn(generated)}</div>
+  </div>
+  <div class="job-label">${efn(job)}</div>
+  <div class="loc-label">&#128205; ${efn(city)}, ${efn(state)}</div>
+  ${checklistHTML}
+  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Verify all requirements with your local building department before starting work.</div>
+</div>
+<script>window.onload=function(){window.print();}<\/script>
+</body>
+</html>`;
+  const w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); }
 }
 function saveChecklistToJob(){ saveJobToTracker(); }
 function saveJobToTracker() {
