@@ -714,19 +714,48 @@ def cache_key(job_type: str, city: str, state: str) -> str:
     raw = f"{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}"
     return hashlib.md5(raw.encode()).hexdigest()
 
-def get_cached(key: str, max_age_days: int = 30):
+def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
+    """Tiered TTL based on popularity and data quality.
+    - Popular + high confidence = 60 days (stable, well-tested data)
+    - Unverified fee or low confidence = 10 days (refresh sooner)
+    - Default = 30 days
+    """
+    if fee_unverified or confidence == "low":
+        return 10
+    if hits >= 10 and confidence == "high":
+        return 60
+    if hits >= 3 and confidence in ("high", "medium"):
+        return 45
+    return 30
+
+def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
+    """Smart cache read with tiered TTL and stale-while-revalidate.
+    - max_age_days: override TTL (used internally; pass None for smart TTL)
+    - _refresh_callback: callable(key) to trigger background refresh when stale
+    """
     try:
         conn = sqlite3.connect(CACHE_DB)
         row = conn.execute(
-            "SELECT result_json, created_at FROM permit_cache WHERE cache_key = ?", [key]
+            "SELECT result_json, created_at, hits FROM permit_cache WHERE cache_key = ?", [key]
         ).fetchone()
         if row:
+            result = json.loads(row[0])
             created = datetime.fromisoformat(row[1])
-            if datetime.now() - created < timedelta(days=max_age_days):
+            hits = row[2] or 0
+            confidence = result.get("confidence", "medium")
+            fee_unverified = bool(result.get("_fee_unverified"))
+            ttl = max_age_days if max_age_days is not None else _smart_ttl(hits, confidence, fee_unverified)
+            age = datetime.now() - created
+            if age < timedelta(days=ttl):
                 conn.execute("UPDATE permit_cache SET hits = hits + 1 WHERE cache_key = ?", [key])
                 conn.commit()
                 conn.close()
-                return json.loads(row[0])
+                # Stale-while-revalidate: if past 75% of TTL, trigger background refresh
+                if _refresh_callback and age > timedelta(days=ttl * 0.75):
+                    print(f"[cache] Stale-while-revalidate triggered for key {key[:8]}… (age={age.days}d, ttl={ttl}d)")
+                    import threading
+                    threading.Thread(target=_refresh_callback, args=(key,), daemon=True).start()
+                return result
         conn.close()
     except Exception as e:
         print(f"[cache] Read error (non-fatal): {e}")
@@ -999,7 +1028,6 @@ Return ONLY a JSON object with these exact fields:
   "apply_address": "123 Main St, City, ST 00000",
   "apply_google_maps": "https://www.google.com/maps/search/City+State+building+permit+office",
   "fee_range": "specific dollar amounts when known, e.g. '$68 first system, $19 each additional (Austin 2025)'",
-  "total_cost_estimate": "realistic total project cost range including labor/materials/permit, e.g. '$2,500 - $4,500'",
   "approval_timeline": {
     "simple": "e.g. Same day OTC for residential trade work",
     "complex": "e.g. 5-10 business days if plan review required"
@@ -1031,16 +1059,9 @@ Return ONLY a JSON object with these exact fields:
     "Schedule rough-in inspection before the 48-hour window closes or pay re-inspection fee"
   ],
   "code_citation": {
-    "section": "IRC R105.2.2" ,
-    "text": "Ordinary repairs to structures shall not include the cutting away of any wall, partition or portion thereof..." 
+    "section": "IRC R105.2.2",
+    "text": "Ordinary repairs to structures shall not include the cutting away of any wall, partition or portion thereof..."
   },
-  "what_to_bring": [
-    "Item 1 contractor needs at the permit counter or to submit online",
-    "Item 2 — be specific: 'Equipment spec sheet with make/model/BTU/SEER2'",
-    "Item 3 — e.g. 'TACL license number (not just the card — the actual number)'",
-    "Item 4 — e.g. 'Site plan showing equipment location and clearances'",
-    "Item 5 — e.g. 'Homeowner signature on application if contractor is pulling'"
-  ],
   "companion_permits": [
     {
       "permit_type": "Name of companion permit (e.g. Electrical Permit)",
@@ -1102,7 +1123,18 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
     key = cache_key(job_type, city, state)
 
     if use_cache:
-        cached = get_cached(key)
+        def _background_refresh(k):
+            """Re-run the lookup without cache and save fresh result."""
+            try:
+                print(f"[cache] Background refresh started for key {k[:8]}…")
+                fresh = research_permit(job_type, city, state, zip_code, use_cache=False, job_category=job_category)
+                if fresh and not fresh.get("error"):
+                    save_cache(k, job_type, city, state, zip_code, fresh)
+                    print(f"[cache] Background refresh complete for {city}, {state} / {job_type}")
+            except Exception as e:
+                print(f"[cache] Background refresh failed (non-fatal): {e}")
+
+        cached = get_cached(key, _refresh_callback=_background_refresh)
         if cached:
             cached["_cached"] = True
             if not isinstance(cached.get("companion_permits"), list):
@@ -1251,7 +1283,7 @@ Return ONLY the JSON object."""
                 {"role": "user",    "content": user_prompt},
             ],
             temperature=0.1,
-            max_tokens=3000,
+            max_tokens=4000,
             response_format={"type": "json_object"},
         )
         raw = response.choices[0].message.content
