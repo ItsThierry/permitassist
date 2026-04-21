@@ -1635,7 +1635,6 @@ Return ONLY the JSON object."""
     # Server-side companion permit injection — guarantees high-value companions
     # even when AI omits them. Only adds if not already present (deduped by permit_type).
     existing_types = {c.get("permit_type", "").lower() for c in result.get("companion_permits", [])}
-    job_lower = job_type.lower()
     injected = []
 
     COMPANION_MATRIX = [
