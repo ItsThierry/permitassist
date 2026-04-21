@@ -2823,9 +2823,12 @@ class Handler(BaseHTTPRequestHandler):
                     # Page messaging events
                     for msg_event in entry.get("messaging", []):
                         sender_id = msg_event.get("sender", {}).get("id")
-                        message = msg_event.get("message", {}).get("text", "")
-                        if sender_id and message:
-                            notify_telegram(f"💬 Facebook Page DM\nFrom: {sender_id}\nMessage: {message}")
+                        message_text = msg_event.get("message", {}).get("text", "")
+                        postback = msg_event.get("postback", {}).get("payload", "")
+                        incoming = postback or message_text
+                        if sender_id and incoming:
+                            notify_telegram(f"💬 Facebook Page DM\nFrom: {sender_id}\nMessage: {incoming}")
+                            threading.Thread(target=handle_messenger_message, args=(sender_id, incoming), daemon=True).start()
                     # Feed events (comments, posts)
                     for change in entry.get("changes", []):
                         field = change.get("field", "")
@@ -3903,3 +3906,74 @@ if __name__ == "__main__":
     print(f"   Open: http://localhost:{PORT}")
     server = HTTPServer(("0.0.0.0", PORT), Handler)
     server.serve_forever()
+
+# ── Messenger Bot Helper ──────────────────────────────────────────────────────
+
+MESSENGER_PAGE_TOKEN = os.environ.get("FB_PAGE_TOKEN", "EAASqNZBDxbWcBRWNr7TqKGrVrweoAeZBmIsIvAHveRvDVH2AIQrWnobiQgBJhcb2lanZB8MemR8OWUfA5hwe35WjPlJrYxmrf67vpe65zv4u3kWKWlwu8XTLnSdZB3QdgCovdCr5zZCTRanfkwu1AvxZA11OHdtPN3dhPrelQj4aXYN0q2R9Q61i88OgjyQwhy46ezVlf4DgZDZD")
+
+TRADE_LINKS = {
+    "roof": ("roofing", "https://permitassist.io/roofing"),
+    "roof": ("roofing", "https://permitassist.io/roofing"),
+    "plumb": ("plumbing", "https://permitassist.io/plumbing"),
+    "electr": ("electrical", "https://permitassist.io/electrical"),
+    "hvac": ("HVAC", "https://permitassist.io/hvac"),
+    "heat": ("HVAC", "https://permitassist.io/hvac"),
+    "cool": ("HVAC", "https://permitassist.io/hvac"),
+    "solar": ("solar", "https://permitassist.io/solar"),
+    "general": ("general contracting", "https://permitassist.io"),
+    "contractor": ("general contracting", "https://permitassist.io"),
+}
+
+def messenger_send(recipient_id, text):
+    """Send a Messenger message as the PermitAssist page."""
+    try:
+        requests.post(
+            "https://graph.facebook.com/v19.0/me/messages",
+            params={"access_token": MESSENGER_PAGE_TOKEN},
+            json={"recipient": {"id": recipient_id}, "message": {"text": text}},
+            timeout=5
+        )
+    except Exception:
+        pass
+
+def messenger_send_buttons(recipient_id, text, buttons):
+    """Send a Messenger message with quick reply buttons."""
+    try:
+        quick_replies = [{"content_type": "text", "title": b, "payload": b.upper()} for b in buttons]
+        requests.post(
+            "https://graph.facebook.com/v19.0/me/messages",
+            params={"access_token": MESSENGER_PAGE_TOKEN},
+            json={"recipient": {"id": recipient_id}, "message": {"text": text, "quick_replies": quick_replies}},
+            timeout=5
+        )
+    except Exception:
+        pass
+
+def handle_messenger_message(sender_id, text):
+    """Route inbound Messenger messages through the bot flow."""
+    text_lower = text.lower().strip()
+
+    # Check for trade keywords
+    for keyword, (trade_name, link) in TRADE_LINKS.items():
+        if keyword in text_lower:
+            messenger_send(sender_id,
+                f"Got it — here's the PermitAssist page built for {trade_name} contractors:\n\n"
+                f"{link}\n\n"
+                f"You get 3 free lookups, no credit card needed. Takes 30 seconds to get started."
+            )
+            notify_telegram(f"📩 Messenger lead: trade={trade_name}, sender={sender_id}")
+            return
+
+    # Greeting or unknown — ask what trade
+    greetings = ["hi", "hello", "hey", "hiya", "sup", "yo", "good"]
+    if any(g in text_lower for g in greetings) or len(text_lower) < 15:
+        messenger_send_buttons(sender_id,
+            "Hey! What trade are you in? I'll send you the right permit lookup page.",
+            ["Roofing", "Plumbing", "Electrical", "HVAC", "Solar", "Other"]
+        )
+    else:
+        messenger_send(sender_id,
+            "Thanks for reaching out! PermitAssist helps contractors look up permit requirements in seconds — fees, docs, timelines for 1,569 cities.\n\n"
+            "Try 3 free lookups here: https://permitassist.io\n\n"
+            "What trade are you in? I can send you the specific page for your work."
+        )
