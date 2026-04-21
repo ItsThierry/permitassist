@@ -1616,8 +1616,40 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def read_json_body(self) -> dict:
-        length = int(self.headers.get("Content-Length", 0))
-        return json.loads(self.rfile.read(length))
+        content_length = self.headers.get("Content-Length")
+        if content_length is not None and int(content_length) > 0:
+            return json.loads(self.rfile.read(int(content_length)))
+        # Fallback: handle chunked transfer encoding (Railway CDN may strip Content-Length)
+        transfer_encoding = self.headers.get("Transfer-Encoding", "").lower()
+        if "chunked" in transfer_encoding:
+            data = b""
+            while True:
+                line = self.rfile.readline().strip()
+                if not line:
+                    break
+                try:
+                    chunk_size = int(line, 16)
+                except ValueError:
+                    break
+                if chunk_size == 0:
+                    break
+                data += self.rfile.read(chunk_size)
+                self.rfile.read(2)  # consume CRLF
+            return json.loads(data)
+        # Last resort: try reading available data
+        import io
+        data = b""
+        while True:
+            try:
+                chunk = self.rfile.read1(65536)
+                if not chunk:
+                    break
+                data += chunk
+            except Exception:
+                break
+        if data:
+            return json.loads(data)
+        raise json.JSONDecodeError("Empty request body", "", 0)
 
     def do_OPTIONS(self):
         self.send_response(200)
