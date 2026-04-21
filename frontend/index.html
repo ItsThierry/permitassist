@@ -1780,7 +1780,7 @@ async function refreshAccountBadge(){
   const token=getSessionToken();
   if(!token)return;
   try{
-    const r=await fetch('/api/account',{headers:{'X-Session-Token':token}});
+    const r=await fetch('/api/account',{headers:{'X-Session-Token':token},cache:'no-store'});
     if(r.status===401){clearSessionToken();return;}
     const d=await r.json();
     // Update counter bar with server-side count

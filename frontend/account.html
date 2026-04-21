@@ -255,7 +255,7 @@ async function loadAccount() {
     return;
   }
   try {
-    const r = await fetch('/api/account', { headers: { 'X-Session-Token': token } });
+    const r = await fetch('/api/account', { headers: { 'X-Session-Token': token }, cache: 'no-store' });
     if (r.status === 401) {
       clearSessionToken();
       document.getElementById('login-section').style.display = 'block';

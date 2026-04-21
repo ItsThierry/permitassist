@@ -2990,6 +2990,19 @@ class Handler(BaseHTTPRequestHandler):
                         or obj.get("metadata", {}).get("email")
                         or ""
                     )
+                    # For subscription events, email is not on the object — look up the customer
+                    if not email and obj.get("customer") and STRIPE_SECRET_KEY:
+                        try:
+                            cust_resp = requests.get(
+                                f"https://api.stripe.com/v1/customers/{obj['customer']}",
+                                headers={"Authorization": f"Bearer {STRIPE_SECRET_KEY}"},
+                                timeout=10,
+                            )
+                            if cust_resp.ok:
+                                email = cust_resp.json().get("email", "")
+                                print(f"[stripe-webhook] Resolved email from customer lookup: {email}")
+                        except Exception as e:
+                            print(f"[stripe-webhook] Customer lookup failed (non-fatal): {e}")
                     # Extract price ID to determine plan
                     price_id = ""
                     if etype == "checkout.session.completed":
