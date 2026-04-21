@@ -640,6 +640,17 @@ def _detect_job_type_hints(job_type: str) -> str:
                 "Address both if unclear."
             )
 
+    # Roofing threshold caveat — fires for all roofing/solar jobs
+    if any(w in job_lower for w in ["roof", "roofing", "shingle", "solar panel", "solar"]):
+        hints.append(
+            "ROOFING THRESHOLD CAVEAT: The common '100 sq ft = roofing permit' rule is NOT universal. "
+            "In reality: (a) Some jurisdictions trigger at different thresholds (50, 200 sq ft, or ANY replacement). "
+            "(b) Some require a permit ANY TIME structural decking is replaced regardless of area. "
+            "(c) For partial roof replacement combined with solar, both roofing AND building permits are triggered. "
+            "ALWAYS state the specific threshold for this jurisdiction. If unknown, state: "
+            "'Threshold varies by jurisdiction — verify with local building department before starting.'"
+        )
+
     # Mini split — dual permit
     if "mini split" in job_lower or "mini-split" in job_lower or "ductless" in job_lower:
         hints.append(
@@ -661,11 +672,46 @@ def _detect_job_type_hints(job_type: str) -> str:
     # Solar
     if "solar" in job_lower or "pv" in job_lower or "photovoltaic" in job_lower:
         hints.append(
-            "SOLAR NOTE: Solar installations require TWO permits: "
-            "1) Building permit (structural — roof penetrations, racking) "
-            "2) Electrical permit (NEC Article 690, utility interconnection) "
-            "Many cities have SolarAPP+ for instant approval. "
-            "Utility interconnection application is SEPARATE from permits."
+            "SOLAR NOTE: Solar installations require TWO permits (NOT three — building and structural are ONE permit): "
+            "1) Building/Structural Permit (roof penetrations, panel racking, structural loading — one combined permit, NOT two separate ones) "
+            "2) Electrical Permit (NEC Article 690, utility interconnection, DC/AC disconnects, rapid shutdown) "
+            "CRITICAL: Do NOT list 'Building Permit' and 'Structural Permit' as separate items — they are the SAME permit. "
+            "Many cities have SolarAPP+ for instant approval. Utility interconnection application is SEPARATE from permits."
+        )
+        hints.append(
+            "SOLAR SETBACKS & PANEL PLACEMENT — MUST INCLUDE IN RESPONSE: "
+            "IRC R324 and IFC Section 1204 require panels to maintain setback clearances. "
+            "Typical residential requirement: 3-foot clear access pathways along roof ridges and perimeter. "
+            "Exact dimensions vary by AHJ — some require 18-inch minimum, others 36 inches. "
+            "Panels CANNOT cover the full roof — fire access pathways must remain clear. "
+            "Include specific setback requirements for this jurisdiction in what_to_bring and inspections."
+        )
+        hints.append(
+            "SOLAR FIRE ACCESS PATHWAYS — MUST INCLUDE IN RESPONSE: "
+            "Most jurisdictions (per IFC/IRC R324) require: "
+            "(a) A 3-foot wide unobstructed pathway from eave to ridge on each roof plane with panels. "
+            "(b) Hip roofs: 3-foot clear area around the perimeter AND a 3-foot pathway to the ridge. "
+            "(c) Structural loading: confirm roof can support panel dead load (typically 3-4 lb/sq ft additional). "
+            "These are common inspection failure points — include in common_mistakes AND inspections."
+        )
+        hints.append(
+            "ZONING / HOA / HISTORIC DISTRICT FLAG — MANDATORY FOR SOLAR: "
+            "Always flag these potential blockers in your response: "
+            "1) HOA RESTRICTIONS: HOA may restrict solar panel placement, visibility, or type — check CC&Rs. "
+            "Note: Most states have solar access laws limiting HOA ability to ban solar outright, but placement restrictions are often still permitted. "
+            "2) HISTORIC DISTRICT: If in a Historic District, Historic Preservation Commission approval may be required BEFORE permits are issued (adds 30-90 days). "
+            "3) ZONING OVERLAY: Scenic corridors, shoreline districts, or other overlays may restrict visible rooftop equipment. "
+            "Populate the 'zoning_hoa_flag' field in your JSON response with specifics for this location."
+        )
+
+    # HOA/zoning flag for roofing jobs
+    if any(w in job_lower for w in ["roof", "roofing", "shingle"]) and "solar" not in job_lower:
+        hints.append(
+            "ZONING / HOA FLAG — ROOFING: "
+            "1) HOA: Many HOAs restrict shingle color, material type, or require approval before re-roofing. "
+            "2) HISTORIC DISTRICT: Homes in historic districts may need Historic Preservation Commission approval for visible roofing changes. "
+            "3) WIND/HAIL ZONE: Some jurisdictions require impact-resistant (Class 4) shingles or specific wind ratings per local IRC Chapter 9 amendments. "
+            "Include an HOA/historic district check note in common_mistakes or pro_tips."
         )
 
     # Generator
@@ -926,7 +972,7 @@ If a licensed contractor pulls the permit FOR the homeowner, say: "[Trade] contr
 EXPERTISE BY TRADE:
 • HVAC: IMC/UMC Chapters 3-9, EPA 608 refrigerant certification, Manual J load calcs, SEER2 minimums (2023), contractor licensing (TACL in TX, C-20 in CA, etc.)
 • Electrical: NEC 2020/2023, Article 210 (branch circuits), Article 230 (services), Article 250 (grounding), Article 625 (EV), Article 690 (solar), Article 702 (generators)
-• Roofing: IRC Chapter 9, wind zones (ASCE 7-22), fire ratings, ICC-600 for high-wind, ice & water shield requirements by climate zone, 25% rule for re-roofing vs tear-off
+• Roofing: IRC Chapter 9, wind zones (ASCE 7-22), fire ratings, ICC-600 for high-wind, ice & water shield requirements by climate zone, 25% rule for re-roofing vs tear-off. PERMIT THRESHOLD: The 100 sq ft rule is NOT universal — thresholds vary by jurisdiction (some require permit for ANY decking replacement regardless of area). Always state the specific local threshold or note it varies by jurisdiction.
 • Plumbing: IPC/UPC, ASSE 1016 (anti-scald), T&P valve relief piping, seismic strapping (CA/OR/WA), water heater venting (Type B, direct vent, power vent)
 • Mini splits: dual permits (mechanical + electrical), refrigerant recovery, line set routing, condensate drainage
 • Solar: NEC Article 690, DC disconnects, rapid shutdown, utility interconnection (separate from building permit), SolarAPP+
@@ -944,6 +990,8 @@ CRITICAL RULES:
    - "Mechanical Permit — Gas Furnace Installation" or  
    - "Mechanical Permit — Mini Split System (Ductless)"
    This is what the contractor actually selects in the permit portal.
+
+2b. SOLAR PERMIT DEDUPLICATION: For solar jobs, 'Building permit' and 'Structural permit' are THE SAME PERMIT — never list both. Use 'Building Permit — Solar PV (Structural Racking & Roof Penetrations)' as the single permit type name.
 
 2. PORTAL_SELECTION must be the exact dropdown/checkbox string from the permit portal. Examples:
    - For HVAC replacement: "HVAC Replacement - Residential" or "Mechanical - AC/Furnace Replacement"
@@ -1069,6 +1117,7 @@ Return ONLY a JSON object with these exact fields:
       "certainty": "almost_certain | likely | possible"
     }
   ],
+  "zoning_hoa_flag": "For solar and roofing jobs: describe potential HOA restrictions, historic district overlay requirements, and zoning restrictions that could block or delay work. State-specific solar access laws if relevant. Return null for jobs where this is not applicable.",
   "sources": ["official source URLs cited in your answer"],
   "confidence": "high|medium|low",
   "disclaimer": "Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently."
@@ -1528,7 +1577,7 @@ Return ONLY the JSON object."""
          "Required for the inverter, electrical interconnection, and utility tie-in.",
          "almost_certain"),
         (["solar", "solar panel"],
-         "Structural / Building Permit",
+         "Building Permit (Structural/Racking)",
          "Required to verify roof load capacity and panel attachment method.",
          "almost_certain"),
         (["ev charger", "electric vehicle", "level 2 charger"],
