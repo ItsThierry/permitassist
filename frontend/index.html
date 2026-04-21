@@ -3060,11 +3060,123 @@ function downloadReport() {
 
 function printResult() {
   if (!currentResult) return;
-  // Hide checklist section during print, show only permit result
-  const cl = document.getElementById('compliance-checklist-card');
-  if (cl) cl.style.display = 'none';
-  window.print();
-  if (cl) cl.style.display = '';
+  const { job, city, state, address, data: d } = currentResult;
+  const permitName = getPermitDisplayName(d);
+  const jurisdiction = getJurisdictionDisplay(d, city, state, address || '');
+  const nextSteps = getNextSteps(d, job, city, state);
+  const fee = d.fee_range || '';
+  const tl = d.approval_timeline || {};
+  const tlText = tl.simple || tl.complex || '';
+  const licenseNote = d.license_required || '';
+  const companions = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
+  const permits = (d.permits_required || []);
+  const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])];  
+  const tips = (d.pro_tips || []).slice(0, 4);
+  const mistakes = (d.common_mistakes || []).slice(0, 4);
+  const inspections = (d.inspections || []).slice(0, 6);
+  const phone = d.apply_phone || '';
+  const maps = d.apply_google_maps || '';
+  const office = d.applying_office || '';
+  const offAddr = d.apply_address || '';
+  const applyUrl = d.apply_url || '';
+  const generated = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  function efn(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  const permitRows = permits.map(p => {
+    const req = p.required === true ? 'REQUIRED' : p.required === 'maybe' ? 'MAYBE' : 'NOT REQ';
+    const reqColor = p.required === true ? '#065f46' : p.required === 'maybe' ? '#92400e' : '#7f1d1d';
+    const reqBg = p.required === true ? '#d1fae5' : p.required === 'maybe' ? '#fef3c7' : '#fee2e2';
+    return `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:80px"><span style="background:${reqBg};color:${reqColor};border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700">${req}</span></td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0"><strong style="font-size:13px">${efn(p.permit_type||'')}</strong>${p.notes ? `<div style="font-size:12px;color:#64748b;margin-top:2px">${efn(p.notes)}</div>` : ''}</td></tr>`;
+  }).join('');
+
+  const companionRows = companions.map(cp => {
+    const badge = cp.certainty === 'almost_certain' ? '<span style="background:#fee2e2;color:#7f1d1d;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:700">REQUIRED</span>' : '<span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:700">LIKELY</span>';
+    return `<tr><td style="padding:8px 10px;border-bottom:1px solid #fde68a;vertical-align:top">${badge} <strong style="font-size:13px">${efn(cp.permit_type||'')}</strong><div style="font-size:12px;color:#78350f;margin-top:2px">${efn(cp.reason||'')}</div></td></tr>`;
+  }).join('');
+
+  const docItems = docs.map(item => `<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;font-size:13px"><div style="width:16px;height:16px;border:1.5px solid #94a3b8;border-radius:3px;flex-shrink:0;margin-top:1px"></div><div>${efn(item)}</div></div>`).join('');
+  const tipList = tips.map(t => `<li style="padding:3px 0;font-size:13px">${efn(t)}</li>`).join('');
+  const mistakeList = mistakes.map(m => `<li style="padding:3px 0;font-size:13px">${efn(m)}</li>`).join('');
+  const inspList = inspections.map((ins, i) => `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:28px;font-size:12px;font-weight:700;color:#2563eb">${i+1}</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0"><strong style="font-size:13px">${efn(ins.stage||ins.title||'Inspection')}</strong>${ins.description ? `<div style="font-size:12px;color:#475569;margin-top:2px">${efn(ins.description)}</div>` : ''}${ins.timing ? `<div style="font-size:11px;color:#2563eb;font-weight:700;margin-top:2px">${efn(ins.timing)}</div>` : ''}</td></tr>`).join('');
+  const stepsHtml = nextSteps.map((s,i) => `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:32px"><span style="background:#2563eb;color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${i+1}</span></td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:13px">${efn(s)}</td></tr>`).join('');
+
+  const docSection = docItems ? `
+  <div class="section">
+    <div class="section-label">&#128230; What to Bring (Checklist)</div>
+    <div style="font-size:11px;color:#94a3b8;margin-bottom:8px">Check each item before going to the permit counter or submitting online</div>
+    ${docItems}
+  </div>` : '';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>${efn(job)} &mdash; Permit Report &mdash; PermitAssist</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  @page{margin:18mm 16mm}
+  body{font-family:'Segoe UI',Arial,sans-serif;color:#0f172a;background:#fff;font-size:14px;line-height:1.5}
+  .page{max-width:760px;margin:0 auto;padding:28px 24px 48px}
+  .header{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:3px solid #2563eb;margin-bottom:18px}
+  .logo-box{background:#2563eb;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .header-text h1{font-size:18px;font-weight:900;color:#0f172a}
+  .header-text .sub{font-size:11px;color:#64748b}
+  .header-date{margin-left:auto;font-size:11px;color:#94a3b8;text-align:right}
+  .hero{background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(37,99,235,.02));border:1.5px solid rgba(37,99,235,.25);border-radius:10px;padding:16px 18px;margin-bottom:14px}
+  .hero-job{font-size:20px;font-weight:900;color:#0f172a}
+  .hero-loc{font-size:13px;color:#475569;margin-top:2px}
+  .verdict-badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 13px;font-size:12px;font-weight:800;margin-top:10px}
+  .vyes{background:rgba(16,185,129,.12);color:#065f46}
+  .vno{background:rgba(239,68,68,.12);color:#7f1d1d}
+  .vmay{background:rgba(245,158,11,.12);color:#92400e}
+  .permit-name-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-top:10px}
+  .permit-name-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#3b82f6;margin-bottom:3px}
+  .permit-name-val{font-size:17px;font-weight:900;color:#1e40af}
+  .section{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:13px 15px;margin-bottom:12px}
+  .section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#94a3b8;margin-bottom:9px}
+  table{width:100%;border-collapse:collapse}
+  .kv td:first-child{font-size:11px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.4px;padding-right:12px;width:110px;vertical-align:top}
+  .kv td{padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:top}
+  .kv tr:last-child td{border-bottom:none}
+  .companion-alert{background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:13px 15px;margin-bottom:12px}
+  ul.plain{margin-left:16px}
+  ul.plain li{padding:3px 0;font-size:13px}
+  .footer{margin-top:24px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8}
+  @media print{body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="logo-box">&#128203;</div>
+    <div class="header-text"><h1>Permit Report &mdash; PermitAssist</h1><div class="sub">permitassist.io &mdash; AI-powered permit research</div></div>
+    <div class="header-date">${efn(generated)}</div>
+  </div>
+  <div class="hero">
+    <div class="hero-job">${efn(job)}</div>
+    <div class="hero-loc">&#128205; ${efn(city)}, ${efn(state)}${address ? ` &mdash; ${efn(address)}` : ''}</div>
+    <div class="verdict-badge ${d.permit_verdict === 'YES' ? 'vyes' : d.permit_verdict === 'NO' ? 'vno' : 'vmay'}">${d.permit_verdict === 'YES' ? '&#9989; PERMIT REQUIRED' : d.permit_verdict === 'NO' ? '&#10060; NO PERMIT REQUIRED' : '&#9888;&#65039; VERIFY WITH BUILDING DEPT'}</div>
+    <div class="permit-name-box"><div class="permit-name-label">&#127919; Permit to Ask For</div><div class="permit-name-val">${efn(permitName)}</div></div>
+    ${d.job_summary ? `<div style="font-size:13px;color:#475569;margin-top:10px;line-height:1.6">${efn(d.job_summary)}</div>` : ''}
+  </div>
+  ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; You Will Also Need These Permits</div><table>${companionRows}</table></div>` : ''}
+  ${fee || tlText || licenseNote ? `<div class="section"><div class="section-label">&#128176; Cost &middot; &#8987; Timeline &middot; &#129527; Who Pulls It</div><table class="kv">${fee ? `<tr><td>Fee</td><td><strong style="color:#059669;font-size:14px">${efn(fee)}</strong></td></tr>` : ''}${tlText ? `<tr><td>Timeline</td><td>${efn(tlText)}</td></tr>` : ''}${tl.complex && tl.simple ? `<tr><td>Plan review</td><td>${efn(tl.complex)}</td></tr>` : ''}${licenseNote ? `<tr><td>Who pulls it</td><td>${efn(licenseNote)}</td></tr>` : ''}</table></div>` : ''}
+  ${office || phone ? `<div class="section"><div class="section-label">&#128222; Where to Apply</div>${phone ? `<div style="font-size:19px;font-weight:900;color:#2563eb">${efn(phone)}</div>` : ''}${office ? `<div style="font-size:14px;font-weight:700;margin-top:4px">${efn(office)}</div>` : ''}${offAddr ? `<div style="font-size:13px;color:#475569;margin-top:2px">${efn(offAddr)}</div>` : ''}${maps ? `<div style="margin-top:6px;font-size:12px"><a href="${efn(maps)}">&#128506;&#65039; Maps: ${efn(maps)}</a></div>` : ''}${applyUrl ? `<div style="margin-top:4px;font-size:12px"><a href="${efn(applyUrl)}">&#127760; Online: ${efn(applyUrl)}</a></div>` : ''}</div>` : ''}
+  ${permitRows ? `<div class="section"><div class="section-label">&#128203; Permits Required</div><table>${permitRows}</table></div>` : ''}
+  ${docSection}
+  ${stepsHtml ? `<div class="section"><div class="section-label">&#9989; Next Steps</div><table>${stepsHtml}</table></div>` : ''}
+  ${inspList ? `<div class="section"><div class="section-label">&#128269; Inspection Stages</div><table>${inspList}</table></div>` : ''}
+  ${tipList ? `<div class="section"><div class="section-label">&#128161; Pro Tips</div><ul class="plain">${tipList}</ul></div>` : ''}
+  ${mistakeList ? `<div class="section" style="border-color:#fca5a5"><div class="section-label" style="color:#dc2626">&#9888;&#65039; Common Mistakes</div><ul class="plain">${mistakeList}</ul></div>` : ''}
+  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</div>
+</div>
+<script>window.onload=function(){window.print();}<\/script>
+</body>
+</html>`;
+
+  const w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); }
 }
 
 // ── History ──────────────────────────────────────────────────────────────────
