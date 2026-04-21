@@ -142,7 +142,13 @@
     .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); }
     .logo-text em { font-style: normal; color: var(--brand); }
     .logo-tagline { font-size: 11px; color: var(--text2); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
-    .nav-right { display: flex; gap: 8px; align-items: center; }
+    .nav-right { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+    .nav-link { color: var(--text2); font-size: 12px; font-weight: 600; text-decoration: none; padding: 6px 10px; border-radius: 20px; white-space: nowrap; transition: background .15s, color .15s; }
+    .nav-link:hover { background: var(--surface2); color: var(--text); }
+    .nav-link-btn { color: var(--brand); font-size: 12px; font-weight: 700; text-decoration: none; padding: 6px 12px; border: 1px solid rgba(37,99,235,0.3); border-radius: 20px; white-space: nowrap; transition: background .15s; }
+    .nav-link-btn:hover { background: rgba(37,99,235,0.06); }
+    .nav-link-btn.paid { color: #fff; background: var(--brand); border-color: var(--brand); }
+    @media (max-width: 480px) { .nav-link { padding: 6px 7px; font-size: 11px; } .nav-link-btn { padding: 6px 10px; font-size: 11px; } }
     .offline-badge { background: var(--red); border-radius: 20px; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; display: none; }
     .offline-badge.show { display: block; }
     .install-btn { background: var(--brand); border: none; border-radius: 20px; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; display: none; }
@@ -1093,12 +1099,16 @@
         <div class="logo-tagline">For Contractors</div>
       </div>
     </div>
-    <div class="nav-right">
+    <div class="nav-right" id="nav-right">
       <a class="nav-new-search" id="nav-new-search" href="#" onclick="event.preventDefault(); newSearch();">← New Lookup</a>
       <div class="offline-badge" id="offline-badge">● Offline</div>
-      <a href="/pricing" style="color:var(--text2);font-size:13px;font-weight:600;text-decoration:none;padding:6px 8px;">Pricing</a>
-      <a href="/help" style="color:var(--text2);font-size:13px;font-weight:600;text-decoration:none;padding:6px 8px;">Help</a>
-      <a href="/login" id="nav-login-btn" style="color:var(--brand);font-size:13px;font-weight:700;text-decoration:none;padding:6px 12px;border:1px solid rgba(37,99,235,0.3);border-radius:20px;white-space:nowrap;transition:background .15s;">Log in</a>
+      <!-- Static nav links (always visible) -->
+      <a href="/pricing" class="nav-link" id="nav-pricing-link">Pricing</a>
+      <a href="/help" class="nav-link" id="nav-help-link">Help</a>
+      <!-- Auth-dependent links — toggled by refreshAccountBadge() -->
+      <a href="/integrations" class="nav-link" id="nav-integrations-link" style="display:none">🔗 Integrations</a>
+      <a href="/account" class="nav-link-btn" id="nav-account-link" style="display:none">Account</a>
+      <a href="/login" class="nav-link-btn" id="nav-login-btn">Log in</a>
       <button class="install-btn" id="install-nav-btn" onclick="installApp()">Add to Phone</button>
     </div>
   </nav>
@@ -1787,25 +1797,20 @@ async function refreshAccountBadge(){
     if(typeof d.lookups_remaining==='number'){
       updateCounterBarFromServer(d.lookups_this_month, d.lookups_remaining, d.plan);
     }
-    // Show account link in nav
-    const navRight=document.querySelector('.nav-right');
-    if(navRight&&!document.getElementById('nav-account-link')){
-      const a=document.createElement('a');
-      a.id='nav-account-link';a.href='/account';
-      a.style.cssText='color:var(--brand);font-size:12px;font-weight:700;text-decoration:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;white-space:nowrap';
-      a.textContent=d.paid?'⭐ Account':'Account';
-      navRight.prepend(a);
-      if(d.paid && !document.getElementById('nav-integrations-link')){
-        const i=document.createElement('a');
-        i.id='nav-integrations-link';i.href='/integrations';
-        i.style.cssText='color:var(--text2);font-size:12px;font-weight:700;text-decoration:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;white-space:nowrap';
-        i.textContent='🔗 Integrations';
-        navRight.prepend(i);
-      }
-      // Hide login btn when logged in
-      const loginBtn=document.getElementById('nav-login-btn');
-      if(loginBtn) loginBtn.style.display='none';
+    // Update nav — show/hide links based on auth + plan
+    const loginBtn=document.getElementById('nav-login-btn');
+    const accountLink=document.getElementById('nav-account-link');
+    const intLink=document.getElementById('nav-integrations-link');
+    const freePaidBar=document.querySelector('.free-paid-bar');
+    if(loginBtn) loginBtn.style.display='none';
+    if(accountLink){
+      accountLink.style.display='';
+      accountLink.textContent=d.paid?'⭐ Account':'Account';
+      if(d.paid) accountLink.classList.add('paid'); else accountLink.classList.remove('paid');
     }
+    if(intLink) intLink.style.display=d.paid?'':'none';
+    // Hide free-tier pitch from paid users
+    if(freePaidBar) freePaidBar.style.display=d.paid?'none':'';
   }catch{}
 }
 
