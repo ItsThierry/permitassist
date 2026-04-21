@@ -1609,6 +1609,8 @@ Return ONLY the JSON object."""
     if not isinstance(result.get("companion_permits"), list):
         result["companion_permits"] = []
 
+    job_lower = job_type.lower()
+
     if not isinstance(result.get("inspection_booking"), str) or not result.get("inspection_booking", "").strip():
         booking_bits = []
         if result.get("apply_url"):
