@@ -135,6 +135,29 @@ def record_fresh_lookup(ip: str):
         print(f"[rate-limit] DB error: {e}")
 
 # ── URL validation ────────────────────────────────────────────────────────────
+# Allowlist of known-good permit portal domains, skip validation for these
+TRUSTED_PERMIT_DOMAINS = [
+    "accela.com", "aca-prod.accela.com",
+    "tylertech.com", "tylerhost.net",
+    "permitportal.com",
+    "viewpointcloud.com",
+    "energovweb.com",
+    "onlineservices.cityofchicago.org",
+    "permits.desmoines.gov",
+    "shapephx.phoenix.gov",
+    "nashville.gov",
+    "mygovernmentonline.org",
+    "citizenserve.com",
+    "municity.com",
+    "ecode360.com",
+    "civicaccess.com",
+    "opengov.com",
+    "laserfiche.com",
+    "municode.com",
+    "etrakit.net",
+    "permitworks.com",
+]
+
 def validate_url(url: str, timeout: int = 4) -> bool:
     """
     HEAD request to verify a URL actually resolves.
@@ -143,6 +166,12 @@ def validate_url(url: str, timeout: int = 4) -> bool:
     """
     if not url or not url.startswith("http"):
         return False
+
+    parsed = urlparse(url)
+    domain = parsed.netloc.lower()
+    if any(domain == d or domain.endswith('.' + d) for d in TRUSTED_PERMIT_DOMAINS):
+        return True
+
     try:
         r = requests.head(url, timeout=timeout, allow_redirects=True,
                           headers={"User-Agent": "PermitAssist/1.0"})
@@ -168,6 +197,82 @@ def sanitize_result_urls(result: dict) -> dict:
             )
         else:
             print(f"[url_check] URL verified: {apply_url}")
+    return result
+
+
+def _normalize_permit_name(name: str) -> str:
+    if not name:
+        return ""
+    n = str(name).lower()
+    replacements = {
+        "structural / building": "building",
+        "structural/building": "building",
+        "structural racking": "building",
+        "building/structural": "building",
+        "electrical permit": "electrical",
+        "mechanical permit": "mechanical",
+        "building permit": "building",
+        "gas permit": "gas",
+        "hvac": "mechanical",
+    }
+    for old, new in replacements.items():
+        n = n.replace(old, new)
+    n = ''.join(ch if ch.isalnum() or ch.isspace() else ' ' for ch in n)
+    n = ' '.join(n.split())
+    if any(p in n for p in ["utility coordination", "utility interconnection", "interconnection"]):
+        return "utility"
+    if any(p in n for p in ["plumbing", "water heater", "repipe"]):
+        return "plumbing"
+    if "gas" in n:
+        return "gas"
+    if any(p in n for p in ["mechanical", "hvac", "furnace", "air handler", "mini split"]):
+        return "mechanical"
+    if any(p in n for p in ["electrical", "service upgrade", "disconnect", "reconnect", "temporary power", "panel replacement", "panel upgrade"]):
+        return "electrical"
+    if any(p in n for p in ["building", "structural", "racking", "roof penetration", "roof penetrations"]):
+        return "building"
+    return n
+
+
+def enrich_result_response(result: dict, job_type: str, city: str, state: str) -> dict:
+    permits_required = result.get("permits_required") or []
+    existing = {_normalize_permit_name(p.get("permit_type", "")) for p in permits_required if isinstance(p, dict)}
+    deduped_companions = []
+    seen = set()
+    for cp in result.get("companion_permits") or []:
+        if not isinstance(cp, dict):
+            continue
+        norm = _normalize_permit_name(cp.get("permit_type", ""))
+        if not norm or norm in existing or norm in seen:
+            continue
+        seen.add(norm)
+        deduped_companions.append(cp)
+    result["companion_permits"] = deduped_companions
+
+    job_lower = (job_type or "").lower()
+    if not result.get("inspection_booking"):
+        booking_bits = []
+        if result.get("apply_url"):
+            booking_bits.append(f"Schedule online at {result['apply_url']}")
+        if result.get("apply_phone"):
+            booking_bits.append(f"Phone: {result['apply_phone']}")
+        context = " ".join((result.get("pro_tips") or []) + (result.get("common_mistakes") or []))
+        context_lower = context.lower()
+        if "48-hour" in context_lower or "48 hour" in context_lower:
+            booking_bits.append("48 hours advance notice required")
+        elif "24-hour" in context_lower or "24 hour" in context_lower:
+            booking_bits.append("24 hours advance notice required")
+        elif booking_bits:
+            booking_bits.append("Advance notice may be required, verify when booking")
+        if booking_bits:
+            result["inspection_booking"] = ". ".join(booking_bits) + "."
+
+    if any(token in job_lower for token in ["solar", "pv", "roof", "roofing", "shingle"]) and not result.get("zoning_hoa_flag"):
+        result["zoning_hoa_flag"] = (
+            "Check HOA rules, historic district overlays, and local zoning before applying. "
+            "Solar and roofing jobs may face placement, material, or visibility restrictions that can delay approval."
+        )
+
     return result
 
 # ── Telegram notifications ────────────────────────────────────────────────────
@@ -2584,21 +2689,35 @@ class Handler(BaseHTTPRequestHandler):
                 if remaining_lookups is not None:
                     result["remaining_lookups"] = remaining_lookups
 
-                # Validate URLs (only on fresh results — cached already verified)
+                # Validate fresh URLs, then apply shared response safety nets for both fresh and cached results
                 if not is_cached:
                     result = sanitize_result_urls(result)
-                    # Strip PDF from apply_url → apply_pdf (server-side safety net)
-                    result = strip_pdf_from_result(result)
-                    # Ensure apply_google_maps always set (prefer pinned address)
-                    if not result.get('apply_google_maps'):
-                        result['apply_google_maps'] = build_google_maps_url(
-                            city, state,
-                            address=result.get('apply_address', ''),
-                            office=result.get('applying_office', '')
-                        )
-                    # Ensure apply_phone is never completely empty
-                    if not result.get('apply_phone'):
-                        result['apply_phone'] = result.get('apply_google_maps', '')
+
+                # Fallback: if apply_url is still null, use best URL from sources[]
+                if not result.get('apply_url'):
+                    sources = result.get('sources') or []
+                    gov_urls = [s for s in sources if isinstance(s, str) and '.gov' in s and not s.lower().endswith('.pdf')]
+                    portal_urls = [s for s in sources if isinstance(s, str) and any(p in s.lower() for p in ['accela', 'permit', 'portal', 'civic', 'govern']) and not s.lower().endswith('.pdf')]
+                    other_urls = [s for s in sources if isinstance(s, str) and s.startswith('http') and not s.lower().endswith('.pdf')]
+                    fallback_url = (gov_urls or portal_urls or other_urls or [None])[0]
+                    if fallback_url:
+                        result['apply_url'] = fallback_url
+                        result['_url_warning'] = None
+
+                # Strip PDF from apply_url → apply_pdf (server-side safety net)
+                result = strip_pdf_from_result(result)
+                # Ensure apply_google_maps always set (prefer pinned address)
+                if not result.get('apply_google_maps'):
+                    result['apply_google_maps'] = build_google_maps_url(
+                        city, state,
+                        address=result.get('apply_address', ''),
+                        office=result.get('applying_office', '')
+                    )
+                # Ensure apply_phone is never completely empty
+                if not result.get('apply_phone'):
+                    result['apply_phone'] = result.get('apply_google_maps', '')
+
+                result = enrich_result_response(result, job_type, city, state)
 
                 # Record stats
                 record_lookup_stat(job_type, city, state, is_cached)

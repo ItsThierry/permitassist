@@ -328,8 +328,57 @@ JURISDICTION_QUIRKS = {
         "Nashville Metro requires contractors to register with Metro Codes before pulling permits — registration is annual and renewal is often missed",
         "Nashville has rapid growth-related permit backlogs — expedited review is available for an additional fee (typically 50% of permit fee)",
         "Tennessee does not have a state electrical license — Nashville uses its own Metro electrical license which must be obtained separately",
+        "REGISTRATION RENEWAL CHECK: Before submitting any Metro Nashville permit application, verify your Metro Codes contractor registration is current at nashville.gov/departments/codes. An expired registration blocks application submission with no error message — you won't know why it failed.",
     ],
 }
+
+# Cities known to support SolarAPP+ (instant solar permit approval)
+# Source: NREL SolarAPP+ adoption list (verify current status via web search)
+SOLARAPP_CITIES = {
+    "des_moines_ia", "aurora_co", "mesa_az", "tempe_az", "peoria_az",
+    "chandler_az", "gilbert_az", "surprise_az", "goodyear_az",
+    "fort_collins_co", "loveland_co", "boulder_co",
+    "stockton_ca", "fresno_ca", "sacramento_ca", "san_jose_ca",
+    "riverside_ca", "corona_ca", "fontana_ca", "moreno_valley_ca",
+    "oxnard_ca", "ontario_ca", "rancho_cucamonga_ca",
+    "las_vegas_nv", "henderson_nv", "north_las_vegas_nv",
+    "portland_or", "salem_or", "gresham_or",
+    "spokane_wa", "tacoma_wa", "bellevue_wa",
+    "albuquerque_nm", "rio_rancho_nm",
+    "el_paso_tx", "lubbock_tx", "amarillo_tx",
+    "tulsa_ok", "oklahoma_city_ok",
+    "wichita_ks", "topeka_ks",
+    "omaha_ne", "lincoln_ne",
+    "sioux_falls_sd",
+    "fargo_nd",
+    "minneapolis_mn", "saint_paul_mn",
+    "madison_wi", "milwaukee_wi",
+    "indianapolis_in", "fort_wayne_in",
+    "columbus_oh", "cleveland_oh", "cincinnati_oh",
+    "detroit_mi", "grand_rapids_mi",
+    "louisville_ky",
+    "nashville_tn", "memphis_tn",
+    "birmingham_al", "montgomery_al",
+    "jackson_ms",
+    "little_rock_ar",
+    "baton_rouge_la", "new_orleans_la",
+    "charleston_sc", "columbia_sc",
+    "charlotte_nc", "raleigh_nc", "greensboro_nc",
+    "richmond_va", "virginia_beach_va",
+    "baltimore_md",
+    "philadelphia_pa", "pittsburgh_pa",
+    "newark_nj", "jersey_city_nj",
+    "hartford_ct", "bridgeport_ct",
+    "providence_ri",
+    "manchester_nh",
+    "portland_me",
+    "burlington_vt",
+}
+
+
+def _check_solarapp(city: str, state: str) -> bool:
+    key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
+    return key in SOLARAPP_CITIES
 
 
 def _get_jurisdiction_quirks(city: str, state: str) -> list[str]:
@@ -679,6 +728,11 @@ def _detect_job_type_hints(job_type: str) -> str:
             "Many cities have SolarAPP+ for instant approval. Utility interconnection application is SEPARATE from permits."
         )
         hints.append(
+            "SOLARAPP+ CHECK — IMPORTANT: Many cities have adopted SolarAPP+ for instant residential solar permits. "
+            "If this city uses SolarAPP+, state it prominently: 'This city supports SolarAPP+ — qualifying standard residential solar installations may receive INSTANT permit approval online without plan review.' "
+            "Always check and state whether SolarAPP+ is available in this jurisdiction. If uncertain, say 'Check with the permit office whether SolarAPP+ is available — it can eliminate plan review delays entirely.'"
+        )
+        hints.append(
             "SOLAR SETBACKS & PANEL PLACEMENT — MUST INCLUDE IN RESPONSE: "
             "IRC R324 and IFC Section 1204 require panels to maintain setback clearances. "
             "Typical residential requirement: 3-foot clear access pathways along roof ridges and perimeter. "
@@ -1025,7 +1079,7 @@ CRITICAL RULES:
    - "https://abc.austintexas.gov" ✅
    - "https://houston.gov/onlinepermitting" ✅
    - "https://city.gov/docs/permit-application.pdf" ❌ (this is a PDF — put in apply_pdf instead)
-   If only a PDF application exists, set apply_url = null and apply_pdf = [PDF URL].
+   If only a PDF application exists, set apply_url = null and apply_pdf = [PDF URL]. If you are not certain of the exact application URL, return the city's main permit office website URL rather than null.
 
 5. SMALL CITY HANDLING: If the city is not in your database, you MUST:
    a. Use web search results to find the actual building department
@@ -1055,6 +1109,10 @@ CRITICAL RULES:
     "$68 for first HVAC system, $19 for each additional (Austin 2025)" or
     "$558 combined mechanical/electrical/building permit (Phoenix — single permit system)"
 
+11. CONTRACTOR REGISTRATION WARNINGS: For any city that requires separate city/metro contractor registration (Nashville Metro Codes, Phoenix PDD, Dallas, Chicago, etc.), ALWAYS add to common_mistakes: "Submitting permit application without verifying current contractor registration status — an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting." Also add to pro_tips: "Check your [city] contractor registration renewal date before starting any permit application — registration lapses are the #1 avoidable rejection reason."
+
+12. INSPECTION BOOKING: Always populate 'inspection_booking' with specific instructions for how to schedule inspections. Contractors often don't know this and it causes project delays. Include advance notice requirements (very important — Phoenix requires 24hr minimum, some cities require 48hr).
+
 Return ONLY a JSON object with these exact fields:
 {
   "job_summary": "clear description of what the job involves and what permits it triggers",
@@ -1070,7 +1128,7 @@ Return ONLY a JSON object with these exact fields:
     }
   ],
   "applying_office": "exact department name, e.g. Houston Permitting Center or Cook County Building & Zoning Dept",
-  "apply_url": "https://real-portal-url.gov (or null if PDF-only or unknown — never a PDF link)",
+  "apply_url": "The DIRECT URL to apply online or start the permit application. IMPORTANT: For cities using Accela (aca-prod.accela.com/CITYNAME), return the exact Accela portal URL. For Tyler Technologies portals, return the exact URL. For city .gov permit pages, return the exact URL. Do NOT return homepage URLs — return the specific permit application page. If you are not certain of the exact URL, return the city's main permit office website URL rather than null.",
   "apply_pdf": "URL to paper application PDF form, or null if online portal exists",
   "apply_phone": "(555) 555-5555 — always return something, even Google Maps search link",
   "apply_address": "123 Main St, City, ST 00000",
@@ -1087,6 +1145,7 @@ Return ONLY a JSON object with these exact fields:
       "timing": "Before insulating lines or covering wall penetrations"
     }
   ],
+  "inspection_booking": "HOW to schedule inspections for this jurisdiction. Include: online portal URL if available, phone number, advance notice required (e.g. '24 hours minimum'), hours of operation if known. Example: 'Schedule online at permits.cityname.gov — minimum 24 hours advance notice required. Phone: (555) 555-1234, Mon-Fri 8am-4pm.' Return null if unknown.",
   "license_required": "Licensed HVAC contractor (TACL in TX) pulls the permit — their license # must appear on the mechanical permit application. Owner-builders cannot pull HVAC permits in TX.",
   "city_contractor_registration": "If this city requires a SEPARATE city-level contractor registration (on top of state license), describe it here with renewal frequency and how to get it. Return null if no city registration required.",
   "what_to_bring": [
@@ -1251,6 +1310,20 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
     else:
         print("[research] No web results — using KB + GPT training data")
 
+    extra_context = ""
+    if "solar" in job_type.lower() or "pv" in job_type.lower():
+        if _check_solarapp(city, state):
+            extra_context = (
+                f"\nSolarAPP+ STATUS: {city}, {state} HAS ADOPTED SolarAPP+. Mention this prominently — "
+                "qualifying residential solar installations may receive instant permit approval. "
+                "Include in pro_tips and approval_timeline."
+            )
+        else:
+            extra_context = (
+                f"\nSolarAPP+ STATUS: {city}, {state} is NOT confirmed in our SolarAPP+ database. "
+                "Tell the contractor to ask the permit office if SolarAPP+ is available."
+            )
+
     # ── Step 3: Build combined context ──
     kb_context_parts = []
     if city_context:       kb_context_parts.append(city_context)
@@ -1302,7 +1375,7 @@ City data availability: {city_match_level}
 
 {_verified_context}
 
-{search_context}
+{search_context}{extra_context}
 
 {quirks_context}
 
@@ -1536,6 +1609,29 @@ Return ONLY the JSON object."""
     if not isinstance(result.get("companion_permits"), list):
         result["companion_permits"] = []
 
+    if not isinstance(result.get("inspection_booking"), str) or not result.get("inspection_booking", "").strip():
+        booking_bits = []
+        if result.get("apply_url"):
+            booking_bits.append(f"Schedule online at {result['apply_url']}")
+        if result.get("apply_phone"):
+            booking_bits.append(f"Phone: {result['apply_phone']}")
+        booking_context = " ".join(result.get("pro_tips", []) + quirks)
+        booking_context_lower = booking_context.lower()
+        if "48-hour" in booking_context_lower or "48 hour" in booking_context_lower:
+            booking_bits.append("48 hours advance notice required")
+        elif "24-hour" in booking_context_lower or "24 hour" in booking_context_lower:
+            booking_bits.append("24 hours advance notice required")
+        elif booking_bits:
+            booking_bits.append("Advance notice may be required, verify when booking")
+        if booking_bits:
+            result["inspection_booking"] = ". ".join(booking_bits) + "."
+
+    if ("solar" in job_lower or "pv" in job_lower or "roof" in job_lower or "roofing" in job_lower) and not result.get("zoning_hoa_flag"):
+        result["zoning_hoa_flag"] = (
+            "Check HOA rules, historic district overlays, and local zoning before applying. "
+            "Solar jobs may also face placement and visibility restrictions, even where state solar access laws limit outright bans."
+        )
+
     # Server-side companion permit injection — guarantees high-value companions
     # even when AI omits them. Only adds if not already present (deduped by permit_type).
     existing_types = {c.get("permit_type", "").lower() for c in result.get("companion_permits", [])}
@@ -1681,6 +1777,58 @@ Return ONLY the JSON object."""
         "auto_verified":   bool(_verified_entry),
         "missing_fields":  missing_fields,
     }
+
+    # ── Deduplicate companion_permits ─────────────────────────────────────────
+    def _normalize_permit_name(name: str) -> str:
+        """Normalize permit type name for dedup comparison."""
+        if not name:
+            return ""
+        n = name.lower()
+        for strip in [" (residential)", " — residential", " - residential",
+                      " (commercial)", "residential ", "commercial ",
+                      " permit", "permit "]:
+            n = n.replace(strip, "")
+        n = n.replace("structural / building", "building")
+        n = n.replace("structural/building", "building")
+        n = n.replace("structural racking", "building")
+        n = n.replace("building/structural", "building")
+        n = n.replace("electrical permit", "electrical")
+        n = n.replace("mechanical permit", "mechanical")
+        n = n.replace("building permit", "building")
+        n = n.replace("gas permit", "gas")
+        n = n.replace("hvac", "mechanical")
+        n = re.sub(r'[^a-z0-9 ]', ' ', n)
+        n = re.sub(r'\s+', ' ', n).strip()
+
+        if any(p in n for p in ["utility coordination", "utility interconnection", "interconnection"]):
+            return "utility"
+        if any(p in n for p in ["plumbing", "water heater", "repipe"]):
+            return "plumbing"
+        if "gas" in n:
+            return "gas"
+        if any(p in n for p in ["mechanical", "hvac", "furnace", "air handler", "mini split"]):
+            return "mechanical"
+        if any(p in n for p in ["electrical", "service upgrade", "disconnect", "reconnect", "temporary power", "panel replacement", "panel upgrade"]):
+            return "electrical"
+        if any(p in n for p in ["building", "structural", "racking", "roof penetration", "roof penetrations"]):
+            return "building"
+        return n
+
+    existing_permit_names = set()
+    for p in result.get("permits_required") or []:
+        existing_permit_names.add(_normalize_permit_name(p.get("permit_type", "")))
+
+    seen_companions = set()
+    deduped_companions = []
+    for cp in result.get("companion_permits") or []:
+        norm = _normalize_permit_name(cp.get("permit_type", ""))
+        if norm in existing_permit_names:
+            continue
+        if norm in seen_companions:
+            continue
+        seen_companions.add(norm)
+        deduped_companions.append(cp)
+    result["companion_permits"] = deduped_companions
 
     save_cache(key, job_type, city, state, zip_code, result)
     return result
