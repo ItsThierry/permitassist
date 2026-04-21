@@ -1279,9 +1279,23 @@ Return ONLY the JSON object."""
     elapsed = round((time.time() - start) * 1000)
     try:
         result = json.loads(raw)
-    except (json.JSONDecodeError, TypeError) as e:
-        print(f"[engine] AI returned non-JSON response: {repr(raw[:200] if raw else None)}")
-        raise RuntimeError(f"AI returned non-JSON output: {e}")
+    except (json.JSONDecodeError, TypeError):
+        # Gemini sometimes wraps JSON in markdown code fences — strip and retry
+        import re as _re
+        cleaned = raw.strip() if raw else ""
+        fence_match = _re.search(r'```(?:json)?\s*([\s\S]+?)\s*```', cleaned)
+        if fence_match:
+            cleaned = fence_match.group(1).strip()
+        # Also strip any leading/trailing non-JSON text
+        brace_match = _re.search(r'(\{[\s\S]*\})', cleaned)
+        if brace_match:
+            cleaned = brace_match.group(1)
+        try:
+            result = json.loads(cleaned)
+            print(f"[engine] Stripped markdown wrapper from AI response successfully")
+        except (json.JSONDecodeError, TypeError) as e2:
+            print(f"[engine] AI returned non-JSON response: {repr((raw or '')[:300])}")
+            raise RuntimeError(f"AI returned non-JSON output: {e2}")
 
     # ── Post-processing ──
 
