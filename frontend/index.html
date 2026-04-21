@@ -2774,12 +2774,12 @@ function renderResults(d, job, city, state) {
     <div class="action-row action-row-3" style="margin-top:14px">
       <button class="action-btn" onclick="shareResult()">📋 Share Report</button>
       <button class="action-btn" onclick="copyResult()">📋 Copy</button>
-      <button class="action-btn" onclick="printResult()">🖨️ Download PDF</button>
+      <button class="action-btn" onclick="callPermitOffice()">📞 Call Permit Office</button>
     </div>
     <div class="action-row action-row-3">
       <button class="action-btn" onclick="copyForQuote()">💰 Copy for Quote</button>
-      <button class="action-btn" onclick="emailResult()">📧 Email to Me</button>
-      <button class="action-btn" onclick="downloadReport()">⬇️ Foreman Brief</button>
+      <button class="action-btn" onclick="emailToForeman()">📤 Email to Foreman</button>
+      <button class="action-btn" onclick="downloadReport()">📄 Print / Save PDF</button>
     </div>
     <div class="action-row">
       <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
@@ -2968,6 +2968,74 @@ function emailResult() {
     </div>`;
   document.body.appendChild(m);
   setTimeout(() => document.getElementById('email-report-input')?.focus(), 100);
+}
+
+function callPermitOffice() {
+  if (!currentResult) return;
+  const { city, state, data: d } = currentResult;
+  const phone = d.apply_phone || '';
+  // Strip non-digit characters to check if it's a real phone number
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length >= 10 && !phone.toLowerCase().startsWith('search')) {
+    // Real phone number — open dialer
+    window.location.href = 'tel:' + digits;
+  } else {
+    // No phone — open Google Maps search for building dept
+    const maps = d.apply_google_maps || `https://www.google.com/maps/search/${encodeURIComponent(city + ' ' + state + ' building permit office')}`;
+    window.open(maps, '_blank');
+    showCopy('📍 No direct number found — opening Maps to find the office');
+  }
+}
+
+function emailToForeman() {
+  if (!currentResult) return;
+  const { job, city, state, data } = currentResult;
+
+  const doSend = email => {
+    const btn = document.getElementById('email-foreman-send-btn');
+    if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
+    fetch('/api/email-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, job, city, state, data })
+    })
+      .then(r => r.json()).then(r => {
+        document.getElementById('email-foreman-modal')?.remove();
+        showCopy(r.sent ? `✅ Report sent to ${email}` : '⚠️ Could not send — try Share Report instead.');
+      })
+      .catch(() => {
+        document.getElementById('email-foreman-modal')?.remove();
+        showCopy('⚠️ Could not send — try Share Report instead.');
+      });
+  };
+
+  document.getElementById('email-foreman-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'email-foreman-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+  m.innerHTML = `
+    <div style="background:var(--surface,#1a2336);border:1px solid var(--border2,#334155);border-radius:16px;padding:24px 22px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px">📤 Email to Foreman</div>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:16px">Enter your foreman's email and we'll send them the full permit breakdown — fees, timeline, contacts, and next steps.</div>
+      <input id="email-foreman-input" type="email" placeholder="foreman@company.com" autocomplete="email"
+        style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#f8fafc;font-size:15px;margin-bottom:12px;outline:none"/>
+      <button id="email-foreman-send-btn"
+        style="width:100%;background:#1a56db;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:10px"
+        onclick="(function(){
+          const inp=document.getElementById('email-foreman-input'),val=inp?inp.value.trim():'';
+          if(!val||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val)){inp.style.border='1px solid #ef4444';inp.focus();return;}
+          inp.style.border='';
+          const btn=document.getElementById('email-foreman-send-btn');
+          if(btn){btn.textContent='Sending\u2026';btn.disabled=true;}
+          fetch('/api/email-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:val,job:'${esc(job)}',city:'${esc(city)}',state:'${esc(state)}',data:window._lastLookupResult||{}})})
+            .then(r=>r.json()).then(r=>{document.getElementById('email-foreman-modal')?.remove();showCopy(r.sent?'\u2705 Report sent to '+val:'\u26a0\ufe0f Could not send \u2014 try Share Report instead.');})
+            .catch(()=>{document.getElementById('email-foreman-modal')?.remove();showCopy('\u26a0\ufe0f Could not send \u2014 try Share Report instead.');});
+        })()"
+      >Send to Foreman</button>
+      <button onclick="document.getElementById('email-foreman-modal').remove()" style="width:100%;background:none;border:1px solid #334155;border-radius:10px;color:#64748b;font-size:14px;padding:11px;cursor:pointer">Cancel</button>
+    </div>`;
+  document.body.appendChild(m);
+  setTimeout(() => document.getElementById('email-foreman-input')?.focus(), 100);
 }
 
 function copyForQuote() {
