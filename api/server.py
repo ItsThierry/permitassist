@@ -2241,7 +2241,11 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
         # ── Permit lookup ─────────────────────────────────────────────────
         if path == "/api/permit":
             try:
-                data     = self.read_json_body()
+                try:
+                    data = self.read_json_body()
+                except json.JSONDecodeError:
+                    self.send_json(400, {"error": "Invalid request body — expected JSON"})
+                    return
                 job_type     = data.get("job_type", "").strip()
                 city         = data.get("city", "").strip()
                 state        = data.get("state", "").strip()
@@ -2340,12 +2344,10 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
 
                 self.send_json(200, result)
 
-            except json.JSONDecodeError:
-                self.send_json(400, {"error": "Invalid JSON"})
             except Exception as e:
                 print(f"[permit] Error: {e}")
                 import traceback; traceback.print_exc()
-                self.send_json(500, {"error": str(e)})
+                self.send_json(500, {"error": "Lookup failed — please try again"})
 
         # ── Feedback ──────────────────────────────────────────────────────
         elif path == "/api/feedback":

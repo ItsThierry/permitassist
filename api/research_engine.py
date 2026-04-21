@@ -1277,7 +1277,11 @@ Return ONLY the JSON object."""
             raise RuntimeError(f"Both OpenAI and Gemini failed. OpenAI: {openai_err} | Gemini: {gemini_err}")
 
     elapsed = round((time.time() - start) * 1000)
-    result = json.loads(raw)
+    try:
+        result = json.loads(raw)
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"[engine] AI returned non-JSON response: {repr(raw[:200] if raw else None)}")
+        raise RuntimeError(f"AI returned non-JSON output: {e}")
 
     # ── Post-processing ──
 
