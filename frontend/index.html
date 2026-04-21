@@ -149,6 +149,12 @@
     .nav-link-btn:hover { background: rgba(37,99,235,0.06); }
     .nav-link-btn.paid { color: #fff; background: var(--brand); border-color: var(--brand); }
     @media (max-width: 480px) { .nav-link { padding: 6px 7px; font-size: 11px; } .nav-link-btn { padding: 6px 10px; font-size: 11px; } }
+    /* Mobile nav: hide tagline + pricing to make room for account btn */
+    @media (max-width: 480px) {
+      .logo-tagline { display: none; }
+      #nav-pricing-link { display: none !important; }
+      .nav-right { gap: 4px; }
+    }
     .offline-badge { background: var(--red); border-radius: 20px; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; display: none; }
     .offline-badge.show { display: block; }
     .install-btn { background: var(--brand); border: none; border-radius: 20px; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; display: none; }
