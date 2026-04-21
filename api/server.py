@@ -2727,9 +2727,11 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(200, result)
 
             except Exception as e:
+                import traceback as _tb
+                _tb_str = _tb.format_exc()
                 print(f"[permit] Error: {e}")
-                import traceback; traceback.print_exc()
-                self.send_json(500, {"error": "Lookup failed — please try again"})
+                print(_tb_str)
+                self.send_json(500, {"error": "Lookup failed — please try again", "_debug": str(e)[:300], "_trace": _tb_str[-600:]})
 
         # ── Feedback ──────────────────────────────────────────────────────
         elif path == "/api/feedback":
