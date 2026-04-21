@@ -2309,6 +2309,18 @@ class Handler(BaseHTTPRequestHandler):
             self.send_file(os.path.join(FRONTEND_DIR, "index.html"), "text/html; charset=utf-8")
         elif path in ("/cities", "/cities.html", "/cities/"):
             self.send_file(os.path.join(FRONTEND_DIR, "cities.html"), "text/html; charset=utf-8")
+
+        # ── Trade-specific landing pages ──────────────────────────────────────
+        elif path in ("/roofing", "/roofing/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "trades", "roofing.html"), "text/html; charset=utf-8")
+        elif path in ("/plumbing", "/plumbing/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "trades", "plumbing.html"), "text/html; charset=utf-8")
+        elif path in ("/electrical", "/electrical/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "trades", "electrical.html"), "text/html; charset=utf-8")
+        elif path in ("/hvac", "/hvac/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "trades", "hvac.html"), "text/html; charset=utf-8")
+        elif path in ("/solar", "/solar/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "trades", "solar.html"), "text/html; charset=utf-8")
         elif path in ("/terms", "/terms.html", "/terms/"):
             self.send_file(os.path.join(FRONTEND_DIR, "terms.html"), "text/html; charset=utf-8")
         elif path in ("/privacy", "/privacy.html", "/privacy/"):
@@ -2330,6 +2342,21 @@ class Handler(BaseHTTPRequestHandler):
             self.send_file(os.path.join(FRONTEND_DIR, "admin.html"), "text/html; charset=utf-8")
         elif path == "/health":
             self.send_json(200, {"status": "ok", "service": "PermitAssist"})
+
+        # ── Facebook Webhook verification (GET) ───────────────────────────────
+        elif path == "/api/fb-webhook":
+            params = parse_qs(urlparse(self.path).query)
+            mode = params.get("hub.mode", [""])[0]
+            token = params.get("hub.verify_token", [""])[0]
+            challenge = params.get("hub.challenge", [""])[0]
+            FB_VERIFY_TOKEN = os.environ.get("FB_WEBHOOK_VERIFY_TOKEN", "permitassist_webhook_2026")
+            if mode == "subscribe" and token == FB_VERIFY_TOKEN:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(challenge.encode())
+            else:
+                self.send_json(403, {"error": "Forbidden"})
 
         # ── Account page (Task 5) ───────────────────────────────────────────────
         elif path in ("/account", "/account/"):
@@ -2783,6 +2810,35 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
+
+        # ── Facebook Webhook events (POST) ─────────────────────────────
+        if path == "/api/fb-webhook":
+            try:
+                cl = int(self.headers.get("Content-Length", 0))
+                body = self.rfile.read(cl) if cl > 0 else b""
+                data = json.loads(body.decode("utf-8")) if body else {}
+                object_type = data.get("object", "")
+                entries = data.get("entry", [])
+                for entry in entries:
+                    # Page messaging events
+                    for msg_event in entry.get("messaging", []):
+                        sender_id = msg_event.get("sender", {}).get("id")
+                        message = msg_event.get("message", {}).get("text", "")
+                        if sender_id and message:
+                            notify_telegram(f"💬 Facebook Page DM\nFrom: {sender_id}\nMessage: {message}")
+                    # Feed events (comments, posts)
+                    for change in entry.get("changes", []):
+                        field = change.get("field", "")
+                        val = change.get("value", {})
+                        if field == "feed":
+                            item = val.get("item", "")
+                            verb = val.get("verb", "")
+                            msg = val.get("message", "")
+                            notify_telegram(f"📰 Facebook {item} {verb}: {msg[:200]}")
+                self.send_json(200, {"status": "ok"})
+            except Exception as e:
+                self.send_json(200, {"status": "ok"})  # Always 200 to Facebook
+            return
 
         # ── Debug endpoint — echo headers and body info ───────────────────
         if path == "/api/debug-headers":
