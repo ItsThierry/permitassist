@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PermitAssist Integrations</title>
+  <style>
+    :root { --bg:#f8fafc; --card:#fff; --text:#0f172a; --muted:#64748b; --brand:#2563eb; --border:#e2e8f0; --green:#059669; --red:#dc2626; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 80px; }
+    .hero { background:linear-gradient(135deg, rgba(37,99,235,.1), rgba(255,255,255,.96)); border:1px solid rgba(37,99,235,.16); border-radius:24px; padding:28px; margin-bottom:20px; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px; box-shadow:0 10px 30px rgba(15,23,42,.05); }
+    .label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--brand); margin-bottom:10px; }
+    input, textarea { width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:12px; font:inherit; margin-bottom:10px; }
+    textarea { min-height:100px; resize:vertical; }
+    button { background:var(--brand); color:#fff; border:none; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer; }
+    .secondary { background:#fff; color:var(--text); border:1px solid var(--border); }
+    .danger { background:#fff5f5; color:var(--red); border:1px solid rgba(220,38,38,.2); }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
+    .item { padding:14px 0; border-bottom:1px solid var(--border); }
+    .item:last-child { border-bottom:none; }
+    code, pre { background:#0f172a; color:#e2e8f0; border-radius:14px; padding:14px; display:block; overflow:auto; }
+    .muted { color:var(--muted); }
+    .ok { color:var(--green); font-weight:700; }
+    @media (max-width: 860px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="label">Native CRM Hub</div>
+      <h1 style="margin:0 0 10px;font-size:36px;line-height:1.05">Connect PermitAssist directly to your CRM</h1>
+      <div class="muted" style="font-size:16px;max-width:760px">No Zapier. Create API keys, receive webhook callbacks, and wire PermitAssist into JobNimbus, AccuLynx, Roofr, Contractor Foreman, or your own tools.</div>
+      <div id="auth-note" class="muted" style="margin-top:12px"></div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="label">Your API Keys</div>
+        <input id="api-key-name" placeholder="Key name, e.g. Roofr office" />
+        <button onclick="createApiKey()">Generate API Key</button>
+        <div id="new-api-key" class="ok" style="margin-top:10px"></div>
+        <div id="api-keys-list" style="margin-top:14px"></div>
+      </div>
+
+      <div class="card">
+        <div class="label">Webhook Integrations</div>
+        <input id="webhook-name" placeholder="Integration name" />
+        <input id="webhook-callback" placeholder="https://yourcrm.com/webhooks/permitassist" />
+        <textarea id="webhook-mapping" placeholder='{"job_type":"trade","city":"job_city","state":"job_state","callback_url":"callback_url"}'></textarea>
+        <button onclick="createWebhook()">Create Webhook</button>
+        <div id="webhook-list" style="margin-top:14px"></div>
+      </div>
+
+      <div class="card">
+        <div class="label">CRM Partners</div>
+        <div class="item"><strong>JobNimbus</strong><div class="muted">Use outbound webhook automation to POST job data into PermitAssist. Map trade, city, and state to your fields.</div></div>
+        <div class="item"><strong>AccuLynx</strong><div class="muted">Trigger after lead creation or before estimate approval. Send callback_url so results return to your workflow.</div></div>
+        <div class="item"><strong>Roofr</strong><div class="muted">Run permit checks as soon as a measurement or proposal is created.</div></div>
+        <div class="item"><strong>Contractor Foreman</strong><div class="muted">Use PermitAssist webhook URL as the action target from custom automation steps.</div></div>
+      </div>
+
+      <div class="card">
+        <div class="label">API Docs</div>
+        <div class="muted" style="margin-bottom:10px">API endpoint</div>
+        <pre id="api-endpoint-doc">POST /api/v1/permit</pre>
+        <div class="muted" style="margin:12px 0 10px">Example request</div>
+        <pre id="curl-doc"></pre>
+        <div class="muted" style="margin:12px 0 10px">Webhook payload</div>
+        <pre id="webhook-doc"></pre>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const SESSION_KEY='pa_session';
+    const token=localStorage.getItem(SESSION_KEY)||'';
+    if(!token){ location.href='/login'; }
+    function esc(s){return String(s||'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+    function authHeaders(){ return {'Content-Type':'application/json','X-Session-Token':token}; }
+    let state={api_keys:[],webhooks:[],paid:false,api_endpoint:'https://permitassist.io/api/v1/permit',webhook_base_url:'https://permitassist.io/api/integrations/webhook/'};
+
+    function render(){
+      document.getElementById('auth-note').textContent = state.paid ? 'Paid plan active. Your integration tools are ready.' : 'Paid plan required for API keys and webhooks.';
+      document.getElementById('api-endpoint-doc').textContent = state.api_endpoint;
+      document.getElementById('curl-doc').textContent = `curl -X POST ${state.api_endpoint} \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"job_type":"Roof replacement","city":"Indianapolis","state":"IN"}'`;
+      document.getElementById('webhook-doc').textContent = `POST ${state.webhook_base_url}YOUR_INTEGRATION_KEY\n{\n  "job_type": "Roof replacement",\n  "city": "Indianapolis",\n  "state": "IN",\n  "callback_url": "https://yourcrm.com/permitassist/callback"\n}`;
+      document.getElementById('api-keys-list').innerHTML = state.api_keys.length ? state.api_keys.map(k => `<div class="item"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div style="font-weight:800">${esc(k.name)}</div><div class="muted">${esc(k.key_preview)} • Last used: ${esc(k.last_used_at || 'Never')} • Lookups: ${esc(k.lookup_count)}</div></div><button class="danger" onclick="deleteApiKey(${k.id})">Revoke</button></div></div>`).join('') : '<div class="muted">No API keys yet.</div>';
+      document.getElementById('webhook-list').innerHTML = state.webhooks.length ? state.webhooks.map(w => `<div class="item"><div style="font-weight:800">${esc(w.name)}</div><div class="muted" style="margin:6px 0">Webhook URL: ${esc(state.webhook_base_url + w.integration_key)}</div><div class="muted">Callback: ${esc(w.callback_url)} • Triggers: ${esc(w.trigger_count)} • Last used: ${esc(w.last_triggered_at || 'Never')}</div><pre>${esc(JSON.stringify(w.field_mapping || {}, null, 2))}</pre><button class="danger" onclick="deleteWebhook(${w.id})">Delete</button></div>`).join('') : '<div class="muted">No webhook integrations yet.</div>';
+    }
+
+    async function load(){
+      const r=await fetch('/api/integrations',{headers:{'X-Session-Token':token}});
+      const d=await r.json();
+      if(r.status===401){ location.href='/login'; return; }
+      state=d; render();
+    }
+
+    async function createApiKey(){
+      const name=document.getElementById('api-key-name').value.trim()||'API Key';
+      const r=await fetch('/api/integrations/api-key',{method:'POST',headers:authHeaders(),body:JSON.stringify({name})});
+      const d=await r.json();
+      if(!r.ok){ alert(d.error||'Could not create API key'); return; }
+      document.getElementById('new-api-key').textContent = `New key: ${d.api_key.key} (copy now, it will only be shown once here)`;
+      state.api_keys=d.api_keys||[]; render();
+    }
+
+    async function createWebhook(){
+      const name=document.getElementById('webhook-name').value.trim()||'Webhook';
+      const callback_url=document.getElementById('webhook-callback').value.trim();
+      const mappingRaw=document.getElementById('webhook-mapping').value.trim();
+      let field_mapping={};
+      if(mappingRaw){ try{ field_mapping=JSON.parse(mappingRaw); }catch{ alert('Field mapping must be valid JSON'); return; } }
+      const r=await fetch('/api/integrations/webhook',{method:'POST',headers:authHeaders(),body:JSON.stringify({name,callback_url,field_mapping})});
+      const d=await r.json();
+      if(!r.ok){ alert(d.error||'Could not create webhook'); return; }
+      state.webhooks=d.webhooks||[]; render();
+    }
+
+    async function deleteApiKey(id){
+      if(!confirm('Revoke this API key?')) return;
+      const r=await fetch('/api/integrations/api-key/'+id,{method:'DELETE',headers:{'X-Session-Token':token}});
+      const d=await r.json();
+      if(!r.ok){ alert(d.error||'Could not revoke key'); return; }
+      await load();
+    }
+
+    async function deleteWebhook(id){
+      if(!confirm('Delete this webhook integration?')) return;
+      const r=await fetch('/api/integrations/webhook/'+id,{method:'DELETE',headers:{'X-Session-Token':token}});
+      const d=await r.json();
+      if(!r.ok){ alert(d.error||'Could not delete webhook'); return; }
+      await load();
+    }
+
+    load();
+  </script>
+</body>
+</html>

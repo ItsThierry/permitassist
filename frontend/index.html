@@ -460,6 +460,17 @@
       padding: 8px 0; font-size: 13px; color: var(--text2); line-height: 1.5;
     }
     .checklist-item::before { content: "☐"; flex-shrink: 0; color: var(--muted); }
+    .compliance-checklist-card { background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(255,255,255,0.98)); }
+    .compliance-checklist-header { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:10px; }
+    .compliance-checklist-summary { font-size:13px; color:var(--text2); line-height:1.6; margin-bottom:14px; }
+    .compliance-checklist-list { display:flex; flex-direction:column; gap:10px; }
+    .compliance-checklist-row { display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+    .compliance-checklist-row:last-child { border-bottom:none; }
+    .compliance-checklist-box { width:18px; height:18px; margin-top:2px; accent-color: var(--brand); }
+    .compliance-checklist-label { font-size:14px; color:var(--text); line-height:1.55; font-weight:600; }
+    .compliance-checklist-meta { font-size:11px; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:.4px; }
+    .compliance-checklist-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .checklist-hint { font-size:12px; color:var(--text2); margin-top:10px; }
 
     /* Actions */
     .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 10px; }
@@ -1784,6 +1795,13 @@ async function refreshAccountBadge(){
       a.style.cssText='color:var(--brand);font-size:12px;font-weight:700;text-decoration:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;white-space:nowrap';
       a.textContent=d.paid?'⭐ Account':'Account';
       navRight.prepend(a);
+      if(d.paid && !document.getElementById('nav-integrations-link')){
+        const i=document.createElement('a');
+        i.id='nav-integrations-link';i.href='/integrations';
+        i.style.cssText='color:var(--text2);font-size:12px;font-weight:700;text-decoration:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;white-space:nowrap';
+        i.textContent='🔗 Integrations';
+        navRight.prepend(i);
+      }
       // Hide login btn when logged in
       const loginBtn=document.getElementById('nav-login-btn');
       if(loginBtn) loginBtn.style.display='none';
@@ -2699,9 +2717,9 @@ function renderResults(d, job, city, state) {
   // Action buttons
   html += `
     <div class="action-row action-row-3" style="margin-top:14px">
-      <button class="action-btn" onclick="shareResult()">📤 Share</button>
+      <button class="action-btn" onclick="shareResult()">📋 Share Report</button>
       <button class="action-btn" onclick="copyResult()">📋 Copy</button>
-      <button class="action-btn" onclick="printResult()">🖨️ Print / PDF</button>
+      <button class="action-btn" onclick="printResult()">🖨️ Download PDF</button>
     </div>
     <div class="action-row action-row-3">
       <button class="action-btn" onclick="copyForQuote()">💰 Copy for Quote</button>
@@ -2720,6 +2738,10 @@ function renderResults(d, job, city, state) {
       </div>
       <div id="reminder-confirm" style="display:none;color:var(--green);font-size:13px;margin-top:8px;font-weight:600">✓ We'll remind you 30 days before expiry.</div>
     </div>
+    <div class="card compliance-checklist-card" id="compliance-checklist-card">
+      <div class="section-label">📋 Pre-Construction Checklist</div>
+      <div id="compliance-checklist-content" class="compliance-checklist-summary">Generating your action checklist…</div>
+    </div>
     <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>
     <div class="feedback-row">
       <span style="font-size:12px;color:var(--muted)">Something wrong?</span>
@@ -2731,6 +2753,7 @@ function renderResults(d, job, city, state) {
     <div class="print-footer">Generated ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} | Verify with local building department before submitting<br>PermitAssist — permitassist.io</div>`;
 
   document.getElementById('results-inner').innerHTML = html;
+  loadComplianceChecklist(job, city, state, d);
 }
 
 function toggleChecklist(el) {
@@ -2806,7 +2829,7 @@ function showShareModal(url) {
   m.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.78);display:flex;align-items:flex-end;';
   m.innerHTML = `<div style="background:#1E293B;border-radius:20px 20px 0 0;border-top:1px solid #334155;padding:24px 20px 36px;width:100%;max-width:680px;margin:0 auto;animation:slideUp .25s ease">
     <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔗 Share this result</div>
-    <div style="font-size:13px;color:#94A3B8;margin-bottom:14px">Send to your foreman or office. Link expires in 30 days.</div>
+    <div style="font-size:13px;color:#94A3B8;margin-bottom:14px">Send to your foreman or office. Link expires in 90 days. Use browser print to save the report as a PDF.</div>
     <div id="share-url-box" style="background:#0F172A;border:1px solid #334155;border-radius:8px;padding:11px 14px;font-size:12px;color:#F8FAFC;word-break:break-all;margin-bottom:14px;user-select:all">${url}</div>
     <button id="share-copy-btn" style="width:100%;background:#3B82F6;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:10px">📋 Copy Link</button>
     <button onclick="document.getElementById('share-modal').remove()" style="width:100%;background:none;border:1px solid #334155;border-radius:10px;color:#64748B;font-size:14px;padding:11px;cursor:pointer">Close</button>
@@ -3445,6 +3468,34 @@ function submitExpiryReminder() {
 
 // ── Job Tracker API ───────────────────────────────────────────────────────────
 function getJobsEmail() { return localStorage.getItem(EMAIL_KEY) || ''; }
+function getChecklistStorageKey(job, city, state){ return 'pa_checklist_' + [job||'', city||'', state||''].join('|').toLowerCase(); }
+function renderComplianceChecklist(checklist, job, city, state){
+  const el=document.getElementById('compliance-checklist-content');
+  if(!el) return;
+  const saved=JSON.parse(localStorage.getItem(getChecklistStorageKey(job, city, state))||'{}');
+  const items=Array.isArray(checklist.items)?checklist.items:[];
+  if(!items.length){ el.innerHTML='<div class="checklist-hint">No checklist items returned for this permit.</div>'; return; }
+  el.innerHTML=`<div class="compliance-checklist-header"><div><div style="font-size:18px;font-weight:800;color:var(--text)">${esc(checklist.title||'Pre-Construction Checklist')}</div><div class="compliance-checklist-summary">${esc(checklist.summary||'Review these permit steps before work starts.')}</div></div></div><div class="compliance-checklist-list">${items.map((item,idx)=>`<label class="compliance-checklist-row"><input class="compliance-checklist-box" type="checkbox" data-checklist-index="${idx}" ${saved[idx]?'checked':''} /><div><div class="compliance-checklist-label">${esc(item.label||'Checklist item')}</div><div class="compliance-checklist-meta">${esc(item.category||'step')}${item.required?' · required':''}</div></div></label>`).join('')}</div><div class="compliance-checklist-actions"><button class="action-btn" onclick="printChecklistSection()">🖨️ Print Checklist</button><button class="action-btn" onclick="saveChecklistToJob()">📁 Save to Job</button></div><div class="checklist-hint">Checklist progress saves on this device for ${esc(city)}, ${esc(state)}.</div>`;
+  el.querySelectorAll('[data-checklist-index]').forEach(box=>box.addEventListener('change',()=>{
+    const next={};
+    el.querySelectorAll('[data-checklist-index]').forEach(cb=>{ next[cb.getAttribute('data-checklist-index')]=cb.checked; });
+    localStorage.setItem(getChecklistStorageKey(job, city, state), JSON.stringify(next));
+  }));
+}
+async function loadComplianceChecklist(job, city, state, result){
+  const el=document.getElementById('compliance-checklist-content');
+  if(!el) return;
+  el.innerHTML='Generating your action checklist…';
+  try{
+    const r=await fetch('/api/checklist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_type:job, city, state, result})});
+    const checklist=await r.json();
+    renderComplianceChecklist(checklist, job, city, state);
+  }catch(e){
+    el.innerHTML='<div class="checklist-hint">Could not load checklist right now.</div>';
+  }
+}
+function printChecklistSection(){ window.print(); }
+function saveChecklistToJob(){ saveJobToTracker(); }
 function saveJobToTracker() {
   if (!currentResult) return;
   if (!isLoggedIn()) {

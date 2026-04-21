@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PermitAssist Report</title>
+  <style>
+    :root { --bg:#f8fafc; --card:#fff; --text:#0f172a; --muted:#64748b; --brand:#2563eb; --border:#e2e8f0; --green:#059669; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); }
+    .wrap { max-width:980px; margin:0 auto; padding:32px 20px 80px; }
+    .hero { background:linear-gradient(135deg, rgba(37,99,235,.09), rgba(255,255,255,.96)); border:1px solid rgba(37,99,235,.15); border-radius:24px; padding:28px; margin-bottom:18px; }
+    .brand { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+    .mark { width:44px; height:44px; border-radius:14px; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px; box-shadow:0 10px 30px rgba(15,23,42,.05); }
+    .label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--brand); margin-bottom:10px; }
+    .headline { font-size:32px; line-height:1.08; font-weight:900; margin:0 0 6px; }
+    .sub { color:var(--muted); font-size:15px; }
+    .pill { display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:8px 14px; border-radius:999px; background:rgba(5,150,105,.12); color:var(--green); font-weight:800; }
+    .meta { display:grid; gap:12px; }
+    .meta-row { display:flex; justify-content:space-between; gap:16px; padding-bottom:12px; border-bottom:1px solid var(--border); font-size:14px; }
+    .meta-row:last-child { border-bottom:none; padding-bottom:0; }
+    ul { margin:0; padding-left:18px; }
+    li { margin:8px 0; color:#334155; }
+    .cta { margin-top:18px; background:#0f172a; color:#fff; border-radius:20px; padding:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .cta a, .print-btn { background:#fff; color:#0f172a; text-decoration:none; border:none; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer; }
+    .source-list a { color:var(--brand); word-break:break-all; }
+    @media (max-width: 760px) { .grid { grid-template-columns:1fr; } .headline { font-size:26px; } .cta { flex-direction:column; align-items:flex-start; } }
+    @media print {
+      body { background:#fff; }
+      .wrap { max-width:none; padding:0; }
+      .cta, .print-actions { display:none !important; }
+      .card, .hero { box-shadow:none; break-inside:avoid; }
+      a { color:#000; text-decoration:none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app"></div>
+  <script id="report-data" type="application/json">__REPORT_DATA__</script>
+  <script>
+    const payload = JSON.parse(document.getElementById('report-data').textContent);
+    const share = payload.share || {};
+    const d = share.data || {};
+    const checklist = payload.checklist || {};
+    const permitName = d.permit_name || (d.permits_required && d.permits_required[0] && d.permits_required[0].permit_type) || 'Permit details';
+    const verdict = (d.permit_verdict || 'MAYBE').toUpperCase();
+    const timeline = (d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || 'Varies by jurisdiction';
+    const docs = [...new Set([...(d.what_to_bring || []), ...(d.requirements || []), ...(d.documents_needed || [])])];
+    const inspections = (d.inspections || []).map(i => i.stage || i.title || i.name || i.description).filter(Boolean);
+    const whereToApply = [d.applying_office, d.apply_address, d.apply_phone].filter(Boolean).join(' • ');
+    const sources = d.sources || [];
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <section class="hero">
+        <div class="brand"><div class="mark">PA</div><div><div style="font-weight:900;font-size:20px">PermitAssist</div><div class="sub">Permit Intelligence Report</div></div></div>
+        <div class="print-actions" style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <h1 class="headline">${permitName}</h1>
+            <div class="sub">${share.job_type || ''} in ${share.city || ''}, ${share.state || ''}</div>
+            <div class="pill">${verdict} permit status</div>
+          </div>
+          <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+        </div>
+      </section>
+      <section class="grid">
+        <div class="card">
+          <div class="label">Core details</div>
+          <div class="meta">
+            <div class="meta-row"><strong>Jurisdiction</strong><span>${share.city || ''}, ${share.state || ''}</span></div>
+            <div class="meta-row"><strong>Permit</strong><span>${permitName}</span></div>
+            <div class="meta-row"><strong>Fees</strong><span>${d.fee_range || 'Call to confirm'}</span></div>
+            <div class="meta-row"><strong>Timeline</strong><span>${timeline}</span></div>
+            <div class="meta-row"><strong>Where to apply</strong><span>${whereToApply || 'Contact local building department'}</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="label">Summary</div>
+          <div class="sub" style="color:#334155">${d.job_summary || d.permit_summary || 'Permit requirements generated from PermitAssist research.'}</div>
+        </div>
+        <div class="card">
+          <div class="label">Required documents</div>
+          <ul>${(docs.length ? docs : ['Scope of work','Any plans or sketches required by the city','Contractor/license details']).map(x => `<li>${x}</li>`).join('')}</ul>
+        </div>
+        <div class="card">
+          <div class="label">Inspection checklist</div>
+          <ul>${(inspections.length ? inspections : (checklist.items || []).filter(i => i.category === 'inspection').map(i => i.label)).slice(0,8).map(x => `<li>${x}</li>`).join('') || '<li>Confirm inspection phases with the jurisdiction.</li>'}</ul>
+        </div>
+        <div class="card">
+          <div class="label">Pre-construction checklist</div>
+          <ul>${((checklist.items || []).length ? checklist.items : [{label:'Pull permit before starting work'}]).map(item => `<li>${item.label}</li>`).join('')}</ul>
+        </div>
+        <div class="card">
+          <div class="label">Official sources</div>
+          <ul class="source-list">${sources.length ? sources.map(src => `<li><a href="${src}" target="_blank" rel="noopener">${src}</a></li>`).join('') : '<li>No source links stored in this share.</li>'}</ul>
+        </div>
+      </section>
+      <section class="cta">
+        <div>
+          <div style="font-size:20px;font-weight:900;margin-bottom:6px">Get your own permits instantly at permitassist.io</div>
+          <div style="color:rgba(255,255,255,.78)">Shareable permit reports, contractor checklists, and faster office handoffs.</div>
+        </div>
+        <a href="${payload.app_base_url || 'https://permitassist.io'}">Try PermitAssist</a>
+      </section>`;
+    document.title = `${permitName} | PermitAssist Report`;
+  </script>
+</body>
+</html>

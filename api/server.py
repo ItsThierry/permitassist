@@ -51,7 +51,7 @@ DATA_DIR = os.environ.get("CACHE_DIR") or os.environ.get("RAILWAY_VOLUME_MOUNT_P
 PORT           = int(os.environ.get("PORT", 8766))
 EMAILS_CSV     = os.path.join(DATA_DIR, "captured_emails.csv")
 CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
-SHARE_TTL_DAYS = 30  # shareable links expire after 30 days
+SHARE_TTL_DAYS = 90  # shareable links expire after 90 days
 
 
 def utc_now() -> datetime:
@@ -357,6 +357,37 @@ def init_db():
             window_start INTEGER NOT NULL,
             count        INTEGER DEFAULT 1,
             PRIMARY KEY (ip, window_start)
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS checklist_cache (
+            result_hash   TEXT PRIMARY KEY,
+            checklist_json TEXT,
+            created_at    TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS api_keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            key TEXT NOT NULL UNIQUE,
+            name TEXT,
+            created_at TEXT,
+            last_used_at TEXT,
+            lookup_count INTEGER DEFAULT 0
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS webhook_integrations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            integration_key TEXT NOT NULL UNIQUE,
+            name TEXT,
+            callback_url TEXT,
+            field_mapping TEXT,
+            created_at TEXT,
+            last_triggered_at TEXT,
+            trigger_count INTEGER DEFAULT 0
         )
     """)
     conn.commit()
@@ -1214,110 +1245,309 @@ def get_share(slug: str) -> dict | None:
         print(f"[share] Read error: {e}")
         return None
 
+def esc_html(value) -> str:
+    return str(value or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+def make_result_hash(result: dict) -> str:
+    clean = {k: v for k, v in (result or {}).items() if not str(k).startswith("_")}
+    raw = json.dumps(clean, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
+    permits = result.get("permits_required") or []
+    permit_name = result.get("permit_name") or (permits[0].get("permit_type") if permits else "Permit") or "Permit"
+    fee = result.get("fee_range") or result.get("fee") or "Confirm fee with the building department"
+    timeline_obj = result.get("approval_timeline") or {}
+    timeline = timeline_obj.get("simple") or timeline_obj.get("complex") or "Varies by jurisdiction"
+    docs = list(dict.fromkeys((result.get("what_to_bring") or []) + (result.get("requirements") or []) + (result.get("documents_needed") or [])))
+    inspections = result.get("inspections") or []
+    special_notes = list(dict.fromkeys((result.get("pro_tips") or [])[:2] + (result.get("common_mistakes") or [])[:2]))
+    items = [
+        {"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True},
+        {"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True},
+        {"label": f"Pay permit fee: {fee}", "category": "fees", "required": True},
+        {"label": f"Plan for approval timeline: {timeline}", "category": "timeline", "required": False},
+    ]
+    if docs:
+        items.append({"label": f"Required documents: {', '.join(docs[:6])}", "category": "documents", "required": True})
+    for inspection in inspections[:6]:
+        label = inspection.get("stage") or inspection.get("title") or inspection.get("name") or "Inspection step"
+        timing = inspection.get("timing") or inspection.get("description") or ""
+        items.append({"label": f"Schedule inspection: {label}{' — ' + timing if timing else ''}", "category": "inspection", "required": False})
+    for note in special_notes[:4]:
+        items.append({"label": note, "category": "special", "required": False})
+    return {
+        "title": "Pre-Construction Compliance Checklist",
+        "summary": f"Action checklist for {job_type or permit_name} in {city}, {state}",
+        "items": items[:12],
+    }
+
+
+def generate_checklist(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
+    fallback = build_checklist_fallback(result, job_type, city, state)
+    system_prompt = (
+        "You generate short, practical pre-construction compliance checklists for contractors. "
+        "Return JSON with keys title, summary, items. Each item must be an object with label, category, required. "
+        "Use the permit lookup result. Keep items concrete, no filler, max 12 items."
+    )
+    user_prompt = json.dumps({
+        "job_type": job_type,
+        "city": city,
+        "state": state,
+        "result": result,
+    }, indent=2)
+    try:
+        resp = _chat_openai_client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.2,
+            max_tokens=700,
+        )
+        parsed = json.loads(resp.choices[0].message.content)
+        if isinstance(parsed, dict) and isinstance(parsed.get("items"), list) and parsed.get("items"):
+            parsed.setdefault("title", fallback["title"])
+            parsed.setdefault("summary", fallback["summary"])
+            return parsed
+    except Exception as e:
+        print(f"[checklist] AI fallback used: {e}")
+    return fallback
+
+
+def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
+    result_hash = make_result_hash(result)
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        row = conn.execute(
+            "SELECT checklist_json FROM checklist_cache WHERE result_hash=?",
+            [result_hash]
+        ).fetchone()
+        if row and row[0]:
+            conn.close()
+            data = json.loads(row[0])
+            data["cached"] = True
+            data["result_hash"] = result_hash
+            return data
+        checklist = generate_checklist(result, job_type, city, state)
+        conn.execute(
+            "INSERT OR REPLACE INTO checklist_cache (result_hash, checklist_json, created_at) VALUES (?,?,?)",
+            (result_hash, json.dumps(checklist), utc_now().isoformat())
+        )
+        conn.commit()
+        conn.close()
+        checklist["cached"] = False
+        checklist["result_hash"] = result_hash
+        return checklist
+    except Exception as e:
+        print(f"[checklist] Cache error: {e}")
+        checklist = build_checklist_fallback(result, job_type, city, state)
+        checklist["cached"] = False
+        checklist["result_hash"] = result_hash
+        return checklist
+
+
+def load_report_template() -> str:
+    template_path = os.path.join(FRONTEND_DIR, "report.html")
+    with open(template_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
 def render_share_page(share: dict) -> str:
-    """Render a clean, read-only HTML page for a shared permit result."""
-    d  = share["data"]
-    job   = share["job_type"]
-    city  = share["city"]
-    state = share["state"]
-    pv    = d.get("permit_verdict", "MAYBE")
-    verdict_color = {"YES": "#10b981", "NO": "#ef4444", "MAYBE": "#f59e0b"}.get(pv, "#f59e0b")
-    verdict_bg    = {"YES": "rgba(16,185,129,.12)", "NO": "rgba(239,68,68,.12)", "MAYBE": "rgba(245,158,11,.12)"}.get(pv, "rgba(245,158,11,.12)")
+    template = load_report_template()
+    payload = {
+        "share": share,
+        "app_base_url": APP_BASE_URL,
+        "generated_at": utc_now().isoformat(),
+        "checklist": get_or_create_checklist(share.get("data") or {}, share.get("job_type", ""), share.get("city", ""), share.get("state", "")),
+    }
+    return template.replace("__REPORT_DATA__", json.dumps(payload))
 
-    def esc(s):
-        return str(s or "").replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace('"',"&quot;")
 
-    fee    = esc(d.get("fee_range", ""))
-    phone  = esc(d.get("apply_phone", ""))
-    office = esc(d.get("applying_office", ""))
-    addr   = esc(d.get("apply_address", ""))
-    tl     = d.get("approval_timeline", {})
-    maps   = esc(d.get("apply_google_maps", ""))
-    permits = d.get("permits_required", [])
-    tips    = d.get("pro_tips", [])[:3]
-    bring   = d.get("what_to_bring", [])[:5]
-    sources = [esc(s) for s in (d.get("sources") or [])[:4] if s]
-    permit_name = esc(d.get("permit_name") or (permits[0].get("permit_type") if permits else "") or "")
-    summary = esc(d.get("job_summary") or d.get("permit_summary") or "")
-    license_r = esc(d.get("license_required", ""))
+def mask_api_key(key: str) -> str:
+    if not key:
+        return ""
+    return key[:10] + "••••••" + key[-4:]
 
-    phone_raw = "".join(c for c in phone if c.isdigit() or c == "+")
 
-    rows = ""
-    if fee:    rows += f'<tr><td>💰 Fee</td><td><strong style="color:#10b981">{fee}</strong></td></tr>'
-    if tl.get("simple"): rows += f'<tr><td>⏱ Timeline</td><td>{esc(tl["simple"])}</td></tr>'
-    if license_r: rows += f'<tr><td>🧰 Who pulls it</td><td>{license_r}</td></tr>'
+def create_api_key(email: str, name: str = "") -> dict:
+    key = f"pa_live_{secrets.token_urlsafe(24)}"
+    now = utc_now().isoformat()
+    conn = sqlite3.connect(CACHE_DB)
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO api_keys (email, key, name, created_at, last_used_at, lookup_count) VALUES (?,?,?,?,?,0)",
+        (email.lower().strip(), key, (name or "API Key").strip()[:80], now, None)
+    )
+    conn.commit()
+    key_id = cur.lastrowid
+    conn.close()
+    return {"id": key_id, "key": key, "name": (name or "API Key").strip()[:80], "created_at": now, "last_used_at": None, "lookup_count": 0}
 
-    tips_html = "".join(f"<li>{esc(t)}</li>" for t in tips)
-    bring_html = "".join(f"<li>{esc(b)}</li>" for b in bring)
-    sources_html = "".join(f"<li><a href=\"{s}\" target=\"_blank\" rel=\"noopener\" style=\"color:#1a56db\">{s}</a></li>" for s in sources)
 
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Permit: {esc(job)} in {esc(city)}, {esc(state)} — PermitAssist</title>
-  <meta name="description" content="Permit requirements for {esc(job)} in {esc(city)}, {esc(state)}. Shared via PermitAssist."/>
-  <style>
-    *{{box-sizing:border-box;margin:0;padding:0}}
-    :root{{
-      --bg:#ffffff;--bg2:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text2:#475569;
-      --text3:#64748b;--card-bg:#f8fafc;--badge-bg:#f1f5f9;--badge-border:#e2e8f0;
-      --hero-bg:linear-gradient(135deg,rgba(26,86,219,.08),rgba(26,86,219,.03));
-      --hero-border:rgba(26,86,219,.2);--td-border:#e2e8f0;
-    }}
-    body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}}
-    .wrap{{max-width:640px;margin:0 auto;padding:24px 20px 48px}}
-    .nav{{display:flex;align-items:center;gap:10px;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border)}}
-    .logo-mark{{width:32px;height:32px;border-radius:7px;background:#1a56db;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}}
-    .logo-text{{font-size:17px;font-weight:800;color:var(--text)}}.logo-text em{{font-style:normal;color:#1a56db}}
-    .shared-badge{{margin-left:auto;font-size:11px;color:var(--text3);background:var(--badge-bg);border:1px solid var(--badge-border);border-radius:20px;padding:4px 10px}}
-    .result-hero{{background:var(--hero-bg);border:1px solid var(--hero-border);border-radius:12px;padding:18px 20px;margin-bottom:14px}}
-    .result-job{{font-size:19px;font-weight:800;margin-bottom:3px;color:var(--text)}}
-    .result-loc{{font-size:13px;color:var(--text2)}}
-    .verdict-pill{{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:800;margin-top:10px;background:{verdict_bg};color:{verdict_color}}}
-    .card{{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px}}
-    .card-label{{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:10px}}
-    table{{width:100%;border-collapse:collapse}}td{{padding:9px 0;border-bottom:1px solid var(--td-border);font-size:14px;color:var(--text2);vertical-align:top}}td:first-child{{width:120px;font-size:12px;color:var(--text3);font-weight:600}}tr:last-child td{{border-bottom:none}}
-    .contact-phone{{display:block;font-size:24px;font-weight:900;color:#1a56db;text-decoration:none;margin-bottom:6px}}
-    .contact-office{{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}}
-    .contact-addr{{font-size:13px;color:var(--text2)}}
-    .maps-link{{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-size:13px;color:#1a56db;font-weight:700;text-decoration:none;background:rgba(26,86,219,.08);border:1px solid rgba(26,86,219,.2);border-radius:8px;padding:7px 12px}}
-    .maps-link:hover{{background:rgba(26,86,219,.15)}}
-    ul{{margin-left:18px;color:var(--text2);line-height:1.6}}li{{padding:4px 0}}
-    .cta{{background:#1a56db;border-radius:12px;padding:18px 20px;text-align:center;margin-top:24px}}
-    .cta p{{font-size:13px;color:rgba(255,255,255,.75);margin-bottom:12px}}
-    .cta a{{background:#fff;color:#1a56db;font-weight:800;font-size:15px;padding:11px 28px;border-radius:8px;text-decoration:none;display:inline-block}}
-    .disclaimer{{font-size:11px;color:var(--text3);text-align:center;margin-top:20px;line-height:1.6}}
-  </style>
-</head>
-<body>
-<div class="wrap">
-  <div class="nav">
-    <div class="logo-mark">📋</div>
-    <div class="logo-text">Permit<em>Assist</em></div>
-    <div class="shared-badge">🔗 Shared result</div>
-  </div>
-  <div class="result-hero">
-    <div class="result-job">{esc(job)}</div>
-    <div class="result-loc">📍 {esc(city)}, {esc(state)}</div>
-    <div class="verdict-pill">{pv}</div>
-  </div>
-  {'<div class="card"><div class="card-label">Permit Info</div><div style="font-size:18px;font-weight:900;margin-bottom:8px">' + permit_name + '</div><div style="font-size:13px;color:#b8c5e0">' + summary + '</div></div>' if permit_name or summary else ''}
-  {'<div class="card"><div class="card-label">📞 Contact</div><a class="contact-phone" href="tel:' + phone_raw + '">' + phone + '</a><div class="contact-office">' + office + '</div><div class="contact-addr">' + addr + '</div>' + ('<a class="maps-link" href="' + maps + '" target="_blank" rel="noopener">📍 Open in Google Maps</a>' if maps else '') + '</div>' if phone or office else ''}
-  {'<div class="card"><div class="card-label">💰 Cost · ⏱ Timeline · 🧰 Who Pulls It</div><table>' + rows + '</table></div>' if rows else ''}
-  {'<div class="card"><div class="card-label">📎 What to Bring</div><ul>' + bring_html + '</ul></div>' if bring_html else ''}
-  {'<div class="card"><div class="card-label">🔗 Sources</div><ul>' + sources_html + '</ul></div>' if sources_html else ''}
-  {'<div class="card"><div class="card-label">💡 Pro Tips</div><ul>' + tips_html + '</ul></div>' if tips_html else ''}
-  <div class="cta">
-    <p>Look up permit requirements for your own jobs — free, no signup needed.</p>
-    <a href="https://permitassist.io">Try PermitAssist Free →</a>
-  </div>
-  <div class="disclaimer">📌 Always verify requirements directly with your local building department before starting work.<br>Shared via <a href="https://permitassist.io" style="color:#1a56db">PermitAssist</a></div>
-</div>
-</body>
-</html>"""
+def list_api_keys(email: str) -> list[dict]:
+    conn = sqlite3.connect(CACHE_DB)
+    rows = conn.execute(
+        "SELECT id, name, key, created_at, last_used_at, lookup_count FROM api_keys WHERE email=? ORDER BY created_at DESC",
+        [email.lower().strip()]
+    ).fetchall()
+    conn.close()
+    return [{
+        "id": row[0], "name": row[1] or "API Key", "key_preview": mask_api_key(row[2]),
+        "created_at": row[3], "last_used_at": row[4], "lookup_count": row[5],
+    } for row in rows]
+
+
+def delete_api_key(email: str, key_id: str) -> bool:
+    conn = sqlite3.connect(CACHE_DB)
+    cur = conn.execute("DELETE FROM api_keys WHERE id=? AND email=?", [key_id, email.lower().strip()])
+    conn.commit()
+    conn.close()
+    return cur.rowcount > 0
+
+
+def validate_api_key(auth_header: str) -> tuple[str | None, str | None]:
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return (None, None)
+    key = auth_header.split(" ", 1)[1].strip()
+    if not key:
+        return (None, None)
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        row = conn.execute("SELECT email FROM api_keys WHERE key=?", [key]).fetchone()
+        if row:
+            conn.execute(
+                "UPDATE api_keys SET last_used_at=?, lookup_count=lookup_count+1 WHERE key=?",
+                (utc_now().isoformat(), key)
+            )
+            conn.commit()
+        conn.close()
+        return ((row[0] if row else None), key)
+    except Exception as e:
+        print(f"[api-key] Validation error: {e}")
+        return (None, None)
+
+
+def create_webhook_integration(email: str, name: str, callback_url: str, field_mapping: dict | None = None) -> dict:
+    integration_key = f"wh_{secrets.token_urlsafe(18)}"
+    now = utc_now().isoformat()
+    clean_mapping = field_mapping or {
+        "job_type": "job_type",
+        "city": "city",
+        "state": "state",
+        "callback_url": "callback_url",
+        "zip_code": "zip_code",
+    }
+    conn = sqlite3.connect(CACHE_DB)
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO webhook_integrations (email, integration_key, name, callback_url, field_mapping, created_at, last_triggered_at, trigger_count) VALUES (?,?,?,?,?,?,?,0)",
+        (email.lower().strip(), integration_key, (name or "Webhook").strip()[:80], callback_url.strip(), json.dumps(clean_mapping), now, None)
+    )
+    conn.commit()
+    integration_id = cur.lastrowid
+    conn.close()
+    return {
+        "id": integration_id,
+        "name": (name or "Webhook").strip()[:80],
+        "integration_key": integration_key,
+        "callback_url": callback_url.strip(),
+        "field_mapping": clean_mapping,
+        "created_at": now,
+        "last_triggered_at": None,
+        "trigger_count": 0,
+    }
+
+
+def list_webhook_integrations(email: str) -> list[dict]:
+    conn = sqlite3.connect(CACHE_DB)
+    rows = conn.execute(
+        "SELECT id, name, integration_key, callback_url, field_mapping, created_at, last_triggered_at, trigger_count FROM webhook_integrations WHERE email=? ORDER BY created_at DESC",
+        [email.lower().strip()]
+    ).fetchall()
+    conn.close()
+    return [{
+        "id": row[0], "name": row[1] or "Webhook", "integration_key": row[2], "callback_url": row[3],
+        "field_mapping": json.loads(row[4] or "{}"), "created_at": row[5], "last_triggered_at": row[6], "trigger_count": row[7],
+    } for row in rows]
+
+
+def delete_webhook_integration(email: str, webhook_id: str) -> bool:
+    conn = sqlite3.connect(CACHE_DB)
+    cur = conn.execute("DELETE FROM webhook_integrations WHERE id=? AND email=?", [webhook_id, email.lower().strip()])
+    conn.commit()
+    conn.close()
+    return cur.rowcount > 0
+
+
+def get_webhook_by_key(integration_key: str) -> dict | None:
+    conn = sqlite3.connect(CACHE_DB)
+    row = conn.execute(
+        "SELECT id, email, name, integration_key, callback_url, field_mapping, created_at, last_triggered_at, trigger_count FROM webhook_integrations WHERE integration_key=?",
+        [integration_key]
+    ).fetchone()
+    conn.close()
+    if not row:
+        return None
+    return {
+        "id": row[0], "email": row[1], "name": row[2], "integration_key": row[3], "callback_url": row[4],
+        "field_mapping": json.loads(row[5] or "{}"), "created_at": row[6], "last_triggered_at": row[7], "trigger_count": row[8],
+    }
+
+
+def mark_webhook_triggered(integration_key: str):
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            "UPDATE webhook_integrations SET last_triggered_at=?, trigger_count=trigger_count+1 WHERE integration_key=?",
+            (utc_now().isoformat(), integration_key)
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[webhook] Trigger update error: {e}")
+
+
+def resolve_webhook_field(data: dict, mapping: dict, key: str, default: str = "") -> str:
+    source_key = (mapping or {}).get(key) or key
+    return str(data.get(source_key, default) or "").strip()
+
+
+def run_webhook_lookup_async(integration: dict, payload: dict):
+    def _worker():
+        try:
+            mapping = integration.get("field_mapping") or {}
+            job_type = resolve_webhook_field(payload, mapping, "job_type")
+            city = resolve_webhook_field(payload, mapping, "city")
+            state = resolve_webhook_field(payload, mapping, "state")
+            zip_code = resolve_webhook_field(payload, mapping, "zip_code")
+            callback_url = str(payload.get("callback_url") or integration.get("callback_url") or "").strip()
+            if not (job_type and city and state and callback_url):
+                raise ValueError("Webhook requires job_type, city, state, and callback_url")
+            result = research_permit(job_type, city, state, zip_code)
+            body = {
+                "ok": True,
+                "job_type": job_type,
+                "city": city,
+                "state": state,
+                "integration": integration.get("name") or "Webhook",
+                "result": result,
+            }
+            requests.post(callback_url, json=body, timeout=20)
+            mark_webhook_triggered(integration["integration_key"])
+        except Exception as e:
+            print(f"[webhook] Delivery error: {e}")
+            callback_url = str(payload.get("callback_url") or integration.get("callback_url") or "").strip()
+            if callback_url:
+                try:
+                    requests.post(callback_url, json={"ok": False, "error": str(e)}, timeout=20)
+                except Exception:
+                    pass
+    threading.Thread(target=_worker, daemon=True).start()
 
 def send_email_report(to_email: str, job: str, city: str, state: str, data: dict) -> bool:
     """Send a beautiful HTML permit research report via Resend."""
@@ -1655,7 +1885,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Session-Token")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Session-Token, Authorization")
         self.end_headers()
 
     def do_PATCH(self):
@@ -1681,9 +1911,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         path = urlparse(self.path).path
+        session_token = self.headers.get("X-Session-Token", "")
+        user_email = validate_session_token(session_token) if session_token else None
         if path.startswith("/api/jobs/"):
-            session_token = self.headers.get("X-Session-Token", "")
-            user_email = validate_session_token(session_token) if session_token else None
             if not user_email:
                 self.send_json(401, {"error": "Not authenticated"})
                 return
@@ -1692,6 +1922,26 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(400, {"error": "Job ID required"})
                 return
             ok = delete_job(job_id, email=user_email)
+            self.send_json(200 if ok else 404, {"deleted": ok})
+        elif path.startswith("/api/integrations/api-key/"):
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
+                return
+            key_id = path[len("/api/integrations/api-key/"):].strip("/")
+            if not key_id:
+                self.send_json(400, {"error": "API key ID required"})
+                return
+            ok = delete_api_key(user_email, key_id)
+            self.send_json(200 if ok else 404, {"deleted": ok})
+        elif path.startswith("/api/integrations/webhook/"):
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
+                return
+            webhook_id = path[len("/api/integrations/webhook/"):].strip("/")
+            if not webhook_id:
+                self.send_json(400, {"error": "Webhook ID required"})
+                return
+            ok = delete_webhook_integration(user_email, webhook_id)
             self.send_json(200 if ok else 404, {"deleted": ok})
         else:
             self.send_json(404, {"error": "Not found"})
@@ -1792,6 +2042,8 @@ class Handler(BaseHTTPRequestHandler):
         # ── Account page (Task 5) ───────────────────────────────────────────────
         elif path in ("/account", "/account/"):
             self.send_file(os.path.join(FRONTEND_DIR, "account.html"), "text/html; charset=utf-8")
+        elif path in ("/integrations", "/integrations/"):
+            self.send_file(os.path.join(FRONTEND_DIR, "integrations.html"), "text/html; charset=utf-8")
 
         # ── GET /api/account ──────────────────────────────────────────────────
         elif path == "/api/account":
@@ -1937,23 +2189,20 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header("Location", "/login?error=google_failed")
                 self.end_headers()
 
-        # ── Shared result pages /s/[slug] ────────────────────────────────────────
-        elif path.startswith("/s/"):
-            slug = path[3:].strip("/")[:20]  # max 20 chars, no traversal
+        # ── Shared result pages /report/[slug] and legacy /s/[slug] ────────────────────────────────────────
+        elif path.startswith("/report/") or path.startswith("/s/"):
+            prefix = "/report/" if path.startswith("/report/") else "/s/"
+            slug = path[len(prefix):].strip("/")[:24]
             if not slug or not slug.replace("-", "").replace("_", "").isalnum():
                 self.send_response(400); self.end_headers(); return
             share = get_share(slug)
             if not share:
-                # Expired or not found
-                html_gone = """<!DOCTYPE html><html><head><meta charset='UTF-8'/>
+                html_gone = f"""<!DOCTYPE html><html><head><meta charset='UTF-8'/>
 <meta name='viewport' content='width=device-width,initial-scale=1'/>
 <title>Link Expired — PermitAssist</title>
-<style>body{font-family:system-ui,sans-serif;background:#0b1220;color:#f0f4ff;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
-.box{max-width:400px;padding:32px 20px}.icon{font-size:56px;margin-bottom:16px}
-h1{font-size:24px;font-weight:800;margin-bottom:10px}p{color:#b8c5e0;margin-bottom:24px;line-height:1.6}
-a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-radius:8px;font-weight:700;text-decoration:none}</style></head>
+<style>body{{font-family:system-ui,sans-serif;background:#0b1220;color:#f0f4ff;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}}.box{{max-width:400px;padding:32px 20px}}.icon{{font-size:56px;margin-bottom:16px}}h1{{font-size:24px;font-weight:800;margin-bottom:10px}}p{{color:#b8c5e0;margin-bottom:24px;line-height:1.6}}a{{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-radius:8px;font-weight:700;text-decoration:none}}</style></head>
 <body><div class='box'><div class='icon'>⏰</div><h1>Link Expired</h1>
-<p>This shared result link is no longer active. Shared links expire after 30 days.</p>
+<p>This shared result link is no longer active. Shared links expire after {SHARE_TTL_DAYS} days.</p>
 <a href='/'>Look Up Your Permits →</a></div></body></html>"""
                 self.send_response(410)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -1964,8 +2213,22 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(html.encode())))
+            self.send_header("Cache-Control", "no-store")
             self.end_headers()
             self.wfile.write(html.encode())
+        elif path == "/api/integrations":
+            session_token = self.headers.get("X-Session-Token", "")
+            user_email = validate_session_token(session_token) if session_token else None
+            if not user_email:
+                self.send_json(401, {"error": "Not authenticated"})
+                return
+            self.send_json(200, {
+                "api_keys": list_api_keys(user_email),
+                "webhooks": list_webhook_integrations(user_email),
+                "paid": is_paid_user(user_email),
+                "webhook_base_url": f"{APP_BASE_URL}/api/integrations/webhook/",
+                "api_endpoint": f"{APP_BASE_URL}/api/v1/permit",
+            })
         elif path == "/api/stats":
             self.send_json(200, get_lookup_stats())
 
@@ -2462,12 +2725,104 @@ a{display:inline-block;background:#1a56db;color:#fff;padding:11px 28px;border-ra
                     self.send_json(400, {"error": "job_type, city, state, result required"})
                     return
                 slug = create_share(job_type, city, state, result)
-                host = self.headers.get("Host", "permitassist.io")
-                scheme = "https" if "railway" in host or "permitassist" in host else "http"
-                share_url = f"{scheme}://{host}/s/{slug}"
+                share_url = f"{APP_BASE_URL}/report/{slug}"
                 self.send_json(200, {"url": share_url, "slug": slug, "expires_days": SHARE_TTL_DAYS})
             except Exception as e:
                 print(f"[share] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/checklist":
+            try:
+                data = self.read_json_body()
+                result = data.get("result") or {}
+                job_type = data.get("job_type", "").strip()
+                city = data.get("city", "").strip()
+                state = data.get("state", "").strip()
+                if not result:
+                    self.send_json(400, {"error": "result is required"})
+                    return
+                self.send_json(200, get_or_create_checklist(result, job_type, city, state))
+            except Exception as e:
+                print(f"[checklist] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/integrations/api-key":
+            try:
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else None
+                if not user_email:
+                    self.send_json(401, {"error": "Not authenticated"})
+                    return
+                if not is_paid_user(user_email):
+                    self.send_json(403, {"error": "Paid plan required"})
+                    return
+                data = self.read_json_body()
+                key = create_api_key(user_email, data.get("name", "API Key"))
+                self.send_json(201, {"api_key": key, "api_keys": list_api_keys(user_email)})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/integrations/webhook":
+            try:
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else None
+                if not user_email:
+                    self.send_json(401, {"error": "Not authenticated"})
+                    return
+                if not is_paid_user(user_email):
+                    self.send_json(403, {"error": "Paid plan required"})
+                    return
+                data = self.read_json_body()
+                callback_url = str(data.get("callback_url", "")).strip()
+                if not callback_url.startswith("http"):
+                    self.send_json(400, {"error": "Valid callback_url required"})
+                    return
+                field_mapping = data.get("field_mapping") or {}
+                if isinstance(field_mapping, str):
+                    try:
+                        field_mapping = json.loads(field_mapping)
+                    except Exception:
+                        field_mapping = {}
+                webhook = create_webhook_integration(user_email, data.get("name", "Webhook"), callback_url, field_mapping)
+                self.send_json(201, {"webhook": webhook, "webhooks": list_webhook_integrations(user_email)})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        elif path.startswith("/api/integrations/webhook/"):
+            try:
+                integration_key = path[len("/api/integrations/webhook/"):].strip("/")
+                integration = get_webhook_by_key(integration_key)
+                if not integration:
+                    self.send_json(404, {"error": "Integration not found"})
+                    return
+                data = self.read_json_body()
+                run_webhook_lookup_async(integration, data)
+                self.send_json(202, {"accepted": True, "integration": integration.get("name") or "Webhook", "callback_url": data.get("callback_url") or integration.get("callback_url")})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/v1/permit":
+            try:
+                user_email, _ = validate_api_key(self.headers.get("Authorization", ""))
+                if not user_email:
+                    self.send_json(401, {"error": "Invalid API key"})
+                    return
+                if not is_paid_user(user_email):
+                    self.send_json(403, {"error": "Paid plan required"})
+                    return
+                data = self.read_json_body()
+                job_type = data.get("job_type", "").strip()
+                city = data.get("city", "").strip()
+                state = data.get("state", "").strip()
+                zip_code = data.get("zip_code", "").strip()
+                job_category = data.get("job_category", "residential").strip() or "residential"
+                if not job_type or not city or not state:
+                    self.send_json(400, {"error": "job_type, city, and state are required"})
+                    return
+                result = research_permit(job_type, city, state, zip_code, job_category=job_category)
+                self.send_json(200, result)
+            except Exception as e:
+                print(f"[api-v1-permit] Error: {e}")
                 self.send_json(500, {"error": str(e)})
 
         elif path == "/api/email-report":
