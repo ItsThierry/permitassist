@@ -142,18 +142,31 @@
     .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); }
     .logo-text em { font-style: normal; color: var(--brand); }
     .logo-tagline { font-size: 11px; color: var(--text2); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+    /* ── Nav right (desktop) ── */
     .nav-right { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-    .nav-link { color: var(--text2); font-size: 12px; font-weight: 600; text-decoration: none; padding: 6px 10px; border-radius: 20px; white-space: nowrap; transition: background .15s, color .15s; }
+    .nav-link { color: var(--text2); font-size: 13px; font-weight: 600; text-decoration: none; padding: 6px 12px; border-radius: 20px; white-space: nowrap; transition: background .15s, color .15s; }
     .nav-link:hover { background: var(--surface2); color: var(--text); }
-    .nav-link-btn { color: var(--brand); font-size: 12px; font-weight: 700; text-decoration: none; padding: 6px 12px; border: 1px solid rgba(37,99,235,0.3); border-radius: 20px; white-space: nowrap; transition: background .15s; }
+    .nav-link-btn { color: var(--brand); font-size: 13px; font-weight: 700; text-decoration: none; padding: 7px 14px; border: 1.5px solid rgba(37,99,235,0.35); border-radius: 20px; white-space: nowrap; transition: background .15s; }
     .nav-link-btn:hover { background: rgba(37,99,235,0.06); }
     .nav-link-btn.paid { color: #fff; background: var(--brand); border-color: var(--brand); }
-    @media (max-width: 480px) { .nav-link { padding: 6px 7px; font-size: 11px; } .nav-link-btn { padding: 6px 10px; font-size: 11px; } }
-    /* Mobile nav: hide tagline + pricing to make room for account btn */
-    @media (max-width: 480px) {
+
+    /* ── Hamburger menu (mobile only) ── */
+    .nav-hamburger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 36px; height: 36px; cursor: pointer; padding: 4px; border-radius: 8px; border: none; background: transparent; flex-shrink: 0; }
+    .nav-hamburger span { display: block; height: 2px; border-radius: 2px; background: var(--text); transition: all .2s; }
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .nav-drawer { display: none; position: absolute; top: 100%; right: 0; left: 0; background: #fff; border-bottom: 1px solid var(--border); padding: 12px 20px 16px; z-index: 99; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .nav-drawer.open { display: block; }
+    .nav-drawer a, .nav-drawer button { display: block; width: 100%; text-align: left; padding: 12px 4px; font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none; border: none; background: transparent; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .nav-drawer a:last-child, .nav-drawer button:last-child { border-bottom: none; }
+    .nav-drawer .drawer-account-btn { color: #fff; background: var(--brand); border-radius: 10px; padding: 13px 16px; margin-top: 8px; font-weight: 700; border-bottom: none; text-align: center; }
+    .nav-drawer .drawer-login-btn { color: var(--brand); border: 1.5px solid rgba(37,99,235,0.35); border-radius: 10px; padding: 13px 16px; margin-top: 8px; font-weight: 700; text-align: center; }
+
+    @media (max-width: 600px) {
+      .nav-right { display: none; }
+      .nav-hamburger { display: flex; }
       .logo-tagline { display: none; }
-      #nav-pricing-link { display: none !important; }
-      .nav-right { gap: 4px; }
     }
     .offline-badge { background: var(--red); border-radius: 20px; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; display: none; }
     .offline-badge.show { display: block; }
@@ -1108,14 +1121,26 @@
     <div class="nav-right" id="nav-right">
       <a class="nav-new-search" id="nav-new-search" href="#" onclick="event.preventDefault(); newSearch();">← New Lookup</a>
       <div class="offline-badge" id="offline-badge">● Offline</div>
-      <!-- Static nav links (always visible) -->
       <a href="/pricing" class="nav-link" id="nav-pricing-link">Pricing</a>
       <a href="/help" class="nav-link" id="nav-help-link">Help</a>
-      <!-- Auth-dependent links — toggled by refreshAccountBadge() -->
       <a href="/integrations" class="nav-link" id="nav-integrations-link" style="display:none">🔗 Integrations</a>
       <a href="/account" class="nav-link-btn" id="nav-account-link" style="display:none">Account</a>
       <a href="/login" class="nav-link-btn" id="nav-login-btn">Log in</a>
       <button class="install-btn" id="install-nav-btn" onclick="installApp()">Add to Phone</button>
+    </div>
+
+    <!-- Mobile hamburger -->
+    <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavDrawer()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Mobile drawer (mirrors nav-right, populated by JS) -->
+    <div class="nav-drawer" id="nav-drawer">
+      <a href="/pricing">Pricing</a>
+      <a href="/help">Help</a>
+      <a href="/integrations" id="drawer-integrations-link" style="display:none">🔗 Integrations</a>
+      <a href="/account" class="drawer-account-btn" id="drawer-account-link" style="display:none">Account</a>
+      <a href="/login" class="drawer-login-btn" id="drawer-login-link">Log in</a>
     </div>
   </nav>
 
@@ -1792,6 +1817,23 @@ function getAuthHeaders(){const t=getSessionToken();const h={'Content-Type':'app
   }
 })();
 
+function toggleNavDrawer(){
+  const btn=document.getElementById('nav-hamburger');
+  const drawer=document.getElementById('nav-drawer');
+  if(!btn||!drawer)return;
+  const open=drawer.classList.toggle('open');
+  btn.classList.toggle('open',open);
+}
+// Close drawer when clicking outside
+document.addEventListener('click',function(e){
+  const drawer=document.getElementById('nav-drawer');
+  const btn=document.getElementById('nav-hamburger');
+  if(drawer&&btn&&!drawer.contains(e.target)&&!btn.contains(e.target)){
+    drawer.classList.remove('open');
+    btn.classList.remove('open');
+  }
+});
+
 async function refreshAccountBadge(){
   const token=getSessionToken();
   if(!token)return;
@@ -1817,6 +1859,13 @@ async function refreshAccountBadge(){
     if(intLink) intLink.style.display=d.paid?'':'none';
     // Hide free-tier pitch from paid users
     if(freePaidBar) freePaidBar.style.display=d.paid?'none':'';
+    // Sync mobile drawer
+    const drawerLogin=document.getElementById('drawer-login-link');
+    const drawerAccount=document.getElementById('drawer-account-link');
+    const drawerInt=document.getElementById('drawer-integrations-link');
+    if(drawerLogin) drawerLogin.style.display='none';
+    if(drawerAccount){ drawerAccount.style.display=''; drawerAccount.textContent=d.paid?'⭐ Account':'Account'; }
+    if(drawerInt) drawerInt.style.display=d.paid?'':'none';
   }catch{}
 }
 
