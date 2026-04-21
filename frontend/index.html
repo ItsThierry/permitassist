@@ -2408,13 +2408,7 @@ function renderResults(d, job, city, state) {
     </div>
     ${confidenceReason ? `<div style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.5">${esc(confidenceReason)}</div>` : ''}
     
-    ${d.apply_url ? `
-    <div style="margin-top:16px">
-      <a href="${esc(d.apply_url)}" target="_blank" rel="noopener" class="search-again-hero" style="background:#10b981; margin-bottom:0; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px">
-        🚀 Apply Online Now
-      </a>
-      <div style="font-size:11px; color:var(--muted); text-align:center; margin-top:6px">External portal: ${esc(new URL(d.apply_url).hostname)}</div>
-    </div>` : ''}
+    ${(()=>{ try { if(!d.apply_url) return ''; const h=new URL(d.apply_url).hostname; if(!h||h.length<4) return ''; return `<div style="margin-top:16px"><a href="${esc(d.apply_url)}" target="_blank" rel="noopener" class="search-again-hero" style="background:#10b981; margin-bottom:0; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px">🚀 Apply Online Now</a><div style="font-size:11px; color:var(--muted); text-align:center; margin-top:6px">External portal: ${esc(h)}</div></div>`; } catch(e){ return ''; } })()}
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--muted)">Last updated: ${heroUpdatedLabel}</span>
@@ -3063,7 +3057,14 @@ function downloadReport() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-function printResult() { if (!currentResult) return; window.print(); }
+function printResult() {
+  if (!currentResult) return;
+  // Hide checklist section during print, show only permit result
+  const cl = document.getElementById('compliance-checklist-section');
+  if (cl) cl.style.display = 'none';
+  window.print();
+  if (cl) cl.style.display = '';
+}
 
 // ── History ──────────────────────────────────────────────────────────────────
 const _saveToHistoryCore = entry => {
@@ -3494,7 +3495,16 @@ async function loadComplianceChecklist(job, city, state, result){
     el.innerHTML='<div class="checklist-hint">Could not load checklist right now.</div>';
   }
 }
-function printChecklistSection(){ window.print(); }
+function printChecklistSection(){
+  // Hide main result during print, show only checklist
+  const ri = document.getElementById('results-inner');
+  const rb = document.getElementById('results');
+  const prevDisplay = rb ? rb.style.display : '';
+  // Temporarily mark everything except checklist as no-print
+  if (ri) ri.classList.add('no-print');
+  window.print();
+  if (ri) ri.classList.remove('no-print');
+}
 function saveChecklistToJob(){ saveJobToTracker(); }
 function saveJobToTracker() {
   if (!currentResult) return;
