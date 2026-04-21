@@ -192,7 +192,7 @@
           <li>Share results via link</li>
           <li>Save lookups to your account</li>
         </ul>
-        <a href="/" class="plan-cta plan-cta-secondary">Start Free →</a>
+        <a href="/" class="plan-cta plan-cta-secondary">Start Free — takes 30 seconds →</a>
       </div>
 
       <!-- Pro -->
@@ -211,7 +211,7 @@
           <li>Share results with your team</li>
           <li>Email support</li>
         </ul>
-        <a id="solo-cta" href="https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c" class="plan-cta plan-cta-primary">Upgrade to Pro →</a>
+        <a id="solo-cta" href="https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c" class="plan-cta plan-cta-primary">Upgrade to Pro — takes 60 seconds →</a>
       </div>
 
       <!-- Team -->
@@ -227,7 +227,7 @@
           <li>Billing portal for your office manager</li>
           <li>Priority city requests (48hr turnaround)</li>
         </ul>
-        <a href="https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b" class="plan-cta plan-cta-secondary">Start Team Plan →</a>
+        <a href="https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b" class="plan-cta plan-cta-secondary">Start Team Plan — takes 60 seconds →</a>
       </div>
     </div>
 
@@ -400,7 +400,7 @@
     if (soloPriceEl) soloPriceEl.innerHTML = prices.solo;
     // Update solo CTA link
     var soloCta = document.getElementById('solo-cta');
-    if (soloCta) { soloCta.href = prices.soloLink; soloCta.textContent = period === 'annual' ? 'Get Annual Plan →' : 'Upgrade to Pro →'; }
+    if (soloCta) { soloCta.href = prices.soloLink; soloCta.textContent = period === 'annual' ? 'Get Annual Plan — takes 60 seconds →' : 'Upgrade to Pro — takes 60 seconds →'; }
     // Update team price (3rd .plan-price element)
     var teamPriceEl = document.querySelectorAll('.plan-price')[2];
     if (teamPriceEl) teamPriceEl.innerHTML = prices.team;
