@@ -1963,7 +1963,8 @@ function refreshCounterBar(){
   const used=getLookupCount(),remaining=Math.max(0,FREE_LIMIT-used);
   const bar=document.getElementById('counter-bar'),text=document.getElementById('counter-text');
   if(!bar) return;
-  if(hasEmail()){bar.style.display='none';return}
+  // Don't hide bar for email users — server will update or hide it after lookup
+  // bar stays visible with localStorage count until server responds
   const pct=Math.round(used/FREE_LIMIT*100);
   text.textContent=remaining===0?'Free lookups used — upgrade for unlimited':`${used} of ${FREE_LIMIT} free lookups used`;
   let progressEl=bar.querySelector('.counter-progress');
