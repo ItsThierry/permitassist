@@ -298,6 +298,38 @@
     .hero-input { min-height: 90px; resize: vertical; line-height: 1.5; }
     .query-wrap { position: relative; }
     .query-wrap textarea { padding-right: 50px; }
+    .trade-wizard {
+      display: none; margin-top: 12px; padding: 14px; border-radius: var(--r-sm);
+      border: 1px solid rgba(37,99,235,0.18); background: linear-gradient(135deg, rgba(37,99,235,0.06), rgba(37,99,235,0.02));
+      animation: fadeUp .22s ease;
+    }
+    .trade-wizard.show { display: block; }
+    .trade-wizard-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .trade-wizard-title { font-size: 13px; font-weight: 800; color: var(--brand); }
+    .trade-wizard-sub { font-size: 12px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+    .trade-wizard-dismiss { background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px; font-weight:700; }
+    .trade-question { margin-top: 12px; }
+    .trade-question:first-of-type { margin-top: 0; }
+    .trade-question-label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .trade-option-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .trade-option-btn {
+      border:1px solid var(--border); background:var(--surface); color:var(--text2); border-radius:999px;
+      padding:8px 12px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; transition:all .15s;
+    }
+    .trade-option-btn.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .trade-option-btn:hover { border-color: var(--brand); color: var(--brand); }
+    .trade-option-btn.active:hover { color:#fff; }
+
+    .permit-explainer-card { background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(255,255,255,0.98)); }
+    .permit-explainer-copy {
+      margin-top: 12px; white-space: pre-wrap; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 14px; font-size: 14px; color: var(--text); line-height: 1.7;
+    }
+    .permit-explainer-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .inspection-fail-card { background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(255,255,255,0.98)); }
+    .inspection-fail-item { display:flex; align-items:flex-start; gap:10px; padding:9px 0; color:var(--text2); font-size:14px; line-height:1.55; border-bottom:1px solid var(--border); }
+    .inspection-fail-item:last-child { border-bottom:none; }
+    .inspection-fail-item::before { content:'✓'; color:var(--green); font-weight:800; flex-shrink:0; }
 
     /* Mic button */
     .mic-btn {
@@ -1261,6 +1293,7 @@
               </div>
               <div class="autocomplete-dropdown" id="autocomplete-dropdown" style="display:none"></div>
             </div>
+            <div class="trade-wizard" id="trade-wizard"></div>
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label>ZIP Code <span style="font-weight:400;text-transform:none;font-size:10px;">(optional)</span></label>
@@ -1662,6 +1695,7 @@ const IS_ADMIN=new URLSearchParams(window.location.search).get('_dev')==='pa_int
 let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false},jobsCache=[],watchesCache=[];
 let _skipDisambig=false;
 let _isSampleLookup=false;
+let tradeWizardState={tradeKey:'',baseQuery:'',answers:{},dismissedTrade:'',suppressInput:false};
 
 // ── Job Types for Autocomplete ────────────────────────────────────────────────
 const JOB_TYPES_ALL = [
@@ -1730,6 +1764,196 @@ function setSearchMode(mode) {
 }
 const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+const TRADE_QUESTIONS = {
+  'hvac': [
+    { q: 'Job type:', options: ['Condenser/AC replacement', 'Furnace replacement', 'Full system (condenser + furnace)', 'New installation', 'Ductwork only'] },
+    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
+  ],
+  'electrical': [
+    { q: 'Job type:', options: ['Panel upgrade/heavy-up', 'New circuit', 'EV charger', 'Whole home rewire', 'Generator/transfer switch'] },
+    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
+  ],
+  'roofing': [
+    { q: 'Scope:', options: ['Full tear-off replacement', 'Partial repair', 'New construction'] },
+    { q: 'Material:', options: ['Asphalt shingle', 'Metal', 'Tile', 'Flat/TPO'] }
+  ],
+  'plumbing': [
+    { q: 'Job type:', options: ['Water heater replacement', 'Sewer/drain line', 'Re-pipe', 'Fixture relocation', 'Gas line'] },
+    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
+  ],
+  'water_heater': [
+    { q: 'Type:', options: ['Tank (gas)', 'Tank (electric)', 'Tankless (gas)', 'Tankless (electric)'] },
+    { q: 'Same location or moving it?', options: ['Same location', 'Moving it'] }
+  ],
+  'deck': [
+    { q: 'Deck type:', options: ['Attached to house', 'Freestanding'] },
+    { q: 'Height above grade:', options: ['Under 30 inches', '30+ inches'] },
+    { q: 'Material:', options: ['Treated lumber', 'Composite/Trex', 'Hardwood'] }
+  ],
+  'solar': [
+    { q: 'System type:', options: ['Grid-tied', 'Off-grid', 'Battery backup only'] },
+    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
+  ],
+  'fence': [
+    { q: 'Height:', options: ['Under 4 feet', '4-6 feet', 'Over 6 feet'] },
+    { q: 'Location:', options: ['Backyard', 'Front yard', 'Side yard'] },
+    { q: 'Corner lot?', options: ['Yes', 'No'] }
+  ],
+  'shed': [
+    { q: 'Size:', options: ['Under 100 sq ft', '100-120 sq ft', '120-200 sq ft', 'Over 200 sq ft'] },
+    { q: 'Adding electricity?', options: ['Yes', 'No'] },
+    { q: 'On permanent slab?', options: ['Yes', 'No — on skids/gravel'] }
+  ],
+  'pool': [
+    { q: 'Pool type:', options: ['In-ground', 'Above-ground'] },
+    { q: 'Depth:', options: ['Under 24 inches', '24+ inches'] }
+  ],
+  'generator': [
+    { q: 'Generator type:', options: ['Whole-home standby', 'Portable', 'Transfer switch only'] },
+    { q: 'Fuel:', options: ['Natural gas', 'Propane', 'Diesel'] }
+  ],
+  'bathroom_remodel': [
+    { q: 'Scope:', options: ['Cosmetic only (no plumbing moved)', 'Moving plumbing fixtures', 'Adding new fixtures', 'Full gut remodel'] }
+  ],
+  'window_replacement': [
+    { q: 'Type:', options: ['Retrofit/pocket (frame stays)', 'Full frame replacement', 'Enlarging opening'] },
+    { q: 'Bedroom window?', options: ['Yes', 'No'] }
+  ]
+};
+
+const INSPECTION_FAIL_POINTS = {
+  'hvac': ['Missing secondary drain pan under air handler','Disconnect not within sight of equipment','Duct joints not sealed with mastic or UL-181 tape','Improper venting clearances from combustibles','AHRI match certificate not on-site'],
+  'electrical': ['Missing AFCI protection on required circuits','GFCI missing within 6ft of water source','Junction box overfilled (too many wires)','Cables not properly supported/stapled within 12" of box','Panel directory not labeled'],
+  'roofing': ['Missing drip edge at eaves and rakes','Ice and water shield not extended 24" past interior wall','Insufficient fasteners per shingle in wind zone','Valley flashing not per manufacturer specs','Decking not inspected before shingling (where required)'],
+  'plumbing': ['P-trap improper depth or distance from wall','Missing cleanout access','Vent pipe not properly supported','Unapproved pipe material in concealed location','No pressure test performed on new lines'],
+  'water_heater': ['Missing thermal expansion tank on closed system','T&P relief valve pipe not terminated correctly (within 6" of floor)','Missing drip pan with drain line','No seismic strapping (required in CA, AK, HI, Pacific NW)','Gas flex connector too long or in concealed space'],
+  'mini_split': ['Missing exterior service disconnect within sight','Line set penetration not sealed (fire/water)','Condenser too close to property line','Refrigerant line insulation missing or damaged','No nameplate on unit at inspection'],
+  'ev_charger': ['Panel overloaded — no load calculation submitted','Wrong wire gauge for continuous 40A or 50A load','GFCI missing on receptacle-type charger','Breaker not rated for continuous duty','Conduit fill exceeded'],
+  'generator': ['Generator too close to operable windows (CO hazard)','Gas line undersized for full load','Pad too close to property line (setback violation)','Transfer switch not properly bonded','No weatherproof inlet box cover'],
+  'deck': ['Footing not deep enough below frost line','Ledger board flashing missing or improperly installed','Post base not properly anchored to footing','Joist hangers missing or wrong size','Guardrail balusters more than 4" apart'],
+  'solar': ['Insufficient roof access pathways for firefighters (18" each side)','Missing rapid shutdown equipment or labeling','DC conduit not properly labeled','Structural engineering stamp missing from plans','Interconnection labeling on utility meter incomplete'],
+  'fence': ['Height exceeds zoning limit for location (front vs back yard)','Built within utility easement','Corner lot sight-triangle violation','No call to 811 (Dig Safe) before digging','HOA approval not obtained before permit (where required)'],
+  'pool': ['Equipotential bonding grid incomplete or not tested','Self-closing, self-latching gate missing or failing','Door alarm from house to pool area missing','Underwater lighting not GFCI protected','Drain cover not anti-entrapment compliant (VGB Act)'],
+  'bathroom_remodel': ['Exhaust fan venting into attic instead of exterior','Shower pan flood test not passed (24-hour standing water)','GFCI not within required distance of water source','Shower floor slope insufficient (1/4" per foot to drain)','Plumbing moved without rough-in inspection'],
+  'window_replacement': ['Bedroom window fails egress size requirements','U-factor or SHGC not meeting climate zone energy code','Tempered glass missing near floor, door, or tub','Flashing/waterproofing not inspected before interior finish','Historic district approval not obtained'],
+  'shed': ['Too close to property line (setback violation)','Built over utility easement','Exceeds maximum square footage without permit','Electrical added without separate electrical permit','No anchor/tie-down in high-wind zone']
+};
+
+function detectTradeKey(text) {
+  const t = (text || '').toLowerCase();
+  if (!t) return '';
+  if (/\b(ev charger|electric vehicle|tesla)\b/.test(t)) return 'ev_charger';
+  if (/\b(mini split|mini-split|ductless|minisplit)\b/.test(t)) return 'mini_split';
+  if (/\b(water heater|hot water|tankless)\b/.test(t)) return 'water_heater';
+  if (/\b(hvac|air conditioner|condenser|furnace|heat pump|\bac\b|heating|cooling|air handler)\b/.test(t)) return 'hvac';
+  if (/\b(solar|\bpv\b)\b/.test(t)) return 'solar';
+  if (/\b(electric|panel|circuit|breaker|wiring)\b/.test(t)) return 'electrical';
+  if (/\b(roof|shingle|tear-off|reroof|re-roof)\b/.test(t)) return 'roofing';
+  if (/\b(plumb|pipe|drain|sewer)\b/.test(t)) return 'plumbing';
+  if (/\b(deck|patio)\b/.test(t)) return 'deck';
+  if (/\b(fence)\b/.test(t)) return 'fence';
+  if (/\b(shed|storage)\b/.test(t)) return 'shed';
+  if (/\b(pool|spa)\b/.test(t)) return 'pool';
+  if (/\b(generator|genset|generac)\b/.test(t)) return 'generator';
+  if (/\b(bathroom|bath|shower|tub)\b/.test(t)) return 'bathroom_remodel';
+  if (/\b(window)\b/.test(t)) return 'window_replacement';
+  return '';
+}
+
+function getTradeWizardSuffix() {
+  const selected = Object.values(tradeWizardState.answers || {}).filter(Boolean);
+  return selected.length ? ` — ${selected.join(', ')}` : '';
+}
+
+function stripTradeWizardSuffix(value) {
+  const suffix = getTradeWizardSuffix();
+  return suffix && value.endsWith(suffix) ? value.slice(0, -suffix.length).trim() : value;
+}
+
+function dismissTradeWizard() {
+  tradeWizardState.dismissedTrade = tradeWizardState.tradeKey || detectTradeKey(document.getElementById('query')?.value || '');
+  const wizard = document.getElementById('trade-wizard');
+  if (wizard) { wizard.classList.remove('show'); wizard.innerHTML = ''; }
+}
+
+function applyTradeWizardAnswers() {
+  const textarea = document.getElementById('query');
+  if (!textarea) return;
+  const selected = Object.values(tradeWizardState.answers || {}).filter(Boolean);
+  const nextValue = tradeWizardState.baseQuery + (selected.length ? ` — ${selected.join(', ')}` : '');
+  tradeWizardState.suppressInput = true;
+  textarea.value = nextValue.trim();
+  tradeWizardState.suppressInput = false;
+}
+
+function setTradeWizardAnswer(questionIndex, option) {
+  tradeWizardState.answers[questionIndex] = tradeWizardState.answers[questionIndex] === option ? '' : option;
+  renderTradeWizard();
+  applyTradeWizardAnswers();
+}
+
+function renderTradeWizard() {
+  const wizard = document.getElementById('trade-wizard');
+  const questions = TRADE_QUESTIONS[tradeWizardState.tradeKey] || [];
+  if (!wizard || !questions.length || !tradeWizardState.baseQuery || tradeWizardState.baseQuery.length > 50 || tradeWizardState.dismissedTrade === tradeWizardState.tradeKey) {
+    if (wizard) { wizard.classList.remove('show'); wizard.innerHTML = ''; }
+    return;
+  }
+  wizard.innerHTML = `<div class="trade-wizard-head"><div><div class="trade-wizard-title">Quick questions</div><div class="trade-wizard-sub">Tap a few details and we will tighten up your permit lookup automatically.</div></div><button type="button" class="trade-wizard-dismiss" onclick="dismissTradeWizard()">✕ dismiss</button></div>${questions.map((item, idx) => `<div class="trade-question"><div class="trade-question-label">${esc(item.q)}</div><div class="trade-option-row">${item.options.map(option => `<button type="button" class="trade-option-btn ${tradeWizardState.answers[idx]===option?'active':''}" onclick="setTradeWizardAnswer(${idx}, ${JSON.stringify(option)})">${esc(option)}</button>`).join('')}</div></div>`).join('')}`;
+  wizard.classList.add('show');
+}
+
+function handleTradeWizardInput() {
+  const textarea = document.getElementById('query');
+  if (!textarea || tradeWizardState.suppressInput) return;
+  const rawValue = textarea.value.trim();
+  const baseValue = stripTradeWizardSuffix(rawValue);
+  tradeWizardState.baseQuery = baseValue;
+  const tradeKey = detectTradeKey(baseValue);
+  if (tradeKey !== tradeWizardState.tradeKey) {
+    tradeWizardState.tradeKey = tradeKey;
+    tradeWizardState.answers = {};
+  }
+  if (!tradeKey || baseValue.length > 50 || !TRADE_QUESTIONS[tradeKey]) {
+    const wizard = document.getElementById('trade-wizard');
+    if (wizard) { wizard.classList.remove('show'); wizard.innerHTML = ''; }
+    return;
+  }
+  renderTradeWizard();
+}
+
+function getInspectionFailPoints(jobType, result) {
+  const permitText = [jobType, result?.permit_name, result?.permit_type, ...(result?.permits_required || []).map(p => p?.permit_type || ''), ...(result?.permits_required || []).map(p => p?.portal_selection || '')].join(' ').toLowerCase();
+  const tradeKey = detectTradeKey(permitText);
+  return INSPECTION_FAIL_POINTS[tradeKey] || [];
+}
+
+function generateCustomerPermitExplanation() {
+  const result = window._lastLookupResult || {};
+  const permitName = getPermitDisplayName(result);
+  const city = window._lastLookupCity || '';
+  const state = window._lastLookupState || '';
+  const fee = result.fee_range || result.fee || result.cost || 'Call the city to confirm the exact fee';
+  return `Why Your ${permitName} Permit is Required\n\nYour contractor is required by ${city}, ${state} law to pull a ${permitName} before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local safety codes. Without it, your homeowner's insurance may not cover claims related to this work, and you may face issues when selling your home.\n\nCost: ${fee} — this is paid directly to the city, not to your contractor.\n\nWhat happens without it: Unpermitted work can result in fines, required tear-out and redo, insurance claim denials, and required disclosure during home sale.\n\nThis information was verified via PermitAssist (permitassist.io).`;
+}
+
+function toggleCustomerExplanation() {
+  const box = document.getElementById('customer-explanation-box');
+  if (!box) return;
+  const isOpen = box.style.display === 'block';
+  if (isOpen) {
+    box.style.display = 'none';
+    return;
+  }
+  box.textContent = generateCustomerPermitExplanation();
+  box.style.display = 'block';
+}
+
+function copyCustomerExplanation() {
+  const text = generateCustomerPermitExplanation();
+  navigator.clipboard.writeText(text).then(() => showCopy('✅ Customer explanation copied')).catch(() => showCopy('⚠️ Could not copy right now'));
+}
 
 // ── Inspection Checklists (hardcoded by trade) ────────────────────────────────
 const INSPECTION_CHECKLISTS = {
@@ -2272,7 +2496,7 @@ function parseQuery(raw){
 }
 
 // ── Navigation helpers ───────────────────────────────────────────────────────
-function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('address').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');refreshCounterBar();document.getElementById('page-search').scrollTop=0}
+function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('address').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');tradeWizardState={tradeKey:'',baseQuery:'',answers:{},dismissedTrade:'',suppressInput:false};const wizard=document.getElementById('trade-wizard');if(wizard){wizard.classList.remove('show');wizard.innerHTML='';}refreshCounterBar();document.getElementById('page-search').scrollTop=0}
 
 const upgradeCouponInput=document.getElementById('upgrade-coupon-input');
 if(upgradeCouponInput){
@@ -2585,6 +2809,11 @@ function renderResults(d, job, city, state) {
     html += `<div class="card"><div class="section-label">✅ Next Steps</div><ol class="ordered-list">${nextSteps.map(step => `<li>${esc(step)}</li>`).join('')}</ol></div>`;
   }
 
+  const inspectionFailPoints = getInspectionFailPoints(job, d);
+  if (inspectionFailPoints.length && verdict !== 'no') {
+    html += `<div class="card inspection-fail-card"><div class="checklist-toggle" onclick="toggleChecklist(this)"><div class="checklist-toggle-text">⚠️ Don't Fail This Inspection</div><div class="checklist-toggle-arrow">▼</div></div><div class="checklist-items">${inspectionFailPoints.map(item => `<div class="inspection-fail-item">${esc(item)}</div>`).join('')}</div></div>`;
+  }
+
   // Contact card
   if (phone || office || maps) {
     html += `<div class="card" style="${verdict==='maybe'?'border-color:rgba(245,158,11,0.4);':''}">
@@ -2626,6 +2855,10 @@ function renderResults(d, job, city, state) {
       html += row('🧰 Who pulls it', esc(licenseDisplay));
     }
     html += `</div>`;
+  }
+
+  if (verdict !== 'no') {
+    html += `<div class="card permit-explainer-card"><div class="section-label">📋 Customer Permit Justifier</div><div style="font-size:14px;color:var(--text2);line-height:1.6">Need to explain the permit to the homeowner fast? Open this and copy it into a text, email, or quote.</div><div class="permit-explainer-actions"><button class="action-btn" onclick="toggleCustomerExplanation()">📋 Get Customer Explanation</button><button class="action-btn" onclick="copyCustomerExplanation()">📋 Copy to Clipboard</button></div><div class="permit-explainer-copy" id="customer-explanation-box" style="display:none"></div></div>`;
   }
 
   // City contractor registration alert
@@ -3912,6 +4145,9 @@ function initAutocomplete() {
 function selectAutocomplete(text) {
   const textarea = document.getElementById('query');
   if (textarea) textarea.value = text;
+  tradeWizardState.baseQuery = text;
+  tradeWizardState.dismissedTrade = '';
+  handleTradeWizardInput();
   const dropdown = document.getElementById('autocomplete-dropdown');
   if (dropdown) dropdown.style.display = 'none';
   checkShimmer();
@@ -4134,7 +4370,12 @@ document.getElementById('lookup-btn').onclick = doLookupWithOffline;
   if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doLookupWithOffline(); } });
 });
 // On query input change, hide disambiguation
-document.getElementById('query').addEventListener('input', () => document.getElementById('disambig-box').classList.remove('show'));
+const queryEl = document.getElementById('query');
+queryEl.addEventListener('input', () => {
+  document.getElementById('disambig-box').classList.remove('show');
+  if (!tradeWizardState.suppressInput) tradeWizardState.dismissedTrade = '';
+  handleTradeWizardInput();
+});
 
 // Search card focus glow
 (function(){
