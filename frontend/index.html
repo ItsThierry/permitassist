@@ -3094,7 +3094,10 @@ function renderResults(d, job, city, state) {
 function printChecklist() {
   const card = document.getElementById('compliance-checklist-card');
   if (card) { card.style.display = 'block'; }
-  setTimeout(() => { window.print(); }, 100);
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => { if (card) card.style.display = 'none'; }, 300);
+  }, 100);
 }
 
 function toggleChecklist(el) {
