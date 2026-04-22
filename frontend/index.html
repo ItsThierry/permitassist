@@ -912,6 +912,8 @@
       .confidence-badge .conf-tooltip { display: none !important; }
       .bullet-list, .ordered-list li { color: #333 !important; }
       .checklist-items { display: block !important; }
+      #compliance-checklist-card { display: block !important; }
+      .result-save-prompt { display: none !important; }
       .print-header { display: block !important; }
       .print-footer { display: block !important; }
       a { color: #2563eb !important; }
@@ -2646,8 +2648,6 @@ function renderResults(d, job, city, state) {
     html += `<div class="card" style="border-color:rgba(59,130,246,0.35)"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><div class="section-label">Usage</div><div style="font-size:14px;font-weight:700">${remaining > 0 ? `${remaining} free lookup${remaining!==1?'s':''} left` : 'Free lookups used'}</div></div><button class="action-btn" style="margin:0;padding:10px 14px" onclick="openUpgrade()">Upgrade</button></div></div>`;
   }
 
-  html += buildResultSavePrompt(job, city, state, getResultPermitName(d));
-
   // County fallback notice
   if (countyNote) {
     html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
@@ -3069,10 +3069,12 @@ function renderResults(d, job, city, state) {
       </div>
       <div id="reminder-confirm" style="display:none;color:var(--green);font-size:13px;margin-top:8px;font-weight:600">✓ We'll remind you 30 days before expiry.</div>
     </div>
-    <div class="card compliance-checklist-card" id="compliance-checklist-card">
+    <div id="compliance-checklist-card" class="card compliance-checklist-card" style="display:none">
       <div class="section-label">📋 Pre-Construction Checklist</div>
       <div id="compliance-checklist-content" class="compliance-checklist-summary">Generating your action checklist…</div>
     </div>
+    <button class="action-btn no-print" style="width:100%;margin-bottom:8px" onclick="printChecklist()">📋 Print Checklist</button>
+    ${buildResultSavePrompt(job, city, state, getResultPermitName(d))}
     <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>
     <div class="feedback-row">
       <span style="font-size:12px;color:var(--muted)">Something wrong?</span>
@@ -3087,6 +3089,12 @@ function renderResults(d, job, city, state) {
   loadComplianceChecklist(job, city, state, d);
   pulseJobsTab();
   maybeShowJobsTooltip();
+}
+
+function printChecklist() {
+  const card = document.getElementById('compliance-checklist-card');
+  if (card) { card.style.display = 'block'; }
+  setTimeout(() => { window.print(); }, 100);
 }
 
 function toggleChecklist(el) {
