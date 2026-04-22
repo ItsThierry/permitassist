@@ -789,16 +789,20 @@ def init_cache():
     conn = sqlite3.connect(CACHE_DB)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS permit_cache (
-            cache_key   TEXT PRIMARY KEY,
-            job_type    TEXT,
-            city        TEXT,
-            state       TEXT,
-            zip_code    TEXT,
-            result_json TEXT,
-            created_at  TEXT,
-            hits        INTEGER DEFAULT 0
+            cache_key    TEXT PRIMARY KEY,
+            job_type     TEXT,
+            job_category TEXT,
+            city         TEXT,
+            state        TEXT,
+            zip_code     TEXT,
+            result_json  TEXT,
+            created_at   TEXT,
+            hits         INTEGER DEFAULT 0
         )
     """)
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(permit_cache)").fetchall()}
+    if "job_category" not in cols:
+        conn.execute("ALTER TABLE permit_cache ADD COLUMN job_category TEXT")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS email_captures (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -810,8 +814,8 @@ def init_cache():
     conn.commit()
     conn.close()
 
-def cache_key(job_type: str, city: str, state: str) -> str:
-    raw = f"{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}"
+def cache_key(job_type: str, city: str, state: str, job_category: str = "residential") -> str:
+    raw = f"{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{(job_category or 'residential').lower().strip()}"
     return hashlib.md5(raw.encode()).hexdigest()
 
 def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
@@ -861,14 +865,14 @@ def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
         print(f"[cache] Read error (non-fatal): {e}")
     return None
 
-def save_cache(key: str, job_type: str, city: str, state: str, zip_code: str, result: dict):
+def save_cache(key: str, job_type: str, job_category: str, city: str, state: str, zip_code: str, result: dict):
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute("""
             INSERT OR REPLACE INTO permit_cache
-            (cache_key, job_type, city, state, zip_code, result_json, created_at, hits)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 0)
-        """, [key, job_type, city, state, zip_code, json.dumps(result), datetime.now().isoformat()])
+            (cache_key, job_type, job_category, city, state, zip_code, result_json, created_at, hits)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+        """, [key, job_type, job_category, city, state, zip_code, json.dumps(result), datetime.now().isoformat()])
         conn.commit()
         conn.close()
     except Exception as e:
@@ -1228,7 +1232,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
     if job_category not in ("residential", "commercial"):
         job_category = "residential"
 
-    key = cache_key(job_type, city, state)
+    key = cache_key(job_type, city, state, job_category)
 
     if use_cache:
         def _background_refresh(k):
@@ -1237,7 +1241,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
                 print(f"[cache] Background refresh started for key {k[:8]}…")
                 fresh = research_permit(job_type, city, state, zip_code, use_cache=False, job_category=job_category)
                 if fresh and not fresh.get("error"):
-                    save_cache(k, job_type, city, state, zip_code, fresh)
+                    save_cache(k, job_type, job_category, city, state, zip_code, fresh)
                     print(f"[cache] Background refresh complete for {city}, {state} / {job_type}")
             except Exception as e:
                 print(f"[cache] Background refresh failed (non-fatal): {e}")
@@ -1831,7 +1835,7 @@ Return ONLY the JSON object."""
         deduped_companions.append(cp)
     result["companion_permits"] = deduped_companions
 
-    save_cache(key, job_type, city, state, zip_code, result)
+    save_cache(key, job_type, job_category, city, state, zip_code, result)
     return result
 
 

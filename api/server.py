@@ -1835,7 +1835,12 @@ def list_jobs(email: str) -> list:
             f"created_at,updated_at FROM jobs WHERE email IN ({placeholders}) ORDER BY created_at DESC",
             scope,
         ).fetchall()
+        reminder_rows = conn.execute(
+            f"SELECT job_id, issued_date FROM permit_issued_reminders WHERE email IN ({placeholders})",
+            scope,
+        ).fetchall()
         conn.close()
+        issued_dates = {job_id: issued_date for job_id, issued_date in reminder_rows if job_id and issued_date}
         cols = ["id","email","job_name","address","city","state","trade","permit_name",
                 "status","applied_date","approved_date","permit_number","expiry_date",
                 "notes","result_json","created_at","updated_at"]
@@ -1845,6 +1850,7 @@ def list_jobs(email: str) -> list:
             if d.get("result_json"):
                 try: d["result_json"] = json.loads(d["result_json"])
                 except: d["result_json"] = {}
+            d["issued_date"] = issued_dates.get(d.get("id"), "")
             result.append(d)
         return result
     except Exception as e:
@@ -2037,7 +2043,39 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
     return {"watched": True, "changed": changed, "last_hash": current_hash}
 
 
-def get_rejection_fix_plan(job_id: str, rejection_text: str, city: str, state: str, job_type: str) -> str:
+def build_fix_plan_text(fix_result: dict) -> str:
+    parts = []
+    reasons = fix_result.get("rejection_reasons") or []
+    if reasons:
+        parts.append("Why it was rejected:")
+        parts.extend([f"- {reason}" for reason in reasons])
+    steps = fix_result.get("fix_steps") or []
+    if steps:
+        if parts:
+            parts.append("")
+        parts.append("What to fix:")
+        parts.extend([f"{idx}. {step}" for idx, step in enumerate(steps, 1)])
+    tips = (fix_result.get("resubmission_tips") or "").strip()
+    if tips:
+        if parts:
+            parts.append("")
+        parts.append(f"Resubmission tips: {tips}")
+    letter = (fix_result.get("response_letter") or "").strip()
+    if letter:
+        if parts:
+            parts.append("")
+        parts.append("Response letter:")
+        parts.append(letter)
+    code_refs = fix_result.get("code_refs") or []
+    if code_refs:
+        if parts:
+            parts.append("")
+        parts.append("Code references:")
+        parts.extend([f"- {ref}" for ref in code_refs])
+    return "\n".join(parts).strip()
+
+
+def get_rejection_fix_result(job_id: str, rejection_text: str, city: str, state: str, job_type: str) -> dict:
     cache_key = hashlib.sha256(f"rejection-fix|{rejection_text}|{city}|{state}|{job_type}".encode()).hexdigest()
     try:
         conn = sqlite3.connect(CACHE_DB)
@@ -2048,38 +2086,91 @@ def get_rejection_fix_plan(job_id: str, rejection_text: str, city: str, state: s
         conn.close()
         if row and row[0]:
             cached = json.loads(row[0])
+            if cached.get("result"):
+                return cached["result"]
             if cached.get("fix_plan"):
-                return cached["fix_plan"]
+                return {
+                    "rejection_reasons": [],
+                    "fix_steps": [cached["fix_plan"]],
+                    "response_letter": "",
+                    "code_refs": [],
+                    "resubmission_tips": "",
+                }
     except Exception as e:
         print(f"[rejection-fix] Cache read error: {e}")
 
-    prompt = (
-        f"A contractor received this permit rejection comment: {rejection_text}. "
-        f"The project is {job_type} in {city}, {state}. Give a clear, actionable fix plan: "
-        f"what documents to resubmit, what to correct, and what to say when resubmitting. "
-        f"Be specific and practical."
-    )
-    resp = _chat_openai_client.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[
-            {"role": "system", "content": "You are a permit consultant helping contractors resolve permit rejections. Return plain text only."},
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0.3,
-        max_tokens=700,
-    )
-    fix_plan = (resp.choices[0].message.content or "").strip()
+    system_prompt = """You are PermitAssist, an expert permit consultant helping contractors respond to city permit rejection letters.
+
+Your job: analyze the rejection letter and generate a professional, specific response letter the contractor can send to the building department to resolve the rejection and get their permit approved.
+
+Response format (JSON only):
+{
+  \"rejection_reasons\": [\"list of specific reasons the city rejected the permit\"],
+  \"fix_steps\": [\"numbered action items the contractor must complete before resubmitting\"],
+  \"response_letter\": \"Full professional letter text ready to send to the building department. Address it To: Building Department. Include: acknowledgment of rejection, specific corrections being made, resubmission statement. Professional tone. No placeholders, write it as if ready to send.\",
+  \"code_refs\": [\"any relevant code sections mentioned or implied in the rejection\"],
+  \"resubmission_tips\": \"1-2 sentences of practical advice for the resubmission\"
+}"""
+
+    user_prompt = f"""Rejection letter from building department:
+---
+{rejection_text}
+---
+
+Job type: {job_type or 'not specified'}
+City: {city or 'not specified'}, {state or 'not specified'}
+
+Analyze this rejection and generate a complete response letter and fix plan."""
+
+    result_text = ''
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=_GEMINI_API_KEY_SERVER)
+        model = genai.GenerativeModel(
+            'gemini-2.5-flash',
+            generation_config=genai.types.GenerationConfig(
+                response_mime_type='application/json',
+                temperature=0.3
+            )
+        )
+        resp = model.generate_content(f"{system_prompt}\n\n{user_prompt}")
+        result_text = resp.text
+    except Exception:
+        oai = _OpenAI()
+        resp = oai.chat.completions.create(
+            model='gpt-4.1',
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': user_prompt}
+            ],
+            response_format={'type': 'json_object'},
+            temperature=0.3
+        )
+        result_text = resp.choices[0].message.content
+
+    parsed = json.loads(result_text)
+    result = {
+        "rejection_reasons": parsed.get("rejection_reasons") or [],
+        "fix_steps": parsed.get("fix_steps") or [],
+        "response_letter": parsed.get("response_letter") or "",
+        "code_refs": parsed.get("code_refs") or [],
+        "resubmission_tips": parsed.get("resubmission_tips") or "",
+    }
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
             "INSERT OR REPLACE INTO checklist_cache (result_hash, checklist_json, created_at) VALUES (?,?,?)",
-            (cache_key, json.dumps({"job_id": job_id, "fix_plan": fix_plan}), utc_now().isoformat())
+            (cache_key, json.dumps({"job_id": job_id, "fix_plan": build_fix_plan_text(result), "result": result}), utc_now().isoformat())
         )
         conn.commit()
         conn.close()
     except Exception as e:
         print(f"[rejection-fix] Cache write error: {e}")
-    return fix_plan
+    return result
+
+
+def get_rejection_fix_plan(job_id: str, rejection_text: str, city: str, state: str, job_type: str) -> str:
+    return build_fix_plan_text(get_rejection_fix_result(job_id, rejection_text, city, state, job_type))
 
 
 # ── Request handler ───────────────────────────────────────────────────────────
@@ -3293,8 +3384,8 @@ class Handler(BaseHTTPRequestHandler):
                 if job_id and not user_can_access_job(job_id, user_email):
                     self.send_json(403, {"error": "Access denied"})
                     return
-                fix_plan = get_rejection_fix_plan(job_id, rejection_text, city, state, job_type)
-                self.send_json(200, {"fix_plan": fix_plan})
+                fix_result = get_rejection_fix_result(job_id, rejection_text, city, state, job_type)
+                self.send_json(200, {"fix_plan": build_fix_plan_text(fix_result), "result": fix_result, "ok": True})
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
@@ -3689,76 +3780,27 @@ class Handler(BaseHTTPRequestHandler):
 
         elif path == '/api/fix-rejection':
             try:
-                _fix_length = int(self.headers.get('Content-Length', 0))
-                _fix_raw = self.rfile.read(_fix_length)
-                body = json.loads(_fix_raw)
+                body = self.read_json_body()
                 rejection_text = (body.get('rejection_text') or '').strip()
                 job_type = (body.get('job_type') or '').strip()
                 city = (body.get('city') or '').strip()
                 state = (body.get('state') or '').strip()
+                job_id = (body.get('job_id') or '').strip()
                 if not rejection_text:
                     self.send_json(400, {'error': 'rejection_text is required'})
                     return
 
-                # Require login for this feature
                 _fix_session_token = self.headers.get('X-Session-Token', '')
                 _fix_user = validate_session_token(_fix_session_token) if _fix_session_token else None
                 if not _fix_user:
                     self.send_json(401, {'error': 'Login required'})
                     return
+                if job_id and not user_can_access_job(job_id, _fix_user):
+                    self.send_json(403, {'error': 'Access denied'})
+                    return
 
-                system_prompt = """You are PermitAssist, an expert permit consultant helping contractors respond to city permit rejection letters.
-
-Your job: analyze the rejection letter and generate a professional, specific response letter the contractor can send to the building department to resolve the rejection and get their permit approved.
-
-Response format (JSON only):
-{
-  "rejection_reasons": ["list of specific reasons the city rejected the permit"],
-  "fix_steps": ["numbered action items the contractor must complete before resubmitting"],
-  "response_letter": "Full professional letter text ready to send to the building department. Address it To: Building Department. Include: acknowledgment of rejection, specific corrections being made, resubmission statement. Professional tone. No placeholders — write it as if ready to send.",
-  "code_refs": ["any relevant code sections mentioned or implied in the rejection"],
-  "resubmission_tips": "1-2 sentences of practical advice for the resubmission"
-}"""
-
-                user_prompt = f"""Rejection letter from building department:
----
-{rejection_text}
----
-
-Job type: {job_type or 'not specified'}
-City: {city or 'not specified'}, {state or 'not specified'}
-
-Analyze this rejection and generate a complete response letter and fix plan."""
-
-                result_text = ''
-                try:
-                    import google.generativeai as genai
-                    genai.configure(api_key=_GEMINI_API_KEY_SERVER)
-                    model = genai.GenerativeModel(
-                        'gemini-2.5-flash',
-                        generation_config=genai.types.GenerationConfig(
-                            response_mime_type='application/json',
-                            temperature=0.3
-                        )
-                    )
-                    resp = model.generate_content(f"{system_prompt}\n\n{user_prompt}")
-                    result_text = resp.text
-                except Exception:
-                    # Fallback to OpenAI
-                    oai = _OpenAI()
-                    resp = oai.chat.completions.create(
-                        model='gpt-4.1',
-                        messages=[
-                            {'role': 'system', 'content': system_prompt},
-                            {'role': 'user', 'content': user_prompt}
-                        ],
-                        response_format={'type': 'json_object'},
-                        temperature=0.3
-                    )
-                    result_text = resp.choices[0].message.content
-
-                parsed = json.loads(result_text)
-                self.send_json(200, {'ok': True, 'result': parsed})
+                result = get_rejection_fix_result(job_id, rejection_text, city, state, job_type)
+                self.send_json(200, {'ok': True, 'result': result, 'fix_plan': build_fix_plan_text(result)})
 
             except Exception as e:
                 self.send_json(500, {'error': str(e)})

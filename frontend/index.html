@@ -2371,6 +2371,9 @@ function getNextSteps(d, job, city, state) {
 
 function renderResults(d, job, city, state) {
   window._lastLookupResult = d;
+  window._lastLookupJob = job || '';
+  window._lastLookupCity = city || '';
+  window._lastLookupState = state || '';
   const verdict = verdictState(d);
   const permits = d.permits_required || [];
   const insps = d.inspections || [];
@@ -2499,7 +2502,7 @@ function renderResults(d, job, city, state) {
     </div>
     ${confidenceReason ? `<div style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.5">${esc(confidenceReason)}</div>` : ''}
     
-    ${(()=>{ try { if(!d.apply_url) return ''; const h=new URL(d.apply_url).hostname; if(!h||h.length<4) return ''; return `<div style="margin-top:16px"><a href="${esc(d.apply_url)}" target="_blank" rel="noopener" class="search-again-hero" style="background:#10b981; margin-bottom:0; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px">🚀 Apply Online Now</a><div style="font-size:11px; color:var(--muted); text-align:center; margin-top:6px">External portal: ${esc(h)}</div></div>`; } catch(e){ return ''; } })()}
+
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--muted)">Last updated: ${heroUpdatedLabel}</span>
@@ -2658,7 +2661,7 @@ function renderResults(d, job, city, state) {
   }
 
   // Before You Start — post-permit callout
-  if (d.permit_verdict === 'YES' || (top && top !== 'NO')) {
+  if (verdict === 'yes') {
     html += `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
       <div class="section-label" style="color:var(--green)">📋 Before You Start Work</div>
       <ul class="bullet-list" style="margin-top:8px">
@@ -3008,6 +3011,11 @@ async function refreshJobsAndWatches() {
       fetch('/api/city-watch', { headers: getAuthHeaders() })
     ]);
     jobsCache = jobsResp.ok ? ((await jobsResp.json()).jobs || []) : [];
+    jobsCache.forEach(job => {
+      if (job?.id && job?.issued_date && !localStorage.getItem('pa_issued_' + job.id)) {
+        localStorage.setItem('pa_issued_' + job.id, job.issued_date);
+      }
+    });
     watchesCache = watchesResp.ok ? ((await watchesResp.json()).watches || []) : [];
   } catch {
     jobsCache = jobsCache || [];
@@ -3106,13 +3114,30 @@ async function submitRejectionFix(job) {
   if (btn) { btn.disabled = true; btn.textContent = 'Getting fix plan...'; }
   if (resultEl) { resultEl.style.display = 'none'; resultEl.textContent = ''; }
   try {
-    const resp = await fetch('/api/rejection-fix', {
+    const resp = await fetch('/api/fix-rejection', {
       method: 'POST', headers: getAuthHeaders(),
       body: JSON.stringify({ job_id: job.id, rejection_text: rejectionText, city: job.city, state: job.state, job_type: job.trade || job.job_name || '' })
     });
     const payload = await resp.json();
-    if (!resp.ok || !payload.fix_plan) throw new Error(payload.error || 'Could not generate fix plan');
-    if (resultEl) { resultEl.style.display = 'block'; resultEl.textContent = payload.fix_plan; }
+    if (!resp.ok || !payload.ok) throw new Error(payload.error || 'Could not generate fix plan');
+    const r = payload.result || {};
+    let html = '';
+    if (r.rejection_reasons && r.rejection_reasons.length) {
+      html += `<div class="fixit-section-label">❌ Why They Rejected It</div>`;
+      r.rejection_reasons.forEach(reason => { html += `<div class="fixit-step">• ${esc(reason)}</div>`; });
+    }
+    if (r.fix_steps && r.fix_steps.length) {
+      html += `<div class="fixit-section-label">✅ What You Need to Fix</div>`;
+      r.fix_steps.forEach((step, i) => { html += `<div class="fixit-step"><strong>${i+1}.</strong> ${esc(step)}</div>`; });
+    }
+    if (r.resubmission_tips) {
+      html += `<div class="fixit-section-label">💡 Resubmission Tips</div><div class="fixit-step">${esc(r.resubmission_tips)}</div>`;
+    }
+    if (r.response_letter) {
+      html += `<div class="fixit-section-label">📄 Response Letter</div><div class="fixit-letter">${esc(r.response_letter)}</div>`;
+    }
+    if (!html && payload.fix_plan) html = esc(payload.fix_plan).replace(/\n/g, '<br>');
+    if (resultEl) { resultEl.style.display = 'block'; resultEl.innerHTML = html || 'No fix plan available.'; }
   } catch (e) {
     if (resultEl) { resultEl.style.display = 'block'; resultEl.textContent = `Error: ${e.message || 'Could not generate fix plan'}`; }
   }
@@ -4077,7 +4102,10 @@ async function savePermitIssuedDate(jobId, jobName, city, state, issuedDate) {
 }
 
 function getPermitIssuedDate(jobId) {
-  return localStorage.getItem('pa_issued_' + jobId) || '';
+  const localValue = localStorage.getItem('pa_issued_' + jobId) || '';
+  if (localValue) return localValue;
+  const job = (jobsCache || []).find(j => String(j.id) === String(jobId));
+  return job?.issued_date || '';
 }
 async function updateJobStatus(id, status) {
   try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:getAuthHeaders(),body:JSON.stringify({status})}); await refreshJobsAndWatches(); renderJobsPage(); } catch{}
@@ -4224,14 +4252,17 @@ function submitFollowupQA() {
     resultDiv.style.display = 'none';
     try {
       const lastResult = window._lastLookupResult || {};
+      const lookupJob = window._lastLookupJob || lastResult.job_type || currentResult?.job || '';
+      const lookupCity = window._lastLookupCity || lastResult.city || currentResult?.city || '';
+      const lookupState = window._lastLookupState || lastResult.state || currentResult?.state || '';
       const resp = await fetch('/api/fix-rejection', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           rejection_text: rejection,
-          job_type: lastResult.job_type || '',
-          city: lastResult.city || '',
-          state: lastResult.state || ''
+          job_type: lookupJob,
+          city: lookupCity,
+          state: lookupState
         })
       });
       if (resp.status === 401) {
