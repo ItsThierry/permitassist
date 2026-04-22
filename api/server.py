@@ -2836,12 +2836,20 @@ class Handler(BaseHTTPRequestHandler):
                 conn = _sqlite3.connect(CACHE_DB)
                 jobs_count = conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
                 sessions_count = conn.execute("SELECT COUNT(*) FROM user_sessions").fetchone()[0]
+                all_jobs = conn.execute("SELECT id, email, job_name, city, state, created_at FROM jobs ORDER BY created_at DESC LIMIT 20").fetchall()
+                all_sessions = conn.execute("SELECT email, expires_at FROM user_sessions ORDER BY expires_at DESC LIMIT 10").fetchall()
                 # Test write
                 conn.execute("INSERT INTO jobs (id,email,job_name,city,state,created_at,updated_at) VALUES ('debug-test','debug@test.com','Debug Job','Test','TX',datetime('now'),datetime('now'))")
                 conn.execute("DELETE FROM jobs WHERE id='debug-test'")
                 conn.commit()
                 conn.close()
-                self.send_json(200, {"data_dir": DATA_DIR, "cache_db": CACHE_DB, "jobs_count": jobs_count, "sessions_count": sessions_count, "write_test": "ok"})
+                self.send_json(200, {
+                    "data_dir": DATA_DIR, "cache_db": CACHE_DB,
+                    "jobs_count": jobs_count, "sessions_count": sessions_count,
+                    "write_test": "ok",
+                    "jobs": [{"id": r[0], "email": r[1], "job_name": r[2], "city": r[3], "state": r[4], "created_at": r[5]} for r in all_jobs],
+                    "sessions": [{"email": r[0], "expires_at": r[1]} for r in all_sessions]
+                })
             except Exception as e:
                 self.send_json(500, {"error": str(e), "data_dir": DATA_DIR, "cache_db": CACHE_DB})
             return True
