@@ -4386,7 +4386,12 @@ async function setPermitIssuedDate(jobId, jobName, city, state) {
 }
 async function deleteJobItem(id) {
   if(!confirm('Delete this job?')) return;
-  try { await fetch('/api/jobs/'+id,{method:'DELETE',headers:getAuthHeaders()}); await refreshJobsAndWatches(); renderJobsPage(); } catch{}
+  try {
+    const r = await fetch('/api/jobs/'+id, {method:'DELETE', headers:getAuthHeaders()});
+    if (!r.ok) { const err = await r.json().catch(()=>({})); alert('Could not delete: ' + (err.error || r.status)); return; }
+    await refreshJobsAndWatches();
+    renderJobsPage();
+  } catch(e) { alert('Delete failed: ' + e.message); }
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
