@@ -2375,24 +2375,24 @@ async function verifyMagicCode(){
   const btn=document.getElementById('magic-verify-btn');
   btn.disabled=true;btn.textContent='Verifying...';
   try{
-    // Use the verify endpoint via fetch (avoid redirect, handle in JS)
-    const r=await fetch('/api/verify-magic?token='+encodeURIComponent(code),{redirect:'follow'});
-    if(r.ok||r.redirected){
-      // Extract session token from URL if redirected
-      const url=new URL(r.url);
-      const t=url.searchParams.get('t');
-      if(t){
-        setSessionToken(t);
-        saveEmail(localStorage.getItem(EMAIL_KEY)||document.getElementById('magic-email-sent').textContent||'');
-      }
+    // Use POST endpoint — returns session_token directly, no redirect needed (works on mobile)
+    const r=await fetch('/api/verify-magic',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({token:code})
+    });
+    const d=await r.json();
+    if(d.session_token){
+      setSessionToken(d.session_token);
+      saveEmail(localStorage.getItem(EMAIL_KEY)||document.getElementById('magic-email-sent').textContent||'');
       hideGate();
       refreshCounterBar();
-      refreshAccountBadge();
+      await refreshAccountBadge();
       if(pendingResult) showPendingResult();
-      // If user logged in via save gate, auto-trigger the save
-      if(currentResult) { await refreshJobsAndWatches(); saveLookupToJobPrompt(); }
+      // If user was trying to save a job, auto-trigger it now
+      if(currentResult){ await refreshJobsAndWatches(); saveLookupToJobPrompt(); }
     } else {
-      alert('Invalid or expired code. Please try again or request a new one.');
+      alert(d.error || 'Invalid or expired code. Please try again or request a new one.');
       btn.disabled=false;btn.textContent='Verify Code →';
     }
   }catch{
