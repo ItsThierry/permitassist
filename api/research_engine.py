@@ -1403,17 +1403,17 @@ Return ONLY the JSON object."""
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4.1",
+            model="gpt-5.4-mini",
             messages=[
                 {"role": "system",  "content": SYSTEM_PROMPT},
                 {"role": "user",    "content": user_prompt},
             ],
             temperature=0.1,
-            max_tokens=8000,
+            max_completion_tokens=8000,
             response_format={"type": "json_object"},
         )
         raw = response.choices[0].message.content
-        print(f"[engine] OpenAI gpt-4.1 responded in {round((time.time()-start)*1000)}ms")
+        print(f"[engine] OpenAI gpt-5.4-mini responded in {round((time.time()-start)*1000)}ms")
     except Exception as openai_err:
         print(f"[engine] OpenAI failed ({openai_err}), trying Gemini 3 Pro fallback...")
         if not _GEMINI_API_KEY:
@@ -1771,7 +1771,7 @@ Return ONLY the JSON object."""
         "generated_at":    datetime.now().isoformat(),
         "response_ms":     elapsed,
         "cached":          False,
-        "model":           "gpt-4.1",
+        "model":           "gpt-5.4-mini",
         "web_sources":     web_source_count,
         "city_match_level": city_match_level,
         "job_type":        job_type,
