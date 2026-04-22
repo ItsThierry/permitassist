@@ -2846,6 +2846,20 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(500, {"error": str(e), "data_dir": DATA_DIR, "cache_db": CACHE_DB})
             return True
 
+        if path == "/api/admin/create-session":
+            try:
+                from urllib.parse import parse_qs as _pqs
+                params = _pqs(urlparse(self.path).query)
+                email = params.get("email", [""])[0].strip().lower()
+                if not email:
+                    self.send_json(400, {"error": "email param required"})
+                    return True
+                token = create_session_token(email)
+                self.send_json(200, {"token": token, "email": email})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+            return True
+
         if path == "/api/admin/stats":
             try:
                 import sqlite3 as _sqlite3
