@@ -2345,14 +2345,27 @@ function showGate(hardBlock){
   setTimeout(()=>document.getElementById('gate-email').focus(),350);
 }
 function hideGate(){document.getElementById('email-gate').style.display='none'}
-function submitGateEmail(){
+async function submitGateEmail(){
   const inp=document.getElementById('gate-email'),val=inp.value.trim();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){inp.style.borderColor='var(--red)';inp.focus();return}
   localStorage.setItem(EMAIL_KEY, val.toLowerCase());
-  // Send magic link in background for login (non-blocking — user gets results immediately)
   const emailSentEl=document.getElementById('magic-email-sent');if(emailSentEl)emailSentEl.textContent=val;
-  fetch('/api/magic-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:val})}).catch(()=>{});
-  incrementLookup();hideGate();refreshCounterBar();if(pendingResult) showPendingResult();
+  // Send magic link and show code entry step so user actually logs in
+  const btn=document.getElementById('magic-send-btn');
+  if(btn)btn.disabled=true;
+  try{
+    const r=await fetch('/api/magic-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:val})});
+    const d=await r.json();
+    document.getElementById('magic-step1').style.display='none';
+    document.getElementById('magic-step2').style.display='block';
+    if(d.sent){
+      document.getElementById('magic-step2-msg').textContent='Check your email for your 6-character login code.';
+    } else if(d.code){
+      document.getElementById('magic-step2-msg').innerHTML='<strong style="font-size:22px;letter-spacing:4px;color:var(--brand)">'+d.code+'</strong><br><span style="font-size:12px;color:var(--muted)">Enter this code below (expires in 15 min)</span>';
+    }
+    setTimeout(()=>{const ci=document.getElementById('magic-code-input');if(ci)ci.focus();},300);
+  }catch{alert('Network error. Try again.');}
+  finally{if(btn)btn.disabled=false;}
 }
 function switchToMagicLogin(){const gate=document.getElementById('email-gate');if(gate){document.getElementById('magic-step1').style.display='none';document.getElementById('magic-step2').style.display='none';/* Show login mode */document.getElementById('magic-step1').style.display='block';}}
 function showMagicStep1(){document.getElementById('magic-step1').style.display='block';document.getElementById('magic-step2').style.display='none';}
@@ -2376,6 +2389,8 @@ async function verifyMagicCode(){
       refreshCounterBar();
       refreshAccountBadge();
       if(pendingResult) showPendingResult();
+      // If user logged in via save gate, auto-trigger the save
+      if(currentResult) { await refreshJobsAndWatches(); saveLookupToJobPrompt(); }
     } else {
       alert('Invalid or expired code. Please try again or request a new one.');
       btn.disabled=false;btn.textContent='Verify Code →';
