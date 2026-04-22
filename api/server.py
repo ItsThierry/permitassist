@@ -2830,6 +2830,22 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(401, {"error": "Admin token required"})
             return True
 
+        if path == "/api/admin/debug":
+            try:
+                import sqlite3 as _sqlite3
+                conn = _sqlite3.connect(CACHE_DB)
+                jobs_count = conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
+                sessions_count = conn.execute("SELECT COUNT(*) FROM user_sessions").fetchone()[0]
+                # Test write
+                conn.execute("INSERT INTO jobs (id,email,job_name,city,state,created_at,updated_at) VALUES ('debug-test','debug@test.com','Debug Job','Test','TX',datetime('now'),datetime('now'))")
+                conn.execute("DELETE FROM jobs WHERE id='debug-test'")
+                conn.commit()
+                conn.close()
+                self.send_json(200, {"data_dir": DATA_DIR, "cache_db": CACHE_DB, "jobs_count": jobs_count, "sessions_count": sessions_count, "write_test": "ok"})
+            except Exception as e:
+                self.send_json(500, {"error": str(e), "data_dir": DATA_DIR, "cache_db": CACHE_DB})
+            return True
+
         if path == "/api/admin/stats":
             try:
                 import sqlite3 as _sqlite3
