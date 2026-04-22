@@ -1900,7 +1900,15 @@ function renderTradeWizard() {
     if (wizard) { wizard.classList.remove('show'); wizard.innerHTML = ''; }
     return;
   }
-  wizard.innerHTML = `<div class="trade-wizard-head"><div><div class="trade-wizard-title">Quick questions</div><div class="trade-wizard-sub">Tap a few details and we will tighten up your permit lookup automatically.</div></div><button type="button" class="trade-wizard-dismiss" onclick="dismissTradeWizard()">✕ dismiss</button></div>${questions.map((item, idx) => `<div class="trade-question"><div class="trade-question-label">${esc(item.q)}</div><div class="trade-option-row">${item.options.map(option => `<button type="button" class="trade-option-btn ${tradeWizardState.answers[idx]===option?'active':''}" onclick="setTradeWizardAnswer(${idx}, ${JSON.stringify(option)})">${esc(option)}</button>`).join('')}</div></div>`).join('')}`;
+  wizard.innerHTML = `<div class="trade-wizard-head"><div><div class="trade-wizard-title">Quick questions</div><div class="trade-wizard-sub">Tap a few details and we will tighten up your permit lookup automatically.</div></div><button type="button" class="trade-wizard-dismiss" id="trade-wizard-dismiss-btn">✕ dismiss</button></div>${questions.map((item, idx) => `<div class="trade-question"><div class="trade-question-label">${esc(item.q)}</div><div class="trade-option-row" data-qidx="${idx}">${item.options.map(option => `<button type="button" class="trade-option-btn ${tradeWizardState.answers[idx]===option?'active':''}" data-option="${esc(option)}">${esc(option)}</button>`).join('')}</div></div>`).join('')}`;
+  const dismissBtn = wizard.querySelector('#trade-wizard-dismiss-btn');
+  if (dismissBtn) dismissBtn.addEventListener('click', dismissTradeWizard);
+  wizard.querySelectorAll('.trade-option-row').forEach(row => {
+    const qIdx = parseInt(row.dataset.qidx, 10);
+    row.querySelectorAll('.trade-option-btn').forEach(btn => {
+      btn.addEventListener('click', () => setTradeWizardAnswer(qIdx, btn.dataset.option));
+    });
+  });
   wizard.classList.add('show');
 }
 
@@ -1935,7 +1943,8 @@ function generateCustomerPermitExplanation() {
   const city = window._lastLookupCity || '';
   const state = window._lastLookupState || '';
   const fee = result.fee_range || result.fee || result.cost || 'Call the city to confirm the exact fee';
-  return `Why Your ${permitName} Permit is Required\n\nYour contractor is required by ${city}, ${state} law to pull a ${permitName} before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local safety codes. Without it, your homeowner's insurance may not cover claims related to this work, and you may face issues when selling your home.\n\nCost: ${fee} — this is paid directly to the city, not to your contractor.\n\nWhat happens without it: Unpermitted work can result in fines, required tear-out and redo, insurance claim denials, and required disclosure during home sale.\n\nThis information was verified via PermitAssist (permitassist.io).`;
+  const location = [city, state].filter(Boolean).join(', ') || 'your jurisdiction';
+  return `Why Your ${permitName} Permit is Required\n\nYour contractor is required by ${location} law to pull a ${permitName} before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local safety codes. Without it, your homeowner's insurance may not cover claims related to this work, and you may face issues when selling your home.\n\nCost: ${fee} — this is paid directly to the city, not to your contractor.\n\nWhat happens without it: Unpermitted work can result in fines, required tear-out and redo, insurance claim denials, and required disclosure during home sale.\n\nThis information was verified via PermitAssist (permitassist.io).`;
 }
 
 function toggleCustomerExplanation() {
@@ -2017,7 +2026,7 @@ function checkDisambiguation() {
   const title = document.querySelector('#disambig-box .disambig-title');
   const btns = document.querySelector('#disambig-box .disambig-btns');
   if (title) title.textContent = rule.title;
-  if (btns) btns.innerHTML = rule.options.map(opt => `<button class="disambig-btn" onclick="submitWithDisambig(${JSON.stringify(opt)})">${esc(opt)}</button>`).join('');
+  if (btns) { btns.innerHTML = rule.options.map(opt => `<button class="disambig-btn">${esc(opt)}</button>`).join(''); btns.querySelectorAll('button').forEach((btn, i) => { btn.addEventListener('click', () => submitWithDisambig(rule.options[i])); }); }
   box.classList.add('show');
   return true;
 }
@@ -4134,9 +4143,13 @@ function initAutocomplete() {
     const matches = JOB_TYPES_ALL.filter(j => j.toLowerCase().includes(val)).slice(0, 7);
     if (!matches.length) { dropdown.style.display = 'none'; return; }
     dropdown.innerHTML = matches.map(m =>
-      `<div class="autocomplete-item" onclick="selectAutocomplete(${JSON.stringify(m)})">${esc(m)}</div>`
+      `<div class="autocomplete-item" data-val="${esc(m)}">${esc(m)}</div>`
     ).join('');
     dropdown.style.display = 'block';
+  });
+  dropdown.addEventListener('click', e => {
+    const item = e.target.closest('.autocomplete-item');
+    if (item && item.dataset.val) selectAutocomplete(item.dataset.val);
   });
   document.addEventListener('click', e => {
     if (!dropdown.contains(e.target) && e.target !== textarea) dropdown.style.display = 'none';

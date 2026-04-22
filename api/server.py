@@ -3093,10 +3093,13 @@ class Handler(BaseHTTPRequestHandler):
                 conn = sqlite3.connect(CACHE_DB)
 
                 # Flag cache entry as stale so next request forces fresh lookup
+                # Delete for all job_category variants (residential, commercial, both)
                 import hashlib
-                raw = f"{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}"
-                key = hashlib.md5(raw.encode()).hexdigest()
-                conn.execute("DELETE FROM permit_cache WHERE cache_key = ?", [key])
+                base = f"{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}"
+                for cat in ['residential', 'commercial', '']:
+                    raw = f"{base}|{cat}" if cat else base
+                    key = hashlib.md5(raw.encode()).hexdigest()
+                    conn.execute("DELETE FROM permit_cache WHERE cache_key = ?", [key])
 
                 # Save feedback record
                 conn.execute(
