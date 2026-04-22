@@ -1197,7 +1197,7 @@
       <!-- Hero -->
       <div class="hero" style="padding:32px 0 16px">
         <h1>Stop Googling.<br><em>Get the HVAC Permit.</em></h1>
-        <p class="hero-sub" style="max-width:460px">Instant permit requirements for HVAC contractors. Fees, docs, timelines — before you schedule the install.</p>
+        <p class="hero-sub" style="max-width:460px">Know exactly which HVAC permit to pull, before you dispatch.</p>
       </div>
 
 
@@ -1256,7 +1256,7 @@
             <label>Describe the job</label>
             <div class="autocomplete-wrap">
               <div class="query-wrap">
-                <textarea class="hero-input" id="query" placeholder="e.g. HVAC replacement, residential furnace swap, 3-ton unit" autocomplete="off" rows="3"></textarea>
+                <textarea class="hero-input" id="query" placeholder="e.g. condenser changeout, furnace swap, mini split install, coil replacement, ductwork redo" autocomplete="off" rows="3"></textarea>
                 <button class="mic-btn" id="mic-btn" type="button" title="Speak your question" onclick="toggleVoice()">🎤</button>
               </div>
               <div class="autocomplete-dropdown" id="autocomplete-dropdown" style="display:none"></div>
@@ -1284,7 +1284,7 @@
         </div>
 
         <div class="trust-note">🧠 Not a chatbot. A permit expert. PermitAssist knows 250+ jurisdictions, local fee schedules, and the exact code sections your inspector will cite — purpose-built for contractors, not a generic AI wrapper.</div>
-        <button class="lookup-btn" id="lookup-btn" type="button">🔍 &nbsp;Look Up Permit Requirements</button>
+        <button class="lookup-btn" id="lookup-btn" type="button">🔍 &nbsp;Find Permit Requirements</button>
       </div>
 
       <!-- How It Works 3-Step -->
@@ -1719,13 +1719,13 @@ function setSearchMode(mode) {
     btnH.style.background = '#2563eb'; btnH.style.color = '#fff';
     if (label) label.textContent = 'What work was done at your property?';
     if (title) title.textContent = '\uD83C\uDFE0 Verify Permit for Your Property';
-    if (query) query.placeholder = 'e.g. HVAC replacement, AC condenser swap, furnace install';
+    if (query) query.placeholder = 'e.g. condenser changeout, furnace swap, mini split install, coil replacement, ductwork redo';
   } else {
     btnH.style.background = 'transparent'; btnH.style.color = 'var(--text2)';
     btnC.style.background = '#2563eb'; btnC.style.color = '#fff';
     if (label) label.textContent = 'What do you need a permit for?';
     if (title) title.textContent = '\uD83D\uDD0D Look Up Your Permit';
-    if (query) query.placeholder = 'e.g. HVAC replacement, residential furnace swap, 3-ton unit';
+    if (query) query.placeholder = 'e.g. condenser changeout, furnace swap, mini split install, coil replacement, ductwork redo';
   }
 }
 const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
@@ -2468,13 +2468,13 @@ function renderResults(d, job, city, state) {
   const isCountyFB = d.county_fallback === true;
   let confBadgeHtml = '';
   if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified Data<span class="conf-tooltip">From our curated city database</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">✓ This data is from our verified city database — high confidence</div>`;
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified from city records<span class="conf-tooltip">Verified from city records</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Verified from city records</div>`;
   } else if (dataSourceRaw === 'web_search') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 AI-Researched<span class="conf-tooltip">Researched live from official sources — verify fees before submitting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">AI-researched from official sources — verify fees directly with the building department.</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">💡 Tip: Fees may vary slightly — call to confirm before submitting your application</div>`;
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
   } else if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 County Data<span class="conf-tooltip">City not found — showing county requirements</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">City not found — showing county-level requirements. Confirm details with your local building department.</div>`;
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
   } else {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🔴 General Estimate<span class="conf-tooltip">Limited local data — confirm with city before applying</span></span><div style="font-size:13px;color:#b91c1c;margin-top:6px;font-weight:600">Limited local data available — confirm all requirements with your city before applying.</div>`;
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🔴 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#b91c1c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
   }
   const heroUpdatedRaw = d.last_verified_at || d._meta?.generated_at || '';
   const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown';
@@ -2528,7 +2528,7 @@ function renderResults(d, job, city, state) {
     }
     html += `<div class="big-meta">${esc(d.job_summary || d.permit_summary || d.summary || d.notes || 'Review the details below before starting the job.')}</div>`;
     if (fee) {
-      html += `<div class="big-price">${esc(fee)}</div><div class="fee-context">💡 Typical fee for this job type in ${esc(city || 'this area')}</div>`;
+      html += `<div class="big-price">${esc(fee)}</div><div class="fee-context">— typically added to job invoice</div>`;
     }
     if (portalSel) {
       html += `<div class="portal-select-box">
@@ -2543,6 +2543,7 @@ function renderResults(d, job, city, state) {
   const companionPermits = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
   if (companionPermits.length > 0) {
     html += `<div class="companion-card" style="background:#fffbeb; border:2px solid #f59e0b; border-radius:12px; padding:18px 20px; margin-bottom:16px;">
+      <div class="section-label" style="color:#92400e; margin-bottom:10px;">⚠️ This Job Requires Multiple Permits</div>
       ${companionPermits.map(cp => `<div style="margin-bottom:12px;">
         <div style="font-size:16px; font-weight:800; color:#92400e; margin-bottom:4px;">⚠️ Companion Permit Required: ${esc(cp.permit_type)}</div>
         <div style="font-size:14px; color:#b45309; font-weight:600;">Contractors are often cited for missing this.</div>
@@ -2605,7 +2606,7 @@ function renderResults(d, job, city, state) {
 
     html += `<div class="card"><div class="section-label">💰 Cost · ⏱ Timeline · 🧰 Who Pulls It</div>`;
     if (fee) {
-      html += row('💰 Fee', `<span style="color:var(--green);font-weight:800;font-size:16px">${esc(fee)}</span><div class="fee-context">Typical fee for this job type</div>`);
+      html += row('💰 Fee', `<span style="color:var(--green);font-weight:800;font-size:16px">${esc(fee)}</span><div class="fee-context">— typically added to job invoice</div>`);
     }
     if (tl.simple || tl.complex) {
       const tlDisplay = tl.simple || tl.complex;
@@ -3370,9 +3371,9 @@ function downloadReport() {
     <div class="permit-name-box"><div class="permit-name-label">&#127919; Permit to Ask For</div><div class="permit-name-val">${efn(permitName)}</div></div>
     ${d.job_summary ? `<div style="font-size:13px;color:#475569;margin-top:10px;line-height:1.6">${efn(d.job_summary)}</div>` : ''}
   </div>
-  ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; You Will Also Need These Permits</div><table>${companionRows}</table><div style="font-size:12px;color:#78350f;margin-top:8px">&#128161; Pull companion permits at the same time to avoid stop-work orders.</div></div>` : ''}
+  ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; This Job Requires Multiple Permits</div><table>${companionRows}</table><div style="font-size:12px;color:#78350f;margin-top:8px">&#128161; Pull companion permits at the same time to avoid stop-work orders.</div></div>` : ''}
   ${cityRegNote ? `<div class="city-reg-alert"><div class="section-label" style="color:#92400e">&#127963;&#65039; City Contractor Registration Required</div><div style="font-size:13px;color:#78350f;line-height:1.6">${efn(cityRegNote)}</div></div>` : ''}
-  ${fee || tlText || licenseNote ? `<div class="section"><div class="section-label">&#128176; Cost &middot; &#8987; Timeline &middot; &#129527; Who Pulls It</div><table class="kv">${fee ? `<tr><td>Fee</td><td><strong style="color:#059669;font-size:14px">${efn(fee)}</strong></td></tr>` : ''}${tlText ? `<tr><td>Timeline</td><td>${efn(tlText)}</td></tr>` : ''}${tl.complex && tl.simple ? `<tr><td>Plan review</td><td>${efn(tl.complex)}</td></tr>` : ''}${licenseNote ? `<tr><td>Who pulls it</td><td>${efn(licenseNote)}</td></tr>` : ''}</table></div>` : ''}
+  ${fee || tlText || licenseNote ? `<div class="section"><div class="section-label">&#128176; Cost &middot; &#8987; Timeline &middot; &#129527; Who Pulls It</div><table class="kv">${fee ? `<tr><td>Fee</td><td><strong style="color:#059669;font-size:14px">${efn(fee)}</strong><div style="font-size:11px;color:#64748b;margin-top:4px">— typically added to job invoice</div></td></tr>` : ''}${tlText ? `<tr><td>Timeline</td><td>${efn(tlText)}</td></tr>` : ''}${tl.complex && tl.simple ? `<tr><td>Plan review</td><td>${efn(tl.complex)}</td></tr>` : ''}${licenseNote ? `<tr><td>Who pulls it</td><td>${efn(licenseNote)}</td></tr>` : ''}</table></div>` : ''}
   ${office || phone ? `<div class="section"><div class="section-label">&#128222; Where to Apply</div>${phone ? `<div style="font-size:19px;font-weight:900;color:#2563eb">${efn(phone)}</div>` : ''}${office ? `<div style="font-size:14px;font-weight:700;margin-top:4px">${efn(office)}</div>` : ''}${offAddr ? `<div style="font-size:13px;color:#475569;margin-top:2px">${efn(offAddr)}</div>` : ''}${maps ? `<div style="margin-top:6px;font-size:12px"><a href="${efn(maps)}" style="color:#2563eb">&#128506;&#65039; Maps: ${efn(maps)}</a></div>` : ''}${applyUrl ? `<div style="margin-top:4px;font-size:12px"><a href="${efn(applyUrl)}" style="color:#2563eb">&#127760; Online: ${efn(applyUrl)}</a></div>` : ''}</div>` : ''}
   ${permitRows ? `<div class="section"><div class="section-label">&#128203; Permits Required</div><table>${permitRows}</table></div>` : ''}
   ${docSection}
@@ -3498,8 +3499,8 @@ function printResult() {
     <div class="permit-name-box"><div class="permit-name-label">&#127919; Permit to Ask For</div><div class="permit-name-val">${efn(permitName)}</div></div>
     ${d.job_summary ? `<div style="font-size:13px;color:#475569;margin-top:10px;line-height:1.6">${efn(d.job_summary)}</div>` : ''}
   </div>
-  ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; You Will Also Need These Permits</div><table>${companionRows}</table></div>` : ''}
-  ${fee || tlText || licenseNote ? `<div class="section"><div class="section-label">&#128176; Cost &middot; &#8987; Timeline &middot; &#129527; Who Pulls It</div><table class="kv">${fee ? `<tr><td>Fee</td><td><strong style="color:#059669;font-size:14px">${efn(fee)}</strong></td></tr>` : ''}${tlText ? `<tr><td>Timeline</td><td>${efn(tlText)}</td></tr>` : ''}${tl.complex && tl.simple ? `<tr><td>Plan review</td><td>${efn(tl.complex)}</td></tr>` : ''}${licenseNote ? `<tr><td>Who pulls it</td><td>${efn(licenseNote)}</td></tr>` : ''}</table></div>` : ''}
+  ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; This Job Requires Multiple Permits</div><table>${companionRows}</table></div>` : ''}
+  ${fee || tlText || licenseNote ? `<div class="section"><div class="section-label">&#128176; Cost &middot; &#8987; Timeline &middot; &#129527; Who Pulls It</div><table class="kv">${fee ? `<tr><td>Fee</td><td><strong style="color:#059669;font-size:14px">${efn(fee)}</strong><div style="font-size:11px;color:#64748b;margin-top:4px">— typically added to job invoice</div></td></tr>` : ''}${tlText ? `<tr><td>Timeline</td><td>${efn(tlText)}</td></tr>` : ''}${tl.complex && tl.simple ? `<tr><td>Plan review</td><td>${efn(tl.complex)}</td></tr>` : ''}${licenseNote ? `<tr><td>Who pulls it</td><td>${efn(licenseNote)}</td></tr>` : ''}</table></div>` : ''}
   ${office || phone ? `<div class="section"><div class="section-label">&#128222; Where to Apply</div>${phone ? `<div style="font-size:19px;font-weight:900;color:#2563eb">${efn(phone)}</div>` : ''}${office ? `<div style="font-size:14px;font-weight:700;margin-top:4px">${efn(office)}</div>` : ''}${offAddr ? `<div style="font-size:13px;color:#475569;margin-top:2px">${efn(offAddr)}</div>` : ''}${maps ? `<div style="margin-top:6px;font-size:12px"><a href="${efn(maps)}">&#128506;&#65039; Maps: ${efn(maps)}</a></div>` : ''}${applyUrl ? `<div style="margin-top:4px;font-size:12px"><a href="${efn(applyUrl)}">&#127760; Online: ${efn(applyUrl)}</a></div>` : ''}</div>` : ''}
   ${permitRows ? `<div class="section"><div class="section-label">&#128203; Permits Required</div><table>${permitRows}</table></div>` : ''}
   ${docSection}
