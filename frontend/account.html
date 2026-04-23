@@ -151,12 +151,12 @@
             <div style="font-size:13px;color:#475569" id="acct-used-label">lookups used</div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:13px;color:#475569">Resets</div>
-            <div style="font-size:14px;font-weight:700" id="acct-reset">—</div>
+            <div style="font-size:13px;color:#475569">Free plan</div>
+            <div style="font-size:14px;font-weight:700" id="acct-reset">No reset</div>
           </div>
         </div>
         <div class="usage-bar"><div class="usage-fill" id="acct-usage-fill" style="width:0%"></div></div>
-        <div style="font-size:12px;color:#475569" id="acct-usage-text">0 of 3 free lookups used</div>
+        <div style="font-size:12px;color:#475569" id="acct-usage-text">0 of 3 free lookups used, no reset</div>
       </div>
 
       <!-- Upgrade buttons (free users) -->
@@ -182,7 +182,7 @@
         <div class="card">
           <div class="card-label">Subscription</div>
           <div style="font-size:14px;color:#475569;margin-bottom:16px;">
-            You have <strong>unlimited lookups</strong> on your plan. No monthly limits.
+            You have <strong>unlimited lookups</strong> on your plan. No cap.
           </div>
           <button id="btn-manage-billing" class="btn btn-secondary" onclick="manageSubscription()">Manage Subscription →</button>
         </div>
@@ -288,13 +288,13 @@ function renderAccount(d) {
   }
 
   // Usage
-  const used = d.lookups_this_month || 0;
+  const used = d.lookups_used || 0;
   const remaining = d.lookups_remaining;
   document.getElementById('acct-used').textContent = used;
   if (d.paid) {
-    document.getElementById('acct-used-label').textContent = 'lookups this month (unlimited)';
+    document.getElementById('acct-used-label').textContent = 'lookups used';
     document.getElementById('acct-usage-fill').style.width = '10%';
-    document.getElementById('acct-usage-text').textContent = 'Unlimited plan — no monthly cap';
+    document.getElementById('acct-usage-text').textContent = 'Unlimited plan — no cap';
   } else {
     const total = 3;
     const pct = Math.min(100, Math.round(used / total * 100));
@@ -302,13 +302,10 @@ function renderAccount(d) {
     const fill = document.getElementById('acct-usage-fill');
     fill.style.width = pct + '%';
     if (pct >= 100) fill.classList.add('full');
-    document.getElementById('acct-usage-text').textContent = remaining === 0 ? 'Monthly limit reached — upgrade for unlimited' : `${remaining} lookup${remaining !== 1 ? 's' : ''} remaining this month`;
+    document.getElementById('acct-usage-text').textContent = remaining === 0 ? '3 free lookups used, no reset. Upgrade for unlimited' : `${remaining} free lookup${remaining !== 1 ? 's' : ''} left, no reset`;
   }
 
-  // Reset date
-  if (d.reset_date) {
-    document.getElementById('acct-reset').textContent = new Date(d.reset_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
+  document.getElementById('acct-reset').textContent = d.paid ? 'Unlimited' : 'No reset';
 
   // Upgrade vs manage
   if (d.paid) {

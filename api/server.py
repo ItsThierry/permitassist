@@ -411,9 +411,23 @@ def notify_telegram(message: str):
     threading.Thread(target=_send, daemon=True).start()
 
 # ── Lookup stats (social proof counters) ─────────────────────────────────────
+def ensure_table_columns(conn: sqlite3.Connection, table_name: str, required_columns: dict[str, str]) -> list[str]:
+    """Safely add missing columns to an existing table via ALTER TABLE."""
+    existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table_name})").fetchall()}
+    added = []
+    for column_name, column_sql in required_columns.items():
+        if column_name in existing:
+            continue
+        conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}")
+        added.append(column_name)
+    return added
+
+
 def init_db():
     os.makedirs(DATA_DIR, exist_ok=True)
     conn = sqlite3.connect(CACHE_DB)
+    drift_fixes = []
+    preexisting_tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
     conn.execute("""
         CREATE TABLE IF NOT EXISTS lookup_stats (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -627,6 +641,30 @@ def init_db():
             trigger_count INTEGER DEFAULT 0
         )
     """)
+
+    added_user_columns = ensure_table_columns(conn, "users", {
+        "free_limit_notice_sent_at": "TEXT",
+    })
+    if added_user_columns:
+        drift_fixes.append(f"users: added columns {', '.join(added_user_columns)}")
+
+    expected_tables = {
+        "onboarding_emails",
+        "referrals",
+        "permit_issued_reminders",
+        "rate_limits",
+        "checklist_cache",
+        "city_watch",
+        "api_keys",
+        "webhook_integrations",
+    }
+    missing_tables = sorted(expected_tables - preexisting_tables)
+    if missing_tables:
+        drift_fixes.append(f"created missing tables {', '.join(missing_tables)}")
+
+    if drift_fixes:
+        print(f"[db] Drift fixed in {CACHE_DB}: " + "; ".join(drift_fixes))
+
     conn.commit()
     conn.close()
 
@@ -691,14 +729,14 @@ def get_user(email: str) -> dict | None:
         conn = sqlite3.connect(CACHE_DB)
         row = conn.execute(
             "SELECT id,email,plan,plan_expires_at,stripe_customer_id,"
-            "stripe_subscription_id,created_at,last_login FROM users WHERE email=?",
+            "stripe_subscription_id,created_at,last_login,free_limit_notice_sent_at FROM users WHERE email=?",
             [email.lower().strip()]
         ).fetchone()
         conn.close()
         if not row:
             return None
         cols = ["id","email","plan","plan_expires_at","stripe_customer_id",
-                "stripe_subscription_id","created_at","last_login"]
+                "stripe_subscription_id","created_at","last_login","free_limit_notice_sent_at"]
         return dict(zip(cols, row))
     except Exception as e:
         print(f"[user] Get error: {e}")
@@ -988,6 +1026,43 @@ def resend_send(to_addr: str, subject: str, text_body: str, html_body: str = Non
     except Exception as e:
         print(f"[resend] Exception: {e}")
         return False
+
+
+def send_free_limit_reached_email(to_email: str) -> bool:
+    """Send one-time free lookup limit reached email."""
+    subject = "You've used your 3 free PermitAssist lookups"
+    body = (
+        "Hey,\n\n"
+        "You've used your 3 free PermitAssist lookups.\n\n"
+        "If you're still pricing jobs or checking permit requirements, you can upgrade here and keep going:\n"
+        "https://permitassist.io/#pricing\n\n"
+        "Solo gives you unlimited lookups, so you can keep moving without stopping to hunt down permit info job by job.\n\n"
+        "Thanks,\n"
+        "PermitAssist\n"
+        "permitassist.io"
+    )
+    return resend_send(to_email, subject, body)
+
+
+def send_free_limit_email_once(email: str):
+    normalized_email = (email or "").lower().strip()
+    if not normalized_email:
+        return
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        now = utc_now().isoformat()
+        cur = conn.execute(
+            "UPDATE users SET free_limit_notice_sent_at=? WHERE email=? AND free_limit_notice_sent_at IS NULL",
+            [now, normalized_email]
+        )
+        conn.commit()
+        conn.close()
+        if cur.rowcount != 1:
+            return
+        if not send_free_limit_reached_email(normalized_email):
+            print(f"[free-limit-email] Send failed after claiming flag for {normalized_email}")
+    except Exception as e:
+        print(f"[free-limit-email] Error: {e}")
 
 
 def send_magic_link_email(to_email: str, token: str) -> bool:
@@ -2594,11 +2669,6 @@ class Handler(BaseHTTPRequestHandler):
             ip = self.client_ip()
             fingerprint = _normalize_fingerprint(self.headers.get("X-Client-Fingerprint", ""))
             count = -1 if paid else get_effective_free_usage(ip, fingerprint)
-            now_dt = utc_now()
-            if now_dt.month == 12:
-                reset_date = f"{now_dt.year + 1}-01-01"
-            else:
-                reset_date = f"{now_dt.year}-{now_dt.month + 1:02d}-01"
             try:
                 conn = sqlite3.connect(CACHE_DB)
                 team_rows = conn.execute(
@@ -2613,9 +2683,9 @@ class Handler(BaseHTTPRequestHandler):
                 "email":              user_email,
                 "plan":               user.get("plan", "free"),
                 "paid":               paid,
-                "lookups_this_month": count,
+                "lookups_used":       count,
                 "lookups_remaining":  -1 if paid else max(0, FREE_LOOKUP_LIMIT - count),
-                "reset_date":         reset_date,
+                "reset_date":         None,
                 "plan_expires_at":    user.get("plan_expires_at"),
                 "team_members":       team_members,
             })
@@ -2714,7 +2784,10 @@ class Handler(BaseHTTPRequestHandler):
                 if not email:
                     raise Exception("No email provided by Google")
                     
+                is_new_user = get_user(email) is None
                 get_or_create_user(email)
+                if is_new_user:
+                    threading.Thread(target=schedule_onboarding_emails, args=(email,), daemon=True).start()
                 session = create_session_token(email)
                 from urllib.parse import quote as _quote
                 final_redirect = f"/?t={_quote(session, safe='')}&verified=1"
@@ -3159,6 +3232,8 @@ class Handler(BaseHTTPRequestHandler):
                         return
 
                     if used_before >= FREE_LOOKUP_LIMIT and not unlimited:
+                        if user_email:
+                            threading.Thread(target=send_free_limit_email_once, args=(user_email,), daemon=True).start()
                         self.send_json(403, {
                             "error": "free_limit_reached",
                             "message": "You've used your 3 free lookups. Subscribe to continue.",

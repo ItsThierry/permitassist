@@ -1214,7 +1214,7 @@
       <!-- Counter bar -->
       <div class="counter-bar" id="counter-bar">
         <div class="counter-bar-top">
-          <span class="counter-text" id="counter-text">0 of 3 free lookups used</span>
+          <span class="counter-text" id="counter-text">0 of 3 free lookups used, no reset</span>
         <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $24.99/mo →</span>
       </div>
       <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
@@ -1910,7 +1910,7 @@ function updateCounterBarFromServer(used, remaining, plan){
   const bar=document.getElementById('counter-bar'),text=document.getElementById('counter-text');
   if(!bar)return;
   const total=FREE_LIMIT,pct=Math.round(used/total*100);
-  text.textContent=remaining===0?'Free lookups used — upgrade for unlimited':`${used} of ${total} free lookups used`;
+  text.textContent=remaining===0?'3 free lookups used, no reset. Upgrade for unlimited':`${used} of ${total} free lookups used, no reset`;
   const fill=bar.querySelector('.counter-progress-fill');
   if(fill)requestAnimationFrame(()=>fill.style.width=pct+'%');
   bar.style.borderColor=remaining===0?'rgba(239,68,68,0.4)':'';
