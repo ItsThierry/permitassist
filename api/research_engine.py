@@ -76,6 +76,19 @@ JURISDICTION_PATTERNS = {
 UNINCORPORATED_KEYWORDS = ["unincorporated", "county area", "rural", "township"]
 FEE_LINK_KEYWORDS = ["fee schedule", "fee table", "permit fees", "building fees", "inspection fee", "permit checklist", "inspection checklist", "apply online", "online portal"]
 PHONE_CONTEXT_KEYWORDS = ["permit", "building", "codes", "office", "main", "department", "division", "contact", "call", "phone"]
+STATE_NAME_MAP = {
+    "AL": "alabama", "AK": "alaska", "AZ": "arizona", "AR": "arkansas", "CA": "california",
+    "CO": "colorado", "CT": "connecticut", "DE": "delaware", "FL": "florida", "GA": "georgia",
+    "HI": "hawaii", "ID": "idaho", "IL": "illinois", "IN": "indiana", "IA": "iowa",
+    "KS": "kansas", "KY": "kentucky", "LA": "louisiana", "ME": "maine", "MD": "maryland",
+    "MA": "massachusetts", "MI": "michigan", "MN": "minnesota", "MS": "mississippi", "MO": "missouri",
+    "MT": "montana", "NE": "nebraska", "NV": "nevada", "NH": "new hampshire", "NJ": "new jersey",
+    "NM": "new mexico", "NY": "new york", "NC": "north carolina", "ND": "north dakota", "OH": "ohio",
+    "OK": "oklahoma", "OR": "oregon", "PA": "pennsylvania", "RI": "rhode island", "SC": "south carolina",
+    "SD": "south dakota", "TN": "tennessee", "TX": "texas", "UT": "utah", "VT": "vermont",
+    "VA": "virginia", "WA": "washington", "WV": "west virginia", "WI": "wisconsin", "WY": "wyoming",
+    "DC": "district of columbia", "PR": "puerto rico",
+}
 
 
 def clean_summary_text(text: str, max_len: int = 700) -> str:
@@ -275,39 +288,23 @@ def accela_find_agency(city: str, state: str) -> dict | None:
     return best if best_score >= 40 else None
 
 
+def _accela_build_citizen_portal_url(agency: dict) -> str:
+    """Build the citizen-facing Accela portal URL for an agency."""
+    spc = str(agency.get("serviceProviderCode") or "").upper()
+    hosted = agency.get("hostedACA", False)
+    if hosted and spc:
+        return f"https://aca-prod.accela.com/{spc}/"
+    return ""
+
+
 def _accela_get_record_types(agency_name: str, job_type: str) -> list[dict]:
-    job_words = _accela_words(job_type)
-    modules = ["Building", "Planning", "Licenses", "Enforcement", "Permits"]
-    all_types = []
-    seen_ids = set()
-    for module in [""] + modules:
-        params = {"limit": 200}
-        if module:
-            params["module"] = module
-        data = _accela_get("/v4/settings/records/types", params=params, agency_name=agency_name) or {}
-        for item in data.get("result") or []:
-            record_id = str(item.get("id") or "")
-            if record_id and record_id in seen_ids:
-                continue
-            if record_id:
-                seen_ids.add(record_id)
-            text_parts = [item.get("text"), item.get("alias"), item.get("group"), item.get("type"), item.get("subType"), item.get("category"), item.get("value")]
-            blob = " ".join(str(part or "") for part in text_parts)
-            words = _accela_words(blob)
-            overlap = len(words & job_words)
-            item["_match_score"] = overlap * 10 + (5 if "permit" in words else 0) + (3 if str(item.get("module") or "").lower() == "building" else 0)
-            all_types.append(item)
-        if all_types:
-            break
-    all_types.sort(key=lambda item: item.get("_match_score", 0), reverse=True)
-    return all_types
+    """Record types require user auth — not available with app-level token. Return empty."""
+    return []
 
 
 def _accela_get_fee_schedules(agency_name: str, record_type_id: str) -> list[dict]:
-    if not record_type_id:
-        return []
-    data = _accela_get(f"/v4/settings/records/types/{record_type_id}/fees/schedules", agency_name=agency_name, require_token=True) or {}
-    return data.get("result") or []
+    """Fee schedules require user auth — not available with app-level token. Return empty."""
+    return []
 
 
 def get_accela_processing_time(agency_id: str, permit_type: str) -> str:
@@ -322,56 +319,27 @@ def accela_get_permit_info(city: str, state: str, job_type: str) -> dict | None:
         return None
 
     agency_name = str(agency.get("name") or "")
-    record_types = _accela_get_record_types(agency_name, job_type)
-    if not record_types:
-        print(f"[accela] No record types returned for {agency_name}")
-        return {
-            "agency": agency,
-            "record_types": [],
-            "fees": [],
-            "structured": {
-                "fees": [],
-                "raw_text": f"Accela agency matched: {agency.get('displayName') or agency_name} ({agency.get('state') or state}). No public record types were returned.",
-                "source": "layer0_5_accela",
-                "field_sources": {},
-                "field_confidence": {},
-                "freshness": "live_accela_api",
-            },
-            "summary": f"Accela agency matched for {city}, {state}: {agency.get('displayName') or agency_name}. No public record types were returned.",
-        }
+    display = str(agency.get("display") or agency_name)
+    portal_url = _accela_build_citizen_portal_url(agency)
 
-    matched_types = [item for item in record_types if item.get("_match_score", 0) > 0][:8] or record_types[:8]
-    fees = []
-    for item in matched_types[:3]:
-        fees.extend(_accela_get_fee_schedules(agency_name, str(item.get("id") or "")))
-    fee_labels = _unique_keep_order([str(fee.get("text") or fee.get("value") or "").strip() for fee in fees if str(fee.get("text") or fee.get("value") or "").strip()])[:8]
+    print(f"[accela] Matched agency: {agency_name} | Portal: {portal_url or 'none (not hostedACA)'}")
 
-    type_lines = []
-    for item in matched_types[:8]:
-        bits = [item.get("module"), item.get("group"), item.get("type"), item.get("subType"), item.get("category")]
-        bits = [str(bit).strip() for bit in bits if str(bit or "").strip()]
-        label = str(item.get("text") or item.get("alias") or item.get("value") or "Unnamed record type")
-        if bits and label not in bits:
-            bits.append(label)
-        type_lines.append(" / ".join(bits) if bits else label)
+    summary = f"Accela agency matched: {display} ({agency.get('state') or state})."
+    if portal_url:
+        summary += f" Citizen portal: {portal_url}"
 
-    fee_line = f"Fee schedules: {', '.join(fee_labels)}" if fee_labels else "Fee schedules: not available from current Accela auth/app configuration"
-    summary = (
-        f"Accela agency match: {agency.get('displayName') or agency_name} ({agency.get('state') or state}). "
-        f"Matched record types: {'; '.join(type_lines[:5]) or 'none'}. {fee_line}."
-    )
     structured = {
-        "fees": fee_labels,
+        "fees": [],
+        "portal_url": portal_url,
         "raw_text": summary,
         "source": "layer0_5_accela",
-        "field_sources": {"fees": f"{ACCELA_BASE_URL}/v4/settings/records/types"} if fee_labels else {},
-        "field_confidence": {"fees": "medium"} if fee_labels else {},
+        "field_sources": {"portal_url": "accela_api"} if portal_url else {},
+        "field_confidence": {"portal_url": "high"} if portal_url else {},
         "freshness": "live_accela_api",
     }
     return {
         "agency": agency,
-        "record_types": matched_types,
-        "fees": fees,
+        "portal_url": portal_url,
         "structured": structured,
         "summary": summary,
     }
@@ -1487,6 +1455,7 @@ def record_url_success(url: str, content_len: int):
 
 def init_cache():
     os.makedirs(os.path.dirname(CACHE_DB), exist_ok=True)
+    ensure_pdf_cache_dir()
     init_search_cache_db()
     conn = sqlite3.connect(CACHE_DB)
     conn.execute("""
@@ -1797,7 +1766,52 @@ def set_search_cache(city: str, state: str, payload: dict):
 
 
 
-def _score_search_url(url: str) -> int:
+def _location_match_score(url: str, title: str = "", content: str = "", city: str = "", state: str = "") -> int:
+    if not city or not state:
+        return 0
+    haystack = " ".join([url or "", title or "", content or ""]).lower()
+    desired_city = re.sub(r"\s+", " ", (city or "").strip().lower())
+    desired_state = (state or "").strip().upper()
+    desired_state_name = STATE_NAME_MAP.get(desired_state, "")
+    desired_city_slug = desired_city.replace(" ", "-")
+    desired_city_compact = desired_city.replace(" ", "")
+
+    score = 0
+    city_match = False
+    if desired_city and any(token in haystack for token in [desired_city, desired_city_slug, desired_city_compact]):
+        score += 10
+        city_match = True
+    elif desired_city and len(desired_city) >= 4:
+        score -= 10
+
+    state_match = False
+    if desired_state_name and desired_state_name in haystack:
+        score += 6
+        state_match = True
+    if re.search(rf"(^|[^a-z]){re.escape(desired_state.lower())}([^a-z]|$)", haystack):
+        score += 4
+        state_match = True
+    if not state_match:
+        score -= 8
+
+    for abbr, name in STATE_NAME_MAP.items():
+        if abbr == desired_state:
+            continue
+        abbr_hit = re.search(rf"(^|[^a-z]){re.escape(abbr.lower())}([^a-z]|$)", haystack)
+        if name in haystack or abbr_hit:
+            if not state_match:
+                score -= 14
+            elif city_match:
+                score -= 6
+            break
+
+    if city_match and state_match:
+        score += 4
+    return score
+
+
+
+def _score_search_url(url: str, title: str = "", content: str = "", city: str = "", state: str = "") -> int:
     if not url:
         return -999
     parsed = urlparse(url)
@@ -1818,15 +1832,16 @@ def _score_search_url(url: str) -> int:
     if path.endswith(".pdf") and any(term in path for term in PDF_URL_HINTS):
         score += 6
     score += _get_domain_success_bonus(url)
+    score += _location_match_score(url, title=title, content=content, city=city, state=state)
     return score
 
 
 
-def _rank_search_results(results: list[dict], limit: int = 4) -> list[dict]:
+def _rank_search_results(results: list[dict], limit: int = 4, city: str = "", state: str = "") -> list[dict]:
     ranked = []
     for item in results or []:
         url = item.get("url", "")
-        score = _score_search_url(url)
+        score = _score_search_url(url, title=item.get("title", ""), content=item.get("content", ""), city=city, state=state)
         print(f"[search] URL ranking: score={score} url={url}")
         ranked.append({**item, "score": score})
     ranked.sort(key=lambda item: (item.get("score", -999), item.get("url", "")), reverse=True)
@@ -1844,7 +1859,7 @@ def _rank_search_results(results: list[dict], limit: int = 4) -> list[dict]:
 
 
 
-def serper_search(query: str, num: int = 5) -> list[dict]:
+def serper_search(query: str, num: int = 5, city: str = "", state: str = "") -> list[dict]:
     if not SERPER_API_KEY:
         return []
     try:
@@ -1866,7 +1881,7 @@ def serper_search(query: str, num: int = 5) -> list[dict]:
                 "url": url,
                 "content": clean_summary_text(r.get("snippet", ""), max_len=500),
             })
-        trimmed = _rank_search_results(results, limit=min(num, 4))
+        trimmed = _rank_search_results(results, limit=min(num, 4), city=city, state=state)
         print(f"[search] Layer 1: serper found {len(trimmed)} urls")
         return trimmed
     except Exception as e:
@@ -1875,7 +1890,7 @@ def serper_search(query: str, num: int = 5) -> list[dict]:
 
 
 
-def brave_search(query: str, num: int = 5, max_results: int | None = None) -> list[dict]:
+def brave_search(query: str, num: int = 5, max_results: int | None = None, city: str = "", state: str = "") -> list[dict]:
     limit = max_results or num
     if not BRAVE_SEARCH_API_KEY:
         return []
@@ -1902,7 +1917,7 @@ def brave_search(query: str, num: int = 5, max_results: int | None = None) -> li
                 "url": url,
                 "content": clean_summary_text(r.get("description", ""), max_len=500),
             })
-        trimmed = _rank_search_results(results, limit=min(limit, 4))
+        trimmed = _rank_search_results(results, limit=min(limit, 4), city=city, state=state)
         print(f"[search] Layer 1: brave found {len(trimmed)} urls")
         return trimmed
     except Exception as e:
@@ -2217,6 +2232,9 @@ def auto_update_city_kb(city: str, state: str, phone: str, portal_url: str, sour
         return
     if ".gov" not in source_url and ".us" not in source_url:
         return
+    if _location_match_score(source_url, city=city, state=state) < 8:
+        print(f"[search] Skipping KB auto-update for {city}, {state}: weak location match")
+        return
     try:
         global _CITIES_KB
         cities_path = os.path.join(KNOWLEDGE_DIR, "cities.json")
@@ -2370,26 +2388,29 @@ def _merge_structured_candidates(candidates: list[dict], kb_entry: dict | None =
         "phone": "", "fees": [], "portal_url": "", "address": "", "hours": "", "raw_text": "", "source": "",
         "field_sources": {}, "field_confidence": {}, "conflicts": [], "freshness": ""
     }
+    candidates = sorted(candidates, key=lambda item: (item.get("location_score", 0), item.get("source_url", "")), reverse=True)
     for item in candidates:
         item_sources = item.get("field_sources") or {}
         item_conf = item.get("field_confidence") or {}
-        if not merged["phone"] and item.get("phone"):
+        loc_score = item.get("location_score", 0)
+        if not merged["phone"] and item.get("phone") and loc_score >= 10:
             merged["phone"] = item["phone"]
             merged["field_sources"]["phone"] = item_sources.get("phone", item.get("source_url", item.get("source", "")))
             merged["field_confidence"]["phone"] = item_conf.get("phone", "medium")
-        if not merged["portal_url"] and item.get("portal_url"):
+        if not merged["portal_url"] and item.get("portal_url") and loc_score >= 4:
             merged["portal_url"] = item["portal_url"]
             merged["field_sources"]["portal_url"] = item_sources.get("portal_url", item.get("source_url", item.get("source", "")))
             merged["field_confidence"]["portal_url"] = item_conf.get("portal_url", "medium")
-        if not merged["address"] and item.get("address"):
+        if not merged["address"] and item.get("address") and loc_score >= 10:
             merged["address"] = item["address"]
             merged["field_sources"]["address"] = item_sources.get("address", item.get("source_url", item.get("source", "")))
             merged["field_confidence"]["address"] = item_conf.get("address", "low")
-        if not merged["hours"] and item.get("hours"):
+        if not merged["hours"] and item.get("hours") and loc_score >= 10:
             merged["hours"] = item["hours"]
             merged["field_sources"]["hours"] = item_sources.get("hours", item.get("source_url", item.get("source", "")))
             merged["field_confidence"]["hours"] = item_conf.get("hours", "medium")
-        merged["fees"] = _unique_keep_order(merged["fees"] + (item.get("fees") or []))[:8]
+        if loc_score >= 4:
+            merged["fees"] = _unique_keep_order(merged["fees"] + (item.get("fees") or []))[:8]
         if merged["fees"] and "fees" not in merged["field_sources"]:
             merged["field_sources"]["fees"] = item_sources.get("fees", item.get("source_url", item.get("source", "")))
             merged["field_confidence"]["fees"] = item_conf.get("fees", "medium")
@@ -2642,10 +2663,14 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
             source_layer = item.get("source_layer", "")
             add_result(url, title, content, source_layer)
             structured = item.get("structured") or {}
+            loc_score = _location_match_score(url, title=title, content=content, city=search_city, state=search_state)
             if any(structured.get(k) for k in ("phone", "fees", "portal_url", "address", "hours", "raw_text")):
+                structured = dict(structured)
+                structured["location_score"] = loc_score
+                structured["source_url"] = url
                 structured_candidates.append(structured)
                 detailed_results.append({"url": url, "structured": structured})
-                if (not auto_kb_updated and source_layer.startswith("layer1") and structured.get("phone") and structured.get("portal_url") and 
+                if (not auto_kb_updated and loc_score >= 10 and source_layer.startswith("layer1") and structured.get("phone") and structured.get("portal_url") and 
                     score_field_confidence(structured.get("phone"), url, "phone") == "high" and
                     score_field_confidence(structured.get("portal_url"), url, "portal_url") == "high"):
                     auto_update_city_kb(city, state, structured.get("phone"), structured.get("portal_url"), url)
@@ -2675,13 +2700,13 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
             primary_query = f'"{search_city}" "{search_state}" {job_type} permit requirements fee site:.gov'
             relaxed_query = f'{search_city} {search_state} {job_type} permit requirements fees building department'
             merged_results = []
-            merged_results.extend(serper_search(primary_query, num=5) or brave_search(primary_query, num=5))
+            merged_results.extend(serper_search(primary_query, num=5, city=search_city, state=search_state) or brave_search(primary_query, num=5, city=search_city, state=search_state))
             if alt_queries:
                 alt_query = f'{search_city} {search_state} {alt_queries[0]} permit building department site:.gov'
-                merged_results.extend(serper_search(alt_query, num=4) or brave_search(alt_query, num=4))
+                merged_results.extend(serper_search(alt_query, num=4, city=search_city, state=search_state) or brave_search(alt_query, num=4, city=search_city, state=search_state))
             if not merged_results:
-                merged_results.extend(serper_search(relaxed_query, num=5) or brave_search(relaxed_query, num=5))
-            ranked = _rank_search_results(merged_results, limit=4)
+                merged_results.extend(serper_search(relaxed_query, num=5, city=search_city, state=search_state) or brave_search(relaxed_query, num=5, city=search_city, state=search_state))
+            ranked = _rank_search_results(merged_results, limit=4, city=search_city, state=search_state)
             scraped = scrape_urls_parallel([r.get("url", "") for r in ranked], city=city, state=state, max_workers=3, timeout=14)
             scraped_by_url = {item.get("url", ""): item for item in scraped}
             for r in ranked:

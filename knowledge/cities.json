@@ -4225,6 +4225,16 @@
       "online_portal": "https://biloxi.ms.us/pdf/Permit%20Fees.pdf",
       "_auto_added": true,
       "_added_date": "2026-04-23T00:07:45.827503"
+    },
+    "alma_ar": {
+      "city": "Alma",
+      "state": "AR",
+      "permit_office": "Alma Building Department",
+      "permit_url": "https://www.almaarkansas.gov/permits/",
+      "online_portal": "https://www.almaarkansas.gov/permits/",
+      "_auto_added": true,
+      "_added_date": "2026-04-23T00:51:41.234943",
+      "_corrected_note": "Auto-added Huntsville, AL source was a false positive. Corrected to Alma official permits page during audit."
     }
   },
   "counties": {

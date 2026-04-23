@@ -1,0 +1,728 @@
+PermitIQ Search Engine — 40-City Stress Test v4
+============================================================
+
+
+[1/40] HVAC replacement | Mobridge, SD
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 20.3s | Length: 3171
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (605-845-3555 [confidence: medium | source: https://www.jaspector.com/permits/south-dakota/walworth/mobridge/]
+Portal: https://www.jaspector.com/permits/south-dakota/walworth/mobridge/ [confidence: medium | source: https://www.jaspector.com/permits/south-dakota/walworth/mobridge/]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: recently updated (0d ago)
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.jaspector.com/permits/south-dakota/walworth/mobridge/
+Title: Mobridge, SD - 2026 Building Permit Guide | Jaspector | Jaspector
+Excerpt: Title: Mobridge, SD - 2026 Building Permit
+----------------------------------------
+
+[2/40] roofing permit | Eufaula, AL
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 5.5s | Length: 3820
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://eufaulaalabama.com/DocumentCenter/View/68/Building-Permit-Fees-PDF [confidence: medium | source: https://eufaulaalabama.com/DocumentCenter/View/68/Building-Permit-Fees-PDF]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: older data (195d ago)
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.eufaulaalabama.com/162/Building-Planning
+Title: Building/Planning | Eufaula, AL
+Excerpt: Title: Building/Planning | Eufaula, AL URL Source: https://www.eufaulaalabama.com/162/Building-Planning Markdown Content: # Building/Planning | Eufaula, AL [Skip To Main Conten
+----------------------------------------
+
+[3/40] electrical permit | Cody, WY
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 12.3s | Length: 4117
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.codywy.gov/126/Applications-Permits-and-Fees [confidence: high | source: https://www.codywy.gov/QuickLinks.aspx?CID=50]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: live_accela_api
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://developer.accela.com/docs/api_reference/api-settings.html#operation/v4.get.settings.records.types
+Title: Accela permit data for Cody, WY
+Excerpt: Accela agency matched for Cody, WY: Cody. No public record types were returned.
+---
+
+Source: https://www.codywy.gov/126/Applications-Permits-and-Fees
+Title: Applications, Permits
+----------------------------------------
+
+[4/40] plumbing permit | Kotzebue, AK
+Score: 8/10 | Layer: Layer 1 (Search) | Time: 39.1s | Length: 2944
+Phone: ✓ | Portal: ✗ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: Not found
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Alaska uses borough authority for permits
+Data freshness: older data (2262d ago)
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: http://allpermit.net/KotzebueAlaskaBuildingPermitDepartment
+Title: Kotzebue Alaska Building Permit Department | Kotzebue AK Building Permits
+Excerpt: The Kotzebue Alaska building permit department representative is then able to give you the yes or no with the permit or at the very least, make recommendations so you are able to receive the permit. The building permit department in Kot
+----------------------------------------
+
+[5/40] fence permit | Chinle, AZ
+Score: 8/10 | Layer: Layer 1 (Search) | Time: 5.0s | Length: 3662
+Phone: ✓ | Portal: ✗ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: Not found
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: recently updated (0d ago)
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.maricopa.gov/499/Permits
+Title: Permits | Maricopa County, AZ
+Excerpt: Title: Permits | Maricopa County, AZ URL Source: https://www.maricopa.gov/499/Permits Published Time: Thu, 23 Apr 2026 00:50:13 GMT Markdown Content: # Permits | Maricopa County, AZ [Skip To Main Content](https://www.maricopa.gov/499/Permits#structuralContainer6) This website is AudioEye enabled and is being optimized for accessibility. To open the AudioEye T
+----------------------------------------
+
+[6/40] deck permit | Ely, NV
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 7.6s | Length: 3870
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (775) 289-2430 [confidence: high | source: https://www.cityofelynv.gov/building-department-and-building-codes-city-of-ely/]
+Portal: https://www.cityofelynv.gov/pdf/BuildingPermitApplication.pdf [confidence: high | source: https://www.cityofelynv.gov/pdf/BuildingPermitApplication.pdf]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: older data (1997d ago)
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.cityofelynv.gov/pdf/BuildingPermitApplication.pdf
+Title: building permit package
+Excerpt: Title: BuildingPermitApplication.pdf URL Source: https://www.cityofelynv.gov/pdf/BuildingPermitApplication.pdf Published Time: Mon, 02 Nov 2020 23:27:01 GMT Number 
+----------------------------------------
+
+[7/40] generator permit | Deadwood, SD
+Score: 8/10 | Layer: Layer 1 (Search) | Time: 8.5s | Length: 4146
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.cityofdeadwood.com/sites/default/files/fileattachments/planning_and_zoning/page/32971/building_permit_fee_schedule.pdf [confidence: medium | source: https://www.cityofdeadwood.com/forms]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: recently updated (0d ago)
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.cityofdeadwood.com/planning/page/contractor-licensing
+Title: Contractor Licensing | City of Deadwood South Dakota
+Excerpt: Title: Contractor Licensing URL Source: https://www.cityofdeadwood.com/planning/page/contractor-licensing Published Time: Thu, 23 Apr 2026 00:50:48 GMT Markdown Content: # Contractor Licensing | C
+----------------------------------------
+
+[8/40] solar permit | Truth or Consequences, NM
+Score: 8/10 | Layer: Layer 1 (Search) | Time: 10.8s | Length: 4215
+Phone: ✓ | Portal: ✗ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: Not found
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: older data (1776d ago)
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://developer.accela.com/docs/api_reference/api-settings.html#operation/v4.get.settings.records.types
+Title: Accela permit data for Truth or Consequences, NM
+Excerpt: Accela agency matched for Truth or Consequences, NM: MORGANCGHD. No public record types were returned.
+---
+
+Source: https://www.rld.nm.gov/wp-content/uploads/2021/06/Solar-Array-Plan-Review_Rev-6_4_2020_docx.pdf
+Title: New Mexico Regulation and Licensing Department MANUFACTURED HOUSING DIVISION
+Excerpt: Title: Solar-Array-Plan-Review_Rev-6_4_2020_doc
+----------------------------------------
+
+[9/40] water heater | Dillingham, AK
+Score: 8/10 | Layer: Layer 1 (Search) | Time: 5.1s | Length: 3506
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.dillinghamak.us/publicworks/page/apply-new-water-andor-sewer-service [confidence: high | source: https://www.dillinghamak.us/publicworks/page/apply-new-water-andor-sewer-service]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Alaska uses borough authority for permits
+Data freshness: recently updated (0d ago)
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://dillinghamak.us/formspermits
+Title: Forms, Permits, and Applications | Dillingham, AK
+Excerpt: Title: Forms, Permits, and Applications URL Source: https://dillinghamak.us/formspermits Published 
+----------------------------------------
+
+[10/40] roofing permit | Alma, AR
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 4.8s | Length: 1499
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (479) 632-0441 [confidence: high | source: https://www.almaarkansas.gov/permits/]
+Portal: https://www.almaarkansas.gov/permits/ [confidence: high | source: https://www.almaarkansas.gov/permits/]
+Fees found: $5.00, $50.00 [confidence: high | source: https://www.almaarkansas.gov/permits/]
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: recently updated (0d ago)
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.almaarkansas.gov/permits/
+Title: Alma Building Department
+Excerpt: Permits & Licenses • City of Alma, Arkansas : City of Alma, Arkansas Explore Alma Community Calendar Map & Directions Alma Aquatic Center Performing Arts Center Parks & Recreation Trails System Public Lib
+----------------------------------------
+
+[11/40] HVAC replacement | Paragould, AR
+Score: 8/10 | Layer: Layer 1 (Search) | Time: 11.2s | Length: 3899
+Phone: ✓ | Portal: ✗ | Fees: ✓ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (870) 239-7525 [confidence: medium | source: https://www.cityofparagould.com/416/Construction-Requirements]
+Portal: Not found
+Fees found: $35 [confidence: medium | source: https://www.cityofparagould.com/245/Permits]
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Conflicts:
+- PHONE CONFLICT: Multiple numbers found - 870-239-7525, (870) 239-7525 - verify before using
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.cityofparagould.com/358/Office-of-Planning-and-Development
+Title: Office of Planning and Development | Paragould, AR
+Excerpt: Office of Planning and Development | Paragould, AR Skip to Main Content Create a Website Account - Manage notification subscriptions, save form progress 
+----------------------------------------
+
+[12/40] electrical panel | Enumclaw, WA
+Score: 8/10 | Layer: Layer 1 (Search) | Time: 9.9s | Length: 4204
+Phone: ✓ | Portal: ✗ | Fees: ✓ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: 360-825-3593 [confidence: medium | source: https://www.cityofenumclaw.net/187/Building-Permit-Application-Forms]
+Portal: Not found
+Fees found: $3 [confidence: medium | source: https://www.cityofenumclaw.net/DocumentCenter/View/10494/Exhibit-C---Admin-Determination-Impact-Fee-LUA2025-0006_SIGNED]
+Address: Not found
+Hours: Monday through Friday between 9 a.m. [confidence: medium | source: https://www.cityofenumclaw.net/187/Building-Permit-Application-Forms]
+Source: layer1_brave_jina
+Conflicts:
+- PHONE CONFLICT: Multiple numbers found - 800-424-5555, 360-825-3593 - verify before using
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.cityofenumclaw.net/186/Building-Department
+Title: Building Department | En
+----------------------------------------
+
+[13/40] plumbing rough-in | Paducah, KY
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 5.0s | Length: 1549
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: 270-444-8604 [confidence: high | source: https://paducahky.gov/departments/fire-department/permits-construction]
+Portal: https://paducahky.gov/departments/fire-department/permits-construction [confidence: high | source: https://paducahky.gov/departments/fire-department/permits-construction]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: recently updated (0d ago)
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://paducahky.gov/departments/fire-department/permits-construction
+Title: Paducah Building Department
+Excerpt: Title: Permits for Construction | City of Paducah URL Source: https://paducahky.gov/departments/fire-department/permits-construction Publishe
+----------------------------------------
+
+[14/40] roofing permit | Biloxi, MS
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 3.5s | Length: 1562
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: 228-435-6280 [confidence: high | source: https://biloxi.ms.us/pdf/Permit%20Fees.pdf]
+Portal: https://biloxi.ms.us/pdf/Permit%20Fees.pdf [confidence: high | source: https://biloxi.ms.us/pdf/Permit%20Fees.pdf]
+Fees found: $10,000, $60, $20,000, $110, $30,000, $160, $40,000, $210 [confidence: high | source: https://biloxi.ms.us/pdf/Permit%20Fees.pdf]
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: older data (4612d ago)
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://biloxi.ms.us/pdf/Permit%20Fees.pdf
+Title: Biloxi Building Department
+Excerpt: Title: Permit Fees2.xls URL Source: https://biloxi.ms.us/pdf/Permit%20Fees.pdf Published Time: Thu, 05 Sep 2013 21:25:16 GMT Number of Pag
+----------------------------------------
+
+[15/40] solar permit | Flagstaff, AZ
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 4.9s | Length: 4432
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.flagstaff.az.gov/5164/Additional-Building-Permit-Resources [confidence: high | source: https://www.flagstaff.az.gov/5164/Additional-Building-Permit-Resources]
+Fees found: $225,000.00, $100,000.00, $500,000.00, $800,000.00, $450,000.00 [confidence: high | source: https://www.flagstaff.az.gov/DocumentCenter/View/88209/01-25-PL]
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.flagstaff.az.gov/DocumentCenter/View/88209/01-25-PL
+Title: Permit No Classification Name Parcel Address Business Primary Party Valuation
+Excerpt: Title: 01-25-PL URL Source: https://www.flagstaff.az.gov/DocumentCenter/View/88209/01-25-PL Numbe
+----------------------------------------
+
+[16/40] deck permit | Cheyenne, WY
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 2.6s | Length: 3305
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (307) 637-6264 [confidence: medium | source: https://www.cheyennecity.org/government/departments/planningdevelopment]
+Portal: https://www.cheyennecity.org/government/departments/planningdevelopment/building-permits [confidence: medium | source: https://www.cheyennecity.org/government/departments/planningdevelopment/building-permits]
+Fees found: $135–$450 (VERIFIED from PermitMint — Cheyenne HVAC: adding central HVAC to home. Sourced from City of Cheyenne fee schedule). $50 Planning & Development review fee on all building permits (VERIFIED from Cheyenne 2025 non-residential fee worksheet)., $100–$300 (ESTIMATED — Wyoming standard), $75–$200 (ESTIMATED), Building permit — valuation-based + $50 P&D fee. Re-roof: $100–
+----------------------------------------
+
+[17/40] EV charger | Burlington, VT
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 4.3s | Length: 3246
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (802) 865-7188 [confidence: high | source: https://www.burlingtonvt.gov/DPZ]
+Portal: https://burlingtonvt.portal.civicclerk.com/ [confidence: high | source: https://www.burlingtonvt.gov/DPZ]
+Fees found: $150–$500 (VERIFIED from PermitMint — Burlington HVAC permit: different HVAC system type = $150–$500 estimated). VT State permit may also apply. Vermont Fire & Building Safety Division issues state permits for certain work., Vermont state electrical permit — issued by VT DPSM (Dept of Public Safety, Div of Fire Safety), NOT the city. State electrical permit fee varies by job type., VT state plumbing permit — also issued by VT DPS, not city., Zoning permit: $122 application fee + $30 construction permit (VERIFIED from
+----------------------------------------
+
+[18/40] water heater | Fargo, ND
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 4.0s | Length: 3226
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (701) 241-1454 [confidence: high | source: https://fargond.gov/city-government/departments/inspections]
+Portal: https://fargond.gov/city-government/departments/inspections/permits [confidence: high | source: https://fargond.gov/city-government/departments/inspections/permits]
+Fees found: HVAC installation — new: $200–$750 (VERIFIED from PermitMint sourcing City of Fargo HVAC fee schedule). Residential HVAC permit effective Jan 1, 2025 — see Fargo HVAC Fee Schedule at fargond.gov., Valuation-based. Building permit: up to $1,000 = $45; above $1,000 = $45 + $5.40 per additional $1,000 (VERIFIED from Fargo residential permit fees PDF). Electrical: similar., Water heater: $75–$200 (ESTIMATED), Building permit — valuation
+----------------------------------------
+
+[19/40] HVAC replacement | Gallup, NM
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 5.3s | Length: 1588
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (505) 863-1290 [confidence: high | source: https://gallupnm.gov/779/Building-Permits]
+Portal: https://gallupnm.gov/779/Building-Permits [confidence: high | source: https://gallupnm.gov/779/Building-Permits]
+Fees found: None found
+Address: 110 W. Aztec Avenue Gallup [confidence: high | source: https://gallupnm.gov/779/Building-Permits]
+Hours: Monday through Friday from 8:00 a.m. [confidence: medium | source: https://gallupnm.gov/779/Building-Permits]
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://gallupnm.gov/779/Building-Permits
+Title: Gallup Building Department
+Excerpt: Title: Building Permits | Gallup, NM URL Source: https://gallupnm.gov/779/Building-Permits Markdown Content: B
+----------------------------------------
+
+[20/40] electrical permit | Laramie, WY
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 22.0s | Length: 3552
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.laramiecountywy.gov/County-Government/County-Departments/Public-Works/Permits [confidence: high | source: https://www.laramiecountywy.gov/County-Government/County-Departments/Public-Works/Permits]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building/Building-Permit-Handouts-and-Fee-Schedule
+Title: Building Permit Handouts, and Fee Schedule - Laramie County, Wyoming
+Excerpt: Title: Building Permit Handouts, and Fee Sched
+----------------------------------------
+
+[21/40] HVAC replacement | Boise, ID
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 5.7s | Length: 2498
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (208) 384-3830 [confidence: medium | source: https://www.cityofboise.org/departments/planning-and-development-services/building/]
+Portal: https://aca-prod.accela.com/BOISE [confidence: high | source: https://aca-prod.accela.com/BOISE]
+Fees found: Sqft-based mechanical permit: up to 1,500 sqft = $130; 1,501–2,500 sqft = $180; 2,501–3,500 = $250; 3,501–4,500 = $290; 4,501+ = $325 + $65 per 1,000 sqft additional. VERIFIED from PermitFlow (sourced from Boise city mechanical fee schedule PDF)., Valuation-based. Panel upgrade/service change: estimated $100–$250., Water heater: $50–$150 (ESTIMATED), Building permit — valuation-based. Re-roof: $100–$250 (ESTIMATED) [confidence: medium | source: https://www.cityofboise.org/d
+----------------------------------------
+
+[22/40] deck permit | Spokane, WA
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 11.3s | Length: 1919
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (509) 625-6300 [confidence: medium | source: https://my.spokanecity.org/dcs/building]
+Portal: https://my.spokanecity.org/dcs/building/permits [confidence: medium | source: https://my.spokanecity.org/dcs/building/permits]
+Fees found: WA L&I issues mechanical permits statewide. Mechanical: $70 flat (WA L&I fee, same structure as Seattle). City may add inspection fees., Washington State L&I — state electrical permit. ~$371 panel upgrade (same WA structure as Seattle)., Spokane County Public Health handles plumbing. $75–$165 estimated., City building permit: valuation-based. Re-roof: $100–$250 estimated. [confidence: medium | source: https://my.spokanecity.org/dcs/building]
+Address: 808 W. Spokane Falls Blvd., Spokane, 
+----------------------------------------
+
+[23/40] solar permit | Yuma, AZ
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 10.3s | Length: 3692
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.yumaaz.gov/residents/building-permits [confidence: high | source: https://www.yumaaz.gov/residents/building-permits]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.yumacountyaz.gov/government/development-services/divisions/customer-service
+Title: Permit Services | Yuma County
+Excerpt: Title: Permit Services | Yuma County URL Source: https://www.yumacountyaz.gov/government/development-services/divisions/customer-service Markdown Content: # Permit Services | Yuma County [Show/Hide](javascript: void (0)) ![Image 1: N
+----------------------------------------
+
+[24/40] water heater | Provo, UT
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 3.3s | Length: 1792
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (801) 852-6400 [confidence: medium | source: https://www.provo.org/departments/community-development]
+Portal: https://aca.provo.org [confidence: medium | source: https://aca.provo.org]
+Fees found: $75–$200 (ESTIMATED — UT standard with 1% state surcharge), $75–$200 (ESTIMATED + 1% surcharge), $50–$150 (ESTIMATED) [confidence: medium | source: https://www.provo.org/departments/community-development]
+Address: 351 W. Center Street, Provo, UT 84601 [confidence: low | source: https://www.provo.org/departments/community-development]
+Hours: Not found
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.provo.org/departments/community-development
+Title: City of Provo Community Development 
+----------------------------------------
+
+[25/40] roofing permit | Anchorage, AK
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 6.3s | Length: 2565
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (907) 343-8211 [confidence: medium | source: https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx]
+Portal: https://aca-prod.accela.com/ANCHORAGE [confidence: high | source: https://aca-prod.accela.com/ANCHORAGE]
+Fees found: Projects under $40,000: $175 per inspection (no valuation fee). Projects over $40,000: $0.009 × project valuation. Typical residential HVAC ($5k–$15k): ~$175 (inspection fee only)., Same structure — $175 per inspection for projects under $40,000, Same structure — $175 per inspection, Building permit — valuation-based for projects over $40,000. Under $40,000 = $175 inspection fee. [confidence: medium | source: https://www.muni.org/Departments/OCPD/development-services/Page
+----------------------------------------
+
+[26/40] electrical permit | Virginia Beach, VA
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 50.8s | Length: 5468
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (757) 385-4621 [confidence: high | source: https://planning.virginiabeach.gov/permits/trade]
+Portal: https://s3.us-east-1.amazonaws.com/virginia-beach-departments-docs/planning/Divisions-Offices/Permits_Inspections/Documents/Electrical-Application.pdf [confidence: high | source: https://s3.us-east-1.amazonaws.com/virginia-beach-departments-docs/planning/Divisions-Offices/Permits_Inspections/Documents/Electrical-Application.pdf]
+Fees found: Valuation-based. Residential: $50 minimum + $7/100 sqft or fee table. HVAC replacement: typically $75–$200., Panel upgrade/repairs (1-2 family): value-based from $55 (under $1,000) to $100+ (over $9,000). $35 re-inspection. $10 tech fee. 2% state levy., Water service line: $50. Se
+----------------------------------------
+
+[27/40] plumbing permit | Kenai, AK
+Score: 7/10 | Layer: Layer 1 (Search) | Time: 29.7s | Length: 3166
+Phone: ✓ | Portal: ✗ | Fees: ✗ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: Not found
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Alaska uses borough authority for permits
+Data freshness: recently updated (0d ago)
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.kenai.city/building
+Title: Building | Kenai, Alaska
+Excerpt: Title: Building | Kenai, Alaska URL Source: https://www.kenai.city/building Markdown Content: # Building | Kenai, Alaska [Skip to main content](https://www.kenai.city/building#main-content) [](https://www.kenai.city/building "Navigation Menu") [![Image 1: Home](https://www.kenai.city/sites/all/themes/aha_compass/logo.png)](https://www.kenai.city/ "Home") * [Community Residents & Visi
+----------------------------------------
+
+[28/40] HVAC replacement | Shreveport, LA
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 8.4s | Length: 3881
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.shreveportla.gov/817/Building-Permits [confidence: high | source: https://www.shreveportla.gov/817/Building-Permits]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Louisiana uses parish authority - may be parish permit office
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.shreveportla.gov/473/Permits-Inspections
+Title: Permits & Inspections | Shreveport, LA - Official Website
+Excerpt: Title: Permits & Inspections | Shreveport, LA URL Source: https://www.shreveportla.gov/473/Permits-Inspections Markdown Content: ![Image 1: Loading](https://ww
+----------------------------------------
+
+[29/40] fence permit | Key West, FL
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 10.0s | Length: 4308
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.cityofkeywest-fl.gov/219/Building-Permitting-Information [confidence: high | source: https://www.cityofkeywest-fl.gov/219/Building-Permitting-Information]
+Fees found: $1,000 [confidence: high | source: https://www.cityofkeywest-fl.gov/220/Permits]
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: live_accela_api
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://developer.accela.com/docs/api_reference/api-settings.html#operation/v4.get.settings.records.types
+Title: Accela permit data for Key West, FL
+Excerpt: Accela agency matched for Key West, FL: AZCIVCONWESTSAC. No public re
+----------------------------------------
+
+[30/40] generator permit | Unincorporated Harris County, TX
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 13.9s | Length: 4115
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.permitflow.com/blog/harris-county-building-permit [confidence: medium | source: https://www.permitflow.com/blog/harris-county-building-permit]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Unincorporated area - searching Harris County
+Data freshness: recently updated (0d ago)
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://developer.accela.com/docs/api_reference/api-settings.html#operation/v4.get.settings.records.types
+Title: Accela permit data for Unincorporated Harris County, TX
+Excerpt: Accela agency matched for Unincorporated Harris County, 
+----------------------------------------
+
+[31/40] HVAC replacement | Nashville, TN
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 2.3s | Length: 1938
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (615) 862-6590 [confidence: high | source: https://www.nashville.gov/departments/codes]
+Portal: https://aca-prod.accela.com/NASHVILLE [confidence: high | source: https://aca-prod.accela.com/NASHVILLE]
+Fees found: HVAC replacement: $75 total (mechanical/gas permit flat fee)., Electrical panel: $75. EV charger: $75., Water heater: $75., Roof replacement: $91 (building permit)., Solar installation: $108 (building + electrical)., Deck/patio: $91. [confidence: high | source: https://www.nashville.gov/departments/codes]
+Address: 800 Second Avenue South, Nashville, TN 37210 [confidence: high | source: https://www.nashville.gov/departments/codes]
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: recently updated (0
+----------------------------------------
+
+[32/40] solar permit | Los Angeles, CA
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 5.5s | Length: 3303
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (213) 482-0000 [confidence: medium | source: https://www.ladbs.org]
+Portal: https://www.ladbs.org/services/apply-for-a-permit [confidence: medium | source: https://www.ladbs.org/services/apply-for-a-permit]
+Fees found: HVAC replacement: $98 total (per-item mechanical permit: $55 min + $24 issuing fee + 3% DSCS + 6% systems surcharge)., Electrical panel: $55 minimum. EV charger: $55., Water heater: $60 (plumbing permit — per item + issuing fee + surcharges)., Roof replacement: $369 (building permit — valuation-based at 90% plan check rate). Building permits are expensive in LA., Solar installation: $498 (building + electrical combined). [confidence: medium | source: https://www.ladbs.org]
+Address: 201 N. Figueroa Str
+----------------------------------------
+
+[33/40] electrical panel | Chicago, IL
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 6.3s | Length: 2770
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (312) 744-3449 [confidence: high | source: https://www.chicago.gov/city/en/depts/bldgs]
+Portal: https://chicago.gov/permits [confidence: high | source: https://chicago.gov/permits]
+Fees found: HVAC replacement: Chicago does NOT issue standalone HVAC trade permits. HVAC work is covered under the building permit ($602 for most residential projects). Alternatively, Express Permit for qualifying like-for-like HVAC replacement., Electrical panel: $75 flat (stand-alone trade permit, Section 14A-12-1204.2)., Water heater: covered under building permit ($602 typical). Stand-alone plumbing permit: similar to electrical., Roof replacement: $475 (building permit)., Solar under 13kW: $225. Solar 13kW+: $250., Building permit (r
+----------------------------------------
+
+[34/40] roofing permit | Houston, TX
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 8.5s | Length: 2030
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✗
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (832) 394-8880 [confidence: medium | source: https://www.houstonpermittingcenter.org]
+Portal: https://www.houstonpermittingcenter.org/online-permitting [confidence: medium | source: https://www.houstonpermittingcenter.org/online-permitting]
+Fees found: $91 minimum (2025). Valuation-based above minimum., $91 minimum (2025). Valuation-based., $96 minimum (2025)., $89.81 minimum building permit (2025). Administrative fee: $33.10., ~$96 (plumbing minimum), ~$91 (electrical minimum), Electrical + building permit — typically $150–$300 combined, Building permit — valuation-based, typically $150–$400 [confidence: medium | source: https://www.houstonpermittingcenter.org]
+Address: 1002 Washington Avenue, Houston, TX 77002 [co
+----------------------------------------
+
+[35/40] deck permit | Seattle, WA
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 12.5s | Length: 3234
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (206) 684-8600 [confidence: high | source: https://www.seattle.gov/sdci]
+Portal: https://cosaccela.seattle.gov [confidence: high | source: https://cosaccela.seattle.gov]
+Fees found: HVAC mechanical permit: $70 total. NOTE: This is JUST the mechanical permit. Building permit on same project: $924+ for $8k valuation., Electrical panel: $371 (electrical permit — separate from building)., Water heater: $165 (plumbing permit — collected by King County Public Health, NOT SDCI)., Commercial reroofing: $146. Residential roof replacement requires building permit — $924+ for $8k project., Solar PV under 12kW: $438. 12–26kW: $876., EV charger: $92. [confidence: high | source: https://www.seattle.gov/sdci]
+Address: 700 5th Ave 
+----------------------------------------
+
+[36/40] HVAC replacement | Shreveport, LA
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 1.5s | Length: 3881
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.shreveportla.gov/817/Building-Permits [confidence: high | source: https://www.shreveportla.gov/817/Building-Permits]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Louisiana uses parish authority - may be parish permit office
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.shreveportla.gov/473/Permits-Inspections
+Title: Permits & Inspections | Shreveport, LA - Official Website
+Excerpt: Title: Permits & Inspections | Shreveport, LA URL Source: https://www.shreveportla.gov/473/Permits-Inspections Markdown Content: ![Image 1: Loading](https://ww
+----------------------------------------
+
+[37/40] plumbing permit | Fairbanks, AK
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 3.0s | Length: 1846
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (907) 459-1260 [confidence: high | source: https://www.fnsb.gov/249/Community-Planning]
+Portal: https://www.fnsb.gov/249/Community-Planning [confidence: high | source: https://www.fnsb.gov/249/Community-Planning]
+Fees found: Verify with FNSB Community Planning — fee schedule not publicly confirmed online. Estimated $75–$200., Verify with FNSB — estimated $75–$200, Verify with FNSB — estimated $75–$150 [confidence: high | source: https://www.fnsb.gov/249/Community-Planning]
+Address: 907 Terminal Street, Fairbanks, AK 99701 [confidence: high | source: https://www.fnsb.gov/249/Community-Planning]
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Alaska uses borough authority for permits
+---
+=== REAL-TIME WE
+----------------------------------------
+
+[38/40] solar permit | Alexandria, VA
+Score: 9/10 | Layer: Layer 1 (Search) | Time: 9.1s | Length: 3964
+Phone: ✓ | Portal: ✓ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.alexandriava.gov/permits/permit-requirements [confidence: high | source: https://www.alexandriava.gov/permits/permit-requirements]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Virginia cities are independent of counties
+Data freshness: recently updated (0d ago)
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://developer.accela.com/docs/api_reference/api-settings.html#operation/v4.get.settings.records.types
+Title: Accela permit data for Alexandria, VA
+Excerpt: Accela agency matched for Alexandria, VA: AZSOLENGALEXANDRIA. No public record types wer
+----------------------------------------
+
+[39/40] roofing permit | Honolulu, HI
+Score: 10/10 | Layer: Layer 1 (Search) | Time: 6.0s | Length: 2983
+Phone: ✓ | Portal: ✓ | Fees: ✓ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (808) 768-8000 [confidence: high | source: https://www.honolulu.gov/dpp]
+Portal: https://www.honolulu.gov/dpp/permitting/building-permits-home [confidence: high | source: https://www.honolulu.gov/dpp/permitting/building-permits-home]
+Fees found: Valuation-based. Plan review fee: 25% of building permit fee for residential. Typical residential HVAC: $150–$400 (ESTIMATED — Hawaii fees are moderate to high due to plan review requirements)., Valuation-based. Similar structure. Electrical panel: $150–$350 (ESTIMATED)., Water heater: $100–$250 (ESTIMATED)., Building permit — valuation-based. Re-roof: $200–$500 (ESTIMATED). [confidence: high | source: https://www.honolulu.gov/dpp]
+Address: 650 South King Street, 7th Floor, 
+----------------------------------------
+
+[40/40] electrical permit | San Juan, PR
+Score: 8/10 | Layer: Layer 0 (KB) | Time: 10.4s | Length: 4170
+Phone: ✓ | Portal: ✗ | Fees: ✗ | .gov: ✓
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: Not found
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer0_5_accela
+Data freshness: live_accela_api
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://developer.accela.com/docs/api_reference/api-settings.html#operation/v4.get.settings.records.types
+Title: Accela permit data for San Juan, PR
+Excerpt: Accela agency matched for San Juan, PR: Azure-MT-SanDiego-Host. No public record types were returned.
+---
+
+Source: https://www.sanjuancountywa.gov/981/Building-Permit-Forms-and-Information
+Title: Building Permit Forms and Information | San Juan County, WA
+Excerpt: Title: Building Permit Forms and Information URL Source: https://www.sanjuancountywa.gov/981/Building-Permit-
+----------------------------------------
+
+============================================================
+FINAL SUMMARY
+============================================================
+Average score: 9.1/10
+Min: 7 | Max: 10
+Scores >= 8: 39/40
+Scores >= 6: 40/40
+Scores < 5: 0/40
+
+  7/10 — Kenai, AK (plumbing permit)
+  8/10 — Kotzebue, AK (plumbing permit)
+  8/10 — Chinle, AZ (fence permit)
+  8/10 — Deadwood, SD (generator permit)
+  8/10 — Truth or Consequences, NM (solar permit)
+  8/10 — Dillingham, AK (water heater)
+  8/10 — Paragould, AR (HVAC replacement)
+  8/10 — Enumclaw, WA (electrical panel)
+  8/10 — San Juan, PR (electrical permit)
+  9/10 — Mobridge, SD (HVAC replacement)
+  9/10 — Eufaula, AL (roofing permit)
+  9/10 — Cody, WY (electrical permit)
+  9/10 — Ely, NV (deck permit)
+  9/10 — Alma, AR (roofing permit)
+  9/10 — Paducah, KY (plumbing rough-in)
+  9/10 — Biloxi, MS (roofing permit)
+  9/10 — Cheyenne, WY (deck permit)
+  9/10 — Gallup, NM (HVAC replacement)
+  9/10 — Laramie, WY (electrical permit)
+  9/10 — Boise, ID (HVAC replacement)
+  9/10 — Spokane, WA (deck permit)
+  9/10 — Yuma, AZ (solar permit)
+  9/10 — Provo, UT (water heater)
+  9/10 — Anchorage, AK (roofing permit)
+  9/10 — Shreveport, LA (HVAC replacement)
+  9/10 — Houston, TX (roofing permit)
+  9/10 — Shreveport, LA (HVAC replacement)
+  9/10 — Alexandria, VA (solar permit)
+  10/10 — Flagstaff, AZ (solar permit)
+  10/10 — Burlington, VT (EV charger)
+  10/10 — Fargo, ND (water heater)
+  10/10 — Virginia Beach, VA (electrical permit)
+  10/10 — Key West, FL (fence permit)
+  10/10 — Unincorporated Harris County, TX (generator permit)
+  10/10 — Nashville, TN (HVAC replacement)
+  10/10 — Los Angeles, CA (solar permit)
+  10/10 — Chicago, IL (electrical panel)
+  10/10 — Seattle, WA (deck permit)
+  10/10 — Fairbanks, AK (plumbing permit)
+  10/10 — Honolulu, HI (roofing permit)
