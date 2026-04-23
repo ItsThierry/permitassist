@@ -250,34 +250,6 @@
     .cities-coverage-link:hover, .cities-coverage-link:active { border-color: var(--brand); color: var(--brand); }
     .cities-coverage-link strong { color: var(--brand); }
 
-    .secondary-intent-banner {
-      margin-bottom: 14px;
-      padding: 16px 18px;
-      border-radius: 14px;
-      border: 1px solid rgba(37,99,235,0.18);
-      background: linear-gradient(180deg, rgba(37,99,235,0.05), rgba(37,99,235,0.02));
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-    .secondary-intent-copy { font-size: 14px; color: var(--text2); line-height: 1.5; }
-    .secondary-intent-copy strong { color: var(--text); }
-    .secondary-intent-btn {
-      border: 1px solid rgba(37,99,235,0.28);
-      background: #fff;
-      color: var(--brand);
-      border-radius: 999px;
-      padding: 10px 14px;
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-    }
-    .secondary-intent-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); border-color: rgba(37,99,235,0.42); }
-
     /* Free/Paid clarity bar */
     .free-paid-bar {
       display: flex; align-items: center; justify-content: center;
@@ -1880,98 +1852,16 @@ function detectTradeKey(text) {
   if (/\b(hvac|air conditioner|condenser|furnace|heat pump|\bac\b|heating|cooling|air handler)\b/.test(t)) return 'hvac';
   if (/\b(solar|\bpv\b)\b/.test(t)) return 'solar';
   if (/\b(electric|panel|circuit|breaker|wiring)\b/.test(t)) return 'electrical';
-  if (/\b(roof|roofing|shingle|tear-off|reroof|re-roof)\b/.test(t)) return 'roofing';
+  if (/\b(roof|shingle|tear-off|reroof|re-roof)\b/.test(t)) return 'roofing';
   if (/\b(plumb|pipe|drain|sewer)\b/.test(t)) return 'plumbing';
   if (/\b(deck|patio)\b/.test(t)) return 'deck';
   if (/\b(fence)\b/.test(t)) return 'fence';
-  if (/\b(shed|storage|garage|outbuilding)\b/.test(t)) return 'shed';
+  if (/\b(shed|storage)\b/.test(t)) return 'shed';
   if (/\b(pool|spa)\b/.test(t)) return 'pool';
   if (/\b(generator|genset|generac)\b/.test(t)) return 'generator';
   if (/\b(bathroom|bath|shower|tub)\b/.test(t)) return 'bathroom_remodel';
   if (/\b(window)\b/.test(t)) return 'window_replacement';
   return '';
-}
-
-function sanitizeMultiIntentDetectionText(text) {
-  return (text || '').split(/[—,-]/, 1)[0].trim();
-}
-
-const MULTI_INTENT_RANK = {
-  pool: 90, driveway: 82, deck: 72, hvac: 70, electrical: 70, plumbing: 68, roofing: 68, shed: 56, fence: 52, fountain: 40
-};
-const MULTI_INTENT_CATALOG = [
-  { key: 'pool', label: 'Pool', query: 'pool', rank: MULTI_INTENT_RANK.pool, patterns: [/\bpool\b/, /\bspa\b/, /\bhot tub\b/, /\bswimming pool\b/] },
-  { key: 'fountain', label: 'Fountain', query: 'fountain', rank: MULTI_INTENT_RANK.fountain, patterns: [/\bfountain\b/, /\bwater feature\b/, /\bbackyard fountain\b/, /\byard fountain\b/] },
-  { key: 'fence', label: 'Fence', query: 'fence', rank: MULTI_INTENT_RANK.fence, patterns: [/\bfence\b/] },
-  { key: 'deck', label: 'Deck', query: 'deck', rank: MULTI_INTENT_RANK.deck, patterns: [/\bdeck\b/] },
-  { key: 'shed', label: 'Shed', query: 'shed', rank: MULTI_INTENT_RANK.shed, patterns: [/\bshed\b/, /\bstorage shed\b/, /\boutbuilding\b/, /\bgarage\b/, /\bdetached garage\b/] },
-  { key: 'driveway', label: 'Driveway', query: 'driveway', rank: MULTI_INTENT_RANK.driveway, patterns: [/\bdriveway\b/, /\bconcrete driveway\b/, /\bdrive approach\b/, /\bapron\b/, /\bpaving\b/, /\bpavement\b/] },
-  { key: 'hvac', label: 'HVAC', query: 'hvac replacement', rank: MULTI_INTENT_RANK.hvac, patterns: [/\bhvac\b/, /\bair conditioner\b/, /\bcondenser\b/, /\bfurnace\b/, /\bheat pump\b/, /\bair handler\b/, /\bductwork\b/, /\bducts\b/] },
-  { key: 'electrical', label: 'Electrical', query: 'electrical work', rank: MULTI_INTENT_RANK.electrical, patterns: [/\belectrical\b/, /\bpanel\b/, /\bcircuit\b/, /\bbreaker\b/, /\bwiring\b/] },
-  { key: 'plumbing', label: 'Plumbing', query: 'plumbing work', rank: MULTI_INTENT_RANK.plumbing, patterns: [/\bplumb\w*\b/, /\bpipe\w*\b/, /\bdrain\w*\b/, /\bsewer\b/] },
-  { key: 'roofing', label: 'Roofing', query: 'roof replacement', rank: MULTI_INTENT_RANK.roofing, patterns: [/\broof\b/, /\broofing\b/, /\bshingle\b/, /\breroof\b/, /\bre-roof\b/, /\btear-off\b/] }
-];
-let multiIntentContext = null;
-
-function detectCatalogMatch(segment) {
-  const text = ` ${(segment || '').toLowerCase().replace(/[^a-z0-9&\s-]/g, ' ')} `;
-  if (!text.trim()) return null;
-  const matches = [];
-  for (const item of MULTI_INTENT_CATALOG) {
-    if (item.patterns.some(pattern => pattern.test(text))) matches.push(item);
-  }
-  if (!matches.length) return null;
-  const unique = [...new Map(matches.map(item => [item.key, item])).values()];
-  if (unique.length !== 1) return null;
-  return unique[0];
-}
-
-function rankMultiIntentPair(a, b) {
-  if ((b.rank || 0) > (a.rank || 0)) return { primary: b, secondary: a };
-  return { primary: a, secondary: b };
-}
-
-function detectMultiIntentQuery(raw) {
-  const text = (raw || '').trim();
-  if (!text) return null;
-  const normalized = sanitizeMultiIntentDetectionText(text).toLowerCase().replace(/\s+/g, ' ');
-  if (!normalized) return null;
-  if (/\b(attached|integrated|covered)\s+pergola\b/.test(normalized)) return null;
-  const connectors = [...normalized.matchAll(/\s(?:and|&)\s/g)];
-  if (connectors.length !== 1) return null;
-  const connector = connectors[0];
-  const index = connector.index || 0;
-  const left = normalized.slice(0, index).trim();
-  const right = normalized.slice(index + connector[0].length).trim();
-  if (!left || !right) return null;
-  if (/^(with|w\/|including|plus)\b/.test(right)) return null;
-  if (/^(attached|integrated|covered|existing|new)\s+pergola\b/.test(right)) return null;
-  const leftMatch = detectCatalogMatch(left);
-  const rightMatch = detectCatalogMatch(right);
-  if (!leftMatch || !rightMatch) return null;
-  if (leftMatch.key === rightMatch.key) return null;
-  const ordered = rankMultiIntentPair({ ...leftMatch, start: left.indexOf(leftMatch.query) }, { ...rightMatch, start: index + right.indexOf(rightMatch.query) });
-  return ordered;
-}
-
-function buildSecondaryIntentBanner() {
-  const secondary = multiIntentContext?.secondary;
-  if (!secondary) return '';
-  return `<div class="secondary-intent-banner"><div class="secondary-intent-copy">We also detected another permit need: <strong>${esc(secondary.label)}</strong></div><button type="button" class="secondary-intent-btn" onclick="runSecondaryIntentSearch()">Search ${esc(secondary.label)}</button></div>`;
-}
-
-function runSecondaryIntentSearch() {
-  const secondary = multiIntentContext?.secondary;
-  if (!secondary) return;
-  const location = multiIntentContext.location || {};
-  newSearch();
-  document.getElementById('query').value = secondary.query;
-  if (location.address) document.getElementById('address').value = location.address;
-  if (location.city) document.getElementById('city').value = location.city;
-  if (location.state) document.getElementById('state').value = location.state;
-  if (location.zip_code) document.getElementById('zip').value = location.zip_code;
-  handleTradeWizardInput();
-  setTimeout(() => doLookupWithOffline(), 60);
 }
 
 function getTradeWizardSuffix() {
@@ -2634,7 +2524,7 @@ function parseQuery(raw){
 }
 
 // ── Navigation helpers ───────────────────────────────────────────────────────
-function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('address').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');tradeWizardState={tradeKey:'',baseQuery:'',answers:{},dismissedTrade:'',suppressInput:false};multiIntentContext=null;const wizard=document.getElementById('trade-wizard');if(wizard){wizard.classList.remove('show');wizard.innerHTML='';}refreshCounterBar();document.getElementById('page-search').scrollTop=0}
+function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('address').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');tradeWizardState={tradeKey:'',baseQuery:'',answers:{},dismissedTrade:'',suppressInput:false};const wizard=document.getElementById('trade-wizard');if(wizard){wizard.classList.remove('show');wizard.innerHTML='';}refreshCounterBar();document.getElementById('page-search').scrollTop=0}
 
 const upgradeCouponInput=document.getElementById('upgrade-coupon-input');
 if(upgradeCouponInput){
@@ -3165,8 +3055,6 @@ function renderResults(d, job, city, state) {
     </div>
     <div id="followup-qa-chat"></div>
   </div>`;
-
-  html += buildSecondaryIntentBanner();
 
   // AHJ Disclaimer (Fix 2)
   html += `<div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:12px; padding:16px 18px; margin-bottom:14px; display:flex; gap:10px; align-items:flex-start;">
@@ -3969,8 +3857,6 @@ async function doLookup() {
   const raw = document.getElementById('query').value.trim();
   const address = document.getElementById('address')?.value.trim() || '';
   const parsed = parseQuery(raw);
-  const multiIntentMatch = detectMultiIntentQuery(parsed.job_type || raw);
-  if (multiIntentMatch?.primary?.query) parsed.job_type = multiIntentMatch.primary.query;
   if (!parsed.job_type) { alert('Please describe the job.'); return; }
   if (address && (!parsed.city || !parsed.state)) {
     const geo = await geocodeAddress(address);
@@ -3990,12 +3876,6 @@ async function doLookup() {
     parsed.state = parsed.state || fallback.state;
   }
   if (!parsed.city || !parsed.state) { alert('Please add a city and state, a full address, or use your location.'); return; }
-
-  multiIntentContext = multiIntentMatch ? {
-    primary: multiIntentMatch.primary,
-    secondary: multiIntentMatch.secondary,
-    location: { address, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code || '' }
-  } : null;
 
   if (!_isSampleLookup && !_preLookupPassed && !hasEmail() && !localStorage.getItem(SESSION_KEY)) {
     showPreLookupGate();
