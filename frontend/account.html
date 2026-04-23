@@ -152,11 +152,11 @@
           </div>
           <div style="text-align:right">
             <div style="font-size:13px;color:#475569">Free plan</div>
-            <div style="font-size:14px;font-weight:700" id="acct-reset">No reset</div>
+            <div style="font-size:14px;font-weight:700" id="acct-reset">3 free lookups — no reset</div>
           </div>
         </div>
         <div class="usage-bar"><div class="usage-fill" id="acct-usage-fill" style="width:0%"></div></div>
-        <div style="font-size:12px;color:#475569" id="acct-usage-text">0 of 3 free lookups used, no reset</div>
+        <div style="font-size:12px;color:#475569" id="acct-usage-text">3 free lookups — no reset</div>
       </div>
 
       <!-- Upgrade buttons (free users) -->
@@ -302,10 +302,10 @@ function renderAccount(d) {
     const fill = document.getElementById('acct-usage-fill');
     fill.style.width = pct + '%';
     if (pct >= 100) fill.classList.add('full');
-    document.getElementById('acct-usage-text').textContent = remaining === 0 ? '3 free lookups used, no reset. Upgrade for unlimited' : `${remaining} free lookup${remaining !== 1 ? 's' : ''} left, no reset`;
+    document.getElementById('acct-usage-text').textContent = remaining === 0 ? '3 free lookups — no reset. Upgrade for unlimited' : `${remaining} free lookup${remaining !== 1 ? 's' : ''} left, no reset`;
   }
 
-  document.getElementById('acct-reset').textContent = d.paid ? 'Unlimited' : 'No reset';
+  document.getElementById('acct-reset').textContent = d.paid ? 'Unlimited' : '3 free lookups — no reset';
 
   // Upgrade vs manage
   if (d.paid) {

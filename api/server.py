@@ -82,7 +82,7 @@ FREE_LOOKUPS_PER_MONTH = 3
 UPGRADE_URL_SOLO       = "https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c"
 UPGRADE_URL_ANNUAL     = "https://buy.stripe.com/fZueV63DlfIo5JX7i53VC0d"
 UPGRADE_URL_TEAM       = "https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b"
-PRICE_SOLO             = "price_1TME9k43XpvaBuPhmXKDc2YC"  # $24.99/mo
+PRICE_SOLO             = "price_1TME9k43XpvaBuPhmXKDc2YC"  # $39.99/mo
 PRICE_SOLO_LEGACY      = "price_1TLkkQ43XpvaBuPhhxdSRoID"   # old $19/mo (deactivated)
 PRICE_SOLO_ANNUAL      = "price_1TME9y43XpvaBuPhfj9W8hgG"   # $199/yr
 PRICE_TEAM             = "price_1TLkkQ43XpvaBuPh0vL7MnY4"
@@ -644,6 +644,7 @@ def init_db():
 
     added_user_columns = ensure_table_columns(conn, "users", {
         "free_limit_notice_sent_at": "TEXT",
+        "free_limit_email_sent": "INTEGER DEFAULT 0",
     })
     if added_user_columns:
         drift_fixes.append(f"users: added columns {', '.join(added_user_columns)}")
@@ -729,14 +730,14 @@ def get_user(email: str) -> dict | None:
         conn = sqlite3.connect(CACHE_DB)
         row = conn.execute(
             "SELECT id,email,plan,plan_expires_at,stripe_customer_id,"
-            "stripe_subscription_id,created_at,last_login,free_limit_notice_sent_at FROM users WHERE email=?",
+            "stripe_subscription_id,created_at,last_login,free_limit_notice_sent_at,free_limit_email_sent FROM users WHERE email=?",
             [email.lower().strip()]
         ).fetchone()
         conn.close()
         if not row:
             return None
         cols = ["id","email","plan","plan_expires_at","stripe_customer_id",
-                "stripe_subscription_id","created_at","last_login","free_limit_notice_sent_at"]
+                "stripe_subscription_id","created_at","last_login","free_limit_notice_sent_at","free_limit_email_sent"]
         return dict(zip(cols, row))
     except Exception as e:
         print(f"[user] Get error: {e}")
@@ -1032,14 +1033,9 @@ def send_free_limit_reached_email(to_email: str) -> bool:
     """Send one-time free lookup limit reached email."""
     subject = "You've used your 3 free PermitAssist lookups"
     body = (
-        "Hey,\n\n"
-        "You've used your 3 free PermitAssist lookups.\n\n"
-        "If you're still pricing jobs or checking permit requirements, you can upgrade here and keep going:\n"
-        "https://permitassist.io/#pricing\n\n"
-        "Solo gives you unlimited lookups, so you can keep moving without stopping to hunt down permit info job by job.\n\n"
-        "Thanks,\n"
-        "PermitAssist\n"
-        "permitassist.io"
+        "Hey, you've used all 3 of your free PermitAssist lookups. "
+        "To keep researching permits without limits, upgrade to Solo for $39.99/mo — cancel anytime. "
+        "https://permitassist.io/#pricing"
     )
     return resend_send(to_email, subject, body)
 
@@ -1048,16 +1044,18 @@ def send_free_limit_email_once(email: str):
     normalized_email = (email or "").lower().strip()
     if not normalized_email:
         return
+    claimed = False
     try:
         conn = sqlite3.connect(CACHE_DB)
-        now = utc_now().isoformat()
         cur = conn.execute(
-            "UPDATE users SET free_limit_notice_sent_at=? WHERE email=? AND free_limit_notice_sent_at IS NULL",
-            [now, normalized_email]
+            "UPDATE users SET free_limit_email_sent=1, free_limit_notice_sent_at=? "
+            "WHERE email=? AND COALESCE(free_limit_email_sent, 0)=0",
+            [utc_now().isoformat(), normalized_email]
         )
         conn.commit()
+        claimed = cur.rowcount == 1
         conn.close()
-        if cur.rowcount != 1:
+        if not claimed:
             return
         if not send_free_limit_reached_email(normalized_email):
             print(f"[free-limit-email] Send failed after claiming flag for {normalized_email}")
@@ -1177,7 +1175,7 @@ ONBOARDING_BODIES = {
     ),
     14: (
         f"You've been with PermitAssist for 2 weeks now.\n\n"
-        f"Free accounts get 3 lookups per month. If you're hitting that limit or doing more than 3 jobs/month, upgrading to Solo for $24.99/mo gets you:\n\n"
+        f"Free accounts get 3 lookups per month. If you're hitting that limit or doing more than 3 jobs/month, upgrading to Solo for $39.99/mo gets you:\n\n"
         f"\u2022 Unlimited lookups, every month\n"
         f"\u2022 Job tracker for all your permits\n"
         f"\u2022 Permit expiry reminders\n"
@@ -3232,8 +3230,9 @@ class Handler(BaseHTTPRequestHandler):
                         return
 
                     if used_before >= FREE_LOOKUP_LIMIT and not unlimited:
-                        if user_email:
-                            threading.Thread(target=send_free_limit_email_once, args=(user_email,), daemon=True).start()
+                        user = get_user(user_email) if user_email else None
+                        if user and user.get("email"):
+                            threading.Thread(target=send_free_limit_email_once, args=(user["email"],), daemon=True).start()
                         self.send_json(403, {
                             "error": "free_limit_reached",
                             "message": "You've used your 3 free lookups. Subscribe to continue.",

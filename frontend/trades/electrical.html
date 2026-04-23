@@ -1206,7 +1206,7 @@
       <div class="free-paid-bar">
         <span>✅ Built for electricians — 3 free lookups</span>
         <span class="free-paid-divider">·</span>
-        <span>Then <strong>$24.99/mo</strong> for unlimited</span>
+        <span>Then <strong>$39.99/mo</strong> for unlimited</span>
         <span class="free-paid-divider">·</span>
         <span>Cancel anytime</span>
       </div>
@@ -1214,8 +1214,8 @@
       <!-- Counter bar -->
       <div class="counter-bar" id="counter-bar">
         <div class="counter-bar-top">
-          <span class="counter-text" id="counter-text">0 of 3 free lookups used, no reset</span>
-        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $24.99/mo →</span>
+          <span class="counter-text" id="counter-text">3 free lookups — no reset</span>
+        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $39.99/mo →</span>
       </div>
       <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
       </div>
@@ -1351,7 +1351,7 @@
             <div class="roi-stat-label">less research time vs. calling building departments</div>
           </div>
           <div class="roi-stat" role="listitem">
-            <div class="roi-stat-number">$24.99/mo</div>
+            <div class="roi-stat-number">$39.99/mo</div>
             <div class="roi-stat-label">vs. $500+/hr permit expediter</div>
           </div>
         </div>
@@ -1404,7 +1404,7 @@
         <div class="compare-strip-cols">
           <div class="compare-col compare-col-winner">
             <div class="compare-col-name">✅ PermitAssist</div>
-            <div class="compare-col-price">$24.99/mo · unlimited</div>
+            <div class="compare-col-price">$39.99/mo · unlimited</div>
             <ul class="compare-col-features">
               <li>⚡ Instant — 30 seconds</li>
               <li>🔍 100% self-serve</li>
@@ -1557,12 +1557,12 @@
 <div class="upgrade-modal" id="upgrade-modal" aria-hidden="true" onclick="handleUpgradeOverlayClick(event)">
   <div class="upgrade-modal-card" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title">
     <button class="upgrade-modal-close" type="button" aria-label="Close upgrade modal" onclick="closeUpgrade()">×</button>
-    <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Pro</div>
+    <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Solo</div>
     <div class="upgrade-modal-accent"></div>
     <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
 
     <div class="upgrade-plan-toggle" role="tablist" aria-label="Choose a plan">
-      <button class="upgrade-plan-btn active" id="upgrade-plan-pro" type="button" onclick="setUpgradePlan('pro')">Pro — $24.99/mo</button>
+      <button class="upgrade-plan-btn active" id="upgrade-plan-pro" type="button" onclick="setUpgradePlan('pro')">Pro — $39.99/mo</button>
       <button class="upgrade-plan-btn" id="upgrade-plan-team" type="button" onclick="setUpgradePlan('team')">Team — $49/mo</button>
     </div>
 
@@ -1618,7 +1618,7 @@
       <div style="font-size:12px;color:#475569;line-height:1.7">
         • 1 stop-work order avoided = <strong style="color:#0f172a">$2,000–$10,000 saved</strong><br>
         • 2 hrs/week research saved = <strong style="color:#0f172a">$300–$600/mo value</strong><br>
-        • PermitAssist costs <strong style="color:#059669">$24.99/month</strong>
+        • PermitAssist costs <strong style="color:#059669">$39.99/month</strong>
       </div>
     </div>
     <a href="/pricing" style="display:block;text-align:center;background:#2563EB;color:#fff;padding:14px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:10px">View Plans & Pricing →</a>
@@ -1646,7 +1646,7 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
-      <button onclick="openUpgrade('pro')" style="background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Pro — $24.99/mo</button>
+      <button onclick="openUpgrade('pro')" style="background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Pro — $39.99/mo</button>
       <button onclick="openUpgrade('team')" style="background:rgba(37,99,235,0.15);color:var(--brand);border:1px solid rgba(37,99,235,0.4);border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Team — $49/mo<br><span style="font-size:10px;font-weight:400">Up to 3 seats</span></button>
     </div>
     <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 3 months free: <strong style="color:#059669">Annual plan = $199/yr</strong> (vs $299.88)</div>
@@ -1910,7 +1910,7 @@ function updateCounterBarFromServer(used, remaining, plan){
   const bar=document.getElementById('counter-bar'),text=document.getElementById('counter-text');
   if(!bar)return;
   const total=FREE_LIMIT,pct=Math.round(used/total*100);
-  text.textContent=remaining===0?'3 free lookups used, no reset. Upgrade for unlimited':`${used} of ${total} free lookups used, no reset`;
+  text.textContent=remaining===0?'3 free lookups — no reset. Upgrade for unlimited':`${used} of ${total} free lookups used, no reset`;
   const fill=bar.querySelector('.counter-progress-fill');
   if(fill)requestAnimationFrame(()=>fill.style.width=pct+'%');
   bar.style.borderColor=remaining===0?'rgba(239,68,68,0.4)':'';
@@ -2093,7 +2093,7 @@ function skipPreLookupGate() {
 
 function showGate(hardBlock){
   const title=document.getElementById('gate-title'),sub=document.getElementById('gate-sub'),skip=document.getElementById('gate-skip-link');
-  if(hardBlock){title.textContent='You\'ve used your 3 free lookups';sub.textContent='Upgrade to Pro for unlimited lookups — $24.99/mo, cancel anytime. Enter your email to log in or create an account.';if(skip)skip.style.display='none';}
+  if(hardBlock){title.textContent='You\'ve used your 3 free lookups';sub.textContent='Upgrade to Solo for unlimited lookups — $39.99/mo, cancel anytime. Enter your email to log in or create an account.';if(skip)skip.style.display='none';}
   else{title.textContent='Save your results';sub.textContent='Enter your email to save your lookup history and get your results by email. Completely free.';if(skip)skip.style.display='block';}
   // Reset to step 1
   document.getElementById('magic-step1').style.display='block';
