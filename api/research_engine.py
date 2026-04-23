@@ -13,6 +13,7 @@ import time
 import re
 import sqlite3
 import hashlib
+import io
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
 from copy import deepcopy
 from urllib.parse import urljoin, urlparse
@@ -21,6 +22,7 @@ from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 from openai import OpenAI
 import google.generativeai as genai
+import pdfplumber
 
 client = OpenAI()
 
@@ -665,6 +667,7 @@ PDF_SOURCES = {
     "austin_tx": "https://www.austintexas.gov/sites/default/files/files/Development_Services/Fee_Schedule.pdf",
 }
 PDF_CACHE_DIR = os.path.join(_data_dir, "pdf_cache")
+_RAILWAY_ENV_PATH = "/data/.openclaw/private/railway.env"
 
 FEE_FORMULAS = {
     "nashville_tn": {"base": 30, "per_thousand": 8.50, "min": 30, "threshold": 2858},
@@ -1178,15 +1181,53 @@ def ensure_pdf_cache_dir():
         print(f"[pdf_kb] Failed to create cache dir: {e}")
 
 
-def get_cached_pdf_text(city: str, state: str) -> str:
+def _get_env_value(name: str, default: str = "") -> str:
+    value = os.environ.get(name)
+    if value not in (None, ""):
+        return value
+    try:
+        with open(_RAILWAY_ENV_PATH) as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, raw_value = line.partition("=")
+                if key.strip() != name:
+                    continue
+                value = raw_value.strip().strip('"').strip("'")
+                if value:
+                    os.environ[name] = value
+                    return value
+    except Exception:
+        pass
+    return default
+
+
+def _pdf_cache_key(city: str, state: str) -> str:
+    return f"{city.lower().replace(' ', '_')}_{state.lower()}"
+
+
+def _meaningful_pdf_text_len(text: str) -> int:
+    if not text:
+        return 0
+    cleaned = re.sub(r"\s+", " ", str(text)).strip()
+    cleaned = re.sub(r"[^A-Za-z0-9$%.,:;()/#\- ]+", " ", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return len(cleaned)
+
+
+def get_cached_pdf_text(city: str, state: str, source_url: str = "") -> str:
     try:
         ensure_pdf_cache_dir()
-        key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
+        key = _pdf_cache_key(city, state)
         cache_file = os.path.join(PDF_CACHE_DIR, f"{key}.txt")
         meta_file = os.path.join(PDF_CACHE_DIR, f"{key}.meta.json")
         if os.path.exists(cache_file) and os.path.exists(meta_file):
             with open(meta_file) as f:
                 meta = json.load(f)
+            cached_source = str(meta.get('source_url') or '')
+            if source_url and cached_source and cached_source != source_url:
+                return ''
             age_days = (time.time() - meta.get('cached_at', 0)) / 86400
             if age_days < 30:
                 with open(cache_file) as f:
@@ -1196,30 +1237,94 @@ def get_cached_pdf_text(city: str, state: str) -> str:
     return ''
 
 
-def cache_pdf_text(city: str, state: str, text: str, source_url: str):
+def cache_pdf_text(city: str, state: str, text: str, source_url: str, extraction_method: str = ""):
     try:
         ensure_pdf_cache_dir()
-        key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
+        key = _pdf_cache_key(city, state)
         with open(os.path.join(PDF_CACHE_DIR, f"{key}.txt"), 'w') as f:
             f.write(text or '')
         with open(os.path.join(PDF_CACHE_DIR, f"{key}.meta.json"), 'w') as f:
-            json.dump({'cached_at': time.time(), 'source_url': source_url}, f)
+            json.dump({'cached_at': time.time(), 'source_url': source_url, 'extraction_method': extraction_method}, f)
     except Exception as e:
         print(f"[pdf_kb] Cache write failed: {e}")
 
 
-def fetch_and_cache_pdf(url: str, city: str, state: str) -> str:
+def _extract_pdf_text_with_pdfplumber(pdf_bytes: bytes, url: str = "") -> str:
+    try:
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+            pages = []
+            for page in pdf.pages:
+                page_text = page.extract_text() or ""
+                if page_text.strip():
+                    pages.append(page_text)
+        text = "\n\n".join(pages).strip()
+        if text:
+            print(f"[pdf_kb] pdfplumber extracted {len(text)} chars from {url or 'pdf bytes'}")
+        return text
+    except Exception as e:
+        print(f"[pdf_kb] pdfplumber extraction failed for {url or 'pdf bytes'}: {e}")
+    return ''
+
+
+def _extract_pdf_text_with_firecrawl(url: str) -> str:
+    api_key = _get_env_value("FIRECRAWL_API_KEY", "")
+    if not api_key or not url:
+        return ""
+    try:
+        resp = requests.post(
+            "https://api.firecrawl.dev/v2/scrape",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={"url": url, "formats": ["markdown"], "parsers": [{"type": "pdf", "mode": "auto"}]},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        data = resp.json() or {}
+        payload = data.get("data") or {}
+        markdown = payload.get("markdown") or data.get("markdown") or ""
+        return (markdown or "").strip()
+    except Exception as e:
+        print(f"[pdf_kb] Firecrawl PDF OCR failed for {url}: {e}")
+        return ""
+
+
+def extract_pdf_text(url: str, city: str, state: str) -> str:
     try:
         if not is_pdf_url(url):
             return ''
-        text, _, _ = jina_fetch(url)
-        if text and len(text) > 200:
-            cache_pdf_text(city, state, text, url)
-            print(f"[pdf_kb] Cached PDF for {city}, {state}: {len(text)} chars")
-            return text
+        cached = get_cached_pdf_text(city, state, source_url=url)
+        if cached:
+            print(f"[pdf_kb] Cache hit for {city}, {state}: {len(cached)} chars")
+            return cached
+
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0 (PermitAssist PDF Bot)"}, timeout=45)
+        resp.raise_for_status()
+        pdf_bytes = resp.content or b''
+        if not pdf_bytes:
+            return ''
+
+        pdfplumber_text = _extract_pdf_text_with_pdfplumber(pdf_bytes, url=url)
+        if _meaningful_pdf_text_len(pdfplumber_text) >= 100:
+            cache_pdf_text(city, state, pdfplumber_text, url, extraction_method="pdfplumber")
+            print(f"[pdf_kb] Cached text PDF for {city}, {state}: {len(pdfplumber_text)} chars")
+            return pdfplumber_text
+
+        print(f"[pdf_kb] Low-text PDF detected for {url}, trying Firecrawl OCR")
+        firecrawl_text = _extract_pdf_text_with_firecrawl(url)
+        if _meaningful_pdf_text_len(firecrawl_text) >= 100:
+            cache_pdf_text(city, state, firecrawl_text, url, extraction_method="firecrawl_pdf_ocr")
+            print(f"[pdf_kb] Cached OCR PDF for {city}, {state}: {len(firecrawl_text)} chars")
+            return firecrawl_text
+
+        if pdfplumber_text:
+            cache_pdf_text(city, state, pdfplumber_text, url, extraction_method="pdfplumber_low_text")
+            return pdfplumber_text
     except Exception as e:
-        print(f"[pdf_kb] Fetch failed: {e}")
+        print(f"[pdf_kb] Unified PDF extraction failed for {url}: {e}")
     return ''
+
+
+def fetch_and_cache_pdf(url: str, city: str, state: str) -> str:
+    return extract_pdf_text(url, city, state)
 
 
 def calculate_permit_ready_score(context: str, structured: dict) -> tuple[int, str, list[str]]:
@@ -2021,7 +2126,7 @@ def jina_fetch(url: str) -> tuple[str, int, bool]:
 
 
 def firecrawl_fetch(url: str) -> str:
-    api_key = os.environ.get("FIRECRAWL_API_KEY", "")
+    api_key = _get_env_value("FIRECRAWL_API_KEY", "")
     if not api_key or not url:
         return ""
     try:
@@ -2551,8 +2656,27 @@ def _make_result(url: str, title: str, content: str, source_layer: str) -> dict:
 def _fetch_and_structure_url(url: str, city: str, state: str, default_title: str = "") -> dict | None:
     if not url:
         return None
-    if url.lower().endswith('.pdf'):
-        print("[search] PDF detected, routing to Jina PDF handler")
+    if is_pdf_url(url):
+        print("[search] PDF detected, routing to unified PDF extractor")
+        pdf_text = extract_pdf_text(url, city, state)
+        content = (pdf_text or "").strip()
+        status = 200 if content else 0
+        source_layer = "layer1_pdf"
+        if content and len(content) > 400:
+            record_url_success(url, len(content))
+        structured = extract_permit_content(url, content, city=city, state=state) if content else {}
+        if structured:
+            structured["source_url"] = url
+            structured["source"] = source_layer
+            structured["freshness"] = check_page_freshness(url)
+        return {
+            "url": url,
+            "title": default_title or url,
+            "content": content[:900],
+            "structured": structured or {},
+            "status": status,
+            "source_layer": source_layer,
+        }
     text, status, is_spa = jina_fetch(url)
     if status == 404:
         return {"url": url, "title": default_title or url, "content": "", "structured": {}, "status": 404, "source_layer": "layer1_dead"}

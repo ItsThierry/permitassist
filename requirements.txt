@@ -4,3 +4,4 @@ tavily-python>=0.3.0
 google-generativeai>=0.8.0
 beautifulsoup4>=4.12.0
 lxml>=5.0.0
+pdfplumber>=0.11.0
