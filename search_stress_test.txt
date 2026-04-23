@@ -1,0 +1,191 @@
+
+============================================================
+TEST: electrical panel upgrade | Enumclaw, WA
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: 360-902-5800
+Portal: https://www.lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/
+Fees found: $250.00, $500.00, $1,200,
+Address: 7273 Linderson Way SW Tumwater
+Hours: Tuesday through Friday. For inspections call the day prior by 3 PM
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/
+Title: Electrical Permits, Fees & Inspections
+Excerpt: Title: Electrical Permits, Fees & Inspections URL Source: https://www.lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/ Markdown Content: # Electrical Permits, Fees & Inspections [Skip to main content](https://www.lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/#lniMainContent)[Skip to navigation](https://www.lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/#homepage-header_mega-menu)Choose a language * [Español](https://www.lni.wa.gov/es/licensing-permits/electrical/electrical-permits-fees-and-inspections/) * [ប្រទេសកម្ពុជា](https://l
+[Total length: 5448]
+
+============================================================
+TEST: roofing permit | Paragould, AR
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (870) 239-7525
+Portal: https://permits.com/us/arkansas/greene-county/paragould
+Fees found: $250.00, $25.00, $1,000.00, $15,000.00, $5.00, $100,000.00, $3,000,000.00, $300,000.00
+Address: 16 - DISTRICT COURTChapter 16 - DISTRICT COURT * Expand Chapter 18 - ENVIRONMENTChapter 18 - ENVIRONMENT * Expand Chapter 20 -
+Hours: Not found
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://library.municode.com/ar/paragould/codes/code_of_ordinances?nodeId=COOR_CH10BUBURE
+Title: Chapter 10 | Code of Ordinances | Paragould, AR
+Excerpt: Title: Chapter 10 - BUILDINGS AND BUILDING REGULATIONS | Code of Ordinances | Paragould, AR URL Source: https://library.municode.com/ar/paragould/codes/code_of_ordinances?nodeId=COOR_CH10BUBURE Markdown Content: # Chapter 10 - BUILDINGS AND BUILDING REGULATIONS | Code of Ordinances | Paragould, AR | Municode Library Chapter 10 - BUILDINGS AND BUILDING REGULATIONS | Code of Ordinances | Paragould, AR | Municode Library [Skip to Chapter 10 - BUILDINGS AND BUILDING REGULATIONS](https://library.municode.com/#_COOR_CH10BUBURE)[Skip to main content](https://librar
+[Total length: 4805]
+
+============================================================
+TEST: plumbing rough-in | Paducah, KY
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (270-444-8527
+Portal: https://paducahky.gov/departments/fire-department/permits-construction
+Fees found: $50, $14, $20, $50.00, $1.00
+Address: 300 South 5th Street. To apply for a permit
+Hours: Not found
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://dhbc.ky.gov/newstatic_info.aspx?static_id=337
+Title: DEPARTMENT OF HOUSING, BUILDINGS AND CONSTRUCTION
+Excerpt: Title: DEPARTMENT OF HOUSING, BUILDINGS AND CONSTRUCTION URL Source: https://dhbc.ky.gov/newstatic_info.aspx?static_id=337 Markdown Content: **FEE CHANGE - Effective March 1, 2022, Plumbing installation permit fees will be as follows: Residential (One and Two Family) Permits: $50 base permit fee, $14 per opening fee Domestic Water Heater Only Permits: $50 Commercial Permits: $50 base permit fee; $20 per opening fee Medical Gas Piping Permits: $50 base permit fee; $20 per opening fee** Please see letter from David Moore, Plumbing Director regarding Plumbing Code changes effective June 2, 2020: [Plumbing Code Changes - Letter](https://dhbc.ky.gov/documents/PlumbingCodeChanges2020JMFedits061620.pdf "Plumbing Code chang
+[Total length: 5495]
+
+============================================================
+TEST: HVAC replacement | Gallup, NM
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (505) 863-1290
+Portal: https://gallupnm.gov/779/Building-Permits
+Fees found: $75, $250, $50, $300, $1,000, $8, $15, $100
+Address: 110 W. Aztec Avenue Gallup
+Hours: Monday through Friday from 8:00 a.m.
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://gallupnm.gov/779/Building-Permits
+Title: Building Permits | Gallup, NM - Official Website
+Excerpt: Title: Building Permits | Gallup, NM URL Source: https://gallupnm.gov/779/Building-Permits Markdown Content: Building Permits are required for most types of construction work within the City. _Permits are not required for_ interior and exterior painting of residential structures, interior painting of commercial structures, minor landscaping, carpeting, tiling, cabinetry, counter tops, and roof mounted solar panels. _Permits are required for_ new commercial construction, new residential construction, structural additions and/or alterations, demolition, asphalt paving & overlay, excavation & grading, roofing and re-roofing, **all storage sheds**, signage, ground mounted solar panels, stuccoing, site development, fences, re-stuccoing,
+[Total length: 5586]
+
+============================================================
+TEST: solar panel installation | Yuma, AZ
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (928) 373-5000
+Portal: https://www.yumaaz.gov/residents/building-permits
+Fees found: $500, $10,000, $150, $100, $300, $50, $200, $250
+Address: 77 2998 S Shari Ave Yuma
+Hours: Mon - Thu & Alt Fri: 7:00 AM
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.yumaaz.gov/residents/building-permits
+Title: Building Permits | City Of Yuma, AZ
+Excerpt: Title: Building Permits | City Of Yuma, AZ URL Source: https://www.yumaaz.gov/residents/building-permits Markdown Content: # Building Permits | City Of Yuma, AZ [Skip to Main Content](https://www.yumaaz.gov/residents/building-permits#pagebody) # City Of Yuma, AZ [HOME](https://www.yumaaz.gov/home)[Menu](javascript:void(0);) [How Do I?](javascript:void(0);) [Close](javascript:void(0);) ## How Do I? ### How Do I... ### Access... ### Public Records For individuals wanting to view or purchase a copy of a City document, click below for additional information. [Learn More](https://www.yumaaz.gov/government/city-clerk-s-office/city-records) [myUMA](https://www.invoicecloud.com/cityofyumaaz)[Yuma Click & Fix](https://www.yumaaz.gov/governmen
+[Total length: 5459]
+
+============================================================
+TEST: water heater replacement | Boise, ID
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (208) 608-7070
+Portal: https://www.cityofboise.org/departments/planning-and-development-services/building/building-permits/
+Fees found: Sqft-based mechanical permit: up to 1,500 sqft = $130; 1,501–2,500 sqft = $180; 2,501–3,500 = $250; 3,501–4,500 = $290; 4,501+ = $325 + $65 per 1,000 sqft additional. VERIFIED from PermitFlow (sourced from Boise city mechanical fee schedule PDF)., Valuation-based. Panel upgrade/service change: estimated $100–$250., Water heater: $50–$150 (ESTIMATED), Building permit — valuation-based. Re-roof: $100–$250 (ESTIMATED)
+Address: 150 North Capitol Blvd. Boise
+Hours: Monday - Friday, 8 a.m.
+Source: layer0_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.cityofboise.org/departments/planning-and-development-services/building/
+Title: City of Boise Building Division
+Excerpt: Title: Building | City of Boise URL Source: https://www.cityofboise.org/departments/planning-and-development-services/building/ # Building | City of Boise [Skip to main content](https://www.cityofboise.org/departments/planning-and-development-services/building/#body) * [Translate](https://www.city
+[Total length: 1806]
+
+============================================================
+TEST: deck permit | Spokane, WA
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (509) 625-6300
+Portal: https://my.spokanecity.org/dcs/building/permits
+Fees found: WA L&I issues mechanical permits statewide. Mechanical: $70 flat (WA L&I fee, same structure as Seattle). City may add inspection fees., Washington State L&I — state electrical permit. ~$371 panel upgrade (same WA structure as Seattle)., Spokane County Public Health handles plumbing. $75–$165 estimated., City building permit: valuation-based. Re-roof: $100–$250 estimated.
+Address: 808 W. Spokane Falls Blvd., Spokane, WA 99201
+Hours: Not found
+Source: layer0_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://my.spokanecity.org/dcs/building
+Title: City of Spokane Building & Planning
+Excerpt: URL Source: https://my.spokanecity.org/dcs/building
+---
+
+Source: https://my.spokanecity.org/dcs/building/permits
+Title: Spokane online permit portal
+Excerpt: URL Source: https://my.spokanecity.org/dcs/building/permits
+---
+[Total length: 988]
+
+============================================================
+TEST: generator installation | Unincorporated Harris County, TX
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: 832.395.9601
+Portal: https://epermits.harriscountytx.gov/
+Fees found: $10.00, $20.00, $50, $75, $2,500.00, $10, $20, $75.00
+Address: 1 # Office of the County Engineer ### Dr. Milton Rahman
+Hours: Not found
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://epermits.harriscountytx.gov/
+Title: Harris County Permits
+Excerpt: Title: ePermits Online URL Source: https://epermits.harriscountytx.gov/ Markdown Content: # ePermits Online ![Image 1](https://epermits.harriscountytx.gov/Images/layoutElements/HCED_Logo_filled.svg) # Office of the County Engineer ### Dr. Milton Rahman, P.E., PMP, CFM, ENV SP [Help](https://epermits.harriscountytx.gov/helpPages/index.htm)[Support](https://www.eng.hctx.net/permits/e-Permits-Support) [![Image 2](https://epermits.harriscountytx.gov/Images/Inspection_New.png)Inspection Request](https://epermits.harriscountytx.gov/InspectionRequest.aspx)[![Image 3: Help Videos](https://epermits.harriscountytx.gov/images/help.png)Help Videos](https://epermits.harriscountytx.gov/#) [E01 Registration](https://epermits.harriscountytx.gov/assets/helpVideos/E01%20Regis
+[Total length: 5441]
+
+============================================================
+TEST: fence permit | Key West, FL
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: 305-809-3956
+Portal: https://cityofkeywest-fl.gov/DocumentCenter/View/5482/Fence-Permit-PDF
+Fees found: $2500.00, $24.00, $36.00, $25,000, $5,000, $0.15, $0.20, $23.15
+Address: 1300 White St. Key West
+Hours: Monday through Friday from 8:00 am
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://cityofkeywest-fl.gov/DocumentCenter/View/5482/Fence-Permit-PDF
+Title: City of Key West Building Department 1300 White St. Key West, FL 33040
+Excerpt: Title: Fence-Permit-PDF URL Source: https://cityofkeywest-fl.gov/DocumentCenter/View/5482/Fence-Permit-PDF Number of Pages: 4 Markdown Content: City of Key West Building Department 1300 White St. Key West, FL 33040 Ph: 305-809-3956: www.cityofkeywest-fl.gov FENCE PERMIT APPLICATION *For office use only *Permit Number.: * is property in the Historic District (HARC) Yes or No CONSTRUCTION UNDER THIS PERMIT SHALL BE DONE IN ACCORDANCE WITH FBC 2020 7 TH EDITION Site Address: Legal Description (Section/Block/Lot): Parcel ID: Owner’s Information Name: Email: Phone: Address: Contractor’s Information Name: Email: Phone: Address: State License numb
+[Total length: 5530]
+
+============================================================
+TEST: EV charger installation | Burlington, VT
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: 802-865-7000
+Portal: https://burlingtonvt.portal.civicclerk.com/
+Fees found: $1,500, $122, $30, $2858, $10, $152, $50,000, $250
+Address: 149 Church Street Burlington
+Hours: Not found
+Source: layer0_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.burlingtonvt.gov/DPZ
+Title: City of Burlington Department of Planning & Zoning
+Excerpt: Hours: Monday through Friday Phone: [802-865-7000](tel: 802-865-7000) Your feedback will be used to help improve Google Translate
+---
+
+Source: https://www.burlingtonvt.gov/558/Permit-Fees
+Title: Burlington online permit portal
+Excerpt: Title: Permit Fees | Burlington, VT URL Source: https://www.burlingtonvt.gov/558/Permit-Fees # Permit Fees | Burlington, VT [Skip to Main Content](https://www.burlingtonvt.gov/558/Permit-Fees#cc5f8c90dc-b4cb-431b-90ee-10648f8df655) 3. [Permitting & Inspections](https://www.burlingtonvt.gov/276/Permitting-Inspections) 5. Permit Fees # Permit Fees All permits have required fees. These fees are typically for the processing of the permit and are due at application time. Other fees such as Development Review fees, Impact fees and fees 
+[Total length: 1568]

@@ -1,0 +1,519 @@
+[1] roofing permit | Paragould, AR
+Layer fired: layer1_brave_jina
+STRUCTURED PERMIT DATA:
+Phone: 870-239-9512
+Portal: https://www.cityofparagould.com/245/Permits
+Fees: $35
+Address: 2510 West Kingshighway, Paragould, AR 72450
+Conflicts: PORTAL CONFLICT: Multiple URLs found - verify which is current
+Freshness: n/a
+Auto-KB-update: no
+Score: 9/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 1, 'no_junk': 2})
+
+[2] generator installation | Unincorporated Harris County, TX
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (713) 274-3580
+Portal: https://epermits.harriscountytx.gov/
+Fees: $0 county permit fee for most residential generator work in unincorporated Harris County; if floodplain/structural review is triggered, structural fees vary by valuation and may start at $0.30/sq ft minimum
+Address: No verified public counter address found in the provided search results; verify through the Harris County Engineering Department before visiting
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 9/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 1, 'no_junk': 2})
+
+[3] EV charger installation | Burlington, VT
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (802) 865-7188
+Portal: https://firesafety.vermont.gov/
+Fees: Fee not confirmed — call the Vermont Department of Public Safety, Division of Fire Safety or check their online fee schedule before applying.
+Address: City Hall, 149 Church Street, Burlington, VT 05401
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 8/10 ({'phone': 2, 'portal': 2, 'fees': 0, 'address': 2, 'no_junk': 2})
+
+[4] electrical panel upgrade | Enumclaw, WA
+Layer fired: layer1_brave_jina
+STRUCTURED PERMIT DATA:
+Phone: Search Google Maps: Enumclaw WA building permit office
+Portal: https://www.lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/
+Fees: $75 - $300 permit fee typical for residential electrical panel upgrades in WA; utility disconnect/reconnect fees may be separate
+Address: 1309 Myrtle Avenue, Enumclaw, WA
+Conflicts: PORTAL CONFLICT: Multiple URLs found - verify which is current
+Freshness: n/a
+Auto-KB-update: no
+Score: 8/10 ({'phone': 0, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+[5] plumbing rough-in | Paducah, KY
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: 270-444-8604
+Portal: https://paducahky.gov/departments/fire-department/permits-construction
+Fees: $75 - $250 permit fee (city fee not published online; typical residential plumbing permit range), plus labor/materials
+Address: 300 South 5th Street, Paducah, KY 42003
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 10/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+[6] HVAC replacement | Gallup, NM
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (505) 863-1290
+Portal: https://gallupnm.gov/779/Building-Permits
+Fees: $75 - $250 for a typical residential HVAC replacement permit; Gallup does not publish a fixed fee on the permit page, so expect the final fee to be based on equipment scope and valuation
+Address: 110 W. Aztec Avenue, Gallup, NM 87301
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 10/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+[7] fence permit | Key West, FL
+Layer fired: layer1_brave_jina
+STRUCTURED PERMIT DATA:
+Phone: (305) 809-3956
+Portal: https://www.cityofkeywest-fl.gov/220/Permits
+Fees: $1,000, $24.00, $36.00
+Address: 1300 White St, Key West, FL 33040
+Conflicts: PORTAL CONFLICT: Multiple URLs found - verify which is current
+Freshness: n/a
+Auto-KB-update: no
+Score: 10/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+[8] electrical permit | Laramie, WY
+Layer fired: layer1_brave_jina
+STRUCTURED PERMIT DATA:
+Phone: Search Google Maps: Laramie WY building permit office
+Portal: https://www.laramiecountywy.gov/County-Government/County-Departments/Public-Works/Permits
+Fees: $75 - $300 typical electrical permit fee range in Wyoming/local jurisdictions; City of Laramie publishes an electrical permit fee schedule on its Building Permits and Inspections page, but the exact fee amount was not visible in the provided web results
+Address: City of Laramie Building Department, Laramie, WY (address not found in web results; verify before visiting)
+Conflicts: PORTAL CONFLICT: Multiple URLs found - verify which is current
+Freshness: n/a
+Auto-KB-update: no
+Score: 7/10 ({'phone': 0, 'portal': 2, 'fees': 2, 'address': 1, 'no_junk': 2})
+
+[9] plumbing permit | Kenai, AK
+Layer fired: layer1_brave_jina
+STRUCTURED PERMIT DATA:
+Phone: Search Google Maps: Kenai AK building permit office
+Portal: https://www.kpb.us/local-governance-and-permitting/permits-and-forms
+Fees: $75 - $250 for a basic residential plumbing permit; $250 - $1,800 total project cost including typical labor/materials for a small repair or water heater-related plumbing scope
+Address: No verified street address found in the provided web results; use the Kenai Peninsula Borough Local Governance & Permitting page and confirm current office location by phone or Google Maps.
+Conflicts: none
+Freshness: recently updated (-1d ago)
+Auto-KB-update: no
+Score: 7/10 ({'phone': 0, 'portal': 2, 'fees': 2, 'address': 1, 'no_junk': 2})
+
+[10] roofing permit | Biloxi, MS
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: 228-435-6280
+Portal: https://biloxi.ms.us/pdf/Permit%20Fees.pdf
+Fees: $60 for $10,000 valuation; $110 for $20,000; $160 for $30,000; $210 for $40,000; $260 for $50,000; $300 for $60,000; $340 for $70,000; $380 for $80,000; $420 for $90,000; $460 for $100,000; $610 for $150,000; $760 for $200,000; $910 for $250,000; $1,660 for $500,000; $3,160 for $1,000,000 (Biloxi fee schedule)
+Address: None
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 8/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 0, 'no_junk': 2})
+
+[11] water heater replacement | Boise, ID
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (208) 384-3830
+Portal: https://aca-prod.accela.com/BOISE
+Fees: $50 - $150 for the plumbing permit (estimated Boise residential water heater permit fee)
+Address: 150 N. Capitol Blvd., Boise, ID 83702
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 10/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+[12] deck permit | Spokane, WA
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (509) 625-6300
+Portal: https://my.spokanecity.org/dcs/building/permits
+Fees: $150 - $500 permit fee typical; total project cost usually $6,500 - $18,000 depending on size, height, materials, stairs, and railing complexity
+Address: 808 W. Spokane Falls Blvd., Spokane, WA 99201
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 10/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+[13] HVAC replacement | Provo, UT
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (801) 852-6400
+Portal: https://aca.provo.org
+Fees: Mechanical permit: $75-$200 plus 1% Utah state surcharge; electrical permit: $75-$200 plus 1% surcharge if electrical work is included
+Address: 351 W. Center Street, Provo, UT 84601
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 10/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+[14] solar panel installation | Yuma, AZ
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (928) 373-5175 — verify with City of Yuma Building Permits / Development Services
+Portal: https://www.yumaaz.gov/residents/building-permits
+Fees: $142.35 electrical permit fee; building permit fee is valuation-based and commonly starts around $993.75 for larger projects, but solar permit fees in Yuma should be confirmed with the permit counter before submittal
+Address: One City Plaza, Yuma, AZ 85364
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 9/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 1, 'no_junk': 2})
+
+[15] HVAC replacement | Shreveport, LA
+Layer fired: layer1_brave_jina
+STRUCTURED PERMIT DATA:
+Phone: Search Google Maps: Shreveport LA building permit office
+Portal: https://www.shreveportla.gov/817/Building-Permits
+Fees: $31 mechanical permit fee for each air handling unit up to 2,000 CFM (official county mechanical fee schedule referenced for Louisiana context); plan check fee is 50% of the mechanical permit fee if plans are required
+Address: Search Google Maps: Shreveport LA building permit office
+Conflicts: PORTAL CONFLICT: Multiple URLs found - verify which is current
+Freshness: n/a
+Auto-KB-update: no
+Score: 7/10 ({'phone': 0, 'portal': 2, 'fees': 2, 'address': 1, 'no_junk': 2})
+
+[16] roofing permit | Anchorage, AK
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (907) 343-8300
+Portal: https://aca-prod.accela.com/ANCHORAGE
+Fees: Under $40,000: $175 inspection fee; over $40,000: $0.009 × project valuation. Typical residential re-roof jobs usually land at the $175 inspection-fee level unless the project valuation exceeds $40,000.
+Address: 4700 Elmore Road, Anchorage, AK 99507
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 10/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+[17] electrical permit | Virginia Beach, VA
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (757) 385-4211
+Portal: https://planning.virginiabeach.gov/permits/trade
+Fees: $55 minimum for valuation under $1,000; $75 up to $5,000; $95 up to $9,000; $100 up to $10,000; then about $5 per additional $12,000 valuation increment, plus $10 technology fee and 2% Virginia state levy. Re-inspection fee: $35.
+Address: 2424 Courthouse Drive, Municipal Center, Virginia Beach, VA 23456
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 10/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+[18] deck permit | Cheyenne, WY
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (307) 637-6264
+Portal: https://cheyennewy.portal.opengov.com/
+Fees: $150 - $500 typical building permit fee, plus $50 Planning & Development review fee on all building permits in Cheyenne
+Address: 2101 O'Neil Avenue, Room 200, Cheyenne, WY 82001
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 10/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+[19] solar permit | Flagstaff, AZ
+Layer fired: layer1_brave_jina
+STRUCTURED PERMIT DATA:
+Phone: Search Google Maps: Flagstaff AZ building permit office
+Portal: https://www.flagstaff.az.gov/5164/Additional-Building-Permit-Resources
+Fees: $225,000.00, $100,000.00, $500,000.00, $800,000.00, $450,000.00
+Address: Search Google Maps: Flagstaff AZ building permit office
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 7/10 ({'phone': 0, 'portal': 2, 'fees': 2, 'address': 1, 'no_junk': 2})
+
+[20] water heater replacement | Fargo, ND
+Layer fired: unknown
+STRUCTURED PERMIT DATA:
+Phone: (701) 241-1454
+Portal: https://fargond.gov/city-government/departments/inspections/permits
+Fees: $75 - $200 for a residential water heater plumbing permit (Fargo estimate); if the job also needs a building permit for related work, Fargo residential building fees are $45 for the first $1,000 of valuation plus $5.40 per additional $1,000
+Address: 225 4th Street N, Fargo, ND 58102
+Conflicts: none
+Freshness: n/a
+Auto-KB-update: no
+Score: 10/10 ({'phone': 2, 'portal': 2, 'fees': 2, 'address': 2, 'no_junk': 2})
+
+SUMMARY
+Average score: 8.95/10
+Per-city scores: 9, 9, 8, 8, 10, 10, 10, 7, 7, 8, 10, 10, 10, 9, 7, 10, 10, 10, 7, 10
+Low scorers: none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+[Total length: 3888]
+
+============================================================
+TEST: roofing permit | Biloxi, MS
+AUTO-SCORE: 9/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: 228-435-6280 [confidence: high | source: https://biloxi.ms.us/pdf/Permit%20Fees.pdf]
+Portal: https://biloxi.ms.us/pdf/Permit%20Fees.pdf [confidence: high | source: https://biloxi.ms.us/pdf/Permit%20Fees.pdf]
+Fees found: $10,000, $60, $20,000, $110, $30,000, $160, $40,000, $210 [confidence: high | source: https://biloxi.ms.us/pdf/Permit%20Fees.pdf]
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Data freshness: older data (4612d ago)
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://biloxi.ms.us/pdf/Permit%20Fees.pdf
+Title: Biloxi Building Department
+Excerpt: Title: Permit Fees2.xls URL Source: https://biloxi.ms.us/pdf/Permit%20Fees.pdf Published Time: Thu, 05 Sep 2013 21:25:16 GMT Number of Pages: 1 Markdown Content: City of Biloxi Building Permit Fees Permit Valuation Permit Fee $10,000 $60 $20,000 $110 $30,000 $160 $40,000 $210 $50,000 $260 $60,000 $300 $70,000 $340 $80,000 $380 $90,000 $420 $100,000 $460 $150,000 $610 $200,000 $760 $250,000 $910 $500,000 $1,660 $1,000,000 $3,160 Building Permit Fee Schedule Total Valuation $0 - $50,000 $50,001 - $100,000 $100,001 - $500,000 $500,001 and up For more information, call 228-435-6280 or email building@biloxi.ms.us $460 for the first $100,001 plus $3 for each additional thousand or fraction thereof, to and including $500,000. $1,660 for the first $500,001 plus $2 for each additional thousand or fraction thereof. Fee $15 for the first $1,000 plus $5 for each additional thousand or fraction t
+---
+[Total length: 1562]
+
+============================================================
+TEST: water heater replacement | Boise, ID
+AUTO-SCORE: 9/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (208) 608-7070 [confidence: medium | source: https://www.cityofboise.org/departments/planning-and-development-services/building/]
+Portal: https://aca-prod.accela.com/BOISE [confidence: high | source: https://aca-prod.accela.com/BOISE]
+Fees found: Sqft-based mechanical permit: up to 1,500 sqft = $130; 1,501–2,500 sqft = $180; 2,501–3,500 = $250; 3,501–4,500 = $290; 4,501+ = $325 + $65 per 1,000 sqft additional. VERIFIED from PermitFlow (sourced from Boise city mechanical fee schedule PDF)., Valuation-based. Panel upgrade/service change: estimated $100–$250., Water heater: $50–$150 (ESTIMATED), Building permit — valuation-based. Re-roof: $100–$250 (ESTIMATED) [confidence: medium | source: https://www.cityofboise.org/departments/planning-and-development-services/building/]
+Address: 150 N. Capitol Blvd., Boise, ID 83702 [confidence: low | source: https://www.cityofboise.org/departments/planning-and-development-services/building/]
+Hours: Not found
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.cityofboise.org/departments/planning-and-development-services/building/
+Title: City of Boise Building Division
+Excerpt: Title: Building | City of Boise URL Source: https://www.cityofboise.org/departments/planning-and-development-services/building/ Markdown Content: # Building | City of Boise [Skip to main content](https://www.cityofboise.org/departments/planning-and-development-services/building/#body) [![Image 1: City of Boise](https://www.cityofboise.org/assets/img/_layout/CoB-America250-Logo-FC-sm.png)](https://www.cityofboise.org/) * [Residents](https://www.cityofboise.org/residents/) * [Visitors](https://www.cityofboise.org/visitors/) * [Business](https://www.cityofboise.org/business/) * [Government](https://www.cityofboise.org/government/) * [Departments Dept.![Image 2: Departments icon](https://www.cityofboise.org/assets/img/_layout/icon__department-circles.svg
+[Total length: 2216]
+
+============================================================
+TEST: deck permit | Spokane, WA
+AUTO-SCORE: 9/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (509) 625-6300 [confidence: medium | source: https://my.spokanecity.org/dcs/building]
+Portal: https://my.spokanecity.org/dcs/building/permits [confidence: medium | source: https://my.spokanecity.org/dcs/building/permits]
+Fees found: WA L&I issues mechanical permits statewide. Mechanical: $70 flat (WA L&I fee, same structure as Seattle). City may add inspection fees., Washington State L&I — state electrical permit. ~$371 panel upgrade (same WA structure as Seattle)., Spokane County Public Health handles plumbing. $75–$165 estimated., City building permit: valuation-based. Re-roof: $100–$250 estimated. [confidence: medium | source: https://my.spokanecity.org/dcs/building]
+Address: 808 W. Spokane Falls Blvd., Spokane, WA 99201 [confidence: low | source: https://my.spokanecity.org/dcs/building]
+Hours: Not found
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://my.spokanecity.org/dcs/building
+Title: City of Spokane Building & Planning
+Excerpt: Title: URL Source: https://my.spokanecity.org/dcs/building Warning: Target URL returned error 403: Forbidden Warning: This page contains iframe that are currently hidden, consider enabling iframe processing. Markdown Content:
+---
+
+Source: https://my.spokanecity.org/dcs/building/permits
+Title: Spokane online permit portal
+Excerpt: Title: URL Source: https://my.spokanecity.org/dcs/building/permits Warning: Target URL returned error 403: Forbidden Warning: This page contains iframe that are currently hidden, consider enabling iframe processing. Markdown Content:
+---
+[Total length: 1631]
+
+============================================================
+TEST: HVAC replacement | Provo, UT
+AUTO-SCORE: 9/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (801) 852-6400 [confidence: medium | source: https://www.provo.org/departments/community-development]
+Portal: https://aca.provo.org [confidence: medium | source: https://aca.provo.org]
+Fees found: $75–$200 (ESTIMATED — UT standard with 1% state surcharge), $75–$200 (ESTIMATED + 1% surcharge), $50–$150 (ESTIMATED) [confidence: medium | source: https://www.provo.org/departments/community-development]
+Address: 351 W. Center Street, Provo, UT 84601 [confidence: low | source: https://www.provo.org/departments/community-development]
+Hours: Not found
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.provo.org/departments/community-development
+Title: City of Provo Community Development Department
+Excerpt: 
+---
+
+Source: https://aca.provo.org
+Title: Provo online permit portal
+Excerpt: 
+---
+
+Source: https://www.provo.gov/200/Building
+Title: Building | Provo, UT
+Excerpt: Apply for Building Permits and more on the Provo Online Portal. See the Building Resources section. For further assistance, please contact the Building Division at (801) 852-6428. ... These tables list the structural design requirements for Provo, Utah. These specifications are taken from the 2021 International Building Code.
+---
+
+Source: https://www.provo.org/departments/development/building
+Title: Building | City of Provo, UT
+Excerpt: Title: DNS points to prohibited IP | www.provo.org URL Source: https://www.provo.org/departments/development/building Warning: Target URL returned error 403: Forbidden Markdown Content: Please enable cookies. ## Error 1000 Ray ID: 9f08b2ccbb9ec944 •2026-04-23 00:19:44 UTC ## What happened? You've requested a page on a website (www.provo.org) that is on the [Cloudflare](https://www.cloudflare.com/5xx-error-landing/) network. Unfortunately, it is resolving to an IP address that is creating a conflict within Cloudflare's system. Please see [https://developers.cloudflare.
+[Total length: 3838]
+
+============================================================
+TEST: solar panel installation | Yuma, AZ
+AUTO-SCORE: 8/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.yumaaz.gov/residents/building-permits [confidence: high | source: https://www.yumaaz.gov/residents/building-permits]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.yumacountyaz.gov/government/development-services/faq
+Title: Development Services FAQ | Yuma County
+Excerpt: Title: Page Not Found... | Yuma County URL Source: https://www.yumacountyaz.gov/government/development-services/faq Warning: Target URL returned error 404: Not Found Markdown Content: # Page Not Found... | Yuma County [Show/Hide](javascript: void (0)) ![Image 1: Navigation Granicus test 2](https://www.yumacountyaz.gov/home/showpublishedimage/15818/639114369037230000) [Skip to Main Content](https://www.yumacountyaz.gov/government/development-services/faq#pagebody) # Yuma County [Home](https://www.yumacountyaz.gov/home)[Menu](javascript:void(0);) [Home](https://www.yumacountyaz.gov/home)[Public Notices](https://www.yumacountyaz.gov/i-want-to/find-public-notice)[Employment](https://www.yumacountyaz.gov/government/human-resources/employment-opportunities)[En Español](javascript:void) [search](https://www.yumacountyaz.gov/government/development-services/faq) [Go](javascript:void(0)
+---
+
+Source: https://www.yumaaz.gov/residents/building-permits
+Title: Building Permits | City Of Yuma, AZ
+Excerpt: Title: Building Permits | City Of Yuma, AZ URL Source: https://www.yumaaz.gov/residents/building-permits Published Time: Wed, 22 Apr 2026 22:58:21 GMT Markdown Content: # Building Permits | City Of Yuma, AZ [Skip to Main Content](https://www.yumaaz.gov/residents/building-permits#pagebody) # City Of Yuma, AZ [HOME](https://www.yumaaz.gov/home)[Menu](javascript:void(0);) [How Do I?](javascript:void(0);) [Close](javascript:void(0);) ## How D
+[Total length: 3841]
+
+============================================================
+TEST: HVAC replacement | Shreveport, LA
+AUTO-SCORE: 7/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.shreveportla.gov/817/Building-Permits [confidence: high | source: https://www.shreveportla.gov/817/Building-Permits]
+Fees found: None found
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Louisiana uses parish authority - may be parish permit office
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.shreveportla.gov/817/Building-Permits
+Title: Building Permits | Shreveport, LA - Official Website
+Excerpt: Title: Building Permits | Shreveport, LA URL Source: https://www.shreveportla.gov/817/Building-Permits Markdown Content: ![Image 1: Loading](https://www.shreveportla.gov/Common/images/ajax-loader.gif) Loading # Building Permits | Shreveport, LA - Official Website ­ [Skip to Main Content](https://www.shreveportla.gov/817/Building-Permits#cca28fe8da-7dc7-4a1b-91a6-36e2f88eae6a) [Create a Website Account](https://www.shreveportla.gov/MyAccount/ProfileCreate)- Manage notification subscriptions, save form progress and more. * [Website Sign In](https://www.shreveportla.gov/MyAccount) [![Image 2: Shreveport LA Homepage](https://www.shreveportla.gov/ImageRepository/Document?documentID=23892)](https://www.shreveportla.gov/) 1. [Government](https://www.shreveportla.gov/176/Government) 2. [Residents](https://www.shreveportla.gov/554/Residents) 3. [Business](https://www.shreveportla.
+---
+
+Source: https://www.shreveportla.gov/473/Permits-Inspections
+Title: Permits & Inspections | Shreveport, LA - Official Website
+Excerpt: Title: Permits & Inspections | Shreveport, LA URL Source: https://www.shreveportla.gov/473/Permits-Inspections Markdown Content: ![Image 1: Loading](https://www.shreveportla.gov/Common/images/ajax-loader.gif) Loading # Permits & Inspections | Shreveport, LA - Official Website ­ [Skip to Main Content](https://www.shreveportla.gov/473/Permits
+[Total length: 3876]
+
+============================================================
+TEST: roofing permit | Anchorage, AK
+AUTO-SCORE: 9/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (907) 343-8211 [confidence: medium | source: https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx]
+Portal: https://aca-prod.accela.com/ANCHORAGE [confidence: high | source: https://aca-prod.accela.com/ANCHORAGE]
+Fees found: Projects under $40,000: $175 per inspection (no valuation fee). Projects over $40,000: $0.009 × project valuation. Typical residential HVAC ($5k–$15k): ~$175 (inspection fee only)., Same structure — $175 per inspection for projects under $40,000, Same structure — $175 per inspection, Building permit — valuation-based for projects over $40,000. Under $40,000 = $175 inspection fee. [confidence: medium | source: https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx]
+Address: 4700 Elmore Road, Anchorage, AK 99507 [confidence: low | source: https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx]
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Alaska uses borough authority for permits
+Data freshness: recently updated (0d ago)
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx
+Title: Municipality of Anchorage — Development Services Division
+Excerpt: Title: Municipality of Anchorage URL Source: https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx Published Time: Thu, 23 Apr 2026 00:07:34 GMT Markdown Content: # Development Services Home " ![Image 1](https://www.muni.org/SiteAssets/anc_logo.ico?rev=40) [![Image 2: Muni.org](https://www.muni.org/SiteAssets/anc_logo_60pxH.png)](https://www.muni.org/) ![Image 3](https://www.google.com/images/cleardot.gif) Powered by [![Image 4: Google Translate](https://www.gstatic.com/images/branding/googlelogo/1x/googlelogo_color_42x16dp.png)Translate](https://translate.google.com/) Residents * [Property Tax Information](https://www.muni.org/Pages/PropertyInformati
+[Total length: 2303]
+
+============================================================
+TEST: electrical permit | Virginia Beach, VA
+AUTO-SCORE: 8/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (757) 385-4621 [confidence: high | source: https://planning.virginiabeach.gov/permits/trade]
+Portal: https://planning.virginiabeach.gov/permits/trade [confidence: high | source: https://planning.virginiabeach.gov/permits/trade]
+Fees found: Valuation-based. Residential: $50 minimum + $7/100 sqft or fee table. HVAC replacement: typically $75–$200., Panel upgrade/repairs (1-2 family): value-based from $55 (under $1,000) to $100+ (over $9,000). $35 re-inspection. $10 tech fee. 2% state levy., Water service line: $50. Sewer: $50. Permit + inspection: $55–$105 range., Building permit. Re-roof: $55–$100 depending on valuation. [confidence: high | source: https://www.virginiabeach.gov/departments/planning-community-development/permits-inspections]
+Address: 2424 Courthouse Drive, Municipal Center, Virginia Beach, VA 23456 [confidence: high | source: https://www.virginiabeach.gov/departments/planning-community-development/permits-inspections]
+Hours: Not found
+Source: layer1_brave_jina
+Jurisdiction note: Virginia cities are independent of counties
+Data freshness: older data (301d ago)
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.virginiabeach.gov/departments/planning-community-development/permits-inspections
+Title: Virginia Beach Department of Planning & Community Development — Permits & Inspections
+Excerpt: 
+---
+
+Source: https://vbgov.com/BuildingPermits
+Title: Virginia Beach online permit portal
+Excerpt: 
+---
+
+Source: https://planning.virginiabeach.gov/permits/trade
+Title: Trades Permits | City of Virginia Beach
+Excerpt: Title: Trades Permits URL Source: https://planning.virginiabeach.gov/permits/trade Markdown Content: # Trades Permits | City of Virginia Beach * [VirginiaBeach.gov](https://virginiabeach.gov/ "Return to VirginiaBeach.gov") * Quick Links * [Development Questionnaire](https://vbforms.forms.govos
+[Total length: 5264]
+
+============================================================
+TEST: deck permit | Cheyenne, WY
+AUTO-SCORE: 8/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (307) 637-6264 [confidence: medium | source: https://www.cheyennecity.org/government/departments/planningdevelopment]
+Portal: https://cheyennewy.portal.opengov.com/ [confidence: high | source: https://www.cheyennecity.org/government/departments/planningdevelopment]
+Fees found: $135–$450 (VERIFIED from PermitMint — Cheyenne HVAC: adding central HVAC to home. Sourced from City of Cheyenne fee schedule). $50 Planning & Development review fee on all building permits (VERIFIED from Cheyenne 2025 non-residential fee worksheet)., $100–$300 (ESTIMATED — Wyoming standard), $75–$200 (ESTIMATED), Building permit — valuation-based + $50 P&D fee. Re-roof: $100–$300 (ESTIMATED). [confidence: medium | source: https://www.cheyennecity.org/government/departments/planningdevelopment]
+Address: 2101 O'Neil Avenue, Room 200, Cheyenne, WY 82001 [confidence: low | source: https://www.cheyennecity.org/government/departments/planningdevelopment]
+Hours: Not found
+Source: layer1_brave_jina
+Conflicts:
+- PORTAL CONFLICT: Multiple URLs found - verify which is current
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.cheyennecity.org/government/departments/planningdevelopment
+Title: City of Cheyenne Planning & Development
+Excerpt: Title: 404 Error URL Source: https://www.cheyennecity.org/government/departments/planningdevelopment Warning: Target URL returned error 404: Not Found Markdown Content: # 404 Error –City of Cheyenne [Skip to main content](https://www.cheyennecity.org/government/departments/planningdevelopment#main-content) opens in new tab or window ### NOTICE FOR INDIVIDUAL AND COMPANY CONTRACTORS! The Building Department has launched their online license & permit portal. Scroll down to LICNESES & PERMITS to set up an online account and apply for licensing and permits with the Building Department. [OpenGov Portal](https://cheyennewy.portal.opengov.com/) [Close this announcement](https://www.cheyennec
+[Total length: 3236]
+
+============================================================
+TEST: solar permit | Flagstaff, AZ
+AUTO-SCORE: 9/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: Not found
+Portal: https://www.flagstaff.az.gov/5164/Additional-Building-Permit-Resources [confidence: high | source: https://www.flagstaff.az.gov/5164/Additional-Building-Permit-Resources]
+Fees found: $225,000.00, $100,000.00, $500,000.00, $800,000.00, $450,000.00 [confidence: high | source: https://www.flagstaff.az.gov/DocumentCenter/View/88209/01-25-PL]
+Address: Not found
+Hours: Not found
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://www.flagstaff.az.gov/DocumentCenter/View/61147/2019-AMENDMENTS-TO-FLAGSTAFF-CITY-CODE-TITLE-4-BUILDING-REGULATIONS-FINAL
+Title: FLAGSTAFF CITY CODE, TITLE 4, BUILDING REGULATIONS Page 1 (05/14/2019) TITLE 4
+Excerpt: Title: 2019-AMENDMENTS-TO-FLAGSTAFF-CITY-CODE-TITLE-4-BUILDING-REGULATIONS-FINAL URL Source: https://www.flagstaff.az.gov/DocumentCenter/View/61147/2019-AMENDMENTS-TO-FLAGSTAFF-CITY-CODE-TITLE-4-BUILDING-REGULATIONS-FINAL Number of Pages: 32 Markdown Content: FLAGSTAFF CITY CODE, # TITLE 4, BUILDING REGULATIONS Page 1 (05/14/2019) # TITLE 4 # BUILDING REGULATIONS CHAPTER S: 4-01 ADMINISTRATIVE ENACTMENTS 4-02 2018 IN TERNATIONAL BUILDING CODE (IBC) AMENDMENTS 4-03 2018 INT ERNATIONAL RESIDENTIAL CODE (IRC) AMENDMENTS 4-04 2018 INTERNATIONAL EXISTING BUI LDING CODE (IEBC) AMENDMENTS 4-05 2018 INTER NATIONAL MECHANICAL CODE (IMC) AMENDMENTS 4-06 2018 INTERNATIONAL PLU MBING CODE (IPC) AM ENDMENTS 4-07 2018 INTERNATIONAL FUEL GAS CODE (IFGC) AMENDMENTS 4-08 2018 INTERNATIONAL ENERGY CONSERVA TION CODE (IECC) AMEND MENTS 4-09 2018 INTERNATIONAL SOLAR ENERGY PROVI
+---
+
+Source: https://www.flagstaff.az.gov/5164/Additional-Building-Permit-Resources
+Title: Additional Building Permit Resources | City of Flagstaff Official Website
+Excerpt: Title: Additional Building Permit Resources | City of Flagstaff Official Website URL Source: https://www.flagstaff.az.gov/5164/Additional-Building-Permit-Resources Markdown Content: ## 
+[Total length: 4432]
+
+============================================================
+TEST: water heater replacement | Fargo, ND
+AUTO-SCORE: 9/10
+============================================================
+=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===
+Phone: (701) 241-1454 [confidence: high | source: https://fargond.gov/city-government/departments/inspections]
+Portal: https://fargond.gov/city-government/departments/inspections/permits [confidence: high | source: https://fargond.gov/city-government/departments/inspections/permits]
+Fees found: HVAC installation — new: $200–$750 (VERIFIED from PermitMint sourcing City of Fargo HVAC fee schedule). Residential HVAC permit effective Jan 1, 2025 — see Fargo HVAC Fee Schedule at fargond.gov., Valuation-based. Building permit: up to $1,000 = $45; above $1,000 = $45 + $5.40 per additional $1,000 (VERIFIED from Fargo residential permit fees PDF). Electrical: similar., Water heater: $75–$200 (ESTIMATED), Building permit — valuation formula: $45 for first $1,000 + $5.40 per additional $1,000 (VERIFIED 2025). Re-roof ($8,000): ~$83. [confidence: high | source: https://fargond.gov/city-government/departments/inspections]
+Address: 225 4th Street N, Fargo, ND 58102 [confidence: high | source: https://fargond.gov/city-government/departments/inspections]
+Hours: Not found
+Source: layer1_brave_jina
+---
+=== REAL-TIME WEB SEARCH RESULTS ===
+
+Source: https://fargond.gov/city-government/departments/inspections
+Title: City of Fargo Inspections Department
+Excerpt: Title: The City of Fargo - Inspections URL Source: https://fargond.gov/city-government/departments/inspections Markdown Content: # The City of Fargo - Inspections [Search](https://fargond.gov/city-government/departments/inspections#) [Menu](https://fargond.gov/city-government/departments/inspections#)[City of Fargo](https://fargond.gov/) * ![Image 17](https://www.google.com/images/cleardot.gif)[Select Language![Image 18](https://www.google.com/images/cleardot.gif)​![Image 19](https://www.google.com/images/cleardot.gif)▼](https://fargond.gov/city-government/departments/inspections#) * [translate](https://fargond.gov/city-government/departments/inspections) * [incr
+[Total length: 3226]
+
+
+AVERAGE SCORE: 8.2/10
+Scores: [8, 7, 8, 7, 8, 8, 8, 7, 8, 9, 9, 9, 9, 8, 7, 9, 8, 8, 9, 9]

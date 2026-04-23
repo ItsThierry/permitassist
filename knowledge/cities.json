@@ -4195,6 +4195,36 @@
         "Georgia DCA contractor licensing",
         "Central Georgia \u2014 active industrial market"
       ]
+    },
+    "paducah_ky": {
+      "city": "Paducah",
+      "state": "KY",
+      "permit_office": "Paducah Building Department",
+      "permit_url": "https://paducahky.gov/departments/fire-department/permits-construction",
+      "phone": "270-444-8604",
+      "online_portal": "https://paducahky.gov/departments/fire-department/permits-construction",
+      "_auto_added": true,
+      "_added_date": "2026-04-23T00:03:51.082841"
+    },
+    "gallup_nm": {
+      "city": "Gallup",
+      "state": "NM",
+      "permit_office": "Gallup Building Department",
+      "permit_url": "https://gallupnm.gov/779/Building-Permits",
+      "phone": "(505) 863-1290",
+      "online_portal": "https://gallupnm.gov/779/Building-Permits",
+      "_auto_added": true,
+      "_added_date": "2026-04-23T00:04:08.085330"
+    },
+    "biloxi_ms": {
+      "city": "Biloxi",
+      "state": "MS",
+      "permit_office": "Biloxi Building Department",
+      "permit_url": "https://biloxi.ms.us/pdf/Permit%20Fees.pdf",
+      "phone": "228-435-6280",
+      "online_portal": "https://biloxi.ms.us/pdf/Permit%20Fees.pdf",
+      "_auto_added": true,
+      "_added_date": "2026-04-23T00:07:45.827503"
     }
   },
   "counties": {

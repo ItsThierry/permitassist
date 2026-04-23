@@ -3114,6 +3114,66 @@ class Handler(BaseHTTPRequestHandler):
                 import traceback; traceback.print_exc()
                 self.send_json(500, {"error": "Lookup failed — please try again"})
 
+        elif path == "/api/batch-permit":
+            try:
+                data = self.read_json_body()
+                lookups = data.get("lookups", [])
+                if not lookups:
+                    self.send_json(400, {"error": "No lookups provided"})
+                    return
+                if len(lookups) > 20:
+                    self.send_json(400, {"error": "Max 20 lookups per batch"})
+                    return
+                from concurrent.futures import ThreadPoolExecutor, as_completed
+
+                def run_lookup(item):
+                    job_type = item.get("job_type", "")
+                    city = item.get("city", "")
+                    state = item.get("state", "")
+                    zip_code = item.get("zip", "") or item.get("zip_code", "")
+                    job_value = item.get("job_value")
+                    try:
+                        result = research_permit(job_type, city, state, zip_code, job_value=job_value)
+                        return {
+                            "job_type": job_type,
+                            "city": city,
+                            "state": state,
+                            "permit_verdict": result.get("permit_verdict"),
+                            "permits_required": result.get("permits_required", []),
+                            "fee_range": result.get("fee_range"),
+                            "approval_timeline": result.get("approval_timeline"),
+                            "apply_url": result.get("apply_url"),
+                            "apply_phone": result.get("apply_phone"),
+                            "confidence": result.get("confidence"),
+                            "permit_ready_score": result.get("permit_ready_score"),
+                            "checklist": result.get("checklist", []),
+                            "rejection_patterns": result.get("rejection_patterns", []),
+                            "error": None,
+                        }
+                    except Exception as e:
+                        return {"job_type": job_type, "city": city, "state": state, "error": str(e)}
+
+                results = []
+                with ThreadPoolExecutor(max_workers=5) as executor:
+                    futures = {executor.submit(run_lookup, item): item for item in lookups}
+                    for future in as_completed(futures, timeout=120):
+                        try:
+                            results.append(future.result(timeout=30))
+                        except Exception as e:
+                            item = futures[future]
+                            results.append({"city": item.get("city"), "error": str(e)})
+                self.send_json(200, {
+                    "results": results,
+                    "total": len(results),
+                    "summary": {
+                        "permits_required": sum(1 for r in results if r.get("permit_verdict") == "YES"),
+                        "no_permit": sum(1 for r in results if r.get("permit_verdict") == "NO"),
+                        "verify": sum(1 for r in results if r.get("permit_verdict") == "MAYBE"),
+                    }
+                })
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
         # ── Feedback ──────────────────────────────────────────────────────
         elif path == "/api/feedback":
             try:

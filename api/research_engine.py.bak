@@ -13,7 +13,6 @@ import time
 import re
 import sqlite3
 import hashlib
-from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
 from copy import deepcopy
 from urllib.parse import urljoin, urlparse
 import requests
@@ -33,13 +32,6 @@ _gemini_fallback_model = "gemini-2.5-pro"
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY", "")
 BRAVE_SEARCH_API_KEY = os.environ.get("BRAVE_SEARCH_API_KEY", "BSAdf-HMvCIiwJw7UlYFXghzqwfv_Pp")
-ACCELA_APP_ID = os.environ.get("ACCELA_APP_ID", "639125015399507099")
-ACCELA_APP_SECRET = os.environ.get("ACCELA_APP_SECRET", "a516edb01cab4261baf14a478ee3c9ac")
-ACCELA_BASE_URL = "https://apis.accela.com"
-ACCELA_DOCS_BASE_URL = "https://developer.accela.com/docs/api_reference"
-_accela_token = ""
-_accela_token_expiry = 0.0
-_accela_agencies_cache: dict[str, object] = {"expires": 0.0, "result": []}
 # Support RAILWAY_VOLUME_MOUNT_PATH or CACHE_DIR env var for persistent volumes
 _default_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
 _data_dir = os.environ.get("CACHE_DIR") or os.environ.get("RAILWAY_VOLUME_MOUNT_PATH") or _default_data_dir
@@ -66,16 +58,6 @@ DIRECT_FETCH_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.5",
 }
-
-JURISDICTION_PATTERNS = {
-    "AK": {"authority": "borough", "examples": ["kenai peninsula borough", "matanuska-susitna borough", "fairbanks north star borough"]},
-    "LA": {"authority": "parish", "examples": ["east baton rouge parish", "jefferson parish", "orleans parish"]},
-    "VA": {"authority": "city", "note": "Virginia cities are independent of counties"},
-}
-
-UNINCORPORATED_KEYWORDS = ["unincorporated", "county area", "rural", "township"]
-FEE_LINK_KEYWORDS = ["fee schedule", "fee table", "permit fees", "building fees", "inspection fee", "permit checklist", "inspection checklist", "apply online", "online portal"]
-PHONE_CONTEXT_KEYWORDS = ["permit", "building", "codes", "office", "main", "department", "division", "contact", "call", "phone"]
 
 
 def clean_summary_text(text: str, max_len: int = 700) -> str:
@@ -169,212 +151,6 @@ def derive_confidence_reason(result: dict, city_match_level: str, auto_verified:
     if missing_fields:
         reason += f". Needs review for: {', '.join(missing_fields[:3])}"
     return reason
-
-
-def get_accela_token() -> str:
-    """Get or refresh an Accela OAuth2 access token."""
-    global _accela_token, _accela_token_expiry
-    if _accela_token and time.time() < _accela_token_expiry - 60:
-        return _accela_token
-    if not (ACCELA_APP_ID and ACCELA_APP_SECRET):
-        return ""
-    try:
-        resp = requests.post(
-            f"{ACCELA_BASE_URL}/oauth2/token",
-            data={
-                "grant_type": "client_credentials",
-                "client_id": ACCELA_APP_ID,
-                "client_secret": ACCELA_APP_SECRET,
-                "scope": "records",
-            },
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            timeout=12,
-        )
-        if resp.ok:
-            data = resp.json()
-            _accela_token = data.get("access_token", "")
-            expires_in = int(data.get("expires_in", 3600) or 3600)
-            _accela_token_expiry = time.time() + expires_in
-            print(f"[accela] Token obtained, expires in {expires_in}s")
-            return _accela_token
-        print(f"[accela] Token fetch failed: {resp.status_code} {resp.text[:300]}")
-    except Exception as e:
-        print(f"[accela] Token fetch failed: {e}")
-    return ""
-
-
-def _accela_get(path: str, *, params: dict | None = None, agency_name: str = "", require_token: bool = False) -> dict | None:
-    if not ACCELA_APP_ID:
-        return None
-    headers = {}
-    token = ""
-    if require_token:
-        token = get_accela_token()
-        if not token:
-            return None
-        headers["Authorization"] = f"Bearer {token}"
-    else:
-        headers["x-accela-appid"] = ACCELA_APP_ID
-    if agency_name:
-        headers["x-accela-agency"] = agency_name
-    try:
-        resp = requests.get(f"{ACCELA_BASE_URL}{path}", headers=headers, params=params or {}, timeout=15)
-        if resp.ok:
-            return resp.json()
-        print(f"[accela] GET {path} failed: {resp.status_code} {resp.text[:300]}")
-    except Exception as e:
-        print(f"[accela] GET {path} failed: {e}")
-    return None
-
-
-def _accela_words(text: str) -> set[str]:
-    return {w for w in re.findall(r"[a-z0-9]+", (text or "").lower()) if len(w) >= 3}
-
-
-def accela_list_agencies(limit: int = 200) -> list[dict]:
-    now = time.time()
-    cached = _accela_agencies_cache.get("result")
-    if cached and now < float(_accela_agencies_cache.get("expires", 0) or 0):
-        return list(cached)
-    data = _accela_get("/v4/agencies", params={"limit": limit, "offset": 0}) or {}
-    agencies = data.get("result") or []
-    _accela_agencies_cache["result"] = agencies
-    _accela_agencies_cache["expires"] = now + 3600
-    return agencies
-
-
-def accela_find_agency(city: str, state: str) -> dict | None:
-    state_upper = (state or "").upper()
-    city_lower = (city or "").strip().lower()
-    if not city_lower or not state_upper:
-        return None
-    candidates = []
-    direct = _accela_get("/v4/agencies", params={"name": city, "limit": 25}) or {}
-    candidates.extend(direct.get("result") or [])
-    if not candidates:
-        candidates.extend(accela_list_agencies())
-    best = None
-    best_score = -1
-    for agency in candidates:
-        agency_state = str(agency.get("state") or "").upper()
-        if state_upper and agency_state and agency_state != state_upper:
-            continue
-        haystacks = [str(agency.get("name") or ""), str(agency.get("displayName") or "")]
-        score = 0
-        for hay in haystacks:
-            hay_l = hay.lower()
-            if hay_l == city_lower:
-                score = max(score, 100)
-            elif city_lower in hay_l:
-                score = max(score, 80)
-            elif any(part and part in hay_l for part in city_lower.split()):
-                score = max(score, 40)
-        if score > best_score:
-            best = agency
-            best_score = score
-    return best if best_score >= 40 else None
-
-
-def _accela_get_record_types(agency_name: str, job_type: str) -> list[dict]:
-    job_words = _accela_words(job_type)
-    modules = ["Building", "Planning", "Licenses", "Enforcement", "Permits"]
-    all_types = []
-    seen_ids = set()
-    for module in [""] + modules:
-        params = {"limit": 200}
-        if module:
-            params["module"] = module
-        data = _accela_get("/v4/settings/records/types", params=params, agency_name=agency_name) or {}
-        for item in data.get("result") or []:
-            record_id = str(item.get("id") or "")
-            if record_id and record_id in seen_ids:
-                continue
-            if record_id:
-                seen_ids.add(record_id)
-            text_parts = [item.get("text"), item.get("alias"), item.get("group"), item.get("type"), item.get("subType"), item.get("category"), item.get("value")]
-            blob = " ".join(str(part or "") for part in text_parts)
-            words = _accela_words(blob)
-            overlap = len(words & job_words)
-            item["_match_score"] = overlap * 10 + (5 if "permit" in words else 0) + (3 if str(item.get("module") or "").lower() == "building" else 0)
-            all_types.append(item)
-        if all_types:
-            break
-    all_types.sort(key=lambda item: item.get("_match_score", 0), reverse=True)
-    return all_types
-
-
-def _accela_get_fee_schedules(agency_name: str, record_type_id: str) -> list[dict]:
-    if not record_type_id:
-        return []
-    data = _accela_get(f"/v4/settings/records/types/{record_type_id}/fees/schedules", agency_name=agency_name, require_token=True) or {}
-    return data.get("result") or []
-
-
-def get_accela_processing_time(agency_id: str, permit_type: str) -> str:
-    """Accela v4 docs do not expose processing time metadata on the public settings endpoints used here."""
-    return ""
-
-
-def accela_get_permit_info(city: str, state: str, job_type: str) -> dict | None:
-    agency = accela_find_agency(city, state)
-    if not agency:
-        print(f"[accela] No agency found for {city}, {state}")
-        return None
-
-    agency_name = str(agency.get("name") or "")
-    record_types = _accela_get_record_types(agency_name, job_type)
-    if not record_types:
-        print(f"[accela] No record types returned for {agency_name}")
-        return {
-            "agency": agency,
-            "record_types": [],
-            "fees": [],
-            "structured": {
-                "fees": [],
-                "raw_text": f"Accela agency matched: {agency.get('displayName') or agency_name} ({agency.get('state') or state}). No public record types were returned.",
-                "source": "layer0_5_accela",
-                "field_sources": {},
-                "field_confidence": {},
-                "freshness": "live_accela_api",
-            },
-            "summary": f"Accela agency matched for {city}, {state}: {agency.get('displayName') or agency_name}. No public record types were returned.",
-        }
-
-    matched_types = [item for item in record_types if item.get("_match_score", 0) > 0][:8] or record_types[:8]
-    fees = []
-    for item in matched_types[:3]:
-        fees.extend(_accela_get_fee_schedules(agency_name, str(item.get("id") or "")))
-    fee_labels = _unique_keep_order([str(fee.get("text") or fee.get("value") or "").strip() for fee in fees if str(fee.get("text") or fee.get("value") or "").strip()])[:8]
-
-    type_lines = []
-    for item in matched_types[:8]:
-        bits = [item.get("module"), item.get("group"), item.get("type"), item.get("subType"), item.get("category")]
-        bits = [str(bit).strip() for bit in bits if str(bit or "").strip()]
-        label = str(item.get("text") or item.get("alias") or item.get("value") or "Unnamed record type")
-        if bits and label not in bits:
-            bits.append(label)
-        type_lines.append(" / ".join(bits) if bits else label)
-
-    fee_line = f"Fee schedules: {', '.join(fee_labels)}" if fee_labels else "Fee schedules: not available from current Accela auth/app configuration"
-    summary = (
-        f"Accela agency match: {agency.get('displayName') or agency_name} ({agency.get('state') or state}). "
-        f"Matched record types: {'; '.join(type_lines[:5]) or 'none'}. {fee_line}."
-    )
-    structured = {
-        "fees": fee_labels,
-        "raw_text": summary,
-        "source": "layer0_5_accela",
-        "field_sources": {"fees": f"{ACCELA_BASE_URL}/v4/settings/records/types"} if fee_labels else {},
-        "field_confidence": {"fees": "medium"} if fee_labels else {},
-        "freshness": "live_accela_api",
-    }
-    return {
-        "agency": agency,
-        "record_types": matched_types,
-        "fees": fees,
-        "structured": structured,
-        "summary": summary,
-    }
 
 # ─── Hardcoded County Fallback Data ───────────────────────────────────────────
 
@@ -613,144 +389,6 @@ SOLARAPP_CITIES = {
     "burlington_vt",
 }
 
-
-STATE_TYPICAL_CITIES = {
-    "AL": "birmingham", "AK": "anchorage", "AZ": "phoenix", "AR": "little_rock",
-    "CA": "los_angeles", "CO": "denver", "CT": "hartford", "DE": "wilmington",
-    "FL": "miami", "GA": "atlanta", "HI": "honolulu", "ID": "boise",
-    "IL": "chicago", "IN": "indianapolis", "IA": "des_moines", "KS": "wichita",
-    "KY": "louisville", "LA": "new_orleans", "ME": "portland", "MD": "baltimore",
-    "MA": "boston", "MI": "detroit", "MN": "minneapolis", "MS": "jackson",
-    "MO": "kansas_city", "MT": "billings", "NE": "omaha", "NV": "las_vegas",
-    "NH": "manchester", "NJ": "newark", "NM": "albuquerque", "NY": "new_york",
-    "NC": "charlotte", "ND": "fargo", "OH": "columbus", "OK": "oklahoma_city",
-    "OR": "portland", "PA": "philadelphia", "RI": "providence", "SC": "columbia",
-    "SD": "sioux_falls", "TN": "nashville", "TX": "houston", "UT": "salt_lake_city",
-    "VT": "burlington", "VA": "virginia_beach", "WA": "seattle", "WV": "charleston",
-    "WI": "milwaukee", "WY": "cheyenne",
-}
-
-CHECKLIST_BASE = {
-    "always": [
-        "Verify your contractor license is current and valid in {state}",
-        "Confirm your liability insurance is active (certificate may be required at permit office)",
-        "Have the property address and legal parcel number ready",
-        "Know the project value/cost — required on most permit applications",
-    ]
-}
-
-CHECKLIST_TRADE = {
-    "hvac": [
-        "Equipment spec sheets / submittal documents for all new units",
-        "Load calculation (Manual J) if replacing system >5 tons or changing capacity",
-        "Refrigerant type and charge amount documentation",
-        "Energy compliance form (required in many states — check {state} requirements)",
-    ],
-    "electrical": [
-        "Panel schedule showing existing and proposed circuits",
-        "Wire gauge and breaker size for each new circuit",
-        "Electrical diagram or one-line drawing (required for panel upgrades)",
-        "Utility disconnect location marked on plans",
-    ],
-    "plumbing": [
-        "Isometric or riser diagram for new plumbing runs",
-        "Fixture count and drain sizes",
-        "Water heater BTU/gallon rating if replacing",
-        "Backflow prevention documentation if required",
-    ],
-    "roofing": [
-        "Manufacturer's product approval number (required in FL, TX coastal areas)",
-        "Existing roof layer count (many jurisdictions limit to 2 layers max)",
-        "Structural decking condition report if decking will be replaced",
-        "Photos of existing roof condition recommended",
-    ],
-    "solar": [
-        "Site plan showing panel layout with setback dimensions",
-        "Structural engineering letter confirming roof load capacity",
-        "Single-line electrical diagram (NEC Article 690 compliant)",
-        "Rapid shutdown compliance documentation",
-        "Utility interconnection application (separate from permit — file with utility)",
-        "HOA approval letter if applicable",
-    ],
-    "generator": [
-        "Generator spec sheet with wattage, fuel type, emissions data",
-        "Transfer switch type (manual or automatic) and rating",
-        "Gas line sizing calculations if natural gas",
-        "Setback measurements from property lines and windows (typically 5-10 ft)",
-    ],
-    "fence": [
-        "Survey or site plan showing fence location relative to property lines",
-        "Fence height and material specifications",
-        "HOA approval if in an HOA community",
-        "Utility locates (call 811) completed before digging",
-    ],
-    "deck": [
-        "Structural drawings showing joist size, span, and beam details",
-        "Footing depth and diameter (frost line depth for {state})",
-        "Ledger attachment method to house",
-        "Guard rail height and baluster spacing specs",
-    ],
-}
-
-PDF_SOURCES = {
-    "nashville_tn": "https://www.nashville.gov/departments/codes/construction-and-permits/permit-fees",
-    "austin_tx": "https://www.austintexas.gov/sites/default/files/files/Development_Services/Fee_Schedule.pdf",
-}
-PDF_CACHE_DIR = os.path.join(_data_dir, "pdf_cache")
-
-FEE_FORMULAS = {
-    "nashville_tn": {"base": 30, "per_thousand": 8.50, "min": 30, "threshold": 2858},
-    "austin_tx": {"base": 200, "per_thousand": 9.00, "min": 200, "max": 25000},
-    "chicago_il": {"base": 50, "per_thousand": 12.00, "min": 50},
-    "houston_tx": {"base": 0, "per_thousand": 6.50, "min": 35},
-    "phoenix_az": {"base": 25, "per_thousand": 3.80, "min": 25},
-    "seattle_wa": {"base": 200, "per_thousand": 11.50, "min": 200},
-    "denver_co": {"base": 35, "per_thousand": 8.00, "min": 35},
-    "portland_or": {"base": 89, "per_thousand": 10.30, "min": 89},
-    "las_vegas_nv": {"base": 40, "per_thousand": 5.50, "min": 40},
-    "san_diego_ca": {"base": 75, "per_thousand": 15.00, "min": 75},
-    "miami_fl": {"base": 60, "per_thousand": 9.00, "min": 60},
-    "atlanta_ga": {"base": 50, "per_thousand": 7.00, "min": 50},
-}
-
-REJECTION_PATTERNS = {
-    "nashville_tn": [
-        {"pattern": "Expired Metro Codes contractor registration", "frequency": "very_common", "fix": "Renew at nashville.gov/departments/codes before applying — registration is annual"},
-        {"pattern": "Missing load calculation for HVAC jobs", "frequency": "common", "fix": "Provide Manual J load calculation signed by licensed engineer"},
-        {"pattern": "Incomplete site plan (missing north arrow, scale, setbacks)", "frequency": "common", "fix": "Include all required elements per Metro Codes checklist"},
-    ],
-    "chicago_il": [
-        {"pattern": "Missing City of Chicago contractor license (state license not sufficient)", "frequency": "very_common", "fix": "Apply for Chicago city-level license at chicago.gov/city/en/depts/bldgs"},
-        {"pattern": "No asbestos survey for pre-1980 buildings", "frequency": "common", "fix": "Hire licensed asbestos inspector before applying for any renovation permit"},
-        {"pattern": "Missing BTRC (Business Tax Registration Certificate)", "frequency": "very_common", "fix": "Register at chicago.gov/city/en/depts/fin/supp_info/revenue/tax_registration"},
-    ],
-    "austin_tx": [
-        {"pattern": "Digital signatures on structural drawings (wet stamps required)", "frequency": "very_common", "fix": "All structural drawings must have original wet stamps — PDFs not accepted"},
-        {"pattern": "No appointment booked for submittal (walk-ins rarely accepted)", "frequency": "common", "fix": "Book appointment at austintexas.gov/dsd before going to counter"},
-        {"pattern": "Missing ROW permit for work affecting sidewalk/driveway", "frequency": "common", "fix": "Apply for separate ROW permit through Austin Transportation Dept"},
-    ],
-    "los_angeles_ca": [
-        {"pattern": "Missing CSLB license AND LA City Business Tax Registration Certificate", "frequency": "very_common", "fix": "Both required — get BTRC at finance.lacity.org before permit application"},
-        {"pattern": "Missing CF1R energy compliance form for HVAC replacements", "frequency": "common", "fix": "Generate CF1R through a certified HERS rater before applying"},
-        {"pattern": "Bureau of Engineering approval missing for projects near public streets", "frequency": "common", "fix": "Submit to Bureau of Engineering separately from Building & Safety"},
-    ],
-    "phoenix_az": [
-        {"pattern": "Missing Phoenix City Contractor Registration (state ROC not sufficient)", "frequency": "very_common", "fix": "Register at phoenix.gov/pdd/contractor-registration before applying"},
-        {"pattern": "Same-day inspection requests (24-hour notice required)", "frequency": "common", "fix": "Schedule inspections minimum 24 hours in advance through city portal"},
-    ],
-    "miami_fl": [
-        {"pattern": "Missing Notice of Commencement (for projects over $2,500)", "frequency": "very_common", "fix": "Record NOC with Miami-Dade County Clerk before starting work"},
-        {"pattern": "Missing product approval numbers for roofing/windows/doors", "frequency": "very_common", "fix": "Florida requires state product approval — verify at floridabuilding.org"},
-    ],
-    "dallas_tx": [
-        {"pattern": "Expired annual city contractor registration", "frequency": "very_common", "fix": "Renew at dallas.gov/dsd annually — expiration causes silent rejection"},
-        {"pattern": "Project value underestimation flagged by plan reviewer", "frequency": "common", "fix": "Use contractor cost estimating software for accurate value — audits can add penalty fees"},
-    ],
-    "seattle_wa": [
-        {"pattern": "Missing Master Use Permit (MUP) in addition to building permit", "frequency": "common", "fix": "Check if project requires MUP at seattle.gov/sdci before applying"},
-        {"pattern": "Noise ordinance violation during construction", "frequency": "common", "fix": "Work hours: 7am-10pm weekdays, 9am-10pm weekends — strictly enforced"},
-    ],
-}
 
 def _check_solarapp(city: str, state: str) -> bool:
     key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
@@ -1158,336 +796,10 @@ def _detect_job_type_hints(job_type: str) -> str:
     return "\n".join(hints) if hints else ""
 
 
-def _safe_format_checklist_item(item: str, city: str, state: str) -> str:
-    try:
-        return str(item).format(city=city, state=state)
-    except Exception:
-        return str(item)
-
-
-def _fuzzy_match_key(value: str, options: list[str]) -> str:
-    try:
-        value_lower = (value or '').lower()
-        best = ''
-        best_score = 0
-        for option in options:
-            score = 0
-            for token in re.split(r'[^a-z0-9]+', option.lower()):
-                if token and token in value_lower:
-                    score += len(token)
-            if option in value_lower:
-                score += len(option) * 2
-            if score > best_score:
-                best_score = score
-                best = option
-        return best
-    except Exception:
-        return ''
-
-
-def find_similar_city(city: str, state: str) -> tuple[str | None, dict | None]:
-    try:
-        _load_knowledge()
-        cities = _CITIES_KB.get('cities', {})
-        state_upper = state.upper()
-        state_cities = [(k, v) for k, v in cities.items() if v.get('state', '').upper() == state_upper]
-        if not state_cities:
-            return None, None
-        typical = STATE_TYPICAL_CITIES.get(state_upper, '')
-        for key, data in state_cities:
-            if typical and typical in key:
-                return key, data
-        return state_cities[0]
-    except Exception as e:
-        print(f"[similar-city] Failed to find similar city: {e}")
-        return None, None
-
-
-def ensure_pdf_cache_dir():
-    try:
-        os.makedirs(PDF_CACHE_DIR, exist_ok=True)
-    except Exception as e:
-        print(f"[pdf_kb] Failed to create cache dir: {e}")
-
-
-def get_cached_pdf_text(city: str, state: str) -> str:
-    try:
-        ensure_pdf_cache_dir()
-        key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
-        cache_file = os.path.join(PDF_CACHE_DIR, f"{key}.txt")
-        meta_file = os.path.join(PDF_CACHE_DIR, f"{key}.meta.json")
-        if os.path.exists(cache_file) and os.path.exists(meta_file):
-            with open(meta_file) as f:
-                meta = json.load(f)
-            age_days = (time.time() - meta.get('cached_at', 0)) / 86400
-            if age_days < 30:
-                with open(cache_file) as f:
-                    return f.read()
-    except Exception as e:
-        print(f"[pdf_kb] Cache read failed: {e}")
-    return ''
-
-
-def cache_pdf_text(city: str, state: str, text: str, source_url: str):
-    try:
-        ensure_pdf_cache_dir()
-        key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
-        with open(os.path.join(PDF_CACHE_DIR, f"{key}.txt"), 'w') as f:
-            f.write(text or '')
-        with open(os.path.join(PDF_CACHE_DIR, f"{key}.meta.json"), 'w') as f:
-            json.dump({'cached_at': time.time(), 'source_url': source_url}, f)
-    except Exception as e:
-        print(f"[pdf_kb] Cache write failed: {e}")
-
-
-def fetch_and_cache_pdf(url: str, city: str, state: str) -> str:
-    try:
-        if not is_pdf_url(url):
-            return ''
-        text, _, _ = jina_fetch(url)
-        if text and len(text) > 200:
-            cache_pdf_text(city, state, text, url)
-            print(f"[pdf_kb] Cached PDF for {city}, {state}: {len(text)} chars")
-            return text
-    except Exception as e:
-        print(f"[pdf_kb] Fetch failed: {e}")
-    return ''
-
-
-def calculate_permit_ready_score(context: str, structured: dict) -> tuple[int, str, list[str]]:
-    try:
-        score = 0
-        reasons = []
-        phone = str(structured.get('phone', '') or '')
-        digits = re.sub(r'\D', '', phone)
-        if len(digits) >= 10:
-            score += 20
-        else:
-            reasons.append('permit office phone not found — call to verify')
-        portal = str(structured.get('portal_url', '') or '')
-        if portal.startswith('http'):
-            score += 25
-        else:
-            reasons.append('online portal not confirmed — may need to apply in person')
-        fees = structured.get('fees', []) or []
-        if fees:
-            score += 20
-        else:
-            reasons.append('exact fees not found — request fee schedule at permit office')
-        address = str(structured.get('address', '') or '')
-        if len(address) > 10:
-            score += 15
-        else:
-            reasons.append('office address not confirmed')
-        if len(context or '') > 1000:
-            score += 10
-        elif len(context or '') > 500:
-            score += 5
-        if '.gov' in (context or ''):
-            score += 10
-        if score >= 85:
-            label = 'Ready to apply'
-        elif score >= 65:
-            label = 'Mostly ready — verify fees'
-        elif score >= 45:
-            label = 'Partial data — call permit office first'
-        else:
-            label = 'Limited data — in-person visit recommended'
-        return score, label, reasons
-    except Exception as e:
-        print(f"[ready-score] Failed: {e}")
-        return 0, 'Limited data — in-person visit recommended', ['unable to score permit readiness']
-
-
-def calculate_exact_fee(job_type: str, city: str, state: str, job_value: float) -> dict:
-    try:
-        key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
-        formula = FEE_FORMULAS.get(key)
-        if not formula:
-            return {'fee': None, 'formula': None, 'confidence': 'none', 'note': f'Exact fee formula not available for {city}, {state}. Use fee range as estimate.'}
-        base = float(formula.get('base', 0) or 0)
-        rate = float(formula.get('per_thousand', 0) or 0)
-        threshold = float(formula.get('threshold', 0) or 0)
-        min_fee = float(formula.get('min', 0) or 0)
-        max_fee = formula.get('max', None)
-        if threshold and job_value <= threshold:
-            calculated = base
-        else:
-            calculated = base + ((job_value / 1000) * rate)
-        calculated = max(calculated, min_fee)
-        if max_fee is not None:
-            calculated = min(calculated, float(max_fee))
-        formula_str = f"${base:g} base + ${rate:.2f}/thousand of job value"
-        if threshold:
-            formula_str += f" (flat ${base:g} for jobs under ${threshold:,.0f})"
-        return {'fee': round(calculated, 2), 'formula': formula_str, 'confidence': 'high', 'note': 'Verify current fee schedule — rates may have changed'}
-    except Exception as e:
-        print(f"[fee-calc] Failed: {e}")
-        return {'fee': None, 'formula': None, 'confidence': 'none', 'note': f'Unable to calculate exact fee for {city}, {state}.'}
-
-
-def get_rejection_patterns(city: str, state: str, job_type: str) -> list[dict]:
-    try:
-        key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
-        patterns = REJECTION_PATTERNS.get(key, [])
-        if not patterns:
-            return []
-        job_lower = (job_type or '').lower()
-        relevant = []
-        for p in patterns:
-            pattern_text = str(p.get('pattern', '')).lower()
-            if p.get('frequency') == 'very_common':
-                relevant.append(p)
-            elif any(word and word in pattern_text for word in re.split(r'[^a-z0-9]+', job_lower)):
-                relevant.append(p)
-        return relevant[:4]
-    except Exception as e:
-        print(f"[rejections] Failed: {e}")
-        return []
-
-
-def generate_permit_checklist(job_type: str, city: str, state: str, result: dict) -> list[str]:
-    try:
-        matched = _fuzzy_match_key(job_type, list(CHECKLIST_TRADE.keys()))
-        items = list(CHECKLIST_BASE.get('always', []))
-        if matched:
-            items.extend(CHECKLIST_TRADE.get(matched, []))
-        license_required = result.get('license_required') or ''
-        applying_office = result.get('applying_office') or ''
-        if license_required:
-            items.append(f"Confirm the required license is active and matches the application: {license_required}")
-        if applying_office:
-            items.append(f"Bring 2 copies of all documents to {applying_office}")
-        deduped = []
-        seen = set()
-        for item in items:
-            formatted = _safe_format_checklist_item(item, city, state).strip()
-            if formatted and formatted not in seen:
-                seen.add(formatted)
-                deduped.append(formatted)
-        return deduped
-    except Exception as e:
-        print(f"[checklist] Failed: {e}")
-        return []
-
-
-def check_for_changes(city: str, state: str, new_content: str) -> dict:
-    try:
-        cached = get_search_cache(city, state)
-        if not cached:
-            return {'changed': False, 'change_summary': ''}
-        old_hash = cached.get('content_hash', '')
-        new_hash = content_hash(new_content)
-        if old_hash and old_hash != new_hash:
-            old_text = cached.get('raw_text', '') or ''
-            changes = []
-            old_fees = set(re.findall(r'\$[\d,]+(?:\.\d{2})?', old_text))
-            new_fees = set(re.findall(r'\$[\d,]+(?:\.\d{2})?', new_content or ''))
-            if old_fees != new_fees:
-                added = new_fees - old_fees
-                removed = old_fees - new_fees
-                if added:
-                    changes.append(f"New fee amounts detected: {', '.join(list(added)[:3])}")
-                if removed:
-                    changes.append(f"Fee amounts no longer found: {', '.join(list(removed)[:3])}")
-            old_phones = set(re.findall(r'\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4}', old_text))
-            new_phones = set(re.findall(r'\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4}', new_content or ''))
-            if old_phones != new_phones:
-                changes.append('Phone number may have changed — verify before calling')
-            summary = ' | '.join(changes) if changes else 'Page content updated — review for changes'
-            return {'changed': True, 'change_summary': summary}
-        return {'changed': False, 'change_summary': ''}
-    except Exception as e:
-        print(f"[change-detect] Failed: {e}")
-        return {'changed': False, 'change_summary': ''}
-
-
 # ─── Cache ────────────────────────────────────────────────────────────────────
-
-def init_search_cache_db():
-    """Initialize search_cache and url_patterns tables."""
-    os.makedirs(os.path.dirname(CACHE_DB), exist_ok=True)
-    conn = sqlite3.connect(CACHE_DB)
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS search_cache (
-            cache_key TEXT PRIMARY KEY,
-            city TEXT,
-            state TEXT,
-            payload_json TEXT,
-            content_hash TEXT,
-            created_at TEXT
-        )
-    """)
-    cols = {row[1] for row in c.execute("PRAGMA table_info(search_cache)").fetchall()}
-    if "content_hash" not in cols:
-        c.execute("ALTER TABLE search_cache ADD COLUMN content_hash TEXT")
-    if "city" not in cols:
-        c.execute("ALTER TABLE search_cache ADD COLUMN city TEXT")
-    if "state" not in cols:
-        c.execute("ALTER TABLE search_cache ADD COLUMN state TEXT")
-    if "payload_json" not in cols:
-        c.execute("ALTER TABLE search_cache ADD COLUMN payload_json TEXT")
-    if "created_at" not in cols:
-        c.execute("ALTER TABLE search_cache ADD COLUMN created_at TEXT")
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS url_patterns (
-            domain TEXT PRIMARY KEY,
-            success_count INTEGER DEFAULT 0,
-            fail_count INTEGER DEFAULT 0,
-            avg_content_len REAL DEFAULT 0,
-            last_seen INTEGER
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-
-def content_hash(text: str) -> str:
-    return hashlib.md5((text or "").encode()).hexdigest()[:12]
-
-
-def _get_domain_success_bonus(url: str) -> int:
-    try:
-        domain = urlparse(url).netloc
-        if not domain:
-            return 0
-        conn = sqlite3.connect(CACHE_DB)
-        row = conn.execute("SELECT success_count FROM url_patterns WHERE domain = ?", (domain,)).fetchone()
-        conn.close()
-        if row and (row[0] or 0) > 5:
-            return 2
-    except Exception:
-        pass
-    return 0
-
-
-def record_url_success(url: str, content_len: int):
-    """Track which domains reliably produce good content."""
-    try:
-        domain = urlparse(url).netloc
-        if not domain:
-            return
-        conn = sqlite3.connect(CACHE_DB)
-        c = conn.cursor()
-        now = int(time.time())
-        c.execute("""
-            INSERT INTO url_patterns (domain, success_count, avg_content_len, last_seen)
-            VALUES (?, 1, ?, ?)
-            ON CONFLICT(domain) DO UPDATE SET
-                success_count = success_count + 1,
-                avg_content_len = (avg_content_len * success_count + ?) / (success_count + 1),
-                last_seen = ?
-        """, (domain, content_len, now, content_len, now))
-        conn.commit()
-        conn.close()
-    except Exception:
-        pass
-
 
 def init_cache():
     os.makedirs(os.path.dirname(CACHE_DB), exist_ok=True)
-    init_search_cache_db()
     conn = sqlite3.connect(CACHE_DB)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS permit_cache (
@@ -1641,29 +953,6 @@ def _unique_keep_order(values: list[str]) -> list[str]:
 
 
 
-def normalize_jurisdiction(city: str, state: str) -> tuple[str, str, str]:
-    """Returns (search_city, search_state, jurisdiction_note)."""
-    city_lower = (city or "").lower()
-    note = ""
-
-    for kw in UNINCORPORATED_KEYWORDS:
-        if kw in city_lower:
-            clean = city_lower.replace(kw, "").replace("county", "").strip(" ,-_")
-            clean = re.sub(r'\s+', ' ', clean).title()
-            note = f"Unincorporated area - searching {clean} County"
-            return f"{clean} County", state, note
-
-    if state.upper() == "AK" and "borough" not in city_lower and "municipality" not in city_lower:
-        note = "Alaska uses borough authority for permits"
-    elif state.upper() == "LA":
-        note = "Louisiana uses parish authority - may be parish permit office"
-    elif state.upper() == "VA":
-        note = JURISDICTION_PATTERNS["VA"].get("note", "")
-
-    return city, state, note
-
-
-
 def _find_city_kb_entry(city: str, state: str) -> dict | None:
     _load_knowledge()
     cities = _CITIES_KB.get("cities", {})
@@ -1709,8 +998,18 @@ def _search_cache_key(city: str, state: str) -> str:
 
 def delete_search_cache(city: str, state: str):
     try:
-        init_search_cache_db()
         conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS search_cache (
+                cache_key    TEXT PRIMARY KEY,
+                city         TEXT,
+                state        TEXT,
+                payload_json TEXT,
+                created_at   TEXT
+            )
+            """
+        )
         conn.execute("DELETE FROM search_cache WHERE cache_key = ?", [_search_cache_key(city, state)])
         conn.commit()
         conn.close()
@@ -1719,40 +1018,35 @@ def delete_search_cache(city: str, state: str):
 
 
 
-def _page_headers_signature(url: str) -> tuple[str, str]:
-    try:
-        resp = requests.head(url, allow_redirects=True, timeout=5, headers={"User-Agent": "Mozilla/5.0 (PermitAssist Search Bot)"})
-        return resp.headers.get("ETag", "") or "", resp.headers.get("Last-Modified", "") or ""
-    except Exception:
-        return "", ""
-
-
-
 def get_search_cache(city: str, state: str, city_match_level: str = "city", ttl_days: int = 30) -> dict | None:
     try:
-        init_search_cache_db()
         conn = sqlite3.connect(CACHE_DB)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS search_cache (
+                cache_key    TEXT PRIMARY KEY,
+                city         TEXT,
+                state        TEXT,
+                payload_json TEXT,
+                created_at   TEXT
+            )
+            """
+        )
         row = conn.execute(
-            "SELECT payload_json, content_hash, created_at FROM search_cache WHERE cache_key = ?",
+            "SELECT payload_json, created_at FROM search_cache WHERE cache_key = ?",
             [_search_cache_key(city, state)],
         ).fetchone()
+        conn.commit()
         conn.close()
         if not row:
             return None
-        created_at = datetime.fromisoformat(row[2])
+        created_at = datetime.fromisoformat(row[1])
         if datetime.now() - created_at > timedelta(days=ttl_days):
             delete_search_cache(city, state)
             return None
         payload = json.loads(row[0])
-        payload["content_hash"] = row[1] or payload.get("content_hash", "")
         if city_match_level and payload.get("city_match_level") and payload.get("city_match_level") != city_match_level:
             return None
-        first_url = ((payload.get("results") or [{}])[0]).get("url", "")
-        if first_url:
-            etag, last_mod = _page_headers_signature(first_url)
-            cached_meta = payload.get("cache_meta") or {}
-            if (etag and cached_meta.get("etag") and etag != cached_meta.get("etag")) or (last_mod and cached_meta.get("last_modified") and last_mod != cached_meta.get("last_modified")):
-                print("[search] Cache hit but page may have changed - serving cached data")
         return payload
     except Exception as e:
         print(f"[search] Cache read failed (non-fatal): {e}")
@@ -1762,31 +1056,30 @@ def get_search_cache(city: str, state: str, city_match_level: str = "city", ttl_
 
 def set_search_cache(city: str, state: str, payload: dict):
     try:
-        init_search_cache_db()
-        first_url = ((payload.get("results") or [{}])[0]).get("url", "")
-        etag, last_mod = _page_headers_signature(first_url) if first_url else ("", "")
-        payload = dict(payload)
-        payload["cache_meta"] = {
-            "etag": etag,
-            "last_modified": last_mod,
-        }
-        raw_text = str(payload.get("raw_text") or ((payload.get("structured") or {}).get("raw_text") or ''))[:500]
-        payload["raw_text"] = raw_text
-        payload["content_hash"] = content_hash(raw_text or json.dumps(payload.get("results") or []))
-        serialized = json.dumps(payload)
+        os.makedirs(os.path.dirname(CACHE_DB), exist_ok=True)
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS search_cache (
+                cache_key    TEXT PRIMARY KEY,
+                city         TEXT,
+                state        TEXT,
+                payload_json TEXT,
+                created_at   TEXT
+            )
+            """
+        )
+        conn.execute(
+            """
             INSERT OR REPLACE INTO search_cache
-            (cache_key, city, state, payload_json, content_hash, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (cache_key, city, state, payload_json, created_at)
+            VALUES (?, ?, ?, ?, ?)
             """,
             [
                 _search_cache_key(city, state),
                 city,
                 state,
-                serialized,
-                payload["content_hash"],
+                json.dumps(payload),
                 datetime.now().isoformat(),
             ],
         )
@@ -1817,12 +1110,11 @@ def _score_search_url(url: str) -> int:
         score -= 3
     if path.endswith(".pdf") and any(term in path for term in PDF_URL_HINTS):
         score += 6
-    score += _get_domain_success_bonus(url)
     return score
 
 
 
-def _rank_search_results(results: list[dict], limit: int = 4) -> list[dict]:
+def _rank_search_results(results: list[dict], limit: int = 3) -> list[dict]:
     ranked = []
     for item in results or []:
         url = item.get("url", "")
@@ -1830,17 +1122,7 @@ def _rank_search_results(results: list[dict], limit: int = 4) -> list[dict]:
         print(f"[search] URL ranking: score={score} url={url}")
         ranked.append({**item, "score": score})
     ranked.sort(key=lambda item: (item.get("score", -999), item.get("url", "")), reverse=True)
-    deduped = []
-    seen = set()
-    for item in ranked:
-        url = item.get("url", "")
-        if not url or url in seen:
-            continue
-        seen.add(url)
-        deduped.append({k: v for k, v in item.items() if k != "score"})
-        if len(deduped) >= limit:
-            break
-    return deduped
+    return [{k: v for k, v in item.items() if k != "score"} for item in ranked[:limit]]
 
 
 
@@ -1866,7 +1148,7 @@ def serper_search(query: str, num: int = 5) -> list[dict]:
                 "url": url,
                 "content": clean_summary_text(r.get("snippet", ""), max_len=500),
             })
-        trimmed = _rank_search_results(results, limit=min(num, 4))
+        trimmed = _rank_search_results(results, limit=min(num, 3))
         print(f"[search] Layer 1: serper found {len(trimmed)} urls")
         return trimmed
     except Exception as e:
@@ -1902,7 +1184,7 @@ def brave_search(query: str, num: int = 5, max_results: int | None = None) -> li
                 "url": url,
                 "content": clean_summary_text(r.get("description", ""), max_len=500),
             })
-        trimmed = _rank_search_results(results, limit=min(limit, 4))
+        trimmed = _rank_search_results(results, limit=min(limit, 3))
         print(f"[search] Layer 1: brave found {len(trimmed)} urls")
         return trimmed
     except Exception as e:
@@ -1928,25 +1210,6 @@ def _is_spa_portal_url(url: str) -> bool:
         return False
     lowered = str(url).lower()
     return any(hint in lowered for hint in _SPA_PORTAL_HINTS)
-
-
-
-def extract_tables_from_html(html: str) -> str:
-    """Extract HTML tables as markdown. Fee schedules are almost always in tables."""
-    try:
-        soup = BeautifulSoup(html, "lxml")
-        tables_md = []
-        for table in soup.find_all("table")[:3]:
-            rows = []
-            for tr in table.find_all("tr"):
-                cells = [td.get_text(strip=True) for td in tr.find_all(["td", "th"])]
-                if cells and any(c for c in cells):
-                    rows.append(" | ".join(cells))
-            if rows:
-                tables_md.append("\n".join(rows))
-        return "\n\n".join(tables_md) if tables_md else ""
-    except Exception:
-        return ""
 
 
 
@@ -1977,7 +1240,7 @@ def jina_fetch(url: str) -> tuple[str, int, bool]:
             )
             status = resp.status_code
             if status == 429:
-                print(f"[search] Jina 429 - falling back to direct fetch for {url}")
+                print(f"[search] Jina 429 — falling back to direct fetch for {url}")
                 direct = requests.get(url, headers=DIRECT_FETCH_HEADERS, timeout=20)
                 status = direct.status_code
                 if status == 404:
@@ -1987,9 +1250,6 @@ def jina_fetch(url: str) -> tuple[str, int, bool]:
                 for tag in soup(["script", "style", "nav", "footer"]):
                     tag.decompose()
                 text = soup.get_text("\n", strip=True)
-                tables = extract_tables_from_html(direct.text or "")
-                if tables:
-                    text = f"{text}\n\n{tables}".strip()
                 print(f"[search] Layer 2: direct fetch extracted {len(text)} chars from {urlparse(url).netloc or url}")
                 return text, status, False
         if status == 404:
@@ -2095,156 +1355,6 @@ def _score_address_candidate(address: str, url: str = "", context: str = "") -> 
 
 
 
-def extract_best_phone(text: str) -> str:
-    """Extract the phone number most contextually relevant to the permit office."""
-    phone_pattern = re.compile(r'\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4}')
-    best_phone = ""
-    best_score = -1
-    for match in phone_pattern.finditer(text or ""):
-        start = max(0, match.start() - 200)
-        end = min(len(text), match.end() + 200)
-        context = text[start:end].lower()
-        score = 0
-        for kw in PHONE_CONTEXT_KEYWORDS:
-            if kw in context:
-                score += 1
-        local_start = max(0, match.start() - start - 30)
-        local_end = min(len(context), match.start() - start + 30)
-        if "fax" in context[local_start:local_end].lower():
-            score -= 5
-        if score > best_score:
-            best_score = score
-            best_phone = match.group()
-    return best_phone
-
-
-
-def score_field_confidence(value: str, source_url: str, field: str) -> str:
-    """Return high, medium, low, or none confidence for a field."""
-    if not value:
-        return "none"
-    is_gov = ".gov" in source_url or ".us" in source_url
-    if field == "phone":
-        return "high" if is_gov else "medium"
-    if field == "portal_url":
-        lower = str(value).lower()
-        if any(kw in lower for kw in ["accela", "citizenserve", "viewpoint", "opengov", "tylertech"]):
-            return "high"
-        return "high" if is_gov else "medium"
-    if field == "fees":
-        return "high" if (is_gov and "$" in str(value)) else "medium"
-    if field == "address":
-        return "high" if is_gov else "low"
-    return "medium"
-
-
-
-def find_followup_links(url: str, content: str) -> list[str]:
-    """Find high-value sub-links from a scraped page worth following."""
-    links = []
-    for match in re.finditer(r'\[([^\]]+)\]\((https?://[^)]+)\)', content or ""):
-        text_label, href = match.group(1).lower(), match.group(2)
-        if any(kw in text_label for kw in FEE_LINK_KEYWORDS):
-            links.append(href)
-    return _unique_keep_order(links)[:2]
-
-
-
-def check_page_freshness(url: str) -> str:
-    """Return freshness label based on Last-Modified header."""
-    try:
-        resp = requests.head(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
-        last_mod = resp.headers.get("Last-Modified", "")
-        if last_mod:
-            from email.utils import parsedate_to_datetime
-            mod_date = parsedate_to_datetime(last_mod)
-            days_old = (datetime.utcnow().replace(tzinfo=mod_date.tzinfo) - mod_date).days
-            if days_old < 30:
-                return f"recently updated ({days_old}d ago)"
-            if days_old < 180:
-                return f"verified ({days_old}d ago)"
-            return f"older data ({days_old}d ago)"
-    except Exception:
-        pass
-    return ""
-
-
-
-def expand_permit_query(job_type: str, city: str, state: str) -> list[str]:
-    """Generate 3 alternative search queries for the job type."""
-    raw = ""
-    try:
-        resp = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{
-                "role": "user",
-                "content": f"List 3 alternative official permit names for '{job_type}' used by US building departments. Return only a JSON array of strings, no explanation. Example: [\"mechanical permit\", \"HVAC permit\", \"cooling system permit\"]"
-            }],
-            max_tokens=80,
-            temperature=0.2
-        )
-        raw = resp.choices[0].message.content or ""
-        raw = re.sub(r'```json?\s*|\s*```', '', raw).strip()
-        if not raw or not raw.startswith("["):
-            return []
-        import json as _json
-        alts = _json.loads(raw)
-        if isinstance(alts, list):
-            return [str(a) for a in alts[:3]]
-    except Exception as e:
-        print(f"[search] Query expansion raw response: {repr(raw[:100])}")
-        print(f"[search] Query expansion failed (non-fatal): {e}")
-    return []
-
-
-
-def detect_contradictions(results: list[dict]) -> list[str]:
-    """Detect fields where multiple sources disagree."""
-    conflicts = []
-    phones = list(set(r["structured"].get("phone", "") for r in results if r.get("structured", {}).get("phone")))
-    if len(phones) > 1:
-        conflicts.append(f"PHONE CONFLICT: Multiple numbers found - {', '.join(phones)} - verify before using")
-    portals = list(set(r["structured"].get("portal_url", "") for r in results if r.get("structured", {}).get("portal_url")))
-    if len(portals) > 1:
-        conflicts.append("PORTAL CONFLICT: Multiple URLs found - verify which is current")
-    return conflicts
-
-
-
-def auto_update_city_kb(city: str, state: str, phone: str, portal_url: str, source_url: str):
-    """Write successfully discovered city data back to cities.json for future Layer 0 hits."""
-    if not (phone and portal_url):
-        return
-    if ".gov" not in source_url and ".us" not in source_url:
-        return
-    try:
-        global _CITIES_KB
-        cities_path = os.path.join(KNOWLEDGE_DIR, "cities.json")
-        with open(cities_path) as f:
-            kb = json.load(f)
-        cities = kb.get("cities", {})
-        key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
-        if key not in cities:
-            cities[key] = {
-                "city": city,
-                "state": state.upper(),
-                "permit_office": f"{city} Building Department",
-                "permit_url": source_url,
-                "phone": phone,
-                "online_portal": portal_url,
-                "_auto_added": True,
-                "_added_date": datetime.utcnow().isoformat()
-            }
-            kb["cities"] = cities
-            with open(cities_path, "w") as f:
-                json.dump(kb, f, indent=2)
-            _CITIES_KB = kb
-            print(f"[search] Auto-added {city}, {state} to cities KB")
-    except Exception as e:
-        print(f"[search] KB auto-update failed (non-fatal): {e}")
-
-
-
 def extract_permit_content(url: str, text: str, city: str = "", state: str = "") -> dict:
     result = {
         "phone": "",
@@ -2253,8 +1363,6 @@ def extract_permit_content(url: str, text: str, city: str = "", state: str = "")
         "address": "",
         "hours": "",
         "raw_text": "",
-        "field_sources": {},
-        "field_confidence": {},
     }
     if not text:
         return result
@@ -2264,13 +1372,8 @@ def extract_permit_content(url: str, text: str, city: str = "", state: str = "")
     lines = [line.strip() for line in normalized.splitlines() if line.strip()]
     address_lines = [line.strip() for line in address_ready.splitlines() if line.strip()]
 
-    best_phone = extract_best_phone(normalized)
+    phones = _unique_keep_order([m.strip() for m in _PHONE_RE.findall(normalized)])
     fees = _unique_keep_order([m.strip() for m in _FEE_RE.findall(normalized)])
-    table_fees = []
-    for line in lines:
-        if "|" in line and any(word in line.lower() for word in ["fee", "permit", "inspection", "total"]):
-            table_fees.extend(_FEE_RE.findall(line))
-    fees = _unique_keep_order(table_fees + fees)
     hours_matches = _unique_keep_order([m.strip() for m in _HOURS_RE.findall(normalized)])
     address_candidates: list[tuple[str, str]] = []
     for match in _ADDRESS_RE.finditer(address_ready):
@@ -2322,6 +1425,7 @@ def extract_permit_content(url: str, text: str, city: str = "", state: str = "")
             score -= 10
         if score >= 7:
             scored_addresses.append((addr, context, score))
+
     scored_addresses.sort(key=lambda item: item[2], reverse=True)
     addresses = [addr for addr, _, _ in scored_addresses]
 
@@ -2331,96 +1435,58 @@ def extract_permit_content(url: str, text: str, city: str = "", state: str = "")
         if any(word in ll for word in ["permit", "inspection", "building", "codes", "application", "contractor", "fee", "hour", "office", "phone"]):
             permit_lines.append(line)
     if not permit_lines:
-        permit_lines = lines[:24]
+        permit_lines = lines[:20]
 
     raw_parts = []
     current_len = 0
     for line in permit_lines:
         candidate = ("\n" if raw_parts else "") + line
-        if current_len + len(candidate) > 1100:
-            remaining = 1100 - current_len
+        if current_len + len(candidate) > 900:
+            remaining = 900 - current_len
             if remaining > 0:
                 raw_parts.append(candidate[:remaining].rstrip())
             break
         raw_parts.append(candidate if raw_parts else line)
         current_len += len(candidate)
 
-    result["phone"] = best_phone
+    result["phone"] = phones[0] if phones else ""
     result["fees"] = fees[:8]
     result["portal_url"] = url_hits[0] if url_hits else ""
     result["address"] = _clean_address_candidate(addresses[0]) if addresses else ""
     result["hours"] = hours_matches[0] if hours_matches else ""
-    result["raw_text"] = "".join(raw_parts).strip() or normalized[:1100]
-    for field in ("phone", "portal_url", "address"):
-        if result.get(field):
-            result["field_sources"][field] = url
-            result["field_confidence"][field] = score_field_confidence(result[field], url, field)
-    if result["fees"]:
-        result["field_sources"]["fees"] = url
-        result["field_confidence"]["fees"] = score_field_confidence(", ".join(result["fees"]), url, "fees")
-    if result["hours"]:
-        result["field_sources"]["hours"] = url
-        result["field_confidence"]["hours"] = score_field_confidence(result["hours"], url, "hours")
+    result["raw_text"] = "".join(raw_parts).strip() or normalized[:900]
     return result
 
 
 
 def _merge_structured_candidates(candidates: list[dict], kb_entry: dict | None = None) -> dict:
-    merged = {
-        "phone": "", "fees": [], "portal_url": "", "address": "", "hours": "", "raw_text": "", "source": "",
-        "field_sources": {}, "field_confidence": {}, "conflicts": [], "freshness": ""
-    }
+    merged = {"phone": "", "fees": [], "portal_url": "", "address": "", "hours": "", "raw_text": "", "source": ""}
     for item in candidates:
-        item_sources = item.get("field_sources") or {}
-        item_conf = item.get("field_confidence") or {}
         if not merged["phone"] and item.get("phone"):
             merged["phone"] = item["phone"]
-            merged["field_sources"]["phone"] = item_sources.get("phone", item.get("source_url", item.get("source", "")))
-            merged["field_confidence"]["phone"] = item_conf.get("phone", "medium")
         if not merged["portal_url"] and item.get("portal_url"):
             merged["portal_url"] = item["portal_url"]
-            merged["field_sources"]["portal_url"] = item_sources.get("portal_url", item.get("source_url", item.get("source", "")))
-            merged["field_confidence"]["portal_url"] = item_conf.get("portal_url", "medium")
         if not merged["address"] and item.get("address"):
             merged["address"] = item["address"]
-            merged["field_sources"]["address"] = item_sources.get("address", item.get("source_url", item.get("source", "")))
-            merged["field_confidence"]["address"] = item_conf.get("address", "low")
         if not merged["hours"] and item.get("hours"):
             merged["hours"] = item["hours"]
-            merged["field_sources"]["hours"] = item_sources.get("hours", item.get("source_url", item.get("source", "")))
-            merged["field_confidence"]["hours"] = item_conf.get("hours", "medium")
-        merged["fees"] = _unique_keep_order(merged["fees"] + (item.get("fees") or []))[:8]
-        if merged["fees"] and "fees" not in merged["field_sources"]:
-            merged["field_sources"]["fees"] = item_sources.get("fees", item.get("source_url", item.get("source", "")))
-            merged["field_confidence"]["fees"] = item_conf.get("fees", "medium")
-        if item.get("raw_text") and len(merged["raw_text"]) < 1800:
-            merged_text = (merged["raw_text"] + "\n" + item["raw_text"]).strip() if merged["raw_text"] else item["raw_text"]
-            merged["raw_text"] = merged_text[:1800]
         if not merged["source"] and item.get("source"):
             merged["source"] = item["source"]
-        if not merged["freshness"] and item.get("freshness"):
-            merged["freshness"] = item["freshness"]
+        merged["fees"] = _unique_keep_order(merged["fees"] + (item.get("fees") or []))[:8]
+        if item.get("raw_text") and len(merged["raw_text"]) < 900:
+            merged_text = (merged["raw_text"] + "\n" + item["raw_text"]).strip() if merged["raw_text"] else item["raw_text"]
+            merged["raw_text"] = merged_text[:900]
 
     if kb_entry:
         if not merged["phone"] and kb_entry.get("phone"):
             merged["phone"] = kb_entry["phone"]
-            merged["field_sources"]["phone"] = kb_entry.get("permit_url", "knowledge_base")
-            merged["field_confidence"]["phone"] = score_field_confidence(merged["phone"], kb_entry.get("permit_url", ""), "phone")
         if not merged["address"] and kb_entry.get("address"):
             merged["address"] = kb_entry["address"]
-            merged["field_sources"]["address"] = kb_entry.get("permit_url", "knowledge_base")
-            merged["field_confidence"]["address"] = score_field_confidence(merged["address"], kb_entry.get("permit_url", ""), "address")
         portal = kb_entry.get("online_portal") or kb_entry.get("permit_url")
         if not merged["portal_url"] and str(portal or "").startswith(("http://", "https://")):
             merged["portal_url"] = portal
-            merged["field_sources"]["portal_url"] = portal
-            merged["field_confidence"]["portal_url"] = score_field_confidence(portal, portal, "portal_url")
         fees = kb_entry.get("fees") or {}
         merged["fees"] = _unique_keep_order(merged["fees"] + [str(v) for k, v in fees.items() if k != "fee_note" and v])[:8]
-        if merged["fees"] and "fees" not in merged["field_sources"]:
-            src = kb_entry.get("permit_url", "knowledge_base")
-            merged["field_sources"]["fees"] = src
-            merged["field_confidence"]["fees"] = score_field_confidence(", ".join(merged["fees"]), src, "fees")
         if not merged["source"] and kb_entry.get("permit_url"):
             merged["source"] = "layer0_jina"
     return merged
@@ -2430,44 +1496,17 @@ def _merge_structured_candidates(candidates: list[dict], kb_entry: dict | None =
 def _render_search_context(payload: dict) -> str:
     structured = payload.get("structured") or {}
     results = payload.get("results") or []
-    field_sources = structured.get("field_sources") or {}
-    field_conf = structured.get("field_confidence") or {}
-    def fmt(field: str, value):
-        if isinstance(value, list):
-            value = ", ".join(value) if value else "None found"
-        value = value or "Not found"
-        extra = []
-        if field_conf.get(field):
-            extra.append(f"confidence: {field_conf[field]}")
-        if field_sources.get(field):
-            extra.append(f"source: {field_sources[field]}")
-        return f"{value}" + (f" [{' | '.join(extra)}]" if extra else "")
     lines = [
         "=== STRUCTURED PERMIT DATA (machine-extracted, high confidence) ===",
-        f"Phone: {fmt('phone', structured.get('phone'))}",
-        f"Portal: {fmt('portal_url', structured.get('portal_url'))}",
-        f"Fees found: {fmt('fees', structured.get('fees') or [])}",
-        f"Address: {fmt('address', structured.get('address'))}",
-        f"Hours: {fmt('hours', structured.get('hours'))}",
+        f"Phone: {structured.get('phone') or 'Not found'}",
+        f"Portal: {structured.get('portal_url') or 'Not found'}",
+        f"Fees found: {', '.join(structured.get('fees') or []) or 'None found'}",
+        f"Address: {structured.get('address') or 'Not found'}",
+        f"Hours: {structured.get('hours') or 'Not found'}",
         f"Source: {structured.get('source') or 'unknown'}",
-    ]
-    if payload.get("jurisdiction_note"):
-        lines.append(f"Jurisdiction note: {payload['jurisdiction_note']}")
-    if payload.get("similar_city_note"):
-        lines.append(payload['similar_city_note'])
-    if structured.get("freshness"):
-        lines.append(f"Data freshness: {structured['freshness']}")
-    change_info = payload.get("change_info") or {}
-    if change_info.get("changed") and change_info.get("change_summary"):
-        lines.append(f"⚠️ CHANGE DETECTED: {change_info['change_summary']}")
-    conflicts = structured.get("conflicts") or []
-    if conflicts:
-        lines.append("Conflicts:")
-        lines.extend([f"- {c}" for c in conflicts])
-    lines.extend([
         "---",
         "=== REAL-TIME WEB SEARCH RESULTS ===",
-    ])
+    ]
     for r in results:
         lines.append("")
         lines.append(f"Source: {r.get('url', '')}")
@@ -2493,30 +1532,6 @@ def _cache_still_valid(payload: dict) -> bool:
 
 
 
-def _parse_search_context_structured(search_context: str) -> dict:
-    structured = {}
-    if not search_context:
-        return structured
-    patterns = {
-        "phone": r'^Phone:\s*(.+)$',
-        "portal_url": r'^Portal:\s*(.+)$',
-        "fees": r'^Fees found:\s*(.+)$',
-        "address": r'^Address:\s*(.+)$',
-        "hours": r'^Hours:\s*(.+)$',
-    }
-    for key, pat in patterns.items():
-        match = re.search(pat, search_context, flags=re.M)
-        if not match:
-            continue
-        value = match.group(1).strip()
-        value = re.sub(r'\s*\[[^\]]*\]\s*$', '', value).strip()
-        if value.lower() in ('not found', 'none found'):
-            value = ''
-        structured[key] = value
-    return structured
-
-
-
 def _make_result(url: str, title: str, content: str, source_layer: str) -> dict:
     return {
         "url": url,
@@ -2527,101 +1542,21 @@ def _make_result(url: str, title: str, content: str, source_layer: str) -> dict:
 
 
 
-def _fetch_and_structure_url(url: str, city: str, state: str, default_title: str = "") -> dict | None:
-    if not url:
-        return None
-    if url.lower().endswith('.pdf'):
-        print("[search] PDF detected, routing to Jina PDF handler")
-    text, status, is_spa = jina_fetch(url)
-    if status == 404:
-        return {"url": url, "title": default_title or url, "content": "", "structured": {}, "status": 404, "source_layer": "layer1_dead"}
-    source_layer = "layer1_brave_jina"
-    if is_spa or len((text or '').strip()) < 200:
-        if is_spa:
-            print(f"[search] SPA detected at {url} - trying firecrawl")
-        fire_text = firecrawl_fetch(url)
-        if fire_text:
-            text = fire_text
-            source_layer = "layer2_firecrawl"
-    content = (text or "").strip()
-    if content and len(content) > 400:
-        record_url_success(url, len(content))
-    structured = extract_permit_content(url, content, city=city, state=state) if content else {}
-    if structured:
-        structured["source_url"] = url
-        structured["source"] = source_layer
-        structured["freshness"] = check_page_freshness(url)
-    follow_content = ""
-    if content:
-        for href in find_followup_links(url, content):
-            child_text, child_status, child_is_spa = jina_fetch(href)
-            if child_status == 404:
-                continue
-            if child_is_spa or len((child_text or '').strip()) < 120:
-                child_fire = firecrawl_fetch(href)
-                if child_fire:
-                    child_text = child_fire
-            child_text = (child_text or "").strip()
-            if child_text:
-                follow_content += "\n\n" + child_text[:600]
-                if len(content) + len(follow_content) > 1800:
-                    break
-    merged_content = (content + follow_content)[:1800] if content else follow_content[:1800]
-    if merged_content and structured:
-        structured = extract_permit_content(url, merged_content, city=city, state=state)
-        structured["source_url"] = url
-        structured["source"] = source_layer
-        structured["freshness"] = check_page_freshness(url)
-    return {
-        "url": url,
-        "title": default_title or url,
-        "content": merged_content[:900],
-        "structured": structured or {},
-        "status": status,
-        "source_layer": source_layer,
-    }
-
-
-
-def scrape_urls_parallel(urls: list[str], city: str = "", state: str = "", max_workers: int = 3, timeout: int = 12) -> list[dict]:
-    """Scrape multiple URLs in parallel. Returns list of dicts with structured extraction."""
-    results = []
-    unique_urls = _unique_keep_order(urls)[: max_workers + 1]
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_url = {executor.submit(_fetch_and_structure_url, url, city, state): url for url in unique_urls[:max_workers]}
-        try:
-            for future in as_completed(future_to_url, timeout=timeout):
-                url = future_to_url[future]
-                try:
-                    item = future.result(timeout=10)
-                    if item and item.get("content"):
-                        results.append(item)
-                except Exception as e:
-                    print(f"[search] Parallel scrape failed for {url}: {e}")
-        except FuturesTimeout:
-            print("[search] Parallel scrape timeout reached")
-    return results
-
-
-
 def build_search_context(job_type: str, city: str, state: str, zip_code: str = "",
                           city_match_level: str = "city") -> str:
     try:
-        search_city, search_state, jurisdiction_note = normalize_jurisdiction(city, state)
-        cached = get_search_cache(search_city, search_state, city_match_level)
+        cached = get_search_cache(city, state, city_match_level)
         if cached:
             if _cache_still_valid(cached):
-                print(f"[search] Search cache hit for {search_city}, {search_state}")
+                print(f"[search] Search cache hit for {city}, {state}")
                 return _render_search_context(cached)
-            delete_search_cache(search_city, search_state)
+            delete_search_cache(city, state)
 
-        kb_entry = _find_city_kb_entry(city, state) or _find_city_kb_entry(search_city, search_state)
+        kb_entry = _find_city_kb_entry(city, state)
         all_results = []
         structured_candidates = []
-        detailed_results = []
         seen_urls = set()
         total_chars = 0
-        auto_kb_updated = False
 
         def add_result(url: str, title: str, content: str, source_layer: str):
             nonlocal total_chars
@@ -2632,76 +1567,88 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
             all_results.append(_make_result(url, title, content, source_layer))
             total_chars += len(content.strip())
 
-        def add_scraped_item(item: dict, fallback_title: str = ""):
-            nonlocal auto_kb_updated
-            if not item or item.get("status") == 404:
-                return
-            url = item.get("url", "")
-            title = item.get("title") or fallback_title or url
-            content = item.get("content", "")
-            source_layer = item.get("source_layer", "")
-            add_result(url, title, content, source_layer)
-            structured = item.get("structured") or {}
-            if any(structured.get(k) for k in ("phone", "fees", "portal_url", "address", "hours", "raw_text")):
-                structured_candidates.append(structured)
-                detailed_results.append({"url": url, "structured": structured})
-                if (not auto_kb_updated and source_layer.startswith("layer1") and structured.get("phone") and structured.get("portal_url") and 
-                    score_field_confidence(structured.get("phone"), url, "phone") == "high" and
-                    score_field_confidence(structured.get("portal_url"), url, "portal_url") == "high"):
-                    auto_update_city_kb(city, state, structured.get("phone"), structured.get("portal_url"), url)
-                    auto_kb_updated = True
+        def add_structured(url: str, title: str, text: str, source_layer: str):
+            extracted = extract_permit_content(url, text, city=city, state=state)
+            if any(extracted.get(k) for k in ("phone", "fees", "portal_url", "address", "hours", "raw_text")):
+                extracted["source"] = source_layer
+                structured_candidates.append(extracted)
+                add_result(url, title, extracted.get("raw_text") or text[:900], source_layer)
 
         if kb_entry and kb_entry.get("permit_url"):
+            direct_url = kb_entry.get("permit_url")
             print("[search] Layer 0: direct permit source check")
-            primary = _fetch_and_structure_url(kb_entry.get("permit_url"), city, state, kb_entry.get("permit_office", f"{city} permit office"))
-            add_scraped_item(primary, kb_entry.get("permit_office", f"{city} permit office"))
-            portal_url = kb_entry.get("online_portal")
-            if portal_url and portal_url != kb_entry.get("permit_url"):
-                add_scraped_item(_fetch_and_structure_url(portal_url, city, state, f"{city} online permit portal"), f"{city} online permit portal")
 
-        if ACCELA_APP_ID:
-            accela_data = accela_get_permit_info(city, state, job_type)
-            if accela_data:
-                print(f"[search] Accela data found for {city}, {state}")
-                accela_structured = accela_data.get("structured") or {}
-                accela_url = f"{ACCELA_DOCS_BASE_URL}/api-settings.html#operation/v4.get.settings.records.types"
-                add_result(accela_url, f"Accela permit data for {city}, {state}", accela_data.get("summary", ""), "layer0_5_accela")
-                if accela_structured:
-                    structured_candidates.append(accela_structured)
-                    detailed_results.append({"url": accela_url, "structured": accela_structured})
+            def fetch_layer0_url(candidate_url: str, label: str) -> tuple[str, int, bool, str]:
+                if not candidate_url:
+                    return "", 0, False, ""
+                if _is_spa_portal_url(candidate_url):
+                    fire_text = firecrawl_fetch(candidate_url)
+                    if fire_text:
+                        return fire_text, 200, True, "layer2_firecrawl"
+                    print(f"[search] Layer 0: skipping SPA portal without Firecrawl support: {candidate_url}")
+                    return "", 0, True, ""
+                if candidate_url.lower().endswith('.pdf'):
+                    print("[search] PDF detected, routing to Jina PDF handler")
+                text_candidate, status_candidate, spa_candidate = jina_fetch(candidate_url)
+                layer_name = "layer0_jina"
+                if spa_candidate:
+                    fire_text = firecrawl_fetch(candidate_url)
+                    if fire_text:
+                        text_candidate = fire_text
+                        layer_name = "layer2_firecrawl"
+                return text_candidate, status_candidate, spa_candidate, layer_name
+
+            text0, status0, _, source_layer = fetch_layer0_url(direct_url, "permit_url")
+            if status0 == 404:
+                delete_search_cache(city, state)
+            if text0:
+                add_structured(direct_url, kb_entry.get("permit_office", f"{city} permit office"), text0, source_layer)
+                total_chars = max(total_chars, len(text0.strip()))
+            portal_url = kb_entry.get("online_portal")
+            if portal_url and portal_url != direct_url:
+                text_portal, _, _, portal_layer = fetch_layer0_url(portal_url, "online_portal")
+                if text_portal:
+                    add_structured(portal_url, f"{city} online permit portal", text_portal, portal_layer)
 
         if total_chars < 200:
-            alt_queries = expand_permit_query(job_type, search_city, search_state)
-            primary_query = f'"{search_city}" "{search_state}" {job_type} permit requirements fee site:.gov'
-            relaxed_query = f'{search_city} {search_state} {job_type} permit requirements fees building department'
-            merged_results = []
-            merged_results.extend(serper_search(primary_query, num=5) or brave_search(primary_query, num=5))
-            if alt_queries:
-                alt_query = f'{search_city} {search_state} {alt_queries[0]} permit building department site:.gov'
-                merged_results.extend(serper_search(alt_query, num=4) or brave_search(alt_query, num=4))
-            if not merged_results:
-                merged_results.extend(serper_search(relaxed_query, num=5) or brave_search(relaxed_query, num=5))
-            ranked = _rank_search_results(merged_results, limit=4)
-            scraped = scrape_urls_parallel([r.get("url", "") for r in ranked], city=city, state=state, max_workers=3, timeout=14)
-            scraped_by_url = {item.get("url", ""): item for item in scraped}
-            for r in ranked:
-                item = scraped_by_url.get(r.get("url", ""))
-                if item:
-                    item["title"] = r.get("title", "") or item.get("title", "")
-                    if SERPER_API_KEY and item.get("source_layer") == "layer1_brave_jina":
-                        item["source_layer"] = "layer1_serper_jina"
-                    add_scraped_item(item, r.get("title", ""))
-                else:
-                    add_result(r.get("url", ""), r.get("title", ""), r.get("content", ""), "layer1_search_only")
+            query = f'"{city}" "{state}" {job_type} permit requirements fee site:.gov'
+            relaxed_query = f'{city} {state} {job_type} permit requirements fees building department'
+            search_results = serper_search(query, num=5) or brave_search(query, num=5)
+            if not search_results:
+                search_results = serper_search(relaxed_query, num=5) or brave_search(relaxed_query, num=5)
+            for r in search_results[:3]:
+                url = r.get("url", "")
+                if not url:
+                    continue
+                if url.lower().endswith('.pdf'):
+                    print("[search] PDF detected, routing to Jina PDF handler")
+                text, status, is_spa = jina_fetch(url)
+                if status == 404:
+                    delete_search_cache(city, state)
+                    continue
+                source_layer = "layer1_serper_jina" if SERPER_API_KEY else "layer1_brave_jina"
+                if is_spa or len(text.strip()) < 200:
+                    if is_spa:
+                        print(f"[search] SPA detected at {url} - trying firecrawl")
+                    fire_text = firecrawl_fetch(url)
+                    if fire_text:
+                        text = fire_text
+                        source_layer = "layer2_firecrawl"
+                content = text.strip() or r.get("content", "")
+                add_result(url, r.get("title", ""), content, source_layer)
+                if text.strip():
+                    extracted = extract_permit_content(url, text, city=city, state=state)
+                    extracted["source"] = source_layer
+                    structured_candidates.append(extracted)
+                    total_chars += len(text.strip())
 
         if total_chars < 200:
             print(f"[search] Layer 4: tavily fallback")
-            fallback_query = f"{search_city} {search_state} building permit {job_type} office phone address fees apply online"
+            fallback_query = f"{city} {state} building permit {job_type} office phone address fees apply online"
             for r in tavily_search(fallback_query, max_results=4):
                 add_result(r.get("url", ""), r.get("title", ""), r.get("content", ""), "layer3_tavily")
 
         merged = _merge_structured_candidates(structured_candidates, kb_entry=kb_entry)
-        merged["conflicts"] = detect_contradictions(detailed_results)
         compact_results = []
         for r in all_results:
             compact_results.append({
@@ -2718,12 +1665,10 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
 
         payload = {
             "city_match_level": city_match_level,
-            "jurisdiction_note": jurisdiction_note,
             "structured": merged,
             "results": compact_results,
-            "auto_kb_updated": auto_kb_updated,
         }
-        set_search_cache(search_city, search_state, payload)
+        set_search_cache(city, state, payload)
         return _render_search_context(payload)
     except Exception as e:
         print(f"[search] build_search_context failed (non-fatal): {e}")
@@ -2735,14 +1680,14 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
                 return ""
             payload = {
                 "city_match_level": city_match_level,
-                "jurisdiction_note": "",
-                "structured": {"phone": "", "fees": [], "portal_url": "", "address": "", "hours": "", "raw_text": "", "source": "layer3_tavily", "field_sources": {}, "field_confidence": {}, "conflicts": [], "freshness": ""},
+                "structured": {"phone": "", "fees": [], "portal_url": "", "address": "", "hours": "", "raw_text": "", "source": "layer3_tavily"},
                 "results": [_make_result(r.get("url", ""), r.get("title", ""), r.get("content", ""), "layer3_tavily") for r in fallback_results],
             }
             return _render_search_context(payload)
         except Exception as inner_e:
             print(f"[search] Final fallback failed (non-fatal): {inner_e}")
             return ""
+
 # ─── URL Utilities ────────────────────────────────────────────────────────────
 
 def is_pdf_url(url: str) -> bool:
@@ -3011,7 +1956,7 @@ COMPANION PERMIT TRADE MATRIX (use this to populate companion_permits):
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
-def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None) -> dict:
+def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential") -> dict:
     """
     Research permit requirements for a job + location.
     v3: Better advice depth, small city fallback, PDF stripping, Google Maps fallback.
@@ -3029,7 +1974,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             """Re-run the lookup without cache and save fresh result."""
             try:
                 print(f"[cache] Background refresh started for key {k[:8]}…")
-                fresh = research_permit(job_type, city, state, zip_code, use_cache=False, job_category=job_category, job_value=job_value)
+                fresh = research_permit(job_type, city, state, zip_code, use_cache=False, job_category=job_category)
                 if fresh and not fresh.get("error"):
                     save_cache(k, job_type, job_category, city, state, zip_code, fresh)
                     print(f"[cache] Background refresh complete for {city}, {state} / {job_type}")
@@ -3056,26 +2001,6 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
                     cached.get("missing_fields", []),
                     meta.get("web_sources", 0),
                 )
-            if 'checklist' not in cached:
-                cached['checklist'] = generate_permit_checklist(job_type, city, state, cached)
-            if 'rejection_patterns' not in cached:
-                cached['rejection_patterns'] = get_rejection_patterns(city, state, job_type)
-            if 'permit_ready_score' not in cached:
-                score_structured = {
-                    'phone': cached.get('apply_phone', ''),
-                    'portal_url': cached.get('apply_url', ''),
-                    'fees': cached.get('fee_range') if isinstance(cached.get('fee_range'), list) else ([cached.get('fee_range')] if cached.get('fee_range') else []),
-                    'address': cached.get('apply_address', ''),
-                }
-                s, label, missing = calculate_permit_ready_score('', score_structured)
-                cached['permit_ready_score'] = s
-                cached['permit_ready_label'] = label
-                cached['permit_ready_missing'] = missing
-            if job_value is not None:
-                cached['job_value'] = job_value
-                cached['fee_calculator'] = calculate_exact_fee(job_type, city, state, float(job_value))
-            elif 'fee_calculator' not in cached:
-                cached['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
             return cached
 
     # ── Check auto-verified data first ──
@@ -3119,7 +2044,6 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
     # ── Step 2: Live web search (adaptive based on city match) ──
     print(f"[research] Searching web for: {job_type} in {location_str}")
     search_context = build_search_context(job_type, city, state, zip_code, city_match_level)
-    machine_structured = _parse_search_context_structured(search_context)
     if search_context:
         print(f"[research] Got {search_context.count('Source:')} web sources")
     else:
@@ -3267,16 +2191,6 @@ Return ONLY the JSON object."""
             raise RuntimeError(f"AI returned non-JSON output: {e2}")
 
     # ── Post-processing ──
-
-    # Prefer machine-extracted contact details when the model leaves gaps
-    if machine_structured.get("phone") and (not result.get("apply_phone") or str(result.get("apply_phone", "")).startswith("Search:")):
-        result["apply_phone"] = machine_structured["phone"]
-    if machine_structured.get("portal_url") and not result.get("apply_url"):
-        result["apply_url"] = machine_structured["portal_url"]
-    if machine_structured.get("address") and not result.get("apply_address"):
-        result["apply_address"] = machine_structured["address"]
-    if machine_structured.get("fees") and (not result.get("fee_range") or any(p in str(result.get("fee_range", "")).lower() for p in ["varies", "not confirmed", "unknown", "call the"])):
-        result["fee_range"] = machine_structured["fees"]
 
     # Strip PDF URLs from apply_url
     result = strip_pdf_from_result(result)
@@ -3656,35 +2570,6 @@ Return ONLY the JSON object."""
         deduped_companions.append(cp)
     result["companion_permits"] = deduped_companions
 
-    score_structured = {
-        'phone': result.get('apply_phone') or machine_structured.get('phone', ''),
-        'portal_url': result.get('apply_url') or machine_structured.get('portal_url', ''),
-        'fees': result.get('fee_range') if isinstance(result.get('fee_range'), list) else (machine_structured.get('fees') or ([result.get('fee_range')] if result.get('fee_range') else [])),
-        'address': result.get('apply_address') or machine_structured.get('address', ''),
-    }
-    ready_score, ready_label, ready_missing = calculate_permit_ready_score(search_context or '', score_structured)
-    result['permit_ready_score'] = ready_score
-    result['permit_ready_label'] = ready_label
-    result['permit_ready_missing'] = ready_missing
-    result['checklist'] = generate_permit_checklist(job_type, city, state, result)
-    result['rejection_patterns'] = get_rejection_patterns(city, state, job_type)
-    search_change = get_search_cache(normalize_jurisdiction(city, state)[0], normalize_jurisdiction(city, state)[1], city_match_level=city_match_level)
-    if search_change:
-        cinfo = search_change.get('change_info') or {}
-        result['change_detected'] = bool(cinfo.get('changed'))
-        result['change_summary'] = cinfo.get('change_summary', '')
-        result['similar_city_reference'] = bool(search_change.get('similar_city_note'))
-        result['similar_city_note'] = search_change.get('similar_city_note', '')
-    else:
-        result['change_summary'] = ''
-        result['similar_city_reference'] = False
-        result['similar_city_note'] = ''
-    if job_value is not None:
-        result['job_value'] = job_value
-        result['fee_calculator'] = calculate_exact_fee(job_type, city, state, float(job_value))
-    else:
-        result['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
-
     save_cache(key, job_type, job_category, city, state, zip_code, result)
     return result
 
@@ -3693,28 +2578,24 @@ Return ONLY the JSON object."""
 
 def format_for_display(result: dict) -> str:
     lines = []
-    meta = result.get("_meta", {})
-    loc = result.get("location") or ", ".join([p for p in [meta.get("city"), meta.get("state")] if p])
-    job = meta.get("job_type", result.get("job_summary", ""))
-    cached = result.get("_cached") or meta.get("cached", False)
-    conf = result.get("confidence", "?").upper()
-    sources = meta.get("web_sources", 0)
-    match = meta.get("city_match_level", "?")
+    loc    = result.get("location", "")
+    job    = result.get("_meta", {}).get("job_type", result.get("job_summary", ""))
+    cached = result.get("_cached") or result.get("_meta", {}).get("cached", False)
+    conf   = result.get("confidence", "?").upper()
+    sources = result.get("_meta", {}).get("web_sources", 0)
+    match   = result.get("_meta", {}).get("city_match_level", "?")
 
-    lines.append("=" * 60)
+    lines.append("="*60)
     lines.append(f"📋 PERMIT RESEARCH: {job.upper()}")
     lines.append(f"📍 Location: {loc} [data: {match}]")
     lines.append(f"🎯 Confidence: {conf}  {'⚡ CACHED' if cached else f'🌐 {sources} web source(s)'}")
-    lines.append("=" * 60)
-
-    if result.get("similar_city_note"):
-        lines.append(f"\n🏙️  {result['similar_city_note']}")
+    lines.append("="*60)
 
     permits = result.get("permits_required", [])
     if permits:
         lines.append("\n🔖 PERMITS REQUIRED:")
         for p in permits:
-            req = p.get("required", "?")
+            req  = p.get("required", "?")
             icon = "✅" if req is True else ("⚠️" if req == "maybe" else "❌")
             lines.append(f"  {icon} {p.get('permit_type', 'Unknown')}")
             if p.get("portal_selection"):
@@ -3723,50 +2604,27 @@ def format_for_display(result: dict) -> str:
                 lines.append(f"     → {p['notes']}")
 
     office = result.get("applying_office", "")
-    url = result.get("apply_url", "")
-    phone = result.get("apply_phone", "")
-    addr = result.get("apply_address", "")
-    maps = result.get("apply_google_maps", "")
-    if office:
-        lines.append(f"\n🏢 APPLY TO: {office}")
-    if url:
-        lines.append(f"   🌐 Online: {url}")
-    if phone:
-        lines.append(f"   📞 Phone: {phone}")
-    if addr:
-        lines.append(f"   📬 Address: {addr}")
-    if maps and not url:
-        lines.append(f"   🗺️  Maps: {maps}")
+    url    = result.get("apply_url", "")
+    phone  = result.get("apply_phone", "")
+    addr   = result.get("apply_address", "")
+    maps   = result.get("apply_google_maps", "")
+    if office: lines.append(f"\n🏢 APPLY TO: {office}")
+    if url:    lines.append(f"   🌐 Online: {url}")
+    if phone:  lines.append(f"   📞 Phone: {phone}")
+    if addr:   lines.append(f"   📬 Address: {addr}")
+    if maps and not url: lines.append(f"   🗺️  Maps: {maps}")
 
     fee = result.get("fee_range", "")
-    if fee:
-        lines.append(f"\n💰 FEES: {fee}")
-    fee_calc = result.get("fee_calculator") or {}
-    if fee_calc.get("fee") is not None:
-        lines.append(f"   Exact fee estimate: ${fee_calc['fee']:.2f}")
-        if fee_calc.get("formula"):
-            lines.append(f"   Formula: {fee_calc['formula']}")
-        if fee_calc.get("note"):
-            lines.append(f"   Note: {fee_calc['note']}")
+    if fee: lines.append(f"\n💰 FEES: {fee}")
 
     tl = result.get("approval_timeline", {})
     if tl:
         lines.append("\n⏱️  TIMELINE:")
-        if tl.get("simple"):
-            lines.append(f"   Simple: {tl['simple']}")
-        if tl.get("complex"):
-            lines.append(f"   Complex: {tl['complex']}")
+        if tl.get("simple"):  lines.append(f"   Simple: {tl['simple']}")
+        if tl.get("complex"): lines.append(f"   Complex: {tl['complex']}")
 
     lic = result.get("license_required", "")
-    if lic:
-        lines.append(f"\n📜 LICENSE: {lic}")
-
-    if result.get("permit_ready_score") is not None:
-        lines.append(f"\n🧭 PERMIT READY SCORE: {result.get('permit_ready_score')}/100 — {result.get('permit_ready_label', '')}")
-        for miss in result.get("permit_ready_missing", [])[:3]:
-            lines.append(f"   Missing: {miss}")
-    if result.get("change_summary"):
-        lines.append(f"\n⚠️ CHANGE DETECTED: {result.get('change_summary')}")
+    if lic: lines.append(f"\n📜 LICENSE: {lic}")
 
     inspections = result.get("inspections", [])
     if inspections:
@@ -3779,32 +2637,15 @@ def format_for_display(result: dict) -> str:
     tips = result.get("pro_tips", [])
     if tips:
         lines.append("\n💡 PRO TIPS:")
-        for tip in tips[:3]:
-            lines.append(f"   • {tip}")
+        for tip in tips[:3]: lines.append(f"   • {tip}")
 
     mistakes = result.get("common_mistakes", [])
     if mistakes:
         lines.append("\n⚠️  AVOID:")
-        for m in mistakes[:3]:
-            lines.append(f"   • {m}")
-
-    checklist = result.get("checklist", [])
-    if checklist:
-        lines.append("\n📝 PRE-APPLICATION CHECKLIST:")
-        for item in checklist[:8]:
-            lines.append(f"   • {item}")
-
-    rejections = result.get("rejection_patterns", [])
-    if rejections:
-        lines.append("\n🚫 KNOWN REJECTION CAUSES (avoid these):")
-        for item in rejections[:4]:
-            lines.append(f"   • {item.get('pattern', '')} [{str(item.get('frequency', '')).upper()}]")
-            if item.get("fix"):
-                lines.append(f"     Fix: {item['fix']}")
+        for m in mistakes[:3]: lines.append(f"   • {m}")
 
     disc = result.get("disclaimer", "")
-    if disc:
-        lines.append(f"\n📌 {disc}")
+    if disc: lines.append(f"\n📌 {disc}")
 
     return "\n".join(lines)
 
