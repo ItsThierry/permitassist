@@ -1880,11 +1880,11 @@ function detectTradeKey(text) {
   if (/\b(hvac|air conditioner|condenser|furnace|heat pump|\bac\b|heating|cooling|air handler)\b/.test(t)) return 'hvac';
   if (/\b(solar|\bpv\b)\b/.test(t)) return 'solar';
   if (/\b(electric|panel|circuit|breaker|wiring)\b/.test(t)) return 'electrical';
-  if (/\b(roof|shingle|tear-off|reroof|re-roof)\b/.test(t)) return 'roofing';
+  if (/\b(roof|roofing|shingle|tear-off|reroof|re-roof)\b/.test(t)) return 'roofing';
   if (/\b(plumb|pipe|drain|sewer)\b/.test(t)) return 'plumbing';
   if (/\b(deck|patio)\b/.test(t)) return 'deck';
   if (/\b(fence)\b/.test(t)) return 'fence';
-  if (/\b(shed|storage)\b/.test(t)) return 'shed';
+  if (/\b(shed|storage|garage|outbuilding)\b/.test(t)) return 'shed';
   if (/\b(pool|spa)\b/.test(t)) return 'pool';
   if (/\b(generator|genset|generac)\b/.test(t)) return 'generator';
   if (/\b(bathroom|bath|shower|tub)\b/.test(t)) return 'bathroom_remodel';
@@ -1892,20 +1892,24 @@ function detectTradeKey(text) {
   return '';
 }
 
+function sanitizeMultiIntentDetectionText(text) {
+  return (text || '').split(/[—,-]/, 1)[0].trim();
+}
+
 const MULTI_INTENT_RANK = {
   pool: 90, driveway: 82, deck: 72, hvac: 70, electrical: 70, plumbing: 68, roofing: 68, shed: 56, fence: 52, fountain: 40
 };
 const MULTI_INTENT_CATALOG = [
-  { key: 'pool', label: 'Pool', query: 'pool', rank: MULTI_INTENT_RANK.pool, patterns: [/\bpool\b/, /\bspa\b/, /\bhot tub\b/] },
-  { key: 'fountain', label: 'Fountain', query: 'fountain', rank: MULTI_INTENT_RANK.fountain, patterns: [/\bfountain\b/, /\bwater feature\b/] },
+  { key: 'pool', label: 'Pool', query: 'pool', rank: MULTI_INTENT_RANK.pool, patterns: [/\bpool\b/, /\bspa\b/, /\bhot tub\b/, /\bswimming pool\b/] },
+  { key: 'fountain', label: 'Fountain', query: 'fountain', rank: MULTI_INTENT_RANK.fountain, patterns: [/\bfountain\b/, /\bwater feature\b/, /\bbackyard fountain\b/, /\byard fountain\b/] },
   { key: 'fence', label: 'Fence', query: 'fence', rank: MULTI_INTENT_RANK.fence, patterns: [/\bfence\b/] },
   { key: 'deck', label: 'Deck', query: 'deck', rank: MULTI_INTENT_RANK.deck, patterns: [/\bdeck\b/] },
-  { key: 'shed', label: 'Shed', query: 'shed', rank: MULTI_INTENT_RANK.shed, patterns: [/\bshed\b/, /\bstorage shed\b/, /\boutbuilding\b/] },
-  { key: 'driveway', label: 'Driveway', query: 'driveway', rank: MULTI_INTENT_RANK.driveway, patterns: [/\bdriveway\b/, /\bconcrete driveway\b/, /\bdrive approach\b/, /\bapron\b/] },
+  { key: 'shed', label: 'Shed', query: 'shed', rank: MULTI_INTENT_RANK.shed, patterns: [/\bshed\b/, /\bstorage shed\b/, /\boutbuilding\b/, /\bgarage\b/, /\bdetached garage\b/] },
+  { key: 'driveway', label: 'Driveway', query: 'driveway', rank: MULTI_INTENT_RANK.driveway, patterns: [/\bdriveway\b/, /\bconcrete driveway\b/, /\bdrive approach\b/, /\bapron\b/, /\bpaving\b/, /\bpavement\b/] },
   { key: 'hvac', label: 'HVAC', query: 'hvac replacement', rank: MULTI_INTENT_RANK.hvac, patterns: [/\bhvac\b/, /\bair conditioner\b/, /\bcondenser\b/, /\bfurnace\b/, /\bheat pump\b/, /\bair handler\b/, /\bductwork\b/, /\bducts\b/] },
   { key: 'electrical', label: 'Electrical', query: 'electrical work', rank: MULTI_INTENT_RANK.electrical, patterns: [/\belectrical\b/, /\bpanel\b/, /\bcircuit\b/, /\bbreaker\b/, /\bwiring\b/] },
   { key: 'plumbing', label: 'Plumbing', query: 'plumbing work', rank: MULTI_INTENT_RANK.plumbing, patterns: [/\bplumb\w*\b/, /\bpipe\w*\b/, /\bdrain\w*\b/, /\bsewer\b/] },
-  { key: 'roofing', label: 'Roofing', query: 'roof replacement', rank: MULTI_INTENT_RANK.roofing, patterns: [/\broof\b/, /\bshingle\b/, /\breroof\b/, /\bre-roof\b/, /\btear-off\b/] }
+  { key: 'roofing', label: 'Roofing', query: 'roof replacement', rank: MULTI_INTENT_RANK.roofing, patterns: [/\broof\b/, /\broofing\b/, /\bshingle\b/, /\breroof\b/, /\bre-roof\b/, /\btear-off\b/] }
 ];
 let multiIntentContext = null;
 
@@ -1930,7 +1934,8 @@ function rankMultiIntentPair(a, b) {
 function detectMultiIntentQuery(raw) {
   const text = (raw || '').trim();
   if (!text) return null;
-  const normalized = text.toLowerCase().replace(/\s+/g, ' ');
+  const normalized = sanitizeMultiIntentDetectionText(text).toLowerCase().replace(/\s+/g, ' ');
+  if (!normalized) return null;
   if (/\b(attached|integrated|covered)\s+pergola\b/.test(normalized)) return null;
   const connectors = [...normalized.matchAll(/\s(?:and|&)\s/g)];
   if (connectors.length !== 1) return null;
