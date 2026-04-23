@@ -439,6 +439,41 @@ COUNTY_DATA = {
         "url": "https://www.traviscountytx.gov/tnr/development-services",
         "office": "Travis County Development Services"
     },
+    "twin_falls_id": {
+        "name": "Twin Falls County Building Department",
+        "office": "Twin Falls County Building Department",
+        "phone": "(208) 736-4011",
+        "url": "https://www.tfcounty.org/building",
+        "state": "ID"
+    },
+    "coconino_az": {
+        "name": "Coconino County Community Development",
+        "office": "Coconino County Community Development",
+        "phone": "(928) 679-8850",
+        "url": "https://www.coconino.az.gov/188/Community-Development",
+        "state": "AZ"
+    },
+    "missoula_mt": {
+        "name": "Missoula County Building Services",
+        "office": "Missoula County Building Services",
+        "phone": "(406) 258-4657",
+        "url": "https://www.missoulacounty.us/government/community-planning/building-services",
+        "state": "MT"
+    },
+    "yellowstone_mt": {
+        "name": "Yellowstone County Building Department",
+        "office": "Yellowstone County Building Department",
+        "phone": "(406) 256-2701",
+        "url": "https://www.yellowstonecountymt.gov/building",
+        "state": "MT"
+    },
+    "chittenden_vt": {
+        "name": "Chittenden County Regional Planning Commission",
+        "office": "Burlington Department of Planning & Zoning",
+        "phone": "(802) 865-7188",
+        "url": "https://www.burlingtonvt.gov/PZ",
+        "state": "VT"
+    },
 }
 
 CITY_TO_COUNTY = {
@@ -462,6 +497,16 @@ CITY_TO_COUNTY = {
     "henderson": "clark_nv", "north_las_vegas": "clark_nv", "north las vegas": "clark_nv",
     # Tarrant County, TX
     "fort_worth": "tarrant_tx", "fort worth": "tarrant_tx", "arlington": "tarrant_tx",
+    # Twin Falls County, ID
+    "twin_falls": "twin_falls_id", "twin falls": "twin_falls_id",
+    # Flagstaff / Coconino County, AZ
+    "flagstaff": "coconino_az",
+    # Missoula County, MT
+    "missoula": "missoula_mt",
+    # Billings / Yellowstone County, MT
+    "billings": "yellowstone_mt",
+    # Burlington / Chittenden County, VT
+    "burlington": "chittenden_vt",
 }
 
 # ─── Jurisdiction Quirks Database ─────────────────────────────────────────────
@@ -665,6 +710,8 @@ CHECKLIST_TRADE = {
 PDF_SOURCES = {
     "nashville_tn": "https://www.nashville.gov/departments/codes/construction-and-permits/permit-fees",
     "austin_tx": "https://www.austintexas.gov/sites/default/files/files/Development_Services/Fee_Schedule.pdf",
+    "indianapolis_in": "https://www.indy.gov/activity/building-permit-fees",
+    "san_jose_ca": "https://www.sanjoseca.gov/your-government/departments-offices/planning-building-code-enforcement/building/fees",
 }
 PDF_CACHE_DIR = os.path.join(_data_dir, "pdf_cache")
 _RAILWAY_ENV_PATH = "/data/.openclaw/private/railway.env"
@@ -680,6 +727,13 @@ FEE_FORMULAS = {
     "portland_or": {"base": 89, "per_thousand": 10.30, "min": 89},
     "las_vegas_nv": {"base": 40, "per_thousand": 5.50, "min": 40},
     "san_diego_ca": {"base": 75, "per_thousand": 15.00, "min": 75},
+    "twin_falls_id": {"base": 30, "per_thousand": 5.00, "min": 30},
+    "flagstaff_az": {"base": 45, "per_thousand": 7.50, "min": 45},
+    "billings_mt": {"base": 35, "per_thousand": 5.50, "min": 35},
+    "missoula_mt": {"base": 40, "per_thousand": 6.00, "min": 40},
+    "burlington_vt": {"base": 50, "per_thousand": 8.00, "min": 50},
+    "indianapolis_in": {"base": 50, "per_thousand": 7.00, "min": 50},
+    "san_jose_ca": {"base": 200, "per_thousand": 18.00, "min": 200},
     "miami_fl": {"base": 60, "per_thousand": 9.00, "min": 60},
     "atlanta_ga": {"base": 50, "per_thousand": 7.00, "min": 50},
 }
@@ -3467,8 +3521,8 @@ Return ONLY the JSON object."""
     if not result.get("apply_phone"):
         result["apply_phone"] = f"Search: {build_google_maps_url(city, state, office=result.get('applying_office',''))}"
 
-    # ── County fallback for small/unknown cities ──
-    if city_match_level in ("state", "none"):
+    # ── County fallback for small/unknown cities + low-confidence known cities ──
+    if city_match_level in ("state", "none") or (result.get("confidence") == "low" and not result.get("apply_url")):
         city_key = city.lower().strip().replace(" ", "_")
         city_key_spaces = city.lower().strip()
         county_key = CITY_TO_COUNTY.get(city_key) or CITY_TO_COUNTY.get(city_key_spaces)
