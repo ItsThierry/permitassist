@@ -1660,6 +1660,7 @@ const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESS
 const JOB_SAVE_SESSION_KEY='pa_saved_jobs_session',JOBS_TOOLTIP_KEY='pa_jobs_tooltip_seen';
 const IS_ADMIN=new URLSearchParams(window.location.search).get('_dev')==='pa_internal_2026_xk9';
 let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false},jobsCache=[],watchesCache=[];
+let _serverFreeLookupsUsed=0;
 let _skipDisambig=false;
 let _isSampleLookup=false;
 
@@ -1807,17 +1808,21 @@ function submitWithDisambig(choice) {
 }
 
 // ── Lookup count & email gate ─────────────────────────────────────────────────
-function getLookupCount(){if(IS_ADMIN) return 0;return parseInt(localStorage.getItem(LOOKUP_KEY)||'0',10)}
-function incrementLookup(){if(IS_ADMIN||_isSampleLookup) return 0;const n=getLookupCount()+1;localStorage.setItem(LOOKUP_KEY,String(n));return n}
+function getLookupCount(){if(IS_ADMIN) return 0;return _serverFreeLookupsUsed||0}
+function incrementLookup(){return getLookupCount()}
 function hasEmail(){if(IS_ADMIN) return true;return !!localStorage.getItem(EMAIL_KEY)}
 function saveEmail(email){localStorage.setItem(EMAIL_KEY,email.trim().toLowerCase());fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim().toLowerCase(),source:'gate'})}).catch(()=>{})}
+function hashString(input){let h=2166136261;for(let i=0;i<input.length;i++){h^=input.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
+function getCanvasFingerprint(){try{const canvas=document.createElement('canvas');const ctx=canvas.getContext('2d');if(!ctx)return 'nocanvas';ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('PermitAssist fingerprint',2,15);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText(navigator.userAgent,4,35);return hashString(canvas.toDataURL())}catch{return 'canvas-error'}}
+function getClientFingerprint(){let fp=localStorage.getItem('pa_client_fingerprint');if(fp)return fp;const tz=(Intl.DateTimeFormat().resolvedOptions().timeZone)||'na';const parts=[navigator.userAgent||'',`${screen.width||0}x${screen.height||0}x${screen.colorDepth||0}`,tz,navigator.language||'',getCanvasFingerprint()];fp=hashString(parts.join('|'));localStorage.setItem('pa_client_fingerprint',fp);return fp}
+function syncLookupCounterFromResponse(res,data){const used=Number(res.headers.get('X-Free-Lookups-Used'));const remaining=Number(res.headers.get('X-Free-Lookups-Remaining'));if(Number.isFinite(used)&&used>=0){_serverFreeLookupsUsed=used;updateCounterBarFromServer(used,Number.isFinite(remaining)&&remaining>=0?remaining:Math.max(0,FREE_LIMIT-used),'free')}else if(data&&typeof data.remaining_lookups==='number'&&data.remaining_lookups>=0){const serverUsed=Math.max(0,FREE_LIMIT-data.remaining_lookups);_serverFreeLookupsUsed=serverUsed;updateCounterBarFromServer(serverUsed,data.remaining_lookups,'free')}else if(data&&data.remaining_lookups===-1){updateCounterBarFromServer(0,-1,'solo')}}
 
 // ── Session token helpers (Task 1) ─────────────────────────────────────────
 function getSessionToken(){return localStorage.getItem(SESSION_KEY)||''}
 function setSessionToken(t){if(t)localStorage.setItem(SESSION_KEY,t)}
 function clearSessionToken(){localStorage.removeItem(SESSION_KEY)}
 function isLoggedIn(){return !!getSessionToken()}
-function getAuthHeaders(){const t=getSessionToken();const h={'Content-Type':'application/json'};if(t)h['X-Session-Token']=t;if(_isSampleLookup)h['X-Sample-Demo']='1';return h;}
+function getAuthHeaders(){const t=getSessionToken();const h={'Content-Type':'application/json','X-Client-Fingerprint':getClientFingerprint()};if(t)h['X-Session-Token']=t;if(_isSampleLookup)h['X-Sample-Demo']='1';return h;}
 
 // Fire Google Ads conversion when user lands after successful Stripe payment
 (function(){
@@ -1864,7 +1869,7 @@ async function refreshAccountBadge(){
   const token=getSessionToken();
   if(!token)return;
   try{
-    const r=await fetch('/api/account',{headers:{'X-Session-Token':token},cache:'no-store'});
+    const r=await fetch('/api/account',{headers:{'X-Session-Token':token,'X-Client-Fingerprint':getClientFingerprint()},cache:'no-store'});
     if(r.status===401){clearSessionToken();return;}
     const d=await r.json();
     // Update counter bar with server-side count
@@ -2048,18 +2053,7 @@ async function loadStats(){
 }
 
 function refreshCounterBar(){
-  const used=getLookupCount(),remaining=Math.max(0,FREE_LIMIT-used);
-  const bar=document.getElementById('counter-bar'),text=document.getElementById('counter-text');
-  if(!bar) return;
-  // Don't hide bar for email users — server will update or hide it after lookup
-  // bar stays visible with localStorage count until server responds
-  const pct=Math.round(used/FREE_LIMIT*100);
-  text.textContent=remaining===0?'Free lookups used — upgrade for unlimited':`${used} of ${FREE_LIMIT} free lookups used`;
-  let progressEl=bar.querySelector('.counter-progress');
-  if(!progressEl){progressEl=document.createElement('div');progressEl.className='counter-progress';progressEl.innerHTML='<div class="counter-progress-fill"></div>';bar.appendChild(progressEl)}
-  const fill=progressEl.querySelector('.counter-progress-fill');
-  if(fill) requestAnimationFrame(()=>fill.style.width=pct+'%');
-  bar.style.borderColor=remaining===0?'rgba(239,68,68,0.4)':'';
+  updateCounterBarFromServer(getLookupCount(),Math.max(0,FREE_LIMIT-getLookupCount()),'free');
 }
 
 // ── Progress steps ────────────────────────────────────────────────────────────
@@ -2115,7 +2109,7 @@ function submitGateEmail(){
   // Send magic link in background for login (non-blocking — user gets results immediately)
   const emailSentEl=document.getElementById('magic-email-sent');if(emailSentEl)emailSentEl.textContent=val;
   fetch('/api/magic-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:val})}).catch(()=>{});
-  incrementLookup();hideGate();refreshCounterBar();if(pendingResult) showPendingResult();
+  hideGate();if(pendingResult) showPendingResult();
 }
 function switchToMagicLogin(){const gate=document.getElementById('email-gate');if(gate){document.getElementById('magic-step1').style.display='none';document.getElementById('magic-step2').style.display='none';/* Show login mode */document.getElementById('magic-step1').style.display='block';}}
 function showMagicStep1(){document.getElementById('magic-step1').style.display='block';document.getElementById('magic-step2').style.display='none';}
@@ -2153,7 +2147,7 @@ async function resendMagicLink(){
   if(!email){showMagicStep1();return;}
   await sendMagicLink(email);
 }
-function skipGate(){if(getLookupCount()>=FREE_LIMIT){document.getElementById('gate-email').focus();return}incrementLookup();hideGate();refreshCounterBar();if(pendingResult) showPendingResult()}
+function skipGate(){if(getLookupCount()>=FREE_LIMIT){document.getElementById('gate-email').focus();return}hideGate();if(pendingResult) showPendingResult()}
 function showPendingResult(){if(!pendingResult) return;const {data,job,city,state}=pendingResult;pendingResult=null;document.getElementById('loading').style.display='none';document.getElementById('results').style.display='block';document.getElementById('results-inner').innerHTML='';renderResults(data,job,city,state);document.getElementById('page-search').scrollTop=0}
 
 // ── Install ──────────────────────────────────────────────────────────────────
@@ -3605,28 +3599,23 @@ async function doLookup() {
       body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, job_category: jobCategory })
     });
     stopProgress();
+    const data = await res.json();
+    syncLookupCounterFromResponse(res,data);
     if (res.status === 429) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('search-form').style.display = 'block';
-      alert("You've hit the hourly limit. Upgrade for unlimited access or try again in an hour."); return;
+      alert(data.message||"Too many requests. Please wait a minute and try again."); return;
     }
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
+    if (res.status === 403 && data.error==='free_limit_reached') {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('search-form').style.display = 'block';
+      pendingResult = { data: null, job: parsed.job_type, city: parsed.city || '', state: parsed.state || '' };
+      showGate(true);
+      return;
+    }
+    if (data.error) throw new Error(data.message||data.error);
     currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, zip: parsed.zip_code, address, data, ts: Date.now() };
     saveToHistory(currentResult);
-    // Removed soft email gate at lookup 2 — let users get all 3 free lookups without interruption
-    if(typeof data.remaining_lookups==='number'&&data.remaining_lookups>=0){
-      // Server returned remaining count — use it (Task 10)
-      const serverUsed=FREE_LIMIT-data.remaining_lookups;
-      updateCounterBarFromServer(Math.max(0,serverUsed),data.remaining_lookups,'free');
-      // Also sync localStorage so counter bar stays consistent
-      if(!isLoggedIn())localStorage.setItem(LOOKUP_KEY,String(serverUsed));
-    } else if(typeof data.remaining_lookups==='number'&&data.remaining_lookups===-1){
-      // Paid user — hide counter bar
-      updateCounterBarFromServer(0,-1,'solo');
-    } else {
-      incrementLookup();refreshCounterBar();
-    }
     document.getElementById('loading').style.display = 'none';
     document.getElementById('results').style.display = 'block';
     renderResults(data, parsed.job_type, parsed.city, parsed.state);

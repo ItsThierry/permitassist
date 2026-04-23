@@ -19,6 +19,7 @@ import os
 import csv
 import hmac
 import hashlib
+import ipaddress
 import sqlite3
 import string
 import requests
@@ -94,46 +95,164 @@ REMINDER_CHECK_SECONDS  = 3600
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# ── Rate limiting ─────────────────────────────────────────────────────────────
-RATE_WINDOW_SECONDS = 3600   # 1 hour
-RATE_MAX_FRESH      = 3      # max fresh lookups per IP per hour (guests get same limit as free tier)
+FREE_LOOKUP_DB = os.environ.get("FREE_LOOKUP_DB") or "/app/data/ip_lookups.db"
+try:
+    os.makedirs(os.path.dirname(FREE_LOOKUP_DB), exist_ok=True)
+except PermissionError:
+    FREE_LOOKUP_DB = os.path.join(DATA_DIR, "ip_lookups.db")
+    os.makedirs(os.path.dirname(FREE_LOOKUP_DB), exist_ok=True)
 
-def is_rate_limited(ip: str) -> tuple[bool, int]:
-    """SQLite-backed rate limiting. Survives deploys."""
-    now_ts = int(utc_now().timestamp())
-    window = now_ts - (now_ts % RATE_WINDOW_SECONDS)  # current 1-hour window
-    try:
-        conn = sqlite3.connect(CACHE_DB)
-        row = conn.execute(
-            "SELECT count FROM rate_limits WHERE ip=? AND window_start=?",
-            [ip, window]
-        ).fetchone()
-        conn.close()
-        count = row[0] if row else 0
-        remaining = max(0, RATE_MAX_FRESH - count)
-        return (count >= RATE_MAX_FRESH, remaining)
-    except Exception:
-        return (False, RATE_MAX_FRESH)  # fail open on DB error
+FREE_LOOKUP_LIMIT = 3
+FREE_LOOKUP_UPGRADE_URL = "https://permitassist.io/#pricing"
+RATE_LIMIT_WINDOW_SECONDS = 60
+RATE_LIMIT_MAX_REQUESTS = 10
+_RATE_LIMIT_STATE = {}
+_RATE_LIMIT_LOCK = threading.Lock()
 
-def record_fresh_lookup(ip: str):
-    """Record a fresh lookup for rate limiting purposes."""
-    now_ts = int(utc_now().timestamp())
-    window = now_ts - (now_ts % RATE_WINDOW_SECONDS)
+
+def _normalize_ip(value: str) -> str:
+    raw = (value or "").strip()
+    if not raw:
+        return ""
+    if ":" in raw and raw.count(":") == 1:
+        host, _, port = raw.partition(":")
+        if host.count(".") == 3 and port.isdigit():
+            raw = host
+    if raw.startswith("[") and "]" in raw:
+        raw = raw[1:raw.index("]")]
     try:
-        conn = sqlite3.connect(CACHE_DB)
-        conn.execute(
-            "INSERT INTO rate_limits (ip, window_start, count) VALUES (?,?,1) "
-            "ON CONFLICT(ip, window_start) DO UPDATE SET count = count + 1",
-            [ip, window]
+        addr = ipaddress.ip_address(raw)
+    except ValueError:
+        return raw
+    if isinstance(addr, ipaddress.IPv6Address) and addr.ipv4_mapped:
+        return str(addr.ipv4_mapped)
+    return addr.compressed
+
+
+def _parse_public_forwarded_ip(forwarded: str) -> str:
+    for part in (forwarded or "").split(","):
+        ip = _normalize_ip(part)
+        if not ip:
+            continue
+        try:
+            addr = ipaddress.ip_address(ip)
+        except ValueError:
+            continue
+        if not (addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_reserved or addr.is_multicast or addr.is_unspecified):
+            return addr.compressed if isinstance(addr, ipaddress.IPv6Address) else str(addr)
+    return ""
+
+
+def _is_dev_ip(ip: str) -> bool:
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    return addr.is_loopback or addr.is_private or addr.is_link_local
+
+
+def _normalize_fingerprint(value: str) -> str:
+    return (value or "").strip()[:512]
+
+
+def get_free_lookup_whitelist() -> set[str]:
+    raw = os.environ.get("FREE_LOOKUP_WHITELIST", "")
+    return {ip for ip in (_normalize_ip(item) for item in raw.split(",")) if ip}
+
+
+def is_whitelisted_ip(ip: str) -> bool:
+    return ip in get_free_lookup_whitelist()
+
+
+def init_free_lookup_db():
+    conn = sqlite3.connect(FREE_LOOKUP_DB)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS ip_usage (
+            ip TEXT PRIMARY KEY,
+            count INTEGER NOT NULL DEFAULT 0,
+            first_seen DATETIME NOT NULL,
+            last_seen DATETIME NOT NULL
         )
-        # Clean up windows older than 2 hours
-        old_window = window - (2 * RATE_WINDOW_SECONDS)
-        conn.execute("DELETE FROM rate_limits WHERE window_start < ?", [old_window])
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"[rate-limit] DB error: {e}")
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS fingerprint_usage (
+            fingerprint TEXT PRIMARY KEY,
+            ip TEXT,
+            count INTEGER NOT NULL DEFAULT 0,
+            first_seen DATETIME NOT NULL,
+            last_seen DATETIME NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
 
+
+def get_usage_counts(ip: str, fingerprint: str = "") -> tuple[int, int]:
+    conn = sqlite3.connect(FREE_LOOKUP_DB)
+    ip_row = conn.execute("SELECT count FROM ip_usage WHERE ip=?", [ip]).fetchone()
+    fp_row = None
+    if fingerprint:
+        fp_row = conn.execute("SELECT count FROM fingerprint_usage WHERE fingerprint=?", [fingerprint]).fetchone()
+    conn.close()
+    return (ip_row[0] if ip_row else 0, fp_row[0] if fp_row else 0)
+
+
+def get_effective_free_usage(ip: str, fingerprint: str = "") -> int:
+    ip_count, fp_count = get_usage_counts(ip, fingerprint)
+    return max(ip_count, fp_count)
+
+
+def record_lookup_usage(ip: str, fingerprint: str = "") -> tuple[int, int]:
+    now = utc_now().isoformat()
+    conn = sqlite3.connect(FREE_LOOKUP_DB)
+    conn.execute(
+        "INSERT INTO ip_usage (ip, count, first_seen, last_seen) VALUES (?,?,?,?) "
+        "ON CONFLICT(ip) DO UPDATE SET count=count+1, last_seen=excluded.last_seen",
+        [ip, 1, now, now],
+    )
+    if fingerprint:
+        conn.execute(
+            "INSERT INTO fingerprint_usage (fingerprint, ip, count, first_seen, last_seen) VALUES (?,?,?,?,?) "
+            "ON CONFLICT(fingerprint) DO UPDATE SET ip=excluded.ip, count=count+1, last_seen=excluded.last_seen",
+            [fingerprint, ip, 1, now, now],
+        )
+    conn.commit()
+    conn.close()
+    return get_usage_counts(ip, fingerprint)
+
+
+def build_free_lookup_headers(used: int) -> dict:
+    remaining = max(0, FREE_LOOKUP_LIMIT - min(used, FREE_LOOKUP_LIMIT))
+    return {
+        "X-Free-Lookups-Used": str(used),
+        "X-Free-Lookups-Remaining": str(remaining),
+    }
+
+
+def is_unlimited_lookup_ip(ip: str) -> bool:
+    return _is_dev_ip(ip) or is_whitelisted_ip(ip)
+
+
+def check_rate_limit(ip: str) -> tuple[bool, int]:
+    now = time.time()
+    with _RATE_LIMIT_LOCK:
+        window = [ts for ts in _RATE_LIMIT_STATE.get(ip, []) if now - ts < RATE_LIMIT_WINDOW_SECONDS]
+        if len(window) >= RATE_LIMIT_MAX_REQUESTS:
+            _RATE_LIMIT_STATE[ip] = window
+            retry_after = max(1, int(RATE_LIMIT_WINDOW_SECONDS - (now - window[0])))
+            return True, retry_after
+        window.append(now)
+        _RATE_LIMIT_STATE[ip] = window
+        stale_before = now - RATE_LIMIT_WINDOW_SECONDS
+        for key, values in list(_RATE_LIMIT_STATE.items()):
+            fresh = [ts for ts in values if ts >= stale_before]
+            if fresh:
+                _RATE_LIMIT_STATE[key] = fresh
+            else:
+                _RATE_LIMIT_STATE.pop(key, None)
+    return False, 0
+
+# ── URL validation ────────────────────────────────────────────────────────────
 # ── URL validation ────────────────────────────────────────────────────────────
 # Allowlist of known-good permit portal domains, skip validation for these
 TRUSTED_PERMIT_DOMAINS = [
@@ -2179,18 +2298,26 @@ class Handler(BaseHTTPRequestHandler):
         print(f"[{self.address_string()}] {args[0]} {args[1]}")
 
     def client_ip(self) -> str:
-        # Respect X-Forwarded-For from Railway/Cloudflare proxy
-        forwarded = self.headers.get("X-Forwarded-For", "")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-        return self.client_address[0]
+        cf_ip = _normalize_ip(self.headers.get("CF-Connecting-IP", ""))
+        if cf_ip:
+            return cf_ip
+        forwarded_ip = _parse_public_forwarded_ip(self.headers.get("X-Forwarded-For", ""))
+        if forwarded_ip:
+            return forwarded_ip
+        real_ip = _normalize_ip(self.headers.get("X-Real-IP", ""))
+        if real_ip:
+            return real_ip
+        return _normalize_ip(self.client_address[0])
 
-    def send_json(self, status: int, data: dict):
+    def send_json(self, status: int, data: dict, extra_headers: dict | None = None):
         body = json.dumps(data, indent=2).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Expose-Headers", "X-Free-Lookups-Used, X-Free-Lookups-Remaining")
+        for key, value in (extra_headers or {}).items():
+            self.send_header(key, value)
         self.end_headers()
         self.wfile.write(body)
 
@@ -2463,8 +2590,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(401, {"error": "Not authenticated"})
                 return
             user  = get_or_create_user(user_email)
-            count = get_monthly_lookup_count(user_email)
             paid  = is_paid_user(user_email)
+            ip = self.client_ip()
+            fingerprint = _normalize_fingerprint(self.headers.get("X-Client-Fingerprint", ""))
+            count = -1 if paid else get_effective_free_usage(ip, fingerprint)
             now_dt = utc_now()
             if now_dt.month == 12:
                 reset_date = f"{now_dt.year + 1}-01-01"
@@ -2485,7 +2614,7 @@ class Handler(BaseHTTPRequestHandler):
                 "plan":               user.get("plan", "free"),
                 "paid":               paid,
                 "lookups_this_month": count,
-                "lookups_remaining":  -1 if paid else max(0, FREE_LOOKUPS_PER_MONTH - count),
+                "lookups_remaining":  -1 if paid else max(0, FREE_LOOKUP_LIMIT - count),
                 "reset_date":         reset_date,
                 "plan_expires_at":    user.get("plan_expires_at"),
                 "team_members":       team_members,
@@ -3008,69 +3137,51 @@ class Handler(BaseHTTPRequestHandler):
                     return
 
                 ip = self.client_ip()
+                fingerprint = _normalize_fingerprint(self.headers.get("X-Client-Fingerprint", ""))
 
                 # ── Sample demo flag — skip all counting/rate-limiting ──────────
                 is_sample_demo = self.headers.get("X-Sample-Demo") == "1"
 
-                # ── Session-based auth (email → server-side monthly limit) ──────
                 session_token = self.headers.get("X-Session-Token", "")
-                user_email    = validate_session_token(session_token) if session_token else None
+                user_email = validate_session_token(session_token) if session_token else None
+                paid = is_paid_user(user_email) if user_email else False
+                unlimited = is_sample_demo or paid or is_unlimited_lookup_ip(ip)
+                used_before = 0 if unlimited else get_effective_free_usage(ip, fingerprint)
+                response_headers = build_free_lookup_headers(used_before)
+
+                if not is_sample_demo:
+                    limited, retry_after = check_rate_limit(ip)
+                    if limited and not unlimited:
+                        self.send_json(429, {
+                            "error": "rate_limit_exceeded",
+                            "message": "Too many requests. Please wait a minute and try again.",
+                        }, extra_headers={**response_headers, "Retry-After": str(retry_after)})
+                        return
+
+                    if used_before >= FREE_LOOKUP_LIMIT and not unlimited:
+                        self.send_json(403, {
+                            "error": "free_limit_reached",
+                            "message": "You've used your 3 free lookups. Subscribe to continue.",
+                            "upgrade_url": FREE_LOOKUP_UPGRADE_URL,
+                        }, extra_headers=response_headers)
+                        return
 
                 if user_email:
-                    paid          = is_paid_user(user_email)
-                    monthly_count = get_monthly_lookup_count(user_email)
-                    email_limited = (not paid) and (monthly_count >= FREE_LOOKUPS_PER_MONTH)
-                    print(f"[permit] {job_type} in {city}, {state} — user={user_email} plan={'paid' if paid else 'free'} count={monthly_count}")
-                    limited = False  # IP limit not used for authenticated users
+                    print(f"[permit] {job_type} in {city}, {state} — user={user_email} plan={'paid' if paid else 'free'} ip={ip} used={used_before}")
                 else:
-                    # IP-based rate limiting (guests / unauthenticated)
-                    limited, _    = is_rate_limited(ip)
-                    email_limited = False
-                    paid          = False
-                    print(f"[permit] {job_type} in {city}, {state} ({job_category}) — IP={ip}")
+                    print(f"[permit] {job_type} in {city}, {state} ({job_category}) — IP={ip} used={used_before}")
 
-                result    = research_permit(job_type, city, state, zip_code, job_category=job_category)
+                result = research_permit(job_type, city, state, zip_code, job_category=job_category)
                 is_cached = result.get("_cached", False)
 
-                if is_sample_demo:
-                    # Demo lookup — never count against any limit
-                    remaining_lookups = None
-                    print(f"[permit] sample demo lookup — skipping all rate/count logic")
-                elif not is_cached:
-                    if user_email:
-                        if email_limited:
-                            self.send_json(429, {
-                                "error": "Monthly lookup limit reached. Upgrade for unlimited access.",
-                                "retry_after": 0,
-                                "upgrade_url": UPGRADE_URL_SOLO,
-                            })
-                            return
-                        if not paid:
-                            new_count         = increment_monthly_lookup(user_email)
-                            remaining_lookups = max(0, FREE_LOOKUPS_PER_MONTH - new_count)
-                        else:
-                            remaining_lookups = -1  # unlimited
-                    else:
-                        if limited:
-                            self.send_json(429, {
-                                "error": "Too many lookups. Please try again in an hour or upgrade for unlimited access.",
-                                "retry_after": RATE_WINDOW_SECONDS,
-                            })
-                            return
-                        record_fresh_lookup(ip)
-                        remaining_lookups = None
-                else:
-                    # Cached lookup — always free, compute remaining for display
-                    if user_email and not paid:
-                        remaining_lookups = max(0, FREE_LOOKUPS_PER_MONTH - get_monthly_lookup_count(user_email))
-                    elif user_email and paid:
-                        remaining_lookups = -1
-                    else:
-                        remaining_lookups = None
-
-                # Inject server-side lookup count into result
-                if remaining_lookups is not None:
-                    result["remaining_lookups"] = remaining_lookups
+                if not unlimited and not is_sample_demo:
+                    used_after = max(*record_lookup_usage(ip, fingerprint))
+                    response_headers = build_free_lookup_headers(used_after)
+                    result["remaining_lookups"] = max(0, FREE_LOOKUP_LIMIT - used_after)
+                elif paid:
+                    result["remaining_lookups"] = -1
+                elif unlimited:
+                    result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
                 # Validate fresh URLs, then apply shared response safety nets for both fresh and cached results
                 if not is_cached:
@@ -3107,7 +3218,7 @@ class Handler(BaseHTTPRequestHandler):
 
                 # No Telegram on lookups — only notify on paying customers
 
-                self.send_json(200, result)
+                self.send_json(200, result, extra_headers=response_headers)
 
             except Exception as e:
                 print(f"[permit] Error: {e}")
@@ -4037,12 +4148,13 @@ def background_task_worker():
 
 if __name__ == "__main__":
     init_db()
+    init_free_lookup_db()
     process_due_reminders()
     threading.Thread(target=reminder_worker, daemon=True).start()
     threading.Thread(target=background_task_worker, daemon=True).start()
     print(f"🚀 PermitAssist server starting on port {PORT}")
-    print(f"   Rate limit: {RATE_MAX_FRESH} fresh lookups / {RATE_WINDOW_SECONDS//3600}h per IP (guests)")
-    print(f"   Free tier: {FREE_LOOKUPS_PER_MONTH} lookups/month per email (auth users)")
+    print(f"   Abuse limit: {RATE_LIMIT_MAX_REQUESTS} requests / {RATE_LIMIT_WINDOW_SECONDS}s per IP")
+    print(f"   Free guest limit: {FREE_LOOKUP_LIMIT} lookups forever per IP/fingerprint")
     print(f"   Stripe webhook: {'configured' if STRIPE_WEBHOOK_SECRET else 'no STRIPE_WEBHOOK_SECRET'}")
     print(f"   Stripe portal: {'configured' if STRIPE_SECRET_KEY else 'no STRIPE_SECRET_KEY'}")
     print(f"   Telegram: {'enabled' if TG_BOT_TOKEN else 'disabled'}")
