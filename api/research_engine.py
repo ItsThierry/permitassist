@@ -2362,12 +2362,12 @@ def expand_permit_query(job_type: str, city: str, state: str) -> list[str]:
     raw = ""
     try:
         resp = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-5.4-mini",
             messages=[{
                 "role": "user",
                 "content": f"List 3 alternative official permit names for '{job_type}' used by US building departments. Return only a JSON array of strings, no explanation. Example: [\"mechanical permit\", \"HVAC permit\", \"cooling system permit\"]"
             }],
-            max_tokens=80,
+            max_completion_tokens=80,
             temperature=0.2
         )
         raw = resp.choices[0].message.content or ""
