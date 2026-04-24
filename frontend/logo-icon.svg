@@ -1,0 +1,37 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="76" y1="64" x2="444" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#1E3A8A"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(164 136) rotate(47.4) scale(449.77)">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="0.48" stop-color="#FFFFFF" stop-opacity="0.03"/>
+      <stop offset="1" stop-color="#020617" stop-opacity="0.18"/>
+    </radialGradient>
+    <filter id="iconShadow" x="118" y="95" width="276" height="323" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="10"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0588235 0 0 0 0 0.0901961 0 0 0 0 0.172549 0 0 0 0.18 0"/>
+      <feBlend in2="SourceGraphic" mode="normal"/>
+    </filter>
+    <clipPath id="bgClip">
+      <rect x="32" y="32" width="448" height="448" rx="110"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#bgClip)">
+    <rect x="32" y="32" width="448" height="448" rx="110" fill="url(#bgGradient)"/>
+    <rect x="32" y="32" width="448" height="448" rx="110" fill="url(#vignette)"/>
+    <path d="M32 312C93 272 149 251 217 257C282 262 333 232 404 178C448 144 468 129 480 120V480H32V312Z" fill="#0F172A" fill-opacity="0.08"/>
+    <path d="M52 52H460V193C452 168 441 147 426 130C392 92 335 73 252 73C186 73 136 58 102 41C84 32 67 26 52 22V52Z" fill="#FFFFFF" fill-opacity="0.06"/>
+  </g>
+
+  <g filter="url(#iconShadow)">
+    <path d="M189 121C189 113.82 194.82 108 202 108H293.686C297.134 108 300.441 109.37 302.878 111.807L349.193 158.122C351.63 160.559 353 163.866 353 167.314V335C353 342.18 347.18 348 340 348H202C194.82 348 189 342.18 189 335V121Z" fill="white"/>
+    <path d="M294 108V157C294 164.18 299.82 170 307 170H356L294 108Z" fill="white" fill-opacity="0.88"/>
+    <path d="M282.682 167.934L238.383 235.228H271.924L247.479 288.247L303.617 212.637H269.741L282.682 167.934Z" fill="white"/>
+    <rect x="224" y="302" width="68" height="10" rx="5" fill="white" fill-opacity="0.42"/>
+    <rect x="224" y="322" width="54" height="10" rx="5" fill="white" fill-opacity="0.3"/>
+  </g>
+</svg>

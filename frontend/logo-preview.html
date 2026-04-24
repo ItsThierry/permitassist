@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PermitAssist Logo Preview</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: rgba(15, 23, 42, 0.08);
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 56px 24px 72px;
+    }
+
+    .hero, .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      display: grid;
+      place-items: center;
+      padding: 48px 32px;
+      margin-bottom: 28px;
+    }
+
+    .hero img {
+      width: min(760px, 100%);
+      height: auto;
+      display: block;
+    }
+
+    .panel {
+      padding: 28px;
+      margin-bottom: 28px;
+    }
+
+    h1, h2 {
+      margin: 0 0 10px;
+      letter-spacing: -0.03em;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: var(--muted);
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .swatch {
+      border-radius: 24px;
+      padding: 22px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .swatch.white {
+      background: #ffffff;
+      border-color: rgba(15,23,42,0.08);
+    }
+
+    .swatch.navy {
+      background: #0f172a;
+      color: white;
+    }
+
+    .swatch.amber {
+      background: #f59e0b;
+      color: #0f172a;
+    }
+
+    .swatch img {
+      width: 110px;
+      height: 110px;
+      display: block;
+    }
+
+    .label {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    .sizes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 18px;
+    }
+
+    .size-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      min-height: 220px;
+    }
+
+    .size-card img {
+      display: block;
+      height: auto;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      border-radius: 22%;
+    }
+
+    .size-note {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      .wrap { padding: 24px 16px 40px; }
+      .hero, .panel { border-radius: 22px; }
+      .hero { padding: 28px 18px; }
+      .panel { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <img src="./logo-lockup.svg" alt="PermitAssist logo lockup" />
+    </section>
+
+    <section class="panel">
+      <h2>Background checks</h2>
+      <p>Premium icon mark across the brand’s primary usage surfaces.</p>
+      <div class="swatches">
+        <div class="swatch white">
+          <img src="./logo-icon.svg" alt="PermitAssist icon on white" />
+          <div class="label">On white</div>
+        </div>
+        <div class="swatch navy">
+          <img src="./logo-icon.svg" alt="PermitAssist icon on navy" />
+          <div class="label">On #0F172A</div>
+        </div>
+        <div class="swatch amber">
+          <img src="./logo-icon.svg" alt="PermitAssist icon on amber" />
+          <div class="label">On #F59E0B</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Scalability</h2>
+      <p>Readability check from hero-scale down to compact UI and favicon usage.</p>
+      <div class="sizes">
+        <div class="size-card">
+          <img src="./logo-icon.svg" alt="256px icon" width="256" />
+          <div class="size-note">256 × 256</div>
+        </div>
+        <div class="size-card">
+          <img src="./logo-icon.svg" alt="128px icon" width="128" />
+          <div class="size-note">128 × 128</div>
+        </div>
+        <div class="size-card">
+          <img src="./logo-icon.svg" alt="64px icon" width="64" />
+          <div class="size-note">64 × 64</div>
+        </div>
+        <div class="size-card">
+          <img src="./logo-icon.svg" alt="32px icon" width="32" />
+          <div class="size-note">32 × 32</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
