@@ -26,6 +26,17 @@ import pdfplumber
 
 client = OpenAI()
 
+# ─── Cache stats (in-memory, resets on restart) ───────────────────────────────
+_cache_stats = {"hits": 0, "misses": 0}
+
+def get_cache_hit_rate() -> dict:
+    h, m = _cache_stats["hits"], _cache_stats["misses"]
+    total = h + m
+    return {
+        "hits": h, "misses": m, "total": total,
+        "hit_rate_pct": round(h / total * 100, 1) if total else 0
+    }
+
 # Gemini fallback client (used if OpenAI is unavailable)
 _GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 if _GEMINI_API_KEY:
@@ -1684,6 +1695,7 @@ def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
                 conn.execute("UPDATE permit_cache SET hits = hits + 1 WHERE cache_key = ?", [key])
                 conn.commit()
                 conn.close()
+                _cache_stats["hits"] += 1
                 # Stale-while-revalidate: if past 75% of TTL, trigger background refresh
                 if _refresh_callback and age > timedelta(days=ttl * 0.75):
                     print(f"[cache] Stale-while-revalidate triggered for key {key[:8]}… (age={age.days}d, ttl={ttl}d)")
@@ -1693,6 +1705,7 @@ def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
         conn.close()
     except Exception as e:
         print(f"[cache] Read error (non-fatal): {e}")
+    _cache_stats["misses"] += 1
     return None
 
 def save_cache(key: str, job_type: str, job_category: str, city: str, state: str, zip_code: str, result: dict):

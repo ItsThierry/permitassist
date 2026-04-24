@@ -30,7 +30,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result
+from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result, get_cache_hit_rate
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -1610,14 +1610,14 @@ def generate_checklist(result: dict, job_type: str = "", city: str = "", state: 
     }, indent=2)
     try:
         resp = _chat_openai_client.chat.completions.create(
-            model="gpt-4.1-mini",
+            model="gpt-5.4-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
             response_format={"type": "json_object"},
             temperature=0.2,
-            max_tokens=700,
+            max_completion_tokens=700,
         )
         parsed = json.loads(resp.choices[0].message.content)
         if isinstance(parsed, dict) and isinstance(parsed.get("items"), list) and parsed.get("items"):
@@ -2330,13 +2330,14 @@ Analyze this rejection and generate a complete response letter and fix plan."""
     except Exception:
         oai = _OpenAI()
         resp = oai.chat.completions.create(
-            model='gpt-4.1',
+            model='gpt-5.4-mini',
             messages=[
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_prompt}
             ],
             response_format={'type': 'json_object'},
-            temperature=0.3
+            temperature=0.3,
+            max_completion_tokens=2000
         )
         result_text = resp.choices[0].message.content
 
@@ -3086,6 +3087,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(200, {
                     "cache_entries":    cache_count,
                     "cache_hits_total": cache_hits,
+                    "session_cache":    get_cache_hit_rate(),
                     "feedback_flags":   feedback_count,
                     "total_users":      user_count,
                     "paid_users":       sub_count,
@@ -4134,12 +4136,12 @@ class Handler(BaseHTTPRequestHandler):
                 if answer is None:
                     # Fallback to GPT-4o-mini if Gemini unavailable
                     resp = _chat_openai_client.chat.completions.create(
-                        model="gpt-4o-mini",
+                        model="gpt-5.4-mini",
                         messages=[
                             {"role": "system", "content": system_msg},
                             {"role": "user", "content": question}
                         ],
-                        max_tokens=300,
+                        max_completion_tokens=300,
                         temperature=0.3
                     )
                     answer = resp.choices[0].message.content.strip()
