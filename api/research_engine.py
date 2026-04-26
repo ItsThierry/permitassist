@@ -37,11 +37,17 @@ def get_cache_hit_rate() -> dict:
         "hit_rate_pct": round(h / total * 100, 1) if total else 0
     }
 
-# Gemini fallback client (used if OpenAI is unavailable)
+# 2026-04-26: Engine swap based on 100-city × 5-trade benchmark (1,000 reqs):
+#   gemini-3-flash-preview: 9.53/10  ($69/mo @ 50k lookups)
+#   gpt-5.4-mini:            8.01/10  ($123/mo @ 50k lookups)
+# Gemini wins every tier and every trade with a +1.52 quality delta and is
+# 44% cheaper. gpt-5.4-mini stays as the fallback so we have a second-source
+# model if the Google API is down or rate-limited.
 _GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 if _GEMINI_API_KEY:
     genai.configure(api_key=_GEMINI_API_KEY)
-_gemini_fallback_model = "gemini-3-flash-preview"
+_gemini_primary_model = "gemini-3-flash-preview"
+_openai_fallback_model = "gpt-5.4-mini"
 
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY", "")
@@ -3762,45 +3768,50 @@ Return ONLY the JSON object."""
 
     start = time.time()
     raw = None
+    _model_used = _gemini_primary_model  # set by whichever engine answered
+
 
     try:
-        # Explicit timeout: OpenAI's SDK defaults to ~600s which would hang the
-        # whole pipeline if the API stalls. 30s is generous for 8K-token JSON.
-        response = client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S).chat.completions.create(
-            model="gpt-5.4-mini",
-            messages=[
-                {"role": "system",  "content": SYSTEM_PROMPT},
-                {"role": "user",    "content": user_prompt},
-            ],
-            temperature=0.1,
-            max_completion_tokens=8000,
-            response_format={"type": "json_object"},
-        )
-        raw = response.choices[0].message.content
-        print(f"[engine] OpenAI gpt-5.4-mini responded in {round((time.time()-start)*1000)}ms")
-    except Exception as openai_err:
-        print(f"[engine] OpenAI failed ({openai_err}), trying Gemini fallback ({_gemini_fallback_model})...")
+        # 2026-04-26: PRIMARY = Gemini 3 Flash (post-benchmark swap).
+        # FALLBACK = gpt-5.4-mini if Gemini fails (key missing, rate limit,
+        # transient error). Either branch sets _model_used so _meta reports
+        # which engine actually answered.
         if not _GEMINI_API_KEY:
-            raise RuntimeError(f"OpenAI failed and no GEMINI_API_KEY set: {openai_err}")
+            raise RuntimeError("GEMINI_API_KEY not set — Gemini is now the primary engine; configure it in env")
+        gemini_model = genai.GenerativeModel(
+            model_name=_gemini_primary_model,
+            generation_config=genai.GenerationConfig(
+                temperature=0.1,
+                max_output_tokens=3000,
+                response_mime_type="application/json",
+            )
+        )
+        gemini_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
+        gemini_resp = gemini_model.generate_content(
+            gemini_prompt,
+            request_options={"timeout": _GEMINI_REQUEST_TIMEOUT_S},
+        )
+        raw = gemini_resp.text
+        _model_used = _gemini_primary_model
+        print(f"[engine] Gemini primary ({_gemini_primary_model}) responded in {round((time.time()-start)*1000)}ms")
+    except Exception as gemini_err:
+        print(f"[engine] Gemini failed ({gemini_err}), trying OpenAI fallback ({_openai_fallback_model})...")
         try:
-            gemini_model = genai.GenerativeModel(
-                model_name=_gemini_fallback_model,
-                generation_config=genai.GenerationConfig(
-                    temperature=0.1,
-                    max_output_tokens=3000,
-                    response_mime_type="application/json",
-                )
+            response = client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S).chat.completions.create(
+                model=_openai_fallback_model,
+                messages=[
+                    {"role": "system",  "content": SYSTEM_PROMPT},
+                    {"role": "user",    "content": user_prompt},
+                ],
+                temperature=0.1,
+                max_completion_tokens=8000,
+                response_format={"type": "json_object"},
             )
-            gemini_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
-            # google-generativeai accepts request_options={"timeout": N}
-            gemini_resp = gemini_model.generate_content(
-                gemini_prompt,
-                request_options={"timeout": _GEMINI_REQUEST_TIMEOUT_S},
-            )
-            raw = gemini_resp.text
-            print(f"[engine] Gemini fallback ({_gemini_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
-        except Exception as gemini_err:
-            raise RuntimeError(f"Both OpenAI and Gemini failed. OpenAI: {openai_err} | Gemini: {gemini_err}")
+            raw = response.choices[0].message.content
+            _model_used = _openai_fallback_model
+            print(f"[engine] OpenAI fallback ({_openai_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
+        except Exception as openai_err:
+            raise RuntimeError(f"Both Gemini and OpenAI failed. Gemini: {gemini_err} | OpenAI: {openai_err}")
 
     elapsed = round((time.time() - start) * 1000)
     try:
@@ -4248,7 +4259,8 @@ Return ONLY the JSON object."""
         "generated_at":    datetime.now().isoformat(),
         "response_ms":     elapsed,
         "cached":          False,
-        "model":           "gpt-5.4-mini",
+        # 2026-04-26: report which engine actually answered (primary or fallback)
+        "model":           _model_used,
         "web_sources":     web_source_count,
         "city_match_level": city_match_level,
         "job_type":        job_type,
