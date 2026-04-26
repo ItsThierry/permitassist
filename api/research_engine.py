@@ -3197,11 +3197,19 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
                 # 2026-04-26: Visibility on Accela silent failures.
                 # Before, this branch was empty — meaning we couldn't tell
                 # "city not in Accela's coverage" from "Accela failed for a
-                # city it should cover." Now we emit a structured warning so
-                # ops can spot patterns (e.g. coverage regression for a
-                # specific state) and so the result includes a flag so
-                # downstream confidence scoring knows it tried Accela.
+                # city it should cover." Now:
+                #   (a) always emit a structured warning + flag downstream,
+                #   (b) if the state has heavy Accela coverage, emit a
+                #       louder per-state WARN so ops can spot data-coverage
+                #       regressions (e.g. CA suddenly stops matching).
                 print(f"[search][WARN] accela_miss city={city!r} state={state!r} job_type={job_type!r} — fell through to web search; quality may be lower")
+                _ACCELA_LIKELY_COVERED_STATES = {
+                    "CA", "TX", "FL", "NY", "PA", "IL", "OH", "GA", "NC", "MI",
+                    "NJ", "VA", "WA", "AZ", "MA", "TN", "IN", "MO", "MD", "WI",
+                    "CO", "MN", "SC", "AL", "LA", "KY", "OR", "OK",
+                }
+                if (state or "").upper() in _ACCELA_LIKELY_COVERED_STATES:
+                    print(f"[accela][WARN] {city}, {state} miss in heavy-coverage state — data gap or normalization miss")
                 if "accela_miss" not in [c.get("source") for c in structured_candidates if isinstance(c, dict)]:
                     structured_candidates.append({
                         "fees": [], "portal_url": "", "raw_text": "",
@@ -3210,18 +3218,6 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
                         "freshness": "accela_miss",
                         "_warn": f"Accela returned no agency match for {city}, {state}",
                     })
-            else:
-                # 2026-04-26: Surface silent Accela failures. For cities that should
-                # be in Accela's 3,086-agency coverage (mid+ population in covered
-                # states) but came back empty, this WARN line lights up so we can
-                # spot data-coverage gaps in production logs.
-                _ACCELA_LIKELY_COVERED_STATES = {
-                    "CA", "TX", "FL", "NY", "PA", "IL", "OH", "GA", "NC", "MI",
-                    "NJ", "VA", "WA", "AZ", "MA", "TN", "IN", "MO", "MD", "WI",
-                    "CO", "MN", "SC", "AL", "LA", "KY", "OR", "OK",
-                }
-                if (state or "").upper() in _ACCELA_LIKELY_COVERED_STATES:
-                    print(f"[accela][WARN] No agency match for {city}, {state} — state has heavy Accela coverage; data gap or normalization miss")
 
         if total_chars < 200:
             alt_queries = expand_permit_query(job_type, search_city, search_state)
