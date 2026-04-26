@@ -2331,7 +2331,6 @@ function submitPreLookupEmail() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: normalizedEmail, source: 'pre-lookup' })
   }).catch(() => {});
-  if (typeof gtag === 'function') gtag('event', 'conversion', {'send_to': 'AW-18087945418/SIGNUP_LABEL'});
   hidePreLookupGate();
   _preLookupPassed = true;
   doLookupWithOffline();

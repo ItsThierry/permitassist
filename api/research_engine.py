@@ -41,7 +41,7 @@ def get_cache_hit_rate() -> dict:
 _GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 if _GEMINI_API_KEY:
     genai.configure(api_key=_GEMINI_API_KEY)
-_gemini_fallback_model = "gemini-2.5-pro"
+_gemini_fallback_model = "gemini-3-flash-preview"
 
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY", "")
