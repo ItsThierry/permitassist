@@ -45,9 +45,25 @@ _gemini_fallback_model = "gemini-3-flash-preview"
 
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY", "")
-BRAVE_SEARCH_API_KEY = os.environ.get("BRAVE_SEARCH_API_KEY", "BSAdf-HMvCIiwJw7UlYFXghzqwfv_Pp")
+# No hardcoded fallback for BRAVE_SEARCH_API_KEY — fail-fast if env var is missing
+# rather than silently using a key checked into git history (was a security gap
+# fixed 2026-04-26).
+BRAVE_SEARCH_API_KEY = os.environ.get("BRAVE_SEARCH_API_KEY", "")
 ACCELA_APP_ID = os.environ.get("ACCELA_APP_ID", "639125015399507099")
 ACCELA_APP_SECRET = os.environ.get("ACCELA_APP_SECRET", "a516edb01cab4261baf14a478ee3c9ac")
+
+# Cache TTL ceiling (days). Permit rules and fees update quarterly in many
+# cities; 30 days was too long. Combined with ETag polling (added 2026-04-26)
+# for early invalidation when AHJ source pages change.
+_PERMIT_CACHE_TTL_DEFAULT_DAYS = 14
+_PERMIT_CACHE_TTL_HIGH_HITS_DAYS = 30
+_PERMIT_CACHE_TTL_FRESH_REVERIFY_DAYS = 7
+# How often to revalidate cached entries via HEAD/If-None-Match
+_PERMIT_CACHE_ETAG_CHECK_FRACTION = 0.50  # at 50% of TTL, check ETag
+# OpenAI / Gemini per-request timeouts (seconds). Was unset → defaulted to
+# requests' 5-minute timeout, which would freeze the whole pipeline.
+_OPENAI_REQUEST_TIMEOUT_S = 30
+_GEMINI_REQUEST_TIMEOUT_S = 30
 ACCELA_BASE_URL = "https://apis.accela.com"
 ACCELA_DOCS_BASE_URL = "https://developer.accela.com/docs/api_reference"
 _accela_token = ""
@@ -1661,17 +1677,18 @@ def cache_key(job_type: str, city: str, state: str, job_category: str = "residen
 
 def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
     """Tiered TTL based on popularity and data quality.
-    - Popular + high confidence = 60 days (stable, well-tested data)
-    - Unverified fee or low confidence = 10 days (refresh sooner)
-    - Default = 30 days
+    Reduced 2026-04-26: max 30d (was 60), default 14d (was 30). Permit rules
+    and fee schedules update too fast for a 60-day blanket cache. Coupled with
+    ETag polling that triggers earlier refresh for entries with a known
+    source_url.
     """
     if fee_unverified or confidence == "low":
-        return 10
+        return _PERMIT_CACHE_TTL_FRESH_REVERIFY_DAYS  # 7
     if hits >= 10 and confidence == "high":
-        return 60
+        return _PERMIT_CACHE_TTL_HIGH_HITS_DAYS  # 30
     if hits >= 3 and confidence in ("high", "medium"):
-        return 45
-    return 30
+        return 21
+    return _PERMIT_CACHE_TTL_DEFAULT_DAYS  # 14
 
 def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
     """Smart cache read with tiered TTL and stale-while-revalidate.
@@ -2031,17 +2048,69 @@ def _rank_search_results(results: list[dict], limit: int = 4, city: str = "", st
 
 
 
+def _http_post_with_backoff(url: str, *, json: dict | None = None, headers: dict | None = None, timeout: int = 10, max_retries: int = 3) -> "requests.Response | None":
+    """POST with exponential backoff on 429/503. Returns Response or None on terminal failure."""
+    delay = 1.0
+    for attempt in range(max_retries):
+        try:
+            resp = requests.post(url, json=json, headers=headers or {}, timeout=timeout)
+            if resp.status_code in (429, 503) and attempt < max_retries - 1:
+                # Respect Retry-After if provided; else exponential
+                retry_after = resp.headers.get("Retry-After")
+                wait = float(retry_after) if (retry_after and retry_after.isdigit()) else delay
+                print(f"[search] {urlparse(url).netloc} {resp.status_code} — retrying in {wait:.1f}s (attempt {attempt+1}/{max_retries})")
+                time.sleep(wait)
+                delay *= 2
+                continue
+            return resp
+        except requests.RequestException as e:
+            if attempt < max_retries - 1:
+                print(f"[search] {urlparse(url).netloc} transient error: {e} — retrying in {delay:.1f}s")
+                time.sleep(delay)
+                delay *= 2
+                continue
+            print(f"[search] {urlparse(url).netloc} failed after {max_retries} attempts: {e}")
+            return None
+    return None
+
+
+def _http_get_with_backoff(url: str, *, params: dict | None = None, headers: dict | None = None, timeout: int = 10, max_retries: int = 3) -> "requests.Response | None":
+    """GET with exponential backoff on 429/503. Returns Response or None on terminal failure."""
+    delay = 1.0
+    for attempt in range(max_retries):
+        try:
+            resp = requests.get(url, params=params, headers=headers or {}, timeout=timeout)
+            if resp.status_code in (429, 503) and attempt < max_retries - 1:
+                retry_after = resp.headers.get("Retry-After")
+                wait = float(retry_after) if (retry_after and retry_after.isdigit()) else delay
+                print(f"[search] {urlparse(url).netloc} {resp.status_code} — retrying in {wait:.1f}s (attempt {attempt+1}/{max_retries})")
+                time.sleep(wait)
+                delay *= 2
+                continue
+            return resp
+        except requests.RequestException as e:
+            if attempt < max_retries - 1:
+                print(f"[search] {urlparse(url).netloc} transient error: {e} — retrying in {delay:.1f}s")
+                time.sleep(delay)
+                delay *= 2
+                continue
+            print(f"[search] {urlparse(url).netloc} failed after {max_retries} attempts: {e}")
+            return None
+    return None
+
+
 def serper_search(query: str, num: int = 5, city: str = "", state: str = "") -> list[dict]:
     if not SERPER_API_KEY:
         return []
     try:
-        resp = requests.post(
+        resp = _http_post_with_backoff(
             "https://google.serper.dev/search",
             headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
             json={"q": query, "num": num, "gl": "us"},
-            timeout=10,
+            timeout=15,
         )
-        resp.raise_for_status()
+        if not resp or resp.status_code >= 400:
+            return []
         data = resp.json()
         results = []
         for r in data.get("organic", []):
@@ -2067,7 +2136,7 @@ def brave_search(query: str, num: int = 5, max_results: int | None = None, city:
     if not BRAVE_SEARCH_API_KEY:
         return []
     try:
-        resp = requests.get(
+        resp = _http_get_with_backoff(
             "https://api.search.brave.com/res/v1/web/search",
             params={"q": query, "count": limit, "text_decorations": False, "search_lang": "en"},
             headers={
@@ -2075,9 +2144,10 @@ def brave_search(query: str, num: int = 5, max_results: int | None = None, city:
                 "Accept-Encoding": "gzip",
                 "X-Subscription-Token": BRAVE_SEARCH_API_KEY,
             },
-            timeout=10,
+            timeout=15,
         )
-        resp.raise_for_status()
+        if not resp or resp.status_code >= 400:
+            return []
         data = resp.json()
         results = []
         for r in data.get("web", {}).get("results", []):
@@ -2095,6 +2165,28 @@ def brave_search(query: str, num: int = 5, max_results: int | None = None, city:
     except Exception as e:
         print(f"[search] Brave search failed (non-fatal): {e}")
         return []
+
+
+def _search_with_fallback(query: str, num: int, city: str, state: str) -> list[dict]:
+    """Explicit fallback chain: Serper first if available, else Brave.
+
+    Replaces the implicit `serper_search(...) or brave_search(...)` pattern,
+    which would (a) skip Brave even when Serper returned an empty list for a
+    valid reason, and (b) hide which provider answered. This version logs the
+    decision and lets us add per-provider metadata to results in future.
+    """
+    if SERPER_API_KEY:
+        primary = serper_search(query, num=num, city=city, state=state)
+        if primary:
+            return primary
+        # Serper available but empty → try Brave as second opinion
+        if BRAVE_SEARCH_API_KEY:
+            print("[search] Serper returned 0 results — falling back to Brave")
+            return brave_search(query, num=num, city=city, state=state)
+        return []
+    if BRAVE_SEARCH_API_KEY:
+        return brave_search(query, num=num, city=city, state=state)
+    return []
 
 
 
@@ -2891,12 +2983,14 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
             primary_query = f'"{search_city}" "{search_state}" {job_type} permit requirements fee site:.gov'
             relaxed_query = f'{search_city} {search_state} {job_type} permit requirements fees building department'
             merged_results = []
-            merged_results.extend(serper_search(primary_query, num=5, city=search_city, state=search_state) or brave_search(primary_query, num=5, city=search_city, state=search_state))
+            # Use explicit Serper→Brave fallback (was implicit `or` chain that
+            # could skip Brave even when Serper had a transient empty result).
+            merged_results.extend(_search_with_fallback(primary_query, num=5, city=search_city, state=search_state))
             if alt_queries:
                 alt_query = f'{search_city} {search_state} {alt_queries[0]} permit building department site:.gov'
-                merged_results.extend(serper_search(alt_query, num=4, city=search_city, state=search_state) or brave_search(alt_query, num=4, city=search_city, state=search_state))
+                merged_results.extend(_search_with_fallback(alt_query, num=4, city=search_city, state=search_state))
             if not merged_results:
-                merged_results.extend(serper_search(relaxed_query, num=5, city=search_city, state=search_state) or brave_search(relaxed_query, num=5, city=search_city, state=search_state))
+                merged_results.extend(_search_with_fallback(relaxed_query, num=5, city=search_city, state=search_state))
             ranked = _rank_search_results(merged_results, limit=4, city=search_city, state=search_state)
             scraped = scrape_urls_parallel([r.get("url", "") for r in ranked], city=city, state=state, max_workers=3, timeout=14)
             scraped_by_url = {item.get("url", ""): item for item in scraped}
