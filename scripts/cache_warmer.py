@@ -5,7 +5,11 @@ Pre-warms the lookup cache for top US cities so contractors get fast results.
 Run nightly via cron.
 """
 import sys, os, time, json, requests
-sys.path.insert(0, '/data/permitassist')
+# Add the repo root to sys.path. Works on Railway (/data/permitassist),
+# Laura's Mac (/Users/lauravelez17/Code/permitassist), or any other host
+# without hardcoding the path.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _REPO_ROOT)
 
 TOP_CITIES = [
     # Top 50 metros + common contractor cities
