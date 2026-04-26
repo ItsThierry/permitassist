@@ -109,6 +109,8 @@
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    button, input, textarea, select { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
+    button { font-size: 15px; font-weight: 700; }
     html, body {
       height: 100%;
       width: 100%;
@@ -1175,6 +1177,8 @@
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18087945418"></script>
   <script>
+    const BRAND_LOGO_PATH = '/public/logo.png';
+    document.addEventListener('DOMContentLoaded', () => { const logo = document.getElementById('brand-logo'); if (logo) logo.src = BRAND_LOGO_PATH; });
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
@@ -1186,7 +1190,7 @@
   <!-- Navbar -->
   <nav class="nav">
     <div class="logo">
-      <img src="/icons/icon-192.png" alt="PA" class="logo-mark-img" />
+      <img id="brand-logo" src="/public/logo.png" alt="PermitAssist" class="logo-mark-img" onerror="this.style.display='none'" />
       <div>
         <div class="logo-text">Permit<em>Assist</em></div>
         <div class="logo-tagline">For Contractors</div>
@@ -1227,11 +1231,11 @@
 
   <!-- Search Page -->
   <div class="page active" id="page-search">
-    <div class="page-inner" id="search-form">
+    <form class="page-inner" id="search-form" onsubmit="event.preventDefault(); doLookupWithOffline();">
       <!-- Hero -->
       <div class="hero" style="padding:32px 0 16px">
         <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
-        <p class="hero-sub" style="max-width:460px">Know exactly what permit to pull, before you dispatch.</p>
+        <h2 class="hero-sub" style="max-width:460px">Know exactly what permit to pull, before you dispatch.</h2>
       </div>
 
 
@@ -1258,8 +1262,8 @@
       <div class="search-action-zone">
         <!-- Contractor / Homeowner mode toggle -->
         <div id="mode-toggle-wrap" style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:14px;max-width:340px">
-          <button id="btn-mode-contractor" onclick="setSearchMode('contractor')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:#2563eb;color:#fff;transition:all .15s">🔨 Contractor</button>
-          <button id="btn-mode-homeowner" onclick="setSearchMode('homeowner')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">🏠 Homeowner</button>
+          <button id="btn-mode-contractor" type="button" onclick="setSearchMode('contractor')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:#2563eb;color:#fff;transition:all .15s">🔨 Contractor</button>
+          <button id="btn-mode-homeowner" type="button" onclick="setSearchMode('homeowner')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">🏠 Homeowner</button>
         </div>
         <div class="search-section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span id="search-section-title">🔍 Look Up Your Permit</span>
@@ -1282,8 +1286,8 @@
           <div class="form-group">
             <label>Job Type</label>
             <div class="toggle-row" id="job-category-toggle">
-              <button class="toggle-btn active" id="btn-residential" onclick="setJobCategory('residential')">🏠 Residential</button>
-              <button class="toggle-btn" id="btn-commercial" onclick="setJobCategory('commercial')">🏢 Commercial</button>
+              <button class="toggle-btn active" id="btn-residential" type="button" onclick="setJobCategory('residential')">🏠 Residential</button>
+              <button class="toggle-btn" id="btn-commercial" type="button" onclick="setJobCategory('commercial')">🏢 Commercial</button>
             </div>
           </div>
           <div class="form-group">
@@ -1313,35 +1317,35 @@
         <div class="disambig-box" id="disambig-box">
           <div class="disambig-title">⚠️ Is this a minor repair or full replacement?</div>
           <div class="disambig-btns">
-            <button class="disambig-btn" onclick="submitWithDisambig('minor repair')">🔧 Minor Repair</button>
-            <button class="disambig-btn" onclick="submitWithDisambig('full replacement')">🔄 Full Replacement</button>
+            <button class="disambig-btn" type="button" onclick="submitWithDisambig('minor repair')">🔧 Minor Repair</button>
+            <button class="disambig-btn" type="button" onclick="submitWithDisambig('full replacement')">🔄 Full Replacement</button>
           </div>
         </div>
 
         <div class="trust-note">🧠 Not a chatbot. A permit expert. PermitAssist knows 250+ jurisdictions, local fee schedules, and the exact code sections your inspector will cite — purpose-built for contractors, not a generic AI wrapper.</div>
-        <button class="lookup-btn" id="lookup-btn" type="button">🔍 &nbsp;Find Permit Requirements</button>
+        <button class="lookup-btn" id="lookup-btn" type="submit">🔍 &nbsp;Find Permit Requirements</button>
       </div>
 
       <!-- How It Works 3-Step -->
       <div class="how-it-works" style="margin-top:20px">
-        <div class="how-it-works-eyebrow">✅ How It Works</div>
+        <h2 class="how-it-works-eyebrow">✅ How It Works</h2>
         <div class="how-steps">
           <div class="how-step">
             <div class="how-step-icon">📍</div>
             <div class="how-step-num">Step 1</div>
-            <div class="how-step-label">Enter your job type &amp; city</div>
+            <h3 class="how-step-label">Enter your job type &amp; city</h3>
           </div>
           <div class="how-connector"></div>
           <div class="how-step">
             <div class="how-step-icon">🔍</div>
             <div class="how-step-num">Step 2</div>
-            <div class="how-step-label">AI researches your exact jurisdiction</div>
+            <h3 class="how-step-label">AI researches your exact jurisdiction</h3>
           </div>
           <div class="how-connector"></div>
           <div class="how-step">
             <div class="how-step-icon">✅</div>
             <div class="how-step-num">Step 3</div>
-            <div class="how-step-label">Get permit name, fees, timeline &amp; where to apply</div>
+            <h3 class="how-step-label">Get permit name, fees, timeline &amp; where to apply</h3>
           </div>
         </div>
       </div>
@@ -1350,7 +1354,7 @@
       <div id="social-proof-strip" style="margin:20px 0 4px; text-align: center; padding: 20px 20px 8px;">
         <div style="max-width:480px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 22px;text-align:center">
           <div style="font-size:28px;margin-bottom:12px">🎯</div>
-          <div style="font-size:17px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:10px">Our goal: you walk into the permit office once, get it right, and never go back.</div>
+          <h2 style="font-size:17px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:10px">Our goal: you walk into the permit office once, get it right, and never go back.</h2>
           <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px">No calling around. No guessing on fees. No rejected applications. Just the exact permit name, requirements, and checklist — before you leave the truck.</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;align-items:center;gap:10px;text-align:left">
@@ -1371,7 +1375,7 @@
 
       <!-- ROI Stats Row -->
       <div class="roi-stats-section">
-        <div class="roi-stats-eyebrow">💰 The ROI is obvious</div>
+        <h2 class="roi-stats-eyebrow">💰 The ROI is obvious</h2>
         <div class="roi-stats-row" role="list" aria-label="Key statistics">
           <div class="roi-stat" role="listitem">
             <div class="roi-stat-number">6–30 hrs</div>
@@ -1394,10 +1398,10 @@
 
       <!-- Old Way vs PermitAssist -->
       <div class="old-vs-new">
-        <div class="old-vs-new-eyebrow">🔄 The difference is obvious</div>
+        <h2 class="old-vs-new-eyebrow">🔄 The difference is obvious</h2>
         <div class="old-vs-new-cols">
           <div class="old-col">
-            <div class="old-col-title">❌ The Old Way</div>
+            <h3 class="old-col-title">❌ The Old Way</h3>
             <div class="vs-item">Call the building dept and get put on hold</div>
             <div class="vs-item">Google it and find outdated PDFs</div>
             <div class="vs-item">Drive to city hall just to find out</div>
@@ -1405,7 +1409,7 @@
             <div class="vs-item">Spend half a day on one job</div>
           </div>
           <div class="new-col">
-            <div class="new-col-title">✅ With PermitAssist</div>
+            <h3 class="new-col-title">✅ With PermitAssist</h3>
             <div class="vs-item">Instant answer in under 60 seconds</div>
             <div class="vs-item">AI-verified, jurisdiction-specific results</div>
             <div class="vs-item">Know fees &amp; timeline before you show up</div>
@@ -1417,7 +1421,7 @@
 
       <!-- ROI Savings Calculator -->
       <div class="roi-calc">
-        <div class="roi-calc-title">💰 See Your Savings</div>
+        <h2 class="roi-calc-title">💰 See Your Savings</h2>
         <div class="roi-calc-question">How many permit lookups do you do per month?</div>
         <input type="range" class="roi-slider" id="roi-slider" min="1" max="50" value="10" oninput="updateROICalc(this.value)" />
         <div class="roi-slider-val"><span id="roi-slider-num">10</span> lookups/month</div>
@@ -1435,10 +1439,10 @@
 
       <!-- Why PermitAssist Comparison Strip -->
       <div class="compare-strip">
-        <div class="compare-strip-eyebrow">Why PermitAssist?</div>
+        <h2 class="compare-strip-eyebrow">Why PermitAssist?</h2>
         <div class="compare-strip-cols">
           <div class="compare-col compare-col-winner">
-            <div class="compare-col-name">✅ PermitAssist</div>
+            <h3 class="compare-col-name">✅ PermitAssist</h3>
             <div class="compare-col-price">$39.99/mo · unlimited</div>
             <ul class="compare-col-features">
               <li>⚡ Instant — 30 seconds</li>
@@ -1448,7 +1452,7 @@
             </ul>
           </div>
           <div class="compare-col">
-            <div class="compare-col-name">🤵 Permit Expediter</div>
+            <h3 class="compare-col-name">🤵 Permit Expediter</h3>
             <div class="compare-col-price">$500–$2,000 / project</div>
             <ul class="compare-col-features">
               <li>⏳ Days to weeks</li>
@@ -1458,7 +1462,7 @@
             </ul>
           </div>
           <div class="compare-col">
-            <div class="compare-col-name">🔍 Googling It</div>
+            <h3 class="compare-col-name">🔍 Googling It</h3>
             <div class="compare-col-price">Free (but costly)</div>
             <ul class="compare-col-features">
               <li>⏰ 2–6 hours wasted</li>
@@ -1472,7 +1476,7 @@
 
       <!-- What's Included Feature Grid -->
       <div style="margin:28px 0 8px;padding:24px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:540px;margin-inline:auto">
-        <div style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--brand);text-align:center;margin-bottom:16px">Everything included with Pro</div>
+        <h2 style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--brand);text-align:center;margin-bottom:16px">Everything included with Pro</h2>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div style="display:flex;align-items:flex-start;gap:10px">
             <span style="font-size:20px">📂</span>
@@ -1543,7 +1547,7 @@
 
 
 
-</div>
+</form>
 
     <!-- Loading -->
     <div id="loading">
@@ -1571,10 +1575,10 @@
   <div class="page" id="page-jobs"><div class="page-inner" id="jobs-inner"></div></div>
 
   <!-- Footer -->
-  <div class="footer">
+  <footer class="footer">
     <p>⚠️ <strong>Disclaimer:</strong> PermitAssist provides AI-generated guidance based on publicly available data. Permit requirements change frequently, and fees shown are estimates. The contractor is strictly responsible for verifying all exact requirements, fees, and timelines directly with the local building department (Authority Having Jurisdiction) prior to starting any work.</p>
     <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved. &nbsp;·&nbsp; <a href="/help" style="color:var(--brand)">Help</a> &nbsp;·&nbsp; <a href="/terms" style="color:var(--brand)">Terms</a> &nbsp;·&nbsp; <a href="/privacy" style="color:var(--brand)">Privacy</a></p>
-  </div>
+  </footer>
 </div>
 
 <!-- Install Banner -->
@@ -2405,7 +2409,14 @@ function showPendingResult(){if(!pendingResult) return;const {data,job,city,stat
 // ── Install ──────────────────────────────────────────────────────────────────
 const _isIOS=(/iphone|ipad|ipod/i).test(navigator.userAgent)&&!window.MSStream;
 const _isInStandalone=('standalone' in navigator && navigator.standalone);
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;if(!localStorage.getItem('pa_install_dismissed')){document.getElementById('install-banner').classList.add('show');document.getElementById('install-nav-btn').style.display='block'}});
+function showInstallAfterFirstScroll(){
+  if(localStorage.getItem('pa_install_dismissed')) return;
+  const page=document.getElementById('page-search');
+  const reveal=()=>{document.getElementById('install-banner').classList.add('show'); if(window.innerWidth>600) document.getElementById('install-nav-btn').style.display='block';};
+  if(page && page.scrollTop > 320) reveal();
+  else if(page) page.addEventListener('scroll', () => { if(page.scrollTop > 320) reveal(); }, { once:true, passive:true });
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;showInstallAfterFirstScroll();});
 // iOS Safari: show banner with tap-share instructions (no beforeinstallprompt on iOS)
 (function(){
   if(_isIOS && !_isInStandalone && !localStorage.getItem('pa_install_dismissed')){
@@ -2416,7 +2427,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
     sub.textContent='Tap the Share button \u2193 then "Add to Home Screen"';
     btn.textContent='Got it';
     btn.onclick=function(){dismissInstall();};
-    banner.classList.add('show');
+    showInstallAfterFirstScroll();
   }
 })();
 function installApp(){if(!deferredInstallPrompt) return;deferredInstallPrompt.prompt();deferredInstallPrompt.userChoice.then(()=>{deferredInstallPrompt=null;document.getElementById('install-banner').classList.remove('show');document.getElementById('install-nav-btn').style.display='none'})}
@@ -3671,7 +3682,7 @@ function downloadReport() {
   ${tipList ? `<div class="section"><div class="section-label">&#128161; Pro Tips</div><ul class="plain">${tipList}</ul></div>` : ''}
   ${mistakeList ? `<div class="section" style="border-color:#fca5a5"><div class="section-label" style="color:#dc2626">&#9888;&#65039; Common Mistakes &mdash; Watch Out</div><ul class="plain">${mistakeList}</ul></div>` : ''}
   ${sourceList ? `<div class="section"><div class="section-label">&#128279; Sources</div><ul class="plain">${sourceList}</ul></div>` : ''}
-  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</div>
+  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</footer>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body>
@@ -3797,7 +3808,7 @@ function printResult() {
   ${inspList ? `<div class="section"><div class="section-label">&#128269; Inspection Stages</div><table>${inspList}</table></div>` : ''}
   ${tipList ? `<div class="section"><div class="section-label">&#128161; Pro Tips</div><ul class="plain">${tipList}</ul></div>` : ''}
   ${mistakeList ? `<div class="section" style="border-color:#fca5a5"><div class="section-label" style="color:#dc2626">&#9888;&#65039; Common Mistakes</div><ul class="plain">${mistakeList}</ul></div>` : ''}
-  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</div>
+  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</footer>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body>
@@ -4287,7 +4298,7 @@ function printChecklistSection(){
   <div class="job-label">${efn(job)}</div>
   <div class="loc-label">&#128205; ${efn(city)}, ${efn(state)}</div>
   ${checklistHTML}
-  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Verify all requirements with your local building department before starting work.</div>
+  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Verify all requirements with your local building department before starting work.</footer>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body>
