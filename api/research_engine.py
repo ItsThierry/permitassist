@@ -326,6 +326,57 @@ def _accela_build_citizen_portal_url(agency: dict) -> str:
     return ""
 
 
+# 2026-04-26: Validation cache for Accela portal URLs. We've never end-to-end
+# tested whether the URLs we return actually let a contractor submit an
+# application — Boban explicitly flagged this. As a first defense, do a HEAD
+# check at portal-build time and cache 4xx/5xx results so we don't re-hit.
+# In-process dict (process-lifetime cache, ~1 hour TTL).
+_ACCELA_URL_VALIDATION_CACHE: dict = {}
+_ACCELA_URL_VALIDATION_TTL_S = 3600  # 1 hour
+
+
+def _validate_accela_portal_url(url: str, *, timeout: float = 4.0) -> dict:
+    """HEAD-check an Accela portal URL. Returns dict with:
+        - alive: bool (True if 2xx/3xx)
+        - status: int or None
+        - reason: short string for logging/UI
+        - checked_at: epoch
+    Cached in-process for _ACCELA_URL_VALIDATION_TTL_S seconds.
+    Never raises.
+    """
+    if not url:
+        return {"alive": False, "status": None, "reason": "empty_url", "checked_at": time.time()}
+    cached = _ACCELA_URL_VALIDATION_CACHE.get(url)
+    now = time.time()
+    if cached and now - cached.get("checked_at", 0) < _ACCELA_URL_VALIDATION_TTL_S:
+        return cached
+    info: dict = {"alive": False, "status": None, "reason": "unknown", "checked_at": now}
+    try:
+        # Some Accela portals 405 on HEAD; fall back to GET if so.
+        resp = requests.head(url, timeout=timeout, allow_redirects=True)
+        if resp.status_code == 405:
+            resp = requests.get(url, timeout=timeout, allow_redirects=True, stream=True)
+            try:
+                resp.close()
+            except Exception:
+                pass
+        info["status"] = resp.status_code
+        if 200 <= resp.status_code < 400:
+            info["alive"] = True
+            info["reason"] = "ok"
+        elif resp.status_code in (401, 403):
+            # Auth-walled but the page exists — treat as alive for our
+            # purposes (contractor will see a login form, that's expected).
+            info["alive"] = True
+            info["reason"] = f"auth_required_{resp.status_code}"
+        else:
+            info["reason"] = f"http_{resp.status_code}"
+    except requests.RequestException as e:
+        info["reason"] = f"net_error: {type(e).__name__}"
+    _ACCELA_URL_VALIDATION_CACHE[url] = info
+    return info
+
+
 def _accela_get_record_types(agency_name: str, job_type: str) -> list[dict]:
     """Record types require user auth — not available with app-level token. Return empty."""
     return []
@@ -351,7 +402,22 @@ def accela_get_permit_info(city: str, state: str, job_type: str) -> dict | None:
     display = str(agency.get("display") or agency_name)
     portal_url = _accela_build_citizen_portal_url(agency)
 
-    print(f"[accela] Matched agency: {agency_name} | Portal: {portal_url or 'none (not hostedACA)'}")
+    # 2026-04-26: HEAD-check the portal URL before claiming it as a source.
+    # Cached in-process. If dead, downgrade portal claim so we don't hand
+    # contractors broken links.
+    portal_alive = True
+    portal_status_reason = "not_checked"
+    if portal_url:
+        v = _validate_accela_portal_url(portal_url)
+        portal_alive = bool(v.get("alive"))
+        portal_status_reason = str(v.get("reason") or "unknown")
+        if not portal_alive:
+            print(f"[accela] Portal URL FAILED validation for {agency_name}: {portal_url} → {portal_status_reason}")
+            # Don't return the URL but do return the agency match so downstream
+            # can still benefit from agency name / display.
+            portal_url = ""
+
+    print(f"[accela] Matched agency: {agency_name} | Portal: {portal_url or 'none (not hostedACA or dead)'} | reason: {portal_status_reason}")
 
     summary = f"Accela agency matched: {display} ({agency.get('state') or state})."
     if portal_url:
@@ -365,6 +431,7 @@ def accela_get_permit_info(city: str, state: str, job_type: str) -> dict | None:
         "field_sources": {"portal_url": "accela_api"} if portal_url else {},
         "field_confidence": {"portal_url": "high"} if portal_url else {},
         "freshness": "live_accela_api",
+        "portal_validation_reason": portal_status_reason,
     }
     return {
         "agency": agency,
@@ -1660,6 +1727,17 @@ def init_cache():
     cols = {row[1] for row in conn.execute("PRAGMA table_info(permit_cache)").fetchall()}
     if "job_category" not in cols:
         conn.execute("ALTER TABLE permit_cache ADD COLUMN job_category TEXT")
+    # 2026-04-26: ETag/Last-Modified columns for change-detection-driven
+    # cache invalidation. When set, get_cached() can revalidate against
+    # the source URL via HEAD If-None-Match before serving stale data.
+    if "source_url" not in cols:
+        conn.execute("ALTER TABLE permit_cache ADD COLUMN source_url TEXT")
+    if "etag" not in cols:
+        conn.execute("ALTER TABLE permit_cache ADD COLUMN etag TEXT")
+    if "last_modified" not in cols:
+        conn.execute("ALTER TABLE permit_cache ADD COLUMN last_modified TEXT")
+    if "last_checked_at" not in cols:
+        conn.execute("ALTER TABLE permit_cache ADD COLUMN last_checked_at TEXT")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS email_captures (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1690,25 +1768,148 @@ def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
         return 21
     return _PERMIT_CACHE_TTL_DEFAULT_DAYS  # 14
 
+def _etag_changed(source_url: str, etag: str = "", last_modified: str = "", *, timeout: float = 4.0) -> str:
+    """Check whether source_url has changed since the last cached version.
+
+    Returns one of: "changed" | "same" | "unknown".
+
+    Uses If-None-Match (ETag) and If-Modified-Since (Last-Modified) per RFC 7232.
+    A 304 = "same", a 200 with different ETag/Last-Modified = "changed".
+    Network/HTTP errors → "unknown" (defer to TTL).
+
+    Never raises. Designed to add at most ~200ms to a cache hit.
+    """
+    if not source_url:
+        return "unknown"
+    headers = {}
+    if etag:
+        headers["If-None-Match"] = etag
+    if last_modified:
+        headers["If-Modified-Since"] = last_modified
+    try:
+        # HEAD first; some servers return 405 → fall back to GET
+        resp = requests.head(source_url, headers=headers, timeout=timeout, allow_redirects=True)
+        if resp.status_code == 405:
+            resp = requests.get(source_url, headers=headers, timeout=timeout, allow_redirects=True, stream=True)
+            try:
+                resp.close()
+            except Exception:
+                pass
+        if resp.status_code == 304:
+            return "same"
+        if resp.status_code >= 400:
+            return "unknown"
+        new_etag = (resp.headers.get("ETag") or "").strip()
+        new_last_mod = (resp.headers.get("Last-Modified") or "").strip()
+        if etag and new_etag and new_etag != etag:
+            return "changed"
+        if last_modified and new_last_mod and new_last_mod != last_modified:
+            return "changed"
+        if not etag and not last_modified:
+            # We don't have validators saved yet — can't compare.
+            return "unknown"
+        return "same"
+    except requests.RequestException:
+        return "unknown"
+
+
+def _capture_validators(source_url: str, *, timeout: float = 4.0) -> tuple[str, str]:
+    """Fetch ETag + Last-Modified for a URL we're about to cache. Returns ("","") on failure."""
+    if not source_url:
+        return ("", "")
+    try:
+        resp = requests.head(source_url, timeout=timeout, allow_redirects=True)
+        if resp.status_code == 405:
+            resp = requests.get(source_url, timeout=timeout, allow_redirects=True, stream=True)
+            try:
+                resp.close()
+            except Exception:
+                pass
+        return (
+            (resp.headers.get("ETag") or "").strip(),
+            (resp.headers.get("Last-Modified") or "").strip(),
+        )
+    except requests.RequestException:
+        return ("", "")
+
+
+def _pick_primary_source_url(result: dict) -> str:
+    """Pick the most-authoritative URL associated with a cached answer.
+
+    Order: apply_url (from KB/Accela) > first .gov source > first source.
+    Used as the ETag-check target.
+    """
+    apply_url = (result.get("apply_url") or "").strip()
+    if apply_url and apply_url.startswith("http"):
+        return apply_url
+    sources = result.get("sources") or []
+    for s in sources:
+        url = (s.get("url") if isinstance(s, dict) else str(s)).strip()
+        if url and (".gov" in url.lower() or ".us" in url.lower()):
+            return url
+    for s in sources:
+        url = (s.get("url") if isinstance(s, dict) else str(s)).strip()
+        if url and url.startswith("http"):
+            return url
+    return ""
+
+
 def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
-    """Smart cache read with tiered TTL and stale-while-revalidate.
+    """Smart cache read with tiered TTL, stale-while-revalidate, and
+    optional ETag-based invalidation (added 2026-04-26).
+
     - max_age_days: override TTL (used internally; pass None for smart TTL)
     - _refresh_callback: callable(key) to trigger background refresh when stale
+
+    ETag flow: at >= _PERMIT_CACHE_ETAG_CHECK_FRACTION of TTL, if we have a
+    source_url + (etag OR last_modified), do a HEAD revalidation. If the
+    source has changed → treat as cache miss + clear the row. Else update
+    last_checked_at. Network/HTTP errors fall back to TTL (status quo).
     """
     try:
         conn = sqlite3.connect(CACHE_DB)
-        row = conn.execute(
-            "SELECT result_json, created_at, hits FROM permit_cache WHERE cache_key = ?", [key]
-        ).fetchone()
+        # Read all the columns we care about
+        cols_avail = {row[1] for row in conn.execute("PRAGMA table_info(permit_cache)").fetchall()}
+        select_cols = ["result_json", "created_at", "hits"]
+        if "source_url" in cols_avail: select_cols.append("source_url")
+        if "etag" in cols_avail: select_cols.append("etag")
+        if "last_modified" in cols_avail: select_cols.append("last_modified")
+        if "last_checked_at" in cols_avail: select_cols.append("last_checked_at")
+        sel_sql = f"SELECT {', '.join(select_cols)} FROM permit_cache WHERE cache_key = ?"
+        row = conn.execute(sel_sql, [key]).fetchone()
         if row:
             result = json.loads(row[0])
             created = datetime.fromisoformat(row[1])
             hits = row[2] or 0
+            row_dict = dict(zip(select_cols, row))
+            source_url = row_dict.get("source_url") or ""
+            etag = row_dict.get("etag") or ""
+            last_modified = row_dict.get("last_modified") or ""
             confidence = result.get("confidence", "medium")
             fee_unverified = bool(result.get("_fee_unverified"))
             ttl = max_age_days if max_age_days is not None else _smart_ttl(hits, confidence, fee_unverified)
             age = datetime.now() - created
             if age < timedelta(days=ttl):
+                # ETag check: at >= 50% of TTL, revalidate against source if we have validators
+                etag_threshold = timedelta(days=ttl * _PERMIT_CACHE_ETAG_CHECK_FRACTION)
+                if source_url and (etag or last_modified) and age >= etag_threshold:
+                    status = _etag_changed(source_url, etag=etag, last_modified=last_modified)
+                    if status == "changed":
+                        # Source has updated since we cached — invalidate
+                        print(f"[cache] ETag CHANGED for {source_url[:80]} → invalidating cache key {key[:8]}…")
+                        conn.execute("DELETE FROM permit_cache WHERE cache_key = ?", [key])
+                        conn.commit()
+                        conn.close()
+                        _cache_stats["misses"] += 1
+                        _cache_stats["etag_invalidations"] = _cache_stats.get("etag_invalidations", 0) + 1
+                        return None
+                    elif status == "same":
+                        # Confirmed unchanged — bump last_checked_at so we don't re-check next read
+                        conn.execute(
+                            "UPDATE permit_cache SET last_checked_at = ? WHERE cache_key = ?",
+                            [datetime.now().isoformat(), key],
+                        )
+                        _cache_stats["etag_revalidations_same"] = _cache_stats.get("etag_revalidations_same", 0) + 1
                 conn.execute("UPDATE permit_cache SET hits = hits + 1 WHERE cache_key = ?", [key])
                 conn.commit()
                 conn.close()
@@ -1727,12 +1928,27 @@ def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
 
 def save_cache(key: str, job_type: str, job_category: str, city: str, state: str, zip_code: str, result: dict):
     try:
+        # 2026-04-26: capture source URL + ETag/Last-Modified for change detection.
+        source_url = _pick_primary_source_url(result)
+        etag, last_modified = _capture_validators(source_url) if source_url else ("", "")
         conn = sqlite3.connect(CACHE_DB)
-        conn.execute("""
-            INSERT OR REPLACE INTO permit_cache
-            (cache_key, job_type, job_category, city, state, zip_code, result_json, created_at, hits)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
-        """, [key, job_type, job_category, city, state, zip_code, json.dumps(result), datetime.now().isoformat()])
+        cols_avail = {row[1] for row in conn.execute("PRAGMA table_info(permit_cache)").fetchall()}
+        if {"source_url", "etag", "last_modified", "last_checked_at"}.issubset(cols_avail):
+            conn.execute("""
+                INSERT OR REPLACE INTO permit_cache
+                (cache_key, job_type, job_category, city, state, zip_code,
+                 result_json, created_at, hits,
+                 source_url, etag, last_modified, last_checked_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+            """, [key, job_type, job_category, city, state, zip_code,
+                  json.dumps(result), datetime.now().isoformat(),
+                  source_url, etag, last_modified, datetime.now().isoformat()])
+        else:
+            conn.execute("""
+                INSERT OR REPLACE INTO permit_cache
+                (cache_key, job_type, job_category, city, state, zip_code, result_json, created_at, hits)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+            """, [key, job_type, job_category, city, state, zip_code, json.dumps(result), datetime.now().isoformat()])
         conn.commit()
         conn.close()
     except Exception as e:
@@ -2977,6 +3193,35 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
                 if accela_structured:
                     structured_candidates.append(accela_structured)
                     detailed_results.append({"url": accela_url, "structured": accela_structured})
+            else:
+                # 2026-04-26: Visibility on Accela silent failures.
+                # Before, this branch was empty — meaning we couldn't tell
+                # "city not in Accela's coverage" from "Accela failed for a
+                # city it should cover." Now we emit a structured warning so
+                # ops can spot patterns (e.g. coverage regression for a
+                # specific state) and so the result includes a flag so
+                # downstream confidence scoring knows it tried Accela.
+                print(f"[search][WARN] accela_miss city={city!r} state={state!r} job_type={job_type!r} — fell through to web search; quality may be lower")
+                if "accela_miss" not in [c.get("source") for c in structured_candidates if isinstance(c, dict)]:
+                    structured_candidates.append({
+                        "fees": [], "portal_url": "", "raw_text": "",
+                        "source": "accela_miss",
+                        "field_sources": {}, "field_confidence": {},
+                        "freshness": "accela_miss",
+                        "_warn": f"Accela returned no agency match for {city}, {state}",
+                    })
+            else:
+                # 2026-04-26: Surface silent Accela failures. For cities that should
+                # be in Accela's 3,086-agency coverage (mid+ population in covered
+                # states) but came back empty, this WARN line lights up so we can
+                # spot data-coverage gaps in production logs.
+                _ACCELA_LIKELY_COVERED_STATES = {
+                    "CA", "TX", "FL", "NY", "PA", "IL", "OH", "GA", "NC", "MI",
+                    "NJ", "VA", "WA", "AZ", "MA", "TN", "IN", "MO", "MD", "WI",
+                    "CO", "MN", "SC", "AL", "LA", "KY", "OR", "OK",
+                }
+                if (state or "").upper() in _ACCELA_LIKELY_COVERED_STATES:
+                    print(f"[accela][WARN] No agency match for {city}, {state} — state has heavy Accela coverage; data gap or normalization miss")
 
         if total_chars < 200:
             alt_queries = expand_permit_query(job_type, search_city, search_state)
@@ -3523,7 +3768,9 @@ Return ONLY the JSON object."""
     raw = None
 
     try:
-        response = client.chat.completions.create(
+        # Explicit timeout: OpenAI's SDK defaults to ~600s which would hang the
+        # whole pipeline if the API stalls. 30s is generous for 8K-token JSON.
+        response = client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S).chat.completions.create(
             model="gpt-5.4-mini",
             messages=[
                 {"role": "system",  "content": SYSTEM_PROMPT},
@@ -3536,7 +3783,7 @@ Return ONLY the JSON object."""
         raw = response.choices[0].message.content
         print(f"[engine] OpenAI gpt-5.4-mini responded in {round((time.time()-start)*1000)}ms")
     except Exception as openai_err:
-        print(f"[engine] OpenAI failed ({openai_err}), trying Gemini 3 Pro fallback...")
+        print(f"[engine] OpenAI failed ({openai_err}), trying Gemini fallback ({_gemini_fallback_model})...")
         if not _GEMINI_API_KEY:
             raise RuntimeError(f"OpenAI failed and no GEMINI_API_KEY set: {openai_err}")
         try:
@@ -3549,9 +3796,13 @@ Return ONLY the JSON object."""
                 )
             )
             gemini_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
-            gemini_resp = gemini_model.generate_content(gemini_prompt)
+            # google-generativeai accepts request_options={"timeout": N}
+            gemini_resp = gemini_model.generate_content(
+                gemini_prompt,
+                request_options={"timeout": _GEMINI_REQUEST_TIMEOUT_S},
+            )
             raw = gemini_resp.text
-            print(f"[engine] Gemini 3 Pro fallback responded in {round((time.time()-start)*1000)}ms")
+            print(f"[engine] Gemini fallback ({_gemini_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
         except Exception as gemini_err:
             raise RuntimeError(f"Both OpenAI and Gemini failed. OpenAI: {openai_err} | Gemini: {gemini_err}")
 
@@ -3592,20 +3843,46 @@ Return ONLY the JSON object."""
     result = strip_pdf_from_result(result)
 
     # ── Hallucination guard: reject vague fee_range non-answers ──
+    # Tightened 2026-04-26:
+    #   - Catch ranges with >10x ratio (e.g. "$50–$500") — too wide to be useful
+    #   - Catch ranges with >5x ratio AND no .gov source backing it up
+    #   - Keep all original "varies/contact/call" phrase rejections
     _fee = str(result.get("fee_range") or "").lower().strip()
     _VAGUE_FEE_PHRASES = [
         "varies", "contact", "call", "check with", "depends on", "consult",
         "not available", "unknown", "n/a", "tbd", "to be determined",
-        "see website", "visit website", "refer to"
+        "see website", "visit website", "refer to", "estimate", "estimated"
     ]
-    if not _fee or any(p in _fee for p in _VAGUE_FEE_PHRASES):
+    _is_vague_phrase = bool(_fee) and any(p in _fee for p in _VAGUE_FEE_PHRASES)
+    _is_wide_range = False
+    if _fee and not _is_vague_phrase:
+        # Detect $X-$Y patterns and compute ratio
+        try:
+            _range_match = re.search(r"\$\s?(\d[\d,.]*)[\s\-–—]+(?:to[\s]+)?\$?\s?(\d[\d,.]*)", _fee)
+            if _range_match:
+                _lo = float(_range_match.group(1).replace(",", ""))
+                _hi = float(_range_match.group(2).replace(",", ""))
+                if _lo > 0:
+                    _ratio = _hi / _lo
+                    if _ratio >= 10:
+                        _is_wide_range = True  # Always reject 10x+ ranges
+                    elif _ratio >= 5:
+                        # Reject 5x+ ranges only if no .gov web source confirms it
+                        _has_gov_source = any(".gov" in (s.get("url") if isinstance(s, dict) else str(s)).lower()
+                                             for s in (result.get("sources") or []))
+                        if not _has_gov_source:
+                            _is_wide_range = True
+        except (ValueError, ZeroDivisionError, AttributeError):
+            pass
+    if not _fee or _is_vague_phrase or _is_wide_range:
         # Replace vague answers with a clear fallback
+        _reason = "vague phrase" if _is_vague_phrase else ("wide range" if _is_wide_range else "missing")
         result["fee_range"] = (
             f"Fee not confirmed — call the {result.get('applying_office') or city + ' building dept'} "
             f"or check their online fee schedule before applying."
         )
         result["_fee_unverified"] = True
-        print(f"[fee_guard] Vague fee_range replaced for {city}, {state}: '{_fee}'") 
+        print(f"[fee_guard] Fee replaced for {city}, {state} ({_reason}): '{_fee[:80]}'")
 
     # Ensure apply_google_maps is always set (use address + office for best pin)
     if not result.get("apply_google_maps"):
@@ -3862,6 +4139,64 @@ Return ONLY the JSON object."""
     if _verified_entry and _verified_entry.get("verified_at"):
         result["last_verified_at"] = _verified_entry.get("verified_at")
 
+    # 2026-04-26: Per-field source attribution. The pipeline already tracks
+    # `field_sources` on individual candidates (Accela / web / KB) and
+    # `machine_structured` data; surface a consolidated map on the final
+    # result so the frontend can show contractors WHERE each field came from.
+    # Sources priority (high → low): accela_api > auto_verified > kb >
+    # machine_extracted > web_search > model_training.
+    _field_sources: dict = {}
+    # Accela-backed fields (highest trust)
+    for cand in structured_candidates if 'structured_candidates' in locals() else []:
+        if not isinstance(cand, dict):
+            continue
+        if cand.get("source") == "layer0_5_accela":
+            for fld, src in (cand.get("field_sources") or {}).items():
+                _field_sources.setdefault(fld, src)
+    # Auto-verified entry takes the next slot (only if not already Accela)
+    if _verified_entry:
+        verified_url = (_verified_entry.get("source_url") or "")
+        for fld in ("apply_url", "applying_office", "apply_phone", "apply_address", "fee_range"):
+            if result.get(fld) and fld not in _field_sources:
+                _field_sources[fld] = "auto_verified" + (f":{verified_url}" if verified_url else "")
+    # KB-backed fields
+    if city_match_level == "city":
+        try:
+            _load_knowledge()
+            _city_key = city.lower().strip().replace(" ", "_") + "_" + state.lower().strip()
+            _city_data = _CITIES_KB.get("cities", {}).get(_city_key)
+            if _city_data:
+                for fld, src_key in [("apply_url", "online_portal"), ("apply_phone", "phone"), ("apply_address", "address")]:
+                    if result.get(fld) and _city_data.get(src_key) and fld not in _field_sources:
+                        _field_sources[fld] = "city_kb"
+        except Exception:
+            pass
+    # Machine-extracted (regex from scraped HTML) fields
+    if 'machine_structured' in locals() and isinstance(machine_structured, dict):
+        for fld, src_key in [("apply_phone", "phone"), ("apply_url", "portal_url"), ("apply_address", "address"), ("fee_range", "fees")]:
+            if machine_structured.get(src_key) and fld not in _field_sources:
+                _field_sources[fld] = "machine_extracted"
+    # Web search backing — at least one .gov source in result["sources"]
+    _sources_list = result.get("sources") or []
+    _has_gov = any(
+        ".gov" in (s.get("url") if isinstance(s, dict) else str(s)).lower()
+        or ".us" in (s.get("url") if isinstance(s, dict) else str(s)).lower()
+        for s in _sources_list
+    )
+    # County-fallback marker
+    if result.get("county_fallback"):
+        for fld in ("apply_url", "applying_office", "apply_phone"):
+            if result.get(fld) and fld not in _field_sources:
+                _field_sources[fld] = "county_fallback"
+    # Anything still unattributed AND we have web sources → web_search
+    # Anything still unattributed AND we have NO web sources → model_training
+    for fld in ("permits_required", "permit_summary", "fee_range", "approval_timeline",
+                "apply_url", "apply_phone", "apply_address", "applying_office",
+                "inspect_checklist", "common_mistakes", "pro_tips", "total_cost_estimate"):
+        if result.get(fld) and fld not in _field_sources:
+            _field_sources[fld] = "web_search" if _has_gov else "model_training"
+    result["_field_sources"] = _field_sources
+
     # Build disclaimer with freshness note
     _generated_at = result.get("_meta", {}).get("generated_at") or datetime.now().isoformat()
     try:
@@ -3892,6 +4227,21 @@ Return ONLY the JSON object."""
     # regardless of missing fields — the data source itself is unverified
     if city_match_level == "state" and confidence == "high":
         confidence = "medium"
+    # 2026-04-26: Penalize web-only answers when no .gov source backed the AI.
+    # Without web verification, a HIGH-confidence-looking answer is just
+    # plausible LLM output. We require at least one .gov / .us source OR an
+    # Accela hit OR an auto-verified entry to keep confidence at "high".
+    _gov_source_present = any(
+        ".gov" in (s.get("url") if isinstance(s, dict) else str(s)).lower()
+        or ".us" in (s.get("url") if isinstance(s, dict) else str(s)).lower()
+        for s in (result.get("sources") or [])
+    )
+    _accela_backed = bool((result.get("_field_sources") or {}).get("portal_url") == "accela_api") or \
+                     bool(result.get("apply_url") and "accela.com" in str(result.get("apply_url", "")).lower())
+    _verified_backed = bool(_verified_entry)
+    if confidence == "high" and not (_gov_source_present or _accela_backed or _verified_backed):
+        confidence = downgrade_confidence(confidence, 1)
+        print(f"[confidence] Downgraded HIGH→{confidence} for {city}, {state}: no .gov/Accela/verified source backing")
     result["confidence"] = confidence
     result["confidence_reason"] = derive_confidence_reason(
         result, city_match_level, bool(_verified_entry), missing_fields, web_source_count
