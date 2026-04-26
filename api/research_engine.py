@@ -3568,7 +3568,7 @@ COMPANION PERMIT TRADE MATRIX (use this to populate companion_permits):
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
-def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None) -> dict:
+def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None) -> dict:
     """
     Research permit requirements for a job + location.
     v3: Better advice depth, small city fallback, PDF stripping, Google Maps fallback.
@@ -3770,12 +3770,16 @@ Return ONLY the JSON object."""
     raw = None
     _model_used = _gemini_primary_model  # set by whichever engine answered
 
+    # 2026-04-26: force_model override for benchmarking.
+    # If set, only that engine is called (no fallback). Used by the
+    # /api/permit benchmark bypass header so we can A/B both engines
+    # through the FULL PermitIQ pipeline. None (default) = production
+    # behavior (Gemini primary, gpt fallback).
+    _gemini_aliases = {"gemini", "gemini-3-flash", _gemini_primary_model}
+    _openai_aliases = {"openai", "gpt", "gpt-5.4-mini", _openai_fallback_model}
+    _force = (force_model or "").strip().lower() if force_model else None
 
-    try:
-        # 2026-04-26: PRIMARY = Gemini 3 Flash (post-benchmark swap).
-        # FALLBACK = gpt-5.4-mini if Gemini fails (key missing, rate limit,
-        # transient error). Either branch sets _model_used so _meta reports
-        # which engine actually answered.
+    def _call_gemini():
         if not _GEMINI_API_KEY:
             raise RuntimeError("GEMINI_API_KEY not set — Gemini is now the primary engine; configure it in env")
         gemini_model = genai.GenerativeModel(
@@ -3791,27 +3795,45 @@ Return ONLY the JSON object."""
             gemini_prompt,
             request_options={"timeout": _GEMINI_REQUEST_TIMEOUT_S},
         )
-        raw = gemini_resp.text
+        return gemini_resp.text
+
+    def _call_openai():
+        response = client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S).chat.completions.create(
+            model=_openai_fallback_model,
+            messages=[
+                {"role": "system",  "content": SYSTEM_PROMPT},
+                {"role": "user",    "content": user_prompt},
+            ],
+            temperature=0.1,
+            max_completion_tokens=8000,
+            response_format={"type": "json_object"},
+        )
+        return response.choices[0].message.content
+
+    if _force in _gemini_aliases:
+        # Forced Gemini — no fallback.
+        raw = _call_gemini()
         _model_used = _gemini_primary_model
-        print(f"[engine] Gemini primary ({_gemini_primary_model}) responded in {round((time.time()-start)*1000)}ms")
-    except Exception as gemini_err:
-        print(f"[engine] Gemini failed ({gemini_err}), trying OpenAI fallback ({_openai_fallback_model})...")
+        print(f"[engine] FORCED Gemini ({_gemini_primary_model}) responded in {round((time.time()-start)*1000)}ms")
+    elif _force in _openai_aliases:
+        # Forced OpenAI — no fallback.
+        raw = _call_openai()
+        _model_used = _openai_fallback_model
+        print(f"[engine] FORCED OpenAI ({_openai_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
+    else:
+        # Default production path: Gemini primary, OpenAI fallback.
         try:
-            response = client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S).chat.completions.create(
-                model=_openai_fallback_model,
-                messages=[
-                    {"role": "system",  "content": SYSTEM_PROMPT},
-                    {"role": "user",    "content": user_prompt},
-                ],
-                temperature=0.1,
-                max_completion_tokens=8000,
-                response_format={"type": "json_object"},
-            )
-            raw = response.choices[0].message.content
-            _model_used = _openai_fallback_model
-            print(f"[engine] OpenAI fallback ({_openai_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
-        except Exception as openai_err:
-            raise RuntimeError(f"Both Gemini and OpenAI failed. Gemini: {gemini_err} | OpenAI: {openai_err}")
+            raw = _call_gemini()
+            _model_used = _gemini_primary_model
+            print(f"[engine] Gemini primary ({_gemini_primary_model}) responded in {round((time.time()-start)*1000)}ms")
+        except Exception as gemini_err:
+            print(f"[engine] Gemini failed ({gemini_err}), trying OpenAI fallback ({_openai_fallback_model})...")
+            try:
+                raw = _call_openai()
+                _model_used = _openai_fallback_model
+                print(f"[engine] OpenAI fallback ({_openai_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
+            except Exception as openai_err:
+                raise RuntimeError(f"Both Gemini and OpenAI failed. Gemini: {gemini_err} | OpenAI: {openai_err}")
 
     elapsed = round((time.time() - start) * 1000)
     try:

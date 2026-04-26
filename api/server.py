@@ -3215,14 +3215,30 @@ class Handler(BaseHTTPRequestHandler):
                 # ── Sample demo flag — skip all counting/rate-limiting ──────────
                 is_sample_demo = self.headers.get("X-Sample-Demo") == "1"
 
+                # 2026-04-26: Benchmark bypass. If env BENCHMARK_SECRET is set
+                # AND the request carries a matching X-PermitIQ-Benchmark-Secret
+                # header, skip rate limit + free-3 limit so we can A/B both
+                # engines through the FULL PermitIQ pipeline. Optional engine
+                # override via X-PermitIQ-Engine: "gemini-3-flash-preview" or
+                # "gpt-5.4-mini" forces a specific engine (no fallback).
+                _BENCHMARK_SECRET = os.environ.get("BENCHMARK_SECRET", "")
+                _benchmark_token = self.headers.get("X-PermitIQ-Benchmark-Secret", "")
+                is_benchmark = bool(
+                    _BENCHMARK_SECRET
+                    and _benchmark_token
+                    and len(_BENCHMARK_SECRET) >= 16
+                    and hmac.compare_digest(_benchmark_token, _BENCHMARK_SECRET)
+                )
+                force_model = self.headers.get("X-PermitIQ-Engine", "").strip() if is_benchmark else None
+
                 session_token = self.headers.get("X-Session-Token", "")
                 user_email = validate_session_token(session_token) if session_token else None
                 paid = is_paid_user(user_email) if user_email else False
-                unlimited = is_sample_demo or paid or is_unlimited_lookup_ip(ip)
+                unlimited = is_sample_demo or paid or is_unlimited_lookup_ip(ip) or is_benchmark
                 used_before = 0 if unlimited else get_effective_free_usage(ip, fingerprint)
                 response_headers = build_free_lookup_headers(used_before)
 
-                if not is_sample_demo:
+                if not is_sample_demo and not is_benchmark:
                     limited, retry_after = check_rate_limit(ip)
                     if limited and not unlimited:
                         self.send_json(429, {
@@ -3242,12 +3258,22 @@ class Handler(BaseHTTPRequestHandler):
                         }, extra_headers=response_headers)
                         return
 
-                if user_email:
+                if is_benchmark:
+                    print(f"[permit][BENCH] {job_type} in {city}, {state} — engine={force_model or 'default'} ip={ip}")
+                elif user_email:
                     print(f"[permit] {job_type} in {city}, {state} — user={user_email} plan={'paid' if paid else 'free'} ip={ip} used={used_before}")
                 else:
                     print(f"[permit] {job_type} in {city}, {state} ({job_category}) — IP={ip} used={used_before}")
 
-                result = research_permit(job_type, city, state, zip_code, job_category=job_category)
+                # Benchmark requests bypass the cache so we measure fresh
+                # pipeline behavior, not pre-cached results.
+                _use_cache = not is_benchmark
+                result = research_permit(
+                    job_type, city, state, zip_code,
+                    job_category=job_category,
+                    use_cache=_use_cache,
+                    force_model=force_model,
+                )
                 is_cached = result.get("_cached", False)
 
                 if not unlimited and not is_sample_demo:
