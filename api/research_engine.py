@@ -3856,6 +3856,21 @@ Return ONLY the JSON object."""
             print(f"[engine] AI returned non-JSON response: {repr((raw or '')[:300])}")
             raise RuntimeError(f"AI returned non-JSON output: {e2}")
 
+    # 2026-04-26: Gemini sometimes returns a top-level JSON ARRAY instead of
+    # an OBJECT (e.g. `[ {...} ]`). All downstream code assumes `result` is a
+    # dict. If we got a list, unwrap the first object element; if there's no
+    # dict in it, that's a real model failure and should error explicitly.
+    if isinstance(result, list):
+        first_dict = next((x for x in result if isinstance(x, dict)), None)
+        if first_dict is None:
+            print(f"[engine] AI returned a list with no dict element: {repr((raw or '')[:200])}")
+            raise RuntimeError(f"AI returned a list-shaped response with no usable object: {raw[:200] if raw else ''}")
+        print(f"[engine] AI returned list-shaped response — unwrapping first dict element")
+        result = first_dict
+    if not isinstance(result, dict):
+        print(f"[engine] AI returned non-dict, non-list response: {type(result).__name__} {repr((raw or '')[:200])}")
+        raise RuntimeError(f"AI returned non-dict output: {type(result).__name__}")
+
     # ── Post-processing ──
 
     # Prefer machine-extracted contact details when the model leaves gaps
