@@ -1144,7 +1144,10 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'AW-18087945418');
+    gtag('config', 'AW-18087945418', {allow_enhanced_conversions: true});
+    function normalizeEmailForAds(email){return String(email||'').trim().toLowerCase();}
+    function setEnhancedConversionEmail(email){const normalized=normalizeEmailForAds(email);if(!normalized||typeof gtag!=='function') return;gtag('set','user_data',{'email': normalized});}
+    try{const storedEcEmail=normalizeEmailForAds(localStorage.getItem('pa_email'));if(storedEcEmail) setEnhancedConversionEmail(storedEcEmail);}catch(_){ }
   </script>
 </head>
 <body data-trade="roofing">
@@ -1811,7 +1814,7 @@ function submitWithDisambig(choice) {
 function getLookupCount(){if(IS_ADMIN) return 0;return _serverFreeLookupsUsed||0}
 function incrementLookup(){return getLookupCount()}
 function hasEmail(){if(IS_ADMIN) return true;return !!localStorage.getItem(EMAIL_KEY)}
-function saveEmail(email){localStorage.setItem(EMAIL_KEY,email.trim().toLowerCase());fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim().toLowerCase(),source:'gate'})}).catch(()=>{})}
+function saveEmail(email){const normalized=normalizeEmailForAds(email);localStorage.setItem(EMAIL_KEY,normalized);setEnhancedConversionEmail(normalized);fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:normalized,source:'gate'})}).catch(()=>{})}
 function hashString(input){let h=2166136261;for(let i=0;i<input.length;i++){h^=input.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
 function getCanvasFingerprint(){try{const canvas=document.createElement('canvas');const ctx=canvas.getContext('2d');if(!ctx)return 'nocanvas';ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('PermitAssist fingerprint',2,15);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText(navigator.userAgent,4,35);return hashString(canvas.toDataURL())}catch{return 'canvas-error'}}
 function getClientFingerprint(){let fp=localStorage.getItem('pa_client_fingerprint');if(fp)return fp;const tz=(Intl.DateTimeFormat().resolvedOptions().timeZone)||'na';const parts=[navigator.userAgent||'',`${screen.width||0}x${screen.height||0}x${screen.colorDepth||0}`,tz,navigator.language||'',getCanvasFingerprint()];fp=hashString(parts.join('|'));localStorage.setItem('pa_client_fingerprint',fp);return fp}
@@ -2074,11 +2077,13 @@ function hidePreLookupGate() {
 function submitPreLookupEmail() {
   const inp = document.getElementById('pre-gate-email'), val = inp.value.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { inp.style.borderColor = 'var(--red)'; inp.focus(); return; }
-  localStorage.setItem(EMAIL_KEY, val.toLowerCase());
+  const normalizedEmail = normalizeEmailForAds(val);
+  localStorage.setItem(EMAIL_KEY, normalizedEmail);
+  setEnhancedConversionEmail(normalizedEmail);
   fetch('/api/capture-email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: val, source: 'pre-lookup' })
+    body: JSON.stringify({ email: normalizedEmail, source: 'pre-lookup' })
   }).catch(() => {});
   if (typeof gtag === 'function') gtag('event', 'conversion', {'send_to': 'AW-18087945418/SIGNUP_LABEL'});
   hidePreLookupGate();
