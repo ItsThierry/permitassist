@@ -9,8 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PermitAssist" />
-  <meta name="theme-color" content="#0E1A4F" />
-  <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#2563EB" />
   <meta name="description" content="PermitAssist — AI-powered permit research for contractors. Get exact requirements, fees, and contact details in seconds. No demo calls, no sales team." />
   <link rel="canonical" href="https://permitassist.io/" />
   <!-- Open Graph -->
@@ -82,49 +81,34 @@
   <style>
     :root {
       color-scheme: light;
-      --bg-deep: #0E1A4F;
-      --bg-mid: #1E40AF;
-      --bg-light: #F8FAFC;
+      --bg: #F5F7FF;
       --surface: #FFFFFF;
-      --glass-bg: rgba(255,255,255,0.10);
-      --glass-border: rgba(255,255,255,0.20);
-      --accent: #F59E0B;
-      --accent-hover: #D97706;
-      --text-light: #FFFFFF;
-      --text-dark: #0F172A;
-      --text-muted-light: rgba(255,255,255,0.72);
-      --text-muted-dark: #475569;
-      --success: #10B981;
-      --border-light: #E2E8F0;
-      --bg: var(--bg-light);
-      --surface2: #F1F5F9;
-      --brand: var(--accent);
-      --brand-dark: var(--accent-hover);
-      --brand-light: rgba(245,158,11,0.10);
-      --brand-lighter: rgba(245,158,11,0.05);
-      --green: var(--success);
-      --green-bg: rgba(16,185,129,0.10);
-      --yellow: var(--accent-hover);
-      --yellow-bg: rgba(245,158,11,0.10);
+      --surface2: #F0F4FF;
+      --brand: #2563EB;
+      --brand-dark: #1D4ED8;
+      --brand-light: rgba(37,99,235,0.08);
+      --brand-lighter: rgba(37,99,235,0.04);
+      --green: #059669;
+      --green-bg: rgba(5,150,105,0.08);
+      --yellow: #D97706;
+      --yellow-bg: rgba(217,119,6,0.08);
       --red: #DC2626;
       --red-bg: rgba(220,38,38,0.07);
-      --text: var(--text-dark);
-      --text2: var(--text-muted-dark);
-      --muted: #64748B;
-      --border: var(--border-light);
+      --text: #0F172A;
+      --text2: #475569;
+      --muted: #94A3B8;
+      --border: #E2E8F0;
       --border2: #CBD5E1;
       --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
       --shadow: 0 4px 6px -1px rgba(15,23,42,0.07), 0 2px 4px -2px rgba(15,23,42,0.05);
-      --shadow-md: 0 14px 28px -12px rgba(15,23,42,0.18), 0 8px 12px -10px rgba(15,23,42,0.10);
-      --shadow-lg: 0 24px 48px -18px rgba(15,23,42,0.28), 0 16px 24px -20px rgba(15,23,42,0.18);
-      --r: 20px;
+      --shadow-md: 0 10px 15px -3px rgba(15,23,42,0.08), 0 4px 6px -4px rgba(15,23,42,0.04);
+      --shadow-lg: 0 20px 25px -5px rgba(15,23,42,0.1), 0 8px 10px -6px rgba(15,23,42,0.06);
+      --r: 16px;
       --r-sm: 12px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    button, input, textarea, select { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
-    button { font-size: 15px; font-weight: 700; }
     html, body {
       height: 100%;
       width: 100%;
@@ -1187,263 +1171,14 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 2px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.15); }
-
-
-    /* ── Pure visual re-skin: v6 Option 5 glassmorphic system ─────────────── */
-    html, body { background: var(--bg-light); }
-    #app { background: var(--bg-light); }
-
-    .nav {
-      border-bottom: 1px solid rgba(255,255,255,0.14);
-      background: rgba(14,26,79,0.92) !important;
-      box-shadow: 0 12px 32px rgba(14,26,79,0.20);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
-    .logo-mark { background: linear-gradient(135deg, var(--bg-deep), var(--bg-mid)); box-shadow: 0 8px 18px rgba(14,26,79,0.28); }
-    .logo-mark-img { content: url('/icons/icon-modern-512.png'); box-shadow: 0 8px 20px rgba(0,0,0,0.20); }
-    .logo-text, .logo-text em { color: var(--text-light); }
-    .logo-tagline { color: var(--text-muted-light); }
-    .nav-link { color: var(--text-muted-light); position: relative; }
-    .nav-link:hover { background: rgba(255,255,255,0.08); color: var(--text-light); }
-    .nav-link[aria-current="page"]::after, .nav-link.active::after {
-      content: ''; position: absolute; left: 12px; right: 12px; bottom: 1px; height: 2px;
-      background: var(--accent); border-radius: 999px;
-    }
-    .nav-link-btn { color: var(--text-light); border-color: rgba(255,255,255,0.30); background: rgba(255,255,255,0.06); }
-    .nav-link-btn:hover { background: rgba(255,255,255,0.12); }
-    .nav-link-btn.paid { color: var(--bg-deep); background: var(--accent); border-color: var(--accent); }
-    .nav-hamburger span { background: var(--text-light); }
-    .install-btn, .install-cta, .drawer-account-btn, .nav-drawer .drawer-account-btn,
-    .lookup-btn, .upgrade-cta, .result-save-btn, .fixit-copy-btn, .juris-alert-btn, .followup-qa-btn,
-    .trade-option-btn.active, .toggle-btn.active {
-      background: var(--accent) !important;
-      border-color: var(--accent) !important;
-      color: var(--bg-deep) !important;
-      box-shadow: 0 10px 24px rgba(245,158,11,0.28), inset 0 1px 0 rgba(255,255,255,0.22) !important;
-    }
-    .lookup-btn:hover, .upgrade-cta:hover, .upgrade-cta:active,
-    .result-save-btn:hover, .fixit-copy-btn:hover, .juris-alert-btn:hover, .followup-qa-btn:hover,
-    .install-btn:hover, .install-cta:hover {
-      background: var(--accent-hover) !important;
-      border-color: var(--accent-hover) !important;
-      color: #fff !important;
-      box-shadow: 0 14px 30px rgba(217,119,6,0.34), inset 0 1px 0 rgba(255,255,255,0.18) !important;
-    }
-    .nav-new-search, .nav-link-btn, .drawer-login-btn, .nav-drawer .drawer-login-btn,
-    .text-link, .result-secondary-btn, .job-action-btn, .disambig-btn, .trade-option-btn:not(.active) {
-      background: transparent;
-      border-color: rgba(15,23,42,0.18);
-      color: var(--text-dark);
-    }
-    .nav .nav-new-search,
-    .nav .nav-link-btn {
-      color: var(--text-light);
-      border-color: rgba(255,255,255,0.30);
-      background: rgba(255,255,255,0.06);
-    }
-
-    #page-search { background: var(--bg-light); }
-    #search-form.page-inner {
-      padding-top: 80px;
-      background: var(--bg-light);
-      isolation: isolate;
-    }
-    #search-form.page-inner::before {
-      content: '';
-      position: absolute;
-      z-index: -2;
-      top: 0;
-      left: 50%;
-      width: 100vw;
-      height: 430px;
-      transform: translateX(-50%);
-      background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 100%);
-    }
-    #search-form.page-inner::after {
-      content: '';
-      position: absolute;
-      z-index: -1;
-      top: 0;
-      left: 50%;
-      width: 100vw;
-      height: 430px;
-      transform: translateX(-50%);
-      background-image:
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-    }
-    #page-search .hero { padding: 0 0 24px !important; }
-    #page-search .hero h1, #page-search .hero h1 em { color: var(--text-light); text-shadow: 0 3px 22px rgba(0,0,0,0.18); }
-    #page-search .hero-sub { color: var(--text-muted-light); }
-    #page-search .free-paid-bar,
-    #page-search .free-paid-bar strong,
-    #page-search .trust-note { color: var(--text-muted-light); }
-    #page-search .free-paid-divider { color: rgba(255,255,255,0.28); }
-    #page-search .counter-bar {
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: var(--text-muted-light);
-      margin-bottom: 64px;
-      box-shadow: none;
-      backdrop-filter: blur(20px) saturate(140%);
-      -webkit-backdrop-filter: blur(20px) saturate(140%);
-    }
-    #page-search .counter-text { color: var(--text-muted-light); }
-    #page-search .counter-progress { background: rgba(255,255,255,0.18); }
-    #page-search .counter-progress-fill { background: linear-gradient(90deg, var(--accent), #FBBF24); }
-
-    .search-action-zone {
-      background: var(--surface);
-      border: 1px solid rgba(226,232,240,0.96);
-      border-radius: 20px;
-      padding: 32px;
-      margin-top: -48px;
-      box-shadow: var(--shadow-lg);
-    }
-    .search-action-zone .card,
-    .search-action-zone #mode-toggle-wrap {
-      background: var(--surface) !important;
-      border: 1px solid var(--border-light) !important;
-      border-radius: 16px !important;
-    }
-    .search-action-zone #mode-toggle-wrap { background: var(--surface2) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,0.80); }
-    .search-action-zone .search-section-label,
-    .search-action-zone .card-label,
-    .search-action-zone label,
-    .search-action-zone .trade-question-label { color: var(--text-dark); }
-    .search-action-zone .search-section-label { border-bottom-color: rgba(15,23,42,0.10); }
-    .search-action-zone input,
-    .search-action-zone select,
-    .search-action-zone textarea {
-      background: var(--surface);
-      border-color: var(--border-light);
-      color: var(--text-dark);
-    }
-    .search-action-zone input:focus,
-    .search-action-zone select:focus,
-    .search-action-zone textarea:focus {
-      background: var(--surface);
-      border-color: rgba(245,158,11,0.72);
-      box-shadow: 0 0 0 4px rgba(245,158,11,0.16);
-    }
-    .search-action-zone input::placeholder,
-    .search-action-zone textarea::placeholder { color: #94A3B8; }
-    .search-action-zone .toggle-btn:not(.active),
-    .search-action-zone .text-link,
-    .search-action-zone .mic-btn,
-    .search-action-zone .trade-option-btn:not(.active) {
-      background: var(--surface);
-      border-color: var(--border-light);
-      color: var(--text-dark);
-    }
-    .search-action-zone .gps-status,
-    .search-action-zone .trade-wizard-sub,
-    #page-search .trust-note { color: var(--text-muted-dark); }
-    .search-action-zone .trade-wizard {
-      border-color: var(--border-light);
-      background: var(--surface2);
-    }
-    .search-action-zone .lookup-btn { color: var(--bg-deep) !important; }
-    .search-action-zone .text-link { display: inline-flex; align-items: center; gap: 8px; }
-    .location-link-icon {
-      position: relative;
-      width: 18px;
-      height: 18px;
-      border-radius: 50% 50% 50% 0;
-      background: var(--accent);
-      transform: rotate(-45deg);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 10px rgba(245,158,11,0.24);
-      flex: 0 0 18px;
-    }
-    .location-link-icon::after {
-      content: '';
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: var(--surface);
-      top: 6px;
-      left: 6px;
-    }
-
-    .card, .summary-card, .result-hero, .how-to-apply-card, .watchout-card, .companion-card,
-    .old-vs-new, .compare-strip, .roi-calc, .roi-stats-row, .followup-qa, .expiry-reminder-card,
-    .jobs-section-card, .job-item, .result-save-prompt, .modal-card {
-      border-radius: 20px;
-      box-shadow: var(--shadow-sm);
-    }
-    .card:hover { border-color: rgba(245,158,11,0.22); }
-    #results .card, #results .summary-card, #results .result-hero,
-    .results-inner .card, .results-inner .summary-card, .results-inner .result-hero {
-      background: var(--surface);
-      border-color: var(--border-light);
-      border-radius: 20px;
-      box-shadow: var(--shadow-lg);
-    }
-    .result-hero {
-      background: linear-gradient(135deg, rgba(245,158,11,0.10) 0%, var(--surface) 100%);
-      border-color: rgba(245,158,11,0.24);
-      box-shadow: var(--shadow-lg);
-    }
-    .result-hero::before { background: linear-gradient(90deg, var(--accent), #FBBF24, var(--accent)); }
-
-    .footer {
-      background: var(--bg-deep);
-      color: var(--text-muted-light);
-      border-top-color: rgba(255,255,255,0.12);
-    }
-    .footer strong { color: var(--text-light); }
-    .footer a, .footer a[style] { color: var(--text-light) !important; }
-    .footer a:hover { color: var(--accent) !important; }
-
-
-    #btn-mode-contractor,
-    #btn-mode-homeowner.active,
-    .gate-submit,
-    .upgrade-plan-btn.active,
-    #share-copy-btn,
-    a[href="/pricing"][style*="background:#2563EB"],
-    button[style*="background:#2563eb"],
-    button[style*="background:#3B82F6"] {
-      background: var(--accent) !important;
-      border-color: var(--accent) !important;
-      color: var(--bg-deep) !important;
-      box-shadow: 0 10px 24px rgba(245,158,11,0.28) !important;
-    }
-    #btn-mode-homeowner:not(.active) { background: transparent !important; color: var(--text-muted-dark) !important; }
-    .logo-mark-img, #brand-logo, #brand-logo[style] { display: block !important; }
-
-    @media (max-width: 480px) {
-      #search-form.page-inner { padding-top: 48px; }
-      #search-form.page-inner::before,
-      #search-form.page-inner::after { height: 480px; }
-      #page-search .counter-bar { margin-bottom: 48px; }
-      #page-search .hero { padding: 0 0 20px !important; }
-      .search-action-zone { margin: -32px -4px 0; padding: 20px; }
-      .nav-drawer { background: rgba(14,26,79,0.98); border-bottom-color: rgba(255,255,255,0.14); }
-      .nav-drawer a, .nav-drawer button { color: var(--text-light); border-bottom-color: rgba(255,255,255,0.14); }
-    }
   </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18087945418"></script>
   <script>
-    const BRAND_LOGO_PATH = '/public/logo.png';
-    document.addEventListener('DOMContentLoaded', () => { const logo = document.getElementById('brand-logo'); if (logo) logo.src = BRAND_LOGO_PATH; });
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    // page_location is captured here (head) before the body-side URL-cleaner runs,
-    // so the `?verified=1` page-load conversion isn't lost to cleanup.
-    gtag('config', 'AW-18087945418', {
-      page_location: window.location.href,
-      allow_enhanced_conversions: true
-    });
-    function normalizeEmailForAds(email){return String(email||'').trim().toLowerCase();}
-    function setEnhancedConversionEmail(email){const normalized=normalizeEmailForAds(email);if(!normalized||typeof gtag!=='function') return;gtag('set','user_data',{'email': normalized});}
-    try{const storedEcEmail=normalizeEmailForAds(localStorage.getItem('pa_email'));if(storedEcEmail) setEnhancedConversionEmail(storedEcEmail);}catch(_){ }
+    gtag('config', 'AW-18087945418');
   </script>
 </head>
 <body>
@@ -1451,7 +1186,7 @@
   <!-- Navbar -->
   <nav class="nav">
     <div class="logo">
-      <img id="brand-logo" src="/icons/icon-modern-512.png" srcset="/icons/icon-modern-512.png 1x" alt="PermitAssist" class="logo-mark-img" onerror="this.style.display='none'" />
+      <img src="/icons/icon-192.png" alt="PA" class="logo-mark-img" />
       <div>
         <div class="logo-text">Permit<em>Assist</em></div>
         <div class="logo-tagline">For Contractors</div>
@@ -1492,11 +1227,11 @@
 
   <!-- Search Page -->
   <div class="page active" id="page-search">
-    <form class="page-inner" id="search-form" onsubmit="event.preventDefault(); doLookupWithOffline();">
+    <div class="page-inner" id="search-form">
       <!-- Hero -->
       <div class="hero" style="padding:32px 0 16px">
         <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
-        <h2 class="hero-sub" style="max-width:460px">Know exactly what permit to pull, before you dispatch.</h2>
+        <p class="hero-sub" style="max-width:460px">Know exactly what permit to pull, before you dispatch.</p>
       </div>
 
 
@@ -1523,8 +1258,8 @@
       <div class="search-action-zone">
         <!-- Contractor / Homeowner mode toggle -->
         <div id="mode-toggle-wrap" style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:14px;max-width:340px">
-          <button id="btn-mode-contractor" type="button" onclick="setSearchMode('contractor')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:#2563eb;color:#fff;transition:all .15s">🔨 Contractor</button>
-          <button id="btn-mode-homeowner" type="button" onclick="setSearchMode('homeowner')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">🏠 Homeowner</button>
+          <button id="btn-mode-contractor" onclick="setSearchMode('contractor')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:#2563eb;color:#fff;transition:all .15s">🔨 Contractor</button>
+          <button id="btn-mode-homeowner" onclick="setSearchMode('homeowner')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">🏠 Homeowner</button>
         </div>
         <div class="search-section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span id="search-section-title">🔍 Look Up Your Permit</span>
@@ -1547,8 +1282,8 @@
           <div class="form-group">
             <label>Job Type</label>
             <div class="toggle-row" id="job-category-toggle">
-              <button class="toggle-btn active" id="btn-residential" type="button" onclick="setJobCategory('residential')">🏠 Residential</button>
-              <button class="toggle-btn" id="btn-commercial" type="button" onclick="setJobCategory('commercial')">🏢 Commercial</button>
+              <button class="toggle-btn active" id="btn-residential" onclick="setJobCategory('residential')">🏠 Residential</button>
+              <button class="toggle-btn" id="btn-commercial" onclick="setJobCategory('commercial')">🏢 Commercial</button>
             </div>
           </div>
           <div class="form-group">
@@ -1568,7 +1303,7 @@
           </div>
           <div class="gps-status" id="gps-status"></div>
           <div class="location-links">
-            <a class="text-link" href="#" onclick="event.preventDefault(); useGPS();"><span class="location-link-icon" aria-hidden="true"></span>Auto-detect my location</a>
+            <a class="text-link" href="#" onclick="event.preventDefault(); useGPS();">📍 Auto-detect my location</a>
           </div>
           <!-- Hidden location-edit for backwards compat -->
           <div id="location-edit" style="display:none"></div>
@@ -1578,35 +1313,35 @@
         <div class="disambig-box" id="disambig-box">
           <div class="disambig-title">⚠️ Is this a minor repair or full replacement?</div>
           <div class="disambig-btns">
-            <button class="disambig-btn" type="button" onclick="submitWithDisambig('minor repair')">🔧 Minor Repair</button>
-            <button class="disambig-btn" type="button" onclick="submitWithDisambig('full replacement')">🔄 Full Replacement</button>
+            <button class="disambig-btn" onclick="submitWithDisambig('minor repair')">🔧 Minor Repair</button>
+            <button class="disambig-btn" onclick="submitWithDisambig('full replacement')">🔄 Full Replacement</button>
           </div>
         </div>
 
         <div class="trust-note">🧠 Not a chatbot. A permit expert. PermitAssist knows 250+ jurisdictions, local fee schedules, and the exact code sections your inspector will cite — purpose-built for contractors, not a generic AI wrapper.</div>
-        <button class="lookup-btn" id="lookup-btn" type="submit">🔍 &nbsp;Find Permit Requirements</button>
+        <button class="lookup-btn" id="lookup-btn" type="button">🔍 &nbsp;Find Permit Requirements</button>
       </div>
 
       <!-- How It Works 3-Step -->
       <div class="how-it-works" style="margin-top:20px">
-        <h2 class="how-it-works-eyebrow">✅ How It Works</h2>
+        <div class="how-it-works-eyebrow">✅ How It Works</div>
         <div class="how-steps">
           <div class="how-step">
             <div class="how-step-icon">📍</div>
             <div class="how-step-num">Step 1</div>
-            <h3 class="how-step-label">Enter your job type &amp; city</h3>
+            <div class="how-step-label">Enter your job type &amp; city</div>
           </div>
           <div class="how-connector"></div>
           <div class="how-step">
             <div class="how-step-icon">🔍</div>
             <div class="how-step-num">Step 2</div>
-            <h3 class="how-step-label">AI researches your exact jurisdiction</h3>
+            <div class="how-step-label">AI researches your exact jurisdiction</div>
           </div>
           <div class="how-connector"></div>
           <div class="how-step">
             <div class="how-step-icon">✅</div>
             <div class="how-step-num">Step 3</div>
-            <h3 class="how-step-label">Get permit name, fees, timeline &amp; where to apply</h3>
+            <div class="how-step-label">Get permit name, fees, timeline &amp; where to apply</div>
           </div>
         </div>
       </div>
@@ -1615,7 +1350,7 @@
       <div id="social-proof-strip" style="margin:20px 0 4px; text-align: center; padding: 20px 20px 8px;">
         <div style="max-width:480px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 22px;text-align:center">
           <div style="font-size:28px;margin-bottom:12px">🎯</div>
-          <h2 style="font-size:17px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:10px">Our goal: you walk into the permit office once, get it right, and never go back.</h2>
+          <div style="font-size:17px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:10px">Our goal: you walk into the permit office once, get it right, and never go back.</div>
           <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px">No calling around. No guessing on fees. No rejected applications. Just the exact permit name, requirements, and checklist — before you leave the truck.</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;align-items:center;gap:10px;text-align:left">
@@ -1636,7 +1371,7 @@
 
       <!-- ROI Stats Row -->
       <div class="roi-stats-section">
-        <h2 class="roi-stats-eyebrow">💰 The ROI is obvious</h2>
+        <div class="roi-stats-eyebrow">💰 The ROI is obvious</div>
         <div class="roi-stats-row" role="list" aria-label="Key statistics">
           <div class="roi-stat" role="listitem">
             <div class="roi-stat-number">6–30 hrs</div>
@@ -1659,10 +1394,10 @@
 
       <!-- Old Way vs PermitAssist -->
       <div class="old-vs-new">
-        <h2 class="old-vs-new-eyebrow">🔄 The difference is obvious</h2>
+        <div class="old-vs-new-eyebrow">🔄 The difference is obvious</div>
         <div class="old-vs-new-cols">
           <div class="old-col">
-            <h3 class="old-col-title">❌ The Old Way</h3>
+            <div class="old-col-title">❌ The Old Way</div>
             <div class="vs-item">Call the building dept and get put on hold</div>
             <div class="vs-item">Google it and find outdated PDFs</div>
             <div class="vs-item">Drive to city hall just to find out</div>
@@ -1670,7 +1405,7 @@
             <div class="vs-item">Spend half a day on one job</div>
           </div>
           <div class="new-col">
-            <h3 class="new-col-title">✅ With PermitAssist</h3>
+            <div class="new-col-title">✅ With PermitAssist</div>
             <div class="vs-item">Instant answer in under 60 seconds</div>
             <div class="vs-item">AI-verified, jurisdiction-specific results</div>
             <div class="vs-item">Know fees &amp; timeline before you show up</div>
@@ -1682,7 +1417,7 @@
 
       <!-- ROI Savings Calculator -->
       <div class="roi-calc">
-        <h2 class="roi-calc-title">💰 See Your Savings</h2>
+        <div class="roi-calc-title">💰 See Your Savings</div>
         <div class="roi-calc-question">How many permit lookups do you do per month?</div>
         <input type="range" class="roi-slider" id="roi-slider" min="1" max="50" value="10" oninput="updateROICalc(this.value)" />
         <div class="roi-slider-val"><span id="roi-slider-num">10</span> lookups/month</div>
@@ -1700,10 +1435,10 @@
 
       <!-- Why PermitAssist Comparison Strip -->
       <div class="compare-strip">
-        <h2 class="compare-strip-eyebrow">Why PermitAssist?</h2>
+        <div class="compare-strip-eyebrow">Why PermitAssist?</div>
         <div class="compare-strip-cols">
           <div class="compare-col compare-col-winner">
-            <h3 class="compare-col-name">✅ PermitAssist</h3>
+            <div class="compare-col-name">✅ PermitAssist</div>
             <div class="compare-col-price">$39.99/mo · unlimited</div>
             <ul class="compare-col-features">
               <li>⚡ Instant — 30 seconds</li>
@@ -1713,7 +1448,7 @@
             </ul>
           </div>
           <div class="compare-col">
-            <h3 class="compare-col-name">🤵 Permit Expediter</h3>
+            <div class="compare-col-name">🤵 Permit Expediter</div>
             <div class="compare-col-price">$500–$2,000 / project</div>
             <ul class="compare-col-features">
               <li>⏳ Days to weeks</li>
@@ -1723,7 +1458,7 @@
             </ul>
           </div>
           <div class="compare-col">
-            <h3 class="compare-col-name">🔍 Googling It</h3>
+            <div class="compare-col-name">🔍 Googling It</div>
             <div class="compare-col-price">Free (but costly)</div>
             <ul class="compare-col-features">
               <li>⏰ 2–6 hours wasted</li>
@@ -1737,7 +1472,7 @@
 
       <!-- What's Included Feature Grid -->
       <div style="margin:28px 0 8px;padding:24px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:540px;margin-inline:auto">
-        <h2 style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--brand);text-align:center;margin-bottom:16px">Everything included with Pro</h2>
+        <div style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--brand);text-align:center;margin-bottom:16px">Everything included with Pro</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div style="display:flex;align-items:flex-start;gap:10px">
             <span style="font-size:20px">📂</span>
@@ -1808,7 +1543,7 @@
 
 
 
-</form>
+</div>
 
     <!-- Loading -->
     <div id="loading">
@@ -1836,10 +1571,10 @@
   <div class="page" id="page-jobs"><div class="page-inner" id="jobs-inner"></div></div>
 
   <!-- Footer -->
-  <footer class="footer">
+  <div class="footer">
     <p>⚠️ <strong>Disclaimer:</strong> PermitAssist provides AI-generated guidance based on publicly available data. Permit requirements change frequently, and fees shown are estimates. The contractor is strictly responsible for verifying all exact requirements, fees, and timelines directly with the local building department (Authority Having Jurisdiction) prior to starting any work.</p>
     <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved. &nbsp;·&nbsp; <a href="/help" style="color:var(--brand)">Help</a> &nbsp;·&nbsp; <a href="/terms" style="color:var(--brand)">Terms</a> &nbsp;·&nbsp; <a href="/privacy" style="color:var(--brand)">Privacy</a></p>
-  </footer>
+  </div>
 </div>
 
 <!-- Install Banner -->
@@ -2312,7 +2047,7 @@ function submitWithDisambig(choice) {
 function getLookupCount(){if(IS_ADMIN) return 0;return _serverFreeLookupsUsed||0}
 function incrementLookup(){return getLookupCount()}
 function hasEmail(){if(IS_ADMIN) return true;return !!localStorage.getItem(EMAIL_KEY)}
-function saveEmail(email){const normalized=normalizeEmailForAds(email);localStorage.setItem(EMAIL_KEY,normalized);setEnhancedConversionEmail(normalized);fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:normalized,source:'gate'})}).catch(()=>{})}
+function saveEmail(email){localStorage.setItem(EMAIL_KEY,email.trim().toLowerCase());fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim().toLowerCase(),source:'gate'})}).catch(()=>{})}
 function hashString(input){let h=2166136261;for(let i=0;i<input.length;i++){h^=input.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
 function getCanvasFingerprint(){try{const canvas=document.createElement('canvas');const ctx=canvas.getContext('2d');if(!ctx)return 'nocanvas';ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('PermitAssist fingerprint',2,15);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText(navigator.userAgent,4,35);return hashString(canvas.toDataURL())}catch{return 'canvas-error'}}
 function getClientFingerprint(){let fp=localStorage.getItem('pa_client_fingerprint');if(fp)return fp;const tz=(Intl.DateTimeFormat().resolvedOptions().timeZone)||'na';const parts=[navigator.userAgent||'',`${screen.width||0}x${screen.height||0}x${screen.colorDepth||0}`,tz,navigator.language||'',getCanvasFingerprint()];fp=hashString(parts.join('|'));localStorage.setItem('pa_client_fingerprint',fp);return fp}
@@ -2576,14 +2311,13 @@ function hidePreLookupGate() {
 function submitPreLookupEmail() {
   const inp = document.getElementById('pre-gate-email'), val = inp.value.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { inp.style.borderColor = 'var(--red)'; inp.focus(); return; }
-  const normalizedEmail = normalizeEmailForAds(val);
-  localStorage.setItem(EMAIL_KEY, normalizedEmail);
-  setEnhancedConversionEmail(normalizedEmail);
+  localStorage.setItem(EMAIL_KEY, val.toLowerCase());
   fetch('/api/capture-email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: normalizedEmail, source: 'pre-lookup' })
+    body: JSON.stringify({ email: val, source: 'pre-lookup' })
   }).catch(() => {});
+  if (typeof gtag === 'function') gtag('event', 'conversion', {'send_to': 'AW-18087945418/SIGNUP_LABEL'});
   hidePreLookupGate();
   _preLookupPassed = true;
   doLookupWithOffline();
@@ -2608,15 +2342,13 @@ function hideGate(){document.getElementById('email-gate').style.display='none'}
 async function submitGateEmail(){
   const inp=document.getElementById('gate-email'),val=inp.value.trim();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){inp.style.borderColor='var(--red)';inp.focus();return}
-  const normalizedEmail = normalizeEmailForAds(val);
-  localStorage.setItem(EMAIL_KEY, normalizedEmail);
-  setEnhancedConversionEmail(normalizedEmail);
-  const emailSentEl=document.getElementById('magic-email-sent');if(emailSentEl)emailSentEl.textContent=normalizedEmail;
+  localStorage.setItem(EMAIL_KEY, val.toLowerCase());
+  const emailSentEl=document.getElementById('magic-email-sent');if(emailSentEl)emailSentEl.textContent=val;
   // Send magic link and show code entry step so user actually logs in
   const btn=document.getElementById('magic-send-btn');
   if(btn)btn.disabled=true;
   try{
-    const r=await fetch('/api/magic-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:normalizedEmail})});
+    const r=await fetch('/api/magic-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:val})});
     const d=await r.json();
     document.getElementById('magic-step1').style.display='none';
     document.getElementById('magic-step2').style.display='block';
@@ -2673,14 +2405,7 @@ function showPendingResult(){if(!pendingResult) return;const {data,job,city,stat
 // ── Install ──────────────────────────────────────────────────────────────────
 const _isIOS=(/iphone|ipad|ipod/i).test(navigator.userAgent)&&!window.MSStream;
 const _isInStandalone=('standalone' in navigator && navigator.standalone);
-function showInstallAfterFirstScroll(){
-  if(localStorage.getItem('pa_install_dismissed')) return;
-  const page=document.getElementById('page-search');
-  const reveal=()=>{document.getElementById('install-banner').classList.add('show'); if(window.innerWidth>600) document.getElementById('install-nav-btn').style.display='block';};
-  if(page && page.scrollTop > 320) reveal();
-  else if(page) page.addEventListener('scroll', () => { if(page.scrollTop > 320) reveal(); }, { once:true, passive:true });
-}
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;showInstallAfterFirstScroll();});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;if(!localStorage.getItem('pa_install_dismissed')){document.getElementById('install-banner').classList.add('show');document.getElementById('install-nav-btn').style.display='block'}});
 // iOS Safari: show banner with tap-share instructions (no beforeinstallprompt on iOS)
 (function(){
   if(_isIOS && !_isInStandalone && !localStorage.getItem('pa_install_dismissed')){
@@ -2691,7 +2416,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
     sub.textContent='Tap the Share button \u2193 then "Add to Home Screen"';
     btn.textContent='Got it';
     btn.onclick=function(){dismissInstall();};
-    showInstallAfterFirstScroll();
+    banner.classList.add('show');
   }
 })();
 function installApp(){if(!deferredInstallPrompt) return;deferredInstallPrompt.prompt();deferredInstallPrompt.userChoice.then(()=>{deferredInstallPrompt=null;document.getElementById('install-banner').classList.remove('show');document.getElementById('install-nav-btn').style.display='none'})}
@@ -3946,7 +3671,7 @@ function downloadReport() {
   ${tipList ? `<div class="section"><div class="section-label">&#128161; Pro Tips</div><ul class="plain">${tipList}</ul></div>` : ''}
   ${mistakeList ? `<div class="section" style="border-color:#fca5a5"><div class="section-label" style="color:#dc2626">&#9888;&#65039; Common Mistakes &mdash; Watch Out</div><ul class="plain">${mistakeList}</ul></div>` : ''}
   ${sourceList ? `<div class="section"><div class="section-label">&#128279; Sources</div><ul class="plain">${sourceList}</ul></div>` : ''}
-  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</footer>
+  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body>
@@ -4072,7 +3797,7 @@ function printResult() {
   ${inspList ? `<div class="section"><div class="section-label">&#128269; Inspection Stages</div><table>${inspList}</table></div>` : ''}
   ${tipList ? `<div class="section"><div class="section-label">&#128161; Pro Tips</div><ul class="plain">${tipList}</ul></div>` : ''}
   ${mistakeList ? `<div class="section" style="border-color:#fca5a5"><div class="section-label" style="color:#dc2626">&#9888;&#65039; Common Mistakes</div><ul class="plain">${mistakeList}</ul></div>` : ''}
-  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</footer>
+  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body>
@@ -4562,7 +4287,7 @@ function printChecklistSection(){
   <div class="job-label">${efn(job)}</div>
   <div class="loc-label">&#128205; ${efn(city)}, ${efn(state)}</div>
   ${checklistHTML}
-  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Verify all requirements with your local building department before starting work.</footer>
+  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Verify all requirements with your local building department before starting work.</div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body>

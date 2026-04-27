@@ -9,27 +9,26 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PermitAssist" />
-  <meta name="theme-color" content="#0E1A4F" />
-  <meta name="robots" content="noindex,nofollow" />
-  <meta name="description" content="PermitAssist — AI-powered permit research for contractors. Get exact requirements, fees, and contact details in seconds. No demo calls, no sales team." />
-  <link rel="canonical" href="https://permitassist.io/" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="description" content="Look up electrical permit requirements in seconds. Fees, documents, timelines for 1,569 cities. Free for contractors." />
+  <link rel="canonical" href="https://permitassist.io/electrical" />
   <!-- Open Graph -->
-  <meta property="og:title" content="PermitAssist — Know Your Permits Before You Start" />
-  <meta property="og:description" content="AI-powered permit research for contractors. Exact requirements, fees, and contacts in 30 seconds. $39.99/mo unlimited." />
-  <meta property="og:url" content="https://permitassist.io/" />
+  <meta property="og:title" content="Electrical Permit Requirements | PermitAssist" />
+  <meta property="og:description" content="Look up electrical permit requirements in seconds. Fees, documents, timelines for 1,569 cities. Free for contractors." />
+  <meta property="og:url" content="https://permitassist.io/electrical" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PermitAssist" />
   <meta property="og:image" content="https://permitassist.io/icons/icon-512.png" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="PermitAssist — Know Your Permits Before You Start" />
-  <meta name="twitter:description" content="AI-powered permit research for contractors. Exact fees, requirements, and contacts in 30 seconds. $39.99/mo unlimited." />
+  <meta name="twitter:title" content="Electrical Permit Requirements | PermitAssist" />
+  <meta name="twitter:description" content="Look up electrical permit requirements in seconds. Fees, documents, timelines for 1,569 cities. Free for contractors." />
   <meta name="twitter:image" content="https://permitassist.io/icons/icon-512.png" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
   <link rel="shortcut icon" href="/icons/icon-192.png" />
-  <title>PermitAssist — Know Your Permits Before You Start</title>
+  <title>Electrical Permit Requirements | PermitAssist</title>
   <!-- Organization + WebSite + SitelinksSearchbox schema -->
   <script type="application/ld+json">
   {
@@ -82,49 +81,34 @@
   <style>
     :root {
       color-scheme: light;
-      --bg-deep: #0E1A4F;
-      --bg-mid: #1E40AF;
-      --bg-light: #F8FAFC;
+      --bg: #F5F7FF;
       --surface: #FFFFFF;
-      --glass-bg: rgba(255,255,255,0.10);
-      --glass-border: rgba(255,255,255,0.20);
-      --accent: #F59E0B;
-      --accent-hover: #D97706;
-      --text-light: #FFFFFF;
-      --text-dark: #0F172A;
-      --text-muted-light: rgba(255,255,255,0.72);
-      --text-muted-dark: #475569;
-      --success: #10B981;
-      --border-light: #E2E8F0;
-      --bg: var(--bg-light);
-      --surface2: #F1F5F9;
-      --brand: var(--accent);
-      --brand-dark: var(--accent-hover);
-      --brand-light: rgba(245,158,11,0.10);
-      --brand-lighter: rgba(245,158,11,0.05);
-      --green: var(--success);
-      --green-bg: rgba(16,185,129,0.10);
-      --yellow: var(--accent-hover);
-      --yellow-bg: rgba(245,158,11,0.10);
+      --surface2: #F0F4FF;
+      --brand: #2563EB;
+      --brand-dark: #1D4ED8;
+      --brand-light: rgba(37,99,235,0.08);
+      --brand-lighter: rgba(37,99,235,0.04);
+      --green: #059669;
+      --green-bg: rgba(5,150,105,0.08);
+      --yellow: #D97706;
+      --yellow-bg: rgba(217,119,6,0.08);
       --red: #DC2626;
       --red-bg: rgba(220,38,38,0.07);
-      --text: var(--text-dark);
-      --text2: var(--text-muted-dark);
-      --muted: #64748B;
-      --border: var(--border-light);
+      --text: #0F172A;
+      --text2: #475569;
+      --muted: #94A3B8;
+      --border: #E2E8F0;
       --border2: #CBD5E1;
       --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
       --shadow: 0 4px 6px -1px rgba(15,23,42,0.07), 0 2px 4px -2px rgba(15,23,42,0.05);
-      --shadow-md: 0 14px 28px -12px rgba(15,23,42,0.18), 0 8px 12px -10px rgba(15,23,42,0.10);
-      --shadow-lg: 0 24px 48px -18px rgba(15,23,42,0.28), 0 16px 24px -20px rgba(15,23,42,0.18);
-      --r: 20px;
+      --shadow-md: 0 10px 15px -3px rgba(15,23,42,0.08), 0 4px 6px -4px rgba(15,23,42,0.04);
+      --shadow-lg: 0 20px 25px -5px rgba(15,23,42,0.1), 0 8px 10px -6px rgba(15,23,42,0.06);
+      --r: 16px;
       --r-sm: 12px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    button, input, textarea, select { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
-    button { font-size: 15px; font-weight: 700; }
     html, body {
       height: 100%;
       width: 100%;
@@ -314,38 +298,6 @@
     .hero-input { min-height: 90px; resize: vertical; line-height: 1.5; }
     .query-wrap { position: relative; }
     .query-wrap textarea { padding-right: 50px; }
-    .trade-wizard {
-      display: none; margin-top: 12px; padding: 14px; border-radius: var(--r-sm);
-      border: 1px solid rgba(37,99,235,0.18); background: linear-gradient(135deg, rgba(37,99,235,0.06), rgba(37,99,235,0.02));
-      animation: fadeUp .22s ease;
-    }
-    .trade-wizard.show { display: block; }
-    .trade-wizard-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; }
-    .trade-wizard-title { font-size: 13px; font-weight: 800; color: var(--brand); }
-    .trade-wizard-sub { font-size: 12px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
-    .trade-wizard-dismiss { background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px; font-weight:700; }
-    .trade-question { margin-top: 12px; }
-    .trade-question:first-of-type { margin-top: 0; }
-    .trade-question-label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-    .trade-option-row { display:flex; gap:8px; flex-wrap:wrap; }
-    .trade-option-btn {
-      border:1px solid var(--border); background:var(--surface); color:var(--text2); border-radius:999px;
-      padding:8px 12px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; transition:all .15s;
-    }
-    .trade-option-btn.active { background: var(--brand); border-color: var(--brand); color: #fff; }
-    .trade-option-btn:hover { border-color: var(--brand); color: var(--brand); }
-    .trade-option-btn.active:hover { color:#fff; }
-
-    .permit-explainer-card { background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(255,255,255,0.98)); }
-    .permit-explainer-copy {
-      margin-top: 12px; white-space: pre-wrap; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: var(--r-sm); padding: 14px; font-size: 14px; color: var(--text); line-height: 1.7;
-    }
-    .permit-explainer-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-    .inspection-fail-card { background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(255,255,255,0.98)); }
-    .inspection-fail-item { display:flex; align-items:flex-start; gap:10px; padding:9px 0; color:var(--text2); font-size:14px; line-height:1.55; border-bottom:1px solid var(--border); }
-    .inspection-fail-item:last-child { border-bottom:none; }
-    .inspection-fail-item::before { content:'✓'; color:var(--green); font-weight:800; flex-shrink:0; }
 
     /* Mic button */
     .mic-btn {
@@ -928,8 +880,6 @@
       .confidence-badge .conf-tooltip { display: none !important; }
       .bullet-list, .ordered-list li { color: #333 !important; }
       .checklist-items { display: block !important; }
-      #compliance-checklist-card { display: block !important; }
-      .result-save-prompt { display: none !important; }
       .print-header { display: block !important; }
       .print-footer { display: block !important; }
       a { color: #2563eb !important; }
@@ -1187,271 +1137,22 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 2px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.15); }
-
-
-    /* ── Pure visual re-skin: v6 Option 5 glassmorphic system ─────────────── */
-    html, body { background: var(--bg-light); }
-    #app { background: var(--bg-light); }
-
-    .nav {
-      border-bottom: 1px solid rgba(255,255,255,0.14);
-      background: rgba(14,26,79,0.92) !important;
-      box-shadow: 0 12px 32px rgba(14,26,79,0.20);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
-    .logo-mark { background: linear-gradient(135deg, var(--bg-deep), var(--bg-mid)); box-shadow: 0 8px 18px rgba(14,26,79,0.28); }
-    .logo-mark-img { content: url('/icons/icon-modern-512.png'); box-shadow: 0 8px 20px rgba(0,0,0,0.20); }
-    .logo-text, .logo-text em { color: var(--text-light); }
-    .logo-tagline { color: var(--text-muted-light); }
-    .nav-link { color: var(--text-muted-light); position: relative; }
-    .nav-link:hover { background: rgba(255,255,255,0.08); color: var(--text-light); }
-    .nav-link[aria-current="page"]::after, .nav-link.active::after {
-      content: ''; position: absolute; left: 12px; right: 12px; bottom: 1px; height: 2px;
-      background: var(--accent); border-radius: 999px;
-    }
-    .nav-link-btn { color: var(--text-light); border-color: rgba(255,255,255,0.30); background: rgba(255,255,255,0.06); }
-    .nav-link-btn:hover { background: rgba(255,255,255,0.12); }
-    .nav-link-btn.paid { color: var(--bg-deep); background: var(--accent); border-color: var(--accent); }
-    .nav-hamburger span { background: var(--text-light); }
-    .install-btn, .install-cta, .drawer-account-btn, .nav-drawer .drawer-account-btn,
-    .lookup-btn, .upgrade-cta, .result-save-btn, .fixit-copy-btn, .juris-alert-btn, .followup-qa-btn,
-    .trade-option-btn.active, .toggle-btn.active {
-      background: var(--accent) !important;
-      border-color: var(--accent) !important;
-      color: var(--bg-deep) !important;
-      box-shadow: 0 10px 24px rgba(245,158,11,0.28), inset 0 1px 0 rgba(255,255,255,0.22) !important;
-    }
-    .lookup-btn:hover, .upgrade-cta:hover, .upgrade-cta:active,
-    .result-save-btn:hover, .fixit-copy-btn:hover, .juris-alert-btn:hover, .followup-qa-btn:hover,
-    .install-btn:hover, .install-cta:hover {
-      background: var(--accent-hover) !important;
-      border-color: var(--accent-hover) !important;
-      color: #fff !important;
-      box-shadow: 0 14px 30px rgba(217,119,6,0.34), inset 0 1px 0 rgba(255,255,255,0.18) !important;
-    }
-    .nav-new-search, .nav-link-btn, .drawer-login-btn, .nav-drawer .drawer-login-btn,
-    .text-link, .result-secondary-btn, .job-action-btn, .disambig-btn, .trade-option-btn:not(.active) {
-      background: transparent;
-      border-color: rgba(15,23,42,0.18);
-      color: var(--text-dark);
-    }
-    .nav .nav-new-search,
-    .nav .nav-link-btn {
-      color: var(--text-light);
-      border-color: rgba(255,255,255,0.30);
-      background: rgba(255,255,255,0.06);
-    }
-
-    #page-search { background: var(--bg-light); }
-    #search-form.page-inner {
-      padding-top: 80px;
-      background: var(--bg-light);
-      isolation: isolate;
-    }
-    #search-form.page-inner::before {
-      content: '';
-      position: absolute;
-      z-index: -2;
-      top: 0;
-      left: 50%;
-      width: 100vw;
-      height: 430px;
-      transform: translateX(-50%);
-      background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 100%);
-    }
-    #search-form.page-inner::after {
-      content: '';
-      position: absolute;
-      z-index: -1;
-      top: 0;
-      left: 50%;
-      width: 100vw;
-      height: 430px;
-      transform: translateX(-50%);
-      background-image:
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-    }
-    #page-search .hero { padding: 0 0 24px !important; }
-    #page-search .hero h1, #page-search .hero h1 em { color: var(--text-light); text-shadow: 0 3px 22px rgba(0,0,0,0.18); }
-    #page-search .hero-sub { color: var(--text-muted-light); }
-    #page-search .free-paid-bar,
-    #page-search .free-paid-bar strong,
-    #page-search .trust-note { color: var(--text-muted-light); }
-    #page-search .free-paid-divider { color: rgba(255,255,255,0.28); }
-    #page-search .counter-bar {
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: var(--text-muted-light);
-      margin-bottom: 64px;
-      box-shadow: none;
-      backdrop-filter: blur(20px) saturate(140%);
-      -webkit-backdrop-filter: blur(20px) saturate(140%);
-    }
-    #page-search .counter-text { color: var(--text-muted-light); }
-    #page-search .counter-progress { background: rgba(255,255,255,0.18); }
-    #page-search .counter-progress-fill { background: linear-gradient(90deg, var(--accent), #FBBF24); }
-
-    .search-action-zone {
-      background: var(--surface);
-      border: 1px solid rgba(226,232,240,0.96);
-      border-radius: 20px;
-      padding: 32px;
-      margin-top: -48px;
-      box-shadow: var(--shadow-lg);
-    }
-    .search-action-zone .card,
-    .search-action-zone #mode-toggle-wrap {
-      background: var(--surface) !important;
-      border: 1px solid var(--border-light) !important;
-      border-radius: 16px !important;
-    }
-    .search-action-zone #mode-toggle-wrap { background: var(--surface2) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,0.80); }
-    .search-action-zone .search-section-label,
-    .search-action-zone .card-label,
-    .search-action-zone label,
-    .search-action-zone .trade-question-label { color: var(--text-dark); }
-    .search-action-zone .search-section-label { border-bottom-color: rgba(15,23,42,0.10); }
-    .search-action-zone input,
-    .search-action-zone select,
-    .search-action-zone textarea {
-      background: var(--surface);
-      border-color: var(--border-light);
-      color: var(--text-dark);
-    }
-    .search-action-zone input:focus,
-    .search-action-zone select:focus,
-    .search-action-zone textarea:focus {
-      background: var(--surface);
-      border-color: rgba(245,158,11,0.72);
-      box-shadow: 0 0 0 4px rgba(245,158,11,0.16);
-    }
-    .search-action-zone input::placeholder,
-    .search-action-zone textarea::placeholder { color: #94A3B8; }
-    .search-action-zone .toggle-btn:not(.active),
-    .search-action-zone .text-link,
-    .search-action-zone .mic-btn,
-    .search-action-zone .trade-option-btn:not(.active) {
-      background: var(--surface);
-      border-color: var(--border-light);
-      color: var(--text-dark);
-    }
-    .search-action-zone .gps-status,
-    .search-action-zone .trade-wizard-sub,
-    #page-search .trust-note { color: var(--text-muted-dark); }
-    .search-action-zone .trade-wizard {
-      border-color: var(--border-light);
-      background: var(--surface2);
-    }
-    .search-action-zone .lookup-btn { color: var(--bg-deep) !important; }
-    .search-action-zone .text-link { display: inline-flex; align-items: center; gap: 8px; }
-    .location-link-icon {
-      position: relative;
-      width: 18px;
-      height: 18px;
-      border-radius: 50% 50% 50% 0;
-      background: var(--accent);
-      transform: rotate(-45deg);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 10px rgba(245,158,11,0.24);
-      flex: 0 0 18px;
-    }
-    .location-link-icon::after {
-      content: '';
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: var(--surface);
-      top: 6px;
-      left: 6px;
-    }
-
-    .card, .summary-card, .result-hero, .how-to-apply-card, .watchout-card, .companion-card,
-    .old-vs-new, .compare-strip, .roi-calc, .roi-stats-row, .followup-qa, .expiry-reminder-card,
-    .jobs-section-card, .job-item, .result-save-prompt, .modal-card {
-      border-radius: 20px;
-      box-shadow: var(--shadow-sm);
-    }
-    .card:hover { border-color: rgba(245,158,11,0.22); }
-    #results .card, #results .summary-card, #results .result-hero,
-    .results-inner .card, .results-inner .summary-card, .results-inner .result-hero {
-      background: var(--surface);
-      border-color: var(--border-light);
-      border-radius: 20px;
-      box-shadow: var(--shadow-lg);
-    }
-    .result-hero {
-      background: linear-gradient(135deg, rgba(245,158,11,0.10) 0%, var(--surface) 100%);
-      border-color: rgba(245,158,11,0.24);
-      box-shadow: var(--shadow-lg);
-    }
-    .result-hero::before { background: linear-gradient(90deg, var(--accent), #FBBF24, var(--accent)); }
-
-    .footer {
-      background: var(--bg-deep);
-      color: var(--text-muted-light);
-      border-top-color: rgba(255,255,255,0.12);
-    }
-    .footer strong { color: var(--text-light); }
-    .footer a, .footer a[style] { color: var(--text-light) !important; }
-    .footer a:hover { color: var(--accent) !important; }
-
-
-    #btn-mode-contractor,
-    #btn-mode-homeowner.active,
-    .gate-submit,
-    .upgrade-plan-btn.active,
-    #share-copy-btn,
-    a[href="/pricing"][style*="background:#2563EB"],
-    button[style*="background:#2563eb"],
-    button[style*="background:#3B82F6"] {
-      background: var(--accent) !important;
-      border-color: var(--accent) !important;
-      color: var(--bg-deep) !important;
-      box-shadow: 0 10px 24px rgba(245,158,11,0.28) !important;
-    }
-    #btn-mode-homeowner:not(.active) { background: transparent !important; color: var(--text-muted-dark) !important; }
-    .logo-mark-img, #brand-logo, #brand-logo[style] { display: block !important; }
-
-    @media (max-width: 480px) {
-      #search-form.page-inner { padding-top: 48px; }
-      #search-form.page-inner::before,
-      #search-form.page-inner::after { height: 480px; }
-      #page-search .counter-bar { margin-bottom: 48px; }
-      #page-search .hero { padding: 0 0 20px !important; }
-      .search-action-zone { margin: -32px -4px 0; padding: 20px; }
-      .nav-drawer { background: rgba(14,26,79,0.98); border-bottom-color: rgba(255,255,255,0.14); }
-      .nav-drawer a, .nav-drawer button { color: var(--text-light); border-bottom-color: rgba(255,255,255,0.14); }
-    }
   </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18087945418"></script>
   <script>
-    const BRAND_LOGO_PATH = '/public/logo.png';
-    document.addEventListener('DOMContentLoaded', () => { const logo = document.getElementById('brand-logo'); if (logo) logo.src = BRAND_LOGO_PATH; });
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    // page_location is captured here (head) before the body-side URL-cleaner runs,
-    // so the `?verified=1` page-load conversion isn't lost to cleanup.
-    gtag('config', 'AW-18087945418', {
-      page_location: window.location.href,
-      allow_enhanced_conversions: true
-    });
-    function normalizeEmailForAds(email){return String(email||'').trim().toLowerCase();}
-    function setEnhancedConversionEmail(email){const normalized=normalizeEmailForAds(email);if(!normalized||typeof gtag!=='function') return;gtag('set','user_data',{'email': normalized});}
-    try{const storedEcEmail=normalizeEmailForAds(localStorage.getItem('pa_email'));if(storedEcEmail) setEnhancedConversionEmail(storedEcEmail);}catch(_){ }
+    gtag('config', 'AW-18087945418');
   </script>
 </head>
-<body>
+<body data-trade="electrical">
 <div id="app">
   <!-- Navbar -->
   <nav class="nav">
     <div class="logo">
-      <img id="brand-logo" src="/icons/icon-modern-512.png" srcset="/icons/icon-modern-512.png 1x" alt="PermitAssist" class="logo-mark-img" onerror="this.style.display='none'" />
+      <img src="/icons/icon-192.png" alt="PA" class="logo-mark-img" />
       <div>
         <div class="logo-text">Permit<em>Assist</em></div>
         <div class="logo-tagline">For Contractors</div>
@@ -1492,18 +1193,18 @@
 
   <!-- Search Page -->
   <div class="page active" id="page-search">
-    <form class="page-inner" id="search-form" onsubmit="event.preventDefault(); doLookupWithOffline();">
+    <div class="page-inner" id="search-form">
       <!-- Hero -->
       <div class="hero" style="padding:32px 0 16px">
-        <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
-        <h2 class="hero-sub" style="max-width:460px">Know exactly what permit to pull, before you dispatch.</h2>
+        <h1>Stop Googling.<br><em>Get the Electrical Permit.</em></h1>
+        <p class="hero-sub" style="max-width:460px">Know exactly which electrical permit to pull, before you dispatch.</p>
       </div>
 
 
 
       <!-- Free/Paid clarity line -->
       <div class="free-paid-bar">
-        <span>✅ <strong>3 free lookups</strong> — no credit card, takes 30 seconds</span>
+        <span>✅ Built for electricians — 3 free lookups</span>
         <span class="free-paid-divider">·</span>
         <span>Then <strong>$39.99/mo</strong> for unlimited</span>
         <span class="free-paid-divider">·</span>
@@ -1523,8 +1224,8 @@
       <div class="search-action-zone">
         <!-- Contractor / Homeowner mode toggle -->
         <div id="mode-toggle-wrap" style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:14px;max-width:340px">
-          <button id="btn-mode-contractor" type="button" onclick="setSearchMode('contractor')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:#2563eb;color:#fff;transition:all .15s">🔨 Contractor</button>
-          <button id="btn-mode-homeowner" type="button" onclick="setSearchMode('homeowner')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">🏠 Homeowner</button>
+          <button id="btn-mode-contractor" onclick="setSearchMode('contractor')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:#2563eb;color:#fff;transition:all .15s">🔨 Contractor</button>
+          <button id="btn-mode-homeowner" onclick="setSearchMode('homeowner')" style="flex:1;padding:8px 12px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">🏠 Homeowner</button>
         </div>
         <div class="search-section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span id="search-section-title">🔍 Look Up Your Permit</span>
@@ -1547,20 +1248,19 @@
           <div class="form-group">
             <label>Job Type</label>
             <div class="toggle-row" id="job-category-toggle">
-              <button class="toggle-btn active" id="btn-residential" type="button" onclick="setJobCategory('residential')">🏠 Residential</button>
-              <button class="toggle-btn" id="btn-commercial" type="button" onclick="setJobCategory('commercial')">🏢 Commercial</button>
+              <button class="toggle-btn active" id="btn-residential" onclick="setJobCategory('residential')">🏠 Residential</button>
+              <button class="toggle-btn" id="btn-commercial" onclick="setJobCategory('commercial')">🏢 Commercial</button>
             </div>
           </div>
           <div class="form-group">
             <label>Describe the job</label>
             <div class="autocomplete-wrap">
               <div class="query-wrap">
-                <textarea class="hero-input" id="query" placeholder="e.g. condenser changeout, panel upgrade, full tear-off, water heater swap, mini split install" autocomplete="off" rows="3"></textarea>
+                <textarea class="hero-input" id="query" placeholder="e.g. panel upgrade, service replacement, EV charger install, subpanel add, meter reset" autocomplete="off" rows="3"></textarea>
                 <button class="mic-btn" id="mic-btn" type="button" title="Speak your question" onclick="toggleVoice()">🎤</button>
               </div>
               <div class="autocomplete-dropdown" id="autocomplete-dropdown" style="display:none"></div>
             </div>
-            <div class="trade-wizard" id="trade-wizard"></div>
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label>ZIP Code <span style="font-weight:400;text-transform:none;font-size:10px;">(optional)</span></label>
@@ -1568,7 +1268,7 @@
           </div>
           <div class="gps-status" id="gps-status"></div>
           <div class="location-links">
-            <a class="text-link" href="#" onclick="event.preventDefault(); useGPS();"><span class="location-link-icon" aria-hidden="true"></span>Auto-detect my location</a>
+            <a class="text-link" href="#" onclick="event.preventDefault(); useGPS();">📍 Auto-detect my location</a>
           </div>
           <!-- Hidden location-edit for backwards compat -->
           <div id="location-edit" style="display:none"></div>
@@ -1578,35 +1278,35 @@
         <div class="disambig-box" id="disambig-box">
           <div class="disambig-title">⚠️ Is this a minor repair or full replacement?</div>
           <div class="disambig-btns">
-            <button class="disambig-btn" type="button" onclick="submitWithDisambig('minor repair')">🔧 Minor Repair</button>
-            <button class="disambig-btn" type="button" onclick="submitWithDisambig('full replacement')">🔄 Full Replacement</button>
+            <button class="disambig-btn" onclick="submitWithDisambig('minor repair')">🔧 Minor Repair</button>
+            <button class="disambig-btn" onclick="submitWithDisambig('full replacement')">🔄 Full Replacement</button>
           </div>
         </div>
 
         <div class="trust-note">🧠 Not a chatbot. A permit expert. PermitAssist knows 250+ jurisdictions, local fee schedules, and the exact code sections your inspector will cite — purpose-built for contractors, not a generic AI wrapper.</div>
-        <button class="lookup-btn" id="lookup-btn" type="submit">🔍 &nbsp;Find Permit Requirements</button>
+        <button class="lookup-btn" id="lookup-btn" type="button">🔍 &nbsp;Find Permit Requirements</button>
       </div>
 
       <!-- How It Works 3-Step -->
       <div class="how-it-works" style="margin-top:20px">
-        <h2 class="how-it-works-eyebrow">✅ How It Works</h2>
+        <div class="how-it-works-eyebrow">✅ How It Works</div>
         <div class="how-steps">
           <div class="how-step">
             <div class="how-step-icon">📍</div>
             <div class="how-step-num">Step 1</div>
-            <h3 class="how-step-label">Enter your job type &amp; city</h3>
+            <div class="how-step-label">Enter your job type &amp; city</div>
           </div>
           <div class="how-connector"></div>
           <div class="how-step">
             <div class="how-step-icon">🔍</div>
             <div class="how-step-num">Step 2</div>
-            <h3 class="how-step-label">AI researches your exact jurisdiction</h3>
+            <div class="how-step-label">AI researches your exact jurisdiction</div>
           </div>
           <div class="how-connector"></div>
           <div class="how-step">
             <div class="how-step-icon">✅</div>
             <div class="how-step-num">Step 3</div>
-            <h3 class="how-step-label">Get permit name, fees, timeline &amp; where to apply</h3>
+            <div class="how-step-label">Get permit name, fees, timeline &amp; where to apply</div>
           </div>
         </div>
       </div>
@@ -1615,7 +1315,7 @@
       <div id="social-proof-strip" style="margin:20px 0 4px; text-align: center; padding: 20px 20px 8px;">
         <div style="max-width:480px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 22px;text-align:center">
           <div style="font-size:28px;margin-bottom:12px">🎯</div>
-          <h2 style="font-size:17px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:10px">Our goal: you walk into the permit office once, get it right, and never go back.</h2>
+          <div style="font-size:17px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:10px">Our goal: you walk into the permit office once, get it right, and never go back.</div>
           <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px">No calling around. No guessing on fees. No rejected applications. Just the exact permit name, requirements, and checklist — before you leave the truck.</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;align-items:center;gap:10px;text-align:left">
@@ -1636,7 +1336,7 @@
 
       <!-- ROI Stats Row -->
       <div class="roi-stats-section">
-        <h2 class="roi-stats-eyebrow">💰 The ROI is obvious</h2>
+        <div class="roi-stats-eyebrow">💰 The ROI is obvious</div>
         <div class="roi-stats-row" role="list" aria-label="Key statistics">
           <div class="roi-stat" role="listitem">
             <div class="roi-stat-number">6–30 hrs</div>
@@ -1659,10 +1359,10 @@
 
       <!-- Old Way vs PermitAssist -->
       <div class="old-vs-new">
-        <h2 class="old-vs-new-eyebrow">🔄 The difference is obvious</h2>
+        <div class="old-vs-new-eyebrow">🔄 The difference is obvious</div>
         <div class="old-vs-new-cols">
           <div class="old-col">
-            <h3 class="old-col-title">❌ The Old Way</h3>
+            <div class="old-col-title">❌ The Old Way</div>
             <div class="vs-item">Call the building dept and get put on hold</div>
             <div class="vs-item">Google it and find outdated PDFs</div>
             <div class="vs-item">Drive to city hall just to find out</div>
@@ -1670,7 +1370,7 @@
             <div class="vs-item">Spend half a day on one job</div>
           </div>
           <div class="new-col">
-            <h3 class="new-col-title">✅ With PermitAssist</h3>
+            <div class="new-col-title">✅ With PermitAssist</div>
             <div class="vs-item">Instant answer in under 60 seconds</div>
             <div class="vs-item">AI-verified, jurisdiction-specific results</div>
             <div class="vs-item">Know fees &amp; timeline before you show up</div>
@@ -1682,7 +1382,7 @@
 
       <!-- ROI Savings Calculator -->
       <div class="roi-calc">
-        <h2 class="roi-calc-title">💰 See Your Savings</h2>
+        <div class="roi-calc-title">💰 See Your Savings</div>
         <div class="roi-calc-question">How many permit lookups do you do per month?</div>
         <input type="range" class="roi-slider" id="roi-slider" min="1" max="50" value="10" oninput="updateROICalc(this.value)" />
         <div class="roi-slider-val"><span id="roi-slider-num">10</span> lookups/month</div>
@@ -1700,10 +1400,10 @@
 
       <!-- Why PermitAssist Comparison Strip -->
       <div class="compare-strip">
-        <h2 class="compare-strip-eyebrow">Why PermitAssist?</h2>
+        <div class="compare-strip-eyebrow">Why PermitAssist?</div>
         <div class="compare-strip-cols">
           <div class="compare-col compare-col-winner">
-            <h3 class="compare-col-name">✅ PermitAssist</h3>
+            <div class="compare-col-name">✅ PermitAssist</div>
             <div class="compare-col-price">$39.99/mo · unlimited</div>
             <ul class="compare-col-features">
               <li>⚡ Instant — 30 seconds</li>
@@ -1713,7 +1413,7 @@
             </ul>
           </div>
           <div class="compare-col">
-            <h3 class="compare-col-name">🤵 Permit Expediter</h3>
+            <div class="compare-col-name">🤵 Permit Expediter</div>
             <div class="compare-col-price">$500–$2,000 / project</div>
             <ul class="compare-col-features">
               <li>⏳ Days to weeks</li>
@@ -1723,7 +1423,7 @@
             </ul>
           </div>
           <div class="compare-col">
-            <h3 class="compare-col-name">🔍 Googling It</h3>
+            <div class="compare-col-name">🔍 Googling It</div>
             <div class="compare-col-price">Free (but costly)</div>
             <ul class="compare-col-features">
               <li>⏰ 2–6 hours wasted</li>
@@ -1737,7 +1437,7 @@
 
       <!-- What's Included Feature Grid -->
       <div style="margin:28px 0 8px;padding:24px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:540px;margin-inline:auto">
-        <h2 style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--brand);text-align:center;margin-bottom:16px">Everything included with Pro</h2>
+        <div style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--brand);text-align:center;margin-bottom:16px">Everything included with Pro</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div style="display:flex;align-items:flex-start;gap:10px">
             <span style="font-size:20px">📂</span>
@@ -1808,7 +1508,7 @@
 
 
 
-</form>
+</div>
 
     <!-- Loading -->
     <div id="loading">
@@ -1836,10 +1536,10 @@
   <div class="page" id="page-jobs"><div class="page-inner" id="jobs-inner"></div></div>
 
   <!-- Footer -->
-  <footer class="footer">
+  <div class="footer">
     <p>⚠️ <strong>Disclaimer:</strong> PermitAssist provides AI-generated guidance based on publicly available data. Permit requirements change frequently, and fees shown are estimates. The contractor is strictly responsible for verifying all exact requirements, fees, and timelines directly with the local building department (Authority Having Jurisdiction) prior to starting any work.</p>
     <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved. &nbsp;·&nbsp; <a href="/help" style="color:var(--brand)">Help</a> &nbsp;·&nbsp; <a href="/terms" style="color:var(--brand)">Terms</a> &nbsp;·&nbsp; <a href="/privacy" style="color:var(--brand)">Privacy</a></p>
-  </footer>
+  </div>
 </div>
 
 <!-- Install Banner -->
@@ -1857,13 +1557,13 @@
 <div class="upgrade-modal" id="upgrade-modal" aria-hidden="true" onclick="handleUpgradeOverlayClick(event)">
   <div class="upgrade-modal-card" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title">
     <button class="upgrade-modal-close" type="button" aria-label="Close upgrade modal" onclick="closeUpgrade()">×</button>
-    <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Pro</div>
+    <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Solo</div>
     <div class="upgrade-modal-accent"></div>
     <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
 
     <div class="upgrade-plan-toggle" role="tablist" aria-label="Choose a plan">
       <button class="upgrade-plan-btn active" id="upgrade-plan-pro" type="button" onclick="setUpgradePlan('pro')">Solo — $39.99/mo</button>
-      <button class="upgrade-plan-btn" id="upgrade-plan-team" type="button" onclick="setUpgradePlan('team')">Team — $79.99/mo</button>
+      <button class="upgrade-plan-btn" id="upgrade-plan-team" type="button" onclick="setUpgradePlan('team')">Team — $49/mo</button>
     </div>
 
     <ul class="upgrade-feature-list" id="upgrade-features-pro">
@@ -1891,7 +1591,7 @@
       <div class="upgrade-coupon-status" id="upgrade-coupon-status"></div>
     </div>
 
-    <a class="upgrade-cta" id="upgrade-modal-cta" href="https://buy.stripe.com/bJe7sE4Hp1Ry2xLgSF3VC0e" target="_blank" rel="noopener">Upgrade Now →</a>
+    <a class="upgrade-cta" id="upgrade-modal-cta" href="https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c" target="_blank" rel="noopener">Upgrade Now →</a>
     <div class="upgrade-cta-note">🔒 Secure payment via Stripe · Cancel anytime · No contracts</div>
   </div>
 </div>
@@ -1947,24 +1647,22 @@
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
       <button onclick="openUpgrade('pro')" style="background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Solo — $39.99/mo</button>
-      <button onclick="openUpgrade('team')" style="background:rgba(37,99,235,0.15);color:var(--brand);border:1px solid rgba(37,99,235,0.4);border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Team — $79.99/mo<br><span style="font-size:10px;font-weight:400">Up to 3 seats</span></button>
+      <button onclick="openUpgrade('team')" style="background:rgba(37,99,235,0.15);color:var(--brand);border:1px solid rgba(37,99,235,0.4);border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Team — $49/mo<br><span style="font-size:10px;font-weight:400">Up to 3 seats</span></button>
     </div>
-    <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 3 months free: <strong style="color:#059669">Annual plan = $349/yr</strong> (vs $479.88)</div>
+    <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 3 months free: <strong style="color:#059669">Annual plan = $199/yr</strong> (vs $299.88)</div>
     <span class="gate-skip" id="gate-skip-link" onclick="skipGate()">Skip for now (uses 1 of 3 free lookups)</span>
   </div>
 </div>
 
 <script>
 // ── Constants & State ─────────────────────────────────────────────────────────
-const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESSION_KEY='pa_session',FREE_LIMIT=3,UPGRADE_URL='https://buy.stripe.com/bJe7sE4Hp1Ry2xLgSF3VC0e',UPGRADE_URL_TEAM='https://buy.stripe.com/4gMdR2ddVgMs7S5cCp3VC0f',UPGRADE_URL_ANNUAL='https://buy.stripe.com/eVqcMYehZfIo3BPbyl3VC0g',UPGRADE_URL_TEAM_ANNUAL='https://buy.stripe.com/6oU4gsb5N53Kfkxbyl3VC0h',UPGRADE_COUPON_CODE='LAUNCH16';
+const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESSION_KEY='pa_session',FREE_LIMIT=3,UPGRADE_URL='https://buy.stripe.com/4gM9AMddV9k08W9auh3VC0c',UPGRADE_URL_TEAM='https://buy.stripe.com/8x25kwgq7gMs2xLauh3VC0b',UPGRADE_URL_ANNUAL='https://buy.stripe.com/fZueV63DlfIo5JX7i53VC0d',UPGRADE_COUPON_CODE='LAUNCH16';
 const JOB_SAVE_SESSION_KEY='pa_saved_jobs_session',JOBS_TOOLTIP_KEY='pa_jobs_tooltip_seen';
-let _userIsPaid = false;
 const IS_ADMIN=new URLSearchParams(window.location.search).get('_dev')==='pa_internal_2026_xk9';
 let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false},jobsCache=[],watchesCache=[];
 let _serverFreeLookupsUsed=0;
 let _skipDisambig=false;
 let _isSampleLookup=false;
-let tradeWizardState={tradeKey:'',baseQuery:'',answers:{},dismissedTrade:'',suppressInput:false};
 
 // ── Job Types for Autocomplete ────────────────────────────────────────────────
 const JOB_TYPES_ALL = [
@@ -2022,216 +1720,17 @@ function setSearchMode(mode) {
     btnH.style.background = '#2563eb'; btnH.style.color = '#fff';
     if (label) label.textContent = 'What work was done at your property?';
     if (title) title.textContent = '\uD83C\uDFE0 Verify Permit for Your Property';
-    if (query) query.placeholder = 'e.g. condenser changeout, panel upgrade, full tear-off, water heater swap, mini split install';
+    if (query) query.placeholder = 'e.g. panel upgrade, service replacement, EV charger install, subpanel add, meter reset';
   } else {
     btnH.style.background = 'transparent'; btnH.style.color = 'var(--text2)';
     btnC.style.background = '#2563eb'; btnC.style.color = '#fff';
     if (label) label.textContent = 'What do you need a permit for?';
     if (title) title.textContent = '\uD83D\uDD0D Look Up Your Permit';
-    if (query) query.placeholder = 'e.g. condenser changeout, panel upgrade, full tear-off, water heater swap, mini split install';
+    if (query) query.placeholder = 'e.g. panel upgrade, service replacement, EV charger install, subpanel add, meter reset';
   }
 }
 const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-
-const TRADE_QUESTIONS = {
-  'hvac': [
-    { q: 'Job type:', options: ['Condenser/AC replacement', 'Furnace replacement', 'Full system (condenser + furnace)', 'New installation', 'Ductwork only'] },
-    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
-  ],
-  'electrical': [
-    { q: 'Job type:', options: ['Panel upgrade/heavy-up', 'New circuit', 'EV charger', 'Whole home rewire', 'Generator/transfer switch'] },
-    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
-  ],
-  'roofing': [
-    { q: 'Scope:', options: ['Full tear-off replacement', 'Partial repair', 'New construction'] },
-    { q: 'Material:', options: ['Asphalt shingle', 'Metal', 'Tile', 'Flat/TPO'] }
-  ],
-  'plumbing': [
-    { q: 'Job type:', options: ['Water heater replacement', 'Sewer/drain line', 'Re-pipe', 'Fixture relocation', 'Gas line'] },
-    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
-  ],
-  'water_heater': [
-    { q: 'Type:', options: ['Tank (gas)', 'Tank (electric)', 'Tankless (gas)', 'Tankless (electric)'] },
-    { q: 'Same location or moving it?', options: ['Same location', 'Moving it'] }
-  ],
-  'deck': [
-    { q: 'Deck type:', options: ['Attached to house', 'Freestanding'] },
-    { q: 'Height above grade:', options: ['Under 30 inches', '30+ inches'] },
-    { q: 'Material:', options: ['Treated lumber', 'Composite/Trex', 'Hardwood'] }
-  ],
-  'solar': [
-    { q: 'System type:', options: ['Grid-tied', 'Off-grid', 'Battery backup only'] },
-    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
-  ],
-  'fence': [
-    { q: 'Height:', options: ['Under 4 feet', '4-6 feet', 'Over 6 feet'] },
-    { q: 'Location:', options: ['Backyard', 'Front yard', 'Side yard'] },
-    { q: 'Corner lot?', options: ['Yes', 'No'] }
-  ],
-  'shed': [
-    { q: 'Size:', options: ['Under 100 sq ft', '100-120 sq ft', '120-200 sq ft', 'Over 200 sq ft'] },
-    { q: 'Adding electricity?', options: ['Yes', 'No'] },
-    { q: 'On permanent slab?', options: ['Yes', 'No — on skids/gravel'] }
-  ],
-  'pool': [
-    { q: 'Pool type:', options: ['In-ground', 'Above-ground'] },
-    { q: 'Depth:', options: ['Under 24 inches', '24+ inches'] }
-  ],
-  'generator': [
-    { q: 'Generator type:', options: ['Whole-home standby', 'Portable', 'Transfer switch only'] },
-    { q: 'Fuel:', options: ['Natural gas', 'Propane', 'Diesel'] }
-  ],
-  'bathroom_remodel': [
-    { q: 'Scope:', options: ['Cosmetic only (no plumbing moved)', 'Moving plumbing fixtures', 'Adding new fixtures', 'Full gut remodel'] }
-  ],
-  'window_replacement': [
-    { q: 'Type:', options: ['Retrofit/pocket (frame stays)', 'Full frame replacement', 'Enlarging opening'] },
-    { q: 'Bedroom window?', options: ['Yes', 'No'] }
-  ]
-};
-
-const INSPECTION_FAIL_POINTS = {
-  'hvac': ['Missing secondary drain pan under air handler','Disconnect not within sight of equipment','Duct joints not sealed with mastic or UL-181 tape','Improper venting clearances from combustibles','AHRI match certificate not on-site'],
-  'electrical': ['Missing AFCI protection on required circuits','GFCI missing within 6ft of water source','Junction box overfilled (too many wires)','Cables not properly supported/stapled within 12" of box','Panel directory not labeled'],
-  'roofing': ['Missing drip edge at eaves and rakes','Ice and water shield not extended 24" past interior wall','Insufficient fasteners per shingle in wind zone','Valley flashing not per manufacturer specs','Decking not inspected before shingling (where required)'],
-  'plumbing': ['P-trap improper depth or distance from wall','Missing cleanout access','Vent pipe not properly supported','Unapproved pipe material in concealed location','No pressure test performed on new lines'],
-  'water_heater': ['Missing thermal expansion tank on closed system','T&P relief valve pipe not terminated correctly (within 6" of floor)','Missing drip pan with drain line','No seismic strapping (required in CA, AK, HI, Pacific NW)','Gas flex connector too long or in concealed space'],
-  'mini_split': ['Missing exterior service disconnect within sight','Line set penetration not sealed (fire/water)','Condenser too close to property line','Refrigerant line insulation missing or damaged','No nameplate on unit at inspection'],
-  'ev_charger': ['Panel overloaded — no load calculation submitted','Wrong wire gauge for continuous 40A or 50A load','GFCI missing on receptacle-type charger','Breaker not rated for continuous duty','Conduit fill exceeded'],
-  'generator': ['Generator too close to operable windows (CO hazard)','Gas line undersized for full load','Pad too close to property line (setback violation)','Transfer switch not properly bonded','No weatherproof inlet box cover'],
-  'deck': ['Footing not deep enough below frost line','Ledger board flashing missing or improperly installed','Post base not properly anchored to footing','Joist hangers missing or wrong size','Guardrail balusters more than 4" apart'],
-  'solar': ['Insufficient roof access pathways for firefighters (18" each side)','Missing rapid shutdown equipment or labeling','DC conduit not properly labeled','Structural engineering stamp missing from plans','Interconnection labeling on utility meter incomplete'],
-  'fence': ['Height exceeds zoning limit for location (front vs back yard)','Built within utility easement','Corner lot sight-triangle violation','No call to 811 (Dig Safe) before digging','HOA approval not obtained before permit (where required)'],
-  'pool': ['Equipotential bonding grid incomplete or not tested','Self-closing, self-latching gate missing or failing','Door alarm from house to pool area missing','Underwater lighting not GFCI protected','Drain cover not anti-entrapment compliant (VGB Act)'],
-  'bathroom_remodel': ['Exhaust fan venting into attic instead of exterior','Shower pan flood test not passed (24-hour standing water)','GFCI not within required distance of water source','Shower floor slope insufficient (1/4" per foot to drain)','Plumbing moved without rough-in inspection'],
-  'window_replacement': ['Bedroom window fails egress size requirements','U-factor or SHGC not meeting climate zone energy code','Tempered glass missing near floor, door, or tub','Flashing/waterproofing not inspected before interior finish','Historic district approval not obtained'],
-  'shed': ['Too close to property line (setback violation)','Built over utility easement','Exceeds maximum square footage without permit','Electrical added without separate electrical permit','No anchor/tie-down in high-wind zone']
-};
-
-function detectTradeKey(text) {
-  const t = (text || '').toLowerCase();
-  if (!t) return '';
-  if (/\b(ev charger|electric vehicle|tesla)\b/.test(t)) return 'ev_charger';
-  if (/\b(mini split|mini-split|ductless|minisplit)\b/.test(t)) return 'mini_split';
-  if (/\b(water heater|hot water|tankless)\b/.test(t)) return 'water_heater';
-  if (/\b(hvac|air conditioner|condenser|furnace|heat pump|\bac\b|heating|cooling|air handler)\b/.test(t)) return 'hvac';
-  if (/\b(solar|\bpv\b)\b/.test(t)) return 'solar';
-  if (/\b(electric|panel|circuit|breaker|wiring)\b/.test(t)) return 'electrical';
-  if (/\b(roof|shingle|tear-off|reroof|re-roof)\b/.test(t)) return 'roofing';
-  if (/\b(plumb|pipe|drain|sewer)\b/.test(t)) return 'plumbing';
-  if (/\b(deck|patio)\b/.test(t)) return 'deck';
-  if (/\b(fence)\b/.test(t)) return 'fence';
-  if (/\b(shed|storage)\b/.test(t)) return 'shed';
-  if (/\b(pool|spa)\b/.test(t)) return 'pool';
-  if (/\b(generator|genset|generac)\b/.test(t)) return 'generator';
-  if (/\b(bathroom|bath|shower|tub)\b/.test(t)) return 'bathroom_remodel';
-  if (/\b(window)\b/.test(t)) return 'window_replacement';
-  return '';
-}
-
-function getTradeWizardSuffix() {
-  const selected = Object.values(tradeWizardState.answers || {}).filter(Boolean);
-  return selected.length ? ` — ${selected.join(', ')}` : '';
-}
-
-function stripTradeWizardSuffix(value) {
-  const suffix = getTradeWizardSuffix();
-  return suffix && value.endsWith(suffix) ? value.slice(0, -suffix.length).trim() : value;
-}
-
-function dismissTradeWizard() {
-  tradeWizardState.dismissedTrade = tradeWizardState.tradeKey || detectTradeKey(document.getElementById('query')?.value || '');
-  const wizard = document.getElementById('trade-wizard');
-  if (wizard) { wizard.classList.remove('show'); wizard.innerHTML = ''; }
-}
-
-function applyTradeWizardAnswers() {
-  const textarea = document.getElementById('query');
-  if (!textarea) return;
-  const selected = Object.values(tradeWizardState.answers || {}).filter(Boolean);
-  const nextValue = tradeWizardState.baseQuery + (selected.length ? ` — ${selected.join(', ')}` : '');
-  tradeWizardState.suppressInput = true;
-  textarea.value = nextValue.trim();
-  tradeWizardState.suppressInput = false;
-}
-
-function setTradeWizardAnswer(questionIndex, option) {
-  tradeWizardState.answers[questionIndex] = tradeWizardState.answers[questionIndex] === option ? '' : option;
-  renderTradeWizard();
-  applyTradeWizardAnswers();
-}
-
-function renderTradeWizard() {
-  const wizard = document.getElementById('trade-wizard');
-  const questions = TRADE_QUESTIONS[tradeWizardState.tradeKey] || [];
-  if (!wizard || !questions.length || !tradeWizardState.baseQuery || tradeWizardState.baseQuery.length > 50 || tradeWizardState.dismissedTrade === tradeWizardState.tradeKey) {
-    if (wizard) { wizard.classList.remove('show'); wizard.innerHTML = ''; }
-    return;
-  }
-  wizard.innerHTML = `<div class="trade-wizard-head"><div><div class="trade-wizard-title">Quick questions</div><div class="trade-wizard-sub">Tap a few details and we will tighten up your permit lookup automatically.</div></div><button type="button" class="trade-wizard-dismiss" id="trade-wizard-dismiss-btn">✕ dismiss</button></div>${questions.map((item, idx) => `<div class="trade-question"><div class="trade-question-label">${esc(item.q)}</div><div class="trade-option-row" data-qidx="${idx}">${item.options.map(option => `<button type="button" class="trade-option-btn ${tradeWizardState.answers[idx]===option?'active':''}" data-option="${esc(option)}">${esc(option)}</button>`).join('')}</div></div>`).join('')}`;
-  const dismissBtn = wizard.querySelector('#trade-wizard-dismiss-btn');
-  if (dismissBtn) dismissBtn.addEventListener('click', dismissTradeWizard);
-  wizard.querySelectorAll('.trade-option-row').forEach(row => {
-    const qIdx = parseInt(row.dataset.qidx, 10);
-    row.querySelectorAll('.trade-option-btn').forEach(btn => {
-      btn.addEventListener('click', () => setTradeWizardAnswer(qIdx, btn.dataset.option));
-    });
-  });
-  wizard.classList.add('show');
-}
-
-function handleTradeWizardInput() {
-  const textarea = document.getElementById('query');
-  if (!textarea || tradeWizardState.suppressInput) return;
-  const rawValue = textarea.value.trim();
-  const baseValue = stripTradeWizardSuffix(rawValue);
-  tradeWizardState.baseQuery = baseValue;
-  const tradeKey = detectTradeKey(baseValue);
-  if (tradeKey !== tradeWizardState.tradeKey) {
-    tradeWizardState.tradeKey = tradeKey;
-    tradeWizardState.answers = {};
-  }
-  if (!tradeKey || baseValue.length > 50 || !TRADE_QUESTIONS[tradeKey]) {
-    const wizard = document.getElementById('trade-wizard');
-    if (wizard) { wizard.classList.remove('show'); wizard.innerHTML = ''; }
-    return;
-  }
-  renderTradeWizard();
-}
-
-function getInspectionFailPoints(jobType, result) {
-  const permitText = [jobType, result?.permit_name, result?.permit_type, ...(result?.permits_required || []).map(p => p?.permit_type || ''), ...(result?.permits_required || []).map(p => p?.portal_selection || '')].join(' ').toLowerCase();
-  const tradeKey = detectTradeKey(permitText);
-  return INSPECTION_FAIL_POINTS[tradeKey] || [];
-}
-
-function generateCustomerPermitExplanation() {
-  const result = window._lastLookupResult || {};
-  const permitName = getPermitDisplayName(result);
-  const city = window._lastLookupCity || '';
-  const state = window._lastLookupState || '';
-  const fee = result.fee_range || result.fee || result.cost || 'Call the city to confirm the exact fee';
-  const location = [city, state].filter(Boolean).join(', ') || 'your jurisdiction';
-  return `Why Your ${permitName} Permit is Required\n\nYour contractor is required by ${location} law to pull a ${permitName} before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local safety codes. Without it, your homeowner's insurance may not cover claims related to this work, and you may face issues when selling your home.\n\nCost: ${fee} — this is paid directly to the city, not to your contractor.\n\nWhat happens without it: Unpermitted work can result in fines, required tear-out and redo, insurance claim denials, and required disclosure during home sale.\n\nThis information was verified via PermitAssist (permitassist.io).`;
-}
-
-function toggleCustomerExplanation() {
-  const box = document.getElementById('customer-explanation-box');
-  if (!box) return;
-  const isOpen = box.style.display === 'block';
-  if (isOpen) {
-    box.style.display = 'none';
-    return;
-  }
-  box.textContent = generateCustomerPermitExplanation();
-  box.style.display = 'block';
-}
-
-function copyCustomerExplanation() {
-  const text = generateCustomerPermitExplanation();
-  navigator.clipboard.writeText(text).then(() => showCopy('✅ Customer explanation copied')).catch(() => showCopy('⚠️ Could not copy right now'));
-}
 
 // ── Inspection Checklists (hardcoded by trade) ────────────────────────────────
 const INSPECTION_CHECKLISTS = {
@@ -2295,7 +1794,7 @@ function checkDisambiguation() {
   const title = document.querySelector('#disambig-box .disambig-title');
   const btns = document.querySelector('#disambig-box .disambig-btns');
   if (title) title.textContent = rule.title;
-  if (btns) { btns.innerHTML = rule.options.map(opt => `<button class="disambig-btn">${esc(opt)}</button>`).join(''); btns.querySelectorAll('button').forEach((btn, i) => { btn.addEventListener('click', () => submitWithDisambig(rule.options[i])); }); }
+  if (btns) btns.innerHTML = rule.options.map(opt => `<button class="disambig-btn" onclick="submitWithDisambig(${JSON.stringify(opt)})">${esc(opt)}</button>`).join('');
   box.classList.add('show');
   return true;
 }
@@ -2312,7 +1811,7 @@ function submitWithDisambig(choice) {
 function getLookupCount(){if(IS_ADMIN) return 0;return _serverFreeLookupsUsed||0}
 function incrementLookup(){return getLookupCount()}
 function hasEmail(){if(IS_ADMIN) return true;return !!localStorage.getItem(EMAIL_KEY)}
-function saveEmail(email){const normalized=normalizeEmailForAds(email);localStorage.setItem(EMAIL_KEY,normalized);setEnhancedConversionEmail(normalized);fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:normalized,source:'gate'})}).catch(()=>{})}
+function saveEmail(email){localStorage.setItem(EMAIL_KEY,email.trim().toLowerCase());fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim().toLowerCase(),source:'gate'})}).catch(()=>{})}
 function hashString(input){let h=2166136261;for(let i=0;i<input.length;i++){h^=input.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
 function getCanvasFingerprint(){try{const canvas=document.createElement('canvas');const ctx=canvas.getContext('2d');if(!ctx)return 'nocanvas';ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('PermitAssist fingerprint',2,15);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText(navigator.userAgent,4,35);return hashString(canvas.toDataURL())}catch{return 'canvas-error'}}
 function getClientFingerprint(){let fp=localStorage.getItem('pa_client_fingerprint');if(fp)return fp;const tz=(Intl.DateTimeFormat().resolvedOptions().timeZone)||'na';const parts=[navigator.userAgent||'',`${screen.width||0}x${screen.height||0}x${screen.colorDepth||0}`,tz,navigator.language||'',getCanvasFingerprint()];fp=hashString(parts.join('|'));localStorage.setItem('pa_client_fingerprint',fp);return fp}
@@ -2329,7 +1828,7 @@ function getAuthHeaders(){const t=getSessionToken();const h={'Content-Type':'app
 (function(){
   if(new URLSearchParams(window.location.search).get('upgraded')==='1'){
     if(typeof gtag==='function'){
-      gtag('event','conversion',{'send_to':'AW-18087945418/7fnVCN6vgp4cEMrJgLFD','value':39.99,'currency':'USD'});
+      gtag('event','conversion',{'send_to':'AW-18087945418/7fnVCN6vgp4cEMrJgLFD','value':24.99,'currency':'USD'});
     }
   }
 })();
@@ -2391,7 +1890,6 @@ async function refreshAccountBadge(){
     if(intLink) intLink.style.display=d.paid?'':'none';
     // Hide free-tier pitch from paid users
     if(freePaidBar) freePaidBar.style.display=d.paid?'none':'';
-    _userIsPaid = !!d.paid;
     // Sync mobile drawer
     const drawerLogin=document.getElementById('drawer-login-link');
     const drawerAccount=document.getElementById('drawer-account-link');
@@ -2576,14 +2074,13 @@ function hidePreLookupGate() {
 function submitPreLookupEmail() {
   const inp = document.getElementById('pre-gate-email'), val = inp.value.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { inp.style.borderColor = 'var(--red)'; inp.focus(); return; }
-  const normalizedEmail = normalizeEmailForAds(val);
-  localStorage.setItem(EMAIL_KEY, normalizedEmail);
-  setEnhancedConversionEmail(normalizedEmail);
+  localStorage.setItem(EMAIL_KEY, val.toLowerCase());
   fetch('/api/capture-email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: normalizedEmail, source: 'pre-lookup' })
+    body: JSON.stringify({ email: val, source: 'pre-lookup' })
   }).catch(() => {});
+  if (typeof gtag === 'function') gtag('event', 'conversion', {'send_to': 'AW-18087945418/SIGNUP_LABEL'});
   hidePreLookupGate();
   _preLookupPassed = true;
   doLookupWithOffline();
@@ -2605,29 +2102,14 @@ function showGate(hardBlock){
   setTimeout(()=>document.getElementById('gate-email').focus(),350);
 }
 function hideGate(){document.getElementById('email-gate').style.display='none'}
-async function submitGateEmail(){
+function submitGateEmail(){
   const inp=document.getElementById('gate-email'),val=inp.value.trim();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){inp.style.borderColor='var(--red)';inp.focus();return}
-  const normalizedEmail = normalizeEmailForAds(val);
-  localStorage.setItem(EMAIL_KEY, normalizedEmail);
-  setEnhancedConversionEmail(normalizedEmail);
-  const emailSentEl=document.getElementById('magic-email-sent');if(emailSentEl)emailSentEl.textContent=normalizedEmail;
-  // Send magic link and show code entry step so user actually logs in
-  const btn=document.getElementById('magic-send-btn');
-  if(btn)btn.disabled=true;
-  try{
-    const r=await fetch('/api/magic-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:normalizedEmail})});
-    const d=await r.json();
-    document.getElementById('magic-step1').style.display='none';
-    document.getElementById('magic-step2').style.display='block';
-    if(d.sent){
-      document.getElementById('magic-step2-msg').textContent='Check your email for your 6-character login code.';
-    } else if(d.code){
-      document.getElementById('magic-step2-msg').innerHTML='<strong style="font-size:22px;letter-spacing:4px;color:var(--brand)">'+d.code+'</strong><br><span style="font-size:12px;color:var(--muted)">Enter this code below (expires in 15 min)</span>';
-    }
-    setTimeout(()=>{const ci=document.getElementById('magic-code-input');if(ci)ci.focus();},300);
-  }catch{alert('Network error. Try again.');}
-  finally{if(btn)btn.disabled=false;}
+  localStorage.setItem(EMAIL_KEY, val.toLowerCase());
+  // Send magic link in background for login (non-blocking — user gets results immediately)
+  const emailSentEl=document.getElementById('magic-email-sent');if(emailSentEl)emailSentEl.textContent=val;
+  fetch('/api/magic-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:val})}).catch(()=>{});
+  hideGate();if(pendingResult) showPendingResult();
 }
 function switchToMagicLogin(){const gate=document.getElementById('email-gate');if(gate){document.getElementById('magic-step1').style.display='none';document.getElementById('magic-step2').style.display='none';/* Show login mode */document.getElementById('magic-step1').style.display='block';}}
 function showMagicStep1(){document.getElementById('magic-step1').style.display='block';document.getElementById('magic-step2').style.display='none';}
@@ -2637,24 +2119,22 @@ async function verifyMagicCode(){
   const btn=document.getElementById('magic-verify-btn');
   btn.disabled=true;btn.textContent='Verifying...';
   try{
-    // Use POST endpoint — returns session_token directly, no redirect needed (works on mobile)
-    const r=await fetch('/api/verify-magic',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({token:code})
-    });
-    const d=await r.json();
-    if(d.session_token){
-      setSessionToken(d.session_token);
-      saveEmail(localStorage.getItem(EMAIL_KEY)||document.getElementById('magic-email-sent').textContent||'');
+    // Use the verify endpoint via fetch (avoid redirect, handle in JS)
+    const r=await fetch('/api/verify-magic?token='+encodeURIComponent(code),{redirect:'follow'});
+    if(r.ok||r.redirected){
+      // Extract session token from URL if redirected
+      const url=new URL(r.url);
+      const t=url.searchParams.get('t');
+      if(t){
+        setSessionToken(t);
+        saveEmail(localStorage.getItem(EMAIL_KEY)||document.getElementById('magic-email-sent').textContent||'');
+      }
       hideGate();
       refreshCounterBar();
-      await refreshAccountBadge();
+      refreshAccountBadge();
       if(pendingResult) showPendingResult();
-      // If user was trying to save a job, auto-trigger it now
-      if(currentResult){ await refreshJobsAndWatches(); saveLookupToJobPrompt(); }
     } else {
-      alert(d.error || 'Invalid or expired code. Please try again or request a new one.');
+      alert('Invalid or expired code. Please try again or request a new one.');
       btn.disabled=false;btn.textContent='Verify Code →';
     }
   }catch{
@@ -2673,14 +2153,7 @@ function showPendingResult(){if(!pendingResult) return;const {data,job,city,stat
 // ── Install ──────────────────────────────────────────────────────────────────
 const _isIOS=(/iphone|ipad|ipod/i).test(navigator.userAgent)&&!window.MSStream;
 const _isInStandalone=('standalone' in navigator && navigator.standalone);
-function showInstallAfterFirstScroll(){
-  if(localStorage.getItem('pa_install_dismissed')) return;
-  const page=document.getElementById('page-search');
-  const reveal=()=>{document.getElementById('install-banner').classList.add('show'); if(window.innerWidth>600) document.getElementById('install-nav-btn').style.display='block';};
-  if(page && page.scrollTop > 320) reveal();
-  else if(page) page.addEventListener('scroll', () => { if(page.scrollTop > 320) reveal(); }, { once:true, passive:true });
-}
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;showInstallAfterFirstScroll();});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;if(!localStorage.getItem('pa_install_dismissed')){document.getElementById('install-banner').classList.add('show');document.getElementById('install-nav-btn').style.display='block'}});
 // iOS Safari: show banner with tap-share instructions (no beforeinstallprompt on iOS)
 (function(){
   if(_isIOS && !_isInStandalone && !localStorage.getItem('pa_install_dismissed')){
@@ -2691,7 +2164,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
     sub.textContent='Tap the Share button \u2193 then "Add to Home Screen"';
     btn.textContent='Got it';
     btn.onclick=function(){dismissInstall();};
-    showInstallAfterFirstScroll();
+    banner.classList.add('show');
   }
 })();
 function installApp(){if(!deferredInstallPrompt) return;deferredInstallPrompt.prompt();deferredInstallPrompt.userChoice.then(()=>{deferredInstallPrompt=null;document.getElementById('install-banner').classList.remove('show');document.getElementById('install-nav-btn').style.display='none'})}
@@ -2793,7 +2266,7 @@ function parseQuery(raw){
 }
 
 // ── Navigation helpers ───────────────────────────────────────────────────────
-function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('address').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');tradeWizardState={tradeKey:'',baseQuery:'',answers:{},dismissedTrade:'',suppressInput:false};const wizard=document.getElementById('trade-wizard');if(wizard){wizard.classList.remove('show');wizard.innerHTML='';}refreshCounterBar();document.getElementById('page-search').scrollTop=0}
+function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('address').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');refreshCounterBar();document.getElementById('page-search').scrollTop=0}
 
 const upgradeCouponInput=document.getElementById('upgrade-coupon-input');
 if(upgradeCouponInput){
@@ -2892,9 +2365,6 @@ function getNextSteps(d, job, city, state) {
 
 function renderResults(d, job, city, state) {
   window._lastLookupResult = d;
-  window._lastLookupJob = job || '';
-  window._lastLookupCity = city || '';
-  window._lastLookupState = state || '';
   const verdict = verdictState(d);
   const permits = d.permits_required || [];
   const insps = d.inspections || [];
@@ -2928,11 +2398,13 @@ function renderResults(d, job, city, state) {
   // Show nav link too
   document.getElementById('nav-new-search').classList.add('show');
 
-  // Counter warning (skip for paid users)
-  if (!_userIsPaid && getLookupCount() >= FREE_LIMIT - 2) {
+  // Counter warning
+  if (getLookupCount() >= FREE_LIMIT - 2) {
     const remaining = Math.max(0, FREE_LIMIT - getLookupCount());
     html += `<div class="card" style="border-color:rgba(59,130,246,0.35)"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><div class="section-label">Usage</div><div style="font-size:14px;font-weight:700">${remaining > 0 ? `${remaining} free lookup${remaining!==1?'s':''} left` : 'Free lookups used'}</div></div><button class="action-btn" style="margin:0;padding:10px 14px" onclick="openUpgrade()">Upgrade</button></div></div>`;
   }
+
+  html += buildResultSavePrompt(job, city, state, getResultPermitName(d));
 
   // County fallback notice
   if (countyNote) {
@@ -3021,7 +2493,7 @@ function renderResults(d, job, city, state) {
     </div>
     ${confidenceReason ? `<div style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.5">${esc(confidenceReason)}</div>` : ''}
     
-
+    ${(()=>{ try { if(!d.apply_url) return ''; const h=new URL(d.apply_url).hostname; if(!h||h.length<4) return ''; return `<div style="margin-top:16px"><a href="${esc(d.apply_url)}" target="_blank" rel="noopener" class="search-again-hero" style="background:#10b981; margin-bottom:0; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px">🚀 Apply Online Now</a><div style="font-size:11px; color:var(--muted); text-align:center; margin-top:6px">External portal: ${esc(h)}</div></div>`; } catch(e){ return ''; } })()}
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--muted)">Last updated: ${heroUpdatedLabel}</span>
@@ -3104,11 +2576,6 @@ function renderResults(d, job, city, state) {
     html += `<div class="card"><div class="section-label">✅ Next Steps</div><ol class="ordered-list">${nextSteps.map(step => `<li>${esc(step)}</li>`).join('')}</ol></div>`;
   }
 
-  const inspectionFailPoints = getInspectionFailPoints(job, d);
-  if (inspectionFailPoints.length && verdict !== 'no') {
-    html += `<div class="card inspection-fail-card"><div class="checklist-toggle" onclick="toggleChecklist(this)"><div class="checklist-toggle-text">⚠️ Don't Fail This Inspection</div><div class="checklist-toggle-arrow">▼</div></div><div class="checklist-items">${inspectionFailPoints.map(item => `<div class="inspection-fail-item">${esc(item)}</div>`).join('')}</div></div>`;
-  }
-
   // Contact card
   if (phone || office || maps) {
     html += `<div class="card" style="${verdict==='maybe'?'border-color:rgba(245,158,11,0.4);':''}">
@@ -3152,10 +2619,6 @@ function renderResults(d, job, city, state) {
     html += `</div>`;
   }
 
-  if (verdict !== 'no') {
-    html += `<div class="card permit-explainer-card"><div class="section-label">📋 Customer Permit Justifier</div><div style="font-size:14px;color:var(--text2);line-height:1.6">Need to explain the permit to the homeowner fast? Open this and copy it into a text, email, or quote.</div><div class="permit-explainer-actions"><button class="action-btn" onclick="toggleCustomerExplanation()">📋 Get Customer Explanation</button><button class="action-btn" onclick="copyCustomerExplanation()">📋 Copy to Clipboard</button></div><div class="permit-explainer-copy" id="customer-explanation-box" style="display:none"></div></div>`;
-  }
-
   // City contractor registration alert
   const cityReg = d.city_contractor_registration;
   if (cityReg && cityReg !== 'null' && cityReg !== 'None') {
@@ -3190,7 +2653,7 @@ function renderResults(d, job, city, state) {
   }
 
   // Before You Start — post-permit callout
-  if (verdict === 'yes') {
+  if (d.permit_verdict === 'YES' || (top && top !== 'NO')) {
     html += `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
       <div class="section-label" style="color:var(--green)">📋 Before You Start Work</div>
       <ul class="bullet-list" style="margin-top:8px">
@@ -3355,12 +2818,10 @@ function renderResults(d, job, city, state) {
       </div>
       <div id="reminder-confirm" style="display:none;color:var(--green);font-size:13px;margin-top:8px;font-weight:600">✓ We'll remind you 30 days before expiry.</div>
     </div>
-    <div id="compliance-checklist-card" class="card compliance-checklist-card" style="display:none">
+    <div class="card compliance-checklist-card" id="compliance-checklist-card">
       <div class="section-label">📋 Pre-Construction Checklist</div>
       <div id="compliance-checklist-content" class="compliance-checklist-summary">Generating your action checklist…</div>
     </div>
-    <button class="action-btn no-print" style="width:100%;margin-bottom:8px" onclick="printChecklist()">📋 Print Checklist</button>
-    ${buildResultSavePrompt(job, city, state, getResultPermitName(d))}
     <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>
     <div class="feedback-row">
       <span style="font-size:12px;color:var(--muted)">Something wrong?</span>
@@ -3375,15 +2836,6 @@ function renderResults(d, job, city, state) {
   loadComplianceChecklist(job, city, state, d);
   pulseJobsTab();
   maybeShowJobsTooltip();
-}
-
-function printChecklist() {
-  const card = document.getElementById('compliance-checklist-card');
-  if (card) { card.style.display = 'block'; }
-  setTimeout(() => {
-    window.print();
-    setTimeout(() => { if (card) card.style.display = 'none'; }, 300);
-  }, 100);
 }
 
 function toggleChecklist(el) {
@@ -3551,11 +3003,6 @@ async function refreshJobsAndWatches() {
       fetch('/api/city-watch', { headers: getAuthHeaders() })
     ]);
     jobsCache = jobsResp.ok ? ((await jobsResp.json()).jobs || []) : [];
-    jobsCache.forEach(job => {
-      if (job?.id && job?.issued_date && !localStorage.getItem('pa_issued_' + job.id)) {
-        localStorage.setItem('pa_issued_' + job.id, job.issued_date);
-      }
-    });
     watchesCache = watchesResp.ok ? ((await watchesResp.json()).watches || []) : [];
   } catch {
     jobsCache = jobsCache || [];
@@ -3654,30 +3101,13 @@ async function submitRejectionFix(job) {
   if (btn) { btn.disabled = true; btn.textContent = 'Getting fix plan...'; }
   if (resultEl) { resultEl.style.display = 'none'; resultEl.textContent = ''; }
   try {
-    const resp = await fetch('/api/fix-rejection', {
+    const resp = await fetch('/api/rejection-fix', {
       method: 'POST', headers: getAuthHeaders(),
       body: JSON.stringify({ job_id: job.id, rejection_text: rejectionText, city: job.city, state: job.state, job_type: job.trade || job.job_name || '' })
     });
     const payload = await resp.json();
-    if (!resp.ok || !payload.ok) throw new Error(payload.error || 'Could not generate fix plan');
-    const r = payload.result || {};
-    let html = '';
-    if (r.rejection_reasons && r.rejection_reasons.length) {
-      html += `<div class="fixit-section-label">❌ Why They Rejected It</div>`;
-      r.rejection_reasons.forEach(reason => { html += `<div class="fixit-step">• ${esc(reason)}</div>`; });
-    }
-    if (r.fix_steps && r.fix_steps.length) {
-      html += `<div class="fixit-section-label">✅ What You Need to Fix</div>`;
-      r.fix_steps.forEach((step, i) => { html += `<div class="fixit-step"><strong>${i+1}.</strong> ${esc(step)}</div>`; });
-    }
-    if (r.resubmission_tips) {
-      html += `<div class="fixit-section-label">💡 Resubmission Tips</div><div class="fixit-step">${esc(r.resubmission_tips)}</div>`;
-    }
-    if (r.response_letter) {
-      html += `<div class="fixit-section-label">📄 Response Letter</div><div class="fixit-letter">${esc(r.response_letter)}</div>`;
-    }
-    if (!html && payload.fix_plan) html = esc(payload.fix_plan).replace(/\n/g, '<br>');
-    if (resultEl) { resultEl.style.display = 'block'; resultEl.innerHTML = html || 'No fix plan available.'; }
+    if (!resp.ok || !payload.fix_plan) throw new Error(payload.error || 'Could not generate fix plan');
+    if (resultEl) { resultEl.style.display = 'block'; resultEl.textContent = payload.fix_plan; }
   } catch (e) {
     if (resultEl) { resultEl.style.display = 'block'; resultEl.textContent = `Error: ${e.message || 'Could not generate fix plan'}`; }
   }
@@ -3946,7 +3376,7 @@ function downloadReport() {
   ${tipList ? `<div class="section"><div class="section-label">&#128161; Pro Tips</div><ul class="plain">${tipList}</ul></div>` : ''}
   ${mistakeList ? `<div class="section" style="border-color:#fca5a5"><div class="section-label" style="color:#dc2626">&#9888;&#65039; Common Mistakes &mdash; Watch Out</div><ul class="plain">${mistakeList}</ul></div>` : ''}
   ${sourceList ? `<div class="section"><div class="section-label">&#128279; Sources</div><ul class="plain">${sourceList}</ul></div>` : ''}
-  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</footer>
+  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body>
@@ -4072,7 +3502,7 @@ function printResult() {
   ${inspList ? `<div class="section"><div class="section-label">&#128269; Inspection Stages</div><table>${inspList}</table></div>` : ''}
   ${tipList ? `<div class="section"><div class="section-label">&#128161; Pro Tips</div><ul class="plain">${tipList}</ul></div>` : ''}
   ${mistakeList ? `<div class="section" style="border-color:#fca5a5"><div class="section-label" style="color:#dc2626">&#9888;&#65039; Common Mistakes</div><ul class="plain">${mistakeList}</ul></div>` : ''}
-  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</footer>
+  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body>
@@ -4228,7 +3658,7 @@ function runSampleLookup() {
   document.getElementById('city').value = 'Austin';
   document.getElementById('state').value = 'TX';
   // Use a query that won't trigger any disambiguation rules
-  document.getElementById('query').value = 'HVAC replacement, residential AC unit swap, 3-ton split system';
+  document.getElementById('query').value = '200-amp panel upgrade, meter/main replacement, residential service';
   setJobCategory('residential');
   checkShimmer();
   // Skip disambiguation and don't count as a free lookup
@@ -4435,13 +3865,9 @@ function initAutocomplete() {
     const matches = JOB_TYPES_ALL.filter(j => j.toLowerCase().includes(val)).slice(0, 7);
     if (!matches.length) { dropdown.style.display = 'none'; return; }
     dropdown.innerHTML = matches.map(m =>
-      `<div class="autocomplete-item" data-val="${esc(m)}">${esc(m)}</div>`
+      `<div class="autocomplete-item" onclick="selectAutocomplete(${JSON.stringify(m)})">${esc(m)}</div>`
     ).join('');
     dropdown.style.display = 'block';
-  });
-  dropdown.addEventListener('click', e => {
-    const item = e.target.closest('.autocomplete-item');
-    if (item && item.dataset.val) selectAutocomplete(item.dataset.val);
   });
   document.addEventListener('click', e => {
     if (!dropdown.contains(e.target) && e.target !== textarea) dropdown.style.display = 'none';
@@ -4450,9 +3876,6 @@ function initAutocomplete() {
 function selectAutocomplete(text) {
   const textarea = document.getElementById('query');
   if (textarea) textarea.value = text;
-  tradeWizardState.baseQuery = text;
-  tradeWizardState.dismissedTrade = '';
-  handleTradeWizardInput();
   const dropdown = document.getElementById('autocomplete-dropdown');
   if (dropdown) dropdown.style.display = 'none';
   checkShimmer();
@@ -4562,7 +3985,7 @@ function printChecklistSection(){
   <div class="job-label">${efn(job)}</div>
   <div class="loc-label">&#128205; ${efn(city)}, ${efn(state)}</div>
   ${checklistHTML}
-  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Verify all requirements with your local building department before starting work.</footer>
+  <div class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Verify all requirements with your local building department before starting work.</div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body>
@@ -4644,10 +4067,7 @@ async function savePermitIssuedDate(jobId, jobName, city, state, issuedDate) {
 }
 
 function getPermitIssuedDate(jobId) {
-  const localValue = localStorage.getItem('pa_issued_' + jobId) || '';
-  if (localValue) return localValue;
-  const job = (jobsCache || []).find(j => String(j.id) === String(jobId));
-  return job?.issued_date || '';
+  return localStorage.getItem('pa_issued_' + jobId) || '';
 }
 async function updateJobStatus(id, status) {
   try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:getAuthHeaders(),body:JSON.stringify({status})}); await refreshJobsAndWatches(); renderJobsPage(); } catch{}
@@ -4665,12 +4085,7 @@ async function setPermitIssuedDate(jobId, jobName, city, state) {
 }
 async function deleteJobItem(id) {
   if(!confirm('Delete this job?')) return;
-  try {
-    const r = await fetch('/api/jobs/'+id, {method:'DELETE', headers:getAuthHeaders()});
-    if (!r.ok) { const err = await r.json().catch(()=>({})); alert('Could not delete: ' + (err.error || r.status)); return; }
-    await refreshJobsAndWatches();
-    renderJobsPage();
-  } catch(e) { alert('Delete failed: ' + e.message); }
+  try { await fetch('/api/jobs/'+id,{method:'DELETE',headers:getAuthHeaders()}); await refreshJobsAndWatches(); renderJobsPage(); } catch{}
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
@@ -4680,12 +4095,7 @@ document.getElementById('lookup-btn').onclick = doLookupWithOffline;
   if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doLookupWithOffline(); } });
 });
 // On query input change, hide disambiguation
-const queryEl = document.getElementById('query');
-queryEl.addEventListener('input', () => {
-  document.getElementById('disambig-box').classList.remove('show');
-  if (!tradeWizardState.suppressInput) tradeWizardState.dismissedTrade = '';
-  handleTradeWizardInput();
-});
+document.getElementById('query').addEventListener('input', () => document.getElementById('disambig-box').classList.remove('show'));
 
 // Search card focus glow
 (function(){
@@ -4804,17 +4214,14 @@ function submitFollowupQA() {
     resultDiv.style.display = 'none';
     try {
       const lastResult = window._lastLookupResult || {};
-      const lookupJob = window._lastLookupJob || lastResult.job_type || currentResult?.job || '';
-      const lookupCity = window._lastLookupCity || lastResult.city || currentResult?.city || '';
-      const lookupState = window._lastLookupState || lastResult.state || currentResult?.state || '';
       const resp = await fetch('/api/fix-rejection', {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           rejection_text: rejection,
-          job_type: lookupJob,
-          city: lookupCity,
-          state: lookupState
+          job_type: lastResult.job_type || '',
+          city: lastResult.city || '',
+          state: lastResult.state || ''
         })
       });
       if (resp.status === 401) {
