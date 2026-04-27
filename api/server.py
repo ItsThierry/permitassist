@@ -3471,16 +3471,23 @@ class Handler(BaseHTTPRequestHandler):
                         }, extra_headers={**response_headers, "Retry-After": str(retry_after)})
                         return
 
-                    if used_before >= FREE_LOOKUP_LIMIT and not unlimited:
-                        user = get_user(user_email) if user_email else None
-                        if user and user.get("email"):
-                            threading.Thread(target=send_free_limit_email_once, args=(user["email"],), daemon=True).start()
-                        self.send_json(403, {
-                            "error": "free_limit_reached",
-                            "message": "You've used your 3 free lookups. Subscribe to continue.",
-                            "upgrade_url": FREE_LOOKUP_UPGRADE_URL,
-                        }, extra_headers=response_headers)
-                        return
+                    # Admin-bypass: if X-Admin-Token header matches ADMIN_TOKEN env, skip the free-tier limit
+                    admin_token = self.headers.get("X-Admin-Token", "")
+                    if ADMIN_TOKEN and admin_token == ADMIN_TOKEN:
+                        # Log the bypass for audit trail
+                        print(f"[admin-bypass] /api/permit lookup bypass at {datetime.utcnow().isoformat()} email={data.get('email','')}")
+                        # Skip free-tier limit check — proceed to engine
+                    else:
+                        if used_before >= FREE_LOOKUP_LIMIT and not unlimited:
+                            user = get_user(user_email) if user_email else None
+                            if user and user.get("email"):
+                                threading.Thread(target=send_free_limit_email_once, args=(user["email"],), daemon=True).start()
+                            self.send_json(403, {
+                                "error": "free_limit_reached",
+                                "message": "You've used your 3 free lookups. Subscribe to continue.",
+                                "upgrade_url": FREE_LOOKUP_UPGRADE_URL,
+                            }, extra_headers=response_headers)
+                            return
 
                 if is_benchmark:
                     print(f"[permit][BENCH] {job_type} in {city}, {state} — engine={force_model or 'default'} ip={ip}")
