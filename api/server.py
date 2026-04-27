@@ -2948,25 +2948,27 @@ class Handler(BaseHTTPRequestHandler):
 
         # ── SEO: /permits/* pages ─────────────────────────────────────────
         elif path.startswith("/permits"):
-            # Try to find index.html in SEO pages directory
-            # e.g. /permits/hvac/houston-tx → seo_pages/permits/hvac/houston-tx/index.html
+            # Try frontend/permits/ first (new city × trade pSEO pages)
+            # then fall back to seo/seo_pages/permits/ (legacy trade-only pages)
             safe_seo = path.lstrip("/")
-            # Direct file path
-            candidate = os.path.realpath(os.path.join(SEO_DIR, safe_seo))
-            seo_root = os.path.realpath(SEO_DIR)
-            # Security check
-            if not candidate.startswith(seo_root):
-                self.send_response(403); self.end_headers(); return
-            # Try as directory with index.html
-            if os.path.isdir(candidate):
-                candidate = os.path.join(candidate, "index.html")
-            # Try with .html extension
-            if not os.path.exists(candidate) and not candidate.endswith(".html"):
-                candidate = candidate + ".html"
-            if os.path.isfile(candidate):
-                ext = os.path.splitext(candidate)[1].lower()
-                self.send_file(candidate, mime_map.get(ext, "text/html; charset=utf-8"))
-            else:
+            served = False
+            for root_dir in (FRONTEND_DIR, SEO_DIR):
+                candidate = os.path.realpath(os.path.join(root_dir, safe_seo))
+                root_real = os.path.realpath(root_dir)
+                if not candidate.startswith(root_real):
+                    continue
+                if os.path.isdir(candidate):
+                    candidate = os.path.join(candidate, "index.html")
+                if not os.path.exists(candidate) and not candidate.endswith(".html"):
+                    candidate_html = candidate + ".html"
+                    if os.path.exists(candidate_html):
+                        candidate = candidate_html
+                if os.path.isfile(candidate):
+                    ext = os.path.splitext(candidate)[1].lower()
+                    self.send_file(candidate, mime_map.get(ext, "text/html; charset=utf-8"))
+                    served = True
+                    break
+            if not served:
                 # 404 with branded page
                 self.send_response(404)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
