@@ -444,6 +444,24 @@
       animation: shimmerBorder 2s ease forwards;
     }
     @keyframes shimmerBorder { from { opacity: 0; } to { opacity: 1; } }
+    .result-trust { display: grid; grid-template-columns: minmax(220px, 320px) 1fr; gap: 12px; align-items: start; margin-bottom: 18px; }
+    .result-trust-toggle { width: 100%; border-radius: 999px; padding: 12px 16px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-sizing: border-box; border: 1px solid transparent; box-shadow: 0 10px 24px rgba(15,23,42,0.08); transition: transform .15s ease, box-shadow .15s ease; }
+    .result-trust-toggle:hover, .result-trust-toggle:focus { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(15,23,42,0.12); outline: none; }
+    .result-trust-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .result-trust-label { font-size: 14px; font-weight: 900; letter-spacing: .8px; line-height: 1.1; }
+    .result-trust-sub { font-size: 12px; font-weight: 700; line-height: 1.25; opacity: .9; white-space: normal; }
+    .result-trust-chevron { font-size: 13px; font-weight: 900; transition: transform .15s ease; flex-shrink: 0; }
+    .result-trust-toggle.open .result-trust-chevron { transform: rotate(180deg); }
+    .result-trust-verified { background: linear-gradient(135deg, rgba(16,185,129,0.20), rgba(236,253,245,0.98)); border-color: rgba(16,185,129,0.36); color: #047857; }
+    .result-trust-ai-researched { background: linear-gradient(135deg, rgba(245,158,11,0.22), rgba(255,251,235,0.98)); border-color: rgba(245,158,11,0.38); color: #92400e; }
+    .result-trust-limited { background: linear-gradient(135deg, rgba(239,68,68,0.18), rgba(254,242,242,0.98)); border-color: rgba(239,68,68,0.34); color: #991b1b; }
+    .result-trust-panel { display: none; background: rgba(255,255,255,0.78); border: 1px solid var(--border); border-radius: 16px; padding: 13px 14px; font-size: 12px; color: var(--text2); line-height: 1.55; box-shadow: var(--shadow-sm); }
+    .result-trust-panel.open { display: block; }
+    .result-trust-panel-title { font-size: 12px; font-weight: 900; color: var(--text); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+    .result-trust-panel-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px 12px; margin-bottom: 8px; }
+    .result-trust-panel-key { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+    .result-trust-panel-value { font-size: 12px; font-weight: 800; color: var(--text); margin-top: 2px; word-break: break-word; }
+    .result-trust-caveat { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
     .result-job { font-size: 20px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.3px; }
     .result-loc { font-size: 13px; color: var(--text2); }
     .result-badges { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: flex-start; }
@@ -997,6 +1015,9 @@
       .tab { font-size: 12px; padding: 12px 4px; }
       .action-row { gap: 8px; }
       .action-btn { font-size: 13px; padding: 10px 12px; }
+      .result-trust { grid-template-columns: 1fr; gap: 10px; margin-bottom: 16px; }
+      .result-trust-toggle { border-radius: 14px; padding: 13px 14px; }
+      .result-trust-panel-grid { grid-template-columns: 1fr; }
       .result-job { font-size: 17px; }
       .permit-name-big { font-size: 17px; }
       .big-price { font-size: 24px; }
@@ -2996,6 +3017,83 @@ function getNextSteps(d, job, city, state) {
   return steps.slice(0, 4);
 }
 
+function normalizeBadgeState(d) {
+  const raw = String(d?.badge_state || '').toLowerCase().replace(/[\s-]+/g, '_');
+  if (raw === 'verified' || raw === 'ai_researched' || raw === 'limited') return raw;
+  const dataSource = d?.data_source || d?._meta?.city_match_level || '';
+  const sources = countAttachedSources(d);
+  const confidence = String(d?.confidence || d?.confidence_level || '').toLowerCase();
+  if (dataSource === 'city_database' && sources >= 3 && !/low|poor/.test(confidence)) return 'verified';
+  if ((dataSource === 'web_search' || sources > 0) && !/low|poor/.test(confidence)) return 'ai_researched';
+  return 'limited';
+}
+
+function countAttachedSources(d) {
+  const explicit = Array.isArray(d?.sources) ? d.sources.filter(Boolean).length : 0;
+  const meta = Number(d?._meta?.web_sources || 0);
+  return Math.max(explicit, Number.isFinite(meta) ? meta : 0);
+}
+
+function formatBadgeDate(raw) {
+  if (!raw) return 'today';
+  const dt = new Date(raw);
+  return Number.isNaN(dt.getTime()) ? String(raw) : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function buildResultTrustBadge(d, city, state) {
+  const stateKey = normalizeBadgeState(d);
+  const updatedRaw = d.last_verified_at || d._meta?.generated_at || d.verified_at || '';
+  const updatedLabel = formatBadgeDate(updatedRaw);
+  const sourceCount = countAttachedSources(d);
+  const badgeCopy = {
+    verified: {
+      label: 'VERIFIED',
+      sub: `Sources verified ${updatedLabel}`,
+      caveat: 'Official source URLs are attached for the fee, AHJ, and code section. Still confirm edge cases if the scope changes.',
+      call: 'Call the AHJ if the job address is outside city limits, the scope changes, or the contractor/license holder differs from the lookup.'
+    },
+    ai_researched: {
+      label: 'AI-RESEARCHED',
+      sub: 'Verify before quoting',
+      caveat: 'PermitIQ found some official local sources, but this city is not yet in the verified-cities list.',
+      call: 'Call the AHJ before quoting firm fees, promising approval timing, or starting work.'
+    },
+    limited: {
+      label: 'LIMITED',
+      sub: 'Call AHJ before relying on this',
+      caveat: 'This result may rely on state fallback data, sparse sources, or a lower-confidence match.',
+      call: 'Call the AHJ before relying on this result for price, permit need, timeline, or inspection requirements.'
+    }
+  }[stateKey];
+  const panelId = `trust-badge-panel-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const location = [city, state].filter(Boolean).join(', ') || 'this jurisdiction';
+  return `<div class="result-trust" data-badge-state="${esc(stateKey)}">
+    <div class="result-trust-toggle result-trust-${esc(stateKey.replace('_','-'))}" role="button" tabindex="0" aria-expanded="false" aria-controls="${panelId}" onclick="toggleTrustBadgeDetails(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleTrustBadgeDetails(this)}">
+      <div class="result-trust-main"><span class="result-trust-label">${esc(badgeCopy.label)}</span><span class="result-trust-sub">${esc(badgeCopy.sub)}</span></div>
+      <span class="result-trust-chevron" aria-hidden="true">⌄</span>
+    </div>
+    <div class="result-trust-panel" id="${panelId}">
+      <div class="result-trust-panel-title">Why this badge?</div>
+      <div class="result-trust-panel-grid">
+        <div><div class="result-trust-panel-key">Sources attached</div><div class="result-trust-panel-value">${sourceCount}</div></div>
+        <div><div class="result-trust-panel-key">Verified</div><div class="result-trust-panel-value">${esc(updatedLabel)}</div></div>
+        <div><div class="result-trust-panel-key">Jurisdiction</div><div class="result-trust-panel-value">${esc(location)}</div></div>
+        <div><div class="result-trust-panel-key">State</div><div class="result-trust-panel-value">${esc(badgeCopy.label)}</div></div>
+      </div>
+      <div class="result-trust-caveat"><strong>Honest caveat:</strong> ${esc(badgeCopy.caveat)}</div>
+      <div class="result-trust-caveat"><strong>When to call the AHJ:</strong> ${esc(badgeCopy.call)}</div>
+    </div>
+  </div>`;
+}
+
+function toggleTrustBadgeDetails(el) {
+  const panel = el?.parentElement?.querySelector('.result-trust-panel');
+  if (!panel) return;
+  const isOpen = panel.classList.toggle('open');
+  el.classList.toggle('open', isOpen);
+  el.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
 function renderResults(d, job, city, state) {
   window._lastLookupResult = d;
   window._lastLookupJob = job || '';
@@ -3023,6 +3121,7 @@ function renderResults(d, job, city, state) {
       `Licensed ${trade.charAt(0).toUpperCase()+trade.slice(1)} (they pull the permit for you — permit is still required)`)
     .replace(/must\s+be\s+pulled\s+by\s+a\s+licensed/gi, 'Permit is pulled by a licensed')
     .replace(/no\s+permit\s+if\s+licensed/gi, 'Licensed contractor pulls the permit — work still requires a permit');
+  const badgeState = normalizeBadgeState(d);
 
   let html = '';
 
@@ -3040,8 +3139,8 @@ function renderResults(d, job, city, state) {
     html += `<div class="card" style="border-color:rgba(59,130,246,0.35)"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><div class="section-label">Usage</div><div style="font-size:14px;font-weight:700">${remaining > 0 ? `${remaining} free lookup${remaining!==1?'s':''} left` : 'Free lookups used'}</div></div><button class="action-btn" style="margin:0;padding:10px 14px" onclick="openUpgrade()">Upgrade</button></div></div>`;
   }
 
-  // County fallback notice
-  if (countyNote) {
+  // County fallback notice rolls under the single trust badge; suppress it for VERIFIED results.
+  if (countyNote && badgeState !== 'verified') {
     html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
   }
 
@@ -3091,22 +3190,8 @@ function renderResults(d, job, city, state) {
     }
   }
 
-  // Data confidence badge
-  const dataSourceRaw = d.data_source || d._meta?.city_match_level || '';
-  const isCountyFB = d.county_fallback === true;
-  let confBadgeHtml = '';
-  if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified from city records<span class="conf-tooltip">Verified from city records</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Verified from city records</div>`;
-  } else if (dataSourceRaw === 'web_search') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
-  } else if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
-  } else {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🔴 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#b91c1c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
-  }
   const heroUpdatedRaw = d.last_verified_at || d._meta?.generated_at || '';
   const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown';
-  const confidenceReason = d.confidence_reason || '';
   const jurisdiction = getJurisdictionDisplay(d, city, state, jobAddress);
   const nextSteps = getNextSteps(d, job, city, state);
 
@@ -3115,6 +3200,7 @@ function renderResults(d, job, city, state) {
   const timelineSimple = d.approval_timeline?.simple || '';
   
   html += `<div class="result-hero">
+    ${buildResultTrustBadge(d, city, state)}
     <div class="result-job">${esc(job)}</div>
     <div class="result-loc">📍 ${esc(city || 'Unknown city')}, ${esc(state || '')}</div>
     <div class="result-badges">
@@ -3123,11 +3209,7 @@ function renderResults(d, job, city, state) {
       ${d._fee_unverified ? `<span class="badge badge-gray" style="background:#fef9c3;color:#854d0e;border-color:#fde68a">💰 Fee: Call to confirm</span>` : ''}
       ${timelineSimple ? `<span class="badge badge-gray" style="background:#fef3c7;color:#92400e;border-color:#fde68a;white-space:normal;max-width:100%">⏱️ ${esc(timelineSimple.split(',')[0].trim())}</span>` : ''}
       ${totalProjectCost ? `<span class="badge badge-gray" style="background:#f0fdf4;color:#166534;border-color:#dcfce7;white-space:normal;max-width:100%">📈 Est. Job: ${esc(totalProjectCost.split('(')[0].trim())}</span>` : ''}
-      ${confBadgeHtml}
     </div>
-    ${confidenceReason ? `<div style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.5">${esc(confidenceReason)}</div>` : ''}
-    
-
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--muted)">Last updated: ${heroUpdatedLabel}</span>
