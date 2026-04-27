@@ -917,6 +917,19 @@
     .result-save-confirm.success { color: var(--green); }
     .result-save-confirm.info { color: var(--brand); }
     .result-save-confirm.error { color: var(--red); }
+    .regular-save-btn { border: 1px solid rgba(245,158,11,.45); background: #fffbeb; color: #92400e; border-radius: 999px; padding: 9px 13px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 18px rgba(245,158,11,.12); }
+    .regular-save-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(245,158,11,.18); }
+    .regulars-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; box-shadow: var(--shadow-sm); }
+    .regulars-title { font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 6px; }
+    .regulars-sub { font-size: 13px; color: var(--text2); line-height: 1.5; margin-bottom: 14px; }
+    .regulars-list { display: grid; gap: 10px; }
+    .regulars-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .regulars-name { font-size: 15px; font-weight: 900; color: var(--text); }
+    .regulars-meta { font-size: 12px; color: var(--text2); margin-top: 3px; }
+    .regulars-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .regulars-btn { border: 1px solid var(--border); background: #fff; color: var(--text); border-radius: 10px; padding: 9px 11px; font-size: 12px; font-weight: 800; cursor: pointer; }
+    .regulars-btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .regulars-empty { text-align: center; padding: 30px 12px; color: var(--text2); }
     .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.58); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 9999; }
     .modal-card { width: min(560px, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: var(--shadow-lg); }
     .modal-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
@@ -1321,9 +1334,20 @@
       font-size: 14px;
       font-weight: 700;
       justify-content: center;
-      margin: 16px auto 24px auto;
+      margin: 16px auto 8px auto;
       padding: 8px 16px;
       width: fit-content;
+    }
+    .no-api-line {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.45;
+      margin: 0 auto 24px auto;
+      max-width: 520px;
+      padding: 0 16px;
+      text-align: center;
+      opacity: 0.92;
     }
     #page-search .free-paid-bar,
     #page-search .free-paid-bar strong,
@@ -1602,6 +1626,7 @@
   <div class="tabs">
     <div class="tab active" id="tab-search" onclick="showTab('search')">🔍 Look Up</div>
     <div class="tab" id="tab-history" onclick="showTab('history');dismissHistoryDot()">📋 History<span id="history-tab-dot" style="display:inline-block;width:8px;height:8px;background:var(--brand);border-radius:50%;margin-left:5px;vertical-align:middle;animation:historyPulse 1.4s ease-in-out infinite"></span></div>
+    <div class="tab" id="tab-regulars" onclick="showTab('regulars')">★ Regular Cities</div>
     <div class="tab" id="tab-jobs" onclick="showTab('jobs')">📁 Jobs</div>
   </div>
 
@@ -1616,6 +1641,7 @@
       </div>
 
       <div class="speed-badge">⚡ Permit answer in 30 seconds</div>
+      <div style="margin:12px auto 24px;max-width:520px;text-align:center;color:#fff;font-size:15px;font-weight:600;line-height:1.35;padding:0 18px">Real AI agents navigate every US permit portal — no API integration required. Coverage other tools can't reach.</div>
 
       <!-- Free/Paid clarity line -->
       <div class="free-paid-bar">
@@ -1959,6 +1985,9 @@
   <!-- History Page -->
   <div class="page" id="page-history"><div class="page-inner" id="history-content"></div></div>
 
+  <!-- Regular Cities Page -->
+  <div class="page" id="page-regulars"><div class="page-inner" id="regulars-inner"></div></div>
+
   <!-- Jobs Page -->
   <div class="page" id="page-jobs"><div class="page-inner" id="jobs-inner"></div></div>
 
@@ -2087,7 +2116,7 @@ const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',SESS
 const JOB_SAVE_SESSION_KEY='pa_saved_jobs_session',JOBS_TOOLTIP_KEY='pa_jobs_tooltip_seen';
 let _userIsPaid = false;
 const IS_ADMIN=new URLSearchParams(window.location.search).get('_dev')==='pa_internal_2026_xk9';
-let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false},jobsCache=[],watchesCache=[];
+let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false},jobsCache=[],watchesCache=[],regularsCache=[];
 let _serverFreeLookupsUsed=0;
 let _skipDisambig=false;
 let _isSampleLookup=false;
@@ -2500,6 +2529,7 @@ async function refreshAccountBadge(){
     const r=await fetch('/api/account',{headers:{'X-Session-Token':token,'X-Client-Fingerprint':getClientFingerprint()},cache:'no-store'});
     if(r.status===401){clearSessionToken();return;}
     const d=await r.json();
+    if(d.email){localStorage.setItem(EMAIL_KEY,normalizeEmailForAds(d.email));setEnhancedConversionEmail(d.email);}
     // Update counter bar with server-side count
     if(typeof d.lookups_remaining==='number'){
       updateCounterBarFromServer(d.lookups_this_month, d.lookups_remaining, d.plan);
@@ -2528,6 +2558,7 @@ async function refreshAccountBadge(){
     if(drawerInt) drawerInt.style.display=d.paid?'':'none';
     maybeShowJobsTooltip();
     refreshJobsAndWatches();
+    refreshRegularJurisdictions();
   }catch{}
 }
 
@@ -2830,7 +2861,7 @@ window.addEventListener('online',updateOnline);window.addEventListener('offline'
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
-function showTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.getElementById('page-'+tab).classList.add('active');if(tab==='history') renderHistory();if(tab==='jobs') renderJobsPage();}
+function showTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.getElementById('page-'+tab).classList.add('active');if(tab==='history') renderHistory();if(tab==='regulars') refreshRegularJurisdictions();if(tab==='jobs') renderJobsPage();}
 
 // ── GPS ──────────────────────────────────────────────────────────────────────
 async function useGPS(){
@@ -3214,9 +3245,12 @@ function renderResults(d, job, city, state) {
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--muted)">Last updated: ${heroUpdatedLabel}</span>
       <button class="flag-wrong-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button>
+      <button class="regular-save-btn" id="save-jurisdiction-btn" onclick="saveCurrentJurisdiction()">★ Save this jurisdiction</button>
       <span class="flag-feedback-inline" id="flag-feedback-inline">Thanks for flagging. We'll review this within 30 days.</span>
     </div>
   </div>`;
+
+  html += buildRegularsMiniPanel();
 
   html += `<div class="card"><div class="section-label">📍 Jurisdiction Match</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span class="freshness-badge">${esc(jurisdiction.badge)}</span>${jobAddress ? `<span class="freshness-badge">🏠 Address-assisted</span>` : `<span class="freshness-badge">🏙️ City/state lookup</span>`}</div>
@@ -3677,7 +3711,92 @@ function copyResult() {
   navigator.clipboard.writeText(t).then(() => showCopy('✅ Copied!')).catch(() => alert(t));
 }
 
-function showCopy(msg) { const el = document.getElementById('copy-feedback'); if (!el) return; el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 2500); }
+function showCopy(msg) { const el = document.getElementById('copy-feedback'); if (!el) { showToast(msg); return; } el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 2500); }
+function showToast(msg) { const toast=document.createElement('div'); toast.className='pa-toast'; toast.textContent=msg; document.body.appendChild(toast); setTimeout(()=>{toast.classList.add('out');setTimeout(()=>toast.remove(),350)},2600); }
+function getSavedJurisdictionEmail(){return normalizeEmailForAds(localStorage.getItem(EMAIL_KEY)||'')}
+function formatRegularDate(raw){if(!raw)return 'Never looked up';const dt=new Date(raw);return Number.isNaN(dt.getTime())?'Last lookup: '+raw:'Last lookup: '+dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+async function refreshRegularJurisdictions(){
+  const email=getSavedJurisdictionEmail();
+  const el=document.getElementById('regulars-inner');
+  if(!el)return;
+  if(!email){regularsCache=[];renderRegularJurisdictions();return;}
+  try{
+    const resp=await fetch('/api/jurisdictions/list?email='+encodeURIComponent(email),{cache:'no-store'});
+    const payload=await resp.json();
+    regularsCache=resp.ok?(payload.jurisdictions||[]):[];
+  }catch{regularsCache=regularsCache||[];}
+  renderRegularJurisdictions();
+}
+function saveRegularEmailFromPanel(){
+  const input=document.getElementById('regulars-email-input');
+  const email=normalizeEmailForAds(input?.value||'');
+  if(!email||!email.includes('@')){input?.focus();return;}
+  localStorage.setItem(EMAIL_KEY,email);setEnhancedConversionEmail(email);refreshRegularJurisdictions();
+}
+function buildRegularsMiniPanel(){
+  const email=getSavedJurisdictionEmail();
+  const rows=(regularsCache||[]).slice(0,3).map(j=>`<div class="regulars-item"><div><div class="regulars-name">${esc(j.display_name||`${j.city}, ${j.state}`)}</div><div class="regulars-meta">${esc(j.city)}, ${esc(j.state)}${j.trade?` · ${esc(j.trade)}`:''} · ${Number(j.lookup_count||0)} lookup${Number(j.lookup_count||0)===1?'':'s'}</div></div><div class="regulars-actions"><button class="regulars-btn primary" onclick="lookupSavedJurisdiction(${Number(j.id)})">Look up</button></div></div>`).join('');
+  return `<div class="regulars-panel no-print" id="regulars-inline-panel" style="margin-bottom:14px"><div class="regulars-title">Your Regular Cities</div><div class="regulars-sub">${email?`Saved privately for <strong>${esc(email)}</strong>.`:'Save regular city + trade combos for one-tap repeat lookups.'}</div>${rows?`<div class="regulars-list">${rows}</div>`:`<div class="regulars-empty" style="padding:12px">No regular cities saved yet — tap <strong>★ Save this jurisdiction</strong> above.</div>`}<div style="margin-top:12px"><button class="regulars-btn" onclick="showTab('regulars')">Open Your Regular Cities panel</button></div></div>`;
+}
+function renderRegularJurisdictions(){
+  const el=document.getElementById('regulars-inner');
+  if(!el)return;
+  const email=getSavedJurisdictionEmail();
+  if(!email){
+    el.innerHTML=`<div class="regulars-panel"><div class="regulars-title">Your Regular Cities</div><div class="regulars-sub">Save the cities and trades you look up all the time, then rerun them with one tap.</div><div class="result-save-row"><input id="regulars-email-input" class="result-save-input" type="email" placeholder="your@email.com" autocomplete="email" /><button class="result-save-btn" onclick="saveRegularEmailFromPanel()">Load Regular Cities</button></div></div>`;
+    return;
+  }
+  const items=(regularsCache||[]).map(j=>`<div class="regulars-item"><div><div class="regulars-name">${esc(j.display_name||`${j.city}, ${j.state}`)}</div><div class="regulars-meta">${esc(j.city)}, ${esc(j.state)}${j.trade?` · ${esc(j.trade)}`:''} · ${Number(j.lookup_count||0)} lookup${Number(j.lookup_count||0)===1?'':'s'} · ${esc(formatRegularDate(j.last_lookup_at))}</div>${j.notes?`<div class="regulars-meta">${esc(j.notes)}</div>`:''}</div><div class="regulars-actions"><button class="regulars-btn primary" onclick="lookupSavedJurisdiction(${Number(j.id)})">Look up</button><button class="regulars-btn" onclick="deleteSavedJurisdiction(${Number(j.id)})">Delete</button></div></div>`).join('');
+  el.innerHTML=`<div class="regulars-panel"><div class="regulars-title">Your Regular Cities</div><div class="regulars-sub">Email-scoped to <strong>${esc(email)}</strong>. Saved jurisdictions are private to this email.</div>${items?`<div class="regulars-list">${items}</div>`:`<div class="regulars-empty">No saved jurisdictions yet.<br/>Run a permit lookup, then tap <strong>★ Save this jurisdiction</strong>.</div>`}</div>`;
+}
+async function saveCurrentJurisdiction(){
+  if(!currentResult){showToast('Run a lookup first.');return;}
+  let email=getSavedJurisdictionEmail();
+  if(!email){email=normalizeEmailForAds(prompt('Email for your saved jurisdictions?')||'');if(!email||!email.includes('@'))return;localStorage.setItem(EMAIL_KEY,email);setEnhancedConversionEmail(email);}
+  const {job,city,state}=currentResult;
+  const defaultName=`${city} ${job}`.trim();
+  const displayName=prompt('Optional display name',defaultName);
+  if(displayName===null)return;
+  const btn=document.getElementById('save-jurisdiction-btn');
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  try{
+    const resp=await fetch('/api/jurisdictions/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,city,state,trade:job,display_name:displayName||defaultName})});
+    const payload=await resp.json();
+    if(!resp.ok||!payload.jurisdiction)throw new Error(payload.error||'Could not save jurisdiction');
+    showToast('✅ Saved to Your Regular Cities');
+    await refreshRegularJurisdictions();
+  }catch(e){showToast('⚠️ '+(e.message||'Could not save jurisdiction'));}
+  finally{if(btn){btn.disabled=false;btn.textContent='★ Save this jurisdiction';}}
+}
+async function lookupSavedJurisdiction(id){
+  const email=getSavedJurisdictionEmail();
+  if(!email)return;
+  try{
+    const resp=await fetch(`/api/jurisdictions/${id}/lookup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const payload=await resp.json();
+    if(!resp.ok||!payload.jurisdiction)throw new Error(payload.error||'Could not load jurisdiction');
+    const j=payload.jurisdiction;
+    let trade=j.trade||'';
+    if(!trade){trade=prompt(`What trade/job should we look up in ${j.city}, ${j.state}?`)||'';}
+    if(!trade)return;
+    document.getElementById('query').value=trade;
+    document.getElementById('city').value=j.city||'';
+    document.getElementById('state').value=j.state||'';
+    showTab('search');
+    await doLookupWithOffline();
+  }catch(e){showToast('⚠️ '+(e.message||'Could not run lookup'));}
+}
+async function deleteSavedJurisdiction(id){
+  const email=getSavedJurisdictionEmail();
+  if(!email||!confirm('Remove this saved jurisdiction?'))return;
+  try{
+    const resp=await fetch(`/api/jurisdictions/${id}?email=${encodeURIComponent(email)}`,{method:'DELETE'});
+    const payload=await resp.json();
+    if(!resp.ok||!payload.deleted)throw new Error(payload.error||'Could not delete jurisdiction');
+    showToast('Deleted saved jurisdiction');
+    await refreshRegularJurisdictions();
+  }catch(e){showToast('⚠️ '+(e.message||'Could not delete jurisdiction'));}
+}
 function getResultPermitName(data) {
   const permits = data?.permits_required || [];
   return permits[0]?.permit_type || data?.permit_name || data?.permit_type || '';

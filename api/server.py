@@ -641,6 +641,24 @@ def init_db():
             trigger_count INTEGER DEFAULT 0
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS saved_jurisdictions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            city TEXT NOT NULL,
+            state TEXT NOT NULL,
+            trade TEXT,
+            display_name TEXT,
+            added_at TEXT NOT NULL,
+            last_lookup_at TEXT,
+            lookup_count INTEGER DEFAULT 0,
+            notes TEXT,
+            UNIQUE(email, city, state, trade)
+        )
+    """)
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_saved_jurisdictions_email ON saved_jurisdictions(email)
+    """)
 
     added_user_columns = ensure_table_columns(conn, "users", {
         "free_limit_notice_sent_at": "TEXT",
@@ -658,6 +676,7 @@ def init_db():
         "city_watch",
         "api_keys",
         "webhook_integrations",
+        "saved_jurisdictions",
     }
     missing_tables = sorted(expected_tables - preexisting_tables)
     if missing_tables:
@@ -2134,6 +2153,135 @@ def _city_watch_payload_hash(result: dict) -> str:
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
+def _normalize_saved_email(email: str) -> str:
+    return (email or "").lower().strip()
+
+
+def _valid_saved_email(email: str) -> bool:
+    normalized = _normalize_saved_email(email)
+    return bool(normalized and "@" in normalized and "." in normalized.rsplit("@", 1)[-1])
+
+
+def _normalize_saved_city(city: str) -> str:
+    return " ".join((city or "").strip().split())
+
+
+def _normalize_saved_state(state: str) -> str:
+    return (state or "").strip().upper()
+
+
+def _normalize_saved_trade(trade: str | None) -> str:
+    # Store blank trade as an empty string, not NULL, so the UNIQUE(email,city,state,trade)
+    # constraint also protects city-only saves in SQLite.
+    return " ".join((trade or "").strip().split())
+
+
+def _saved_jurisdiction_dict(row) -> dict:
+    cols = ["id", "email", "city", "state", "trade", "display_name", "added_at", "last_lookup_at", "lookup_count", "notes"]
+    return dict(zip(cols, row)) if row else {}
+
+
+def save_jurisdiction(email: str, city: str, state: str, trade: str | None = "", display_name: str | None = "", notes: str | None = "") -> dict:
+    normalized_email = _normalize_saved_email(email)
+    normalized_city = _normalize_saved_city(city)
+    normalized_state = _normalize_saved_state(state)
+    normalized_trade = _normalize_saved_trade(trade)
+    clean_display_name = " ".join((display_name or "").strip().split())
+    clean_notes = (notes or "").strip()[:2000]
+    if not clean_display_name:
+        clean_display_name = f"{normalized_city} {normalized_trade}".strip() or f"{normalized_city}, {normalized_state}"
+    now = utc_now().isoformat()
+    conn = sqlite3.connect(CACHE_DB)
+    conn.execute(
+        """
+        INSERT INTO saved_jurisdictions (email, city, state, trade, display_name, added_at, notes)
+        VALUES (?,?,?,?,?,?,?)
+        ON CONFLICT(email, city, state, trade) DO UPDATE SET
+            display_name=excluded.display_name,
+            notes=excluded.notes
+        """,
+        (normalized_email, normalized_city, normalized_state, normalized_trade, clean_display_name, now, clean_notes)
+    )
+    row = conn.execute(
+        """
+        SELECT id,email,city,state,trade,display_name,added_at,last_lookup_at,lookup_count,notes
+        FROM saved_jurisdictions
+        WHERE email=? AND city=? AND state=? AND trade=?
+        """,
+        (normalized_email, normalized_city, normalized_state, normalized_trade)
+    ).fetchone()
+    conn.commit()
+    conn.close()
+    return _saved_jurisdiction_dict(row)
+
+
+def list_saved_jurisdictions(email: str) -> list[dict]:
+    conn = sqlite3.connect(CACHE_DB)
+    rows = conn.execute(
+        """
+        SELECT id,email,city,state,trade,display_name,added_at,last_lookup_at,lookup_count,notes
+        FROM saved_jurisdictions
+        WHERE email=?
+        ORDER BY COALESCE(last_lookup_at, added_at) DESC, id DESC
+        """,
+        [_normalize_saved_email(email)]
+    ).fetchall()
+    conn.close()
+    return [_saved_jurisdiction_dict(row) for row in rows]
+
+
+def get_saved_jurisdiction_for_owner(jurisdiction_id: str, email: str) -> tuple[int, dict | None]:
+    conn = sqlite3.connect(CACHE_DB)
+    row = conn.execute(
+        """
+        SELECT id,email,city,state,trade,display_name,added_at,last_lookup_at,lookup_count,notes
+        FROM saved_jurisdictions WHERE id=?
+        """,
+        [jurisdiction_id]
+    ).fetchone()
+    conn.close()
+    if not row:
+        return 404, None
+    data = _saved_jurisdiction_dict(row)
+    if data.get("email") != _normalize_saved_email(email):
+        return 403, data
+    return 200, data
+
+
+def delete_saved_jurisdiction(jurisdiction_id: str, email: str) -> tuple[int, bool]:
+    status, _row = get_saved_jurisdiction_for_owner(jurisdiction_id, email)
+    if status != 200:
+        return status, False
+    conn = sqlite3.connect(CACHE_DB)
+    cur = conn.execute("DELETE FROM saved_jurisdictions WHERE id=? AND email=?", [jurisdiction_id, _normalize_saved_email(email)])
+    conn.commit()
+    conn.close()
+    return 200 if cur.rowcount else 404, cur.rowcount > 0
+
+
+def record_saved_jurisdiction_lookup(jurisdiction_id: str, email: str) -> tuple[int, dict | None]:
+    status, _row = get_saved_jurisdiction_for_owner(jurisdiction_id, email)
+    if status != 200:
+        return status, _row
+    now = utc_now().isoformat()
+    conn = sqlite3.connect(CACHE_DB)
+    conn.execute(
+        "UPDATE saved_jurisdictions SET lookup_count=COALESCE(lookup_count,0)+1, last_lookup_at=? WHERE id=? AND email=?",
+        [now, jurisdiction_id, _normalize_saved_email(email)]
+    )
+    row = conn.execute(
+        """
+        SELECT id,email,city,state,trade,display_name,added_at,last_lookup_at,lookup_count,notes
+        FROM saved_jurisdictions WHERE id=? AND email=?
+        """,
+        [jurisdiction_id, _normalize_saved_email(email)]
+    ).fetchone()
+    conn.commit()
+    conn.close()
+    return 200, _saved_jurisdiction_dict(row)
+
+
+# ── City watch helpers ───────────────────────────────────────────────────────
 def create_city_watch(email: str, city: str, state: str, job_type: str) -> dict:
     now = utc_now().isoformat()
     normalized_email = email.lower().strip()
@@ -2487,7 +2635,22 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         session_token = self.headers.get("X-Session-Token", "")
         user_email = validate_session_token(session_token) if session_token else None
-        if path.startswith("/api/jobs/"):
+        if path.startswith("/api/jurisdictions/"):
+            qs = parse_qs(urlparse(self.path).query)
+            email = (qs.get("email", [""])[0] or "").strip()
+            jurisdiction_id = path[len("/api/jurisdictions/"):].strip("/")
+            if not jurisdiction_id:
+                self.send_json(400, {"error": "Jurisdiction ID required"})
+                return
+            if not _valid_saved_email(email):
+                self.send_json(400, {"error": "Valid email required"})
+                return
+            status, deleted = delete_saved_jurisdiction(jurisdiction_id, email)
+            if status == 403:
+                self.send_json(403, {"error": "Forbidden"})
+            else:
+                self.send_json(status, {"deleted": deleted})
+        elif path.startswith("/api/jobs/"):
             if not user_email:
                 self.send_json(401, {"error": "Not authenticated"})
                 return
@@ -2880,6 +3043,14 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_json(200, {"verified_cities": [], "count": 0, "note": str(e)})
 
+        elif path == "/api/jurisdictions/list":
+            qs = parse_qs(urlparse(self.path).query)
+            email = (qs.get("email", [""])[0] or "").strip()
+            if not _valid_saved_email(email):
+                self.send_json(400, {"error": "Valid email required"})
+                return
+            self.send_json(200, {"jurisdictions": list_saved_jurisdictions(email)})
+
         elif path == "/api/jobs":
             session_token = self.headers.get("X-Session-Token", "")
             user_email = validate_session_token(session_token) if session_token else None
@@ -3191,6 +3362,57 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 info["body_read_error"] = str(e)
             self.send_json(200, info)
+            return
+
+        # ── Saved jurisdictions ────────────────────────────────────────────
+        if path == "/api/jurisdictions/save":
+            try:
+                try:
+                    data = self.read_json_body()
+                except json.JSONDecodeError:
+                    self.send_json(400, {"error": "Invalid request body — expected JSON"})
+                    return
+                email = data.get("email", "")
+                city = data.get("city", "")
+                state = data.get("state", "")
+                trade = data.get("trade", "")
+                if not _valid_saved_email(email):
+                    self.send_json(400, {"error": "Valid email required"})
+                    return
+                if not _normalize_saved_city(city) or not _normalize_saved_state(state):
+                    self.send_json(400, {"error": "city and state are required"})
+                    return
+                saved = save_jurisdiction(email, city, state, trade, data.get("display_name", ""), data.get("notes", ""))
+                self.send_json(200, {"jurisdiction": saved})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+            return
+
+        if path.startswith("/api/jurisdictions/") and path.endswith("/lookup"):
+            try:
+                jurisdiction_id = path[len("/api/jurisdictions/"):-len("/lookup")].strip("/")
+                if not jurisdiction_id:
+                    self.send_json(400, {"error": "Jurisdiction ID required"})
+                    return
+                qs = parse_qs(urlparse(self.path).query)
+                email = (qs.get("email", [""])[0] or "").strip()
+                try:
+                    data = self.read_json_body()
+                    email = (data.get("email") or email or "").strip()
+                except json.JSONDecodeError:
+                    pass
+                if not _valid_saved_email(email):
+                    self.send_json(400, {"error": "Valid email required"})
+                    return
+                status, saved = record_saved_jurisdiction_lookup(jurisdiction_id, email)
+                if status == 403:
+                    self.send_json(403, {"error": "Forbidden"})
+                elif status == 404:
+                    self.send_json(404, {"error": "Not found"})
+                else:
+                    self.send_json(200, {"jurisdiction": saved})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
             return
 
         # ── Permit lookup ─────────────────────────────────────────────────
