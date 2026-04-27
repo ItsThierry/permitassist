@@ -7,6 +7,8 @@ Improvements over v4:
   - Fallback is transparent — same result structure, same post-processing
 """
 
+from __future__ import annotations
+
 import os
 import json
 import time
@@ -23,6 +25,15 @@ from bs4 import BeautifulSoup
 from openai import OpenAI
 import google.generativeai as genai
 import pdfplumber
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+except Exception:
+    # python-dotenv is optional in production; environment variables may already
+    # be injected by the hosting layer. Never block a lookup because .env loading
+    # is unavailable.
+    pass
 
 client = OpenAI()
 
@@ -79,7 +90,10 @@ _accela_agencies_cache: dict[str, object] = {"expires": 0.0, "result": []}
 _default_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
 _data_dir = os.environ.get("CACHE_DIR") or os.environ.get("RAILWAY_VOLUME_MOUNT_PATH") or _default_data_dir
 CACHE_DB       = os.path.join(_data_dir, "cache.db")
+SERPER_CACHE_DB = os.path.join(_data_dir, "serper_cache.db")
 KNOWLEDGE_DIR  = os.path.join(os.path.dirname(__file__), "..", "knowledge")
+SERPER_TRUST_TTL_SECONDS = 7 * 24 * 60 * 60
+SERPER_TRUST_MAX_QUERIES = 5
 
 SUMMARY_JUNK_PATTERNS = [
     r'\*\s*Email;\s*"Click to submit an email[^\n]*',
@@ -2352,6 +2366,372 @@ def serper_search(query: str, num: int = 5, city: str = "", state: str = "") -> 
         return []
 
 
+# ─── Tier A Trust Layer: Serper claim grounding + conditional companion permits ──
+
+def _today_iso_date() -> str:
+    return datetime.now().date().isoformat()
+
+
+def _serper_cache_conn():
+    os.makedirs(os.path.dirname(SERPER_CACHE_DB), exist_ok=True)
+    conn = sqlite3.connect(SERPER_CACHE_DB)
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS serper_claim_cache (
+            city TEXT NOT NULL,
+            state TEXT NOT NULL,
+            claim_type TEXT NOT NULL,
+            query TEXT NOT NULL,
+            title TEXT,
+            url TEXT,
+            snippet TEXT,
+            created_at REAL NOT NULL,
+            PRIMARY KEY (city, state, claim_type)
+        )
+        """
+    )
+    conn.commit()
+    return conn
+
+
+def _cache_norm(value: str) -> str:
+    return (value or "").strip().lower()
+
+
+def _get_cached_serper_source(city: str, state: str, claim_type: str) -> dict | None:
+    try:
+        conn = _serper_cache_conn()
+        try:
+            row = conn.execute(
+                "SELECT title, url, snippet, created_at FROM serper_claim_cache WHERE city=? AND state=? AND claim_type=?",
+                (_cache_norm(city), _cache_norm(state), _cache_norm(claim_type)),
+            ).fetchone()
+        finally:
+            conn.close()
+        if not row:
+            return None
+        title, url, snippet, created_at = row
+        if not url or (time.time() - float(created_at or 0)) > SERPER_TRUST_TTL_SECONDS:
+            return None
+        return {
+            "url": url,
+            "title": title or url,
+            "verified_at": datetime.fromtimestamp(float(created_at)).date().isoformat(),
+            "snippet": snippet or "",
+            "cache": "hit",
+        }
+    except Exception as e:
+        print(f"[trust] Serper cache read failed (non-fatal): {e}")
+        return None
+
+
+def _set_cached_serper_source(city: str, state: str, claim_type: str, query: str, source: dict) -> None:
+    if not source or not source.get("url"):
+        return
+    try:
+        conn = _serper_cache_conn()
+        try:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO serper_claim_cache
+                (city, state, claim_type, query, title, url, snippet, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    _cache_norm(city),
+                    _cache_norm(state),
+                    _cache_norm(claim_type),
+                    query,
+                    source.get("title") or source.get("url"),
+                    source.get("url"),
+                    source.get("snippet") or source.get("content") or "",
+                    time.time(),
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f"[trust] Serper cache write failed (non-fatal): {e}")
+
+
+def _is_official_permit_source_url(url: str) -> bool:
+    domain = urlparse(url or "").netloc.lower()
+    if not domain:
+        return False
+    if domain.endswith(".gov") or ".gov" in domain or domain.endswith(".us"):
+        return True
+    official_domain_hints = (
+        "cityof", "houstontx.gov", "houstonpermittingcenter.org",
+        "phoenix.gov", "cityofpasadena.net", "maricopa.gov", "lacounty.gov",
+        "southpasadenaca.gov",
+    )
+    return any(hint in domain for hint in official_domain_hints)
+
+
+def _best_serper_source_from_results(results: list[dict], city: str, state: str) -> dict | None:
+    if not results:
+        return None
+    ranked = _rank_search_results(results, limit=min(len(results), 5), city=city, state=state)
+    official = [r for r in (ranked or results) if _is_official_permit_source_url(r.get("url") or r.get("link") or "")]
+    best = (official or ranked or results)[0]
+    url = best.get("url") or best.get("link") or ""
+    if not url:
+        return None
+    return {
+        "url": url,
+        "title": best.get("title") or url,
+        "verified_at": _today_iso_date(),
+        "snippet": clean_summary_text(best.get("content") or best.get("snippet") or "", max_len=280),
+    }
+
+
+def _serper_claim_source(query: str, claim_type: str, city: str, state: str, stats: dict) -> dict | None:
+    cached = _get_cached_serper_source(city, state, claim_type)
+    if cached:
+        stats["cache_hits"] = stats.get("cache_hits", 0) + 1
+        print(f"[trust] Serper {claim_type}: cache hit {cached.get('url')}")
+        return cached
+
+    if stats.get("queries", 0) >= SERPER_TRUST_MAX_QUERIES:
+        stats["capped"] = True
+        return None
+    if not SERPER_API_KEY:
+        stats["provider_failed"] = True
+        stats["failure_reason"] = "missing_api_key"
+        return None
+
+    stats["queries"] = stats.get("queries", 0) + 1
+    try:
+        resp = _http_post_with_backoff(
+            "https://google.serper.dev/search",
+            headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
+            json={"q": query, "num": 5, "gl": "us"},
+            timeout=15,
+            max_retries=2,
+        )
+        if not resp or resp.status_code >= 400:
+            stats["provider_failed"] = True
+            stats["failure_reason"] = f"http_{getattr(resp, 'status_code', 'none')}"
+            return None
+        data = resp.json()
+        results = []
+        for r in data.get("organic", []) or []:
+            url = r.get("link", "")
+            if not url:
+                continue
+            results.append({
+                "title": r.get("title", ""),
+                "url": url,
+                "content": clean_summary_text(r.get("snippet", ""), max_len=500),
+            })
+        source = _best_serper_source_from_results(results, city, state)
+        if source:
+            _set_cached_serper_source(city, state, claim_type, query, source)
+            print(f"[trust] Serper {claim_type}: {source.get('url')}")
+            return source
+        stats["empty_results"] = stats.get("empty_results", 0) + 1
+        return None
+    except Exception as e:
+        stats["provider_failed"] = True
+        stats["failure_reason"] = type(e).__name__
+        print(f"[trust] Serper {claim_type} failed (non-fatal): {e}")
+        return None
+
+
+def _primary_permit_label(result: dict, job_type: str) -> str:
+    for p in result.get("permits_required") or []:
+        if isinstance(p, dict) and p.get("permit_type"):
+            return str(p.get("permit_type"))
+    return job_type or "building permit"
+
+
+def _serper_claim_queries(job_type: str, city: str, state: str, result: dict) -> list[tuple[str, str, str]]:
+    # Use the contractor's plain job description rather than the model's often
+    # long portal label. Exact quoted permit labels over-constrain Google and
+    # caused empty Serper results for real cases like ADUs and solar+battery.
+    permit_type = (job_type or _primary_permit_label(result, job_type) or "building permit").strip()
+    return [
+        ("fee", "fee_source", f'{city} {state} {permit_type} permit fee schedule 2026'),
+        ("ahj_contact", "ahj_contact_source", f'{city} {state} Building Department phone address'),
+        ("code_section", "code_section_source", f'{city} {state} {permit_type} code section permit'),
+        ("required_documents", "required_documents_source", f'{city} {state} {permit_type} permit application requirements'),
+        ("inspection_process", "inspection_process_source", f'{city} {state} {permit_type} inspection process'),
+    ]
+
+
+def _append_source_url(result: dict, source: dict) -> None:
+    url = (source or {}).get("url")
+    if not url:
+        return
+    existing = result.get("sources") or []
+    if not isinstance(existing, list):
+        existing = []
+    if url not in [s for s in existing if isinstance(s, str)]:
+        existing.append(url)
+    result["sources"] = normalize_sources(existing)
+
+
+def enrich_result_with_serper_sources(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Attach claim-level Google/Serper source URLs without changing existing fields.
+
+    Adds fee_source, ahj_contact_source, code_section_source,
+    required_documents_source, inspection_process_source, sources_status,
+    serper_credits_used, and serper_cache_hits. Never raises.
+    """
+    if not isinstance(result, dict):
+        return result
+    stats = {"queries": 0, "cache_hits": 0}
+    attached = 0
+    try:
+        for claim_type, field_name, query in _serper_claim_queries(job_type, city, state, result):
+            source = _serper_claim_source(query, claim_type, city, state, stats)
+            if source and source.get("url"):
+                public_source = {
+                    "url": source.get("url"),
+                    "title": source.get("title") or source.get("url"),
+                    "verified_at": source.get("verified_at") or _today_iso_date(),
+                }
+                result[field_name] = public_source
+                _append_source_url(result, public_source)
+                attached += 1
+            elif stats.get("provider_failed"):
+                break
+        result["serper_credits_used"] = int(stats.get("queries", 0))
+        result["serper_cache_hits"] = int(stats.get("cache_hits", 0))
+        if attached >= 3:
+            result["sources_status"] = "serper_verified"
+        elif attached > 0:
+            result["sources_status"] = "serper_partial"
+        else:
+            result["sources_status"] = "serper_unavailable"
+        if stats.get("failure_reason"):
+            result["sources_failure_reason"] = stats.get("failure_reason")
+        print(
+            f"[trust] Serper credits used: {result['serper_credits_used']} "
+            f"(cache hits: {result['serper_cache_hits']}, attached: {attached}, status: {result['sources_status']})"
+        )
+    except Exception as e:
+        result["serper_credits_used"] = int(stats.get("queries", 0))
+        result["serper_cache_hits"] = int(stats.get("cache_hits", 0))
+        result["sources_status"] = "serper_unavailable"
+        result["sources_failure_reason"] = type(e).__name__
+        print(f"[trust] Serper enrichment failed (non-fatal): {e}")
+    return result
+
+
+def _companion_trigger(permit_type: str, job_type: str) -> str:
+    p = (permit_type or "").lower()
+    job = (job_type or "").lower()
+    like_for_like = any(x in job for x in ["like for like", "like-for-like", "swap", "condenser", "replacement", "replace"])
+
+    if "elect" in p:
+        if any(x in job for x in ["solar", "pv", "battery"]):
+            return "inverter, battery, disconnect, panel tie-in, service equipment, or new/modified wiring is included"
+        if any(x in job for x in ["hvac", "ac", "air condition", "condenser", "heat pump", "furnace"]):
+            return "new wiring, disconnect replacement, breaker/panel modification, or a new circuit is included"
+        if "ev" in job or "charger" in job:
+            return "a new 240V circuit, breaker, load calculation, panel work, or hardwired EVSE is included"
+        return "new circuits, panel work, outlet relocation, disconnect replacement, or wiring modifications are included"
+    if "gas" in p:
+        if like_for_like:
+            return "gas piping modification, gas appliance connection change, regulator change, venting change, or a new gas line is included"
+        return "gas piping modification, gas appliance connection, regulator/venting change, or a new gas line is included"
+    if "plumb" in p:
+        return "pipe relocation, fixture move, water/sanitary line work, or DWV modification is included"
+    if "mechanical" in p or "hvac" in p:
+        return "new HVAC equipment, duct routing, exhaust/ventilation, combustion air, or condensate routing is added or modified"
+    if "struct" in p or "building" in p:
+        if any(x in job for x in ["solar", "pv", "battery"]):
+            return "roof racking, attachments, penetrations, battery mounting, or structural load review is required"
+        return "framing, load-bearing elements, structural openings, roof/decking, or exterior envelope changes are included"
+    if "utility" in p or "interconnection" in p or "coordination" in p:
+        if any(x in job for x in ["solar", "pv", "battery"]):
+            return "grid-tied PV export, net metering, battery backup, meter changes, or utility interconnection is included"
+        return "service disconnect/reconnect, meter pull, utility-side service change, or grid interconnection is required"
+    if "fire" in p:
+        return "fire-rated assemblies, alarms, sprinklers, battery/fire review, or egress/fire separation changes are included"
+    return "that trade's scope is added, relocated, upgraded, or modified beyond the primary permit scope"
+
+
+def hedge_companion_permits(result: dict, job_type: str) -> dict:
+    """Convert companion permits from unconditional Required to scoped conditions.
+
+    Keeps primary permits in permits_required untouched; companion_permits are
+    secondary and should read as conditional triggers for contractor trust.
+    """
+    if not isinstance(result, dict):
+        return result
+    companions = result.get("companion_permits") or []
+    if not isinstance(companions, list):
+        result["companion_permits"] = []
+        return result
+    hedged = []
+    for cp in companions:
+        if not isinstance(cp, dict):
+            continue
+        item = dict(cp)
+        ptype = item.get("permit_type") or item.get("name") or "Companion Permit"
+        trigger = item.get("required_if")
+        existing_reason = str(item.get("reason") or "").strip()
+        if not trigger and existing_reason.lower().startswith("may be required if"):
+            trigger = re.sub(r"^may be required if\s*:?\s*", "", existing_reason, flags=re.I)
+        if not trigger:
+            trigger = _companion_trigger(ptype, job_type)
+        trigger = str(trigger).strip().rstrip(".")
+        # Solar/battery utility coordination is not an electrical permit; label
+        # it as interconnection/PTO when the model blends those concepts.
+        if any(x in (job_type or "").lower() for x in ["solar", "pv", "battery"]) and any(x in str(ptype).lower() for x in ["utility", "interconnection", "meter"]):
+            ptype = "Utility Interconnection / Permission to Operate"
+        item["permit_type"] = ptype
+        item["required_if"] = trigger
+        item["requirement_label"] = "May be required based on scope"
+        item["reason"] = f"May be required if: {trigger}."
+        if str(item.get("certainty", "")).lower() in ("almost_certain", "required", "mandatory"):
+            item["certainty"] = "conditional"
+        elif not item.get("certainty"):
+            item["certainty"] = "possible"
+        hedged.append(item)
+    result["companion_permits"] = hedged
+    if hedged:
+        print("[trust] Companion permit hedging applied: " + "; ".join(f"{h.get('permit_type')} — {h.get('reason')}" for h in hedged[:5]))
+    return result
+
+
+def apply_fee_verify_caveat(result: dict) -> dict:
+    """Preserve fee numbers and add verify language + source URL when available."""
+    if not isinstance(result, dict):
+        return result
+    fee = result.get("fee_range")
+    if isinstance(fee, list):
+        fee_text = ", ".join(str(x) for x in fee if x)
+    else:
+        fee_text = str(fee or "").strip()
+    if not fee_text:
+        return result
+    fee_source = result.get("fee_source") if isinstance(result.get("fee_source"), dict) else {}
+    source_url = fee_source.get("url") or ""
+    if "verify in" in fee_text.lower() or "verify at" in fee_text.lower():
+        # Cached results may have an older verify URL. Keep the fee number but
+        # align inline caveat with the current fee_source when available.
+        if source_url and source_url not in fee_text:
+            result["fee_range"] = re.sub(
+                r"\s+—\s+verify\s+(?:in|at)\s+.+?(?:\s+before quoting)?$",
+                f" — verify in {source_url} before quoting",
+                fee_text,
+                flags=re.I,
+            )
+        return result
+    if fee_text.lower().startswith("fee estimate:"):
+        base = fee_text
+    else:
+        base = f"Fee Estimate: {fee_text}"
+    if source_url:
+        result["fee_range"] = f"{base} — verify in {source_url} before quoting"
+    else:
+        result["fee_range"] = f"{base} — verify in city portal before quoting"
+    return result
+
 
 def brave_search(query: str, num: int = 5, max_results: int | None = None, city: str = "", state: str = "") -> list[dict]:
     limit = max_results or num
@@ -3523,8 +3903,9 @@ Return ONLY a JSON object with these exact fields:
   "companion_permits": [
     {
       "permit_type": "Name of companion permit (e.g. Electrical Permit)",
-      "reason": "One sentence explaining why this additional permit is needed for this job",
-      "certainty": "almost_certain | likely | possible"
+      "reason": "May be required if: specific scope trigger for this trade/job (new wiring, gas piping modification, fixture relocation, structural change, utility interconnection, etc.)",
+      "required_if": "specific trigger conditions; do NOT mark companion permits as unconditionally Required",
+      "certainty": "likely | possible | conditional"
     }
   ],
   "zoning_hoa_flag": "For solar and roofing jobs: describe potential HOA restrictions, historic district overlay requirements, and zoning restrictions that could block or delay work. State-specific solar access laws if relevant. Return null for jobs where this is not applicable.",
@@ -3544,23 +3925,24 @@ DEPTH CHECKLIST — before returning your answer, verify:
 ✓ license_required explains WHO pulls the permit and HOW, never implies 'no permit needed'
 ✓ city_contractor_registration: populate ONLY when city requires separate city-level contractor registration beyond state license (e.g. Dallas annual registration, Phoenix city contractor registration, Chicago city license, Nashville Metro Codes registration). Set to null if only state license required.
 ✓ pro_tips save real time or money — not generic advice
-✓ companion_permits is MANDATORY — always populate this field. Use the trade matrix below. Return [] ONLY if the job is truly isolated (e.g. painting, landscaping, minor repairs). For any mechanical, electrical, plumbing, or structural work, there are almost always companion permits.
+✓ companion_permits is MANDATORY — always populate this field. Use the trade matrix below. Return [] ONLY if the job is truly isolated (e.g. painting, landscaping, minor repairs). For any mechanical, electrical, plumbing, or structural work, there are often companion permits, but companion permits must be phrased conditionally unless they are the primary permit.
+✓ Companion permit wording rule: NEVER say "Companion Permit Required" or imply unconditional requirement for secondary permits. Use "May be required if: [specific trigger]". Keep the primary permit in permits_required as required when applicable; do not downgrade the primary permit.
 
-COMPANION PERMIT TRADE MATRIX (use this to populate companion_permits):
-- HVAC/AC/furnace/heat pump replacement → [almost_certain: Electrical Permit (disconnect/reconnect circuit), likely: Gas Permit if gas appliance]
-- Electrical panel upgrade/service change → [almost_certain: Electrical Inspection Permit, likely: Utility Coordination Permit]
-- Bathroom remodel → [almost_certain: Plumbing Permit, almost_certain: Electrical Permit (GFCI/outlets), possible: Building Permit if walls moved]
-- Kitchen remodel → [almost_certain: Plumbing Permit, almost_certain: Electrical Permit, possible: Mechanical Permit for range hood]
-- Roof replacement → [possible: Electrical Permit if solar panels present, possible: Structural Permit if decking replaced]
-- Water heater replacement → [likely: Gas Permit if gas unit, possible: Electrical Permit if converting to electric]
-- Deck/patio addition → [almost_certain: Building Permit, likely: Electrical Permit if adding outlets/lighting]
-- Garage conversion/ADU → [almost_certain: Building Permit, almost_certain: Electrical Permit, almost_certain: Plumbing Permit, likely: Mechanical Permit]
-- Solar panel installation → [almost_certain: Electrical Permit, almost_certain: Building/Structural Permit, likely: Utility Interconnection Permit]
-- EV charger installation → [almost_certain: Electrical Permit]
-- Generator installation → [almost_certain: Electrical Permit, likely: Gas/Mechanical Permit]
-- Basement finish → [almost_certain: Building Permit, almost_certain: Electrical Permit, likely: Plumbing Permit, likely: Mechanical Permit]
-- Window/door replacement → [possible: Building Permit if structural opening changes]
-- Plumbing repiping → [almost_certain: Plumbing Permit, possible: Building Permit for access openings]
+COMPANION PERMIT TRADE MATRIX (use this to populate companion_permits with conditional triggers):
+- HVAC/AC/furnace/heat pump replacement → [Electrical Permit — May be required if: new wiring, disconnect replacement, breaker/panel modification, or new circuit; Gas Permit — May be required if: gas piping modification, gas appliance connection, or new gas line]
+- Electrical panel upgrade/service change → [Utility Coordination — May be required if: service disconnect/reconnect, meter pull, or utility-side service change]
+- Bathroom remodel → [Plumbing Permit — May be required if: pipe relocation, fixture move, or DWV modification; Electrical Permit — May be required if: new circuits, GFCI/outlet relocation, fan/light wiring, or panel work; Building Permit — May be required if: walls moved or structural/framing changes]
+- Kitchen remodel → [Plumbing Permit — May be required if: sink/dishwasher/ice-maker line relocation or gas line work; Electrical Permit — May be required if: new dedicated circuits, outlet relocation, appliance circuits, or panel work; Mechanical Permit — May be required if: new/rerouted range hood exhaust]
+- Roof replacement → [Electrical Permit — May be required if: solar panels/electrical equipment must be removed/reinstalled; Structural Permit — May be required if: decking, rafters, trusses, or load path changes]
+- Water heater replacement → [Gas Permit — May be required if: gas piping, venting, combustion air, or gas appliance connection changes; Electrical Permit — May be required if: converting to electric or adding a circuit/disconnect]
+- Deck/patio addition → [Electrical Permit — May be required if: outlets, lighting, fans, heaters, or exterior circuits are added]
+- Garage conversion/ADU → [Electrical Permit — May be required if: new circuits, subpanel, service load changes, or rewiring; Plumbing Permit — May be required if: bathroom/kitchen/laundry fixtures or drains are added; Mechanical Permit — May be required if: new HVAC, ducts, exhaust, or ventilation]
+- Solar panel installation → [Electrical Permit — May be required if: inverter, disconnect, panel tie-in, battery, or service equipment is installed/modified; Building/Structural Permit — May be required if: roof racking, attachments, penetrations, or structural review are required; Utility Interconnection — May be required if: grid-tied PV export, net metering, or battery backup interconnection is included]
+- EV charger installation → [Electrical Permit — May be required if: new 240V circuit, breaker, load calculation, panel work, or hardwired EVSE]
+- Generator installation → [Electrical Permit — May be required if: transfer switch/interlock, feeder, or panel connection is installed; Gas/Mechanical Permit — May be required if: gas piping, regulator, venting, or fuel connection changes]
+- Basement finish → [Electrical Permit — May be required if: new outlets, lighting, smoke/CO alarms, or subpanel work; Plumbing Permit — May be required if: bathroom, wet bar, laundry, or floor drain added; Mechanical Permit — May be required if: ducts, returns, bathroom exhaust, or heating/cooling zones are modified]
+- Window/door replacement → [Building Permit — May be required if: structural opening/header changes, egress changes, or exterior envelope alterations]
+- Plumbing repiping → [Building Permit — May be required if: structural framing, fire-rated assemblies, or major access openings are altered]
 ✓ apply_url: ALWAYS provide the direct online permit portal URL if one exists (e.g. "https://abc.austintexas.gov"). Do not leave null if you found a portal in your research.
 ✓ total_cost_estimate: Provide a realistic total project cost range for this job in this city (including labor, materials, and permit fees). Example: "$2,500 - $4,500". NEVER leave this field null — use your training knowledge to provide a best-estimate range for the contractor.
 ✓ approval_timeline: Always provide a 'simple' (over-the-counter) and 'complex' (plan review) estimate.
@@ -3633,6 +4015,9 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
                 cached['fee_calculator'] = calculate_exact_fee(job_type, city, state, float(job_value))
             elif 'fee_calculator' not in cached:
                 cached['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
+            hedge_companion_permits(cached, job_type)
+            enrich_result_with_serper_sources(cached, job_type, city, state)
+            apply_fee_verify_caveat(cached)
             return cached
 
     # ── Check auto-verified data first ──
@@ -4140,6 +4525,10 @@ Return ONLY the JSON object."""
          "Building Permit (Structural/Racking)",
          "Required to verify roof load capacity and panel attachment method.",
          "almost_certain"),
+        (["solar", "solar panel", "pv", "battery backup"],
+         "Utility Interconnection / Permission to Operate",
+         "May be required if the PV or battery system is grid-tied, exports power, uses net metering, changes the meter, or needs utility PTO.",
+         "likely"),
         (["ev charger", "electric vehicle", "level 2 charger"],
          "Electrical Permit",
          "Required for the dedicated 240V circuit and panel breaker installation.",
@@ -4155,6 +4544,22 @@ Return ONLY the JSON object."""
         (["basement finish", "basement remodel", "basement conversion"],
          "Plumbing Permit",
          "Required if adding a bathroom, wet bar, or floor drain to the basement.",
+         "likely"),
+        (["adu", "garage conversion", "accessory dwelling", "in-law suite"],
+         "Planning/Zoning Clearance",
+         "May be required if the property is in a historic district, zoning overlay, parking-sensitive area, or needs ADU covenant/site-plan review.",
+         "possible"),
+        (["adu", "garage conversion", "accessory dwelling", "in-law suite"],
+         "Electrical Permit",
+         "May be required if new circuits, subpanel, service load changes, smoke/CO alarms, or rewiring are included.",
+         "likely"),
+        (["adu", "garage conversion", "accessory dwelling", "in-law suite"],
+         "Plumbing Permit",
+         "May be required if a bathroom, kitchen, laundry, water line, sewer line, or DWV work is included.",
+         "likely"),
+        (["adu", "garage conversion", "accessory dwelling", "in-law suite"],
+         "Mechanical Permit",
+         "May be required if new HVAC, ducts, exhaust, ventilation, or combustion-air work is included.",
          "likely"),
         (["water heater"],
          "Gas Permit",
@@ -4367,6 +4772,12 @@ Return ONLY the JSON object."""
         seen_companions.add(norm)
         deduped_companions.append(cp)
     result["companion_permits"] = deduped_companions
+
+    # Tier A trust layer: conditional companion wording, claim-level Google
+    # sources, and fee verify caveat. These only ADD fields / enrich text.
+    hedge_companion_permits(result, job_type)
+    enrich_result_with_serper_sources(result, job_type, city, state)
+    apply_fee_verify_caveat(result)
 
     score_structured = {
         'phone': result.get('apply_phone') or machine_structured.get('phone', ''),
