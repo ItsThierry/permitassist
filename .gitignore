@@ -1,1 +1,11 @@
 seo/__pycache__/
+
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*.json
+api/__pycache__/
+scripts/__pycache__/
