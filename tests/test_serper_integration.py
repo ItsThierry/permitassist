@@ -43,6 +43,20 @@ def _base_result():
     }
 
 
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        ("https://permitmint.com/texas/austin/hvac-permit", engine.SOURCE_CLASS_EXCLUDED),
+        ("https://abc.austintexas.gov/web/permit/public-search", engine.SOURCE_CLASS_OFFICIAL),
+        ("https://www.roofingcontractor.com/articles/permit-guide", engine.SOURCE_CLASS_SUPPLEMENTARY),
+        ("https://permitai.us/austin-tx-permits", engine.SOURCE_CLASS_EXCLUDED),
+        ("https://codes.iccsafe.org/content/IBC2024P1", engine.SOURCE_CLASS_EXCLUDED),
+    ],
+)
+def test_classify_source_url(url, expected):
+    assert engine.classify_source_url(url) == expected
+
+
 def test_serper_attaches_claim_sources(monkeypatch):
     calls = []
 
@@ -65,7 +79,10 @@ def test_serper_attaches_claim_sources(monkeypatch):
         else:
             link = "https://www.cityofpasadena.net/planning/inspections/"
             title = "Pasadena Inspection Process"
-        return FakeResponse(organic=[{"title": title, "link": link, "snippet": "Official city permit page"}])
+        return FakeResponse(organic=[
+            {"title": "Competitor HVAC guide", "link": "https://permitmint.com/guides/hvac/texas/pasadena/", "snippet": "Competitor page must never be cited"},
+            {"title": title, "link": link, "snippet": "Official city permit page"},
+        ])
 
     monkeypatch.setattr(engine, "_http_post_with_backoff", fake_post)
 
@@ -79,6 +96,7 @@ def test_serper_attaches_claim_sources(monkeypatch):
     assert result["sources_status"] == "serper_verified"
     assert result["serper_credits_used"] == 5
     assert len(calls) == 5
+    assert all("permitmint.com" not in src for src in result["sources"])
 
 
 def test_fee_verify_caveat_keeps_number_and_adds_source(monkeypatch):

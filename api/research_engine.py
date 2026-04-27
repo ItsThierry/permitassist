@@ -113,6 +113,77 @@ SERPER_TRUST_MAX_CONCURRENCY = 5
 SERPER_TRUST_TOTAL_TIMEOUT_SECONDS = 30
 SERPER_TRUST_REQUEST_TIMEOUT_SECONDS = 12
 
+SOURCE_CLASS_OFFICIAL = "OFFICIAL"
+SOURCE_CLASS_SUPPLEMENTARY = "SUPPLEMENTARY"
+SOURCE_CLASS_EXCLUDED = "EXCLUDED"
+
+# Serper source-domain policy. Keep these constants near the top of the file so
+# competitor/source trust updates are easy to audit during hotfixes.
+EXCLUDED_SOURCE_DOMAINS = {
+    "permitmint.com",
+    "doineedapermit.org",
+    "permitai.us",
+    "permitflow.com",
+    "permitlabs.ai",
+    "withpulley.com",
+    "oneclickcode.com",
+    "buildoraiq.com",
+    "shovels.ai",
+    "upcodes.com",
+    "codes.iccsafe.org",
+    "madcad.com",
+    "greenlancer.com",
+    "lyra.solar",
+    "gosolarapp.org",
+    "archistar.ai",
+    "planifly.co.uk",
+    "planningpermission.ai",
+    "planx.uk",
+    "planningai.com.au",
+    "servicetitan.com",
+    "housecallpro.com",
+    "buildertrend.com",
+    "jobnimbus.com",
+    "fieldedge.com",
+    "houzz.com",
+    "zillow.com",
+    "realtor.com",
+    "yelp.com",
+    "angi.com",
+    "thumbtack.com",
+    "nextdoor.com",
+    "facebook.com",
+    "reddit.com",
+    "medium.com",
+    "substack.com",
+    "quora.com",
+    "youtube.com",
+}
+
+OFFICIAL_SOURCE_DOMAINS = {
+    "nfpa.org",
+    "iapmo.org",
+    "ncqa.org",
+    "ashrae.org",
+    "iccsafe.org",
+    "nationalbuildingcodes.com",
+    # Recognized AHJ/authority domains that are not on .gov/.us.
+    "cityofpasadena.net",
+    "houstonpermittingcenter.org",
+    "harrispermits.org",
+}
+
+SUPPLEMENTARY_SOURCE_DOMAINS = {
+    "roofingcontractor.com",
+    "ecmweb.com",
+    "contractingbusiness.com",
+    "contractor.com",
+    "plumbingmag.com",
+    "ehcopumps.com",
+    "statefarm.com",
+    "municode.com",
+}
+
 SUMMARY_JUNK_PATTERNS = [
     r'\*\s*Email;\s*"Click to submit an email[^\n]*',
     r'\*\s*Facebook\s*"Click to share with Facebook[^\n]*',
@@ -2375,8 +2446,10 @@ def serper_search(query: str, num: int = 5, city: str = "", state: str = "") -> 
                 "url": url,
                 "content": clean_summary_text(r.get("snippet", ""), max_len=500),
             })
-        trimmed = _rank_search_results(results, limit=min(num, 4), city=city, state=state)
-        print(f"[search] Layer 1: serper found {len(trimmed)} urls")
+        allowed_results = _filter_allowed_source_results(results)
+        excluded = len(results) - len(allowed_results)
+        trimmed = _rank_search_results(allowed_results, limit=min(num, 4), city=city, state=state)
+        print(f"[search] Layer 1: serper found {len(trimmed)} urls (excluded: {excluded})")
         return trimmed
     except Exception as e:
         print(f"[search] Serper search failed (non-fatal): {e}")
@@ -2430,13 +2503,23 @@ def _get_cached_serper_source(city: str, state: str, claim_type: str) -> dict | 
         title, url, snippet, created_at = row
         if not url or (time.time() - float(created_at or 0)) > SERPER_TRUST_TTL_SECONDS:
             return None
-        return {
+        source_class = classify_source_url(url)
+        if source_class == SOURCE_CLASS_EXCLUDED:
+            print(f"[trust] Serper cache ignored excluded source: {url}")
+            return None
+        cached = {
             "url": url,
             "title": title or url,
             "verified_at": datetime.fromtimestamp(float(created_at)).date().isoformat(),
             "snippet": snippet or "",
             "cache": "hit",
+            "source_class": source_class,
+            "source_type": source_class.lower(),
         }
+        if source_class == SOURCE_CLASS_SUPPLEMENTARY:
+            cached["supplementary"] = True
+            cached["source_label"] = "supplementary reference"
+        return cached
     except Exception as e:
         print(f"[trust] Serper cache read failed (non-fatal): {e}")
         return None
@@ -2444,6 +2527,8 @@ def _get_cached_serper_source(city: str, state: str, claim_type: str) -> dict | 
 
 def _set_cached_serper_source(city: str, state: str, claim_type: str, query: str, source: dict) -> None:
     if not source or not source.get("url"):
+        return
+    if classify_source_url(source.get("url") or "") == SOURCE_CLASS_EXCLUDED:
         return
     try:
         conn = _serper_cache_conn()
@@ -2472,35 +2557,112 @@ def _set_cached_serper_source(city: str, state: str, claim_type: str, query: str
         print(f"[trust] Serper cache write failed (non-fatal): {e}")
 
 
-def _is_official_permit_source_url(url: str) -> bool:
-    domain = urlparse(url or "").netloc.lower()
+def _normalized_source_domain(url: str) -> str:
+    raw = (url or "").strip()
+    if not raw:
+        return ""
+    parsed = urlparse(raw if "://" in raw else f"https://{raw}")
+    domain = (parsed.hostname or parsed.netloc or "").lower().strip(".")
+    if domain.startswith("www."):
+        domain = domain[4:]
+    return domain
+
+
+def _domain_matches(domain: str, candidate: str) -> bool:
+    return domain == candidate or domain.endswith(f".{candidate}")
+
+
+def classify_source_url(url: str) -> str:
+    """Classify a source URL before it is allowed into public citations."""
+    domain = _normalized_source_domain(url)
     if not domain:
-        return False
-    if domain.endswith(".gov") or ".gov" in domain or domain.endswith(".us"):
-        return True
-    official_domain_hints = (
-        "cityof", "houstontx.gov", "houstonpermittingcenter.org",
-        "phoenix.gov", "cityofpasadena.net", "maricopa.gov", "lacounty.gov",
-        "southpasadenaca.gov",
-    )
-    return any(hint in domain for hint in official_domain_hints)
+        return SOURCE_CLASS_EXCLUDED
+
+    # Blocklist wins over every allow rule, including .us and iccsafe.org.
+    if any(_domain_matches(domain, blocked) for blocked in EXCLUDED_SOURCE_DOMAINS):
+        return SOURCE_CLASS_EXCLUDED
+
+    if domain.endswith((".gov", ".us", ".mil")):
+        return SOURCE_CLASS_OFFICIAL
+
+    if any(_domain_matches(domain, allowed) for allowed in OFFICIAL_SOURCE_DOMAINS):
+        return SOURCE_CLASS_OFFICIAL
+
+    labels = domain.split(".")
+    first_label = labels[0] if labels else ""
+    if first_label.startswith(("cityof", "townof", "villageof", "countyof")):
+        return SOURCE_CLASS_OFFICIAL
+    if any(token in domain for token in ("county", "borough", "parish")) and any(token in domain for token in ("permit", "building", "planning", "development")):
+        return SOURCE_CLASS_OFFICIAL
+
+    if any(_domain_matches(domain, supplemental) for supplemental in SUPPLEMENTARY_SOURCE_DOMAINS):
+        return SOURCE_CLASS_SUPPLEMENTARY
+
+    if domain.endswith(".org"):
+        return SOURCE_CLASS_SUPPLEMENTARY
+
+    # Unknown .com/.net/etc. sources are not authoritative enough for PermitIQ
+    # citations. Excluding by default prevents accidental competitor referrals.
+    return SOURCE_CLASS_EXCLUDED
+
+
+def _is_official_permit_source_url(url: str) -> bool:
+    return classify_source_url(url) == SOURCE_CLASS_OFFICIAL
+
+
+def _source_trust_rank(source_class: str) -> int:
+    if source_class == SOURCE_CLASS_OFFICIAL:
+        return 0
+    if source_class == SOURCE_CLASS_SUPPLEMENTARY:
+        return 1
+    return 2
+
+
+def _with_source_class(item: dict, source_class: str) -> dict:
+    annotated = {**item, "source_class": source_class, "source_type": source_class.lower()}
+    if source_class == SOURCE_CLASS_SUPPLEMENTARY:
+        annotated["supplementary"] = True
+        annotated["source_label"] = "supplementary reference"
+    return annotated
+
+
+def _filter_allowed_source_results(results: list[dict]) -> list[dict]:
+    allowed = []
+    for item in results or []:
+        url = item.get("url") or item.get("link") or ""
+        source_class = classify_source_url(url)
+        if source_class == SOURCE_CLASS_EXCLUDED:
+            continue
+        allowed.append(_with_source_class(item, source_class))
+    return allowed
 
 
 def _best_serper_source_from_results(results: list[dict], city: str, state: str) -> dict | None:
     if not results:
         return None
-    ranked = _rank_search_results(results, limit=min(len(results), 5), city=city, state=state)
-    official = [r for r in (ranked or results) if _is_official_permit_source_url(r.get("url") or r.get("link") or "")]
-    best = (official or ranked or results)[0]
+    allowed = _filter_allowed_source_results(results)
+    if not allowed:
+        return None
+    ranked = _rank_search_results(allowed, limit=min(len(allowed), 5), city=city, state=state)
+    ranked = ranked or allowed
+    ranked.sort(key=lambda item: (_source_trust_rank(item.get("source_class", SOURCE_CLASS_EXCLUDED)),))
+    best = ranked[0]
     url = best.get("url") or best.get("link") or ""
     if not url:
         return None
-    return {
+    source_class = best.get("source_class") or classify_source_url(url)
+    source = {
         "url": url,
         "title": best.get("title") or url,
         "verified_at": _today_iso_date(),
         "snippet": clean_summary_text(best.get("content") or best.get("snippet") or "", max_len=280),
+        "source_class": source_class,
+        "source_type": source_class.lower(),
     }
+    if source_class == SOURCE_CLASS_SUPPLEMENTARY:
+        source["supplementary"] = True
+        source["source_label"] = "supplementary reference"
+    return source
 
 
 def _serper_claim_source(query: str, claim_type: str, city: str, state: str, stats: dict, request_timeout: float = 15) -> dict | None:
@@ -2545,9 +2707,15 @@ def _serper_claim_source(query: str, claim_type: str, city: str, state: str, sta
         source = _best_serper_source_from_results(results, city, state)
         if source:
             _set_cached_serper_source(city, state, claim_type, query, source)
-            print(f"[trust] Serper {claim_type}: {source.get('url')}")
+            label = source.get("source_label") or source.get("source_type") or "source"
+            print(f"[trust] Serper {claim_type}: {source.get('url')} ({label})")
             return source
-        stats["empty_results"] = stats.get("empty_results", 0) + 1
+        if results and all(classify_source_url(r.get("url") or r.get("link") or "") == SOURCE_CLASS_EXCLUDED for r in results):
+            stats["excluded_results"] = stats.get("excluded_results", 0) + len(results)
+            stats["failure_reason"] = stats.get("failure_reason") or "excluded_sources_only"
+            print(f"[trust] Serper {claim_type}: synthesized from {len(results)} excluded sources, no official URL available")
+        else:
+            stats["empty_results"] = stats.get("empty_results", 0) + 1
         return None
     except Exception as e:
         stats["provider_failed"] = True
@@ -2599,6 +2767,8 @@ def _merge_serper_stats(total: dict, partial: dict | None) -> None:
     for key in ("capped", "provider_failed", "empty_results", "timed_out"):
         if partial.get(key):
             total[key] = partial.get(key)
+    if partial.get("excluded_results"):
+        total["excluded_results"] = total.get("excluded_results", 0) + int(partial.get("excluded_results", 0) or 0)
     if partial.get("failure_reason") and not total.get("failure_reason"):
         total["failure_reason"] = partial.get("failure_reason")
 
@@ -2710,11 +2880,18 @@ def _attach_serper_claim_results(result: dict, claim_results: list[dict], stats:
     for item in sorted(claim_results, key=lambda x: x.get("index", 0)):
         source = item.get("source")
         if source and source.get("url"):
+            source_class = source.get("source_class") or classify_source_url(source.get("url") or "")
+            if source_class == SOURCE_CLASS_EXCLUDED:
+                continue
             public_source = {
                 "url": source.get("url"),
                 "title": source.get("title") or source.get("url"),
                 "verified_at": source.get("verified_at") or _today_iso_date(),
+                "source_type": source_class.lower(),
             }
+            if source_class == SOURCE_CLASS_SUPPLEMENTARY:
+                public_source["supplementary"] = True
+                public_source["source_label"] = "supplementary reference"
             result[item.get("field_name")] = public_source
             _append_source_url(result, public_source)
             attached += 1
