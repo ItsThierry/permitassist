@@ -1454,6 +1454,11 @@
       border-color: var(--accent);
       color: #fff;
     }
+    .trade-chip-clear {
+      background: rgba(255,255,255,0.68);
+      color: var(--text-muted-dark);
+    }
+    .trade-fields[data-trade-fields] { display: block; }
     .location-link-icon {
       position: relative;
       width: 18px;
@@ -1698,14 +1703,15 @@
             <label>Describe the job</label>
             <div class="trade-quick-pick-label">Quick pick a common job:</div>
             <div class="trade-chip-strip" aria-label="Quick pick a common job">
-              <button class="trade-chip" type="button" data-fill="Replace outdoor AC condenser unit, like-for-like swap, residential">🔥 Condenser changeout</button>
-              <button class="trade-chip" type="button" data-fill="Complete HVAC system replacement, indoor + outdoor unit, residential">❄️ Full HVAC replacement</button>
-              <button class="trade-chip" type="button" data-fill="Tank water heater replacement, like-for-like, gas/electric">💧 Water heater swap</button>
-              <button class="trade-chip" type="button" data-fill="Electrical service panel upgrade from 100A to 200A, residential">🔌 Panel upgrade</button>
-              <button class="trade-chip" type="button" data-fill="Level 2 EV charger circuit install, 240V dedicated, residential">🚗 EV charger install</button>
-              <button class="trade-chip" type="button" data-fill="Residential solar PV system install, rooftop, grid-tied">🌞 Solar PV install</button>
-              <button class="trade-chip" type="button" data-fill="Full roof tear-off and replacement, asphalt shingles, residential">🏠 Roof tear-off</button>
-              <button class="trade-chip" type="button" data-fill="Ductless mini-split system install, single-zone, residential">🪟 Mini-split install</button>
+              <button class="trade-chip" type="button" data-trade-key="condenser_changeout" data-fill="HVAC condenser changeout, like-for-like swap, residential">🔥 Condenser changeout</button>
+              <button class="trade-chip" type="button" data-trade-key="hvac_replacement" data-fill="Complete HVAC system replacement, indoor + outdoor unit, residential">❄️ Full HVAC replacement</button>
+              <button class="trade-chip" type="button" data-trade-key="water_heater" data-fill="Water heater swap, like-for-like replacement, residential">💧 Water heater swap</button>
+              <button class="trade-chip" type="button" data-trade-key="panel_upgrade" data-fill="Electrical service panel upgrade, residential">🔌 Panel upgrade</button>
+              <button class="trade-chip" type="button" data-trade-key="ev_charger" data-fill="Level 2 EV charger install, dedicated 240V circuit, residential">🚗 EV charger install</button>
+              <button class="trade-chip" type="button" data-trade-key="solar_pv" data-fill="Residential solar PV system install, grid-tied">🌞 Solar PV install</button>
+              <button class="trade-chip" type="button" data-trade-key="roof_tearoff" data-fill="Full roof tear-off and replacement, residential">🏠 Roof tear-off</button>
+              <button class="trade-chip" type="button" data-trade-key="mini_split" data-fill="Ductless mini-split install, residential">🪟 Mini-split install</button>
+              <button class="trade-chip trade-chip-clear" type="button" data-clear-trade="true" aria-label="Clear selected quick pick">Clear</button>
             </div>
             <div class="autocomplete-wrap">
               <div class="query-wrap">
@@ -2121,6 +2127,7 @@ let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation
 let _serverFreeLookupsUsed=0;
 let _skipDisambig=false;
 let _isSampleLookup=false;
+let formState={trade:''};
 let tradeWizardState={tradeKey:'',baseQuery:'',answers:{},dismissedTrade:'',suppressInput:false};
 
 // ── Job Types for Autocomplete ────────────────────────────────────────────────
@@ -2192,59 +2199,96 @@ const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 const TRADE_QUESTIONS = {
-  'hvac': [
-    { q: 'Job type:', options: ['Condenser/AC replacement', 'Furnace replacement', 'Full system (condenser + furnace)', 'New installation', 'Ductwork only'] },
-    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
+  // trade-aware quick-pick fields: additive follow-ups revealed from chip clicks only.
+  'condenser_changeout': [
+    { field: 'tonnage', q: 'Tonnage:', options: ['1.5-ton', '2-ton', '2.5-ton', '3-ton', '3.5-ton', '4-ton', '5+ ton'] },
+    { field: 'refrigerant', q: 'Refrigerant:', options: ['R-410A', 'R-32', 'R-454B'] },
+    { field: 'disconnect', q: 'New disconnect needed?', options: ['New disconnect needed', 'Existing disconnect OK', 'Not sure'] }
   ],
-  'electrical': [
-    { q: 'Job type:', options: ['Panel upgrade/heavy-up', 'New circuit', 'EV charger', 'Whole home rewire', 'Generator/transfer switch'] },
-    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
-  ],
-  'roofing': [
-    { q: 'Scope:', options: ['Full tear-off replacement', 'Partial repair', 'New construction'] },
-    { q: 'Material:', options: ['Asphalt shingle', 'Metal', 'Tile', 'Flat/TPO'] }
-  ],
-  'plumbing': [
-    { q: 'Job type:', options: ['Water heater replacement', 'Sewer/drain line', 'Re-pipe', 'Fixture relocation', 'Gas line'] },
-    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
+  'hvac_replacement': [
+    { field: 'tonnage_total', q: 'Tonnage:', options: ['1.5-ton', '2-ton', '2.5-ton', '3-ton', '3.5-ton', '4-ton', '5+ ton'] },
+    { field: 'indoor_unit_type', q: 'Indoor unit type:', options: ['Gas furnace', 'Heat pump air handler'] },
+    { field: 'gas_line_modification', q: 'Gas line modification?', options: ['No gas line modification', 'Gas line modification needed', 'Not sure'] }
   ],
   'water_heater': [
-    { q: 'Type:', options: ['Tank (gas)', 'Tank (electric)', 'Tankless (gas)', 'Tankless (electric)'] },
-    { q: 'Same location or moving it?', options: ['Same location', 'Moving it'] }
+    { field: 'water_heater_type', q: 'Type:', options: ['Gas tank', 'Electric tank', 'Tankless gas', 'Tankless electric'] },
+    { field: 'capacity', q: 'Capacity:', options: ['40 gal', '50 gal', '65 gal', '80 gal'] },
+    { field: 'same_location', q: 'Same location?', options: ['Same location', 'New location', 'Not sure'] }
+  ],
+  'panel_upgrade': [
+    { field: 'amps_from', q: 'From amps:', options: ['60A', '100A', '150A', '200A'] },
+    { field: 'amps_to', q: 'To amps:', options: ['100A', '150A', '200A', '400A'] },
+    { field: 'service_drop_relocation', q: 'Service drop relocation?', options: ['No service drop relocation', 'Service drop relocation needed', 'Not sure'] }
+  ],
+  'ev_charger': [
+    { field: 'charger_amps', q: 'Charger amps:', options: ['30A', '40A', '48A', '80A'] },
+    { field: 'dedicated_240v_circuit', q: 'Dedicated 240V circuit needed?', options: ['Dedicated 240V circuit needed', 'Existing 240V circuit available', 'Not sure'] },
+    { field: 'panel_capacity', q: 'Existing panel capacity OK?', options: ['Panel capacity OK', 'Load calc needed', 'Not sure'] }
+  ],
+  'solar_pv': [
+    { field: 'system_size_kw', q: 'System size kW:', options: ['3 kW', '5 kW', '8 kW', '10 kW', '12 kW', '15+ kW'] },
+    { field: 'battery_storage_kwh', q: 'Battery storage?', options: ['No battery storage', 'Battery storage planned', 'Battery kWh TBD'] },
+    { field: 'mount_type', q: 'Roof or ground mount?', options: ['Roof mount', 'Ground mount'] }
+  ],
+  'roof_tearoff': [
+    { field: 'roof_material', q: 'Material:', options: ['Asphalt shingles', 'Metal', 'Tile'] },
+    { field: 'square_footage', q: 'Square footage:', options: ['Under 1,500 sq ft', '1,500-2,500 sq ft', '2,500-4,000 sq ft', '4,000+ sq ft'] },
+    { field: 'decking_replacement', q: 'Decking replacement needed?', options: ['No decking replacement', 'Some decking replacement', 'Full decking replacement', 'Not sure'] }
+  ],
+  'mini_split': [
+    { field: 'zones', q: 'Number of zones:', options: ['1 zone', '2 zones', '3 zones', '4+ zones'] },
+    { field: 'total_tonnage', q: 'Total tonnage:', options: ['0.75-ton', '1-ton', '1.5-ton', '2-ton', '3+ ton'] },
+    { field: 'location', q: 'Location:', options: ['Interior wall', 'Exterior corner', 'Garage/shop', 'Multiple rooms'] }
+  ],
+  'hvac': [
+    { field: 'tonnage', q: 'Tonnage:', options: ['1.5-ton', '2-ton', '2.5-ton', '3-ton', '3.5-ton', '4-ton', '5+ ton'] },
+    { field: 'refrigerant', q: 'Refrigerant:', options: ['R-410A', 'R-32', 'R-454B'] }
+  ],
+  'electrical': [
+    { field: 'amps_to', q: 'Amps:', options: ['100A', '150A', '200A', '400A'] },
+    { field: 'electrical_scope', q: 'Scope:', options: ['Panel upgrade', 'New circuit', 'Service relocation'] }
+  ],
+  'roofing': [
+    { field: 'roof_material', q: 'Material:', options: ['Asphalt shingles', 'Metal', 'Tile', 'Flat/TPO'] },
+    { field: 'square_footage', q: 'Square footage:', options: ['Under 1,500 sq ft', '1,500-2,500 sq ft', '2,500-4,000 sq ft', '4,000+ sq ft'] }
+  ],
+  'plumbing': [
+    { field: 'plumbing_scope', q: 'Job type:', options: ['Water heater replacement', 'Sewer/drain line', 'Re-pipe', 'Fixture relocation', 'Gas line'] },
+    { field: 'same_location', q: 'Same location?', options: ['Same location', 'Moving it'] }
   ],
   'deck': [
-    { q: 'Deck type:', options: ['Attached to house', 'Freestanding'] },
-    { q: 'Height above grade:', options: ['Under 30 inches', '30+ inches'] },
-    { q: 'Material:', options: ['Treated lumber', 'Composite/Trex', 'Hardwood'] }
+    { field: 'deck_type', q: 'Deck type:', options: ['Attached to house', 'Freestanding'] },
+    { field: 'height_above_grade', q: 'Height above grade:', options: ['Under 30 inches', '30+ inches'] },
+    { field: 'deck_material', q: 'Material:', options: ['Treated lumber', 'Composite/Trex', 'Hardwood'] }
   ],
   'solar': [
-    { q: 'System type:', options: ['Grid-tied', 'Off-grid', 'Battery backup only'] },
-    { q: 'Residential or commercial?', options: ['Residential', 'Commercial'] }
+    { field: 'system_size_kw', q: 'System size kW:', options: ['3 kW', '5 kW', '8 kW', '10 kW', '12 kW', '15+ kW'] },
+    { field: 'battery_storage_kwh', q: 'Battery storage?', options: ['No battery storage', 'Battery storage planned', 'Battery kWh TBD'] }
   ],
   'fence': [
-    { q: 'Height:', options: ['Under 4 feet', '4-6 feet', 'Over 6 feet'] },
-    { q: 'Location:', options: ['Backyard', 'Front yard', 'Side yard'] },
-    { q: 'Corner lot?', options: ['Yes', 'No'] }
+    { field: 'fence_height', q: 'Height:', options: ['Under 4 feet', '4-6 feet', 'Over 6 feet'] },
+    { field: 'fence_location', q: 'Location:', options: ['Backyard', 'Front yard', 'Side yard'] },
+    { field: 'corner_lot', q: 'Corner lot?', options: ['Yes', 'No'] }
   ],
   'shed': [
-    { q: 'Size:', options: ['Under 100 sq ft', '100-120 sq ft', '120-200 sq ft', 'Over 200 sq ft'] },
-    { q: 'Adding electricity?', options: ['Yes', 'No'] },
-    { q: 'On permanent slab?', options: ['Yes', 'No — on skids/gravel'] }
+    { field: 'shed_size', q: 'Size:', options: ['Under 100 sq ft', '100-120 sq ft', '120-200 sq ft', 'Over 200 sq ft'] },
+    { field: 'shed_electricity', q: 'Adding electricity?', options: ['Yes', 'No'] },
+    { field: 'shed_foundation', q: 'On permanent slab?', options: ['Yes', 'No — on skids/gravel'] }
   ],
   'pool': [
-    { q: 'Pool type:', options: ['In-ground', 'Above-ground'] },
-    { q: 'Depth:', options: ['Under 24 inches', '24+ inches'] }
+    { field: 'pool_type', q: 'Pool type:', options: ['In-ground', 'Above-ground'] },
+    { field: 'pool_depth', q: 'Depth:', options: ['Under 24 inches', '24+ inches'] }
   ],
   'generator': [
-    { q: 'Generator type:', options: ['Whole-home standby', 'Portable', 'Transfer switch only'] },
-    { q: 'Fuel:', options: ['Natural gas', 'Propane', 'Diesel'] }
+    { field: 'generator_type', q: 'Generator type:', options: ['Whole-home standby', 'Portable', 'Transfer switch only'] },
+    { field: 'generator_fuel', q: 'Fuel:', options: ['Natural gas', 'Propane', 'Diesel'] }
   ],
   'bathroom_remodel': [
-    { q: 'Scope:', options: ['Cosmetic only (no plumbing moved)', 'Moving plumbing fixtures', 'Adding new fixtures', 'Full gut remodel'] }
+    { field: 'bathroom_scope', q: 'Scope:', options: ['Cosmetic only (no plumbing moved)', 'Moving plumbing fixtures', 'Adding new fixtures', 'Full gut remodel'] }
   ],
   'window_replacement': [
-    { q: 'Type:', options: ['Retrofit/pocket (frame stays)', 'Full frame replacement', 'Enlarging opening'] },
-    { q: 'Bedroom window?', options: ['Yes', 'No'] }
+    { field: 'window_type', q: 'Type:', options: ['Retrofit/pocket (frame stays)', 'Full frame replacement', 'Enlarging opening'] },
+    { field: 'bedroom_window', q: 'Bedroom window?', options: ['Yes', 'No'] }
   ]
 };
 
@@ -2297,6 +2341,28 @@ function stripTradeWizardSuffix(value) {
   return suffix && value.endsWith(suffix) ? value.slice(0, -suffix.length).trim() : value;
 }
 
+function syncTradeState(tradeKey) {
+  formState.trade = tradeKey || '';
+  tradeWizardState.tradeKey = tradeKey || '';
+}
+
+function clearTradeAwareForm(clearQuery=false) {
+  const wizard = document.getElementById('trade-wizard');
+  const textarea = document.getElementById('query');
+  syncTradeState('');
+  tradeWizardState.baseQuery = '';
+  tradeWizardState.answers = {};
+  tradeWizardState.dismissedTrade = '';
+  document.querySelectorAll('.trade-chip').forEach(btn => btn.classList.remove('active'));
+  if (wizard) { wizard.classList.remove('show'); wizard.innerHTML = ''; }
+  if (clearQuery && textarea) {
+    tradeWizardState.suppressInput = true;
+    textarea.value = '';
+    tradeWizardState.suppressInput = false;
+    checkShimmer();
+  }
+}
+
 function dismissTradeWizard() {
   tradeWizardState.dismissedTrade = tradeWizardState.tradeKey || detectTradeKey(document.getElementById('query')?.value || '');
   const wizard = document.getElementById('trade-wizard');
@@ -2311,6 +2377,7 @@ function applyTradeWizardAnswers() {
   tradeWizardState.suppressInput = true;
   textarea.value = nextValue.trim();
   tradeWizardState.suppressInput = false;
+  checkShimmer();
 }
 
 function setTradeWizardAnswer(questionIndex, option) {
@@ -2321,12 +2388,13 @@ function setTradeWizardAnswer(questionIndex, option) {
 
 function renderTradeWizard() {
   const wizard = document.getElementById('trade-wizard');
-  const questions = TRADE_QUESTIONS[tradeWizardState.tradeKey] || [];
-  if (!wizard || !questions.length || !tradeWizardState.baseQuery || tradeWizardState.baseQuery.length > 50 || tradeWizardState.dismissedTrade === tradeWizardState.tradeKey) {
+  const tradeKey = tradeWizardState.tradeKey;
+  const questions = TRADE_QUESTIONS[tradeKey] || [];
+  if (!wizard || !questions.length || !tradeWizardState.baseQuery || tradeWizardState.dismissedTrade === tradeKey) {
     if (wizard) { wizard.classList.remove('show'); wizard.innerHTML = ''; }
     return;
   }
-  wizard.innerHTML = `<div class="trade-wizard-head"><div><div class="trade-wizard-title">Quick questions</div><div class="trade-wizard-sub">Tap a few details and we will tighten up your permit lookup automatically.</div></div><button type="button" class="trade-wizard-dismiss" id="trade-wizard-dismiss-btn">✕ dismiss</button></div>${questions.map((item, idx) => `<div class="trade-question"><div class="trade-question-label">${esc(item.q)}</div><div class="trade-option-row" data-qidx="${idx}">${item.options.map(option => `<button type="button" class="trade-option-btn ${tradeWizardState.answers[idx]===option?'active':''}" data-option="${esc(option)}">${esc(option)}</button>`).join('')}</div></div>`).join('')}`;
+  wizard.innerHTML = `<div class="trade-wizard-head"><div><div class="trade-wizard-title">Trade-aware quick questions</div><div class="trade-wizard-sub">Only showing follow-ups for this selected trade. Your job description updates automatically.</div></div><button type="button" class="trade-wizard-dismiss" id="trade-wizard-dismiss-btn">✕ dismiss</button></div><div class="trade-fields" data-trade-fields="${esc(tradeKey)}">${questions.map((item, idx) => `<div class="trade-question" data-trade-field="${esc(item.field || ('question_'+idx))}"><div class="trade-question-label">${esc(item.q)}</div><div class="trade-option-row" data-qidx="${idx}">${item.options.map(option => `<button type="button" class="trade-option-btn ${tradeWizardState.answers[idx]===option?'active':''}" data-option="${esc(option)}" data-field="${esc(item.field || '')}">${esc(option)}</button>`).join('')}</div></div>`).join('')}</div>`;
   const dismissBtn = wizard.querySelector('#trade-wizard-dismiss-btn');
   if (dismissBtn) dismissBtn.addEventListener('click', dismissTradeWizard);
   wizard.querySelectorAll('.trade-option-row').forEach(row => {
@@ -2338,18 +2406,47 @@ function renderTradeWizard() {
   wizard.classList.add('show');
 }
 
+function setTradeFromQuickPick(tradeKey, baseQuery, chip) {
+  const textarea = document.getElementById('query');
+  const wizard = document.getElementById('trade-wizard');
+  if (!tradeKey || !TRADE_QUESTIONS[tradeKey]) {
+    clearTradeAwareForm(false);
+    return;
+  }
+  document.querySelectorAll('.trade-chip').forEach(btn => btn.classList.remove('active'));
+  if (chip) chip.classList.add('active');
+  syncTradeState(tradeKey);
+  tradeWizardState.baseQuery = baseQuery || '';
+  tradeWizardState.answers = {};
+  tradeWizardState.dismissedTrade = '';
+  if (textarea) {
+    tradeWizardState.suppressInput = true;
+    textarea.value = tradeWizardState.baseQuery;
+    tradeWizardState.suppressInput = false;
+    textarea.focus();
+  }
+  if (wizard) wizard.setAttribute('data-active-trade', tradeKey);
+  renderTradeWizard();
+  checkShimmer();
+}
+
 function handleTradeWizardInput() {
   const textarea = document.getElementById('query');
   if (!textarea || tradeWizardState.suppressInput) return;
   const rawValue = textarea.value.trim();
+  if (!rawValue) {
+    clearTradeAwareForm(false);
+    return;
+  }
   const baseValue = stripTradeWizardSuffix(rawValue);
   tradeWizardState.baseQuery = baseValue;
   const tradeKey = detectTradeKey(baseValue);
   if (tradeKey !== tradeWizardState.tradeKey) {
-    tradeWizardState.tradeKey = tradeKey;
+    syncTradeState(tradeKey);
     tradeWizardState.answers = {};
+    document.querySelectorAll('.trade-chip').forEach(btn => btn.classList.remove('active'));
   }
-  if (!tradeKey || baseValue.length > 50 || !TRADE_QUESTIONS[tradeKey]) {
+  if (!tradeKey || !TRADE_QUESTIONS[tradeKey]) {
     const wizard = document.getElementById('trade-wizard');
     if (wizard) { wizard.classList.remove('show'); wizard.innerHTML = ''; }
     return;
@@ -5025,10 +5122,12 @@ loadStats();
 initAutocomplete();
 document.querySelectorAll('.trade-chip').forEach(chip => {
   chip.addEventListener('click', () => {
-    document.getElementById('query').value = chip.dataset.fill;
-    chip.classList.add('active');
-    setTimeout(() => chip.classList.remove('active'), 600);
-    document.getElementById('query').focus();
+    if (chip.dataset.clearTrade) {
+      clearTradeAwareForm(true);
+      document.getElementById('query')?.focus();
+      return;
+    }
+    setTradeFromQuickPick(chip.dataset.tradeKey, chip.dataset.fill, chip);
   });
 });
 
