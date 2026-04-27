@@ -59,11 +59,13 @@ def test_ca_state_pack_is_appended_for_non_adu_ca_jobs():
     assert "ladwp" in text
 
 
-def test_state_pack_not_added_for_texas():
+def test_tx_state_pack_added_without_california_rules():
     result = engine.apply_state_expert_pack(_blank_result(), "Houston", "TX", "HVAC condenser changeout")
     text = _notes_text(result)
 
-    assert result.get("expert_notes") == []
+    assert len(result.get("expert_notes", [])) == 8
+    assert "tdlr" in text
+    assert "tsbpe" in text
     assert "california" not in text
     assert "title 24" not in text
 
