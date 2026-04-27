@@ -27,6 +27,11 @@ import google.generativeai as genai
 import pdfplumber
 
 try:
+    from .state_packs import get_state_expert_notes
+except ImportError:  # server.py imports research_engine as a top-level module
+    from state_packs import get_state_expert_notes
+
+try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 except Exception:
@@ -35,7 +40,17 @@ except Exception:
     # is unavailable.
     pass
 
-client = OpenAI()
+client = None
+
+def _get_openai_client() -> OpenAI:
+    """Create the OpenAI fallback client lazily so importing tests never needs a key."""
+    global client
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set — OpenAI fallback unavailable")
+    if client is None or getattr(client, "api_key", None) != api_key:
+        client = OpenAI(api_key=api_key)
+    return client
 
 # ─── Cache stats (in-memory, resets on restart) ───────────────────────────────
 _cache_stats = {"hits": 0, "misses": 0}
@@ -1218,13 +1233,12 @@ def _detect_job_type_hints(job_type: str) -> str:
             "'Threshold varies by jurisdiction — verify with local building department before starting.'"
         )
 
-    # Mini split — dual permit
+    # Mini split — scope-aware permit handling
     if "mini split" in job_lower or "mini-split" in job_lower or "ductless" in job_lower:
         hints.append(
-            "IMPORTANT: Mini split installations require TWO permits in most jurisdictions: "
-            "1) Mechanical/HVAC permit for the refrigerant system "
-            "2) Electrical permit for the dedicated circuit "
-            "List BOTH in permits_required."
+            "IMPORTANT: Treat mini-split scope carefully. If the job only states mini-split equipment installation/changeout "
+            "and does NOT explicitly mention panel/service work, gas-line work, or new fixtures, list the Mechanical/HVAC permit only. "
+            "Add an Electrical permit only when the scope explicitly includes panel/service upgrade, new circuit, breaker, or disconnect work."
         )
 
     # EV charger
@@ -2850,6 +2864,188 @@ def hedge_companion_permits(result: dict, job_type: str) -> dict:
     return result
 
 
+def _scope_has_any(job: str, phrases: list[str]) -> bool:
+    return any(p in job for p in phrases)
+
+
+def _scope_permit(permit_type: str, portal_selection: str, notes: str, required: bool | str = True) -> dict:
+    return {
+        "permit_type": permit_type,
+        "portal_selection": portal_selection,
+        "required": required,
+        "notes": notes,
+    }
+
+
+def classify_scope_required_permits(job_type: str) -> dict | None:
+    """Deterministically classify permits for high-confidence job scopes.
+
+    This is intentionally narrow: it only overrides the model when the job text
+    clearly matches a scope in the Tier B matrix. Other jobs keep model output
+    and receive derived logic only.
+    """
+    job = (job_type or "").lower()
+    job = re.sub(r"\s+", " ", job).strip()
+    if not job:
+        return None
+
+    has_panel = _scope_has_any(job, ["panel upgrade", "service upgrade", "new panel", "subpanel", "sub-panel", "200 amp", "200amp", "400 amp", "400amp"])
+    has_gas_line = _scope_has_any(job, ["gas line", "gas piping", "new gas", "relocate gas", "gas modification"])
+    has_new_fixtures = _scope_has_any(job, ["new fixture", "new fixtures", "add fixture", "add fixtures", "fixture relocation", "new bathroom", "new kitchen"])
+    has_solar = _scope_has_any(job, ["solar", " pv", "photovoltaic"])
+    has_battery = _scope_has_any(job, ["battery", "ess", "energy storage", "powerwall"])
+
+    logic: list[dict] = []
+
+    def add_logic(permit_type: str, because: str, trigger: str) -> None:
+        logic.append({"permit_type": permit_type, "included_because": because, "scope_trigger": trigger})
+
+    # Solar first so "roof solar" scopes don't collapse into a reroof permit.
+    if has_solar:
+        permits = [
+            _scope_permit(
+                "Building Permit — Solar PV (Structural Racking & Roof Penetrations)",
+                "Building - Solar PV / Roof-Mounted Racking",
+                "Required for rooftop racking, roof penetrations, and structural load review.",
+            ),
+            _scope_permit(
+                "Electrical Permit — Solar PV" + (" + Battery ESS" if has_battery else ""),
+                "Electrical - Solar PV" + (" and Battery Energy Storage" if has_battery else " System"),
+                "Required for inverter, rapid shutdown, DC/AC disconnects, panel tie-in" + (", and ESS wiring/listing." if has_battery else "."),
+            ),
+        ]
+        add_logic(permits[0]["permit_type"], "Solar PV roof work needs structural/racking review, but Building and Structural are one permit.", "solar/pv in job description")
+        add_logic(permits[1]["permit_type"], "Solar PV electrical work falls under NEC Article 690; battery scope adds ESS review to the electrical permit.", "battery/ESS present" if has_battery else "solar/pv electrical scope")
+        return {
+            "scope_classification": "solar_pv_battery" if has_battery else "solar_pv",
+            "permits_required": permits,
+            "permits_required_logic": logic,
+            "companion_permits": [{
+                "permit_type": "Utility Interconnection / Permission to Operate",
+                "reason": "May be required if: grid-tied PV export, net metering, battery backup, meter changes, or utility PTO is included.",
+                "required_if": "grid-tied PV export, net metering, battery backup, meter changes, or utility PTO is included",
+                "certainty": "conditional",
+                "requirement_label": "May be required based on scope",
+            }],
+        }
+
+    is_adu = _scope_has_any(job, ["adu", "accessory dwelling", "garage conversion", "in-law suite", "granny flat", "junior accessory dwelling", "jadu"])
+    if is_adu:
+        permits = [
+            _scope_permit("Building Permit — ADU Conversion / Residential Alteration", "Building - Accessory Dwelling Unit (ADU)", "Master building permit for occupancy conversion, life-safety, framing, fire separation, and egress."),
+            _scope_permit("Electrical Permit — ADU Circuits / Service Load", "Electrical - ADU / Residential Alteration", "Required for new circuits, smoke/CO alarms, load calculations, subpanel, or service changes."),
+            _scope_permit("Plumbing Permit — ADU Kitchen/Bath/Laundry", "Plumbing - ADU Fixtures / DWV", "Required for kitchen, bath, laundry, water supply, sewer, and DWV work."),
+            _scope_permit("Mechanical Permit — ADU HVAC / Ventilation", "Mechanical - ADU HVAC / Ventilation", "Required for HVAC, bath/kitchen exhaust, ventilation, combustion air, or ducts."),
+        ]
+        add_logic(permits[0]["permit_type"], "ADU conversion changes occupancy/use and needs a master building permit.", "ADU/conversion scope")
+        add_logic(permits[1]["permit_type"], "ADUs require dedicated electrical scope for circuits, alarms, load calculations, and possible subpanel/service work.", "ADU electrical systems")
+        add_logic(permits[2]["permit_type"], "ADUs normally add or legalize kitchen/bath/laundry plumbing and DWV work.", "ADU plumbing fixtures")
+        add_logic(permits[3]["permit_type"], "ADUs need conditioned-space HVAC/ventilation review under mechanical code and Title 24 in California.", "ADU mechanical/ventilation systems")
+        return {
+            "scope_classification": "adu_conversion",
+            "permits_required": permits,
+            "permits_required_logic": logic,
+            "companion_permits": [],
+        }
+
+    is_roof = _scope_has_any(job, ["roof", "reroof", "re-roof", "tear-off", "tear off", "shingle"])
+    roof_simple = is_roof and not _scope_has_any(job, ["skylight", "solar", "structural", "rafter", "truss", "decking replacement", "new opening"])
+    if roof_simple:
+        permits = [_scope_permit("Roofing Permit — Tear-Off / Re-Roof", "Roofing - Residential Re-Roof", "Required for roof tear-off and reroof; no companion permit unless skylights, solar, or structural work are added.")]
+        add_logic(permits[0]["permit_type"], "Roof tear-off/re-roof scope is isolated roofing work with no skylight, solar, or structural trigger stated.", "roof/reroof keywords without companion triggers")
+        return {
+            "scope_classification": "roof_reroof_only",
+            "permits_required": permits,
+            "permits_required_logic": logic,
+            "companion_permits": [],
+        }
+
+    is_hvac = _scope_has_any(job, ["hvac", "condenser", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler"])
+    is_water_heater = "water heater" in job
+    hvac_like_for_like = _scope_has_any(job, ["like for like", "like-for-like", "swap", "changeout", "change out", "condenser", "replacement", "replace", "mini split", "mini-split", "ductless"])
+    if is_hvac or is_water_heater:
+        if is_water_heater and not is_hvac:
+            ptype = "Plumbing Permit — Water Heater Replacement"
+            portal = "Plumbing - Water Heater Replacement"
+            notes = "Required for water heater replacement; companion electrical/gas permits are suppressed unless gas piping, venting conversion, or new circuit work is explicit."
+            base_reason = "Water heater swap is one trade permit when same location/capacity and no new gas/electrical scope is stated."
+        else:
+            ptype = "Mechanical Permit — HVAC Equipment Changeout (Residential)" if hvac_like_for_like else "Mechanical Permit — HVAC System Replacement (Residential)"
+            portal = "Mechanical - HVAC Changeout / Replacement"
+            notes = "Required for HVAC equipment replacement/changeout; companion permits are suppressed unless panel work, gas-line modification, or new fixtures are explicit."
+            base_reason = "HVAC equipment swap/changeout triggers the mechanical permit; no companion trade permit is included without explicit extra scope."
+        permits = [_scope_permit(ptype, portal, notes)]
+        add_logic(permits[0]["permit_type"], base_reason, "HVAC/water-heater replacement scope")
+        companions: list[dict] = []
+        if has_panel:
+            ep = _scope_permit("Electrical Permit — Panel / Service Upgrade", "Electrical - Panel Upgrade / Service Change", "Required because panel or service upgrade work is explicitly included.")
+            permits.append(ep)
+            add_logic(ep["permit_type"], "Electrical permit required because the job explicitly includes panel/service upgrade work.", "panel/service upgrade stated")
+        if has_gas_line:
+            gp = _scope_permit("Gas Permit — Gas Line Modification", "Mechanical/Gas - Gas Line Modification", "Required because gas piping modification is explicitly included.")
+            permits.append(gp)
+            add_logic(gp["permit_type"], "Gas permit required because gas line or gas piping modification is explicitly stated.", "gas-line modification stated")
+        if has_new_fixtures:
+            pp = _scope_permit("Plumbing Permit — New Fixture Work", "Plumbing - Fixture Addition / Relocation", "Required because new fixture work is explicitly included.")
+            permits.append(pp)
+            add_logic(pp["permit_type"], "Plumbing permit required because new fixtures or fixture relocation are explicitly stated.", "new fixture work stated")
+        return {
+            "scope_classification": "hvac_or_water_heater_with_explicit_companions" if len(permits) > 1 else "hvac_or_water_heater_single_trade",
+            "permits_required": permits,
+            "permits_required_logic": logic,
+            "companion_permits": companions,
+        }
+
+    return None
+
+
+def _derive_permit_logic(result: dict) -> list[dict]:
+    logic = []
+    for permit in result.get("permits_required") or []:
+        if not isinstance(permit, dict):
+            continue
+        ptype = permit.get("permit_type") or "Permit"
+        because = permit.get("notes") or permit.get("portal_selection") or "Included by jurisdiction-specific permit research for this job scope."
+        logic.append({"permit_type": ptype, "included_because": str(because), "scope_trigger": "model/jurisdiction research"})
+    return logic
+
+
+def apply_scope_aware_permit_classification(result: dict, job_type: str) -> dict:
+    """Apply Tier B scope-aware permits and always add permits_required_logic."""
+    if not isinstance(result, dict):
+        return result
+    classified = classify_scope_required_permits(job_type)
+    if classified:
+        result["permits_required"] = classified["permits_required"]
+        result["permits_required_logic"] = classified["permits_required_logic"]
+        result["companion_permits"] = classified.get("companion_permits", result.get("companion_permits", []))
+        if classified["permits_required"]:
+            result["permit_verdict"] = "YES"
+    elif not isinstance(result.get("permits_required_logic"), list) or not result.get("permits_required_logic"):
+        result["permits_required_logic"] = _derive_permit_logic(result)
+    return result
+
+
+def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str) -> dict:
+    """Append deterministic state expert notes (currently California)."""
+    if not isinstance(result, dict):
+        return result
+    notes = get_state_expert_notes(state, city, job_type)
+    if not notes:
+        if "expert_notes" not in result:
+            result["expert_notes"] = []
+        return result
+    existing = result.get("expert_notes") if isinstance(result.get("expert_notes"), list) else []
+    seen = {str(n.get("title") if isinstance(n, dict) else n).lower() for n in existing}
+    for note in notes:
+        title = str(note.get("title") if isinstance(note, dict) else note).lower()
+        if title not in seen:
+            existing.append(note)
+            seen.add(title)
+    result["expert_notes"] = existing
+    return result
+
+
 def apply_fee_verify_caveat(result: dict) -> dict:
     """Preserve fee numbers and add verify language + source URL when available."""
     if not isinstance(result, dict):
@@ -3996,6 +4192,14 @@ CRITICAL RULES:
 
 12. INSPECTION BOOKING: Always populate 'inspection_booking' with specific instructions for how to schedule inspections. Contractors often don't know this and it causes project delays. Include advance notice requirements (very important — Phoenix requires 24hr minimum, some cities require 48hr).
 
+13. JOB-SCOPE-AWARE PERMIT SELECTION — CRITICAL: Use the job_description + trade scope. Output ONLY the permits actually triggered by the stated scope, not a fixed companion list by trade.
+   - HVAC like-for-like/condenser changeout/water heater swap/mini-split with no panel/gas-line/new-fixture scope → ONE primary trade permit only.
+   - HVAC replacement WITH panel/service upgrade → Mechanical + Electrical panel/service permit.
+   - ADU/garage conversion → Building master + Electrical + Plumbing + Mechanical; Solar only if new detached ADU or solar mandate is clearly triggered.
+   - Roof tear-off/re-roof → Roofing permit only unless skylights, solar, or structural work is stated.
+   - Solar PV → Building/Structural Solar permit + Electrical Solar permit; battery is included in the electrical/ESS permit. Utility interconnection/PTO is separate coordination, not a third city permit unless the AHJ treats it as one.
+   For borderline items, use companion_permits with "May be required if: [specific trigger]" rather than listing them as required.
+
 Return ONLY a JSON object with these exact fields:
 {
   "job_summary": "clear description of what the job involves and what permits it triggers",
@@ -4008,6 +4212,13 @@ Return ONLY a JSON object with these exact fields:
       "portal_selection": "HVAC Replacement - Residential System",
       "required": true,
       "notes": "Required for any HVAC system replacement involving refrigerant or new ductwork"
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Mechanical Permit — HVAC Replacement (Residential)",
+      "included_because": "Mechanical permit required because the stated scope is a like-for-like HVAC equipment changeout; no panel, gas-line, or fixture work was described.",
+      "scope_trigger": "HVAC changeout in job description"
     }
   ],
   "applying_office": "exact department name, e.g. Houston Permitting Center or Cook County Building & Zoning Dept",
@@ -4077,10 +4288,11 @@ DEPTH CHECKLIST — before returning your answer, verify:
 ✓ license_required explains WHO pulls the permit and HOW, never implies 'no permit needed'
 ✓ city_contractor_registration: populate ONLY when city requires separate city-level contractor registration beyond state license (e.g. Dallas annual registration, Phoenix city contractor registration, Chicago city license, Nashville Metro Codes registration). Set to null if only state license required.
 ✓ pro_tips save real time or money — not generic advice
-✓ companion_permits is MANDATORY — always populate this field. Use the trade matrix below. Return [] ONLY if the job is truly isolated (e.g. painting, landscaping, minor repairs). For any mechanical, electrical, plumbing, or structural work, there are often companion permits, but companion permits must be phrased conditionally unless they are the primary permit.
+✓ permits_required_logic explains WHY each required permit was included and names the scope trigger.
+✓ companion_permits is MANDATORY as a field, but [] is correct for isolated single-trade scopes (HVAC condenser swap, water heater swap, simple re-roof, etc.). Do NOT populate a fixed companion list just because of the trade.
 ✓ Companion permit wording rule: NEVER say "Companion Permit Required" or imply unconditional requirement for secondary permits. Use "May be required if: [specific trigger]". Keep the primary permit in permits_required as required when applicable; do not downgrade the primary permit.
 
-COMPANION PERMIT TRADE MATRIX (use this to populate companion_permits with conditional triggers):
+COMPANION PERMIT TRADE MATRIX (use ONLY when the stated scope includes or plausibly borders these triggers):
 - HVAC/AC/furnace/heat pump replacement → [Electrical Permit — May be required if: new wiring, disconnect replacement, breaker/panel modification, or new circuit; Gas Permit — May be required if: gas piping modification, gas appliance connection, or new gas line]
 - Electrical panel upgrade/service change → [Utility Coordination — May be required if: service disconnect/reconnect, meter pull, or utility-side service change]
 - Bathroom remodel → [Plumbing Permit — May be required if: pipe relocation, fixture move, or DWV modification; Electrical Permit — May be required if: new circuits, GFCI/outlet relocation, fan/light wiring, or panel work; Building Permit — May be required if: walls moved or structural/framing changes]
@@ -4167,6 +4379,8 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
                 cached['fee_calculator'] = calculate_exact_fee(job_type, city, state, float(job_value))
             elif 'fee_calculator' not in cached:
                 cached['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
+            apply_scope_aware_permit_classification(cached, job_type)
+            apply_state_expert_pack(cached, city, state, job_type)
             hedge_companion_permits(cached, job_type)
             enrich_result_with_serper_sources(cached, job_type, city, state)
             apply_fee_verify_caveat(cached)
@@ -4335,7 +4549,8 @@ Return ONLY the JSON object."""
         return gemini_resp.text
 
     def _call_openai():
-        response = client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S).chat.completions.create(
+        openai_client = _get_openai_client()
+        response = openai_client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S).chat.completions.create(
             model=_openai_fallback_model,
             messages=[
                 {"role": "system",  "content": SYSTEM_PROMPT},
@@ -4959,6 +5174,9 @@ Return ONLY the JSON object."""
         result['fee_calculator'] = calculate_exact_fee(job_type, city, state, float(job_value))
     else:
         result['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
+
+    apply_scope_aware_permit_classification(result, job_type)
+    apply_state_expert_pack(result, city, state, job_type)
 
     save_cache(key, job_type, job_category, city, state, zip_code, result)
     return result
