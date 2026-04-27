@@ -561,6 +561,524 @@ STATE_PACKS = {
             }
         ]
     },
+    "PA": {
+        "name": "Pennsylvania expert pack",
+        "expert_notes": [
+            {
+                "title": "2021 I-Codes adoption effective January 1, 2026",
+                "note": "Pennsylvania's Uniform Construction Code adopted the 2021 International Code Council (ICC) family of codes effective January 1, 2026, replacing the 2018 ICC series. Plan reviews and inspections on new applications must comply with the 2021 IRC, IBC, and IECC, and energy-envelope requirements have tightened. Confirm which code edition the AHJ is enforcing on the application date.",
+                "applies_to": "All new residential and commercial construction permits in PA",
+                "source": "https://www.cohenseglias.com/construction-law-now/pennsylvania-2026-building-code-update/"
+            },
+            {
+                "title": "UCC inspector certification required for plan review and inspections",
+                "note": "Anyone who administers or enforces the UCC, inspects construction work, or performs plan reviews in Pennsylvania must hold the appropriate UCC certification (e.g., B1 Residential Building Inspector, E1 Residential Electrical Inspector, P1 Residential Plumbing Inspector). Verify your third-party agency or municipal inspector holds the matching category before scheduling inspections to avoid rejected sign-offs.",
+                "applies_to": "All UCC-regulated trade inspections (building, electrical, plumbing, mechanical)",
+                "source": "https://www.pa.gov/content/dam/copapwp-pagov/en/dli/documents/individuals/labor-management-relations/bois/documents/ucc/ucc_certification_booklet.pdf"
+            },
+            {
+                "title": "Home Improvement Contractor (HIC) registration with PA Attorney General",
+                "note": "Under the Home Improvement Consumer Protection Act, most home improvement contractors performing residential work in Pennsylvania must register with the Attorney General's Office. The registration fee is $100 every two years, and contractors must show proof of Commercial General Liability Insurance. The HIC number must appear on all contracts, estimates, and advertisements; unregistered contracts are unenforceable against the homeowner.",
+                "applies_to": "Residential home improvement contracts over $500 in PA",
+                "source": "https://hic.attorneygeneral.gov/"
+            },
+            {
+                "title": "Municipal vs. county AHJ split \u2014 ~90% local enforcement",
+                "note": "Pennsylvania has no statewide building department; roughly 90% of PA municipalities handle their own UCC enforcement, often through third-party agencies, while opt-out municipalities default to L&I for commercial only. Always confirm the specific borough/township AHJ before submitting, since neighboring municipalities can use different code amendments, fee schedules, and third-party reviewers.",
+                "applies_to": "All PA permit submittals \u2014 confirming jurisdiction before applying",
+                "source": "https://davisbucco.com/why-do-90-of-pa-municipalities-handle-construction-code-enforcement/"
+            },
+            {
+                "title": "Floodplain development permit in Special Flood Hazard Areas",
+                "note": "Any construction, substantial improvement, or filling within a Special Flood Hazard Area (SFHA) requires a separate Floodplain Development Permit in addition to the building permit, per PA Floodplain Management Act and local floodplain ordinances. Substantial improvements (>50% of pre-improvement market value) trigger full elevation/flood-proofing compliance. Check the parcel against FEMA FIRM maps before quoting work.",
+                "applies_to": "Projects within FEMA-mapped SFHAs or local floodplain overlay districts",
+                "source": "https://www.pa.gov/content/dam/copapwp-pagov/en/pema/documents/floodplain-management/pema%20floodplain%20development%20guide.pdf"
+            },
+            {
+                "title": "Act 537 sewage planning module for on-lot or new sewage service",
+                "note": "The Pennsylvania Sewage Facilities Act (Act 537) requires DEP-approved sewage planning before a permit can be issued for new on-lot disposal systems or any project that creates new sewage flows not covered by an existing municipal Act 537 plan. Local sewage enforcement officers (SEOs) issue on-lot permits under uniform standards. Add Act 537 module review time to ADU, new dwelling, and rural addition schedules.",
+                "applies_to": "New dwellings, ADUs, and additions creating new sewage flows (especially on-lot/septic)",
+                "source": "https://www.pa.gov/agencies/dep/programs-and-services/water/clean-water/wastewater-management/act-537-sewage-facilities-program"
+            },
+            {
+                "title": "Act 167 stormwater management compliance",
+                "note": "Once a county or watershed Act 167 Stormwater Management Plan is adopted and approved, the location, design, and construction of stormwater management systems and obstructions on any regulated site must conform to that plan. Many PA municipalities require an Act 167 stormwater review/permit for impervious surface additions \u2014 confirm thresholds (often as low as ~500\u20131,000 sq ft of new impervious) with the local AHJ.",
+                "applies_to": "Projects adding impervious area (driveways, additions, ADUs, accessory structures)",
+                "source": "https://www.pa.gov/agencies/dep/programs-and-services/water/clean-water/stormwater-management/act-167"
+            },
+            {
+                "title": "No statewide general contractor license \u2014 local trade licenses still apply",
+                "note": "Pennsylvania does not issue a state-level general contractor's license, but individual cities (notably Philadelphia and Pittsburgh) require their own contractor licenses, and many municipalities license plumbing and electrical trades locally. HIC registration with the AG is separate from and does not substitute for these municipal trade licenses. Verify both before pulling permits.",
+                "applies_to": "Out-of-area contractors working in PA cities with local licensing (e.g., Philadelphia, Pittsburgh)",
+                "source": "https://gaslampinsurance.com/how-to-get-a-contractors-license-in-pennsylvania-a-step-by-step-guide-to-obtaining-your-pa-contractor-license/"
+            }
+        ]
+    },
+    "OH": {
+        "name": "Ohio expert pack",
+        "expert_notes": [
+            {
+                "title": "Ohio 30-day permit review shot clock",
+                "note": "Ohio law requires the building department to review your permit application within 30 days of receipt. If a jurisdiction blows past this without action or written deficiency, you have grounds to escalate to the certified department or the Board of Building Standards.",
+                "applies_to": "All residential and commercial building permit applications in Ohio",
+                "source": "https://www.cincinnati-oh.gov/buildings/building-permit-forms-applications/permit-guide/permit-review-process/"
+            },
+            {
+                "title": "2024 Ohio code adoption \u2014 RCO and energy code change",
+                "note": "Effective April 15, 2024, Ohio enforces the 2019 Residential Code of Ohio with April 2024 Amendments and the 2024 Ohio Building Code (based on IBC 2021). Energy provisions jumped from the 2012 to the 2021 IECC / ASHRAE 90.1-2019 baseline \u2014 older plan sets and prior-cycle energy calcs will be rejected.",
+                "applies_to": "New construction, additions, and alterations submitted after April 15, 2024",
+                "source": "https://rosscountybuilding.com/docs/News/CodeChanges.pdf"
+            },
+            {
+                "title": "OCILB licensing required for electrical, HVAC, plumbing, hydronics, refrigeration",
+                "note": "The Ohio Construction Industry Licensing Board (OCILB) licenses five specialty trades \u2014 electrical, HVAC, plumbing, hydronics, and refrigeration \u2014 for commercial work statewide. Residential work is not state-licensed but most municipalities require local registration; pull the OCILB license number into the permit application or it will be returned.",
+                "applies_to": "Commercial trade permits and any jurisdiction that requires OCILB credentials on the application",
+                "source": "https://com.ohio.gov/licensing-and-registration/construction-inspection-and-maintenance/contractor-licensing"
+            },
+            {
+                "title": "Municipal vs county AHJ split \u2014 confirm certified department",
+                "note": "Ohio building permits are issued by whichever municipal, township, or county building department is certified by the Board of Building Standards under OAC 4101:7-2-01 for the parcel. Many counties (e.g., Hamilton) require the local jurisdiction to issue the zoning certificate before the county will accept the building permit \u2014 confirm which department has jurisdiction before submitting.",
+                "applies_to": "Any project where city and county boundaries overlap or the local township is non-certified",
+                "source": "https://up.codes/s/building-department-jurisdictional-limitations"
+            },
+            {
+                "title": "Lake Erie Coastal Erosion Area (CEA) Shore Structure Permit",
+                "note": "A Shore Structure Permit from ODNR is required before constructing a beach, groin, revetment, seawall, bulkhead, breakwater, pier, or jetty along Ohio's Lake Erie shore. A separate CEA permit applies to any permanent structure located within the designated Coastal Erosion Area \u2014 pull this in parallel with the local building permit, not after.",
+                "applies_to": "Lakefront construction in Lake, Ashtabula, Cuyahoga, Lorain, Erie, Ottawa, and Lucas counties",
+                "source": "https://ohiodnr.gov/wps/portal/gov/odnr/buy-and-apply/regulatory-permits/lake-erie-land-and-water-permits/shore-structure-permit"
+            },
+            {
+                "title": "Floodplain overlay development permit",
+                "note": "In Ohio communities participating in the NFIP, it is unlawful to begin construction, filling, grading, or alteration in a designated Special Flood Hazard Area without a floodplain development permit from the local floodplain administrator. This is a separate approval from the building permit and is commonly missed on additions, detached structures, and grading work near streams.",
+                "applies_to": "Any work within a FEMA SFHA or locally-mapped floodplain overlay district",
+                "source": "https://www.eriecounty.oh.gov/Downloads/2022%20Revised%20Erie%20County%20Flood%20Plain%20Regulations.pdf?v=-102"
+            },
+            {
+                "title": "ADUs are governed locally \u2014 no statewide ADU statute",
+                "note": "Ohio has no statewide ADU enabling law or ministerial shot clock; whether an ADU is permitted, and the lot-size, owner-occupancy, and parking rules, are set by each municipality or township zoning code. Verify the local zoning text and obtain a zoning certificate before designing \u2014 denials are common in single-family-only districts.",
+                "applies_to": "Detached and attached ADU / accessory dwelling unit projects",
+                "source": "https://www.steadily.com/blog/adu-laws-and-regulations-in-ohio"
+            }
+        ]
+    },
+    "MI": {
+        "name": "Michigan expert pack",
+        "expert_notes": [
+            {
+                "title": "Stille-DeRossett-Hale single state construction code preempts local code variations",
+                "note": "Michigan operates under the Stille-DeRossett-Hale Single State Construction Code Act, meaning the Michigan Building Code, Michigan Residential Code, Michigan Energy Code, Michigan Electrical Code, and Michigan Rehabilitation Code apply uniformly statewide. Local jurisdictions enforce but cannot weaken these codes \u2014 confirm which jurisdiction is the enforcing agency before submitting plans.",
+                "applies_to": "All residential and commercial permit work statewide",
+                "source": "https://ars.apps.lara.state.mi.us/AdminCode/DownloadAdminCodeFile?FileName=R%20408.30500%20%20to%20408.30547g.pdf&ReturnHTML=True"
+            },
+            {
+                "title": "2021 Michigan Energy Code effective April 22, 2025",
+                "note": "Michigan adopted the 2021 IECC and ASHRAE 90.1-2019 with amendments, with the updated commercial energy code enforcement starting April 22, 2025. Plans submitted under prior code assumptions may fail review \u2014 confirm insulation, fenestration, and mechanical system specs against the current code edition before submittal.",
+                "applies_to": "New construction, additions, and alterations affecting conditioned space",
+                "source": "https://www.energycodes.gov/status/states/michigan"
+            },
+            {
+                "title": "Permit expiration: work must begin within 180 days",
+                "note": "Under the Michigan Building Code, work must typically begin within 180 days (6 months) of permit issuance, or the permit becomes void. Permits also lapse if work is suspended or abandoned for 180 days. Schedule the first inspection promptly after issuance to vest the permit.",
+                "applies_to": "All issued building permits",
+                "source": "http://www.constructionconcept.net/permit-deadlines-and-expiration-rules-understanding-michigan-building-code/"
+            },
+            {
+                "title": "Trade licensing required for plumbing, electrical, and mechanical permits",
+                "note": "Plumbing permits require a licensed plumbing contractor (or a homeowner installing on their own occupied dwelling). HVAC contractors require three years of experience, a passed exam, and state licensure. General work over $600 requires a residential builder or maintenance & alteration contractor license \u2014 unlicensed work is grounds for permit denial and stop-work orders.",
+                "applies_to": "All plumbing, electrical, mechanical, and general contracting permit applications",
+                "source": "https://www.michigan.gov/lara/bureau-list/bcc/sections/permit-section/permits/plumbing-permit-information"
+            },
+            {
+                "title": "EGLE permits required for floodplain, wetland, and inland-lakes work",
+                "note": "Construction in regulated floodplains, wetlands, inland lakes, or streams requires a separate permit from the Michigan Department of Environment, Great Lakes, and Energy (EGLE) under Part 31 and related authorities. New residential construction is prohibited in the floodway. Confirm EGLE jurisdiction before local building permit application \u2014 local permits are commonly conditioned on EGLE approval.",
+                "applies_to": "Projects on or near floodplains, wetlands, inland lakes, streams, or Great Lakes shoreline",
+                "source": "https://www.michigan.gov/egle/about/organization/water-resources/wetlands/permit-categories"
+            },
+            {
+                "title": "Critical Dune Area permit required along Great Lakes shoreline",
+                "note": "Approximately 29% of Michigan's sand dunes are designated Critical Dune Areas. Any construction or improvement in a CDA requires an EGLE permit and typically a written Vegetative Assurance Plan. This is a frequent gotcha for shoreline parcels in counties like Oceana, Mason, Berrien, and Leelanau.",
+                "applies_to": "Construction on parcels within designated Critical Dune Areas along the Great Lakes",
+                "source": "https://www.michigan.gov/egle/about/organization/water-resources/sand-dunes/critical-dunes"
+            },
+            {
+                "title": "ADU rules are local, not state \u2014 verify township zoning first",
+                "note": "Michigan has no statewide ADU shot clock or by-right ADU statute; ADU size, setbacks, parking, and permitting are controlled by local zoning at the township, city, or village level. Confirm the property's zoning district allows ADUs (and whether owner-occupancy is required) before quoting timeline or fees.",
+                "applies_to": "ADU and accessory structure projects",
+                "source": "https://www.zookcabins.com/regulations/michigan-adus"
+            },
+            {
+                "title": "Three-tier jurisdiction: confirm enforcing agency before submittal",
+                "note": "Michigan has three levels of jurisdiction (state, county, and municipal) and the enforcing agency for building, electrical, mechanical, and plumbing can differ within the same parcel. Local zoning ordinances commonly require zoning approval before or concurrent with building permit issuance \u2014 sequence permits correctly to avoid resubmittal.",
+                "applies_to": "All projects \u2014 verify AHJ split between state, county, and municipal authorities",
+                "source": "https://www.michigan.gov/-/media/Project/Websites/lara/bcc-media/Folder5/Statewide_Jurisdiction_List.pdf?rev=1cc0331538974c218c8135bc99e73d70"
+            }
+        ]
+    },
+    "NJ": {
+        "name": "New Jersey expert pack",
+        "expert_notes": [
+            {
+                "title": "20-working-day permit review under the UCC",
+                "note": "New Jersey's Uniform Construction Code requires the local construction official to grant or deny a complete permit application within 20 business days of submission. Track the clock from the date your application is logged complete; if it lapses, escalate to the construction official and the DCA Division of Codes and Standards.",
+                "applies_to": "All UCC construction permits (building, electrical, plumbing, fire, mechanical)",
+                "source": "https://www.facebook.com/groups/253700335754858/posts/1203657674092448/"
+            },
+            {
+                "title": "Home Improvement Contractor registration is mandatory",
+                "note": "Under the NJ Contractor's Registration Act, all home improvement contractors must register annually with the Division of Consumer Affairs and display the registration number on contracts, ads, and permit applications. Building subcode forms include a field for the HIC registration number or exemption reason \u2014 leaving it blank is a common rejection trigger.",
+                "applies_to": "Residential remodels, additions, and alterations performed by a contractor",
+                "source": "https://www.nj.gov/state/bac/assets/pdf/quick-start/home-improvement-contractor-2019-09-R1.pdf"
+            },
+            {
+                "title": "Separate state HVACR contractor license required",
+                "note": "HVAC and refrigeration work in New Jersey must be performed under a license issued by the State Board of Examiners of Heating, Ventilating, Air Conditioning and Refrigeration Contractors. HIC registration alone does not authorize HVACR work \u2014 the licensed contractor's number must appear on the mechanical subcode application.",
+                "applies_to": "HVAC, ventilation, and refrigeration scopes",
+                "source": "https://www.njconsumeraffairs.gov/hvacr"
+            },
+            {
+                "title": "Current energy subcode: IECC 2021 residential / ASHRAE 90.1-2019 commercial",
+                "note": "NJAC 5:23-3.18 adopts the 2021 IECC for low-rise residential and ASHRAE 90.1-2019 for commercial and high-rise residential. Plans must include compliance documentation (REScheck/COMcheck or prescriptive paths) matching these editions; older energy code submittals are routinely rejected at intake.",
+                "applies_to": "New construction, additions, and conditioned-space alterations",
+                "source": "https://www.nj.gov/dca/codes/codreg/current.shtml"
+            },
+            {
+                "title": "CAFRA, Waterfront Development, and Pinelands overlays",
+                "note": "Projects in the Coastal Area Facility Review Act zone, tidal waterfront, or Pinelands Area require NJDEP authorization in addition to the municipal UCC permit. CAFRA individual permit applications must be submitted electronically through njdeponline.com, and overlay approval typically must be in hand before the construction permit is released.",
+                "applies_to": "Coastal, tidal waterfront, and Pinelands-area parcels",
+                "source": "https://dep.nj.gov/wp-content/uploads/wlm/downloads/caf/cp_011.pdf"
+            },
+            {
+                "title": "Flood Hazard and Freshwater Wetlands triggers under REAL rules",
+                "note": "NJDEP's Watershed & Land Management program offers Flood Hazard general permits (some by registration with instant approval) for work near streams, wetlands, and tidal flood hazard areas. The REAL rules tightened mitigation thresholds when stacking general permits and raised flood-proofing elevations \u2014 verify jurisdictional status with a Jurisdictional Request Form before designing the foundation.",
+                "applies_to": "Single-family and accessory work near wetlands, streams, or flood hazard areas",
+                "source": "https://dep.nj.gov/wlm/lrp/common-projects/single-family-home/"
+            },
+            {
+                "title": "Municipalities (not counties) enforce the UCC",
+                "note": "The DCA delegates plan review, permit issuance, and inspections to municipal construction departments; only where a town has not established its own enforcing agency does the county or DCA step in. Confirm which agency holds jurisdiction on your address before submitting \u2014 inter-local agreements are common and the wrong office will return the package.",
+                "applies_to": "Identifying the correct AHJ for permit submittal",
+                "source": "https://www.nj.gov/dca/codes/forms/pdf_bcpr/pr_app_guide.pdf"
+            },
+            {
+                "title": "Use the State-prescribed construction permit packet",
+                "note": "New Jersey requires the DCA-issued construction permit application packet (building, electrical, plumbing, mechanical, and fire subcode forms) for every UCC permit. Municipal cover sheets do not replace these state forms \u2014 submitting only a local form is a frequent cause of intake rejection.",
+                "applies_to": "All UCC permit submittals statewide",
+                "source": "https://www.nj.gov/dca/codes/resources/constructionpermitforms.shtml"
+            }
+        ]
+    },
+    "VA": {
+        "name": "Virginia expert pack",
+        "expert_notes": [
+            {
+                "title": "Virginia USBC is statewide and preempts local amendments",
+                "note": "The Virginia Uniform Statewide Building Code (USBC) is adopted by the Board of Housing and Community Development and applies in every city, town, and county. Local jurisdictions cannot alter the technical requirements, so a permit reviewer cannot impose a stricter structural or energy standard than the USBC.",
+                "applies_to": "All residential and commercial permit work statewide",
+                "source": "http://www.dhcd.virginia.gov/virginia-uniform-statewide-building-code-usbc"
+            },
+            {
+                "title": "2021 USBC effective date \u2014 January 18, 2024",
+                "note": "The current USBC cycle (based on the 2021 I-Codes with Virginia amendments) went into effect January 18, 2024, with enforcement of the updated cycle beginning January 18, 2025. Verify which code edition the AHJ is reviewing under, especially for projects that were started under the prior cycle.",
+                "applies_to": "Plan review and permit applications submitted in 2024\u20132026",
+                "source": "https://vaeec.org/programs/building-codes/"
+            },
+            {
+                "title": "DPOR tradesman license required for HVAC, electrical, plumbing, gas",
+                "note": "The Class A/B/C Contractor Building (CBC) classification does NOT cover electrical, plumbing, HVAC, or gas fitting work. Each trade must be performed by a separately licensed tradesman, journeyman, or master through the DPOR Board for Contractors. As of April 1, 2025, new residential trades license types (Residential HVAC mechanic, etc.) provide an additional pathway.",
+                "applies_to": "Any permit pulling electrical, plumbing, HVAC, or gas trade work",
+                "source": "https://www.dpor.virginia.gov/sites/default/files/Records%20and%20Documents/Regulant%20List/VA%20Contractors%20Classifications%20%26%20Specialties.pdf"
+            },
+            {
+                "title": "Chesapeake Bay Preservation Act RPA review",
+                "note": "Tidewater Virginia localities (under Code \u00a7\u00a7 62.1-44.15:67\u201379) require a plan-of-development review prior to building permit issuance for parcels in a Chesapeake Bay Preservation Area. RPA (Resource Protection Area) review may be triggered even when no building or land-disturbance permit would otherwise be required.",
+                "applies_to": "Projects in Tidewater Virginia jurisdictions with CBPA-designated parcels",
+                "source": "https://www.deq.virginia.gov/water/chesapeake-bay/chesapeake-bay-preservation-act"
+            },
+            {
+                "title": "VPDES Construction General Permit at 1 acre disturbance",
+                "note": "Land-disturbing activities of 1 acre or more require coverage under an individual or General VPDES Construction Stormwater Permit (CGP), in addition to local erosion and sediment control approval. Disturbance of non-tidal wetlands triggers a separate DEQ permit regardless of acreage.",
+                "applies_to": "Site work, new construction, and additions disturbing \u22651 acre",
+                "source": "https://online.encodeplus.com/regs/deq-va/doc-viewer.aspx?secid=92"
+            },
+            {
+                "title": "ADUs require full trade permits and septic capacity review",
+                "note": "An ADU in Virginia requires a residential building permit plus separate trade reviews for plumbing, electrical, and HVAC. On parcels using on-site sewage, septic capacity must be confirmed before permit issuance \u2014 this is a frequent cause of ADU permit delays in counties without public sewer.",
+                "applies_to": "ADU jobs",
+                "source": "https://www.zookcabins.com/regulations/adu-regulations-in-virginia"
+            },
+            {
+                "title": "Confirm AHJ \u2014 city, town, or county before applying",
+                "note": "Virginia is split between independent cities, incorporated towns, and counties, each of which may operate its own building department. Towns within a county sometimes defer to the county for building permits but retain zoning authority. Identify the correct AHJ first; submitting to the wrong department is the most common avoidable delay.",
+                "applies_to": "Every Virginia permit application",
+                "source": "https://www.permitflow.com/state/virginia"
+            },
+            {
+                "title": "VFRIS floodplain check before site/foundation design",
+                "note": "Use the Virginia Flood Risk Information System (VFRIS) to verify Special Flood Hazard Area status before finalizing site plan and foundation elevation. Local floodplain ordinances often require freeboard above the BFE and may require an Elevation Certificate at permit submittal and again at final inspection.",
+                "applies_to": "New construction, additions, and substantial improvements in or near mapped floodplains",
+                "source": "https://www.dcr.virginia.gov/dam-safety-and-floodplains/fpvfris"
+            }
+        ]
+    },
+    "TN": {
+        "name": "Tennessee expert pack",
+        "expert_notes": [
+            {
+                "title": "Tennessee $25,000 contractor license threshold",
+                "note": "A Tennessee Board for Licensing Contractors license is required before bidding or negotiating a price whenever the total project cost (materials and labor) is $25,000 or more. HVAC, electrical, and mechanical fall under the contractor's license at this threshold; bidding without one can void the contract and trigger penalties.",
+                "applies_to": "Any residential or commercial project with total cost $25,000 or more",
+                "source": "https://www.tn.gov/commerce/regboards/contractors/license/get/contractor.html"
+            },
+            {
+                "title": "Limited Licensed Electrician (LLE) and Limited Licensed Plumber (LLP) scope",
+                "note": "Tennessee issues separate Limited Licensed Electrician (LLE) and Limited Licensed Plumber (LLP) licenses for trade work performed under the $25,000 prime contractor threshold or as a subcontractor. Verify the LLE/LLP is current before pulling electrical or plumbing permits \u2014 local AHJs will reject permit applications without it.",
+                "applies_to": "Electrical and plumbing subcontractor work statewide",
+                "source": "https://www.tn.gov/commerce/regboards/contractors.html"
+            },
+            {
+                "title": "State Fire Marshal residential permits in non-local jurisdictions",
+                "note": "In Tennessee counties and cities that have not opted out of statewide standards, residential building and electrical permits are purchased directly from the State Fire Marshal's Office, not a local building department. Inspections (including re-inspections) are also requested through the SFMO portal.",
+                "applies_to": "Residential jobs in jurisdictions covered by the State Fire Marshal",
+                "source": "https://www.tn.gov/commerce/fire/residential-permits.html"
+            },
+            {
+                "title": "Opt-out jurisdictions and the city/county permit split",
+                "note": "Tennessee counties and municipalities may opt out of statewide one- and two-family dwelling standards under Title 68, Chapter 120. Inside city limits, you typically need both a city permit and a county permit; in opt-out counties outside city limits there may be no building code enforcement at all (septic still applies). Confirm jurisdiction before quoting timelines.",
+                "applies_to": "Any project \u2014 verify AHJ before pulling permits",
+                "source": "https://www.tn.gov/commerce/fire/residential-permits/opt-out-jurisdictions.html"
+            },
+            {
+                "title": "2021 IECC energy code effective April 17, 2025",
+                "note": "Tennessee adopted the 2021 IECC with amendments for both residential and commercial, effective April 17, 2025 (replacing the 2018 IECC that was in force from July 16, 2020). Plans submitted under the older code may need to be updated for envelope, duct sealing, and lighting requirements unless grandfathered by the local AHJ.",
+                "applies_to": "New construction and additions involving conditioned space",
+                "source": "https://www.energycodes.gov/status/states/tennessee"
+            },
+            {
+                "title": "TDEC ARAP for any work touching waters of the state",
+                "note": "Physical alterations to waters of the state (streams, wetlands, springs, wet-weather conveyances) require an Aquatic Resource Alteration Permit (ARAP) or \u00a7401 Water Quality Certification from TDEC. New General ARAPs took effect May 15, 2025 and run through May 15, 2030; recent legislation allows alteration of low-quality wetlands up to 1 acre or moderate-quality up to 0.25 acres without notice, but higher-quality resources still require a permit.",
+                "applies_to": "Site work near streams, wetlands, or drainage features",
+                "source": "https://www.tn.gov/environment/permit-permits/water-permits1/aquatic-resource-alteration-permit--arap-.html"
+            },
+            {
+                "title": "Seven-year code currency rule for local amendments",
+                "note": "Under Title 68, Chapter 120, building codes adopted by reference by a Tennessee local government must be current within seven years of the latest edition, and local standards must meet or exceed the state minimum. Always check the specific edition the local AHJ has adopted (e.g., Rutherford County 2018 I-Codes, Metro Nashville 2024 I-Codes) \u2014 it is not uniform statewide.",
+                "applies_to": "Code reference selection for plan submittals",
+                "source": "https://www.mtas.tennessee.edu/reference/amendments-building-codes"
+            },
+            {
+                "title": "Nashville DADU permitting goes through Metro Codes",
+                "note": "Detached Accessory Dwelling Units (DADUs) in Davidson County must complete the permitting process with Metro Codes and Building Safety, including zoning examiner review, before a building permit issues. ADUs elsewhere in Tennessee typically require a building permit, mechanical permit, and HVAC permit at minimum \u2014 there is no statewide ministerial shot clock, and local review can run roughly 20 days.",
+                "applies_to": "ADU and DADU projects",
+                "source": "https://www.nashville.gov/departments/codes/construction-and-permits/building-permits-central/detached-accessory-dwelling-unit"
+            }
+        ]
+    },
+    "MA": {
+        "name": "Massachusetts expert pack",
+        "expert_notes": [
+            {
+                "title": "10th Edition MA State Building Code (780 CMR) is in effect",
+                "note": "The 10th Edition of the Massachusetts State Building Code took effect October 11, 2024. All permit applications must comply with 780 CMR 1.00 to 115.00 as amended in the 10th Edition. Confirm the AHJ is reviewing under the current edition before submitting plans.",
+                "applies_to": "All residential and commercial permit applications",
+                "source": "https://www.mass.gov/handbook/tenth-edition-of-the-ma-state-building-code-780"
+            },
+            {
+                "title": "Base, Stretch, and Specialized (Opt-In) energy code tiers",
+                "note": "MA municipalities operate on one of three energy code tiers: Base Code (IECC 2021 with MA amendments \u2014 780 CMR Ch. 11R residential, Ch. 13 commercial), Stretch Code, or the Specialized (net-zero) Opt-In Code. Confirm the jurisdiction's tier before scoping HVAC, envelope, or solar \u2014 Specialized Code triggers electrification-readiness and pre-wiring requirements.",
+                "applies_to": "New construction, additions, and major alterations",
+                "source": "https://www.mass.gov/info-details/2025-massachusetts-building-energy-codes"
+            },
+            {
+                "title": "HIC Registration vs. Construction Supervisor License (CSL) are not interchangeable",
+                "note": "Work on existing owner-occupied 1-to-4 family homes generally requires the contractor to hold both an HIC Registration and a CSL. The HIC is a consumer-protection registration ($150 + Guaranty Fund payment); the CSL authorizes structural work. Pulling a permit under the wrong credential is a common rejection reason.",
+                "applies_to": "Residential remodels, additions, and structural work on 1-4 family dwellings",
+                "source": "https://www.mass.gov/info-details/hic-contractor-resources"
+            },
+            {
+                "title": "HIC must pull the permit on owner-occupied jobs",
+                "note": "Under M.G.L. c. 142A, the registered Home Improvement Contractor is responsible for obtaining all permits for work covered by the HIC law. If the homeowner pulls the permit instead, they forfeit access to the Guaranty Fund \u2014 a frequent disclosure issue that can void the contract.",
+                "applies_to": "HIC-covered residential improvement work",
+                "source": "https://www.middleboroughma.gov/FAQ.aspx?QID=94"
+            },
+            {
+                "title": "Wetlands Protection Act \u2014 Order of Conditions required near resource areas",
+                "note": "Any work within 100 ft of a wetland, 200 ft of a perennial stream, or in a flood zone requires filing a Notice of Intent with the local Conservation Commission and obtaining an Order of Conditions (WPA Form 5) before a building permit can be issued. The Order is not final until appeal periods expire \u2014 budget 8-12 weeks.",
+                "applies_to": "Projects within Wetlands Protection Act buffer zones or floodplains",
+                "source": "https://www.mass.gov/how-to/wpa-form-5-order-of-conditions"
+            },
+            {
+                "title": "Statewide Protected-Use ADUs as of right (Affordable Homes Act)",
+                "note": "As of February 2, 2025, the Affordable Homes Act allows Protected Use ADUs by right in single-family zones statewide. Local procedures still vary \u2014 many towns layered site plan review onto the bylaw, so confirm whether the AHJ treats it as ministerial or discretionary before promising a timeline.",
+                "applies_to": "ADU projects on single-family-zoned lots",
+                "source": "https://www.mass.gov/info-details/accessory-dwelling-unit-adu-faqs"
+            },
+            {
+                "title": "MA zoning is local \u2014 no county building departments",
+                "note": "All zoning and building permit authority in Massachusetts sits with the municipality (city or town). There is no county-level permit office. Each community designates its own permit-granting authority, and bylaws can assign different boards (ZBA, Planning, Conservation) to different permit types. Always verify the issuing authority per project type.",
+                "applies_to": "All MA jurisdictions",
+                "source": "https://www.mass.gov/info-details/re16rc13-zoning-building-codes"
+            },
+            {
+                "title": "Floodplain Overlay District / MC-FRM coastal flood risk",
+                "note": "Coastal and riverine parcels are commonly within a Floodplain Overlay District tied to the FEMA Special Flood Hazard Area (1% annual chance / 100-year zone). MA also evaluates wetlands permits against the Massachusetts Coastal Flood Risk Model (MC-FRM), which projects up to 2.5 ft of sea level rise by 2050 \u2014 expect freeboard, breakaway-wall, or elevation conditions on coastal jobs.",
+                "applies_to": "Coastal, riverine, and floodplain parcels",
+                "source": "https://www.mass.gov/info-details/coastal-flood-risk-model-mc-frm-evaluation-for-wetlands-permitting"
+            }
+        ]
+    },
+    "IN": {
+        "name": "Indiana expert pack",
+        "expert_notes": [
+            {
+                "title": "Indiana Residential Code is 2020 IRC with state amendments (675 IAC 14)",
+                "note": "Indiana has adopted the 2020 IRC as the Indiana Residential Code with state-specific amendments under 675 IAC. Always check the Indiana amendments rather than relying on the model IRC text \u2014 provisions like fastener schedules, electrical bonding, and insulation values diverge from the base IRC.",
+                "applies_to": "All one- and two-family residential construction and alterations",
+                "source": "https://up.codes/viewer/indiana/irc-2018"
+            },
+            {
+                "title": "Indiana energy code amendment: R-15 cavity insulation in Climate Zone 4",
+                "note": "Indiana amended the IECC to require R-15 cavity insulation (raised from R-13) in Climate Zone 4 wood-frame walls. Submitting plans with R-13 will trigger a correction notice \u2014 specify R-15 batt or equivalent continuous insulation up front.",
+                "applies_to": "New construction and additions with conditioned wood-frame walls in Climate Zone 4",
+                "source": "https://insulationinstitute.org/wp-content/uploads/2025/05/N105-IN-Energy-Code-0425.pdf"
+            },
+            {
+                "title": "IDHS state-level plan review: 10-business-day response clock",
+                "note": "For projects requiring state-level review by Indiana Department of Homeland Security, submission starts an automatic 10-business-day clock. IDHS must respond (release, release with conditions, or disapproval) within 10 business days \u2014 track the submission date and escalate if exceeded.",
+                "applies_to": "Class 1 structures and other projects requiring IDHS Building Plan Review",
+                "source": "https://www.in.gov/dhs/building-plan-review/building-plan-review-process/"
+            },
+            {
+                "title": "State-licensed plumbing vs. locally licensed HVAC",
+                "note": "Indiana licenses plumbing contractors and electrical work at the state level (PLA), but HVAC licensing is handled locally by city or county \u2014 there is no statewide HVAC license. Verify the local AHJ's HVAC requirement separately (e.g., Lake County issues its own); using only a state credential will fail HVAC permit pulls.",
+                "applies_to": "HVAC and plumbing permit applications",
+                "source": "https://www.servicetitan.com/licensing/hvac/indiana"
+            },
+            {
+                "title": "Split jurisdiction: state oversight, local enforcement",
+                "note": "Indiana's permitting is split \u2014 IDHS sets the state code and reviews Class 1 (commercial/multi-family) plans, while local building departments enforce and issue permits for Class 2 (one- and two-family) structures. Confirm whether a project is Class 1 or Class 2 before deciding where to file; misrouted submittals lose weeks.",
+                "applies_to": "All commercial, multi-family, and residential permit submittals",
+                "source": "https://www.permitflow.com/state/indiana"
+            },
+            {
+                "title": "DNR Construction in a Floodway permit required before local permit",
+                "note": "Any structure or fill in a regulated floodway requires a Construction in a Floodway permit from the IDNR Division of Water before local building permits can be issued. Local AHJs will not release a building permit until the DNR approval is in hand for floodway work \u2014 start the DNR application early since it runs in parallel, not sequentially.",
+                "applies_to": "Projects in a regulated floodway or SFHA",
+                "source": "https://www.in.gov/dnr/water/regulatory-permit-programs/"
+            },
+            {
+                "title": "IDEM 14-working-day construction plan review for large activities",
+                "note": "Under Indiana Code 13-18-27-16, IDEM must act on a construction plan for a large construction activity by the 14th working day after submission. If the deadline passes without action, the plan is deemed reviewed \u2014 document the submission date precisely.",
+                "applies_to": "Large construction activities requiring IDEM construction plan review (stormwater, sewer extensions, etc.)",
+                "source": "https://law.justia.com/codes/indiana/title-13/article-18/chapter-27/section-13-18-27-16/"
+            },
+            {
+                "title": "Floodplain Overlay districts trigger extra local review",
+                "note": "Many Indiana jurisdictions impose a Flood Hazard / Conservation Floodplain Overlay on top of base zoning, requiring a separate floodplain development permit demonstrating no increase in flood elevation. This is in addition to any DNR floodway permit \u2014 check the local zoning map for overlay districts before quoting timelines.",
+                "applies_to": "Any development within a mapped SFHA or local floodplain overlay",
+                "source": "https://www.in.gov/dnr/water/files/wa-FP_Management_Indiana_QuickGuide.pdf"
+            }
+        ]
+    },
+    "MD": {
+        "name": "Maryland expert pack",
+        "expert_notes": [
+            {
+                "title": "Separate state HVACR license plus local trade permits",
+                "note": "HVACR contractors must be licensed by the Maryland Board of HVACR Contractors at the state level, but local plumbing, gasfitting, and electrical permits are still required from the county or municipality before HVACR work can begin. Pulling the state license alone does not authorize work \u2014 confirm the local AHJ permit is open.",
+                "applies_to": "HVAC, gasfitting, and mechanical scope on residential and commercial jobs",
+                "source": "https://www.labor.maryland.gov/license/hvacr/hvacrcounty.shtml"
+            },
+            {
+                "title": "Maryland Building Performance Standards (MBPS) \u2014 IECC 2021 statewide",
+                "note": "Maryland adopted the 2021 IECC (with ASHRAE 90.1-2019 commercial path) as the statewide energy code. All local jurisdictions were required to amend and adopt the new code for local enforcement by May 29, 2024. Energy compliance documentation (envelope, fenestration U-values, duct/air sealing) is mandatory for new construction and conditioned-space alterations.",
+                "applies_to": "New construction, additions, and alterations affecting conditioned space",
+                "source": "https://energy.maryland.gov/pages/policy-energy-codes.aspx"
+            },
+            {
+                "title": "Local jurisdictions can amend codes \u2014 but not the IECC",
+                "note": "Under the MBPS each Maryland local jurisdiction may modify the IBC/IRC and related codes to suit local conditions, with the explicit exception of the International Energy Conservation Code, which must be adopted as written. Always check the county or municipal amendments before submitting plans, but never assume the energy code has been weakened locally.",
+                "applies_to": "Any project subject to local plan review in Maryland",
+                "source": "https://labor.maryland.gov/labor/build/buildcodes.shtml"
+            },
+            {
+                "title": "Chesapeake Bay Critical Area review for shoreline parcels",
+                "note": "All private projects within the Chesapeake Bay or Atlantic Coastal Bays Critical Area \u2014 including individual building permits, additions, and grading \u2014 require Critical Area review by the local planning department in addition to the standard building permit. This adds review time and can trigger impervious-surface caps, buffer setbacks, and mitigation plantings.",
+                "applies_to": "Parcels within 1,000 ft of tidal waters or tidal wetlands in the Critical Area",
+                "source": "https://dnr.maryland.gov/criticalarea/pages/development_in_cac.aspx"
+            },
+            {
+                "title": "MDE Wetlands and Waterways permit for floodplain or wetland work",
+                "note": "Construction in wetlands or floodplains requires a separate state permit from the MDE Wetlands and Waterways Program (Water and Science Administration), in addition to local building and grading permits. Foundation, fill, and outbuilding work in mapped flood zones cannot proceed on local permits alone.",
+                "applies_to": "Construction in mapped wetlands, tidal/non-tidal floodplains, or waterways",
+                "source": "https://mde.maryland.gov/programs/water/stormwatermanagementprogram/floodhazardmitigation/pages/permitting.aspx"
+            },
+            {
+                "title": "Statewide ADU authorization deadline \u2014 October 1, 2026",
+                "note": "By October 1, 2026, all Maryland local legislative bodies must adopt laws authorizing Accessory Dwelling Units. Until a jurisdiction has adopted its ADU ordinance, ADU permitting still runs through existing local zoning (often as accessory apartments or in-law suites), so confirm the current local rule rather than assuming statewide ministerial approval.",
+                "applies_to": "ADU and accessory apartment projects",
+                "source": "https://www.dougpruettconstruction.com/blog/ADU-laws-and-permit-requirements-in-maryland--what-you-need-to-know"
+            },
+            {
+                "title": "Dual county + municipal permits in incorporated towns",
+                "note": "Maryland uses a dual permitting system: in many incorporated municipalities (common in Montgomery, Prince George's, and other counties) you must pull both a county building permit and a separate municipal permit for the same job. Pricing and scheduling around only the county permit is a frequent miss \u2014 confirm the town's requirement before mobilizing.",
+                "applies_to": "Projects located inside incorporated towns or municipalities",
+                "source": "https://www3.montgomerycountymd.gov/311/SolutionView.aspx?SolutionId=1-4WNX4B"
+            }
+        ]
+    },
+    "MO": {
+        "name": "Missouri expert pack",
+        "expert_notes": [
+            {
+                "title": "No statewide building or trade license \u2014 verify the local AHJ",
+                "note": "Missouri has no statewide general contractor, plumbing, HVAC, or mechanical contractor license. Licensing for electricians, plumbers, mechanical (HVAC) contractors, drainlayers, and pool installers is handled at the city or county level, so confirm requirements with the specific AHJ before pulling a permit.",
+                "applies_to": "All trade contractors operating in Missouri",
+                "source": "https://adaptdigitalsolutions.com/articles/missouri-contractor-license-requirements/"
+            },
+            {
+                "title": "Statewide electrical contractor license is reciprocity-only",
+                "note": "Missouri's Office of Statewide Electrical Contractors issues a statewide electrical contractor license that is recognized by participating municipalities, but it does not replace local licensing in non-participating cities. Contractors must still register with each local AHJ that requires its own license.",
+                "applies_to": "Electrical contractors working across multiple Missouri jurisdictions",
+                "source": "https://pr.mo.gov/electricalcontractors.asp"
+            },
+            {
+                "title": "No statewide energy code \u2014 adoption varies by jurisdiction",
+                "note": "Missouri has not adopted a statewide residential or commercial energy code. Each jurisdiction sets its own code; check the Missouri DNR Energy Codes by Jurisdiction list before assuming any IECC version applies, because requirements (and effective dates) differ city-to-city.",
+                "applies_to": "New construction and additions across Missouri",
+                "source": "https://dnr.mo.gov/energy/efficiency/codes-jurisdiction"
+            },
+            {
+                "title": "Kansas City 2021 IECC with local amendments",
+                "note": "Kansas City adopted the 2021 IECC effective July 1, 2023 (with a 90-day grace period), and Ordinance 260144 amended it to provide additional compliance options including updated wall insulation requirements. Confirm which amendment package applies to a permit submittal date because KC's IECC differs from the published 2021 baseline.",
+                "applies_to": "Residential and commercial projects in Kansas City, MO",
+                "source": "https://www.nahb.org/blog/2026/02/kansas-city-2021-iecc-amendments"
+            },
+            {
+                "title": "Floodplain Development Permit triggers separate review and engineer certification",
+                "note": "Any development in a Special Flood Hazard Area requires a local Floodplain Development Permit in addition to the building permit, and the developer/owner must provide as-built certification by a registered engineer, architect, or land surveyor. This is a separate approval from the standard building permit and can add weeks to the timeline.",
+                "applies_to": "Construction, fill, or substantial improvement in a mapped floodplain",
+                "source": "https://sema.dps.mo.gov/programs/floodplain/documents/floodplain-develoment-permit.pdf"
+            },
+            {
+                "title": "Substantial improvement rule for historic and existing structures in floodplains",
+                "note": "When work in a floodplain requires a Floodplain Development Permit, the local floodplain administrator must review all proposed work and the cumulative cost of all work counts toward the substantial improvement threshold (typically 50% of market value). Phasing a remodel does not avoid the trigger; once crossed, the entire structure must be brought into floodplain compliance.",
+                "applies_to": "Remodels, additions, and repairs to existing structures in a Missouri floodplain",
+                "source": "https://sema.dps.mo.gov/programs/floodplain/documents/nfip-historic-structures.pdf"
+            },
+            {
+                "title": "ADUs governed locally \u2014 expect conditional use permits in dense zones",
+                "note": "Missouri has no state ADU shot clock or by-right statute. In more densely zoned residential areas ADUs may be restricted or require a conditional use permit, and review timelines run roughly two to eight weeks depending on jurisdiction and workload. Build the CUP hearing window into the project schedule from day one.",
+                "applies_to": "Accessory dwelling unit projects in Missouri",
+                "source": "https://www.steadily.com/blog/adu-laws-and-regulations-in-missouri"
+            },
+            {
+                "title": "City code applies to county-owned buildings inside city limits",
+                "note": "Missouri appellate case law has held that a city's building code applies to county buildings located within that city's limits, despite county claims of state-law authority to build without restriction. For projects on government-owned parcels, do not assume county-level review supersedes municipal permitting \u2014 confirm jurisdiction in writing before submittal.",
+                "applies_to": "Projects on county or public-agency property within an incorporated Missouri city",
+                "source": "https://lawoftheland.wordpress.com/2012/10/11/missouri-court-of-appeals-finds-city-building-code-applies-to-county-buildings-within-the-city/"
+            }
+        ]
+    },
 }
 
 

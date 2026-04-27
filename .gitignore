@@ -9,3 +9,19 @@ seo/__pycache__/
 *credentials*.json
 api/__pycache__/
 scripts/__pycache__/
+
+api/state_packs/drafts/
+
+# Backups created by inplace edits (never commit historical state)
+*.bak-*
+*.bak-pre-*
+
+# Local data caches and SQLite runtime DBs (regenerable from sources)
+data/co-est2024-alldata.csv
+data/sub-est2024.csv
+data/serper_cache.db
+data/ip_lookups.db
+data/verified_cities.db
+data/verified_cities.db.*
+artifacts/
+tests/__pycache__/
