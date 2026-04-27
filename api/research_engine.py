@@ -3954,6 +3954,13 @@ Return ONLY the JSON object."""
         city_key = city.lower().strip().replace(" ", "_")
         city_key_spaces = city.lower().strip()
         county_key = CITY_TO_COUNTY.get(city_key) or CITY_TO_COUNTY.get(city_key_spaces)
+        # Refuse county fallback if it's in a different state than the user typed.
+        # CITY_TO_COUNTY maps city name → "harris_tx" / "cook_il" etc. The suffix is the state.
+        # Without this check, "Pasadena, CA" would map to Harris County, TX.
+        if county_key:
+            county_state = county_key.rsplit("_", 1)[-1].upper() if "_" in county_key else ""
+            if county_state and county_state != state.upper().strip():
+                county_key = None
         if county_key and county_key in COUNTY_DATA:
             county = COUNTY_DATA[county_key]
             # Fill in missing fields from county data
