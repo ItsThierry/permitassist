@@ -1278,6 +1278,32 @@
     #page-search .hero { padding: 0 0 24px !important; }
     #page-search .hero h1, #page-search .hero h1 em { color: var(--text-light); text-shadow: 0 3px 22px rgba(0,0,0,0.18); }
     #page-search .hero-sub { color: var(--text-muted-light); }
+    .hero-eyebrow {
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      line-height: 1.45;
+      margin: 0 auto 14px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    .speed-badge {
+      align-items: center;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      color: #fff;
+      display: flex;
+      font-size: 14px;
+      font-weight: 700;
+      justify-content: center;
+      margin: 16px auto 24px auto;
+      padding: 8px 16px;
+      width: fit-content;
+    }
     #page-search .free-paid-bar,
     #page-search .free-paid-bar strong,
     #page-search .trust-note { color: var(--text-muted-light); }
@@ -1348,6 +1374,40 @@
     }
     .search-action-zone .lookup-btn { color: var(--bg-deep) !important; }
     .search-action-zone .text-link { display: inline-flex; align-items: center; gap: 8px; }
+    .trade-quick-pick-label {
+      color: var(--text-muted-dark);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .trade-chip-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .trade-chip {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+      color: var(--text-dark);
+      cursor: pointer;
+      flex: 0 0 auto;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 14px;
+      transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
+    }
+    .trade-chip:hover {
+      background: rgba(245,158,11,0.10);
+      border-color: rgba(245,158,11,0.35);
+    }
+    .trade-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
     .location-link-icon {
       position: relative;
       width: 18px;
@@ -1448,7 +1508,15 @@
       #search-form.page-inner::after { height: 480px; }
       #page-search .counter-bar { margin-bottom: 48px; }
       #page-search .hero { padding: 0 0 20px !important; }
+      .hero-eyebrow { font-size: 12px; }
+      .speed-badge { font-size: 13px; }
       .search-action-zone { margin: -32px -4px 0; padding: 24px; }
+      .trade-chip-strip {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+      }
       .nav-drawer { background: rgba(14,26,79,0.98); border-bottom-color: rgba(255,255,255,0.14); }
       .nav-drawer a, .nav-drawer button { color: var(--text-light); border-bottom-color: rgba(255,255,255,0.14); }
     }
@@ -1521,11 +1589,12 @@
     <form class="page-inner" id="search-form" onsubmit="event.preventDefault(); doLookupWithOffline();">
       <!-- Hero -->
       <div class="hero" style="padding:32px 0 16px">
+        <div class="hero-eyebrow">BUILT ONLY FOR HVAC · PLUMBING · ELECTRICAL · ROOFING · SOLAR CONTRACTORS</div>
         <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
         <h2 class="hero-sub" style="max-width:460px">Know exactly what permit to pull, before you dispatch.</h2>
       </div>
 
-
+      <div class="speed-badge">⚡ Permit answer in 30 seconds</div>
 
       <!-- Free/Paid clarity line -->
       <div class="free-paid-bar">
@@ -1579,6 +1648,17 @@
           </div>
           <div class="form-group">
             <label>Describe the job</label>
+            <div class="trade-quick-pick-label">Quick pick a common job:</div>
+            <div class="trade-chip-strip" aria-label="Quick pick a common job">
+              <button class="trade-chip" type="button" data-fill="Replace outdoor AC condenser unit, like-for-like swap, residential">🔥 Condenser changeout</button>
+              <button class="trade-chip" type="button" data-fill="Complete HVAC system replacement, indoor + outdoor unit, residential">❄️ Full HVAC replacement</button>
+              <button class="trade-chip" type="button" data-fill="Tank water heater replacement, like-for-like, gas/electric">💧 Water heater swap</button>
+              <button class="trade-chip" type="button" data-fill="Electrical service panel upgrade from 100A to 200A, residential">🔌 Panel upgrade</button>
+              <button class="trade-chip" type="button" data-fill="Level 2 EV charger circuit install, 240V dedicated, residential">🚗 EV charger install</button>
+              <button class="trade-chip" type="button" data-fill="Residential solar PV system install, rooftop, grid-tied">🌞 Solar PV install</button>
+              <button class="trade-chip" type="button" data-fill="Full roof tear-off and replacement, asphalt shingles, residential">🏠 Roof tear-off</button>
+              <button class="trade-chip" type="button" data-fill="Ductless mini-split system install, single-zone, residential">🪟 Mini-split install</button>
+            </div>
             <div class="autocomplete-wrap">
               <div class="query-wrap">
                 <textarea class="hero-input" id="query" placeholder="e.g. condenser changeout, panel upgrade, full tear-off, water heater swap, mini split install" autocomplete="off" rows="3"></textarea>
@@ -4741,6 +4821,14 @@ updateJobsTabLabel();
 refreshCounterBar();
 loadStats();
 initAutocomplete();
+document.querySelectorAll('.trade-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.getElementById('query').value = chip.dataset.fill;
+    chip.classList.add('active');
+    setTimeout(() => chip.classList.remove('active'), 600);
+    document.getElementById('query').focus();
+  });
+});
 
 // Hide history dot if user has already seen it
 (function() {
