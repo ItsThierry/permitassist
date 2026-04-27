@@ -3,6 +3,8 @@
 
 import os
 import sys
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -152,3 +154,79 @@ def test_companion_hedging_keeps_primary_required_for_full_hvac_replacement():
     assert hedged["permits_required"][0]["permit_type"] == "Mechanical Permit — HVAC System Replacement"
     assert hedged["companion_permits"][0]["reason"].startswith("May be required if:")
     assert hedged["companion_permits"][0]["certainty"] == "conditional"
+
+
+
+def test_serper_claim_queries_run_concurrently(monkeypatch):
+    calls = []
+    active = 0
+    max_active = 0
+    lock = threading.Lock()
+
+    def fake_post(url, headers=None, json=None, timeout=15, max_retries=2):
+        nonlocal active, max_active
+        with lock:
+            calls.append(json["q"])
+            active += 1
+            max_active = max(max_active, active)
+        time.sleep(0.15)
+        with lock:
+            active -= 1
+        slug = json["q"].split()[0].lower()
+        return FakeResponse(organic=[{
+            "title": f"Official {slug} source",
+            "link": f"https://example.gov/{slug}-{len(calls)}",
+            "snippet": "Official city permit page",
+        }])
+
+    monkeypatch.setattr(engine, "_http_post_with_backoff", fake_post)
+
+    started = time.perf_counter()
+    result = engine.enrich_result_with_serper_sources(_base_result(), "HVAC replacement", "Concurrency", "TX")
+    elapsed = time.perf_counter() - started
+
+    assert len(calls) == 5
+    assert max_active > 1
+    assert elapsed < 0.45
+    assert result["sources_status"] == "serper_verified"
+    assert result["serper_credits_used"] == 5
+
+
+def test_serper_parallel_caps_at_five_queries_and_degrades_partially(monkeypatch):
+    calls = []
+    active = 0
+    max_active = 0
+    lock = threading.Lock()
+
+    extra_claims = [(f"claim_{i}", f"claim_{i}_source", f"Cap City TX claim {i} permit source") for i in range(7)]
+    monkeypatch.setattr(engine, "_serper_claim_queries", lambda job_type, city, state, result: extra_claims)
+
+    def fake_post(url, headers=None, json=None, timeout=15, max_retries=2):
+        nonlocal active, max_active
+        q = json["q"]
+        with lock:
+            calls.append(q)
+            active += 1
+            max_active = max(max_active, active)
+        time.sleep(0.05)
+        with lock:
+            active -= 1
+        if "claim 2" in q or "claim 4" in q:
+            raise requests.Timeout("simulated timeout")
+        return FakeResponse(organic=[{
+            "title": "Official permit source",
+            "link": f"https://example.gov/{q.split()[-3]}-{q.split()[-1]}",
+            "snippet": "Official city permit page",
+        }])
+
+    monkeypatch.setattr(engine, "_http_post_with_backoff", fake_post)
+
+    result = engine.enrich_result_with_serper_sources(_base_result(), "panel upgrade", "Cap City", "TX")
+
+    assert len(calls) == 5
+    assert max_active <= engine.SERPER_TRUST_MAX_CONCURRENCY
+    assert result["serper_credits_used"] == 5
+    assert result["sources_status"] == "serper_verified"
+    assert "claim_2_source" not in result
+    assert "claim_4_source" not in result
+    assert result["claim_0_source"]["url"].startswith("https://example.gov/")

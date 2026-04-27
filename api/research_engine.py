@@ -94,6 +94,9 @@ SERPER_CACHE_DB = os.path.join(_data_dir, "serper_cache.db")
 KNOWLEDGE_DIR  = os.path.join(os.path.dirname(__file__), "..", "knowledge")
 SERPER_TRUST_TTL_SECONDS = 7 * 24 * 60 * 60
 SERPER_TRUST_MAX_QUERIES = 5
+SERPER_TRUST_MAX_CONCURRENCY = 5
+SERPER_TRUST_TOTAL_TIMEOUT_SECONDS = 30
+SERPER_TRUST_REQUEST_TIMEOUT_SECONDS = 12
 
 SUMMARY_JUNK_PATTERNS = [
     r'\*\s*Email;\s*"Click to submit an email[^\n]*',
@@ -2486,7 +2489,7 @@ def _best_serper_source_from_results(results: list[dict], city: str, state: str)
     }
 
 
-def _serper_claim_source(query: str, claim_type: str, city: str, state: str, stats: dict) -> dict | None:
+def _serper_claim_source(query: str, claim_type: str, city: str, state: str, stats: dict, request_timeout: float = 15) -> dict | None:
     cached = _get_cached_serper_source(city, state, claim_type)
     if cached:
         stats["cache_hits"] = stats.get("cache_hits", 0) + 1
@@ -2507,7 +2510,7 @@ def _serper_claim_source(query: str, claim_type: str, city: str, state: str, sta
             "https://google.serper.dev/search",
             headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
             json={"q": query, "num": 5, "gl": "us"},
-            timeout=15,
+            timeout=request_timeout,
             max_retries=2,
         )
         if not resp or resp.status_code >= 400:
@@ -2572,6 +2575,177 @@ def _append_source_url(result: dict, source: dict) -> None:
     result["sources"] = normalize_sources(existing)
 
 
+
+
+def _merge_serper_stats(total: dict, partial: dict | None) -> None:
+    if not partial:
+        return
+    total["queries"] = total.get("queries", 0) + int(partial.get("queries", 0) or 0)
+    total["cache_hits"] = total.get("cache_hits", 0) + int(partial.get("cache_hits", 0) or 0)
+    for key in ("capped", "provider_failed", "empty_results", "timed_out"):
+        if partial.get(key):
+            total[key] = partial.get(key)
+    if partial.get("failure_reason") and not total.get("failure_reason"):
+        total["failure_reason"] = partial.get("failure_reason")
+
+
+def _run_serper_claim_task(index: int, claim_type: str, field_name: str, query: str, city: str, state: str) -> dict:
+    local_stats = {"queries": 0, "cache_hits": 0}
+    source = _serper_claim_source(
+        query,
+        claim_type,
+        city,
+        state,
+        local_stats,
+        request_timeout=SERPER_TRUST_REQUEST_TIMEOUT_SECONDS,
+    )
+    return {
+        "index": index,
+        "claim_type": claim_type,
+        "field_name": field_name,
+        "query": query,
+        "source": source,
+        "stats": local_stats,
+    }
+
+
+def _serper_claim_sources_parallel(job_type: str, city: str, state: str, result: dict) -> tuple[list[dict], dict]:
+    """Resolve claim-level Serper sources concurrently with a bounded budget.
+
+    The caller receives partial successes if individual searches fail or the
+    overall 30s budget expires. At most five Serper-crediting requests are
+    submitted per lookup.
+    """
+    claims = _serper_claim_queries(job_type, city, state, result)[:SERPER_TRUST_MAX_QUERIES]
+    stats = {"queries": 0, "cache_hits": 0}
+    if not claims:
+        return [], stats
+
+    max_workers = min(SERPER_TRUST_MAX_CONCURRENCY, len(claims))
+    completed: dict[int, dict] = {}
+    executor = ThreadPoolExecutor(max_workers=max_workers)
+    futures = {
+        executor.submit(_run_serper_claim_task, idx, claim_type, field_name, query, city, state): idx
+        for idx, (claim_type, field_name, query) in enumerate(claims)
+    }
+    try:
+        for future in as_completed(futures, timeout=SERPER_TRUST_TOTAL_TIMEOUT_SECONDS):
+            idx = futures[future]
+            try:
+                item = future.result()
+            except Exception as e:
+                item = {
+                    "index": idx,
+                    "claim_type": claims[idx][0],
+                    "field_name": claims[idx][1],
+                    "query": claims[idx][2],
+                    "source": None,
+                    "stats": {"provider_failed": True, "failure_reason": type(e).__name__},
+                }
+                print(f"[trust] Serper {claims[idx][0]} failed in worker (non-fatal): {e}")
+            _merge_serper_stats(stats, item.get("stats"))
+            completed[idx] = item
+    except FuturesTimeout:
+        stats["timed_out"] = True
+        stats["failure_reason"] = stats.get("failure_reason") or "total_timeout"
+        print("[trust] Serper parallel enrichment total timeout reached; using partial sources")
+    finally:
+        for future in futures:
+            if not future.done():
+                future.cancel()
+        executor.shutdown(wait=False, cancel_futures=True)
+
+    return [completed[i] for i in sorted(completed)], stats
+
+
+def _serper_claim_sources_sequential(job_type: str, city: str, state: str, result: dict) -> tuple[list[dict], dict]:
+    """Legacy serial Serper claim resolution retained for benchmarks/tests."""
+    claims = _serper_claim_queries(job_type, city, state, result)[:SERPER_TRUST_MAX_QUERIES]
+    stats = {"queries": 0, "cache_hits": 0}
+    completed = []
+    deadline = time.monotonic() + SERPER_TRUST_TOTAL_TIMEOUT_SECONDS
+    for idx, (claim_type, field_name, query) in enumerate(claims):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            stats["timed_out"] = True
+            stats["failure_reason"] = stats.get("failure_reason") or "total_timeout"
+            break
+        local_stats = {"queries": 0, "cache_hits": 0}
+        source = _serper_claim_source(
+            query,
+            claim_type,
+            city,
+            state,
+            local_stats,
+            request_timeout=min(SERPER_TRUST_REQUEST_TIMEOUT_SECONDS, max(1, remaining)),
+        )
+        _merge_serper_stats(stats, local_stats)
+        completed.append({
+            "index": idx,
+            "claim_type": claim_type,
+            "field_name": field_name,
+            "query": query,
+            "source": source,
+            "stats": local_stats,
+        })
+    return completed, stats
+
+
+def _attach_serper_claim_results(result: dict, claim_results: list[dict], stats: dict) -> int:
+    attached = 0
+    for item in sorted(claim_results, key=lambda x: x.get("index", 0)):
+        source = item.get("source")
+        if source and source.get("url"):
+            public_source = {
+                "url": source.get("url"),
+                "title": source.get("title") or source.get("url"),
+                "verified_at": source.get("verified_at") or _today_iso_date(),
+            }
+            result[item.get("field_name")] = public_source
+            _append_source_url(result, public_source)
+            attached += 1
+    result["serper_credits_used"] = min(int(stats.get("queries", 0) or 0), SERPER_TRUST_MAX_QUERIES)
+    result["serper_cache_hits"] = int(stats.get("cache_hits", 0) or 0)
+    if attached >= 3:
+        result["sources_status"] = "serper_verified"
+    elif attached > 0:
+        result["sources_status"] = "serper_partial"
+    else:
+        result["sources_status"] = "serper_unavailable"
+    if stats.get("failure_reason"):
+        result["sources_failure_reason"] = stats.get("failure_reason")
+    if not result.get("badge_state"):
+        meta = result.get("_meta") if isinstance(result.get("_meta"), dict) else {}
+        data_source = str(result.get("data_source") or meta.get("city_match_level") or "").lower()
+        if attached >= 3 and (data_source in {"city_database", "city", "verified"} or meta.get("auto_verified")):
+            result["badge_state"] = "verified"
+        elif attached > 0:
+            result["badge_state"] = "ai_researched"
+        else:
+            result["badge_state"] = "limited"
+    return attached
+
+
+def _enrich_result_with_serper_sources_sequential(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Legacy serial enrichment path used by the benchmark script."""
+    if not isinstance(result, dict):
+        return result
+    stats = {"queries": 0, "cache_hits": 0}
+    try:
+        claim_results, stats = _serper_claim_sources_sequential(job_type, city, state, result)
+        attached = _attach_serper_claim_results(result, claim_results, stats)
+        print(
+            f"[trust] Serper serial credits used: {result['serper_credits_used']} "
+            f"(cache hits: {result['serper_cache_hits']}, attached: {attached}, status: {result['sources_status']})"
+        )
+    except Exception as e:
+        result["serper_credits_used"] = int(stats.get("queries", 0))
+        result["serper_cache_hits"] = int(stats.get("cache_hits", 0))
+        result["sources_status"] = "serper_unavailable"
+        result["sources_failure_reason"] = type(e).__name__
+        print(f"[trust] Serper serial enrichment failed (non-fatal): {e}")
+    return result
+
 def enrich_result_with_serper_sources(result: dict, job_type: str, city: str, state: str) -> dict:
     """Attach claim-level Google/Serper source URLs without changing existing fields.
 
@@ -2582,31 +2756,9 @@ def enrich_result_with_serper_sources(result: dict, job_type: str, city: str, st
     if not isinstance(result, dict):
         return result
     stats = {"queries": 0, "cache_hits": 0}
-    attached = 0
     try:
-        for claim_type, field_name, query in _serper_claim_queries(job_type, city, state, result):
-            source = _serper_claim_source(query, claim_type, city, state, stats)
-            if source and source.get("url"):
-                public_source = {
-                    "url": source.get("url"),
-                    "title": source.get("title") or source.get("url"),
-                    "verified_at": source.get("verified_at") or _today_iso_date(),
-                }
-                result[field_name] = public_source
-                _append_source_url(result, public_source)
-                attached += 1
-            elif stats.get("provider_failed"):
-                break
-        result["serper_credits_used"] = int(stats.get("queries", 0))
-        result["serper_cache_hits"] = int(stats.get("cache_hits", 0))
-        if attached >= 3:
-            result["sources_status"] = "serper_verified"
-        elif attached > 0:
-            result["sources_status"] = "serper_partial"
-        else:
-            result["sources_status"] = "serper_unavailable"
-        if stats.get("failure_reason"):
-            result["sources_failure_reason"] = stats.get("failure_reason")
+        claim_results, stats = _serper_claim_sources_parallel(job_type, city, state, result)
+        attached = _attach_serper_claim_results(result, claim_results, stats)
         print(
             f"[trust] Serper credits used: {result['serper_credits_used']} "
             f"(cache hits: {result['serper_cache_hits']}, attached: {attached}, status: {result['sources_status']})"
