@@ -1858,7 +1858,10 @@ def init_cache():
     conn.close()
 
 def cache_key(job_type: str, city: str, state: str, job_category: str = "residential") -> str:
-    raw = f"{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{(job_category or 'residential').lower().strip()}"
+    # v2 (2026-04-27): bumped after the Pasadena CA → Harris County TX cross-state
+    # leak. Old v1 entries cached buggy county_fallback data; bumping the prefix
+    # invalidates every pre-fix row at once so users never see stale results.
+    raw = f"v2|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{(job_category or 'residential').lower().strip()}"
     return hashlib.md5(raw.encode()).hexdigest()
 
 def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
