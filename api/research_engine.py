@@ -6362,6 +6362,19 @@ Return ONLY the JSON object."""
         print(f"[hidden_triggers] Failed: {e}")
         result["hidden_triggers"] = []
 
+    # 2026-04-28: Fee Realism Guardrail V1. Closes the systematic 3-10x under-
+    # quote bug Opus 4.7 grading caught across all 4 cities of restaurant TI
+    # tests ($219 elec + $558 HVAC for an $8K-25K real fee). Per-scope sqft
+    # floors + 25 jurisdiction multipliers + trigger adders. Pure deterministic
+    # logic, zero LLM calls, zero added latency. Reads result['hidden_triggers']
+    # so trigger adders compose with the just-detected triggers.
+    try:
+        from fee_realism_guardrail import apply_fee_realism_guardrail
+        primary_scope_for_fee = result.get("_primary_scope") or detect_primary_scope(job_type)
+        apply_fee_realism_guardrail(result, job_type, city, state, primary_scope_for_fee)
+    except Exception as e:
+        print(f"[fee_realism_guardrail] Failed: {e}")
+
     # 2026-04-28: Strip fabricated URLs from free-text fields BEFORE the
     # validation gate runs. The earlier source-grounding fix in
     # normalize_sources() filters the structured sources list, but LLM-emitted
