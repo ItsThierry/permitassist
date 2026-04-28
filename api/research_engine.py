@@ -3082,20 +3082,61 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
 
     # Solar first so "roof solar" scopes don't collapse into a reroof permit.
     if has_solar:
+        # Mount-type detection: prevents the "ground-mount job labeled as Roof-Mounted
+        # Racking" bug Opus flagged on the Montpelier VT 12kW PV review (2026-04-27).
+        is_ground_mount = _scope_has_any(job, [
+            "ground-mount", "ground mount", "ground-mounted", "ground mounted",
+            "ground array", "pole-mount", "pole mount", "pole-mounted", "pole mounted",
+        ])
+        is_carport = _scope_has_any(job, ["carport", "solar canopy", "solar carport", "patio cover solar"])
+        is_bipv = _scope_has_any(job, ["bipv", "building-integrated", "building integrated pv", "solar shingle", "solar tile", "tesla solar roof"])
+
+        if is_ground_mount:
+            building_permit_name = "Building Permit — Solar PV (Ground-Mount Foundation & Racking)"
+            portal_label = "Building - Solar PV / Ground-Mount Foundation"
+            building_notes = (
+                "Required for ground-mount foundation engineering (concrete piers, helical piles, "
+                "or driven posts), frost-depth compliance, racking structural design, lateral wind/snow "
+                "loads, and trench/conduit routing from the array to the main service."
+            )
+            mount_logic_phrase = "Solar PV ground-mount work needs foundation + structural review under the building permit (no roof penetrations)."
+            mount_trigger = "ground-mount/pole-mount in job description"
+        elif is_carport:
+            building_permit_name = "Building Permit — Solar PV (Carport / Canopy Structure)"
+            portal_label = "Building - Solar PV / Carport Canopy"
+            building_notes = (
+                "Required for solar carport canopy structural design (columns, beams, footings), "
+                "lateral bracing, drainage routing, racking attachment, and clearance review."
+            )
+            mount_logic_phrase = "Solar PV carport canopy needs full structural review (foundations + lateral) under the building permit."
+            mount_trigger = "carport/solar canopy in job description"
+        elif is_bipv:
+            building_permit_name = "Building Permit — Solar PV (BIPV Building-Integrated)"
+            portal_label = "Building - Solar PV / BIPV"
+            building_notes = (
+                "Required for building-integrated PV review covering envelope penetrations, "
+                "weatherproofing, fire-rating, and integrated structural/electrical scope."
+            )
+            mount_logic_phrase = "BIPV scope needs envelope + structural + integrated electrical review under the building permit."
+            mount_trigger = "BIPV/solar shingle in job description"
+        else:
+            # Default: roof-mount. Only label this way when no other mount type is detected.
+            building_permit_name = "Building Permit — Solar PV (Structural Racking & Roof Penetrations)"
+            portal_label = "Building - Solar PV / Roof-Mounted Racking"
+            building_notes = "Required for rooftop racking, roof penetrations, and structural load review."
+            mount_logic_phrase = "Solar PV roof work needs structural/racking review, but Building and Structural are one permit."
+            mount_trigger = "solar/pv (roof-mount default) in job description"
+
         permits = [
-            _scope_permit(
-                "Building Permit — Solar PV (Structural Racking & Roof Penetrations)",
-                "Building - Solar PV / Roof-Mounted Racking",
-                "Required for rooftop racking, roof penetrations, and structural load review.",
-            ),
+            _scope_permit(building_permit_name, portal_label, building_notes),
             _scope_permit(
                 "Electrical Permit — Solar PV" + (" + Battery ESS" if has_battery else ""),
                 "Electrical - Solar PV" + (" and Battery Energy Storage" if has_battery else " System"),
-                "Required for inverter, rapid shutdown, DC/AC disconnects, panel tie-in" + (", and ESS wiring/listing." if has_battery else "."),
+                "Required for inverter, rapid shutdown, DC/AC disconnects, panel tie-in" + (", and ESS wiring/listing per NEC 706 + NFPA 855." if has_battery else "."),
             ),
         ]
-        add_logic(permits[0]["permit_type"], "Solar PV roof work needs structural/racking review, but Building and Structural are one permit.", "solar/pv in job description")
-        add_logic(permits[1]["permit_type"], "Solar PV electrical work falls under NEC Article 690; battery scope adds ESS review to the electrical permit.", "battery/ESS present" if has_battery else "solar/pv electrical scope")
+        add_logic(permits[0]["permit_type"], mount_logic_phrase, mount_trigger)
+        add_logic(permits[1]["permit_type"], "Solar PV electrical work falls under NEC Article 690; battery scope adds ESS review under NEC 706 + NFPA 855.", "battery/ESS present" if has_battery else "solar/pv electrical scope")
         return {
             "scope_classification": "solar_pv_battery" if has_battery else "solar_pv",
             "permits_required": permits,
