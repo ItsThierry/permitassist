@@ -886,7 +886,7 @@ CHECKLIST_TRADE = {
         "Site plan showing panel layout with setback dimensions",
         "Structural engineering letter confirming roof load capacity",
         "Single-line electrical diagram (NEC Article 690 compliant)",
-        "Rapid shutdown compliance documentation",
+        "Rapid shutdown compliance documentation per NEC 690.12",
         "Utility interconnection application (separate from permit — file with utility)",
         "HOA approval letter if applicable",
     ],
@@ -908,6 +908,106 @@ CHECKLIST_TRADE = {
         "Ledger attachment method to house",
         "Guard rail height and baluster spacing specs",
     ],
+}
+
+# Scope-specific inspection / submittal items that fire when matching tokens
+# appear in the job description. Layered ON TOP of CHECKLIST_TRADE so a
+# "solar+ESS" job gets both solar items AND battery-specific items.
+# Added 2026-04-27 after Opus 4.7 review of Montpelier VT 12kW PV + 2 Powerwall
+# job flagged the inspection checklist as generic NEC items rather than
+# solar/ESS-specific (no rapid-shutdown labeling, no NFPA 855 clearances).
+CHECKLIST_SCOPE = {
+    "battery_ess": {
+        "tokens": ["battery", "ess", "energy storage", "powerwall", "encharge", "lg chem", "sonnen", "fortress"],
+        "items": [
+            "ESS clearances per NFPA 855 (≥3 ft from openings, doors, windows; verify state/AHJ override)",
+            "Battery commissioning report from manufacturer (required for inspection sign-off)",
+            "ESS hazardous-voltage labeling per UL 9540 / 9540A on each enclosure",
+            "AC disconnect labeling 'Warning: Dual Power Source' per NEC 705.10 at the main service",
+            "AC disconnect within sight of the inverter (NEC 690.13 / 705.20)",
+            "Working clearance at ESS enclosure: 30 in wide × 36 in depth × 6.5 ft height (NEC 110.26)",
+            "ESS marking at the main service identifying battery feed-in source per NEC 706.10",
+        ],
+    },
+    "ground_mount_solar": {
+        "tokens": ["ground-mount", "ground mount", "ground-mounted", "ground mounted", "ground array", "pole-mount", "pole mount"],
+        "items": [
+            "Foundation depth ≥ {state} frost line (e.g. 42 in central VT, 48 in interior MN, 30 in coastal NC)",
+            "Helical pile installation report (torque values, depth, manufacturer letter) if helical foundation used",
+            "Trench depth per NEC 300.5 — minimum 24 in direct burial / 18 in PVC Schedule 40 conduit",
+            "Equipment grounding electrode at the array per NEC 250.32 (auxiliary GEC)",
+            "Array-to-house conduit transition box accessible for inspection",
+            "Setback from property lines verified against zoning (often 5–10 ft)",
+        ],
+    },
+    "rapid_shutdown": {
+        "tokens": ["solar", "pv", "photovoltaic"],
+        "items": [
+            "Rapid shutdown initiator at service disconnect labeled per NEC 690.56(C) (red label, 1 in lettering)",
+            "DC conductors inside the array boundary terminated within 30 sec of shutdown initiation",
+            "Module-level rapid shutdown devices (MLPE) if voltage outside the array reduced to ≤80V",
+        ],
+    },
+    "ev_charger": {
+        "tokens": ["ev charger", "ev charging", "level 2", "240v charger", "240 v charger", "evse", "wallbox", "tesla wall connector"],
+        "items": [
+            "Continuous-load sized at 125% per NEC 625.41 (e.g. 40A charger needs 50A breaker + 6 AWG)",
+            "GFCI protection per NEC 625.54 for receptacle-fed installations",
+            "Disconnect within sight or capable of being locked OPEN (NEC 625.43) for ≥60A chargers",
+            "Load calculation showing service can carry the new circuit (or EVEMS if load-managed)",
+            "Charger circuit dedicated — no shared neutrals per NEC 625.40",
+        ],
+    },
+    "panel_upgrade": {
+        "tokens": ["panel upgrade", "service upgrade", "200 amp", "200amp", "400 amp", "400amp", "subpanel", "sub-panel", "main panel"],
+        "items": [
+            "Working space at panel: 30 in wide × 36 in depth × 6.5 ft height (NEC 110.26)",
+            "Neutral-ground bond at service only (not at subpanels) per NEC 250.142",
+            "AFCI protection on all 120V branch circuits per NEC 210.12 (current code cycle)",
+            "Equipment grounding conductor sized to NEC 250.122 table",
+            "Service-entrance labeling: amperage rating, AIC rating, and short-circuit current per NEC 110.16/110.24",
+        ],
+    },
+    "tankless_water_heater": {
+        "tokens": ["tankless", "tankless water heater", "tankless wh", "instantaneous water heater", "navien", "rinnai"],
+        "items": [
+            "Gas line sized for tankless BTU/hr (typically 150,000–199,000 BTU vs ~40,000 for tank — verify pipe size)",
+            "Concentric vent or category III/IV vent per manufacturer; clearance to property lines",
+            "Condensate drain to approved location (some need neutralizer for condensing units)",
+            "Dedicated 120V outlet within 6 ft if electric ignition / control board",
+            "Isolation valves on hot AND cold for descaling (manufacturer requirement, AHJ commonly verifies)",
+        ],
+    },
+    "gas_water_heater": {
+        "tokens": ["gas water heater", "gas wh", "natural gas water heater", "lp water heater"],
+        "items": [
+            "T&P relief valve discharge piped to floor / drain pan per IPC 504",
+            "Drain pan with ≥1 in side height for water heaters above finished space",
+            "Garage installation: 18 in elevation OR FVIR-listed unit (IPC 504.6)",
+            "Seismic strapping (CA/OR/WA): two straps, upper third + lower third",
+            "Combustion air provisions or direct-vent unit — verify per IFGC 304",
+        ],
+    },
+    "adu_specific": {
+        "tokens": ["adu", "accessory dwelling", "granny flat", "in-law suite", "garage conversion", "junior accessory", "jadu"],
+        "items": [
+            "Smoke + CO alarms in every sleeping room AND each level (interconnected if hardwired)",
+            "Egress window in every sleeping room: 5.7 sq ft net (5.0 if grade), 24 in min height, 20 in min width, sill ≤44 in",
+            "Fire-rated assembly between dwelling units (1-hour wall + 1-hour ceiling typical)",
+            "Independent or accessory-metered electrical service (varies by state — confirm with utility)",
+            "Energy code compliance for the new conditioned space (Title 24 in CA; IECC adopted version elsewhere)",
+        ],
+    },
+    "pool_spa": {
+        "tokens": ["swimming pool", "in-ground pool", "above-ground pool", "spa", "hot tub", "jacuzzi"],
+        "items": [
+            "Barrier / fence at least 48 in (60 in some jurisdictions) per IRC AG105",
+            "Self-closing self-latching gate latch ≥54 in above ground",
+            "Equipotential bonding grid per NEC 680.26 (8 AWG copper, ≤6 ft from water)",
+            "GFCI protection on all pool/spa equipment circuits per NEC 680.6",
+            "Anti-entrapment drain cover per Virginia Graeme Baker Act",
+        ],
+    },
 }
 
 PDF_SOURCES = {
@@ -1681,6 +1781,18 @@ def generate_permit_checklist(job_type: str, city: str, state: str, result: dict
         items = list(CHECKLIST_BASE.get('always', []))
         if matched:
             items.extend(CHECKLIST_TRADE.get(matched, []))
+        # Layer scope-specific inspection items on top of the trade checklist
+        # whenever the job description contains matching tokens. Multiple scopes
+        # can fire on one job (e.g. solar + battery + ground-mount pulls
+        # rapid_shutdown + battery_ess + ground_mount_solar all together).
+        # Added 2026-04-27 after Opus 4.7 review of the Montpelier VT 12kW PV +
+        # 2x Powerwall lookup flagged the inspection list as too generic for
+        # solar/ESS jobs (no rapid-shutdown labeling, no NFPA 855 clearances).
+        job_lc = (job_type or "").lower()
+        for scope_key, scope in CHECKLIST_SCOPE.items():
+            tokens = scope.get("tokens") or []
+            if any(t in job_lc for t in tokens):
+                items.extend(scope.get("items", []))
         license_required = result.get('license_required') or ''
         applying_office = result.get('applying_office') or ''
         if license_required:
