@@ -836,6 +836,24 @@
     .flag-wrong-btn:hover { border-color: var(--yellow); color: var(--yellow); }
     .flag-feedback-inline { font-size: 11px; color: var(--green); margin-left: 8px; display: none; }
 
+    /* Per-field source provenance — small inline trust badge next to fee / phone / url */
+    .field-source-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; vertical-align: middle; line-height: 1.5; margin-left: 6px; }
+    .field-source-tag.tier-verified { background: rgba(16,185,129,0.12); color: #047857; border: 1px solid rgba(16,185,129,0.32); }
+    .field-source-tag.tier-research { background: rgba(245,158,11,0.12); color: #b45309; border: 1px solid rgba(245,158,11,0.32); }
+    .field-source-tag.tier-ai       { background: rgba(249,115,22,0.12); color: #c2410c; border: 1px solid rgba(249,115,22,0.32); }
+    .field-source-tag.tier-county   { background: rgba(120,113,108,0.12); color: #57534e; border: 1px solid rgba(120,113,108,0.32); }
+    .field-source-tag-block { display: block; margin: 6px 0 0; }
+
+    /* Hero source-host chip strip — surface where the data came from above-the-fold */
+    .hero-sources { margin-top: 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; }
+    .hero-sources-label { color: var(--muted); font-weight: 600; }
+    .hero-source-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.20); color: var(--brand); font-weight: 600; text-decoration: none; transition: background .15s, border-color .15s; }
+    .hero-source-chip:hover, .hero-source-chip:active { background: rgba(37,99,235,0.16); border-color: rgba(37,99,235,0.42); }
+
+    /* Print / Save PDF button on result hero */
+    .btn-print-pdf { background: none; border: 1px solid var(--border); border-radius: 16px; color: var(--text2); cursor: pointer; font-size: 11px; padding: 4px 10px; transition: all .15s; font-weight: 600; }
+    .btn-print-pdf:hover, .btn-print-pdf:active { border-color: var(--brand); color: var(--brand); background: rgba(37,99,235,0.05); }
+
     /* Residential/Commercial Toggle */
     .toggle-row { display: flex; gap: 8px; }
     .toggle-btn {
@@ -927,6 +945,9 @@
       .badge-red { background: #fee2e2 !important; color: #991b1b !important; }
       .confidence-badge { border: 1px solid #ccc !important; }
       .confidence-badge .conf-tooltip { display: none !important; }
+      .field-source-tag { background: #f5f5f5 !important; color: #333 !important; border-color: #999 !important; }
+      .hero-source-chip { background: #fff !important; color: #2563eb !important; border-color: #999 !important; }
+      .btn-print-pdf { display: none !important; }
       .bullet-list, .ordered-list li { color: #333 !important; }
       .checklist-items { display: block !important; }
       #compliance-checklist-card { display: block !important; }
@@ -1957,7 +1978,77 @@ function handleTradeWizardInput() {
   renderTradeWizard();
 }
 
+// 2026-04-28: scope-aware fail-points + ADU-aware. Earlier the residential
+// 'deck' fail-points ('frost line footing', 'ledger flashing', 'joist hangers',
+// 'guardrail balusters') leaked into 4/4 commercial restaurant TIs reviewed by
+// Opus 4.7 because the regex `/\b(deck|patio)\b/` matched the "outdoor patio"
+// in the restaurant scope. We now hard-gate on the engine-emitted
+// `result._primary_scope` and use scope-correct fail-points for commercial.
+const COMMERCIAL_FAIL_POINTS = {
+  commercial_restaurant: [
+    'Type I hood capture velocity not verified at final witness test (NFPA 96 §8)',
+    'Hood Ansul / UL-300 suppression: discharge test not witnessed by AHJ before CO',
+    'Grease interceptor installed but vent / trap configuration not per IPC 1003.3.4',
+    'Health-department plan-review approval not on-site at building final inspection',
+    'Walk-in cooler / freezer envelope not insulated to IECC 403.10.1 minimums',
+    'ADA fixture count + 60" turning radius + accessible-route clearances not verified before walls closed',
+    'Backflow prevention assembly not certified for carbonator / dishwasher / espresso connections',
+  ],
+  commercial_office_ti: [
+    'Demising wall fire-rated assembly not continuous through the ceiling plenum (IBC 706)',
+    'Sprinkler head relocation hydraulic recalc not on file (NFPA 13 / 25)',
+    'Egress travel distance + occupant load not recomputed for the new layout (IBC 1006 / 1017)',
+    'Lighting power density exceeds IECC C405 for the tenant area',
+    'ADA accessible route from accessible entrance to all tenant areas not verified',
+    'Asbestos / lead survey missing for pre-1980 buildings disturbed during the TI',
+  ],
+  commercial_retail_ti: [
+    'Storefront safety glazing missing within 24 in of doors / 60 in of floor (IBC 2406)',
+    'Sprinkler hydraulic recalc not on file if shelving / racking exceeds 12 ft (NFPA 13)',
+    'Occupant load calc not updated for the new layout (IBC 1004 mercantile)',
+    'Public restroom availability not verified for occupant load > 150 (IBC 2902.3)',
+    'Exterior signage permit not pulled separately from the building TI',
+    'Means of egress: <2 exits provided when occupant load > 49 OR floor area > 3,000 sf (IBC 1006)',
+  ],
+  multifamily: [
+    'Fire-rated wall assembly between dwelling units not continuous through ceiling / floor (IBC 706)',
+    'Type B accessible-unit ratio not provided per IBC 1107.6.2',
+    'Standpipe coverage not provided for buildings > 4 stories or > 30 ft above fire-dept access (IBC 905.3)',
+    'NFPA 13R sprinkler coverage incomplete (attic spaces, common areas, dwelling units)',
+    'STC ≥50 / IIC ≥50 between units not field-tested at final (IBC 1206)',
+    'Trash chute fire-rated 1-hr enclosure missing or sprinkler at chute terminal omitted (IBC 713.13)',
+  ],
+  commercial: [
+    'Change-of-occupancy review not completed before Certificate of Occupancy (IEBC §1001)',
+    'Means of egress not recalculated for the new occupancy load (IBC 1004 / 1006)',
+    'ADA path-of-travel upgrade not provided for primary-function alterations (2010 ADA §202.4 / 28 CFR §36.403)',
+    'Fire protection systems not re-evaluated for the new occupancy (IFC Ch. 9)',
+    'Mechanical ventilation not recalculated to the new occupancy load (IMC Ch. 4 / §403)',
+    'Plumbing fixture count not updated for the new occupancy (IPC Ch. 4 + IBC Table 2902.1)',
+  ],
+};
+
+const ADU_FAIL_POINTS = [
+  'Smoke + CO alarms missing in any sleeping room or level (interconnected if hardwired)',
+  'Egress window in sleeping room undersized — 5.7 sf net / 5.0 if grade / 24 in min height / 20 in min width / sill ≤44 in',
+  'Fire-rated 1-hour separation between dwelling units not continuous through floor / ceiling assembly',
+  'Energy-code compliance for new conditioned space not shown on plans (Title 24 CA / IECC elsewhere)',
+  'Independent or accessory-metered electrical service not coordinated with the utility',
+  'No backwater valve at sewer connection where required by jurisdiction',
+];
+
 function getInspectionFailPoints(jobType, result) {
+  const primaryScope = result?._primary_scope || '';
+  // Commercial primary scopes — return commercial fail points instead of letting
+  // the residential trade-keyed list (deck / HVAC residential / plumbing
+  // residential) leak through.
+  if (primaryScope.startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial') {
+    return COMMERCIAL_FAIL_POINTS[primaryScope] || COMMERCIAL_FAIL_POINTS.commercial || [];
+  }
+  if (primaryScope === 'residential_adu') {
+    return ADU_FAIL_POINTS;
+  }
+  // Residential default (existing behavior — trade-keyed)
   const permitText = [jobType, result?.permit_name, result?.permit_type, ...(result?.permits_required || []).map(p => p?.permit_type || ''), ...(result?.permits_required || []).map(p => p?.portal_selection || '')].join(' ').toLowerCase();
   const tradeKey = detectTradeKey(permitText);
   return INSPECTION_FAIL_POINTS[tradeKey] || [];
@@ -1965,11 +2056,20 @@ function getInspectionFailPoints(jobType, result) {
 
 function generateCustomerPermitExplanation() {
   const result = window._lastLookupResult || {};
+  const primaryScope = result?._primary_scope || '';
   const permitName = getPermitDisplayName(result);
   const city = window._lastLookupCity || '';
   const state = window._lastLookupState || '';
   const fee = result.fee_range || result.fee || result.cost || 'Call the city to confirm the exact fee';
   const location = [city, state].filter(Boolean).join(', ') || 'your jurisdiction';
+  const isCommercial = primaryScope.startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial';
+  // 2026-04-28: tier the justifier by occupancy. Earlier this was residential-
+  // only and shipped "homeowner's insurance" / "selling your home" language to
+  // commercial restaurant + office + retail TI responses (4/4 commercial Opus
+  // reviews flagged this as a credibility-killing template leak).
+  if (isCommercial) {
+    return `Why Your ${permitName} Permit is Required\n\nYour project requires a ${permitName} under ${location} law before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local building, fire, mechanical, plumbing, and life-safety codes. Without it, the building cannot receive a Certificate of Occupancy and the tenant cannot lawfully open for business.\n\nCost: ${fee} — paid to the city, not to your contractor. Plan-review and trade-permit fees scale with project valuation; budget for the full package.\n\nWhat happens without it: Unpermitted commercial work can result in stop-work orders, fines, required tear-out and rework, denied business-insurance claims, denied Certificate of Occupancy, lease violations with the landlord, and forced delays to the opening date.\n\nThis information was verified via PermitAssist (permitassist.io).`;
+  }
   return `Why Your ${permitName} Permit is Required\n\nYour contractor is required by ${location} law to pull a ${permitName} before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local safety codes. Without it, your homeowner's insurance may not cover claims related to this work, and you may face issues when selling your home.\n\nCost: ${fee} — this is paid directly to the city, not to your contractor.\n\nWhat happens without it: Unpermitted work can result in fines, required tear-out and redo, insurance claim denials, and required disclosure during home sale.\n\nThis information was verified via PermitAssist (permitassist.io).`;
 }
 
@@ -2000,7 +2100,16 @@ const INSPECTION_CHECKLISTS = {
   default: ["Work matches permit scope", "Materials match approved plans", "Safety measures in place", "Permit posted on-site"]
 };
 
-function getInspectionChecklist(jobType) {
+function getInspectionChecklist(jobType, result) {
+  // 2026-04-28: suppress this hardcoded residential-trade card on commercial
+  // scopes — INSPECTION_CHECKLISTS contains residential GFCI/AFCI/breaker
+  // items only, which leaked into commercial restaurant + office + retail TI
+  // responses across all 4 cities of Opus 4.7 reviews. The engine's own
+  // inspect_checklist + scope-group items already cover commercial.
+  const primaryScope = result?._primary_scope || '';
+  if (primaryScope.startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial' || primaryScope === 'change_of_occupancy') {
+    return null;
+  }
   const j = (jobType || '').toLowerCase();
   if (/hvac|heating|cooling|\bac\b|furnace|heat pump|air condition/.test(j)) return { trade: 'HVAC', items: INSPECTION_CHECKLISTS.hvac };
   if (/electric|panel|service|wiring|breaker/.test(j)) return { trade: 'Electrical', items: INSPECTION_CHECKLISTS.electrical };
@@ -2676,7 +2785,9 @@ function renderResults(d, job, city, state) {
   let html = '';
 
   // Print header (only visible when printing)
-  html += `<div class="print-header"><h2>PermitAssist — permitassist.io</h2><p>Permit Research Report</p></div>`;
+  const _printDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const _printSubtitle = [esc(job || ''), [city, state].filter(Boolean).map(esc).join(', '), `Printed ${_printDate}`].filter(Boolean).join(' · ');
+  html += `<div class="print-header"><h2>PermitAssist — permitassist.io</h2><p>${_printSubtitle}</p></div>`;
 
   // Search Again hero button at top
   html += `<button class="search-again-hero" onclick="newSearch()">🔍 &nbsp;New Lookup</button>`;
@@ -2758,6 +2869,48 @@ function renderResults(d, job, city, state) {
   const confidenceReason = d.confidence_reason || '';
   const jurisdiction = getJurisdictionDisplay(d, city, state, jobAddress);
   const nextSteps = getNextSteps(d, job, city, state);
+
+  // Per-field source attribution helper. Reads d._field_sources[fieldName]
+  // (engine populates this with origin tags: accela_api / auto_verified /
+  // city_kb / machine_extracted / web_search / county_fallback / model_training
+  // — the first three are "verified" tier, web_search is "research", others
+  // are "ai" or "county"). Returns a small inline badge or empty string.
+  const _fieldSources = d._field_sources || {};
+  const fieldSourceTag = (fieldName) => {
+    const raw = _fieldSources[fieldName];
+    if (!raw) return '';
+    const src = String(raw).split(':')[0];
+    let tier, label, tooltip;
+    if (src === 'accela_api' || src === 'auto_verified' || src === 'city_kb') {
+      tier = 'verified'; label = '✓ Verified source';
+      tooltip = 'This field was cross-checked against an official building-department portal or auto-verified database.';
+    } else if (src === 'machine_extracted') {
+      tier = 'verified'; label = '✓ From building dept site';
+      tooltip = 'Pulled directly from the building department website. Verify before quoting.';
+    } else if (src === 'web_search') {
+      tier = 'research'; label = '🔍 Local research';
+      tooltip = 'Found via local web research with at least one .gov source. Verify before quoting.';
+    } else if (src === 'county_fallback') {
+      tier = 'county'; label = '🏛️ County estimate';
+      tooltip = 'No city-level data available; using county-level fallback. Verify with the city building dept.';
+    } else {
+      tier = 'ai'; label = '🧠 AI estimate';
+      tooltip = 'No verified source available — model estimate. Confirm with the building department before relying on this.';
+    }
+    return `<span class="field-source-tag tier-${tier}" title="${esc(tooltip)}">${label}</span>`;
+  };
+
+  // Hero source-host chip strip. Surface up to 4 official-source hostnames
+  // above-the-fold so the contractor sees WHERE the data came from before
+  // scrolling. Filters to .gov / .us / known portal hosts; drops junk.
+  const _PORTAL_HOSTS_OK = /(\.gov(\.us)?$|\.us$|\.edu$|\.mil$|accela\.com$|ladbs\.org$|ladbsservices2?\.lacity\.org$|austintexas\.gov$|phoenix\.gov$|cityofchicago\.org$|nyc\.gov$|sfgov\.org$|seattle\.gov$|denvergov\.org$|bostonpermits\.com$)/i;
+  const sourceHostChips = (Array.isArray(d.sources) ? d.sources : [])
+    .map(s => typeof s === 'string' ? s : (s && s.url) || '')
+    .filter(Boolean)
+    .map(u => { try { const h = new URL(u).hostname.replace(/^www\./, ''); return _PORTAL_HOSTS_OK.test(h) ? { url: u, host: h } : null; } catch { return null; } })
+    .filter(Boolean)
+    .filter((c, i, arr) => arr.findIndex(x => x.host === c.host) === i)
+    .slice(0, 4);
 
   // Result hero
   const totalProjectCost = d.total_cost_estimate || '';
@@ -2978,9 +3131,13 @@ function renderResults(d, job, city, state) {
     </div>`;
   }
 
-  // Inspection checklist (collapsible, hardcoded by trade)
+  // Inspection checklist (collapsible, hardcoded by trade — residential only).
+  // 2026-04-28: now scope-aware. Commercial / multifamily / ADU primary scopes
+  // get null and we suppress the card entirely; the engine's inspect_checklist
+  // field already covers those cases with real commercial code citations.
   if (verdict !== 'no') {
-    const inspChecklist = getInspectionChecklist(job);
+    const inspChecklist = getInspectionChecklist(job, d);
+    if (inspChecklist) {
     html += `<div class="card">
       <div class="checklist-toggle" onclick="toggleChecklist(this)">
         <div class="checklist-toggle-text">📋 ${esc(inspChecklist.trade)} Inspection Checklist</div>
@@ -2990,6 +3147,7 @@ function renderResults(d, job, city, state) {
         ${inspChecklist.items.map(item => `<div class="checklist-item">${esc(item)}</div>`).join('')}
       </div>
     </div>`;
+    }
   }
 
   // Estimated timeline
