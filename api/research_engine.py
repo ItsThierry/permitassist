@@ -207,6 +207,24 @@ EXCLUDED_SOURCE_DOMAINS = {
     "ed.gov",
     "loc.gov",
     "nps.gov",
+    # 2026-04-28: LLM-hallucinated academic / archival / research domains
+    # caught across 4-city Opus 4.7 grading + 10-scenario re-grade. None has
+    # any business in contractor-facing permit citations.
+    "kauffman.org",                     # Seattle restaurant TI + Seattle ADU regression
+    "huduser.gov",                      # federal HUD research
+    "opendata.utah.gov",                # Denver multifamily — wrong state CSV
+    "coloradocoalition.org",            # Denver multifamily — housing RFP, not code
+    "rand.org",
+    "brookings.edu",
+    "urban.org",
+    "pewresearch.org",
+    "archive.org",                      # archive.org/details/dailycolonist1978 (Vegas)
+    "web.archive.org",
+    "scholar.google.com",
+    "ncbi.nlm.nih.gov",
+    "jstor.org",
+    "cstx.gov",                         # College Station TX — only valid for College Station queries
+    "dublin.ca.gov",                    # Dublin CA — only valid for Dublin queries
 }
 
 OFFICIAL_SOURCE_DOMAINS = {
