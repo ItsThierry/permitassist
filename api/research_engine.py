@@ -6371,7 +6371,14 @@ Return ONLY the JSON object."""
     try:
         from fee_realism_guardrail import apply_fee_realism_guardrail
         primary_scope_for_fee = result.get("_primary_scope") or detect_primary_scope(job_type)
-        apply_fee_realism_guardrail(result, job_type, city, state, primary_scope_for_fee)
+        # 2026-04-28: the guardrail deep-copies and returns a new dict; we need
+        # to merge it back into result so subsequent steps + save_cache see
+        # the override. Earlier wiring discarded the return value, which is
+        # why _fee_adjusted was null on every prod response despite local
+        # tests passing — caught by Opus 4.7 re-grade run.
+        guarded = apply_fee_realism_guardrail(result, job_type, city, state, primary_scope_for_fee)
+        if isinstance(guarded, dict):
+            result.update(guarded)
     except Exception as e:
         print(f"[fee_realism_guardrail] Failed: {e}")
 
