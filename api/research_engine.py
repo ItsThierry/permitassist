@@ -1958,24 +1958,114 @@ def get_rejection_patterns(city: str, state: str, job_type: str) -> list[dict]:
         return []
 
 
+def detect_primary_scope(job_type: str) -> str:
+    """Identify the primary occupancy/project class for a permit query.
+
+    2026-04-28: introduced after Opus 4.7 graded a Phoenix commercial restaurant
+    TI at 30% — the engine returned residential-deck checklist items because
+    fuzzy-matched residential trades and residential single-trade scopes (HVAC,
+    panel_upgrade, etc.) ran alongside the commercial scope. With a primary
+    scope detected up front, generate_permit_checklist() suppresses competing
+    residential trades + single-trade scopes for commercial queries.
+
+    Returns one of:
+      commercial_restaurant | commercial_office_ti | commercial_retail_ti |
+      multifamily | commercial (generic) | residential_adu | residential (default)
+    """
+    job_lc = (job_type or "").lower()
+
+    # Commercial restaurant — strongest signal
+    if any(t in job_lc for t in (
+        'restaurant', 'commercial kitchen', 'food service', ' cafe', 'fast-casual',
+        'fast casual', 'tavern', 'brewery', 'type i hood', 'grease interceptor',
+        'ansul', 'walk-in cooler', 'walk-in freezer', 'kitchen build-out',
+    )):
+        return 'commercial_restaurant'
+    if any(t in job_lc for t in (
+        'office tenant improvement', 'office ti', 'office buildout',
+        'co-working', 'coworking', 'professional office',
+        'medical office tenant', 'dental office tenant', 'law office',
+    )):
+        return 'commercial_office_ti'
+    if any(t in job_lc for t in (
+        'retail tenant improvement', 'retail ti', 'retail buildout',
+        'showroom', 'boutique', 'mall tenant', 'strip mall', 'store buildout',
+        'commercial retail',
+    )):
+        return 'commercial_retail_ti'
+    if any(t in job_lc for t in (
+        'multifamily', '5-over-1', '5 over 1', 'podium', '4-over-1',
+        'mixed-use', 'mixed use', 'apartment complex', 'apartment building',
+    )):
+        return 'multifamily'
+    # Generic commercial — no specific subtype detected but commercial markers present
+    if any(t in job_lc for t in (
+        'commercial tenant improvement', 'commercial buildout', 'commercial building',
+        'industrial ', 'warehouse', 'change of occupancy', 'a-2 occupancy',
+        'b-occupancy', 'mercantile', 'assembly occupancy', 'change of use',
+    )):
+        return 'commercial'
+
+    # ADU detection — important enough to be its own primary scope
+    if any(t in job_lc for t in (
+        'adu', 'accessory dwelling', 'granny flat', 'in-law suite',
+        'in law suite', 'garage conversion', 'junior accessory', 'jadu',
+        'secondary dwelling', 'secondary unit', 'convert into a residence',
+    )):
+        return 'residential_adu'
+
+    return 'residential'
+
+
+# Residential single-trade scopes that pollute commercial checklists with
+# items like residential gas-water-heater drain pans on a restaurant TI.
+# Suppressed when primary scope is commercial.
+_RESIDENTIAL_TRADE_SCOPES = frozenset({
+    'gas_water_heater', 'tankless_water_heater', 'panel_upgrade', 'ev_charger',
+    'ground_mount_solar', 'rapid_shutdown', 'battery_ess', 'pool_spa',
+    'adu_specific',
+})
+
+_COMMERCIAL_PRIMARY_SCOPES = frozenset({
+    'commercial_restaurant', 'commercial_office_ti', 'commercial_retail_ti',
+    'multifamily', 'commercial',
+})
+
+
 def generate_permit_checklist(job_type: str, city: str, state: str, result: dict) -> list[str]:
     try:
-        matched = _fuzzy_match_key(job_type, list(CHECKLIST_TRADE.keys()))
+        primary_scope = detect_primary_scope(job_type)
+        is_commercial = primary_scope in _COMMERCIAL_PRIMARY_SCOPES
+        # Surface the routing decision on the result so the UI / validator can
+        # see why scope items were included or suppressed.
+        if isinstance(result, dict):
+            result.setdefault('_primary_scope', primary_scope)
+
         items = list(CHECKLIST_BASE.get('always', []))
-        if matched:
-            items.extend(CHECKLIST_TRADE.get(matched, []))
-        # Layer scope-specific inspection items on top of the trade checklist
-        # whenever the job description contains matching tokens. Multiple scopes
-        # can fire on one job (e.g. solar + battery + ground-mount pulls
-        # rapid_shutdown + battery_ess + ground_mount_solar all together).
-        # Added 2026-04-27 after Opus 4.7 review of the Montpelier VT 12kW PV +
-        # 2x Powerwall lookup flagged the inspection list as too generic for
-        # solar/ESS jobs (no rapid-shutdown labeling, no NFPA 855 clearances).
+
+        # Fuzzy-matched residential trade items pollute commercial output
+        # (e.g. "tenant improvement" fuzzy-matched to a residential trade
+        # supplied residential deck items on a Phoenix restaurant TI).
+        # Skip the trade-fuzzy step for commercial queries — commercial
+        # routes exclusively through the matching commercial scope below.
+        if not is_commercial:
+            matched = _fuzzy_match_key(job_type, list(CHECKLIST_TRADE.keys()))
+            if matched:
+                items.extend(CHECKLIST_TRADE.get(matched, []))
+
+        # Layer scope-specific inspection items on top with primary-scope-aware
+        # suppression. Residential single-trade scopes (gas_water_heater,
+        # panel_upgrade, etc.) are suppressed for commercial queries.
+        # Multiple scopes can still fire on one job (e.g. solar + battery
+        # pulls rapid_shutdown + battery_ess on a residential PV install).
         job_lc = (job_type or "").lower()
         for scope_key, scope in CHECKLIST_SCOPE.items():
             tokens = scope.get("tokens") or []
-            if any(t in job_lc for t in tokens):
-                items.extend(scope.get("items", []))
+            if not any(t in job_lc for t in tokens):
+                continue
+            if is_commercial and scope_key in _RESIDENTIAL_TRADE_SCOPES:
+                continue
+            items.extend(scope.get("items", []))
         license_required = result.get('license_required') or ''
         applying_office = result.get('applying_office') or ''
         if license_required:
