@@ -1119,6 +1119,46 @@ CHECKLIST_SCOPE = {
             "Existing sprinkler system reuse: hydraulic recalc for new layout + current 5-year cert per NFPA 25; new heads in cooking equipment area must be K-25+ per NFPA 13",
             "Floor drains within 5 ft of kitchen equipment per IPC 411 with backwater valves where required",
             "Fire alarm + emergency lighting per NFPA 72/101 with current battery capacity test on file",
+            # 2026-04-28: additions sourced from Forge / commercial-state-pack-draft.
+            "Change of occupancy memo (B/M → A-2): include occupant load + exits + restroom count + sprinkler/fire-alarm impacts per IEBC §1001.2/1001.3 + IBC §303.3 (Group A-2)",
+            "Maricopa County (or local equivalent) Environmental Services Department food-establishment plan review + final inspection sign-off REQUIRED before opening — coordinate with City CO schedule (MCESD: maricopa.gov)",
+            "Backflow prevention on EVERY food-service water connection: carbonated beverage (ASSE 1022 dual check), chemical dispenser at mop/service sinks, hose bibbs, dish-machine/ice/RO/espresso, pre-rinse — testable assemblies certified annually",
+            "Outdoor patio / sidewalk dining: verify city zoning (use permit may apply, e.g. Phoenix ZO §1207); include patio in occupant load + exiting + accessible route + sprinkler/awning review",
+            "Phoenix-specific (or equivalent local rule): contractor must be AZ ROC licensed AND associated with the Phoenix SHAPE PHX permit account before submittal (A.R.S. Title 32 Ch. 10) — frequently-missed pre-submittal blocker",
+            "Realistic fee warning: a 3,200 sq ft restaurant TI in Phoenix typically lands $8K–$25K+ across plan review + permit + fire + utility + health + zoning. Reject token min-fee outputs; calculate from the live fee schedule before quoting",
+        ],
+    },
+    "change_of_occupancy": {
+        "tokens": [
+            "change of occupancy", "change of use", "change occupancy",
+            "b to a-2", "office to restaurant", "retail to restaurant",
+            "new occupancy classification",
+        ],
+        "items": [
+            "Occupancy reclassification: identify existing approved occupancy + proposed group; require code-official approval + new/updated Certificate of Occupancy (IEBC §§1001.1, 1001.2, 1001.3; IBC Ch. 3)",
+            "Height/area limit recheck: compare new occupancy hazard category to existing construction type, allowable area, frontage/sprinkler increases, fire-wall strategy (IEBC §1011.5; IBC Ch. 5)",
+            "Fire-resistance + separation reassessment: re-verify fire barriers, horizontal assemblies, exterior wall ratings/openings, shaft enclosures, mixed-occupancy separations for the new hazard category (IEBC §§1011.1, 1011.5.3, 1011.6/7; IBC Ch. 7)",
+            "Fire protection re-run: sprinkler, fire alarm, hood suppression, and monitoring requirements at the new occupancy + IBC/IFC Ch. 9 thresholds (IEBC §§1004.1, 1011.2; IFC Ch. 9)",
+            "Means of egress recalculation: occupant load + number of exits + egress capacity + travel distance + common path + dead ends + door hardware updated to new occupancy (IEBC §§1005.1, 1011.4; IBC Ch. 10)",
+            "Accessibility / path-of-travel trigger: alterations to primary-function areas trigger ADA upgrades to altered area + serving amenities (2010 ADA §202.4 + 28 CFR §36.403)",
+            "Mechanical ventilation/exhaust recheck against the new occupancy: IMC ventilation, commercial-kitchen exhaust + makeup air, hazardous exhaust, energy compliance (IEBC §1008.1; IMC Ch. 4-6 + §507)",
+            "Plumbing demand + fixture-count recheck: water supply, sanitary load, fixture count, food-handling waste, grease/oil interceptors, chemical-waste approval (IEBC §§1009.1-1009.4; IPC Ch. 4 + 10)",
+        ],
+    },
+    "ada_path_of_travel": {
+        "tokens": [
+            "ada path-of-travel", "path of travel", "path-of-travel",
+            "20% rule", "20 percent rule", "primary function area",
+            "alteration", "renovation",
+        ],
+        "items": [
+            "Identify altered primary-function area: if scope alters an area where major activity occurs, an accessible path of travel to the altered area is required unless technically infeasible / disproportionate (2010 ADA §202.4; 28 CFR §36.403(a))",
+            "20% disproportionality cap: ADA path-of-travel work exceeding 20% of alteration cost is disproportionate at the federal level, but lower-cost items must still be prioritized (28 CFR §36.403(f)(1))",
+            "Accessible exterior route: site arrival points + accessible parking/passenger loading + curb ramps + walking surfaces + ramps/landings + slope/cross-slope + door clearances to altered area (2010 ADA §§206.2.1, 206.4, 403, 404, 405, 406)",
+            "Restroom path + restroom upgrades: if restrooms serve the altered area, accessible route + door + turning space + lavatory + water closet + grab bars + clearances + signage (2010 ADA §§213, 603-606, 609, 703)",
+            "Parking + passenger loading: recalculate accessible-stall count + van space + access aisle + signage for affected parking serving the altered area (2010 ADA §§208, 502, 503; 28 CFR §36.403(e)(1))",
+            "Drinking fountains, phones, and signage along the path: tactile/visual signs, room ID, directional, fountain units, public phones if any (2010 ADA §§211, 216, 602, 703, 704)",
+            "Doors, thresholds, and hardware on the route: clear width + maneuvering clearance + opening force + thresholds + lever/operable hardware + protruding objects (2010 ADA §§303, 307, 309, 404)",
         ],
     },
     "commercial_office_ti": {
