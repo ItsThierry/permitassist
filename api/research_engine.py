@@ -1169,10 +1169,19 @@ CHECKLIST_SCOPE = {
         ],
     },
     "commercial_restaurant": {
+        # 2026-04-28: tightened tokens. Removed generic "tenant improvement"
+        # and " ti " — they match ANY commercial TI (office, retail, industrial)
+        # and were causing the 41-item commercial-kitchen pack (UL 710 / NFPA 96
+        # / ANSUL / grease) to leak into Chicago office TI and Houston retail TI
+        # responses (graded 64 and 58 respectively). Restaurant-specific tokens
+        # only — primary-scope router handles broader commercial routing.
         "tokens": [
-            "restaurant", "cafe", "fast-casual", "fast casual", "tenant improvement", " ti ", "food service",
-            "commercial kitchen", "hood", "type i hood", "grease trap", "grease interceptor", "ansul",
-            "walk-in cooler", "walk in cooler", "walk-in freezer", "bar", "tavern", "brewery", "kitchen build-out",
+            "restaurant", "cafe", "fast-casual", "fast casual", "food service",
+            "commercial kitchen", "type i hood", "kitchen hood", "grease trap",
+            "grease interceptor", "ansul", "fryer", "charbroiler", "griddle",
+            "walk-in cooler", "walk in cooler", "walk-in freezer",
+            "bar buildout", "tavern", "brewery", "kitchen build-out",
+            "dine-in", "dine in", "food establishment",
         ],
         "items": [
             "Type I commercial exhaust hood listed/labeled per UL 710 with NFPA 96 compliance and AHJ-approved capture velocity per IMC 507",
@@ -2164,16 +2173,37 @@ def generate_permit_checklist(job_type: str, city: str, state: str, result: dict
                 items.extend(CHECKLIST_TRADE.get(matched, []))
 
         # Layer scope-specific inspection items on top with primary-scope-aware
-        # suppression. Residential single-trade scopes (gas_water_heater,
-        # panel_upgrade, etc.) are suppressed for commercial queries.
-        # Multiple scopes can still fire on one job (e.g. solar + battery
-        # pulls rapid_shutdown + battery_ess on a residential PV install).
+        # suppression.
+        # 1) Residential single-trade scopes (gas_water_heater, panel_upgrade,
+        #    etc.) are suppressed for commercial queries.
+        # 2) Commercial primary scopes COMPETE with each other — when primary
+        #    is commercial_office_ti / commercial_retail_ti / multifamily, we
+        #    SUPPRESS the commercial_restaurant scope group even if its tokens
+        #    match (e.g. Chicago office TI mentioning "tenant improvement" or
+        #    " ti " was loading the full hood/grease/Type-I-hood pack —
+        #    Opus 4.7 graded Chicago office TI 64 and Houston retail 58
+        #    specifically because of this leak). Cross-cutting scopes
+        #    (change_of_occupancy, ada_path_of_travel) are NOT competing — they
+        #    fire alongside any primary because they're orthogonal reviews.
+        # 3) Multiple non-competing scopes can still fire on one job (e.g.
+        #    solar + battery on a residential PV install pulls rapid_shutdown
+        #    + battery_ess together).
+        _COMMERCIAL_COMPETING_SCOPES = frozenset({
+            'commercial_restaurant', 'commercial_office_ti',
+            'commercial_retail_ti', 'multifamily',
+        })
         job_lc = (job_type or "").lower()
         for scope_key, scope in CHECKLIST_SCOPE.items():
             tokens = scope.get("tokens") or []
             if not any(t in job_lc for t in tokens):
                 continue
             if is_commercial and scope_key in _RESIDENTIAL_TRADE_SCOPES:
+                continue
+            if (
+                is_commercial
+                and scope_key in _COMMERCIAL_COMPETING_SCOPES
+                and scope_key != primary_scope
+            ):
                 continue
             items.extend(scope.get("items", []))
         license_required = result.get('license_required') or ''
