@@ -5269,6 +5269,15 @@ CRITICAL RULES:
    - Solar PV → Building/Structural Solar permit + Electrical Solar permit; battery is included in the electrical/ESS permit. Utility interconnection/PTO is separate coordination, not a third city permit unless the AHJ treats it as one.
    For borderline items, use companion_permits with "May be required if: [specific trigger]" rather than listing them as required.
 
+14. COMMERCIAL vs RESIDENTIAL PERMIT NAMING — CRITICAL FOR COMMERCIAL ACCURACY:
+   If the job_description contains commercial markers (restaurant, tenant improvement / TI, change of occupancy, A-2 / B / M / I / F occupancy, commercial kitchen, food service, multifamily, 5-over-1, mixed-use, warehouse, industrial, office TI, retail TI, ≥3-story, occupancy classification change, public assembly, hotel, school, hospital), permit names MUST NOT contain residential framing.
+   - DO NOT output "Residential Re-Roof" / "Residential Roofing" / "Residential Deck" / "Residential Furnace" / "Residential System" / "(Residential)" suffix on a commercial scope.
+   - For roofing on a commercial building: use "Roofing Permit — Commercial Re-Roof" or "Roofing Permit — Built-Up / Modified-Bitumen / TPO" (match the system).
+   - For HVAC on a commercial building: use "Mechanical Permit — Commercial RTU / VAV / Make-Up Air Unit" (match the equipment).
+   - For B → A-2 / B → M / B → I / use-change scopes: lead permit_name with "Building Permit — Interior Alteration / Change of Use (B → A-2)" or the specific occupancy pair, NOT a trade-specific residential template.
+   - For multifamily / 5-over-1 / podium / mixed-use: use "Building Permit — Multifamily Construction" or "Building Permit — Multifamily Alteration".
+   The few-shot examples in CRITICAL RULE 2 above are RESIDENTIAL EXAMPLES. They illustrate the format, not the framing. When the job is commercial, replace "Residential" with the appropriate commercial qualifier or drop the residential qualifier entirely.
+
 Return ONLY a JSON object with these exact fields:
 {
   "job_summary": "clear description of what the job involves and what permits it triggers",
@@ -5514,6 +5523,55 @@ _COMMERCIAL_TOKENS = re.compile(
     re.IGNORECASE,
 )
 
+# 2026-04-28: residential-marker patterns. Opus 4.7 commercial review caught
+# the Milwaukee 411 E Wisconsin Ave 85-seat restaurant TI (B → A-2) returning
+# "Roofing – Residential Re-Roof" as exact_permit_name. Cause: the prompt
+# few-shot examples (lines ~5208-5218) are residential-biased — when any
+# trade keyword fires on a commercial scope (rooftop RTU, exterior wall
+# penetration, deck demo, mechanical work) the LLM grabs the residential
+# few-shot pattern. The validator below is the safety net on top of the
+# prompt rule we added on the same day. Strip + flag + downgrade confidence.
+_RESIDENTIAL_MARKER_PATTERNS = [
+    re.compile(r'\s*\(\s*Residential\s*\)', re.IGNORECASE),
+    re.compile(r'\s*[—–-]\s*Residential\s+Re-?Roof\b', re.IGNORECASE),
+    re.compile(r'\s*[—–-]\s*Residential\s+Roofing\b', re.IGNORECASE),
+    re.compile(r'\s*[—–-]\s*Residential\s+Deck\b', re.IGNORECASE),
+    re.compile(r'\s*[—–-]\s*Residential\s+(System|Unit|Furnace|Service)\b', re.IGNORECASE),
+    re.compile(r'\s*[—–-]\s*Residential\b(?!\s+\w)', re.IGNORECASE),
+    re.compile(r'\bResidential\s+Re-?Roof\b', re.IGNORECASE),
+    re.compile(r'\bResidential\s+Roofing\b', re.IGNORECASE),
+    re.compile(r'\bResidential\s+Deck\b', re.IGNORECASE),
+    re.compile(r'\bResidential\s+(System|Unit|Furnace|Service)\b', re.IGNORECASE),
+    # Trailing "Residential" / "Residential System" at end of string —
+    # "Mechanical - HVAC Replacement Residential" → "Mechanical - HVAC Replacement"
+    re.compile(r'\s+Residential\s*$', re.IGNORECASE),
+    re.compile(r'\s+Residential\s+(System|Unit)\s*$', re.IGNORECASE),
+    # Single-family detached / SFR markers
+    re.compile(r'\bsingle-?family\s+detached\b', re.IGNORECASE),
+    re.compile(r'\bSFR\b'),
+]
+
+# Primary-scope → fallback permit name when the residential-marker strip
+# leaves too short a stub to ship.
+_COMMERCIAL_FALLBACK_PERMIT_NAMES = {
+    'commercial_restaurant': 'Building Permit — Tenant Improvement (Commercial Restaurant)',
+    'commercial_office_ti':  'Building Permit — Tenant Improvement (Commercial Office)',
+    'commercial_retail_ti':  'Building Permit — Tenant Improvement (Commercial Retail)',
+    'multifamily':           'Building Permit — Multifamily Tenant Improvement',
+    'commercial':            'Building Permit — Commercial Alteration',
+}
+
+
+def _strip_residential_markers(name: str) -> tuple:
+    """Strip residential markers from a permit name. Returns (cleaned, changed)."""
+    if not isinstance(name, str) or not name:
+        return name, False
+    cleaned = name
+    for pat in _RESIDENTIAL_MARKER_PATTERNS:
+        cleaned = pat.sub('', cleaned)
+    cleaned = re.sub(r'\s{2,}', ' ', cleaned).strip(' -—–')
+    return cleaned, cleaned != name
+
 
 def _has_placeholder(value) -> bool:
     if not isinstance(value, str):
@@ -5642,6 +5700,16 @@ def validate_and_sanitize_permit_result(result: dict, job_type: str, city: str, 
 
     # 3. Scope/checklist mismatch — commercial query, residential-only checklist
     is_commercial = bool(_COMMERCIAL_TOKENS.search(job_type or ""))
+    # Cross-reference with primary scope detection — catches commercial signals
+    # the regex misses (e.g. "85-person seating", "B-occupancy", "A-2 occupancy
+    # change") that detect_primary_scope picks up via stronger lexicon.
+    primary_scope_for_validation = 'residential'
+    try:
+        primary_scope_for_validation = detect_primary_scope(job_type or "")
+        if not is_commercial:
+            is_commercial = primary_scope_for_validation in _COMMERCIAL_PRIMARY_SCOPES
+    except Exception:
+        pass
     if is_commercial:
         checklist_blob = []
         for fld in ('inspect_checklist', 'common_mistakes', 'pro_tips', 'requirements', 'documents_needed'):
@@ -5660,6 +5728,57 @@ def validate_and_sanitize_permit_result(result: dict, job_type: str, city: str, 
                 "kind": "scope_mismatch_commercial_query_residential_checklist",
                 "detail": f"residential_token_hits={residential_hits} commercial_token_hits={commercial_hits}",
             })
+
+    # 4. Residential permit name on commercial scope — repair + flag.
+    #    Catches the LLM-hallucinated "Roofing — Residential Re-Roof",
+    #    "Building Permit - Residential Deck", "(Residential)" suffix, etc.
+    #    on commercial queries. Surfaced by the Milwaukee 411 E Wisconsin
+    #    restaurant TI review (2026-04-28): single-screenshot kills commercial
+    #    credibility. Defense in depth on top of the prompt rule — strips the
+    #    residential framing and falls back to a scope-aware neutral name when
+    #    the strip leaves an empty / too-short stub.
+    if is_commercial:
+        fallback_name = _COMMERCIAL_FALLBACK_PERMIT_NAMES.get(
+            primary_scope_for_validation,
+            _COMMERCIAL_FALLBACK_PERMIT_NAMES['commercial'],
+        )
+
+        def _repair_permit_field(container: dict, key: str, label: str) -> None:
+            v = container.get(key)
+            if not isinstance(v, str) or not v:
+                return
+            cleaned, changed = _strip_residential_markers(v)
+            # If after strip the stub is too short to ship (< 6 chars or just
+            # "Permit" / "Building Permit"), fall back to the scope-default.
+            stub_too_short = len(cleaned) < 6 or cleaned.strip().lower() in {
+                "permit", "building permit", "building permit -", "building permit —",
+            }
+            if changed:
+                final_value = fallback_name if stub_too_short else cleaned
+                issues.append({
+                    "field": label,
+                    "kind": "residential_permit_name_on_commercial_scope",
+                    "value": v,
+                    "repaired_to": final_value,
+                })
+                container[key] = final_value
+
+        _repair_permit_field(result, 'permit_name', 'permit_name')
+        _repair_permit_field(result, 'permit_type', 'permit_type')
+
+        permits_list = result.get('permits_required') or []
+        if isinstance(permits_list, list):
+            for idx, p in enumerate(permits_list):
+                if isinstance(p, dict):
+                    _repair_permit_field(p, 'permit_type', f'permits_required[{idx}].permit_type')
+                    _repair_permit_field(p, 'portal_selection', f'permits_required[{idx}].portal_selection')
+
+        companions = result.get('companion_permits') or []
+        if isinstance(companions, list):
+            for idx, p in enumerate(companions):
+                if isinstance(p, dict):
+                    _repair_permit_field(p, 'permit_type', f'companion_permits[{idx}].permit_type')
+                    _repair_permit_field(p, 'name', f'companion_permits[{idx}].name')
 
     if issues:
         result['_validation_issues'] = issues
