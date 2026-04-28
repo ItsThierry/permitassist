@@ -1215,7 +1215,7 @@
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18087945418"></script>
   <script>
-    const BRAND_LOGO_PATH = '/public/logo.png';
+    const BRAND_LOGO_PATH = '/icons/logo.png';
     document.addEventListener('DOMContentLoaded', () => { const logo = document.getElementById('brand-logo'); if (logo) logo.src = BRAND_LOGO_PATH; });
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
@@ -1236,7 +1236,7 @@
   <!-- Navbar -->
   <nav class="nav">
     <div class="logo">
-      <img id="brand-logo" src="/public/logo.png" alt="PermitAssist" class="logo-mark-img" onerror="this.style.display='none'" />
+      <img id="brand-logo" src="/icons/logo.png" alt="PermitAssist" class="logo-mark-img" onerror="this.style.display='none'" />
       <div>
         <div class="logo-text">Permit<em>Assist</em></div>
         <div class="logo-tagline">For Contractors</div>
@@ -2410,12 +2410,11 @@ async function loadStats(){
       if(barEl) barEl.style.display='';
     }
   }catch{}
-  try{
-    const r2=await fetch('/api/verified-cities');
-    const d2=await r2.json();
-    const el=document.getElementById('stat-verified');
-    if(el && d2.count) el.textContent=Number(d2.count).toLocaleString();
-  }catch{}
+  // 2026-04-28: stat-verified is statically rendered as 5,260 (canonical city
+  // pack count). Don't overwrite from /api/verified-cities — the endpoint
+  // falls back to a legacy 263-city list when the SQLite read fails on a cold
+  // replica, which produced a visible regression. Re-enable once the API is
+  // guaranteed to return the real count on every replica.
 }
 
 function refreshCounterBar(){
