@@ -3007,41 +3007,81 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(200, get_lookup_stats())
 
         elif path == "/api/verified-cities":
+            # 2026-04-27: primary source is data/verified_cities.db (5,260 rows
+            # populated by scripts/city-coverage-expander.py — Tier 2/3 cities +
+            # Tier 4 counties). Falls back to the legacy 263-city curated list
+            # only if the DB is missing/empty so the homepage badge stays honest.
+            cities = []
+            stats = {}
             try:
-                import sys
-                sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
-                from auto_verify import get_verified_cities
-                cities = get_verified_cities()
-                # Fallback 1: check knowledge/verified_cities.json (full 263-city list, baked into git)
-                if not cities:
-                    _vk_path = os.path.join(os.path.dirname(__file__), "..", "knowledge", "verified_cities.json")
-                    if os.path.exists(_vk_path):
-                        with open(_vk_path) as _f:
-                            _vk_data = json.load(_f)
-                        _seen = set()
-                        for _entry in _vk_data.values():
-                            _k = f"{_entry.get('city','')}|{_entry.get('state','')}"
-                            if _k not in _seen and _entry.get('city') and _entry.get('state'):
-                                _seen.add(_k)
-                                cities.append({"city": _entry["city"], "state": _entry["state"]})
-                        cities = sorted(cities, key=lambda x: (x["state"], x["city"]))
-                # Fallback 2: knowledge/cities.json (150-city curated set)
-                if not cities:
-                    _kb_cities_path = os.path.join(os.path.dirname(__file__), "..", "knowledge", "cities.json")
-                    if os.path.exists(_kb_cities_path):
-                        with open(_kb_cities_path) as _f:
-                            _kb = json.load(_f)
-                        _seen = set()
-                        for _entry in _kb.get("cities", {}).values():
-                            _k = f"{_entry.get('city','')}|{_entry.get('state','')}"
-                            if _k not in _seen:
-                                _seen.add(_k)
-                                cities.append({"city": _entry["city"], "state": _entry["state"]})
-                        cities = sorted(cities, key=lambda x: (x["state"], x["city"])
-                        )
-                self.send_json(200, {"verified_cities": cities, "count": len(cities)})
-            except Exception as e:
-                self.send_json(200, {"verified_cities": [], "count": 0, "note": str(e)})
+                import sqlite3 as _sql
+                _db_path = os.path.join(os.path.dirname(__file__), "..", "data", "verified_cities.db")
+                if os.path.exists(_db_path):
+                    with _sql.connect(_db_path) as _conn:
+                        _conn.row_factory = _sql.Row
+                        rows = _conn.execute(
+                            """SELECT city, state, population, tier, badge_state,
+                                      portal_url, building_dept_phone, building_dept_address,
+                                      entity_type
+                               FROM verified_cities
+                               ORDER BY state, city"""
+                        ).fetchall()
+                        for r in rows:
+                            cities.append({
+                                "city": r["city"],
+                                "state": r["state"],
+                                "entity_type": r["entity_type"] or "city",
+                                "badge_state": r["badge_state"] or "ai_researched",
+                                "portal_url": r["portal_url"] or "",
+                                "phone": r["building_dept_phone"] or "",
+                                "address": r["building_dept_address"] or "",
+                                "population": r["population"] or 0,
+                            })
+                        # Aggregate counts for the homepage badge to live-update
+                        # against the real dataset instead of a hardcoded number.
+                        by_entity = {}
+                        by_badge = {}
+                        for c in cities:
+                            by_entity[c["entity_type"]] = by_entity.get(c["entity_type"], 0) + 1
+                            by_badge[c["badge_state"]] = by_badge.get(c["badge_state"], 0) + 1
+                        stats = {"by_entity": by_entity, "by_badge": by_badge}
+            except Exception as _db_err:
+                print(f"[verified-cities] DB read failed: {_db_err}")
+                cities = []
+
+            # Legacy fallback only if the new DB returned nothing.
+            if not cities:
+                try:
+                    import sys
+                    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
+                    from auto_verify import get_verified_cities
+                    legacy = get_verified_cities() or []
+                    if not legacy:
+                        _vk_path = os.path.join(os.path.dirname(__file__), "..", "knowledge", "verified_cities.json")
+                        if os.path.exists(_vk_path):
+                            with open(_vk_path) as _f:
+                                _vk_data = json.load(_f)
+                            _seen = set()
+                            for _entry in _vk_data.values():
+                                _k = f"{_entry.get('city','')}|{_entry.get('state','')}"
+                                if _k not in _seen and _entry.get('city') and _entry.get('state'):
+                                    _seen.add(_k)
+                                    legacy.append({"city": _entry["city"], "state": _entry["state"]})
+                            legacy = sorted(legacy, key=lambda x: (x["state"], x["city"]))
+                    cities = [
+                        {"city": c.get("city",""), "state": c.get("state",""),
+                         "entity_type": "city", "badge_state": "ai_researched",
+                         "portal_url": "", "phone": "", "address": "", "population": 0}
+                        for c in legacy
+                    ]
+                except Exception as _legacy_err:
+                    print(f"[verified-cities] Legacy fallback failed: {_legacy_err}")
+
+            self.send_json(200, {
+                "verified_cities": cities,
+                "count": len(cities),
+                **stats,
+            })
 
         elif path == "/api/jurisdictions/list":
             qs = parse_qs(urlparse(self.path).query)

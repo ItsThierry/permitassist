@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="PermitAssist covers permit requirements for 250+ US cities across 40+ states — verified from official building department sources." />
+  <meta name="description" content="PermitAssist covers permit requirements for 5,000+ US cities and counties across all 50 states — verified from official building department sources." />
   <link rel="canonical" href="https://permitassist.io/cities" />
-  <meta property="og:title" content="Verified Cities — PermitAssist" />
-  <meta property="og:description" content="PermitAssist covers permit requirements for 250+ US cities across 40+ states — verified from official building department sources." />
+  <meta property="og:title" content="Verified Cities &amp; Counties — PermitAssist" />
+  <meta property="og:description" content="PermitAssist covers permit requirements for 5,000+ US cities and counties across all 50 states — verified from official building department sources." />
   <meta property="og:url" content="https://permitassist.io/cities" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PermitAssist" />
   <meta property="og:image" content="https://permitassist.io/icons/icon-512.png" />
-  <title>Verified Cities — PermitAssist</title>
+  <title>Verified Cities &amp; Counties — PermitAssist</title>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "PermitAssist — Verified Cities",
+    "name": "PermitAssist — Verified Cities & Counties",
     "url": "https://permitassist.io/cities",
     "isPartOf": { "@id": "https://permitassist.io/#website" },
     "about": { "@id": "https://permitassist.io/#organization" },
-    "description": "PermitAssist covers permit requirements for 250+ US cities across 40+ states."
+    "description": "PermitAssist covers permit requirements for 5,000+ US cities and counties across all 50 states."
   }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -121,16 +121,17 @@
   </nav>
 
   <div class="hero">
-    <h1>Verified <em>Cities</em></h1>
-    <p class="hero-sub">Permit data verified from official building department sources. Cities marked ✅ have been cross-checked against real fee schedules and department contacts.</p>
+    <h1>Verified <em>Cities &amp; Counties</em></h1>
+    <p class="hero-sub">Permit data verified from official building department sources across all 50 states. Cities and counties marked ✓ Verified have been cross-checked against real fee schedules and department contacts; AI-Researched entries have a confirmed portal + contact but fewer official cross-checks.</p>
     <div class="hero-stats">
-      <div class="hero-stat"><span id="city-count">—</span> Verified Cities</div>
+      <div class="hero-stat"><span id="total-count">—</span> Total</div>
+      <div class="hero-stat"><span id="city-count">—</span> Cities</div>
+      <div class="hero-stat"><span id="county-count">—</span> Counties</div>
       <div class="hero-stat"><span id="state-count">—</span> States</div>
-      <div class="hero-stat">Updated <span id="update-month">April 2026</span></div>
     </div>
   </div>
 
-  <input class="search-input" type="text" id="city-search" placeholder="Search cities... (e.g. Houston, Denver, Atlanta)" oninput="filterCities()" />
+  <input class="search-input" type="text" id="city-search" placeholder="Search cities or counties... (e.g. Houston, Harris County, Denver)" oninput="filterCities()" />
 
   <div class="request-bar" id="request-bar">
     <p>Don't see your city? We add new cities weekly. Solo and Team users get priority additions.</p>
@@ -164,10 +165,15 @@ async function loadCities(){
   }
 }
 function updateStats(){
-  const cities=new Set(allCities.map(c=>(c.city||'')+'|'+(c.state||''))).size;
+  const total=allCities.length;
+  const cityRows=allCities.filter(c=>(c.entity_type||'city')==='city').length;
+  const countyRows=allCities.filter(c=>c.entity_type==='county').length;
   const states=new Set(allCities.map(c=>c.state||'')).size;
-  document.getElementById('city-count').textContent=cities;
-  document.getElementById('state-count').textContent=states;
+  const set=(id,n)=>{const el=document.getElementById(id);if(el)el.textContent=n.toLocaleString();};
+  set('total-count',total);
+  set('city-count',cityRows);
+  set('county-count',countyRows);
+  set('state-count',states);
 }
 function filterCities(){
   const q=(document.getElementById('city-search').value||'').toLowerCase().trim();
@@ -179,20 +185,36 @@ function filterCities(){
 }
 function renderCities(cities,query){
   const container=document.getElementById('cities-container');
-  if(!cities.length){container.innerHTML='<div class="no-results"><h3>No cities found</h3><p>Try a different search or request your city.</p></div>';return;}
+  if(!cities.length){container.innerHTML='<div class="no-results"><h3>No matches</h3><p>Try a different search or request a new jurisdiction.</p></div>';return;}
   const byState={};
   cities.forEach(c=>{const s=c.state||'Other';if(!byState[s])byState[s]=[];byState[s].push(c);});
   let html='';
   Object.keys(byState).sort().forEach(state=>{
     const sc=byState[state];const sn=SN[state]||state;
-    // Deduplicate cities (may have multiple trades)
-    const seen=new Set();const unique=[];
-    sc.forEach(c=>{const k=c.city||'';if(!seen.has(k)){seen.add(k);unique.push(c);}});
-    html+=`<div class="state-section"><div class="state-header"><span>${sn} (${state})</span><span class="state-count">${unique.length} cit${unique.length!==1?'ies':'y'}</span></div><div class="cities-grid">`;
+    // Deduplicate by (city,state) — keep the entity_type best-available (verified > ai_researched > limited)
+    const order={verified:3,ai_researched:2,limited:1};
+    const dedup={};
+    sc.forEach(c=>{
+      const k=(c.city||'')+'|'+(c.entity_type||'city');
+      if(!dedup[k] || (order[c.badge_state]||0) > (order[dedup[k].badge_state]||0)) dedup[k]=c;
+    });
+    const unique=Object.values(dedup);
+    const cityCount=unique.filter(u=>(u.entity_type||'city')==='city').length;
+    const countyCount=unique.filter(u=>u.entity_type==='county').length;
+    const summary=[
+      cityCount?`${cityCount} cit${cityCount!==1?'ies':'y'}`:'',
+      countyCount?`${countyCount} count${countyCount!==1?'ies':'y'}`:'',
+    ].filter(Boolean).join(' + ');
+    html+=`<div class="state-section"><div class="state-header"><span>${sn} (${state})</span><span class="state-count">${summary}</span></div><div class="cities-grid">`;
     unique.forEach(c=>{
-      const city=c.city||'';const trades=Array.isArray(c.trades)?c.trades:(c.trade?[c.trade]:[]);
-      const ts=trades.slice(0,4).join(', ')+(trades.length>4?'…':'');
-      html+=`<a class="city-card" href="/?city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}"><div class="city-name">${esc(city)}</div>${ts?`<div class="city-meta">${esc(ts)}</div>`:''}<div class="city-verified">✅ Verified</div></a>`;
+      const city=c.city||'';
+      const isCounty=c.entity_type==='county';
+      const verified=c.badge_state==='verified';
+      const badgeText=verified?'✓ Verified':'AI-Researched';
+      const badgeColor=verified?'var(--green)':'#B45309';
+      const typeBadge=isCounty?'<span style="font-size:9px;background:#EEF2FF;color:#3730A3;border-radius:6px;padding:1px 6px;margin-left:6px;font-weight:700">COUNTY</span>':'';
+      const phone=c.phone?`<div class="city-meta">📞 ${esc(c.phone)}</div>`:'';
+      html+=`<a class="city-card" href="/?city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}"><div class="city-name">${esc(city)}${typeBadge}</div>${phone}<div class="city-verified" style="color:${badgeColor}">${badgeText}</div></a>`;
     });
     html+='</div></div>';
   });

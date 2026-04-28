@@ -1540,11 +1540,20 @@
         <div class="trust-badge">🎯 No Guessing</div>
         <div class="trust-badge">🧠 Not a Chatbot</div>
       </div>
-      <!-- Live API badge override removed 2026-04-27: /api/verified-cities returns the
-           legacy ~250 incorporated-city count and would overwrite the canonical
-           5,000+ cities & counties badge. The new coverage number is sourced from
-           data/verified_cities.db (3,195 incorporated places + 2,065 counties) and
-           is held statically until the API is rewired against the new dataset. -->
+      <script>
+      // Live-update the badge + link counter from /api/verified-cities. The
+      // endpoint now reads data/verified_cities.db (5,260 rows: 3,195 cities +
+      // 2,065 counties), so the number is real, not hardcoded. If the fetch
+      // fails or returns a fallback (<1,000 rows = legacy curated list),
+      // we keep the static "5,000+ Cities & Counties" copy already in the badge.
+      fetch('/api/verified-cities').then(r=>r.json()).then(d=>{
+        if (!d || !d.count || d.count < 1000) return;
+        const el = document.getElementById('city-count-badge');
+        if (el) el.innerHTML = '<strong>' + d.count.toLocaleString() + '</strong> Cities &amp; Counties';
+        const linkEl = document.getElementById('stat-verified-link');
+        if (linkEl) linkEl.textContent = d.count.toLocaleString();
+      }).catch(()=>{});
+      </script>
       <!-- Cities link + live counter -->
       <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:-2px 0 12px">
         <a href="/cities" class="cities-coverage-link" target="_blank">📍 View all <strong id="stat-verified-link">5,000+</strong> verified cities and counties across all 50 states →</a>

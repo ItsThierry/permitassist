@@ -23,7 +23,10 @@ data/cache.db
 data/cache.db.*
 data/serper_cache.db
 data/ip_lookups.db
-data/verified_cities.db
+# verified_cities.db is the canonical 5,260-AHJ snapshot (cities + counties).
+# It IS tracked in git so Railway can serve /api/verified-cities at deploy time.
+# It's regenerated infrequently (when scripts/city-coverage-expander.py runs) so
+# it doesn't churn like cache.db. Backups (verified_cities.db.bak-*) stay ignored.
 data/verified_cities.db.*
 artifacts/
 tests/__pycache__/
