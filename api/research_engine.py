@@ -1580,6 +1580,63 @@ _TRADES_KB: dict = {}
 _STATES_KB: dict = {}
 _CITIES_KB: dict = {}
 
+# 2026-04-28: lazy in-process cache of the canonical verified_cities.db row
+# set, keyed by ("city_lower", "state_upper") → portal_url / phone / address.
+# Used as a wider-coverage fallback (5,260 AHJs) when _CITIES_KB (curated
+# JSON, ~263 cities) misses. Loaded once on first lookup.
+_VERIFIED_CITIES_ROWS: dict[tuple[str, str], dict] = {}
+_VERIFIED_CITIES_LOADED: bool = False
+
+def _load_verified_cities_rows() -> None:
+    global _VERIFIED_CITIES_ROWS, _VERIFIED_CITIES_LOADED
+    if _VERIFIED_CITIES_LOADED:
+        return
+    _VERIFIED_CITIES_LOADED = True  # set first so a fail-once doesn't retry every request
+    try:
+        import sqlite3
+        knowledge_db = os.path.join(KNOWLEDGE_DIR, "verified_cities.db")
+        data_db = os.path.join(os.path.dirname(__file__), "..", "data", "verified_cities.db")
+        db_path = knowledge_db if os.path.exists(knowledge_db) else data_db
+        if not os.path.exists(db_path):
+            print(f"[verified_cities_kb] DB not found at {knowledge_db} or {data_db}")
+            return
+        with sqlite3.connect(db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                "SELECT city, state, portal_url, building_dept_phone, "
+                "building_dept_address, entity_type FROM verified_cities"
+            ).fetchall()
+            for r in rows:
+                key = (str(r["city"] or "").strip().lower(), str(r["state"] or "").strip().upper())
+                # Prefer city rows over county rows on collision (cities are
+                # the more specific match for an apply_url fallback).
+                existing = _VERIFIED_CITIES_ROWS.get(key)
+                if existing and existing.get("entity_type") == "city" and r["entity_type"] == "county":
+                    continue
+                _VERIFIED_CITIES_ROWS[key] = {
+                    "city": r["city"],
+                    "state": r["state"],
+                    "portal_url": r["portal_url"] or "",
+                    "phone": r["building_dept_phone"] or "",
+                    "address": r["building_dept_address"] or "",
+                    "entity_type": r["entity_type"] or "city",
+                }
+        print(f"[verified_cities_kb] Loaded {len(_VERIFIED_CITIES_ROWS)} rows from {db_path}")
+    except Exception as e:
+        print(f"[verified_cities_kb] Load failed (non-fatal): {e}")
+
+def _get_verified_city_row(city: str, state: str) -> dict | None:
+    """Look up a single AHJ row from verified_cities.db (5,260 rows).
+
+    Returns dict with keys: city, state, portal_url, phone, address,
+    entity_type. None if no match. Used as the apply_url / phone / address
+    fallback when the curated _CITIES_KB JSON doesn't have the city.
+    """
+    if not city or not state:
+        return None
+    _load_verified_cities_rows()
+    return _VERIFIED_CITIES_ROWS.get((city.strip().lower(), state.strip().upper()))
+
 def _load_knowledge():
     global _TRADES_KB, _STATES_KB, _CITIES_KB
     if _TRADES_KB and _STATES_KB and _CITIES_KB:
@@ -6092,6 +6149,28 @@ Return ONLY the JSON object."""
                 result["apply_phone"] = _city_data.get("phone")
             if not result.get("apply_address"):
                 result["apply_address"] = _city_data.get("address")
+
+    # 2026-04-28: Wider verified_cities.db fallback (5,260 AHJs, vs ~263 in
+    # _CITIES_KB JSON). Catches cities like Pasadena/Houston/Portland whose
+    # apply_url was landing empty because the LLM emitted null and the
+    # curated JSON had no entry. Only fills gaps — never overwrites a real
+    # apply_url / phone / address the LLM or earlier fallback already
+    # produced. Skipped on state/none matches where city name isn't trusted.
+    if city_match_level not in ("state", "none"):
+        _vrow = _get_verified_city_row(city, state)
+        if _vrow:
+            if not result.get("apply_url") and _vrow.get("portal_url"):
+                result["apply_url"] = _vrow["portal_url"]
+                print(f"[apply_url_fallback] verified_cities.db → {city}, {state}: {_vrow['portal_url']}")
+            if (not result.get("apply_phone") or str(result.get("apply_phone", "")).startswith("Search:")) and _vrow.get("phone"):
+                result["apply_phone"] = _vrow["phone"]
+            if not result.get("apply_address") and _vrow.get("address"):
+                result["apply_address"] = _vrow["address"]
+
+    # 2026-04-28: state-license URL strip can't run before the verified_cities
+    # fallback (verified_cities.db has clean portal URLs), but we re-run it now
+    # in case any fallback step accidentally landed a state-license URL.
+    result = strip_pdf_from_result(result)
 
     # ── Total Cost Estimate fallback (hardcoded industry averages if AI skipped it) ──
     if not result.get("total_cost_estimate"):
