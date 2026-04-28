@@ -2983,48 +2983,13 @@ function renderResults(d, job, city, state) {
     </div>`;
   }
 
-  // 2026-04-28: Hidden Triggers card. Surfaces result['hidden_triggers']
-  // populated by detect_hidden_triggers() in research_engine.py — the moat
-  // feature both Opus + GPT-5.5 deep-thinks named #1. Shows permit blockers
-  // contractors didn't ask about (hood→fire suppression, B→A-2 sprinkler,
-  // hillside→geotech, oak→urban forestry, restroom→ADA path-of-travel 20%).
-  const hiddenTriggers = Array.isArray(d.hidden_triggers) ? d.hidden_triggers : [];
-  if (hiddenTriggers.length > 0 && verdict !== 'no') {
-    const _sevColor = (sev) => sev === 'high' ? { bg:'#fef2f2', border:'#fca5a5', label:'#991b1b', tag:'#dc2626' }
-                            : sev === 'medium' ? { bg:'#fffbeb', border:'#fde68a', label:'#92400e', tag:'#d97706' }
-                            : { bg:'#eff6ff', border:'#bfdbfe', label:'#1e40af', tag:'#2563eb' };
-    const _sevLabel = (sev) => sev === 'high' ? 'HIGH' : sev === 'medium' ? 'MEDIUM' : 'LOW';
-    html += `<div style="background:#fef9f9; border:2px solid #fca5a5; border-radius:12px; padding:18px 20px; margin-bottom:16px;">
-      <div class="section-label" style="color:#991b1b; margin-bottom:6px;">⚠️ Triggers You Didn't Ask About — Don't Get Surprised</div>
-      <div style="font-size:13px; color:#7f1d1d; margin-bottom:14px; line-height:1.5;">PermitAssist found ${hiddenTriggers.length} permit blocker${hiddenTriggers.length === 1 ? '' : 's'} hidden in your scope. Most contractors miss these and get rejected at plan check or inspection.</div>
-      ${hiddenTriggers.map(t => {
-        const c = _sevColor(t.severity);
-        const actions = Array.isArray(t.likely_required_actions) ? t.likely_required_actions : [];
-        const agencies = Array.isArray(t.agencies) ? t.agencies : [];
-        const citations = Array.isArray(t.citations) ? t.citations : [];
-        const companions = Array.isArray(t.companion_permits) ? t.companion_permits : [];
-        return `<div style="background:${c.bg}; border:1px solid ${c.border}; border-radius:8px; padding:14px 16px; margin-bottom:10px;">
-          <div style="display:flex; align-items:flex-start; gap:8px; margin-bottom:6px;">
-            <span style="background:${c.tag}; color:#fff; font-size:10px; font-weight:800; padding:3px 8px; border-radius:4px; letter-spacing:0.4px; flex-shrink:0;">${_sevLabel(t.severity)}</span>
-            <div style="font-size:14px; font-weight:800; color:${c.label}; line-height:1.4;">${esc(t.title || '')}</div>
-          </div>
-          ${t.why_it_matters ? `<div style="font-size:13px; color:${c.label}; line-height:1.5; margin-bottom:8px;">${esc(t.why_it_matters)}</div>` : ''}
-          ${actions.length ? `<div style="font-size:12px; color:var(--text2); margin-bottom:6px;"><strong>What to do:</strong>${actions.map(a => `<div style="margin-top:3px;">• ${esc(a)}</div>`).join('')}</div>` : ''}
-          ${companions.length ? `<div style="font-size:12px; color:var(--text2); margin-bottom:6px;"><strong>Companion permits:</strong> ${esc(companions.join(' · '))}</div>` : ''}
-          ${agencies.length ? `<div style="font-size:11px; color:var(--muted);"><strong>Agencies:</strong> ${esc(agencies.join(' · '))}</div>` : ''}
-          ${citations.length ? `<div style="font-size:11px; color:var(--muted); margin-top:3px;"><strong>Code:</strong> ${esc(citations.join(' · '))}</div>` : ''}
-        </div>`;
-      }).join('')}
-    </div>`;
-  }
-
   // 2026-04-28: Hidden Triggers card — the moat feature both Opus + GPT-5.5
   // deep-thinks named as the unbeatable differentiator. Surfaces permit
   // blockers the contractor didn't ask about (hood→fire suppression, B→A-2
   // sprinkler retrofit, restroom→ADA path-of-travel 20%, hillside→geotech,
   // oak→urban forestry, etc.) from the engine's hidden_triggers field.
   const hiddenTriggers = (d.hidden_triggers || []).filter(t => t && (t.severity === 'high' || t.severity === 'medium'));
-  if (hiddenTriggers.length > 0) {
+  if (hiddenTriggers.length > 0 && verdict !== 'no') {
     const sevSorted = hiddenTriggers.slice().sort((a, b) => {
       const order = { high: 0, medium: 1, low: 2 };
       return (order[a.severity] ?? 9) - (order[b.severity] ?? 9);
