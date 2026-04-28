@@ -4913,6 +4913,130 @@ def _retry_with_minimal_prompt(user_prompt: str, _openai_call_fn=None):
     return json.loads(raw)
 
 
+# ─── Output schema validation gate ───────────────────────────────────────────
+# 2026-04-28: Catches semantic defects that pass structural normalization.
+# Real production cases that triggered this:
+#   • Phoenix restaurant TI returned "the required permit" as the permit
+#     name (LLM placeholder when it couldn't determine the real name).
+#   • Same Phoenix TI returned residential deck-building checklist items
+#     (joist hangers, ledger flashing) for a commercial restaurant scope.
+#   • LA Hillside ADU showed HVAC-only "Don't fail this inspection" items
+#     (drain pan, AHRI cert, duct mastic) — wrong scope for an ADU.
+# When the gate flags issues it redacts placeholder fields, downgrades
+# confidence, and sets needs_review=True so the UI surfaces the warning.
+
+_PLACEHOLDER_PATTERNS = [
+    re.compile(p, re.IGNORECASE) for p in [
+        r'\bthe\s+required\s+permit\b',
+        r'^\s*the\s+permit\s*$',
+        r'^\s*permit\s*$',
+        r'^\s*the\s+building\s+permit\s*$',
+        r'\[\s*trade\s*\]\s*permit',
+        r'\[\s*permit[_\s]*name\s*\]',
+        r'<\s*permit[_\s]*name\s*>',
+        r'\{\s*permit[_\s]*name\s*\}',
+        r'^\s*tbd\s*$',
+        r'^\s*see\s+notes\s*$',
+        r'\bINSERT_\w+',
+        r'^\s*N/?A\s*$',
+    ]
+]
+
+# Tokens that signal residential single-trade work; if these are the ONLY
+# scope-relevant tokens in the checklist for a commercial query, that's a
+# scope/checklist mismatch.
+_RESIDENTIAL_DECK_PATTERNS = re.compile(
+    r'(joist\s+hanger|ledger\s+flash|guardrail\s+balust|frost\s+line|deck\s+footing|stair\s+stringer)',
+    re.IGNORECASE,
+)
+_RESIDENTIAL_HVAC_RES_PATTERNS = re.compile(
+    r'(condensate\s+drain\s+pan|AHRI\s+cert|R-?410|duct\s+mastic|return-air\s+plenum|residential\s+furnace)',
+    re.IGNORECASE,
+)
+_COMMERCIAL_TOKENS = re.compile(
+    r'(restaurant|tenant\s+improvement|\bTI\b|\bhood\b|grease\s+interceptor|change\s+of\s+occupancy|'
+    r'commercial\s+kitchen|office\s+TI|retail\s+TI|multifamily|5-?over-?1|mixed-?use|'
+    r'food\s+service|commercial\s+building|warehouse|\bindustrial\b|\bAnsul\b|Type\s+I\s+hood|'
+    r'\b[AB]-?\d\b\s*occupancy)',
+    re.IGNORECASE,
+)
+
+
+def _has_placeholder(value) -> bool:
+    if not isinstance(value, str):
+        return False
+    s = value.strip()
+    if not s:
+        return False
+    return any(p.search(s) for p in _PLACEHOLDER_PATTERNS)
+
+
+def validate_and_sanitize_permit_result(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Hard gate against placeholder leaks + scope/checklist mismatch.
+
+    Mutates result in place. Adds `_validation_issues` for telemetry,
+    downgrades confidence, sets needs_review=True, and redacts placeholder
+    fields so the UI can suppress them or show a "verify with building
+    department" tag.
+    """
+    issues: list[dict] = []
+
+    # 1. Placeholder check on top-level critical fields
+    for fld in ('permit_name', 'permit_type', 'permit_summary'):
+        v = result.get(fld)
+        if _has_placeholder(v):
+            issues.append({"field": fld, "kind": "placeholder", "value": v})
+            result[fld] = None
+
+    # 2. Placeholder check inside permits_required[]
+    permits = result.get('permits_required') or []
+    if isinstance(permits, list):
+        for permit in permits:
+            if not isinstance(permit, dict):
+                continue
+            for sub in ('permit_type', 'portal_selection'):
+                pv = permit.get(sub) or ''
+                if _has_placeholder(pv):
+                    issues.append({"field": f"permits_required.{sub}", "kind": "placeholder", "value": pv})
+                    permit[sub] = None
+
+    # 3. Scope/checklist mismatch — commercial query, residential-only checklist
+    is_commercial = bool(_COMMERCIAL_TOKENS.search(job_type or ""))
+    if is_commercial:
+        checklist_blob = []
+        for fld in ('inspect_checklist', 'common_mistakes', 'pro_tips', 'requirements', 'documents_needed'):
+            v = result.get(fld) or []
+            if isinstance(v, list):
+                checklist_blob.extend(str(i) for i in v if i)
+        text = " | ".join(checklist_blob)
+        residential_hits = (
+            len(_RESIDENTIAL_DECK_PATTERNS.findall(text)) +
+            len(_RESIDENTIAL_HVAC_RES_PATTERNS.findall(text))
+        )
+        commercial_hits = len(_COMMERCIAL_TOKENS.findall(text))
+        if residential_hits >= 2 and commercial_hits == 0:
+            issues.append({
+                "field": "inspect_checklist",
+                "kind": "scope_mismatch_commercial_query_residential_checklist",
+                "detail": f"residential_token_hits={residential_hits} commercial_token_hits={commercial_hits}",
+            })
+
+    if issues:
+        result['_validation_issues'] = issues
+        result['needs_review'] = True
+        if str(result.get('confidence') or '').lower() in ('high', 'medium'):
+            result['confidence'] = 'low'
+        existing_reason = (result.get('confidence_reason') or '').strip()
+        kinds = sorted({i['kind'] for i in issues})
+        validation_msg = (
+            f"⚠️ Output validation flagged {len(issues)} issue(s): {', '.join(kinds)}. "
+            "Confirm permit names + scope with the building department before relying on this."
+        )
+        result['confidence_reason'] = (existing_reason + " " + validation_msg).strip() if existing_reason else validation_msg
+
+    return result
+
+
 # ─── Main Research Function ───────────────────────────────────────────────────
 
 def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None) -> dict:
@@ -5798,6 +5922,12 @@ Return ONLY the JSON object."""
 
     apply_scope_aware_permit_classification(result, job_type)
     apply_state_expert_pack(result, city, state, job_type)
+
+    # 2026-04-28: Final hard gate — catch placeholder leaks and scope mismatch
+    # before the result reaches the contractor. Mutates result in place; if
+    # issues are found, redacts the bad fields, downgrades confidence to
+    # "low", and sets needs_review=True so the UI surfaces the warning.
+    validate_and_sanitize_permit_result(result, job_type, city, state)
 
     save_cache(key, job_type, job_category, city, state, zip_code, result)
     return result
