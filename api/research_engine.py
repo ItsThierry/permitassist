@@ -6343,6 +6343,25 @@ Return ONLY the JSON object."""
     apply_scope_aware_permit_classification(result, job_type)
     apply_state_expert_pack(result, city, state, job_type)
 
+    # 2026-04-28: Hidden Trigger Detector V1. Deterministic detection of
+    # permit blockers the user didn't ask about (hood→fire suppression,
+    # B→A-2 sprinkler retrofit, restroom→ADA path-of-travel 20% rule,
+    # hillside→geotech/haul, oak→urban forestry, etc.). 44 triggers across
+    # commercial restaurant TI, LA Hillside ADU, generic commercial,
+    # multifamily, and residential single-trade scopes. Pure regex/token,
+    # zero LLM calls, zero added latency. Both Opus + GPT-5.5 deep-thinks
+    # named this as the single biggest moat differentiator.
+    try:
+        from hidden_trigger_detector import detect_hidden_triggers
+        primary_scope_for_triggers = result.get("_primary_scope") or detect_primary_scope(job_type)
+        result["hidden_triggers"] = detect_hidden_triggers(
+            job_type=job_type, city=city, state=state,
+            primary_scope=primary_scope_for_triggers, result=result,
+        )
+    except Exception as e:
+        print(f"[hidden_triggers] Failed: {e}")
+        result["hidden_triggers"] = []
+
     # 2026-04-28: Strip fabricated URLs from free-text fields BEFORE the
     # validation gate runs. The earlier source-grounding fix in
     # normalize_sources() filters the structured sources list, but LLM-emitted
