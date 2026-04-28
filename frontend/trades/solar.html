@@ -1652,7 +1652,7 @@
       <button onclick="openUpgrade('pro')" style="background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Solo — $39.99/mo</button>
       <button onclick="openUpgrade('team')" style="background:rgba(37,99,235,0.15);color:var(--brand);border:1px solid rgba(37,99,235,0.4);border-radius:8px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer">Team — $49/mo<br><span style="font-size:10px;font-weight:400">Up to 3 seats</span></button>
     </div>
-    <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 3 months free: <strong style="color:#059669">Annual plan = $199/yr</strong> (vs $299.88)</div>
+    <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 3 months free: <strong style="color:#059669">Annual plan = $349/yr</strong> (vs $479.88)</div>
     <span class="gate-skip" id="gate-skip-link" onclick="skipGate()">Skip for now (uses 1 of 3 free lookups)</span>
   </div>
 </div>
@@ -2466,7 +2466,7 @@ function renderResults(d, job, city, state) {
   const isCountyFB = d.county_fallback === true;
   let confBadgeHtml = '';
   if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified from city records<span class="conf-tooltip">Verified from city records</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Verified from city records</div>`;
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified · official sources<span class="conf-tooltip">Cross-checked against official building-department sources. Verify final requirements with the AHJ before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Cross-checked against official sources · verify with AHJ before submitting</div>`;
   } else if (dataSourceRaw === 'web_search') {
     confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
   } else if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {

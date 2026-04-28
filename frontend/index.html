@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
   <link rel="shortcut icon" href="/icons/icon-192.png" />
-  <title>PermitAssist — Know Your Permits Before You Start</title>
+  <title>PermitAssist for Contractors | Permit Research, Fees & Checklists by City</title>
   <!-- Organization + WebSite + SitelinksSearchbox schema -->
   <script type="application/ld+json">
   {
@@ -1617,6 +1617,7 @@
   <footer class="footer">
     <p>⚠️ <strong>Disclaimer:</strong> PermitAssist provides AI-generated guidance based on publicly available data. Permit requirements change frequently, and fees shown are estimates. The contractor is strictly responsible for verifying all exact requirements, fees, and timelines directly with the local building department (Authority Having Jurisdiction) prior to starting any work.</p>
     <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved. &nbsp;·&nbsp; <a href="/help" style="color:var(--brand)">Help</a> &nbsp;·&nbsp; <a href="/terms" style="color:var(--brand)">Terms</a> &nbsp;·&nbsp; <a href="/privacy" style="color:var(--brand)">Privacy</a></p>
+    <div style="font-size:11px;color:#94a3b8;margin-top:6px">PermitAssist is operated by an Indiana LLC. Information is AI-assisted research, not legal advice — verify final requirements with the AHJ before submitting.</div>
   </footer>
 </div>
 
@@ -2855,7 +2856,7 @@ function renderResults(d, job, city, state) {
   const isCountyFB = d.county_fallback === true;
   let confBadgeHtml = '';
   if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified from city records<span class="conf-tooltip">Verified from city records</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Verified from city records</div>`;
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified · official sources<span class="conf-tooltip">Cross-checked against official building-department sources. Verify final requirements with the AHJ before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Cross-checked against official sources · verify with AHJ before submitting</div>`;
   } else if (dataSourceRaw === 'web_search') {
     confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
   } else if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
