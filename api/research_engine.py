@@ -397,6 +397,68 @@ def downgrade_confidence(confidence: str, steps: int = 1) -> str:
     return levels[max(0, idx - steps)]
 
 
+# 2026-04-28: free-text URL sanitizer. The LLM occasionally emits hallucinated
+# URLs INSIDE free-text fields (fee_range, confidence_reason, pro_tips notes)
+# that survive the source-grounding filter on result["sources"] because that
+# filter only operates on the structured sources list, not on prose. Real
+# four-city Opus 4.7 review caught these leaks:
+#   • Phoenix restaurant TI: fee_range said "verify in https://www.ojp.gov/..."
+#     × 6 places (US DOJ digitization archive)
+#   • Vegas restaurant TI: "verify in archive.org/dailycolonist1978" × 6 places
+#   • Seattle restaurant TI: "verify in kauffman.org/.../NETS_US_PublicFirms.xlsx" × 6 places
+# Strategy: find every URL in the text via regex and pass it through
+# classify_source_url(). If EXCLUDED, replace the URL token with the AHJ name
+# placeholder so the surrounding sentence still reads sensibly.
+_URL_IN_TEXT_RE = re.compile(r'https?://[^\s\)\]\}\,]+', re.IGNORECASE)
+
+
+def strip_junk_urls_from_text(text: str, ahj_name: str = "city building dept") -> str:
+    """Remove URLs from a free-text field if their host is EXCLUDED.
+
+    Replaces matched URLs with `[verify with ahj_name]` so the sentence stays
+    readable. Returns the text unchanged if no junk URLs are present.
+    """
+    if not isinstance(text, str) or not text:
+        return text
+    placeholder = f"[verify with {ahj_name}]"
+
+    def _replace(match):
+        url = match.group(0).rstrip('.,;:')
+        try:
+            cls = classify_source_url(url)
+            if cls == SOURCE_CLASS_EXCLUDED:
+                return placeholder
+        except Exception:
+            return placeholder
+        return match.group(0)
+
+    return _URL_IN_TEXT_RE.sub(_replace, text)
+
+
+def sanitize_free_text_url_leaks(result: dict, city: str = "", state: str = "") -> dict:
+    """Strip hallucinated URLs from prose fields. Mutates result in place.
+
+    Called near the end of research_permit() after the LLM has populated
+    text fields and before the validation gate runs.
+    """
+    ahj_name = result.get("applying_office") or (
+        f"{city} building department" if city else "your local building department"
+    )
+    for fld in ("fee_range", "confidence_reason", "permit_summary", "job_summary"):
+        v = result.get(fld)
+        if isinstance(v, str) and v:
+            result[fld] = strip_junk_urls_from_text(v, ahj_name=ahj_name)
+    # List-of-strings fields too.
+    for fld in ("pro_tips", "common_mistakes", "what_to_bring", "requirements", "documents_needed"):
+        v = result.get(fld)
+        if isinstance(v, list):
+            result[fld] = [
+                strip_junk_urls_from_text(item, ahj_name=ahj_name) if isinstance(item, str) else item
+                for item in v
+            ]
+    return result
+
+
 def derive_confidence_reason(result: dict, city_match_level: str, auto_verified: bool, missing_fields: list[str], web_sources: int) -> str:
     if auto_verified:
         reason = "Verified city/trade data found from official sources"
@@ -5194,6 +5256,93 @@ def _has_placeholder(value) -> bool:
     return any(p.search(s) for p in _PLACEHOLDER_PATTERNS)
 
 
+# 2026-04-28: free-text URL sanitizer. The earlier source-grounding fix in
+# normalize_sources() filtered the structured `result["sources"]` list, but
+# LLM-emitted free text (fee_range, confidence_reason, notes) still leaks
+# fabricated plausible-sounding archival URLs that don't survive domain
+# classification. Real triangulated leaks across 4 cities of Opus 4.7 review:
+#   - Phoenix:  ojp.gov/pdffiles1/Digitization/10429NCJRS.pdf  (DOJ archive)
+#   - Vegas:    archive.org/details/dailycolonist1978          (1978 Victoria BC newspaper)
+#   - Seattle:  kauffman.org/wp-content/.../NETS_US_PublicFirms2013.xlsx  (academic firms data)
+#   - LA:       pw.lacounty.gov/...                            (wrong jurisdiction for City of LA)
+# All four shipped to contractors via fee_range "verify in <URL>" text.
+# This sanitizer runs after the engine builds free-text fields and strips any
+# URL whose host classifies as EXCLUDED, replacing with the AHJ name.
+_URL_REGEX = re.compile(r'https?://[^\s)\]\}>"\'`]+', re.IGNORECASE)
+
+
+def _strip_excluded_urls_from_text(text: str, ahj_name: str = "the building department") -> str:
+    """Strip URLs that don't belong in contractor-facing free text.
+
+    Stricter than `normalize_sources` because free-text fields are read by
+    the contractor as authoritative ("verify in URL"). For free text we only
+    allow URLs that classify_source_url() rates as OFFICIAL — that means
+    .gov / .us / .mil / municipal / explicit-AHJ-allowlist domains. Anything
+    that's SUPPLEMENTARY (.org bucket including kauffman.org, archive.org,
+    research foundations, academic) or EXCLUDED gets replaced with
+    `[verify with {ahj_name}]`.
+
+    Real triangulated leaks this catches:
+      - kauffman.org public-firms research dataset (Seattle review)
+      - archive.org/details/dailycolonist1978 1978 newspaper (Vegas review)
+      - ojp.gov DOJ digitization archive (Phoenix review)
+      - any .org/.com domain the LLM hallucinates as a fee-source URL
+    """
+    if not text or not isinstance(text, str):
+        return text
+    def _replace(match):
+        url = match.group(0).rstrip('.,;:!?')
+        try:
+            cls = classify_source_url(url)
+            # Free-text URLs must be OFFICIAL (.gov / .us / .mil / municipal /
+            # vetted AHJ allowlist). SUPPLEMENTARY and EXCLUDED both get
+            # stripped — supplementary research sources don't belong in
+            # "verify in <URL>" contractor-facing text.
+            if cls != SOURCE_CLASS_OFFICIAL:
+                return f"[verify with {ahj_name}]"
+        except Exception:
+            return f"[verify with {ahj_name}]"
+        return url
+    return _URL_REGEX.sub(_replace, text)
+
+
+def sanitize_free_text_urls(result: dict, city: str, state: str) -> dict:
+    """Apply _strip_excluded_urls_from_text to known free-text fields.
+
+    Mutates result in place. Reports any strips on result['_url_strips'] for
+    telemetry. Runs after the engine builds the response, before the
+    semantic validation gate.
+    """
+    ahj = result.get("applying_office") or f"the {city} building department"
+    fields_to_clean = [
+        "fee_range", "confidence_reason", "permit_summary",
+        "permit_type", "permit_name", "disclaimer",
+    ]
+    strips: list[dict] = []
+    for fld in fields_to_clean:
+        original = result.get(fld)
+        if not isinstance(original, str) or not original:
+            continue
+        # Quick check: any URLs at all?
+        urls = _URL_REGEX.findall(original)
+        if not urls:
+            continue
+        # Any non-OFFICIAL URLs? Free-text fields require OFFICIAL only —
+        # SUPPLEMENTARY (.org research / archive sources) and EXCLUDED both
+        # get stripped because both lead to "wait, why am I verifying my
+        # Phoenix permit fee at kauffman.org?" credibility hits.
+        bad = [u.rstrip('.,;:!?') for u in urls if classify_source_url(u.rstrip('.,;:!?')) != SOURCE_CLASS_OFFICIAL]
+        if not bad:
+            continue
+        cleaned = _strip_excluded_urls_from_text(original, ahj_name=ahj)
+        if cleaned != original:
+            result[fld] = cleaned
+            strips.append({"field": fld, "removed": bad[:3]})
+    if strips:
+        result["_url_strips"] = strips
+    return result
+
+
 def validate_and_sanitize_permit_result(result: dict, job_type: str, city: str, state: str) -> dict:
     """Hard gate against placeholder leaks + scope/checklist mismatch.
 
@@ -6145,6 +6294,14 @@ Return ONLY the JSON object."""
 
     apply_scope_aware_permit_classification(result, job_type)
     apply_state_expert_pack(result, city, state, job_type)
+
+    # 2026-04-28: Strip fabricated URLs from free-text fields BEFORE the
+    # validation gate runs. The earlier source-grounding fix in
+    # normalize_sources() filters the structured sources list, but LLM-emitted
+    # URLs still leak inside fee_range / confidence_reason / permit_summary.
+    # Real Opus 4.7 production leaks: ojp.gov (Phoenix), kauffman.org (Seattle),
+    # archive.org/dailycolonist1978 (Vegas), pw.lacounty.gov (LA city query).
+    sanitize_free_text_urls(result, city, state)
 
     # 2026-04-28: Final hard gate — catch placeholder leaks and scope mismatch
     # before the result reaches the contractor. Mutates result in place; if
