@@ -66,9 +66,17 @@ def get_cache_hit_rate() -> dict:
 # 2026-04-26: Engine swap based on 100-city × 5-trade benchmark (1,000 reqs):
 #   gemini-3-flash-preview: 9.53/10  ($69/mo @ 50k lookups)
 #   gpt-5.4-mini:            8.01/10  ($123/mo @ 50k lookups)
-# Gemini wins every tier and every trade with a +1.52 quality delta and is
-# 44% cheaper. gpt-5.4-mini stays as the fallback so we have a second-source
-# model if the Google API is down or rate-limited.
+# Gemini won the synthetic benchmark with a +1.52 delta and was 44% cheaper.
+#
+# 2026-04-28 OVERRIDE: real-world Opus 4.7 reviews graded the engine 75%
+# (residential ADU) and 30% (commercial restaurant TI) while running on
+# Gemini-3-Flash-Preview as primary. The 9.53/10 internal benchmark didn't
+# include commercial restaurant / office TI scenarios — exactly where
+# Gemini-3-Flash falls apart. Swap: OpenAI gpt-5.4-mini becomes PRIMARY,
+# Gemini-3-Flash drops to fallback. (gpt-5.5 / gpt-5.5-mini are not yet
+# available via the OpenAI API as of 2026-04-28; bump when they ship.)
+# Variable names retained for backwards-compat across the file; the
+# *_fallback_model name now refers to the PRIMARY model. Rename pending.
 _GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 if _GEMINI_API_KEY:
     genai.configure(api_key=_GEMINI_API_KEY)
@@ -120,6 +128,7 @@ SOURCE_CLASS_EXCLUDED = "EXCLUDED"
 # Serper source-domain policy. Keep these constants near the top of the file so
 # competitor/source trust updates are easy to audit during hotfixes.
 EXCLUDED_SOURCE_DOMAINS = {
+    # Competitor / aggregator domains — never surface as our citations.
     "permitmint.com",
     "doineedapermit.org",
     "permitai.us",
@@ -158,6 +167,38 @@ EXCLUDED_SOURCE_DOMAINS = {
     "substack.com",
     "quora.com",
     "youtube.com",
+    # 2026-04-28: federal .gov domains unrelated to building/permitting.
+    # Without this list, classify_source_url() auto-classifies any .gov as
+    # OFFICIAL — and an Opus 4.7 review on a Phoenix restaurant TI caught the
+    # engine citing ojp.gov (US DOJ Office of Justice Programs digitization
+    # archive) as a fee source SIX times. These are LLM hallucinations the
+    # source-grounding layer has no business surfacing for a contractor.
+    "ojp.gov",
+    "ncjrs.gov",
+    "doj.gov",
+    "justice.gov",
+    "fbi.gov",
+    "ice.gov",
+    "dhs.gov",
+    "uscis.gov",
+    "nih.gov",
+    "cdc.gov",
+    "irs.gov",
+    "ssa.gov",
+    "va.gov",
+    "uspto.gov",
+    "treasury.gov",
+    "state.gov",
+    "fcc.gov",
+    "ftc.gov",
+    "sec.gov",
+    "fda.gov",
+    "noaa.gov",
+    "usgs.gov",
+    "nasa.gov",
+    "ed.gov",
+    "loc.gov",
+    "nps.gov",
 }
 
 OFFICIAL_SOURCE_DOMAINS = {
@@ -171,6 +212,36 @@ OFFICIAL_SOURCE_DOMAINS = {
     "cityofpasadena.net",
     "houstonpermittingcenter.org",
     "harrispermits.org",
+    # 2026-04-28: major-city building-dept portals on .org/.com TLDs that ARE
+    # the AHJ. Without this, classify_source_url() drops them to SUPPLEMENTARY
+    # and they lose to LLM-emitted .gov junk in source ranking.
+    "ladbs.org",                      # City of LA — Department of Building & Safety
+    "ladbsservices2.lacity.org",      # LADBS online portal
+    "ladbsservices.lacity.org",
+    "ssps.lacity.org",                # LA online permitting
+    "buildingla.lacity.org",
+    "permits.lacounty.gov",           # LA County (unincorporated only)
+    "epermits.miamidade.gov",
+    "selfservice.miamidade.gov",
+    "pdox.bouldercolorado.gov",
+    "permits.charlottenc.gov",
+    "permits.austintexas.gov",
+    "abc.austintexas.gov",
+    "abuilding.dallascityhall.com",
+    "buildingeplans.austintexas.gov",
+    "ipermits.minneapolismn.gov",
+    "permits.sandiego.gov",
+    "permits.santamonica.gov",
+    "permits.berkeleyca.gov",
+    "permits.cityofchicago.org",
+    "etrakit.cityofchicago.org",
+    "epermits.cityofchicago.org",
+    # Common AHJ vendors (treat as official if AHJ uses them)
+    "accela.com",
+    "mygovernmentonline.org",
+    "viewpointcloud.com",
+    "etrakit.com",
+    "openforms.com",
 }
 
 SUPPLEMENTARY_SOURCE_DOMAINS = {
@@ -255,6 +326,13 @@ def clean_verified_entry(entry: dict | None) -> dict | None:
 
 
 def normalize_sources(*groups) -> list[str]:
+    """Deduplicate + classify source URLs before they reach the contractor.
+
+    2026-04-28: previously this only filtered non-http strings, which let
+    LLM-hallucinated junk URLs (e.g. ojp.gov DOJ archive cited as a Phoenix
+    building permit source) flow straight through to the result. Now applies
+    classify_source_url() and rejects EXCLUDED domains.
+    """
     seen = set()
     out = []
     for group in groups:
@@ -269,6 +347,11 @@ def normalize_sources(*groups) -> list[str]:
             if not src.startswith("http"):
                 continue
             if src in seen:
+                continue
+            try:
+                if classify_source_url(src) == SOURCE_CLASS_EXCLUDED:
+                    continue
+            except Exception:
                 continue
             seen.add(src)
             out.append(src)
@@ -5094,19 +5177,21 @@ Return ONLY the JSON object."""
         _model_used = _openai_fallback_model
         print(f"[engine] FORCED OpenAI ({_openai_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
     else:
-        # Default production path: Gemini primary, OpenAI fallback.
+        # Default production path: OpenAI primary, Gemini fallback.
+        # 2026-04-28: swapped from Gemini primary after Opus 4.7 reviews
+        # graded the engine 30% on commercial restaurant TI scenarios.
         try:
-            raw = _call_gemini()
-            _model_used = _gemini_primary_model
-            print(f"[engine] Gemini primary ({_gemini_primary_model}) responded in {round((time.time()-start)*1000)}ms")
-        except Exception as gemini_err:
-            print(f"[engine] Gemini failed ({gemini_err}), trying OpenAI fallback ({_openai_fallback_model})...")
+            raw = _call_openai()
+            _model_used = _openai_fallback_model
+            print(f"[engine] OpenAI primary ({_openai_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
+        except Exception as openai_err:
+            print(f"[engine] OpenAI failed ({openai_err}), trying Gemini fallback ({_gemini_primary_model})...")
             try:
-                raw = _call_openai()
-                _model_used = _openai_fallback_model
-                print(f"[engine] OpenAI fallback ({_openai_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
-            except Exception as openai_err:
-                raise RuntimeError(f"Both Gemini and OpenAI failed. Gemini: {gemini_err} | OpenAI: {openai_err}")
+                raw = _call_gemini()
+                _model_used = _gemini_primary_model
+                print(f"[engine] Gemini fallback ({_gemini_primary_model}) responded in {round((time.time()-start)*1000)}ms")
+            except Exception as gemini_err:
+                raise RuntimeError(f"Both OpenAI and Gemini failed. OpenAI: {openai_err} | Gemini: {gemini_err}")
 
     elapsed = round((time.time() - start) * 1000)
     try:
