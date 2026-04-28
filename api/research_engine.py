@@ -384,6 +384,169 @@ def normalize_sources(*groups) -> list[str]:
     return out[:8]
 
 
+# ─── Cross-jurisdiction source-locality filter ──────────────────────────────
+# 2026-04-28: post-process result["sources"] to drop URLs that aren't relevant
+# to the queried AHJ. Eval suite caught these cross-jurisdiction leaks across
+# the 10-scenario re-grade run:
+#   - Phoenix queries: nyc.gov/onenyc URL (wrong state)
+#   - Denver queries: saratoga.ca.us, dublin.ca.gov, opendata.utah.gov (wrong state)
+#   - LA city queries: pw.lacounty.gov (LA County, not City of LA)
+#   - Pasadena queries: southpasadenaca.gov (different city in same county)
+# These survive the EXCLUDED filter because they're real .gov sites — they're
+# just wrong jurisdictions. The fix: keep only sources whose hostname/path
+# contains the queried city, state, state-code, OR is in a curated always-keep
+# allowlist (NFPA, IAPMO, ICC, federal building/energy domains).
+
+_US_STATE_NAMES = {
+    "AL": "alabama", "AK": "alaska", "AZ": "arizona", "AR": "arkansas",
+    "CA": "california", "CO": "colorado", "CT": "connecticut", "DE": "delaware",
+    "FL": "florida", "GA": "georgia", "HI": "hawaii", "ID": "idaho",
+    "IL": "illinois", "IN": "indiana", "IA": "iowa", "KS": "kansas",
+    "KY": "kentucky", "LA": "louisiana", "ME": "maine", "MD": "maryland",
+    "MA": "massachusetts", "MI": "michigan", "MN": "minnesota", "MS": "mississippi",
+    "MO": "missouri", "MT": "montana", "NE": "nebraska", "NV": "nevada",
+    "NH": "newhampshire", "NJ": "newjersey", "NM": "newmexico", "NY": "newyork",
+    "NC": "northcarolina", "ND": "northdakota", "OH": "ohio", "OK": "oklahoma",
+    "OR": "oregon", "PA": "pennsylvania", "RI": "rhodeisland", "SC": "southcarolina",
+    "SD": "southdakota", "TN": "tennessee", "TX": "texas", "UT": "utah",
+    "VT": "vermont", "VA": "virginia", "WA": "washington", "WV": "westvirginia",
+    "WI": "wisconsin", "WY": "wyoming", "DC": "districtofcolumbia",
+}
+
+# Always-keep regardless of locality — code-reference + federal building authorities.
+# These are valid citations for any US AHJ.
+_LOCALITY_ALLOWLIST_DOMAINS = frozenset({
+    "nfpa.org", "iapmo.org", "icc-es.org", "iccsafe.org", "ashrae.org",
+    "ada.gov", "access-board.gov", "energystar.gov", "energy.gov",
+    "epa.gov", "hud.gov", "fema.gov", "osha.gov",
+    "law.cornell.edu", "ecfr.gov", "regulations.gov",
+    "cslb.ca.gov", "tdlr.texas.gov", "roc.az.gov",  # state license boards — info only, blocked from apply_url separately
+    "myfloridalicense.com", "dbpr.myfloridalicense.com",
+    "lni.wa.gov", "ccb.oregon.gov",
+})
+
+# City-specific exclusions: when the query city is X, these domains are
+# almost-always wrong AHJ. Curated list — each entry is verified.
+_CITY_LOCALITY_EXCLUSIONS = {
+    # Only exclude domains that are CLEARLY wrong-AHJ. Keep county domains
+    # that legitimately provide companion permit info (health, environmental,
+    # public works) — those help, they don't hurt.
+    ("los angeles", "ca"): ("pw.lacounty.gov", "dpw.lacounty.gov"),
+    # Note: maricopa.gov is KEPT for Phoenix queries — Maricopa County
+    # Environmental Services issues the food-establishment health permit
+    # which is a legitimate companion permit for restaurant TIs.
+}
+
+
+def _city_match_tokens(city: str, state: str) -> set[str]:
+    """Build a set of lowercase tokens that should appear in a valid AHJ source URL."""
+    tokens: set[str] = set()
+    if not city:
+        return tokens
+    c = city.lower().strip()
+    tokens.add(c)
+    tokens.add(c.replace(" ", ""))           # "losangeles"
+    tokens.add(c.replace(" ", "_"))          # "los_angeles"
+    tokens.add(c.replace(" ", "-"))          # "los-angeles"
+    # Common short forms
+    if c in ("los angeles", "los_angeles"):
+        tokens.update({"la", "lacity", "ladbs", "ladbsservices2", "ladwp", "boe"})
+    elif c == "new york":
+        tokens.update({"nyc", "newyork", "nycgov"})
+    elif c == "san francisco":
+        tokens.update({"sf", "sfgov", "sfdbi"})
+    elif c == "phoenix":
+        tokens.update({"phx", "shapephx"})
+    elif c == "chicago":
+        tokens.update({"chi"})
+    elif c == "washington" and state.upper() == "DC":
+        tokens.update({"dcra"})
+    return tokens
+
+
+def _state_match_tokens(state: str) -> set[str]:
+    """State name + 2-letter code (lowercased) for locality match."""
+    tokens: set[str] = set()
+    if not state:
+        return tokens
+    s = state.upper().strip()
+    if s in _US_STATE_NAMES:
+        tokens.add(s.lower())                # "az"
+        full = _US_STATE_NAMES[s]
+        tokens.add(full)                     # "arizona"
+        tokens.add(full.replace(" ", ""))   # already no-space
+        # also accept "az.gov" / "az.us" style suffixes via _domain_endswith_state
+    return tokens
+
+
+def filter_sources_by_locality(sources: list[str], city: str, state: str) -> list[str]:
+    """Drop sources whose hostname/path doesn't match the queried AHJ.
+
+    Algorithm:
+      1. Build token set from (city + city aliases) ∪ (state + state code).
+      2. For each source URL:
+         - KEEP if hostname is in _LOCALITY_ALLOWLIST_DOMAINS (code refs + federal)
+         - KEEP if hostname or path contains any city/state token
+         - REJECT otherwise
+      3. Apply per-city exclusions (e.g. lacounty.gov for City of LA queries).
+
+    Conservative — when in doubt, KEEP. Only rejects sources with zero locality
+    signal AND not in the allowlist.
+    """
+    if not isinstance(sources, list) or not sources:
+        return sources or []
+
+    city_tokens = _city_match_tokens(city, state)
+    state_tokens = _state_match_tokens(state)
+    state_code = state.lower().strip() if state else ""
+    all_tokens = city_tokens | state_tokens
+
+    excluded = _CITY_LOCALITY_EXCLUSIONS.get((city.lower().strip(), state_code), ()) if city and state else ()
+
+    kept: list[str] = []
+    try:
+        from urllib.parse import urlparse as _urlparse
+    except Exception:
+        return sources
+
+    for src in sources:
+        if not isinstance(src, str) or not src.startswith("http"):
+            kept.append(src)
+            continue
+        try:
+            parsed = _urlparse(src)
+            host = (parsed.hostname or "").lower()
+            path = (parsed.path or "").lower()
+            full = (host + " " + path).lower()
+        except Exception:
+            kept.append(src)
+            continue
+
+        # 1) Always-keep code-reference + federal authorities
+        if any(host == d or host.endswith("." + d) for d in _LOCALITY_ALLOWLIST_DOMAINS):
+            kept.append(src)
+            continue
+
+        # 2) Per-city exclusions (e.g., lacounty.gov on City of LA queries)
+        if any(host == ex or host.endswith("." + ex) for ex in excluded):
+            continue  # drop
+
+        # 3) Locality match
+        if any(tok and tok in full for tok in all_tokens if len(tok) >= 2):
+            kept.append(src)
+            continue
+
+        # 4) State-tld match (e.g., *.az.gov on AZ queries)
+        if state_code and (host.endswith("." + state_code + ".gov") or host.endswith("." + state_code + ".us")):
+            kept.append(src)
+            continue
+
+        # 5) Default: drop
+        # (don't print every drop — too verbose; could log to telemetry later)
+
+    return kept
+
+
 def compute_missing_fields(result: dict) -> list[str]:
     missing = []
     permits = result.get("permits_required")
@@ -6124,6 +6287,23 @@ Return ONLY the JSON object."""
         result.get("apply_url", ""),
         result.get("apply_pdf", ""),
     )
+
+    # 2026-04-28: cross-jurisdiction source-locality filter. Drops sources whose
+    # hostname/path doesn't match the queried AHJ — catches saratoga.ca.us on
+    # Denver queries, nyc.gov on Phoenix queries, pw.lacounty.gov on City of LA
+    # queries. Conservative: keeps anything in the federal/code-reference
+    # allowlist (NFPA, IAPMO, ICC, ada.gov, energy.gov, etc.) and anything with
+    # a city/state/state-code locality match. Telemetry on `_sources_locality_dropped`.
+    try:
+        _pre_filter = list(result["sources"])
+        result["sources"] = filter_sources_by_locality(result["sources"], city, state)
+        _dropped = [s for s in _pre_filter if s not in result["sources"]]
+        if _dropped:
+            result["_sources_locality_dropped"] = _dropped[:5]
+    except Exception as _e:
+        # Defensive — never let the filter break the engine
+        print(f"[locality_filter] failed: {_e}")
+
     if _verified_entry and _verified_entry.get("verified_at"):
         result["last_verified_at"] = _verified_entry.get("verified_at")
 
