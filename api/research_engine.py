@@ -167,6 +167,14 @@ EXCLUDED_SOURCE_DOMAINS = {
     "substack.com",
     "quora.com",
     "youtube.com",
+    # 2026-04-28: hallucinated / mis-cited data sources flagged in the live
+    # grading run (Opus 4.7 grading pass against prod). These domains are real
+    # .gov / .com but unrelated to building permits in the contexts where the
+    # LLM cited them.
+    "opendata.utah.gov",          # appeared as a Denver multifamily fee citation
+    "developer.accela.com",       # Accela API docs page, not a permit source
+    "huduser.gov",                # federal HUD research, not a permit source
+    "coloradocoalition.org",      # appeared in a Denver permit context (RFP doc)
     # 2026-04-28: federal .gov domains unrelated to building/permitting.
     # Without this list, classify_source_url() auto-classifies any .gov as
     # OFFICIAL — and an Opus 4.7 review on a Phoenix restaurant TI caught the
@@ -4689,12 +4697,97 @@ def is_pdf_url(url: str) -> bool:
         "format=pdf" in url_lower
     )
 
+# 2026-04-28: state contractor-license / regulator domains. These are NOT
+# building-permit portals — they're licensing authorities for verifying
+# trade credentials. Opus 4.7 grading caught the LLM emitting these as
+# `apply_url` for Pasadena solar (cslb.ca.gov, CA contractor license board)
+# and Houston retail TI (tdlr.texas.gov, TX licensing). A contractor lands
+# on the wrong site, looks lost, bounces. Block these from apply_url.
+STATE_LICENSE_DOMAINS = frozenset({
+    "cslb.ca.gov",                   # CA Contractors State License Board
+    "dca.ca.gov",                    # CA Department of Consumer Affairs
+    "tdlr.texas.gov",                # TX Department of Licensing & Regulation
+    "dbpr.myfloridalicense.com",     # FL Dept of Business and Professional Regulation
+    "myfloridalicense.com",          # FL DBPR alias
+    "roc.az.gov",                    # AZ Registrar of Contractors (verify-only)
+    "azroc.gov",                     # AZ ROC alias
+    "lni.wa.gov",                    # WA L&I (licensing portal)
+    "ccb.oregon.gov",                # OR Construction Contractors Board
+    "dpor.virginia.gov",             # VA Dept of Professional/Occupational Regulation
+    "llr.sc.gov",                    # SC Labor Licensing Regulation
+    "ncbceblc.org",                  # NC Building Code Council
+    "tn.gov/commerce",               # TN Dept of Commerce & Insurance (licensing)
+    "in.gov/pla",                    # IN Professional Licensing Agency
+    "michigan.gov/lara",             # MI LARA (licensing)
+    "dpr.delaware.gov",              # DE Division of Professional Regulation
+    "dol.colorado.gov",              # CO Dept of Labor (licensing)
+    "dpor.virginia.gov",             # VA DPOR
+    "dca.ny.gov",                    # NY Dept of Consumer Affairs
+    "doppl.indiana.gov",             # IN PLA alias
+    "dol.maryland.gov",              # MD licensing
+})
+
+
+def is_state_license_url(url: str) -> bool:
+    """True if url points at a state contractor-license / regulator domain.
+
+    These belong in `license_required` context, NEVER in `apply_url` — a
+    contractor clicking "apply for permit" should land on a building-dept
+    portal, not a license-verification page.
+    """
+    if not url:
+        return False
+    try:
+        from urllib.parse import urlparse
+        host = (urlparse(url).hostname or "").lower()
+        # Strip explicit "www." prefix (lstrip("www.") is a CHARACTER class
+        # strip — it eats any leading w/. chars, breaking www2.dbpr.* etc).
+        if host.startswith("www."):
+            host = host[4:]
+        if not host:
+            return False
+        path = (urlparse(url).path or "")
+        for pat in STATE_LICENSE_DOMAINS:
+            if "/" in pat:
+                pat_host, pat_path = pat.split("/", 1)
+                # Match host (exact or subdomain suffix) + path prefix
+                if (host == pat_host or host.endswith("." + pat_host)) and \
+                   path.lstrip("/").lower().startswith(pat_path.lower()):
+                    return True
+            else:
+                # Exact OR subdomain suffix match (catches www2.dbpr.* etc)
+                if host == pat or host.endswith("." + pat):
+                    return True
+        return False
+    except Exception:
+        return False
+
+
 def strip_pdf_from_result(result: dict) -> dict:
     """
-    Move PDF URLs from apply_url to apply_pdf.
-    Apply_url should only ever be a real web portal, never a PDF.
+    Move PDF URLs from apply_url to apply_pdf, and strip state-license
+    URLs entirely (they're never the right apply_url target).
+
+    Apply_url should only ever be a real building-department permit portal
+    or PDF application, never a PDF and never a state license verification
+    page.
     """
     apply_url = result.get("apply_url", "")
+    # 2026-04-28: state license domains never belong in apply_url. The LLM
+    # occasionally emits cslb.ca.gov / tdlr.texas.gov as apply_url because
+    # they're authoritative-looking .gov links it found while researching
+    # contractor licensing — but the contractor following that URL lands
+    # on a license lookup page, not a permit portal.
+    if apply_url and is_state_license_url(apply_url):
+        print(f"[apply_url_strip] Removed state-license URL from apply_url: {apply_url}")
+        result["apply_url"] = None
+        # Surface the license URL elsewhere so it's not lost — append to
+        # license_required text if not already there.
+        existing_license = result.get("license_required", "") or ""
+        if apply_url not in existing_license:
+            result["license_required"] = (existing_license + (" " if existing_license else "") + f"(license verification: {apply_url})").strip()
+        apply_url = ""
+
     if apply_url and is_pdf_url(apply_url):
         print(f"[pdf_strip] Moved PDF to apply_pdf: {apply_url}")
         result["apply_pdf"] = apply_url
