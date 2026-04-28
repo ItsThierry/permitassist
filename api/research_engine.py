@@ -4492,6 +4492,91 @@ COMPANION PERMIT TRADE MATRIX (use ONLY when the stated scope includes or plausi
 ✓ approval_timeline: Always provide a 'simple' (over-the-counter) and 'complex' (plan review) estimate.
 ✓ code_citation: ALWAYS include the specific code section (IRC/IPC/NEC/state code) that applies. Format: {"section": "IRC R105.2.2", "text": "first 120 chars of the relevant rule or exemption text"}. For NO verdicts: cite the exemption clause. For YES/MAYBE verdicts: cite the primary code section that REQUIRES the permit (e.g. "IRC R105.1", "NEC 210.12", "IPC 106.1"). Never set code_citation to null — always provide a relevant code reference."""
 
+# ─── JSON repair helpers (used after a JSONDecodeError on AI output) ──────────
+
+def _try_repair_truncated_json(text: str):
+    """Best-effort recovery of structurally broken JSON from LLM output.
+
+    Production hits this when gpt-5.4-mini occasionally produces a JSON body
+    with a missing comma or unterminated string mid-document on long prompts
+    (ADU conversions, multi-permit scopes). Returns parsed dict on success,
+    None if no repair strategy worked. Never raises.
+    """
+    if not text:
+        return None
+    text = text.strip()
+
+    # Strategy 1: json5 / demjson3 (lenient parsers, optional deps).
+    for parser_name in ("json5", "demjson3"):
+        try:
+            mod = __import__(parser_name)
+            return mod.loads(text)
+        except ImportError:
+            continue
+        except Exception:
+            continue
+
+    # Strategy 2: progressively trim from the right until the prefix parses.
+    # Handles "valid JSON cut off mid-field" by recovering everything before
+    # the broken element. Bound the search to avoid O(n^2) on huge bodies.
+    last_brace = text.rfind("}")
+    attempts = 0
+    while last_brace > 0 and attempts < 50:
+        candidate = text[: last_brace + 1]
+        try:
+            return json.loads(candidate)
+        except (json.JSONDecodeError, TypeError):
+            last_brace = text.rfind("}", 0, last_brace)
+            attempts += 1
+
+    # Strategy 3: naive bracket-balance repair. Cut off after the last comma
+    # to drop the partial element, then append matching closers.
+    open_braces = text.count("{") - text.count("}")
+    open_brackets = text.count("[") - text.count("]")
+    if open_braces > 0 or open_brackets > 0:
+        last_comma = text.rfind(",")
+        if last_comma > 0:
+            candidate = text[:last_comma] + ("]" * max(0, open_brackets)) + ("}" * max(0, open_braces))
+            try:
+                return json.loads(candidate)
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+    return None
+
+
+def _retry_with_minimal_prompt(user_prompt: str, _openai_call_fn=None):
+    """Last-resort retry with a stripped-down system prompt asking for a
+    minimal JSON shape. Used when the full prompt repeatedly produces
+    malformed JSON. The `_openai_call_fn` arg is a closure passed for
+    signature compatibility with the call site; we re-issue the request
+    against the fallback model directly so we control the system prompt.
+    """
+    minimal_system = (
+        "You are a permit research assistant. Return ONLY a valid, parseable "
+        "JSON object — nothing else, no markdown, no commentary. Required fields: "
+        "applying_office (string), apply_phone (string), apply_url (string), "
+        "apply_address (string), permit_verdict (one of: YES, NO, MAYBE), "
+        "permits_required (array of objects with type, required:bool, fee_estimate:string). "
+        "Optional fields: fee_range (string), approval_timeline (object with simple, complex), "
+        "code_citation (object with section, text), confidence (low/medium/high). "
+        "Keep the response under 3000 tokens. Be concise and accurate."
+    )
+    openai_client = _get_openai_client()
+    response = openai_client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S).chat.completions.create(
+        model=_openai_fallback_model,
+        messages=[
+            {"role": "system", "content": minimal_system},
+            {"role": "user", "content": user_prompt},
+        ],
+        temperature=0.0,
+        max_completion_tokens=4000,
+        response_format={"type": "json_object"},
+    )
+    raw = response.choices[0].message.content
+    return json.loads(raw)
+
+
 # ─── Main Research Function ───────────────────────────────────────────────────
 
 def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None) -> dict:
@@ -4737,7 +4822,10 @@ Return ONLY the JSON object."""
                 {"role": "user",    "content": user_prompt},
             ],
             temperature=0.1,
-            max_completion_tokens=8000,
+            # 2026-04-27 evening: bumped 8000→16000 after Boban hit "Lookup failed"
+            # on complex ADU/basement-conversion payloads. The model was producing
+            # valid-but-truncated JSON when output approached the cap.
+            max_completion_tokens=16000,
             response_format={"type": "json_object"},
         )
         return response.choices[0].message.content
@@ -4785,8 +4873,23 @@ Return ONLY the JSON object."""
             result = json.loads(cleaned)
             print(f"[engine] Stripped markdown wrapper from AI response successfully")
         except (json.JSONDecodeError, TypeError) as e2:
-            print(f"[engine] AI returned non-JSON response: {repr((raw or '')[:300])}")
-            raise RuntimeError(f"AI returned non-JSON output: {e2}")
+            # 2026-04-27: Aggressive repair pass for the intermittent
+            # "Expecting ',' delimiter" / "Unterminated string" failures from
+            # gpt-5.4-mini on long prompts. We progressively trim the response
+            # until it parses, recovering whatever fields fit. Better partial
+            # data than a 500.
+            result = _try_repair_truncated_json(cleaned)
+            if result is not None:
+                print(f"[engine] Repaired truncated/malformed JSON after model failure ({e2})")
+            else:
+                # Last resort: ask the model to retry with a shorter, stricter prompt.
+                try:
+                    result = _retry_with_minimal_prompt(user_prompt, _call_openai)
+                    print(f"[engine] Recovered via minimal-prompt retry after JSON failure")
+                except Exception as retry_err:
+                    print(f"[engine] AI returned non-JSON response: {repr((raw or '')[:300])}")
+                    print(f"[engine] Minimal-prompt retry also failed: {retry_err}")
+                    raise RuntimeError(f"AI returned non-JSON output: {e2}")
 
     # 2026-04-26: Gemini sometimes returns a top-level JSON ARRAY instead of
     # an OBJECT (e.g. `[ {...} ]`). All downstream code assumes `result` is a

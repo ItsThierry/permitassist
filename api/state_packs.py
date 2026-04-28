@@ -135,6 +135,54 @@ STATE_PACKS = {
                 "applies_to": "Wildfire-prone California jurisdictions",
                 "source": CALIFORNIA_VHFHSZ_URL,
             },
+            {
+                "title": "CSLB licensing — $500 unlicensed-work threshold",
+                "note": (
+                    "California Contractors State License Board (CSLB) requires a license for any single project "
+                    "with combined labor + materials at $500 or more. Unlicensed contracting above that threshold is "
+                    "a misdemeanor (B&P §7028). Verify license + classification (e.g. B General Building, C-10 "
+                    "Electrical, C-36 Plumbing, C-20 HVAC) on the CSLB lookup before quoting; expired or suspended "
+                    "licenses void the contract and block lien rights."
+                ),
+                "applies_to": "All paid construction work in California ≥ $500",
+                "source": "https://www.cslb.ca.gov/Consumers/HireAContractor/CheckTheLicenseFirst.aspx",
+            },
+            {
+                "title": "SB 9 lot split + 2-unit ministerial path",
+                "note": (
+                    "SB 9 (Govt Code §65852.21 / §66411.7) lets owners of single-family-zoned parcels split a lot "
+                    "into two and/or build a duplex per resulting parcel under ministerial review (no public hearing, "
+                    "no CEQA). Combined with ADU/JADU rules this can yield up to 4 units on a former SFR lot. Owner "
+                    "must sign a 3-year owner-occupancy affidavit on lot splits. Cities can impose objective design "
+                    "standards but cannot deny qualifying SB 9 projects."
+                ),
+                "applies_to": "Single-family-zoned residential infill and duplex conversions",
+                "source": "https://www.hcd.ca.gov/policy-and-research/accessory-dwelling-units",
+            },
+            {
+                "title": "California Building Standards Code triennial cycle (2025 → 2026 enforcement)",
+                "note": (
+                    "California adopts a new Title 24 / CBSC edition every three years. The 2025 California "
+                    "Building/Residential/Plumbing/Electrical/Mechanical/Energy/Green Building Standards Codes were "
+                    "published Jul 1, 2025 and become enforceable Jan 1, 2026 statewide. Permit applications submitted "
+                    "before Jan 1, 2026 may still be reviewed under the 2022 code at the AHJ's discretion — confirm "
+                    "which code edition applies before submitting drawings."
+                ),
+                "applies_to": "Permit applications crossing the 2026-01-01 code-change boundary",
+                "source": "https://www.dgs.ca.gov/BSC",
+            },
+            {
+                "title": "CALGreen mandatory + EV-ready / solar-ready requirements",
+                "note": (
+                    "CALGreen (Title 24 Part 11) sets statewide green-building minimums: low-VOC finishes, water-use "
+                    "reduction (≤1.28 gpf toilets, ≤1.8 gpm kitchen faucets), EV-ready raceway in new SFR garages, "
+                    "and solar-ready zone for new low-rise residential. Tier 1/Tier 2 voluntary measures may be locally "
+                    "mandated (e.g., San Francisco, Santa Monica). Plan check rejection is common when the EV raceway "
+                    "or solar-ready zone is omitted from new SFR/ADU drawings."
+                ),
+                "applies_to": "New construction and major remodels statewide",
+                "source": "https://www.dgs.ca.gov/BSC/CALGreen",
+            },
         ],
     },
     "CO": {
