@@ -3015,7 +3015,12 @@ class Handler(BaseHTTPRequestHandler):
             stats = {}
             try:
                 import sqlite3 as _sql
-                _db_path = os.path.join(os.path.dirname(__file__), "..", "data", "verified_cities.db")
+                # Try the baked-in knowledge/ path first (lives in the deploy image,
+                # not under Railway's /app/data volume mount which would hide it),
+                # fall back to data/ for local dev where city-coverage-expander writes.
+                _knowledge_db = os.path.join(os.path.dirname(__file__), "..", "knowledge", "verified_cities.db")
+                _data_db = os.path.join(os.path.dirname(__file__), "..", "data", "verified_cities.db")
+                _db_path = _knowledge_db if os.path.exists(_knowledge_db) else _data_db
                 if os.path.exists(_db_path):
                     with _sql.connect(_db_path) as _conn:
                         _conn.row_factory = _sql.Row
