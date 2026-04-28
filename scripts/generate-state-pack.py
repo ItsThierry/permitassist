@@ -28,7 +28,7 @@ DRAFT_DIR = ROOT / "api" / "state_packs" / "drafts"
 STATE_PACKS_PY = ROOT / "api" / "state_packs.py"
 TOP9 = ["TX", "FL", "NY", "IL", "GA", "AZ", "NC", "WA", "CO"]
 MAX_SERPER_CREDITS_PER_STATE = 10
-MAX_TOTAL_SERPER_CREDITS = 100
+MAX_TOTAL_SERPER_CREDITS = 350
 MIN_RULES = 5
 MAX_RULES = 8
 CLAUDE_TIMEOUT_SECONDS = int(os.environ.get("STATE_PACK_CLAUDE_TIMEOUT", "420"))
@@ -54,6 +54,16 @@ STATE_NAMES = {
     "IN": "Indiana",
     "MD": "Maryland",
     "MO": "Missouri",
+    # Final 30 (2026-04-27 evening) — finishing all 50 states.
+    "WI": "Wisconsin", "MN": "Minnesota", "SC": "South Carolina", "AL": "Alabama",
+    "LA": "Louisiana", "KY": "Kentucky", "OR": "Oregon", "OK": "Oklahoma",
+    "CT": "Connecticut", "UT": "Utah",
+    "IA": "Iowa", "NV": "Nevada", "AR": "Arkansas", "KS": "Kansas",
+    "MS": "Mississippi", "NM": "New Mexico", "NE": "Nebraska", "ID": "Idaho",
+    "WV": "West Virginia", "HI": "Hawaii",
+    "NH": "New Hampshire", "ME": "Maine", "RI": "Rhode Island", "MT": "Montana",
+    "DE": "Delaware", "SD": "South Dakota", "ND": "North Dakota", "AK": "Alaska",
+    "VT": "Vermont", "WY": "Wyoming",
 }
 
 QUERY_TEMPLATES = [
@@ -163,6 +173,156 @@ STATE_QUERY_HINTS = {
         "Missouri local contractor licensing electrical plumbing HVAC residential no statewide license",
         "Missouri local building code adoption residential energy code municipal variation",
         "Missouri floodplain levee historic preservation permit construction municipal",
+    ],
+    "WI": [
+        "Wisconsin Department of Safety Professional Services dwelling contractor electrical plumbing HVAC license",
+        "Wisconsin Uniform Dwelling Code UDC residential building energy code adoption",
+        "Wisconsin shoreland zoning floodplain wetland navigable waters permit",
+    ],
+    "MN": [
+        "Minnesota Department of Labor Industry residential contractor license electrical plumbing HVAC",
+        "Minnesota State Building Code Residential Code 1309 energy code adoption",
+        "Minnesota DNR shoreland floodplain wetland conservation permit construction",
+    ],
+    "SC": [
+        "South Carolina LLR Contractor Licensing Board residential builder mechanical electrical plumbing",
+        "South Carolina Modular Buildings Construction Standards Act IRC IBC IECC adoption",
+        "South Carolina coastal CRC OCRM critical area floodplain permit residential",
+    ],
+    "AL": [
+        "Alabama Home Builders Licensure Board AHBLB residential contractor electrical HVAC plumbing",
+        "Alabama Energy and Residential Codes Board IRC IECC adoption local",
+        "Alabama coastal floodplain wetland ADEM Mobile Bay permit construction",
+    ],
+    "LA": [
+        "Louisiana State Licensing Board for Contractors residential mold electrical mechanical plumbing",
+        "Louisiana State Uniform Construction Code LSUCC IRC IECC adoption parish",
+        "Louisiana CPRA coastal use permit floodplain wetland construction parish",
+    ],
+    "KY": [
+        "Kentucky HBC Board of Housing Buildings Construction electrical plumbing HVAC contractor license",
+        "Kentucky Residential Code KRC building code energy code amendments",
+        "Kentucky DOW floodplain construction permit historic district residential",
+    ],
+    "OR": [
+        "Oregon CCB Construction Contractors Board residential general contractor BCD electrical plumbing",
+        "Oregon Residential Specialty Code ORSC OEESC energy code adoption",
+        "Oregon DSL DEQ wetland floodplain coastal zone Goal 18 permit construction",
+    ],
+    "OK": [
+        "Oklahoma CIB Construction Industries Board electrical plumbing mechanical residential builder",
+        "Oklahoma Uniform Building Code Commission IRC IECC energy code adoption",
+        "Oklahoma OWRB floodplain construction tribal jurisdiction permit residential",
+    ],
+    "CT": [
+        "Connecticut DCP Department of Consumer Protection HIC home improvement contractor major contractor",
+        "Connecticut State Building Code IRC IBC IECC stretch energy code adoption",
+        "Connecticut DEEP inland wetlands flood management coastal permit construction",
+    ],
+    "UT": [
+        "Utah DOPL Division of Occupational Professional Licensing contractor electrical plumbing mechanical",
+        "Utah State Construction Code IRC IBC IECC energy code adoption local amendments",
+        "Utah DWR floodplain critical lands wildland urban interface permit construction",
+    ],
+    "IA": [
+        "Iowa contractor registration Workforce Development electrical plumbing HVAC license",
+        "Iowa State Building Code residential energy code adoption local jurisdiction",
+        "Iowa DNR floodplain sovereign land wetland permit construction municipal",
+    ],
+    "NV": [
+        "Nevada State Contractors Board NSCB residential A B C license classifications",
+        "Nevada IECC energy code Southern Nevada adoption Clark County jurisdiction",
+        "Nevada Division of Water Resources floodplain BLM federal lands permit construction",
+    ],
+    "AR": [
+        "Arkansas Contractors Licensing Board residential builder HVACR electrical plumbing license",
+        "Arkansas Fire Prevention Code IBC IRC IECC adoption local amendments",
+        "Arkansas Game Fish Commission ADEQ floodplain wetland permit construction",
+    ],
+    "KS": [
+        "Kansas no statewide general contractor license local plumbing electrical HVAC certification",
+        "Kansas IRC IECC adoption local jurisdiction energy code amendments",
+        "Kansas KDHE floodplain wetland Department of Agriculture water permit construction",
+    ],
+    "MS": [
+        "Mississippi State Board of Contractors residential builder electrical plumbing HVAC remodeler",
+        "Mississippi Building Code Council IRC IBC IECC adoption local jurisdiction",
+        "Mississippi MDEQ Coastal Program wetland floodplain permit construction",
+    ],
+    "NM": [
+        "New Mexico CID Construction Industries Division GB GA EE ME MM license residential",
+        "New Mexico Residential Building Code Energy Conservation Code adoption",
+        "New Mexico OSE acequia traditional water rights floodplain pueblo permit construction",
+    ],
+    "NE": [
+        "Nebraska Contractor Registration Department of Labor electrical plumbing HVAC license",
+        "Nebraska State Energy Code IECC adoption local building code jurisdiction",
+        "Nebraska DNR floodplain Game Parks historic preservation permit construction",
+    ],
+    "ID": [
+        "Idaho DBS Division of Building Safety contractor electrical plumbing HVAC license",
+        "Idaho Residential Code IRC IECC adoption local jurisdiction amendments",
+        "Idaho IDWR floodplain wetland Department of Lands permit construction",
+    ],
+    "WV": [
+        "West Virginia Contractor Licensing Board electrical plumbing HVAC residential general contractor",
+        "West Virginia State Building Code IRC IBC IECC adoption local jurisdiction",
+        "West Virginia DEP floodplain National Coal Heritage permit construction",
+    ],
+    "HI": [
+        "Hawaii DCCA Contractor Licensing Board RME C residential contractor electrical plumbing",
+        "Hawaii State Building Code IBC IRC IECC adoption county Honolulu Maui Kauai",
+        "Hawaii DLNR Special Management Area shoreline conservation district permit construction",
+    ],
+    "NH": [
+        "New Hampshire no statewide general contractor license local electrical plumbing license",
+        "New Hampshire State Building Code IRC IBC IECC adoption local amendments",
+        "New Hampshire DES wetlands shoreland alteration of terrain permit construction",
+    ],
+    "ME": [
+        "Maine no statewide general contractor license local electrical plumbing HVAC trades",
+        "Maine Uniform Building Energy Code MUBEC IRC IECC adoption municipal",
+        "Maine DEP NRPA wetlands shoreland zoning permit construction municipal",
+    ],
+    "RI": [
+        "Rhode Island Contractors Registration Licensing Board CRLB electrical plumbing HVAC builder",
+        "Rhode Island State Building Code IRC IBC IECC adoption local jurisdiction",
+        "Rhode Island CRMC coastal zone DEM wetlands permit construction",
+    ],
+    "MT": [
+        "Montana DLI Department of Labor Industry contractor registration electrical plumbing HVAC",
+        "Montana State Building Code IRC IBC IECC adoption local jurisdiction amendments",
+        "Montana DNRC floodplain stream protection 310 permit construction",
+    ],
+    "DE": [
+        "Delaware contractor business license electrical plumbing HVAC trade license county",
+        "Delaware State Building Code IRC IBC IECC adoption Sussex Kent New Castle",
+        "Delaware DNREC wetlands floodplain coastal zone permit construction",
+    ],
+    "SD": [
+        "South Dakota no statewide general contractor license local electrical plumbing HVAC",
+        "South Dakota State Building Code IRC IECC adoption local jurisdiction amendments",
+        "South Dakota DENR floodplain Game Fish Parks permit construction",
+    ],
+    "ND": [
+        "North Dakota Secretary of State contractor license electrical plumbing HVAC",
+        "North Dakota State Building Code IRC IECC adoption local jurisdiction amendments",
+        "North Dakota DWR floodplain Game Fish Parks permit construction",
+    ],
+    "AK": [
+        "Alaska DCCED Construction Contractor Endorsement electrical plumbing license",
+        "Alaska Building Code Council IRC IECC adoption Anchorage Fairbanks Juneau borough",
+        "Alaska DNR coastal zone wetlands ADF&G habitat permit construction",
+    ],
+    "VT": [
+        "Vermont Office of Professional Regulation electrical plumbing trade license no GC license",
+        "Vermont Residential Building Energy Code RBES IRC adoption municipal",
+        "Vermont ANR Act 250 wetlands river corridor permit construction",
+    ],
+    "WY": [
+        "Wyoming no statewide general contractor license local electrical plumbing HVAC",
+        "Wyoming State Building Code IRC IECC adoption local jurisdiction amendments",
+        "Wyoming WEQC floodplain wetland Game Fish permit construction",
     ],
 }
 
