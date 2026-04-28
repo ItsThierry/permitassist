@@ -19,6 +19,8 @@ api/state_packs/drafts/
 # Local data caches and SQLite runtime DBs (regenerable from sources)
 data/co-est2024-alldata.csv
 data/sub-est2024.csv
+data/cache.db
+data/cache.db.*
 data/serper_cache.db
 data/ip_lookups.db
 data/verified_cities.db
