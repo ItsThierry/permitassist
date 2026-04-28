@@ -2933,6 +2933,7 @@ function renderResults(d, job, city, state) {
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--muted)">Last updated: ${heroUpdatedLabel}</span>
+      <button class="flag-wrong-btn" onclick="renderReportView()" style="border-color:var(--brand);color:var(--brand);">📋 Report view</button>
       <button class="flag-wrong-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button>
       <span class="flag-feedback-inline" id="flag-feedback-inline">Thanks for flagging. We'll review this within 30 days.</span>
     </div>
@@ -2979,6 +2980,73 @@ function renderResults(d, job, city, state) {
         <div style="font-size:14px; color:#b45309; font-weight:600;">Contractors are often cited for missing this.</div>
         <div style="font-size:13px; color:#78350f; margin-top:6px;">${esc(cp.reason)}</div>
       </div>`).join('')}
+    </div>`;
+  }
+
+  // 2026-04-28: Hidden Triggers card. Surfaces result['hidden_triggers']
+  // populated by detect_hidden_triggers() in research_engine.py — the moat
+  // feature both Opus + GPT-5.5 deep-thinks named #1. Shows permit blockers
+  // contractors didn't ask about (hood→fire suppression, B→A-2 sprinkler,
+  // hillside→geotech, oak→urban forestry, restroom→ADA path-of-travel 20%).
+  const hiddenTriggers = Array.isArray(d.hidden_triggers) ? d.hidden_triggers : [];
+  if (hiddenTriggers.length > 0 && verdict !== 'no') {
+    const _sevColor = (sev) => sev === 'high' ? { bg:'#fef2f2', border:'#fca5a5', label:'#991b1b', tag:'#dc2626' }
+                            : sev === 'medium' ? { bg:'#fffbeb', border:'#fde68a', label:'#92400e', tag:'#d97706' }
+                            : { bg:'#eff6ff', border:'#bfdbfe', label:'#1e40af', tag:'#2563eb' };
+    const _sevLabel = (sev) => sev === 'high' ? 'HIGH' : sev === 'medium' ? 'MEDIUM' : 'LOW';
+    html += `<div style="background:#fef9f9; border:2px solid #fca5a5; border-radius:12px; padding:18px 20px; margin-bottom:16px;">
+      <div class="section-label" style="color:#991b1b; margin-bottom:6px;">⚠️ Triggers You Didn't Ask About — Don't Get Surprised</div>
+      <div style="font-size:13px; color:#7f1d1d; margin-bottom:14px; line-height:1.5;">PermitAssist found ${hiddenTriggers.length} permit blocker${hiddenTriggers.length === 1 ? '' : 's'} hidden in your scope. Most contractors miss these and get rejected at plan check or inspection.</div>
+      ${hiddenTriggers.map(t => {
+        const c = _sevColor(t.severity);
+        const actions = Array.isArray(t.likely_required_actions) ? t.likely_required_actions : [];
+        const agencies = Array.isArray(t.agencies) ? t.agencies : [];
+        const citations = Array.isArray(t.citations) ? t.citations : [];
+        const companions = Array.isArray(t.companion_permits) ? t.companion_permits : [];
+        return `<div style="background:${c.bg}; border:1px solid ${c.border}; border-radius:8px; padding:14px 16px; margin-bottom:10px;">
+          <div style="display:flex; align-items:flex-start; gap:8px; margin-bottom:6px;">
+            <span style="background:${c.tag}; color:#fff; font-size:10px; font-weight:800; padding:3px 8px; border-radius:4px; letter-spacing:0.4px; flex-shrink:0;">${_sevLabel(t.severity)}</span>
+            <div style="font-size:14px; font-weight:800; color:${c.label}; line-height:1.4;">${esc(t.title || '')}</div>
+          </div>
+          ${t.why_it_matters ? `<div style="font-size:13px; color:${c.label}; line-height:1.5; margin-bottom:8px;">${esc(t.why_it_matters)}</div>` : ''}
+          ${actions.length ? `<div style="font-size:12px; color:var(--text2); margin-bottom:6px;"><strong>What to do:</strong>${actions.map(a => `<div style="margin-top:3px;">• ${esc(a)}</div>`).join('')}</div>` : ''}
+          ${companions.length ? `<div style="font-size:12px; color:var(--text2); margin-bottom:6px;"><strong>Companion permits:</strong> ${esc(companions.join(' · '))}</div>` : ''}
+          ${agencies.length ? `<div style="font-size:11px; color:var(--muted);"><strong>Agencies:</strong> ${esc(agencies.join(' · '))}</div>` : ''}
+          ${citations.length ? `<div style="font-size:11px; color:var(--muted); margin-top:3px;"><strong>Code:</strong> ${esc(citations.join(' · '))}</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // 2026-04-28: Hidden Triggers card — the moat feature both Opus + GPT-5.5
+  // deep-thinks named as the unbeatable differentiator. Surfaces permit
+  // blockers the contractor didn't ask about (hood→fire suppression, B→A-2
+  // sprinkler retrofit, restroom→ADA path-of-travel 20%, hillside→geotech,
+  // oak→urban forestry, etc.) from the engine's hidden_triggers field.
+  const hiddenTriggers = (d.hidden_triggers || []).filter(t => t && (t.severity === 'high' || t.severity === 'medium'));
+  if (hiddenTriggers.length > 0) {
+    const sevSorted = hiddenTriggers.slice().sort((a, b) => {
+      const order = { high: 0, medium: 1, low: 2 };
+      return (order[a.severity] ?? 9) - (order[b.severity] ?? 9);
+    }).slice(0, 8);
+    const sevColor = sev => sev === 'high' ? '#dc2626' : sev === 'medium' ? '#d97706' : '#64748b';
+    const sevBg = sev => sev === 'high' ? '#fef2f2' : sev === 'medium' ? '#fffbeb' : '#f8fafc';
+    const sevBorder = sev => sev === 'high' ? '#fecaca' : sev === 'medium' ? '#fde68a' : '#e2e8f0';
+    const sevLabel = sev => sev === 'high' ? '🔴 High' : sev === 'medium' ? '🟡 Medium' : '⚪ Low';
+    html += `<div class="card" style="border:2px solid #d97706; background:linear-gradient(135deg, rgba(217,119,6,0.06), rgba(255,255,255,0.98));padding:18px 20px;margin-bottom:16px;">
+      <div class="section-label" style="color:#92400e;margin-bottom:6px">⚠️ Triggers You Didn't Ask About</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">Hidden permit blockers contractors get rejected for. Each one is a separate review track or filing — missing any can block your final inspection or Certificate of Occupancy.</div>
+      ${sevSorted.map(t => `<div style="background:${sevBg(t.severity)};border:1px solid ${sevBorder(t.severity)};border-radius:8px;padding:12px 14px;margin-bottom:10px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">
+          <div style="font-size:14px;font-weight:800;color:${sevColor(t.severity)};line-height:1.35">${esc(t.title || '')}</div>
+          <div style="font-size:10px;font-weight:700;color:${sevColor(t.severity)};background:rgba(255,255,255,0.6);padding:3px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0">${sevLabel(t.severity)}</div>
+        </div>
+        ${t.why_it_matters ? `<div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:6px">${esc(t.why_it_matters)}</div>` : ''}
+        ${(t.likely_required_actions || []).length ? `<div style="font-size:12px;color:var(--text2);line-height:1.5;margin-top:6px"><strong style="color:${sevColor(t.severity)}">What to do:</strong> ${esc((t.likely_required_actions || []).slice(0,3).join(' · '))}</div>` : ''}
+        ${(t.companion_permits || []).length ? `<div style="font-size:12px;color:var(--text2);line-height:1.5;margin-top:4px"><strong style="color:${sevColor(t.severity)}">Adds:</strong> ${esc((t.companion_permits || []).join(' · '))}</div>` : ''}
+        ${(t.citations || []).length ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">${esc((t.citations || []).slice(0,3).join(' · '))}</div>` : ''}
+      </div>`).join('')}
+      ${hiddenTriggers.length > 8 ? `<div style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px">+ ${hiddenTriggers.length - 8} more — verify with the building department</div>` : ''}
     </div>`;
   }
 
@@ -3288,6 +3356,214 @@ function renderResults(d, job, city, state) {
   loadComplianceChecklist(job, city, state, d);
   pulseJobsTab();
   maybeShowJobsTooltip();
+}
+
+// ── Report Template Renderer (PermitAssist v1.0.0) ──────────────────────────
+// 18-field locked contractor-grade permit report.
+// Forces every output through the same fixed-position layout with explicit
+// "needs verification" markers for missing fields. Codified from the Opus 4.7
+// + GPT-5.5 Claude-app deep-think on what makes a "best in market" permit
+// tool. Skill spec: ~/.openclaw/workspace/skills/permitassist-report-template/SKILL.md
+function renderResultAsReport(d, job, city, state) {
+  d = d || {};
+  const _missing = '⚠️ <em>needs verification — call AHJ</em>';
+  const _esc = (typeof esc === 'function') ? esc : (s => String(s == null ? '' : s).replace(/[<>&"']/g, m => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[m])));
+
+  const verdict = (d.permit_verdict || '').toString().toUpperCase();
+  const verdictBadge = verdict === 'YES' ? '<span class="badge badge-green">✅ PERMIT REQUIRED</span>'
+                     : verdict === 'NO'  ? '<span class="badge badge-red">❌ NO PERMIT</span>'
+                     : verdict === 'MAYBE' ? '<span class="badge badge-yellow">⚠️ MAYBE — verify with AHJ</span>'
+                     : '<span class="badge badge-gray">— verdict pending</span>';
+
+  const permits = Array.isArray(d.permits_required) ? d.permits_required : [];
+  const permitName = d.permit_name || d.permit_type || (permits[0] && permits[0].permit_type) || '';
+  const office = d.applying_office || '';
+  const phone = d.apply_phone || '';
+  const address = d.apply_address || '';
+  const applyUrl = d.apply_url || '';
+  const applyPdf = d.apply_pdf || '';
+  const license = d.license_required || '';
+  const cityReg = d.city_contractor_registration || '';
+  const fee = d.fee_range || '';
+  const feeAdjusted = !!d._fee_adjusted;
+  const tl = d.approval_timeline || {};
+  const reqs = (Array.isArray(d.requirements) && d.requirements.length) ? d.requirements
+             : (Array.isArray(d.documents_needed) ? d.documents_needed : []);
+  const inspections = Array.isArray(d.inspect_checklist) ? d.inspect_checklist
+                    : (Array.isArray(d.inspections) ? d.inspections : []);
+  const failureRisks = Array.isArray(d.common_mistakes) ? d.common_mistakes : [];
+  const sources = Array.isArray(d.sources) ? d.sources.filter(Boolean) : [];
+  const validationIssues = Array.isArray(d._validation_issues) ? d._validation_issues : [];
+  const missingFields = Array.isArray(d.missing_fields) ? d.missing_fields : [];
+  const lastVerified = d.last_verified_at || (d._meta && d._meta.generated_at) || '';
+  const lastVerifiedLabel = lastVerified ? new Date(lastVerified).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  const confidence = (d.confidence || '').toString().toLowerCase();
+  const confidenceColor = confidence === 'high' ? '#047857' : confidence === 'medium' ? '#b45309' : confidence === 'low' ? '#b91c1c' : '#57534e';
+  const confidenceLabel = confidence ? confidence.toUpperCase() : '—';
+  const confidenceReason = d.confidence_reason || '';
+  const needsReview = !!d.needs_review;
+  const hiddenTriggers = Array.isArray(d.hidden_triggers) ? d.hidden_triggers : [];
+
+  // Field renderer helper — returns "<value>" or _missing marker
+  const _v = (s) => {
+    if (s === null || s === undefined) return _missing;
+    const t = String(s).trim();
+    if (!t || t.toLowerCase() === 'none' || t.toLowerCase() === 'null') return _missing;
+    return _esc(t);
+  };
+  const _list = (arr, max) => {
+    if (!Array.isArray(arr) || arr.length === 0) return _missing;
+    const items = arr.slice(0, max || arr.length);
+    return '<ul style="margin:4px 0 0 18px; padding:0;">' + items.map(x => `<li style="margin:2px 0;">${_esc(String(x))}</li>`).join('') + '</ul>';
+  };
+
+  // Application method — derived
+  let appMethod = _missing;
+  if (applyUrl && /accela|portal|eplan|epermit|cosaccela|shapephx/i.test(applyUrl)) appMethod = 'Online portal — see field 6';
+  else if (applyUrl) appMethod = 'Online — see field 6';
+  else if (applyPdf) appMethod = 'PDF download + in-person submission — see field 14';
+  else if (phone || address) appMethod = 'In-person or by phone — see fields 12 / 13';
+
+  // Build the 18 fields
+  let html = '';
+
+  // Header: confidence + needs-review banner
+  html += `<div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:14px">`;
+  html += `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">`;
+  html += `<div style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase">PermitAssist Report v1.0</div>`;
+  html += `<div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="color:${confidenceColor};font-weight:800">CONFIDENCE: ${_esc(confidenceLabel)}</span></div>`;
+  html += `</div>`;
+  html += `<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">${_esc(job || 'Permit Lookup')}</div>`;
+  html += `<div style="font-size:13px;color:var(--text2);margin-bottom:8px">📍 ${_esc(city || '')}${city && state ? ', ' : ''}${_esc(state || '')}${lastVerifiedLabel ? ` · Last verified ${_esc(lastVerifiedLabel)}` : ''}</div>`;
+  if (needsReview) {
+    html += `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400e;margin-top:8px">⚠️ <strong>Engine flagged this answer for review</strong> — verify each field with the AHJ before relying on it.</div>`;
+  }
+  html += `</div>`;
+
+  // Hidden triggers — render BEFORE field 1 (per spec)
+  if (hiddenTriggers.length > 0) {
+    html += `<div style="background:#fef9f9;border:2px solid #fca5a5;border-radius:12px;padding:16px 20px;margin-bottom:14px">`;
+    html += `<div style="font-size:11px;font-weight:800;color:#991b1b;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">⚠️ Triggers You Didn't Ask About</div>`;
+    html += `<div style="font-size:13px;color:#7f1d1d;margin-bottom:10px;line-height:1.5">PermitAssist found ${hiddenTriggers.length} permit blocker${hiddenTriggers.length === 1 ? '' : 's'} hidden in your scope.</div>`;
+    hiddenTriggers.forEach(t => {
+      const sev = (t.severity || '').toLowerCase();
+      const sc = sev === 'high' ? { bg:'#fef2f2', tag:'#dc2626', label:'#991b1b' } : sev === 'medium' ? { bg:'#fffbeb', tag:'#d97706', label:'#92400e' } : { bg:'#eff6ff', tag:'#2563eb', label:'#1e40af' };
+      html += `<div style="background:${sc.bg};border:1px solid ${sc.tag};border-radius:8px;padding:10px 12px;margin-bottom:8px">`;
+      html += `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:4px"><span style="background:${sc.tag};color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;letter-spacing:0.4px">${(sev || 'INFO').toUpperCase()}</span> <strong style="color:${sc.label};font-size:13px">${_esc(t.title || '')}</strong></div>`;
+      if (t.why_it_matters) html += `<div style="font-size:12px;color:${sc.label};line-height:1.5;margin-bottom:4px">${_esc(t.why_it_matters)}</div>`;
+      if (Array.isArray(t.likely_required_actions) && t.likely_required_actions.length) {
+        html += `<div style="font-size:11px;color:var(--text2);margin-top:4px"><strong>Action:</strong> ${_esc(t.likely_required_actions.join(' · '))}</div>`;
+      }
+      if (Array.isArray(t.citations) && t.citations.length) {
+        html += `<div style="font-size:11px;color:var(--muted);margin-top:2px"><strong>Code:</strong> ${_esc(t.citations.join(' · '))}</div>`;
+      }
+      html += `</div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#166534">✅ No hidden triggers detected for this scope.</div>`;
+  }
+
+  // The 18 fields — locked order
+  const row = (n, label, value) => `<div style="display:grid;grid-template-columns:32px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:800;color:var(--muted);text-align:right">${n}</div><div><div style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px">${_esc(label)}</div><div style="font-size:14px;color:var(--text);line-height:1.5">${value}</div></div></div>`;
+
+  html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px 22px 18px;margin-bottom:14px">`;
+
+  // 1. Bottom line
+  const bottomLine = (d.permit_summary || d.summary || '').split(/\.\s+/)[0] || (verdict === 'YES' ? 'Permit required for this scope of work.' : verdict === 'NO' ? 'No permit required.' : 'Permit may be required — verify with AHJ.');
+  html += row(1, 'Bottom line', _esc(bottomLine));
+  // 2. Permit required
+  html += row(2, 'Permit required', verdictBadge);
+  // 3. Permit type
+  html += row(3, 'Permit type', _v(permitName));
+  // 4. Department / jurisdiction
+  html += row(4, 'Department / jurisdiction', _v(office));
+  // 5. Application method
+  html += row(5, 'Application method', appMethod);
+  // 6. Portal / link
+  const portalLink = applyUrl ? `<a href="${_esc(applyUrl)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(applyUrl)}</a>` : _missing;
+  html += row(6, 'Portal / link', portalLink);
+  // 7. Who may apply
+  let whoMay = '';
+  if (license) whoMay += _esc(license);
+  if (cityReg) whoMay += (whoMay ? ' · ' : '') + 'City contractor registration: ' + _esc(cityReg);
+  html += row(7, 'Who may apply', whoMay || _missing);
+  // 8. Required documents
+  html += row(8, 'Required documents', _list(reqs, 8));
+  // 9. Fees
+  let feeBlock = _v(fee);
+  if (feeAdjusted && fee) feeBlock += `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">(structured floor — fee verified against per-scope/per-jurisdiction baseline)</div>`;
+  html += row(9, 'Fees', feeBlock);
+  // 10. Inspections
+  html += row(10, 'Inspections', _list(inspections, 6));
+  // 11. Timeline
+  let tlBlock = '';
+  if (tl.simple) tlBlock += '<div>' + _esc(tl.simple) + '</div>';
+  if (tl.complex && tl.complex !== tl.simple) tlBlock += '<div style="margin-top:3px;font-size:12px;color:var(--text2)">Plan review: ' + _esc(tl.complex) + '</div>';
+  html += row(11, 'Timeline', tlBlock || _missing);
+  // 12. Where to call
+  const phoneBlock = phone ? `<a href="tel:${_esc((phone || '').replace(/[^\d+]/g, ''))}" style="color:var(--brand);font-weight:700">${_esc(phone)}</a>` : _missing;
+  html += row(12, 'Where to call', phoneBlock);
+  // 13. Where to go
+  const mapsUrl = address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address + ' ' + (city || '') + ' ' + (state || ''))}` : '';
+  const addressBlock = address ? `${_esc(address)}${mapsUrl ? ' · <a href="' + _esc(mapsUrl) + '" target="_blank" rel="noopener" style="color:var(--brand)">🗺️ map</a>' : ''}` : _missing;
+  html += row(13, 'Where to go', addressBlock);
+  // 14. Online application
+  let appBlock = '';
+  if (applyUrl) appBlock += `<a href="${_esc(applyUrl)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(applyUrl)}</a>`;
+  if (applyPdf) appBlock += (appBlock ? '<div style="margin-top:4px">' : '') + `<a href="${_esc(applyPdf)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">📄 PDF application: ${_esc(applyPdf)}</a>` + (appBlock ? '</div>' : '');
+  html += row(14, 'Online application', appBlock || _missing);
+  // 15. Failure risks
+  html += row(15, 'Failure risks (top 5)', _list(failureRisks, 5));
+  // 16. Missing / uncertain items
+  let missingBlock = '';
+  const missingRollup = [...missingFields, ...validationIssues.map(v => v.field || v.kind || '')].filter(Boolean);
+  if (missingRollup.length === 0) {
+    missingBlock = '✅ None flagged';
+  } else {
+    missingBlock = _list(missingRollup, 6);
+  }
+  html += row(16, 'Missing / uncertain items', missingBlock);
+  // 17. Official sources checked
+  let sourcesBlock = '';
+  if (sources.length === 0) {
+    sourcesBlock = _missing;
+  } else {
+    sourcesBlock = '<ul style="margin:4px 0 0 18px;padding:0">' + sources.slice(0, 6).map(src => {
+      const url = typeof src === 'string' ? src : (src && src.url) || '';
+      return url ? `<li style="margin:2px 0"><a href="${_esc(url)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(url)}</a></li>` : '';
+    }).filter(Boolean).join('') + '</ul>';
+  }
+  html += row(17, 'Official sources checked', sourcesBlock);
+  // 18. Last checked + confidence
+  const lastBlock = `<div style="display:flex;flex-direction:column;gap:3px"><span>${lastVerifiedLabel ? _esc(lastVerifiedLabel) : _missing}</span>${confidenceReason ? `<span style="font-size:12px;color:var(--text2)">${_esc(confidenceReason)}</span>` : ''}</div>`;
+  html += row(18, 'Last checked + confidence', lastBlock);
+
+  html += `</div>`;
+
+  // Footer with copy/print actions
+  html += `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:12px">`;
+  html += `<button class="action-btn" onclick="renderStandardView()">📄 Standard view</button>`;
+  html += `<button class="action-btn" onclick="window.print()">🖨️ Print / Save PDF</button>`;
+  html += `</div>`;
+
+  return html;
+}
+
+function renderReportView() {
+  const d = window._lastLookupResult;
+  if (!d) return;
+  const inner = document.getElementById('results-inner');
+  if (!inner) return;
+  inner.innerHTML = renderResultAsReport(d, window._lastLookupJob, window._lastLookupCity, window._lastLookupState);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderStandardView() {
+  const d = window._lastLookupResult;
+  if (!d) return;
+  renderResults(d, window._lastLookupJob, window._lastLookupCity, window._lastLookupState);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function printChecklist() {

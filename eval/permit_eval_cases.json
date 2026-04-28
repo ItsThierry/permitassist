@@ -1,0 +1,229 @@
+{
+  "_meta": {
+    "version": "v1.0.0",
+    "created": "2026-04-28",
+    "purpose": "Locked test scenarios for PermitAssist engine quality evaluation. Run via scripts/run_eval.py to grade live prod responses against deterministic rubrics. Each case scores 0-100 based on rubric checks; aggregate is the engine's score.",
+    "notes": "Cases mirror the 4-city Opus 4.7 review baselines (LA Hillside ADU, Phoenix restaurant TI, Vegas restaurant TI, Seattle restaurant TI) plus the 10-scenario Opus 4.7 grading sweep. Cache-bust suffix appended to job_type at runtime."
+  },
+  "cases": [
+    {
+      "id": "la_hillside_adu",
+      "category": "residential",
+      "scope": "residential_adu",
+      "job_type": "720 sqft ADU conversion of detached garage with 280 sqft addition, oak tree at 15 ft, legalize unpermitted bathroom, hillside lot",
+      "city": "Los Angeles",
+      "state": "CA",
+      "rubric": {
+        "must_apply_url_match": "(ladbs\\.org|dbs\\.lacity\\.gov|lacity\\.org)",
+        "must_apply_url_not_match": "(cslb\\.ca\\.gov|tdlr\\.|dbpr\\.|pw\\.lacounty\\.gov|kauffman|archive\\.org)",
+        "must_primary_scope": "residential_adu",
+        "permits_min": 4,
+        "must_sources_match_any": ["ladbs.org", "lacity.gov", "dbs.lacity.gov"],
+        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "huduser.gov", "dublin.ca.gov", "cstx.gov", "pw.lacounty.gov"],
+        "must_checklist_contain_any": ["egress window", "smoke + co", "title 24", "fire-rated", "title-24", "smoke and co"],
+        "must_checklist_not_contain": ["joist hanger", "ledger flash", "frost line", "ahri cert", "duct mastic"],
+        "must_hidden_triggers_min": 4,
+        "must_hidden_trigger_ids_any": ["la_hillside_adu_slope_grading_soils_geology", "la_hillside_adu_protected_tree_arborist", "adu_bathroom_legalization_as_built_permit_history"],
+        "must_fee_min": 12000,
+        "must_fee_max": 60000,
+        "must_validation_no_placeholder": true
+      }
+    },
+    {
+      "id": "phoenix_restaurant_ti",
+      "category": "commercial",
+      "scope": "commercial_restaurant",
+      "job_type": "3200 sqft commercial restaurant tenant improvement with Type I hood, grease interceptor, change of occupancy from B to A-2, ADA path-of-travel, fire sprinkler, outdoor patio",
+      "city": "Phoenix",
+      "state": "AZ",
+      "rubric": {
+        "must_apply_url_match": "(phoenix\\.gov|accela\\.com/PHOENIX|shapephx)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|nyc\\.gov)",
+        "must_primary_scope": "commercial_restaurant",
+        "permits_min": 4,
+        "must_sources_match_any": ["phoenix.gov", "accela.com/PHOENIX", "roc.az.gov"],
+        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "huduser.gov", "nyc.gov", "ncjrs.gov"],
+        "must_checklist_contain_any": ["nfpa 96", "type i hood", "ansul", "grease interceptor", "ipc 1003"],
+        "must_checklist_not_contain": ["joist hanger", "ledger flash", "frost line", "guardrail balust", "deck footing"],
+        "must_hidden_triggers_min": 6,
+        "must_hidden_trigger_ids_any": ["phoenix_restaurant_hood_fire_suppression", "phoenix_restaurant_b_to_a2_sprinkler_change_of_occupancy", "maricopa_restaurant_food_establishment_plan_review"],
+        "must_fee_min": 15000,
+        "must_fee_max": 200000,
+        "must_fee_adjusted": true,
+        "must_validation_no_placeholder": true
+      }
+    },
+    {
+      "id": "pasadena_solar_ess_mpu",
+      "category": "residential",
+      "scope": "residential",
+      "job_type": "12kW rooftop solar PV + 2 Powerwall 3 batteries + main service panel upgrade to 200A",
+      "city": "Pasadena",
+      "state": "CA",
+      "rubric": {
+        "must_apply_url_match": "(cityofpasadena|pasadena\\.gov|pasadenaca\\.gov|accela\\.com/pasadena|pasadena)",
+        "must_apply_url_not_match": "(cslb\\.ca\\.gov|tdlr\\.|dbpr\\.|kauffman|archive\\.org|southpasadena)",
+        "must_primary_scope": "residential",
+        "permits_min": 1,
+        "must_sources_match_any": ["pasadena", "cslb.ca.gov", "energy.ca.gov"],
+        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "huduser.gov", "southpasadenaca.gov"],
+        "must_checklist_contain_any": ["rapid shutdown", "nec 690", "nec 705", "nec 706", "ufc"],
+        "must_hidden_triggers_min": 2,
+        "must_hidden_trigger_ids_any": ["solar_pv_rapid_shutdown_pto_interconnection", "ess_battery_nfpa_855", "panel_upgrade_service_load_calc_utility_coordination"],
+        "must_fee_max": 100000,
+        "must_validation_no_placeholder": true
+      }
+    },
+    {
+      "id": "austin_hvac",
+      "category": "residential",
+      "scope": "residential",
+      "job_type": "3 ton AC condenser + new variable-speed furnace + R-410A refrigerant lineset replacement, residential",
+      "city": "Austin",
+      "state": "TX",
+      "rubric": {
+        "must_apply_url_match": "(austintexas\\.gov|abc\\.austintexas\\.gov|austin\\.gov)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org)",
+        "must_primary_scope": "residential",
+        "permits_min": 1,
+        "must_sources_match_any": ["austintexas.gov", "tdlr.texas.gov"],
+        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org"],
+        "must_checklist_not_contain": ["joist hanger", "ledger flash", "frost line"],
+        "must_fee_max": 5000,
+        "must_validation_no_placeholder": true
+      }
+    },
+    {
+      "id": "chicago_office_ti",
+      "category": "commercial",
+      "scope": "commercial_office_ti",
+      "job_type": "5000 sqft office tenant improvement with new demising walls, ADA-upgraded restrooms, sprinkler relocations, and lighting controls",
+      "city": "Chicago",
+      "state": "IL",
+      "rubric": {
+        "must_apply_url_match": "(chicago\\.gov|cityofchicago\\.org|ipiweb\\.cityofchicago\\.org)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org)",
+        "must_primary_scope": "commercial_office_ti",
+        "permits_min": 3,
+        "must_sources_match_any": ["chicago.gov", "cityofchicago.org"],
+        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "saratoga.ca.us", "dublin.ca.gov"],
+        "must_checklist_contain_any": ["ada", "demising", "iecc c405", "ibc 706", "fire-rated", "demising wall"],
+        "must_checklist_not_contain": ["joist hanger", "type i hood", "grease interceptor", "frost line", "ansul"],
+        "must_hidden_triggers_min": 3,
+        "must_fee_min": 5000,
+        "must_fee_max": 100000,
+        "must_fee_adjusted": true,
+        "must_validation_no_placeholder": true
+      }
+    },
+    {
+      "id": "denver_5_over_1_multifamily",
+      "category": "commercial",
+      "scope": "multifamily",
+      "job_type": "32-unit 5-over-1 multifamily over 8000 sqft retail podium, NFPA 13R sprinkler, Type IIIA construction",
+      "city": "Denver",
+      "state": "CO",
+      "rubric": {
+        "must_apply_url_match": "(denvergov\\.org|accela\\.com/denver|cpd\\.denvergov)",
+        "must_apply_url_not_match": "(saratoga\\.ca\\.us|dublin\\.ca\\.gov|cstx\\.gov|opendata\\.utah)",
+        "must_primary_scope": "multifamily",
+        "permits_min": 3,
+        "must_sources_match_any": ["denvergov.org", "denver", "colorado.gov"],
+        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "saratoga.ca.us", "dublin.ca.gov", "cstx.gov", "opendata.utah.gov", "coloradocoalition.org"],
+        "must_checklist_contain_any": ["nfpa 13r", "type b accessible", "ibc 706", "type iiia", "podium", "ibc 1107"],
+        "must_checklist_not_contain": ["type i hood", "grease interceptor", "joist hanger", "frost line"],
+        "must_hidden_triggers_min": 3,
+        "must_fee_min": 25000,
+        "must_fee_max": 1000000,
+        "must_fee_adjusted": true,
+        "must_validation_no_placeholder": true
+      }
+    },
+    {
+      "id": "houston_retail_ti",
+      "category": "commercial",
+      "scope": "commercial_retail_ti",
+      "job_type": "2200 sqft retail tenant improvement, new storefront glazing, demising wall, accessible restrooms, fire alarm",
+      "city": "Houston",
+      "state": "TX",
+      "rubric": {
+        "must_apply_url_match": "(houstonpermittingcenter|houstontx\\.gov|harriscountytx)",
+        "must_apply_url_not_match": "(tdlr\\.texas\\.gov|cslb\\.|kauffman)",
+        "must_primary_scope": "commercial_retail_ti",
+        "permits_min": 3,
+        "must_sources_match_any": ["houstontx.gov", "houstonpermittingcenter", "houston"],
+        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "tdlr.texas.gov"],
+        "must_checklist_contain_any": ["ibc 2406", "safety glazing", "ibc 706", "demising", "accessible", "ibc 1004"],
+        "must_checklist_not_contain": ["type i hood", "grease interceptor", "joist hanger", "frost line"],
+        "must_hidden_triggers_min": 2,
+        "must_fee_min": 4000,
+        "must_fee_max": 60000,
+        "must_fee_adjusted": true,
+        "must_validation_no_placeholder": true
+      }
+    },
+    {
+      "id": "miami_reroof",
+      "category": "residential",
+      "scope": "residential",
+      "job_type": "residential asphalt shingle reroof, 2400 sqft, hurricane strap inspection, valley flashing replacement",
+      "city": "Miami",
+      "state": "FL",
+      "rubric": {
+        "must_apply_url_match": "(miamigov|miami\\.gov|miamidade\\.gov|ecobuilt\\.miamidade)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|kauffman|archive\\.org)",
+        "must_primary_scope": "residential",
+        "permits_min": 1,
+        "must_sources_match_any": ["miami", "miamidade.gov", "myfloridalicense.com"],
+        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org"],
+        "must_checklist_contain_any": ["hvhz", "noa", "secondary water", "hurricane", "drip edge", "wind"],
+        "must_checklist_not_contain": ["type i hood", "grease interceptor"],
+        "must_fee_max": 5000,
+        "must_validation_no_placeholder": true
+      }
+    },
+    {
+      "id": "seattle_garage_adu",
+      "category": "residential",
+      "scope": "residential_adu",
+      "job_type": "convert detached 480 sqft garage into ADU with kitchen, bath, sleeping room, separate electrical service",
+      "city": "Seattle",
+      "state": "WA",
+      "rubric": {
+        "must_apply_url_match": "(seattle\\.gov|cosaccela\\.seattle\\.gov|sdci)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|kauffman|archive\\.org)",
+        "must_primary_scope": "residential_adu",
+        "permits_min": 3,
+        "must_sources_match_any": ["seattle.gov", "sdci"],
+        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "developer.accela.com"],
+        "must_checklist_contain_any": ["egress", "smoke", "fire-rated", "wsec", "title 24"],
+        "must_checklist_not_contain": ["type i hood", "grease interceptor"],
+        "must_hidden_triggers_min": 1,
+        "must_fee_min": 8000,
+        "must_fee_max": 60000,
+        "must_validation_no_placeholder": true
+      }
+    },
+    {
+      "id": "portland_change_of_occupancy",
+      "category": "commercial",
+      "scope": "change_of_occupancy",
+      "job_type": "convert 8000 sqft S-1 warehouse into B-occupancy office and light retail mix, new restrooms, sprinkler modification, ADA upgrades",
+      "city": "Portland",
+      "state": "OR",
+      "rubric": {
+        "must_apply_url_match": "(portland\\.gov|portlandoregon\\.gov|portlandmaps|bds)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|kauffman|archive\\.org)",
+        "permits_min": 3,
+        "must_sources_match_any": ["portland", "oregon.gov"],
+        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "appeal_id="],
+        "must_checklist_contain_any": ["iebc", "change of occupancy", "ibc", "ada", "egress"],
+        "must_checklist_not_contain": ["joist hanger", "frost line"],
+        "must_hidden_triggers_min": 1,
+        "must_fee_min": 6000,
+        "must_fee_max": 200000,
+        "must_validation_no_placeholder": true
+      }
+    }
+  ]
+}
