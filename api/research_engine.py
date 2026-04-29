@@ -2441,6 +2441,142 @@ _COMMERCIAL_PRIMARY_SCOPES = frozenset({
 })
 
 
+# A7 (2026-04-28): model-code citations are useful, but contractors in the
+# launch cities also expect the controlling state/local amendment regime to sit
+# next to the IBC/IMC/IPC/NEC citation. This layer only augments code_citation;
+# it intentionally does not touch tier_b/apply_state_expert_pack.
+STATE_AMENDMENT_CITATIONS = {
+    "CA": [
+        {"code": "California Building Code (CBC)", "section_pattern": "CBC Chapter <X>", "applies_to": ["all"], "version": "2022 with 2025 supplement"},
+        {"code": "California Mechanical Code (CMC)", "applies_to": ["mechanical"], "version": "2022"},
+        {"code": "California Plumbing Code (CPC)", "applies_to": ["plumbing"], "version": "2022"},
+        {"code": "California Electrical Code (CEC)", "applies_to": ["electrical"], "version": "2022"},
+        {"code": "California Energy Code Title 24 Part 6", "applies_to": ["energy", "all"], "version": "2022"},
+        {"code": "California Fire Code (CFC)", "applies_to": ["fire", "all_commercial"], "version": "2022"},
+        {"code": "CALGreen Title 24 Part 11", "applies_to": ["all"], "version": "2022"},
+    ],
+    "WA": [
+        {"code": "Washington State Energy Code Commercial (WSEC-C)", "applies_to": ["energy", "all_commercial"], "version": "2021"},
+        {"code": "Washington State Energy Code Residential (WSEC-R)", "applies_to": ["energy", "all_residential"], "version": "2021"},
+        {"code": "Seattle Building Code (SBC) Chapter <X> amendments", "applies_to": ["all"], "scope": "Seattle only"},
+    ],
+    "AZ": [
+        {"code": "Arizona Roofing Standards (ARS)", "applies_to": ["roofing"]},
+        {"code": "Phoenix Building Construction Code (PBCC) — IBC 2018 + Phoenix amendments", "applies_to": ["all"], "scope": "Phoenix only"},
+    ],
+    "NV": [
+        {"code": "Clark County Building Code — IBC 2018 + Clark amendments", "applies_to": ["all"], "scope": "Clark County / unincorporated Las Vegas"},
+        {"code": "City of Las Vegas Municipal Code Title 15", "applies_to": ["all"], "scope": "incorporated Las Vegas only"},
+    ],
+    "TX": [
+        {"code": "Texas Accessibility Standards (TAS)", "applies_to": ["accessibility", "all_commercial"], "version": "2012 with 2025 erratta"},
+        {"code": "Texas Plumbing License Law (TSBPE)", "applies_to": ["plumbing"]},
+        {"code": "Texas State Board of Plumbing Examiners", "applies_to": ["plumbing"]},
+        {"code": "TDLR — Texas Department of Licensing and Regulation (Air Conditioning and Refrigeration)", "applies_to": ["mechanical"]},
+        {"code": "Dallas Building Code Chapter — local amendments", "applies_to": ["all"], "scope": "Dallas only"},
+    ],
+}
+
+
+def _code_citation_items(code_citation):
+    if isinstance(code_citation, list):
+        return [c for c in code_citation if c]
+    if isinstance(code_citation, dict):
+        return [code_citation]
+    if isinstance(code_citation, str) and len(code_citation) > 3:
+        return [{"section": code_citation, "text": ""}]
+    return []
+
+
+def _state_amendment_trade_tags(result: dict, job_type: str) -> set[str]:
+    haystack_parts = [job_type or "", result.get("_primary_scope") or ""]
+    for key in ("code_citation", "permits_required", "companion_permits", "inspections", "what_to_bring", "common_mistakes", "pro_tips"):
+        haystack_parts.append(str(result.get(key, "")))
+    text = " ".join(haystack_parts).lower()
+    tags = set()
+    tag_terms = {
+        "mechanical": ("mechanical", "hvac", "rtu", "furnace", "heat pump", "imc", "air conditioning", "tdlr"),
+        "plumbing": ("plumbing", "fixture", "grease interceptor", "ipc", "water heater", "dwv", "tsbpe"),
+        "electrical": ("electrical", "panel", "wiring", "circuit", "nec", "service upgrade", "lighting"),
+        "fire": ("fire", "sprinkler", "alarm", "ansul", "hood suppression", "ifc", "cfc"),
+        "accessibility": ("accessib", " ada", "tas", "disabled", "barrier"),
+        "energy": ("energy", "title 24", "wsec", "calgreen", "envelope", "insulation"),
+        "roofing": ("roof", "reroof", "re-roof", "roofing"),
+    }
+    for tag, terms in tag_terms.items():
+        if any(term in text for term in terms):
+            tags.add(tag)
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    tags.add("all_commercial" if primary_scope in _COMMERCIAL_PRIMARY_SCOPES else "all_residential")
+    tags.add("all")
+    return tags
+
+
+def _format_amendment_code(amendment: dict, existing_items: list[dict]) -> str:
+    code = amendment.get("code", "")
+    pattern = amendment.get("section_pattern")
+    if pattern and "<X>" in pattern:
+        for item in existing_items:
+            section = str(item.get("section") or item.get("code") or "")
+            m = re.search(r"\b(?:IBC|IRC|IEBC)\s*(?:§+\s*)?(\d+)", section, re.I)
+            if m:
+                chapter = m.group(1)[:2] if len(m.group(1)) >= 4 else m.group(1)[:1]
+                return f"{code} {pattern.replace('<X>', chapter).replace('CBC ', '')}"
+    return code.replace("Chapter <X>", "Chapter INCOMPLETE — verify AHJ-specific chapter")
+
+
+def apply_state_amendment_citations(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Append A7 state/local amendment citations to result['code_citation']."""
+    state_code = (state or "").strip().upper()
+    amendments = STATE_AMENDMENT_CITATIONS.get(state_code)
+    if not amendments:
+        return result
+
+    city_lc = (city or "").lower()
+    tags = _state_amendment_trade_tags(result, job_type)
+    existing_items = _code_citation_items(result.get("code_citation"))
+    out = list(existing_items)
+    seen = {str(i.get("code") or i.get("section") or "").lower() for i in out if isinstance(i, dict)}
+
+    for amendment in amendments:
+        scope = amendment.get("scope", "")
+        if "Seattle only" in scope and "seattle" not in city_lc:
+            continue
+        if "Phoenix only" in scope and "phoenix" not in city_lc:
+            continue
+        if "Dallas only" in scope and "dallas" not in city_lc:
+            continue
+        if "Clark County" in scope and not any(t in city_lc for t in ("las vegas", "clark")):
+            continue
+        if "incorporated Las Vegas" in scope and "las vegas" not in city_lc:
+            continue
+
+        applies_to = amendment.get("applies_to", [])
+        matched_scope = next((a for a in applies_to if a in tags), None)
+        if not matched_scope:
+            continue
+
+        code = _format_amendment_code(amendment, existing_items)
+        if code.lower() in seen:
+            continue
+        entry = {
+            "code": code,
+            "type": "state_amendment",
+            "state": state_code,
+            "applies_to_scope": matched_scope,
+        }
+        if amendment.get("version"):
+            entry["version"] = amendment["version"]
+        if amendment.get("scope"):
+            entry["scope"] = amendment["scope"]
+        out.append(entry)
+        seen.add(code.lower())
+
+    if out:
+        result["code_citation"] = out
+    return result
+
+
 def generate_permit_checklist(job_type: str, city: str, state: str, result: dict) -> list[str]:
     try:
         primary_scope = detect_primary_scope(job_type)
@@ -6514,6 +6650,8 @@ Return ONLY the JSON object."""
         result["code_citation"] = {"section": cc, "text": ""}
     elif not cc:
         result["code_citation"] = None
+
+    result = apply_state_amendment_citations(result, job_type, city, state)
 
     # Ensure list fields are present and well-formed
     if not isinstance(result.get("permits_required"), list):

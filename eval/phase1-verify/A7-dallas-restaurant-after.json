@@ -1,0 +1,64 @@
+{
+  "_primary_scope": "commercial_restaurant",
+  "job_summary": "Dallas restaurant tenant improvement with Type I hood, grease interceptor, ADA restroom upgrades, and MEP work.",
+  "location": "Dallas, TX",
+  "code_citation": [
+    {
+      "section": "IBC 105.1",
+      "text": "Permits required for construction, enlargement, alteration, repair, movement, demolition, or change of occupancy."
+    },
+    {
+      "code": "Texas Accessibility Standards (TAS)",
+      "type": "state_amendment",
+      "state": "TX",
+      "applies_to_scope": "accessibility",
+      "version": "2012 with 2025 erratta"
+    },
+    {
+      "code": "Texas Plumbing License Law (TSBPE)",
+      "type": "state_amendment",
+      "state": "TX",
+      "applies_to_scope": "plumbing"
+    },
+    {
+      "code": "Texas State Board of Plumbing Examiners",
+      "type": "state_amendment",
+      "state": "TX",
+      "applies_to_scope": "plumbing"
+    },
+    {
+      "code": "TDLR \u2014 Texas Department of Licensing and Regulation (Air Conditioning and Refrigeration)",
+      "type": "state_amendment",
+      "state": "TX",
+      "applies_to_scope": "mechanical"
+    },
+    {
+      "code": "Dallas Building Code Chapter \u2014 local amendments",
+      "type": "state_amendment",
+      "state": "TX",
+      "applies_to_scope": "all",
+      "scope": "Dallas only"
+    }
+  ],
+  "permits_required": [
+    {
+      "permit_type": "Building Permit \u2014 Commercial Restaurant TI"
+    },
+    {
+      "permit_type": "Mechanical Permit"
+    },
+    {
+      "permit_type": "Plumbing Permit"
+    },
+    {
+      "permit_type": "Electrical Permit"
+    }
+  ],
+  "companion_permits": [],
+  "inspections": [],
+  "what_to_bring": [],
+  "common_mistakes": [],
+  "pro_tips": [
+    "Coordinate TAS accessibility review, TDLR mechanical licensing, and TSBPE plumbing requirements before submittal."
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "_primary_scope": "residential_adu",
+  "job_summary": "Los Angeles hillside ADU conversion requiring building and energy review.",
+  "location": "Los Angeles, CA",
+  "code_citation": [
+    {
+      "section": "IBC 105.1",
+      "text": "Permits required for construction, enlargement, alteration, repair, movement, demolition, or change of occupancy."
+    },
+    {
+      "code": "California Building Code (CBC) Chapter 1",
+      "type": "state_amendment",
+      "state": "CA",
+      "applies_to_scope": "all",
+      "version": "2022 with 2025 supplement"
+    },
+    {
+      "code": "California Mechanical Code (CMC)",
+      "type": "state_amendment",
+      "state": "CA",
+      "applies_to_scope": "mechanical",
+      "version": "2022"
+    },
+    {
+      "code": "California Energy Code Title 24 Part 6",
+      "type": "state_amendment",
+      "state": "CA",
+      "applies_to_scope": "energy",
+      "version": "2022"
+    },
+    {
+      "code": "CALGreen Title 24 Part 11",
+      "type": "state_amendment",
+      "state": "CA",
+      "applies_to_scope": "all",
+      "version": "2022"
+    }
+  ],
+  "permits_required": [
+    {
+      "permit_type": "Building Permit \u2014 ADU / Garage Conversion"
+    }
+  ],
+  "companion_permits": [],
+  "inspections": [],
+  "what_to_bring": [],
+  "common_mistakes": [],
+  "pro_tips": [
+    "Title 24 energy forms required for ADU envelope/mechanical scope."
+  ]
+}
