@@ -2441,6 +2441,124 @@ _COMMERCIAL_PRIMARY_SCOPES = frozenset({
 })
 
 
+# A4 (2026-04-28): downstream cleanup for solar/ESS advisory residue leaking
+# into non-solar residential scopes after permit + content assembly. Keep this
+# conservative and late in the pipeline: it must not alter trigger detection,
+# and it intentionally leaves commercial output alone.
+_A4_SOLAR_ESS_SCOPE_RE = re.compile(r"(?<![a-z0-9])(?:solar|pv|photovoltaic|battery|batteries|ess|bess|energy\s+storage|panel_with_storage)(?![a-z0-9])", re.I)
+_A4_SOLAR_ESS_TEXT_RE = re.compile(
+    r"\b(?:"
+    r"ESS|Energy\s+Storage\s+System|energy\s+storage|solar|PV|photovoltaic|"
+    r"battery|batteries|Powerwall|LiFePO4|lithium|NFPA\s*855|NEC\s*706|"
+    r"IRC\s*324\.10|inverter|microinverter|string\s+inverter|ESS\s+NEC|"
+    r"ESS\s+NFPA|BESS"
+    r")\b",
+    re.I,
+)
+
+
+def _a4_solar_ess_in_scope(result: dict, job_type: str) -> bool:
+    """Return True only when solar/PV/battery/ESS is actually in scope."""
+    parts = [job_type or "", str((result or {}).get("_primary_scope") or "")]
+    if any(_A4_SOLAR_ESS_SCOPE_RE.search(p) for p in parts):
+        return True
+    for trig in (result or {}).get("hidden_triggers") or []:
+        trig_id = ""
+        if isinstance(trig, dict):
+            trig_id = str(trig.get("id") or trig.get("trigger_id") or "")
+        else:
+            trig_id = str(trig or "")
+        if _A4_SOLAR_ESS_SCOPE_RE.search(trig_id):
+            return True
+    return False
+
+
+def _a4_strip_solar_ess_sentences(text: str) -> str:
+    """Remove only sentences/clauses containing solar/ESS keywords."""
+    if not isinstance(text, str) or not _A4_SOLAR_ESS_TEXT_RE.search(text):
+        return text
+    pieces = re.split(r"(?<=[.!?])\s+|\n+", text)
+    kept = [p.strip() for p in pieces if p.strip() and not _A4_SOLAR_ESS_TEXT_RE.search(p)]
+    if kept:
+        return " ".join(kept)
+    clauses = re.split(r"\s*(?:;|\s+—\s+|\s+-\s+)\s*", text)
+    kept = [c.strip() for c in clauses if c.strip() and not _A4_SOLAR_ESS_TEXT_RE.search(c)]
+    return "; ".join(kept).strip()
+
+
+def purge_solar_ess_residue(result: dict, job_type: str) -> dict:
+    """Suppress ESS/solar/battery advisory residue for non-solar residential scopes."""
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope in _COMMERCIAL_PRIMARY_SCOPES:
+        return result
+    if _a4_solar_ess_in_scope(result, job_type):
+        return result
+
+    removed = 0
+
+    def clean_string(value: str) -> str:
+        nonlocal removed
+        cleaned = _a4_strip_solar_ess_sentences(value)
+        if cleaned != value:
+            removed += 1
+        return cleaned
+
+    def clean_list(values, drop_keyword_dicts: bool = False):
+        nonlocal removed
+        if not isinstance(values, list):
+            return values
+        out = []
+        for item in values:
+            if isinstance(item, str):
+                if _A4_SOLAR_ESS_TEXT_RE.search(item):
+                    removed += 1
+                    continue
+                out.append(item)
+            elif isinstance(item, dict):
+                if drop_keyword_dicts and _A4_SOLAR_ESS_TEXT_RE.search(str(item)):
+                    removed += 1
+                    continue
+                out.append(clean_dict(item))
+            else:
+                out.append(item)
+        return out
+
+    def clean_dict(obj: dict) -> dict:
+        cleaned = dict(obj)
+        for key, value in list(cleaned.items()):
+            if isinstance(value, str) and key in {"notes", "note", "description", "applies_to", "title"}:
+                cleaned[key] = clean_string(value)
+            elif isinstance(value, list) and key in {"notes", "fail_points", "common_mistakes", "pro_tips", "watch_out"}:
+                cleaned[key] = clean_list(value)
+        return cleaned
+
+    for key in ("job_summary", "zoning_hoa_flag", "confidence_reason", "disclaimer"):
+        if isinstance(result.get(key), str):
+            result[key] = clean_string(result[key])
+    for key in ("pro_tips", "common_mistakes", "watch_out", "what_to_bring", "requirements", "checklist"):
+        if key in result:
+            result[key] = clean_list(result.get(key))
+    if "expert_notes" in result:
+        result["expert_notes"] = clean_list(result.get("expert_notes"), drop_keyword_dicts=True)
+    for key in ("inspections", "permits_required"):
+        if isinstance(result.get(key), list):
+            result[key] = [clean_dict(item) if isinstance(item, dict) else item for item in result[key]]
+    for key in ("sources", "state_expert_notes"):
+        if isinstance(result.get(key), list):
+            result[key] = clean_list(result[key], drop_keyword_dicts=True)
+    for key in ("fee_source", "ahj_contact_source", "code_section_source", "required_documents_source", "inspection_process_source"):
+        if isinstance(result.get(key), dict) and _A4_SOLAR_ESS_TEXT_RE.search(str(result[key])):
+            result[key] = {}
+            removed += 1
+
+    if removed:
+        result["_a4_residue_removed"] = removed
+    return result
+
+
 # A7 (2026-04-28): model-code citations are useful, but contractors in the
 # launch cities also expect the controlling state/local amendment regime to sit
 # next to the IBC/IMC/IPC/NEC citation. This layer only augments code_citation;
@@ -7252,6 +7370,10 @@ Return ONLY the JSON object."""
     # Real Opus 4.7 production leaks: ojp.gov (Phoenix), kauffman.org (Seattle),
     # archive.org/dailycolonist1978 (Vegas), pw.lacounty.gov (LA city query).
     sanitize_free_text_urls(result, city, state)
+
+    # A4: purge ESS/solar/battery advisory residue from non-solar residential
+    # scopes after permit/content assembly and before render/cache.
+    purge_solar_ess_residue(result, job_type)
 
     # 2026-04-28: Final hard gate — catch placeholder leaks and scope mismatch
     # before the result reaches the contractor. Mutates result in place; if
