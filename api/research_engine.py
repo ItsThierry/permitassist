@@ -4532,6 +4532,87 @@ def _ahj_companion_permit_name(family: str, primary_scope: str, city: str, state
     return (verified_names if verified else generic).get(family, generic[family])
 
 
+# A6 (2026-04-28): deterministic retail TI rulebook enrichment. Complements
+# hidden-trigger detection with retail-specific content so retail TI no longer
+# gets thin office/restaurant leftovers.
+def apply_retail_ti_rulebook(result: dict, job_type: str, city: str, state: str) -> dict:
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope != "commercial_retail_ti":
+        return result
+
+    def ensure_list(key: str) -> list:
+        if not isinstance(result.get(key), list):
+            result[key] = []
+        return result[key]
+
+    def add_unique(key: str, items: list[str]) -> None:
+        arr = ensure_list(key)
+        seen = {str(x).strip().lower() for x in arr if isinstance(x, str)}
+        for item in items:
+            if item.lower() not in seen:
+                arr.append(item)
+                seen.add(item.lower())
+
+    city_state = f"{city}, {state}".strip(", ")
+    add_unique("pro_tips", [
+        "Coordinate the sign permit with the landlord's master sign program before ordering storefront signage.",
+        "Confirm retail parking ratio and accessible parking/path-of-travel scope before lease execution or final layout.",
+        "If the tenant sells food, groceries, coffee, alcohol, or cannabis, start health/licensing/zoning review in parallel with the building TI.",
+        "Package storefront elevations, glazing specs, awning details, and sign locations together so facade/design review does not lag the TI.",
+    ])
+    add_unique("watch_out", [
+        "Many cities require a Master Sign Program or landlord sign criteria approval before individual retail sign permits.",
+        "Parking, loading, and zoning variances commonly surface on change-of-use retail TIs and can block the certificate of occupancy.",
+        "Tenant leases often restrict facade, storefront, awning, penetrations, and signage even when code allows them — get landlord signoff early.",
+        "Illuminated signage may need both a sign permit and an electrical sign permit/inspection.",
+    ])
+    add_unique("common_mistakes", [
+        "Skipping storefront/facade design review when windows, awnings, signs, or exterior finishes change.",
+        "Underestimating ADA path-of-travel upgrades for a primary-function retail alteration and missing the 20% cost allocation.",
+        "Missing storefront glazing and lighting/HVAC energy-code documentation (COMcheck/IECC, Title 24, WSEC-C, or local equivalent).",
+        "Submitting retail fixture plans without occupant-load, egress, aisle-width, and exit-sign/emergency-lighting coordination.",
+    ])
+    add_unique("inspections", [
+        "Building rough/final — verify sales-floor layout, accessible route, exits, doors/hardware, and certificate-of-occupancy conditions.",
+        "Storefront/facade final — verify glazing safety labels, awning attachment, exterior finishes, and approved elevations.",
+        "Sign final / electrical sign inspection — verify sign location, mounting, illumination disconnect, and landlord/master-sign-program compliance.",
+        "Fire alarm / sprinkler acceptance test if devices, ceilings, racking, demising walls, or coverage areas changed.",
+        "Energy compliance verification — confirm lighting controls, lighting power density, HVAC controls, economizer/ventilation, and storefront glazing documentation.",
+    ])
+
+    # Surface companion permits from A6 triggers as first-class companions.
+    companions = ensure_list("companion_permits")
+    existing_companions = {str(c.get("permit_type") if isinstance(c, dict) else c).strip().lower() for c in companions}
+    for trig in result.get("hidden_triggers") or []:
+        if not isinstance(trig, dict) or not str(trig.get("id", "")).startswith("retail_"):
+            continue
+        for permit in trig.get("companion_permits") or []:
+            key = str(permit).strip().lower()
+            if key and key not in existing_companions:
+                companions.append({
+                    "permit_type": permit,
+                    "reason": trig.get("why_it_matters") or f"Retail TI rulebook trigger {trig.get('id')}",
+                    "certainty": "likely" if trig.get("severity") == "medium" else "almost_certain",
+                })
+                existing_companions.add(key)
+
+    # Make sure critical retail companions can appear even when a thin prompt
+    # only says "retail TI" and hidden trigger companion text is sparse.
+    baseline = [
+        ("Sign Permit", "Retail tenant changes usually include new wall/window/monument signage; most AHJs review signs separately."),
+        ("Electrical Sign Permit if illuminated", "Illuminated retail signage generally requires electrical review/inspection under NEC Article 600."),
+    ]
+    for permit, reason in baseline:
+        key = permit.lower()
+        if key not in existing_companions:
+            companions.append({"permit_type": permit, "reason": reason, "certainty": "almost_certain"})
+            existing_companions.add(key)
+
+    return result
+
 def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: str) -> dict:
     """A3: ensure office/retail TI required permits include core MEP families.
 
@@ -7339,6 +7420,7 @@ Return ONLY the JSON object."""
             job_type=job_type, city=city, state=state,
             primary_scope=primary_scope_for_triggers, result=result,
         )
+        apply_retail_ti_rulebook(result, job_type, city, state)
     except Exception as e:
         print(f"[hidden_triggers] Failed: {e}")
         result["hidden_triggers"] = []

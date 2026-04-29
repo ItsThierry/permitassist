@@ -1,0 +1,399 @@
+{
+  "_primary_scope": "commercial_retail_ti",
+  "location": "Phoenix, AZ",
+  "job_summary": "Phoenix retail tenant improvement boutique $180,000 buildout with new storefront sign, lighting, HVAC, cash wrap and restroom refresh",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit",
+      "portal_selection": "Building Permit",
+      "required": true,
+      "notes": "Base retail tenant improvement building review."
+    },
+    {
+      "permit_type": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+      "portal_selection": "Mechanical Permit - Commercial Interior Alteration",
+      "required": true,
+      "notes": "Added by A3 TI permit-floor guardrail: mechanical review is a core companion permit family for commercial retail ti scope. Verify exact AHJ portal label before submittal."
+    },
+    {
+      "permit_type": "Electrical Permit \u2014 Commercial Tenant Improvement",
+      "portal_selection": "Electrical Permit - Commercial Interior Alteration",
+      "required": true,
+      "notes": "Added by A3 TI permit-floor guardrail: electrical review is a core companion permit family for commercial retail ti scope. Verify exact AHJ portal label before submittal."
+    },
+    {
+      "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+      "portal_selection": "Plumbing Permit - Commercial Interior Alteration",
+      "required": true,
+      "notes": "Added by A3 TI permit-floor guardrail: plumbing review is a core companion permit family for commercial retail ti scope. Verify exact AHJ portal label before submittal."
+    },
+    {
+      "permit_type": "Sign Permit \u2014 Commercial Storefront / Wall Sign",
+      "portal_selection": "Sign Permit - Commercial",
+      "required": true,
+      "notes": "Added by A3 TI permit-floor guardrail: sign review is a core companion permit family for commercial retail ti scope. Verify exact AHJ portal label before submittal."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+      "included_because": "Added by A3 TI permit-floor guardrail: mechanical review is a core companion permit family for commercial retail ti scope. Verify exact AHJ portal label before submittal.",
+      "scope_trigger": "A3 commercial TI min_permits floor"
+    },
+    {
+      "permit_type": "Electrical Permit \u2014 Commercial Tenant Improvement",
+      "included_because": "Added by A3 TI permit-floor guardrail: electrical review is a core companion permit family for commercial retail ti scope. Verify exact AHJ portal label before submittal.",
+      "scope_trigger": "A3 commercial TI min_permits floor"
+    },
+    {
+      "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+      "included_because": "Added by A3 TI permit-floor guardrail: plumbing review is a core companion permit family for commercial retail ti scope. Verify exact AHJ portal label before submittal.",
+      "scope_trigger": "A3 commercial TI min_permits floor"
+    },
+    {
+      "permit_type": "Sign Permit \u2014 Commercial Storefront / Wall Sign",
+      "included_because": "Added by A3 TI permit-floor guardrail: sign review is a core companion permit family for commercial retail ti scope. Verify exact AHJ portal label before submittal.",
+      "scope_trigger": "A3 commercial TI min_permits floor"
+    }
+  ],
+  "companion_permits": [
+    {
+      "permit_type": "Sign Permit",
+      "reason": "Signage is commonly a separate permit and missing it is one of the fastest ways a retail opening slips, especially when the sign is illuminated or tied to a master sign program.",
+      "certainty": "almost_certain"
+    },
+    {
+      "permit_type": "Electrical Sign Permit if illuminated",
+      "reason": "Signage is commonly a separate permit and missing it is one of the fastest ways a retail opening slips, especially when the sign is illuminated or tied to a master sign program.",
+      "certainty": "almost_certain"
+    },
+    {
+      "permit_type": "Facade Alteration Permit",
+      "reason": "Retail storefront, awning, window, and facade work is often reviewed separately from the interior TI; Specific Plan/form-based-code areas may add design review.",
+      "certainty": "almost_certain"
+    },
+    {
+      "permit_type": "Electrical Permit",
+      "reason": "New lighting, controls, HVAC, envelope, or storefront glazing can require COMcheck/IECC forms, WSEC-C, or CA Title 24 Part 6 documentation.",
+      "certainty": "likely"
+    },
+    {
+      "permit_type": "Mechanical Permit",
+      "reason": "New lighting, controls, HVAC, envelope, or storefront glazing can require COMcheck/IECC forms, WSEC-C, or CA Title 24 Part 6 documentation.",
+      "certainty": "likely"
+    }
+  ],
+  "pro_tips": [
+    "Coordinate the sign permit with the landlord's master sign program before ordering storefront signage.",
+    "Confirm retail parking ratio and accessible parking/path-of-travel scope before lease execution or final layout.",
+    "If the tenant sells food, groceries, coffee, alcohol, or cannabis, start health/licensing/zoning review in parallel with the building TI.",
+    "Package storefront elevations, glazing specs, awning details, and sign locations together so facade/design review does not lag the TI."
+  ],
+  "watch_out": [
+    "Many cities require a Master Sign Program or landlord sign criteria approval before individual retail sign permits.",
+    "Parking, loading, and zoning variances commonly surface on change-of-use retail TIs and can block the certificate of occupancy.",
+    "Tenant leases often restrict facade, storefront, awning, penetrations, and signage even when code allows them \u2014 get landlord signoff early.",
+    "Illuminated signage may need both a sign permit and an electrical sign permit/inspection."
+  ],
+  "common_mistakes": [
+    "Skipping storefront/facade design review when windows, awnings, signs, or exterior finishes change.",
+    "Underestimating ADA path-of-travel upgrades for a primary-function retail alteration and missing the 20% cost allocation.",
+    "Missing storefront glazing and lighting/HVAC energy-code documentation (COMcheck/IECC, Title 24, WSEC-C, or local equivalent).",
+    "Submitting retail fixture plans without occupant-load, egress, aisle-width, and exit-sign/emergency-lighting coordination."
+  ],
+  "inspections": [
+    "Building rough/final \u2014 verify sales-floor layout, accessible route, exits, doors/hardware, and certificate-of-occupancy conditions.",
+    "Storefront/facade final \u2014 verify glazing safety labels, awning attachment, exterior finishes, and approved elevations.",
+    "Sign final / electrical sign inspection \u2014 verify sign location, mounting, illumination disconnect, and landlord/master-sign-program compliance.",
+    "Fire alarm / sprinkler acceptance test if devices, ceilings, racking, demising walls, or coverage areas changed.",
+    "Energy compliance verification \u2014 confirm lighting controls, lighting power density, HVAC controls, economizer/ventilation, and storefront glazing documentation."
+  ],
+  "sources": [],
+  "hidden_triggers": [
+    {
+      "id": "retail_ada_path_of_travel_20pct",
+      "severity": "high",
+      "title": "Retail TI valuation can trigger ADA path-of-travel upgrades",
+      "why_it_matters": "Alterations to a retail primary-function area can require accessible upgrades to the entrance, route, restrooms, parking, counters, and signage up to the 20% disproportionality cap.",
+      "fired_by": [
+        "\\bretail\\b",
+        "\\btenant improvement\\b",
+        "\\bti\\b",
+        "\\bbuildout\\b",
+        "\\brenovation\\b",
+        "\\bremodel\\b",
+        "\\bfront counter\\b",
+        "\\bcash wrap\\b",
+        "\\brestroom\\b",
+        "\\$\\s?\\d"
+      ],
+      "likely_required_actions": [
+        "Prepare ADA path-of-travel cost allocation",
+        "Show accessible route from site arrival to sales floor/counter/restrooms",
+        "Verify accessible parking and entrance hardware"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "2010 ADA Standards \u00a7202.4",
+        "28 CFR \u00a736.403",
+        "IBC Chapter 11",
+        "CBC 11B-202.4 / TAS where adopted"
+      ],
+      "primary_scope": "commercial_retail_ti"
+    },
+    {
+      "id": "retail_signage_permit",
+      "severity": "high",
+      "title": "Retail tenant changes almost always need a separate sign permit",
+      "why_it_matters": "Signage is commonly a separate permit and missing it is one of the fastest ways a retail opening slips, especially when the sign is illuminated or tied to a master sign program.",
+      "fired_by": [
+        "\\bretail\\b",
+        "\\bstore\\b",
+        "\\bshop\\b",
+        "\\bboutique\\b",
+        "\\bshowroom\\b",
+        "\\bmall tenant\\b",
+        "\\bstrip mall\\b",
+        "\\bsign(age)?\\b",
+        "\\btenant improvement\\b",
+        "\\bti\\b"
+      ],
+      "likely_required_actions": [
+        "Submit wall/window/monument sign drawings separately if required",
+        "Confirm landlord master sign program",
+        "Add electrical sign permit if illuminated"
+      ],
+      "companion_permits": [
+        "Sign Permit",
+        "Electrical Sign Permit if illuminated"
+      ],
+      "agencies": [
+        "AHJ Sign/Zoning reviewer",
+        "Electrical reviewer"
+      ],
+      "citations": [
+        "Local sign code [verify district and master sign program]",
+        "NEC Article 600"
+      ],
+      "primary_scope": "commercial_retail_ti"
+    },
+    {
+      "id": "retail_storefront_facade_alteration",
+      "severity": "high",
+      "title": "Storefront/facade changes usually need separate facade or design review",
+      "why_it_matters": "Retail storefront, awning, window, and facade work is often reviewed separately from the interior TI; Specific Plan/form-based-code areas may add design review.",
+      "fired_by": [
+        "\\bfacade\\b",
+        "\\bfa\u00e7ade\\b",
+        "\\bstorefront\\b",
+        "\\bawning\\b",
+        "\\bwindow(s)?\\b",
+        "\\bglazing\\b",
+        "\\bfrontage\\b"
+      ],
+      "likely_required_actions": [
+        "Confirm facade/design-review path before TI submittal",
+        "Show storefront elevations, materials, glazing, and awning attachment",
+        "Coordinate sign locations with facade drawings"
+      ],
+      "companion_permits": [
+        "Facade Alteration Permit",
+        "Sign Permit"
+      ],
+      "agencies": [
+        "AHJ Building Dept",
+        "Planning / Design Review",
+        "Sign reviewer"
+      ],
+      "citations": [
+        "IBC \u00a7105.1",
+        "IBC \u00a72406",
+        "Local sign/facade design standards [verify before merging]"
+      ],
+      "primary_scope": "commercial_retail_ti"
+    },
+    {
+      "id": "commercial_hvac_a2l_refrigerant_2025_transition",
+      "severity": "medium",
+      "title": "Commercial HVAC replacement must use A2L refrigerant per 2025 EPA AIM Act phasedown",
+      "why_it_matters": "Manufacture/import of new R-410A rooftop units and split systems was largely cut off January 1, 2025 under EPA 40 CFR Part 84. Commercial replacements ship with A2L refrigerants (R-454B, R-32) that change clearance, leak detection, electrical disconnect, and EMS interlock requirements.",
+      "fired_by": [
+        "\\bhvac\\b",
+        "\\brtu\\b",
+        "\\brooftop unit\\b",
+        "\\bcondenser\\b",
+        "\\bvrf\\b",
+        "\\bvrv\\b",
+        "\\br[-\\s]?410a\\b",
+        "\\br[-\\s]?454b\\b",
+        "\\br[-\\s]?32\\b",
+        "\\ba2l\\b",
+        "\\brefrigerant\\b"
+      ],
+      "likely_required_actions": [
+        "Confirm new equipment is A2L-compatible (R-454B / R-32)",
+        "Add refrigerant detection / EMS shutoff per ASHRAE 15 and listing",
+        "Verify installer EPA Section 608 + manufacturer A2L training"
+      ],
+      "companion_permits": [
+        "Mechanical permit",
+        "Electrical permit if disconnect / EMS changes"
+      ],
+      "agencies": [
+        "AHJ Mechanical Dept",
+        "EPA"
+      ],
+      "citations": [
+        "40 CFR Part 84 (AIM Act technology transitions)",
+        "ASHRAE 15-2022",
+        "UL 60335-2-40",
+        "IMC \u00a71106 [verify adopted edition before merging]"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_accessible_route_existing_building_alteration",
+      "severity": "medium",
+      "title": "Commercial alteration can require accessible-route/path-of-travel upgrades",
+      "why_it_matters": "Even when the requested work is not 'an ADA project,' altered primary-function areas can require accessible route, restroom, drinking fountain, parking, and entrance upgrades within the disproportionality cap.",
+      "fired_by": [
+        "\\btenant improvement\\b",
+        "\\bti\\b",
+        "\\bprimary function\\b",
+        "\\baccessible route\\b",
+        "\\bpath of travel\\b",
+        "\\bfront counter\\b",
+        "\\breception\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare path-of-travel analysis",
+        "Budget required accessible upgrades",
+        "Document 20% disproportionality cap if used"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR \u00a736.403",
+        "2010 ADA Standards \u00a7202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_lighting_iecc_controls",
+      "severity": "medium",
+      "title": "Lighting changes trigger IECC lighting-power and automatic-control checks",
+      "why_it_matters": "Replacing or reconfiguring lighting can require COMcheck/energy forms, lighting power density compliance, occupancy sensors, daylight controls, and automatic shutoff details.",
+      "fired_by": [
+        "\\blighting\\b",
+        "\\blight fixtures\\b",
+        "\\bled retrofit\\b",
+        "\\btrack lighting\\b",
+        "\\boccupancy sensors?\\b",
+        "\\bdaylight controls?\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare lighting compliance / COMcheck if required",
+        "Show control zones and automatic shutoff",
+        "Coordinate emergency egress lighting"
+      ],
+      "companion_permits": [
+        "Electrical permit, if separated locally"
+      ],
+      "agencies": [
+        "AHJ Electrical/Energy reviewer"
+      ],
+      "citations": [
+        "IECC \u00a7C405",
+        "ASHRAE 90.1 [where adopted]"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_plumbing_fixture_count_change",
+      "severity": "medium",
+      "title": "Occupancy or occupant-load change can alter required restroom fixture counts",
+      "why_it_matters": "A retail/office/assembly change may look like tenant buildout but can require additional fixtures or accessible upgrades if occupant load or use category changes.",
+      "fired_by": [
+        "\\bchange of occupancy\\b",
+        "\\bchange of use\\b",
+        "\\boccupant load\\b",
+        "\\brestroom\\b",
+        "\\bassembly\\b",
+        "\\btraining room\\b",
+        "\\bshowroom\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare occupant-load and plumbing-fixture-count table",
+        "Check accessible fixture requirements",
+        "Coordinate any restroom expansion with path-of-travel obligations"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building/Plumbing Dept"
+      ],
+      "citations": [
+        "IPC \u00a7403.1",
+        "IBC \u00a72902",
+        "2010 ADA Standards \u00a7213"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "retail_energy_code_lighting_hvac",
+      "severity": "medium",
+      "title": "Retail lighting/HVAC work triggers commercial energy-code compliance",
+      "why_it_matters": "New lighting, controls, HVAC, envelope, or storefront glazing can require COMcheck/IECC forms, WSEC-C, or CA Title 24 Part 6 documentation.",
+      "fired_by": [
+        "\\blighting\\b",
+        "\\blight fixtures?\\b",
+        "\\bhvac\\b",
+        "\\bduct\\b",
+        "\\bthermostat\\b",
+        "\\bcontrols?\\b",
+        "\\bstorefront\\b",
+        "\\bglazing\\b",
+        "\\bti\\b",
+        "\\btenant improvement\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare COMcheck/IECC or state energy forms",
+        "Show lighting power density and control zones",
+        "Coordinate HVAC economizer/ventilation and storefront glazing performance"
+      ],
+      "companion_permits": [
+        "Electrical Permit",
+        "Mechanical Permit"
+      ],
+      "agencies": [
+        "Energy reviewer",
+        "AHJ Electrical/Mechanical Dept"
+      ],
+      "citations": [
+        "IECC \u00a7C405",
+        "IECC \u00a7C403",
+        "WSEC-C / CA Title 24 Part 6 / local amendments where adopted"
+      ],
+      "primary_scope": "commercial_retail_ti"
+    }
+  ],
+  "_a3_min_permits": {
+    "scope": "commercial_retail_ti",
+    "floor": 4,
+    "added_families": [
+      "mechanical",
+      "electrical",
+      "plumbing",
+      "sign"
+    ],
+    "verified_city_row": true
+  },
+  "permit_verdict": "YES"
+}

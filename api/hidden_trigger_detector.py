@@ -226,6 +226,130 @@ HIDDEN_TRIGGER_REGISTRY = [
     },
 
     # ------------------------------------------------------------------
+    # Commercial retail TI triggers (A6)
+    # ------------------------------------------------------------------
+    {
+        "id": "retail_storefront_facade_alteration",
+        "severity": "high",
+        "title": "Storefront/facade changes usually need separate facade or design review",
+        "why_it_matters": "Retail storefront, awning, window, and facade work is often reviewed separately from the interior TI; Specific Plan/form-based-code areas may add design review.",
+        "fired_by": [r"\bfacade\b", r"\bfaçade\b", r"\bstorefront\b", r"\bawning\b", r"\bwindow(s)?\b", r"\bglazing\b", r"\bfrontage\b"],
+        "likely_required_actions": ["Confirm facade/design-review path before TI submittal", "Show storefront elevations, materials, glazing, and awning attachment", "Coordinate sign locations with facade drawings"],
+        "companion_permits": ["Facade Alteration Permit", "Sign Permit"],
+        "agencies": ["AHJ Building Dept", "Planning / Design Review", "Sign reviewer"],
+        "citations": ["IBC §105.1", "IBC §2406", "Local sign/facade design standards [verify before merging]"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_signage_permit",
+        "severity": "high",
+        "title": "Retail tenant changes almost always need a separate sign permit",
+        "why_it_matters": "Signage is commonly a separate permit and missing it is one of the fastest ways a retail opening slips, especially when the sign is illuminated or tied to a master sign program.",
+        "fired_by": [r"\bretail\b", r"\bstore\b", r"\bshop\b", r"\bboutique\b", r"\bshowroom\b", r"\bmall tenant\b", r"\bstrip mall\b", r"\bsign(age)?\b", r"\btenant improvement\b", r"\bti\b"],
+        "likely_required_actions": ["Submit wall/window/monument sign drawings separately if required", "Confirm landlord master sign program", "Add electrical sign permit if illuminated"],
+        "companion_permits": ["Sign Permit", "Electrical Sign Permit if illuminated"],
+        "agencies": ["AHJ Sign/Zoning reviewer", "Electrical reviewer"],
+        "citations": ["Local sign code [verify district and master sign program]", "NEC Article 600"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_ada_path_of_travel_20pct",
+        "severity": "high",
+        "title": "Retail TI valuation can trigger ADA path-of-travel upgrades",
+        "why_it_matters": "Alterations to a retail primary-function area can require accessible upgrades to the entrance, route, restrooms, parking, counters, and signage up to the 20% disproportionality cap.",
+        "fired_by": [r"\bretail\b", r"\btenant improvement\b", r"\bti\b", r"\bbuildout\b", r"\brenovation\b", r"\bremodel\b", r"\bfront counter\b", r"\bcash wrap\b", r"\brestroom\b", r"\$\s?\d"],
+        "likely_required_actions": ["Prepare ADA path-of-travel cost allocation", "Show accessible route from site arrival to sales floor/counter/restrooms", "Verify accessible parking and entrance hardware"],
+        "companion_permits": [],
+        "agencies": ["AHJ Building Dept", "Accessibility reviewer"],
+        "citations": ["2010 ADA Standards §202.4", "28 CFR §36.403", "IBC Chapter 11", "CBC 11B-202.4 / TAS where adopted"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_egress_occupant_load_recalc",
+        "severity": "medium",
+        "title": "Retail layout or merchandise changes require occupant-load and egress recalculation",
+        "why_it_matters": "Mercantile occupant load varies by sales, stock, queueing, and display configuration; changes can affect exit count, door swing, panic hardware, travel distance, and exit signage.",
+        "fired_by": [r"\blayout\b", r"\bpartition\b", r"\bsales floor\b", r"\bmerchandise\b", r"\bshowroom\b", r"\bstock(room)?\b", r"\boccupant load\b", r"\begress\b", r"\baisles?\b"],
+        "likely_required_actions": ["Add occupant-load table by sales/stock/support area", "Show exit access travel distance and aisle widths", "Coordinate exit signs/emergency lighting"],
+        "companion_permits": [],
+        "agencies": ["AHJ Building Dept", "Fire Prevention"],
+        "citations": ["IBC §1004", "IBC §1005", "IBC §1006", "IBC §1017"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_fire_alarm_sprinkler_modifications",
+        "severity": "medium",
+        "title": "Ceiling/demising changes can trigger fire alarm and sprinkler modification permits",
+        "why_it_matters": "Retail ceiling clouds, demising walls, racking, and lighting grids often require sprinkler head relocation, alarm/strobe coverage changes, or separate fire shop drawings.",
+        "fired_by": [r"\bceiling\b", r"\bdemising\b", r"\bsprinkler\b", r"\bfire alarm\b", r"\bstrobe\b", r"\bracking\b", r"\bshelving\b", r"\brelocat(e|ing) sprinkler\b"],
+        "likely_required_actions": ["Confirm deferred vs separate fire submittals", "Show sprinkler/alarm devices affected by ceiling or wall changes", "Schedule fire final/acceptance testing"],
+        "companion_permits": ["Fire Alarm Permit", "Fire Sprinkler Modification Permit"],
+        "agencies": ["Fire Prevention", "AHJ Building Dept"],
+        "citations": ["IFC §901.2", "IFC §907.1.1", "NFPA 13", "NFPA 72"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_energy_code_lighting_hvac",
+        "severity": "medium",
+        "title": "Retail lighting/HVAC work triggers commercial energy-code compliance",
+        "why_it_matters": "New lighting, controls, HVAC, envelope, or storefront glazing can require COMcheck/IECC forms, WSEC-C, or CA Title 24 Part 6 documentation.",
+        "fired_by": [r"\blighting\b", r"\blight fixtures?\b", r"\bhvac\b", r"\bduct\b", r"\bthermostat\b", r"\bcontrols?\b", r"\bstorefront\b", r"\bglazing\b", r"\bti\b", r"\btenant improvement\b"],
+        "likely_required_actions": ["Prepare COMcheck/IECC or state energy forms", "Show lighting power density and control zones", "Coordinate HVAC economizer/ventilation and storefront glazing performance"],
+        "companion_permits": ["Electrical Permit", "Mechanical Permit"],
+        "agencies": ["Energy reviewer", "AHJ Electrical/Mechanical Dept"],
+        "citations": ["IECC §C405", "IECC §C403", "WSEC-C / CA Title 24 Part 6 / local amendments where adopted"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_row_encroachment_outdoor_display",
+        "severity": "medium",
+        "title": "Sidewalk display, sandwich boards, or outdoor retail use can need ROW/encroachment approval",
+        "why_it_matters": "Outdoor merchandise, sandwich-board signs, and sidewalk activation can be controlled by transportation/public-works rules outside the building permit.",
+        "fired_by": [r"\bsidewalk display\b", r"\boutdoor display\b", r"\bsandwich[-\s]?board\b", r"\ba[-\s]?frame sign\b", r"\boutdoor seating\b", r"\bencroachment\b", r"\bright[-\s]?of[-\s]?way\b", r"\bROW\b"],
+        "likely_required_actions": ["Check public-right-of-way permit process", "Maintain accessible sidewalk clear width", "Coordinate insurance/indemnity if required"],
+        "companion_permits": ["Public Right-of-Way Permit", "Encroachment Permit"],
+        "agencies": ["Public Works / Transportation", "AHJ Planning/Zoning"],
+        "citations": ["Local encroachment ordinance [verify before merging]", "2010 ADA Standards §403"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_health_food_handling",
+        "severity": "high",
+        "title": "Food retail can need health-department food establishment approval",
+        "why_it_matters": "Grocery, convenience, cafe, bakery, beverage, and prepared-food retail often need health plan review before building final/CO.",
+        "fired_by": [r"\bgrocery\b", r"\bconvenience store\b", r"\bcafe\b", r"\bcoffee\b", r"\bbakery\b", r"\bfood handling\b", r"\bprepared food\b", r"\bwalk[-\s]?in cooler\b", r"\bthree[-\s]?compartment\b", r"\b3[-\s]?compartment\b"],
+        "likely_required_actions": ["Submit health plan review early", "Show hand sinks, mop sink, food-contact finishes, refrigeration, and warewashing", "Coordinate health inspection before final CO"],
+        "companion_permits": ["Health Department Food Establishment Permit"],
+        "agencies": ["Local / county health department", "AHJ Building Dept"],
+        "citations": ["FDA Food Code as adopted locally [verify edition]", "Local health department plan-review rules"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_change_of_use_or_occupancy",
+        "severity": "high",
+        "title": "Non-retail-to-retail or special retail changes can require change-of-use / new CO approval",
+        "why_it_matters": "Warehouse/office/industrial-to-retail conversions and high-risk retail types can change occupancy, parking, accessibility, fire protection, and certificate-of-occupancy requirements.",
+        "fired_by": [r"\bwarehouse\s+(to|into)\s+retail\b", r"\boffice\s+(to|into)\s+retail\b", r"\bindustrial\s+(to|into)\s+retail\b", r"\bchange of (use|occupancy)\b", r"\bnew certificate of occupancy\b", r"\bnew co\b", r"\bformer warehouse\b", r"\bformer office\b"],
+        "likely_required_actions": ["Identify existing/proposed occupancy groups", "Confirm zoning/parking and CO process", "Coordinate fire/life-safety and accessibility impacts"],
+        "companion_permits": ["Change of Use Permit", "Certificate of Occupancy"],
+        "agencies": ["AHJ Building Dept", "Planning/Zoning", "Fire Prevention"],
+        "citations": ["IBC Chapter 3", "IEBC change-of-occupancy provisions [verify adopted edition]", "Local CO ordinance"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_cannabis_alcohol_special_use",
+        "severity": "high",
+        "title": "Cannabis or alcohol retail needs special-use / state licensing parallel path",
+        "why_it_matters": "Cannabis and alcohol approvals are separate from the building TI and can control zoning clearance, security plans, hearings, inspections, and opening date.",
+        "fired_by": [r"\bcannabis\b", r"\bdispensary\b", r"\bmarijuana\b", r"\balcohol\b", r"\bliquor\b", r"\bbeer and wine\b", r"\bwine shop\b", r"\bottle shop\b"],
+        "likely_required_actions": ["Start special-use/zoning clearance and state license in parallel", "Keep floor/security plan consistent across licensing and permit sets", "Confirm separation-distance and operating-condition rules"],
+        "companion_permits": ["Special Use Permit", "State cannabis/alcohol license"],
+        "agencies": ["Planning/Zoning", "State licensing agency", "AHJ Building Dept"],
+        "citations": ["Local special-use ordinance [verify]", "State cannabis/alcohol licensing rules [verify]"],
+        "primary_scope": "commercial_retail_ti",
+    },
+
+    # ------------------------------------------------------------------
     # LA Hillside ADU + residential ADU triggers (9)
     # ------------------------------------------------------------------
     {
@@ -969,6 +1093,12 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
         return (
             primary_scope_norm in {_normalize("commercial_restaurant"), _normalize("commercial_restaurant_ti")}
             or ("restaurant" in text and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
+        )
+
+    if trigger_scope_norm == _normalize("commercial_retail_ti"):
+        return (
+            primary_scope_norm == _normalize("commercial_retail_ti")
+            or ("retail" in text and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
         )
 
     if trigger_scope_norm == _normalize("commercial_ti"):
