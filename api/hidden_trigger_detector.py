@@ -336,6 +336,130 @@ HIDDEN_TRIGGER_REGISTRY = [
         "citations": ["IPC Chapter 7", "Local sewer/septic ordinance [verify before merging]"],
         "primary_scope": "residential_adu",
     },
+    {
+        "id": "adu_sewer_capacity",
+        "severity": "medium",
+        "confidence": "high",
+        "title": "Sewer Capacity / Utility Upgrade Likely",
+        "why_it_matters": "Most ADUs require a sewer capacity letter or service upsize. Failure to confirm BEFORE submittal causes plan-check holds.",
+        "fired_by": [r"\b(adu|dadu|jadu|accessory dwelling|junior adu)\b", r"\b(detached|attached)\s+adu\b", r"\bgarage conversion\b.*\b(jadu|adu)\b"],
+        "likely_required_actions": ["Confirm existing sewer lateral size and available capacity", "Ask sanitation / utility provider about ADU capacity-letter process", "Carry possible service upsize or sewer connection cost in budget"],
+        "companion_permits": ["Sewer Connection Permit", "Sanitation Capacity Letter"],
+        "agencies": ["AHJ sanitation department", "Water/sewer utility", "AHJ Building Dept"],
+        "citations": ["AHJ sanitation department capacity-letter requirement"],
+        "ask_user_if_missing": ["What is the existing sewer line size?", "Has the utility provider confirmed capacity for an additional ADU?"],
+        "citations_needed": ["AHJ sanitation department capacity-letter requirement"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_school_impact_fees",
+        "severity": "medium",
+        "confidence": "medium",
+        "title": "School Fees Often Applicable",
+        "why_it_matters": "ADUs over 750 sf trigger school fees in CA. Other states vary widely. Budget +$2-15/sf depending on district.",
+        "fired_by": [r"\b(adu|dadu|accessory dwelling)\b.*\b(7[6-9][0-9]|[89][0-9]{2}|1[0-9]{3,})\s*(sf|sq\.?\s*ft|square feet)\b"],
+        "regions": ["ca"],
+        "likely_required_actions": ["Confirm conditioned ADU floor area", "Ask school district or AHJ fee counter about per-square-foot school fees", "Budget school fees before submittal if over 750 sf"],
+        "companion_permits": [],
+        "agencies": ["Local school district", "AHJ Building Dept"],
+        "citations": ["Cal. Gov. Code §65852.2(f)(3) [verify current recodification before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_traffic_park_water_impact_fees",
+        "severity": "medium",
+        "confidence": "medium",
+        "title": "Traffic / Park / Water-Sewer Connection Impact Fees",
+        "why_it_matters": "Many cities charge traffic, park, and water/sewer connection fees on top of building permit. Often $3K–$15K total.",
+        "fired_by": [r"\b(detached adu|dadu|new adu|new accessory dwelling)\b", r"\b(adu|dadu)\b.*\b(new utility|new sewer|new water|new connection|separate meter)\b"],
+        "not_regions": ["tx"],
+        "likely_required_actions": ["Ask fee counter for traffic, park, water, and sewer impact-fee estimate", "Confirm whether fees are reduced/waived for ADUs", "Include utility connection charges in the owner budget"],
+        "companion_permits": ["Utility connection permit", "Impact fee assessment"],
+        "agencies": ["AHJ Building Dept", "Water/sewer utility", "Planning / impact fee counter"],
+        "citations": ["Local ADU impact-fee schedule [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_parking_replacement",
+        "severity": "medium",
+        "confidence": "high",
+        "title": "Parking Replacement May Be Required",
+        "why_it_matters": "Removing a covered parking space for ADU may require replacement (uncovered OK in CA). Verify city-specific waiver eligibility before submittal.",
+        "fired_by": [r"\bgarage conversion\b", r"\bconvert garage\b", r"\bcarport conversion\b", r"\b(remove|removing|removed|demolish|demo)\b.*\b(parking|garage|carport|covered space)\b"],
+        "likely_required_actions": ["Document existing parking spaces removed by the ADU", "Check state and city ADU parking waiver eligibility", "Show replacement parking location if local rules require it"],
+        "companion_permits": [],
+        "agencies": ["AHJ Planning/Zoning", "AHJ Building Dept"],
+        "citations": ["Cal. Gov. Code §65852.2 parking provisions [verify current recodification before merging]", "Local ADU parking ordinance [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_tree_protection",
+        "severity": "medium",
+        "confidence": "high",
+        "title": "Protected Tree / Tree-Removal Permit",
+        "why_it_matters": "Many CA cities require a separate tree permit and arborist report. Removing protected oaks/sycamores without permit is a common stop-work violation.",
+        "fired_by": [r"\b(adu|dadu|jadu|accessory dwelling)\b", r"\b(oak|sycamore|protected tree|heritage tree|significant tree|tree removal|arborist)\b"],
+        "regions": ["adu_protected_tree_city", "explicit_protected_tree_context"],
+        "likely_required_actions": ["Identify protected trees and tree-protection zones on the site plan", "Order arborist report if work is near protected trees", "File tree-removal/pruning permit before grading or foundation work"],
+        "companion_permits": ["Tree removal / protected tree permit"],
+        "agencies": ["Urban Forestry / Planning", "AHJ Building Dept"],
+        "citations": ["Local protected-tree ordinance [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_geotech_haul_route",
+        "severity": "high",
+        "confidence": "high",
+        "title": "Geotech Soils Report + Haul Route Plan Required",
+        "why_it_matters": "Hillside ADUs require Caltrans/city-approved haul route + soils report. Without these, plan check stalls 4–8 weeks.",
+        "fired_by": [r"\bhillside\b", r"\bsteep slope\b", r"\bgrading\b.*\b([5-9][0-9]|[1-9][0-9]{2,})\s*(cy|cubic yards?)\b", r"\bhaul route\b", r"\bsoils report\b", r"\bgeotech"],
+        "likely_required_actions": ["Order geotechnical / soils report", "Quantify cut/fill and export on the grading plan", "Prepare haul route permit or plan if export exceeds local threshold"],
+        "companion_permits": ["Haul Route Permit", "Grading Permit"],
+        "agencies": ["AHJ Building/Grading Dept", "Public Works / Transportation"],
+        "citations": ["Local hillside/grading ordinance [verify before merging]", "IBC Chapter 18"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_legalization_co_codeenforcement",
+        "severity": "high",
+        "confidence": "high",
+        "title": "Legalization Triggers Code Enforcement Review",
+        "why_it_matters": "Legalization permits are routed through code enforcement. Unpermitted work must be brought to current code, and a CO will be re-issued. Expect inspection of every system.",
+        "fired_by": [r"\blegalization\b", r"\blegalize\b", r"\bunpermitted\b", r"\bexisting converted\b", r"\bafter[-\s]?the[-\s]?fact\b", r"\bas[-\s]?built\b"],
+        "likely_required_actions": ["Pull permit history before filing", "Prepare as-built plans and current-code correction narrative", "Coordinate code-enforcement clearance and final CO/occupancy documentation"],
+        "companion_permits": ["Code enforcement clearance", "Certificate of Occupancy re-issue"],
+        "agencies": ["Code Enforcement", "AHJ Building Dept"],
+        "citations": ["Local legalization / investigation fee rules [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_vhfhsz_wui_compliance",
+        "severity": "high",
+        "confidence": "high",
+        "title": "VHFHSZ / WUI Class A Roofing + Eaves + Vents",
+        "why_it_matters": "ADUs in WUI/VHFHSZ require Class A roofing, ember-resistant vents, eaves protection per CRC R337 / CBC Chapter 7A. Critical in LA Hillside, San Diego, Riverside, much of Bay Area.",
+        "fired_by": [r"\b(wui|wildland|very high fire|vhfhsz|fire hazard severity)\b", r"\bhillside\b"],
+        "regions": ["ca"],
+        "likely_required_actions": ["Confirm WUI/VHFHSZ parcel status", "Specify Class A roof assembly and ember-resistant vents", "Show exterior wall, eave, deck, glazing, and vegetation/fire-zone notes"],
+        "companion_permits": [],
+        "agencies": ["AHJ Building Dept", "Fire Dept"],
+        "citations": ["CRC §R337", "CBC Chapter 7A", "Local VHFHSZ map [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_hud_far_setback",
+        "severity": "medium",
+        "confidence": "medium",
+        "title": "Detached ADU Setback / Lot Coverage / FAR Limits",
+        "why_it_matters": "CA state-mandated minimums (4-ft side/rear, 0 ft for conversion) but city-specific overlays may add. FAR cap and lot coverage often constrain detached ADUs.",
+        "fired_by": [r"\b(detached adu|dadu|new accessory dwelling)\b", r"\b(adu|accessory dwelling)\b.*\b(property line|setback|lot coverage|far|footprint)\b"],
+        "likely_required_actions": ["Confirm side/rear setback from proposed ADU footprint", "Check lot coverage/FAR and overlay constraints", "Show conversion vs new detached footprint clearly on site plan"],
+        "companion_permits": [],
+        "agencies": ["AHJ Planning/Zoning", "AHJ Building Dept"],
+        "citations": ["Cal. Gov. Code ADU setback provisions [verify current recodification before merging]", "Local zoning ordinance [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+
 
     # ------------------------------------------------------------------
     # Generic commercial TI triggers (8)
@@ -693,10 +817,14 @@ COMMERCIAL_SCOPES = {
 
 ADU_SCOPES = {
     "residential_adu",
+    "residential_jadu",
+    "residential_garage_conversion",
+    "residential_hillside_adu",
     "adu",
     "accessory_dwelling_unit",
     "junior_adu",
     "jadu",
+    "dadu",
     "garage_conversion_adu",
 }
 
@@ -752,6 +880,22 @@ NAMED_REGIONS = {
             r"\bcertificate of appropriateness\b",
             r"\bnational register\b",
             r"\blandmark commission\b",
+        ],
+    },
+    "adu_protected_tree_city": {
+        "city_any": {
+            "los angeles", "oakland", "berkeley", "sacramento",
+            "san francisco", "san diego", "seattle",
+        },
+    },
+    "explicit_protected_tree_context": {
+        "text_any_pattern": [
+            r"\bprotected tree\b",
+            r"\bheritage tree\b",
+            r"\bsignificant tree\b",
+            r"\boak\b",
+            r"\bsycamore\b",
+            r"\barborist\b",
         ],
     },
 }
@@ -831,7 +975,9 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
         return _is_commercial_scope(primary_scope_norm)
 
     if trigger_scope_norm == _normalize("residential_adu"):
-        return primary_scope_norm in {_normalize(s) for s in ADU_SCOPES} or bool(re.search(r"\b(adu|jadu|accessory dwelling|garage conversion)\b", text))
+        if _is_commercial_scope(primary_scope_norm):
+            return False
+        return primary_scope_norm in {_normalize(s) for s in ADU_SCOPES} or bool(re.search(r"\b(adu|dadu|jadu|accessory dwelling|garage conversion)\b", text))
 
     if trigger_scope_norm == _normalize("residential_single_trade"):
         # Explicit requirement: skip residential single-trade triggers when the
