@@ -1781,6 +1781,13 @@ const JOB_TYPES_ALL = [
   'Commercial tenant improvement','Foundation repair','Load bearing wall removal',
 ];
 
+const RESIDENTIAL_ONLY_JOB_TYPE_RE = /\b(tankless|Solar PV system)\b/i;
+function getAutocompleteJobTypes() {
+  return jobCategory === 'commercial'
+    ? JOB_TYPES_ALL.filter(j => !RESIDENTIAL_ONLY_JOB_TYPE_RE.test(j))
+    : JOB_TYPES_ALL;
+}
+
 function setJobCategory(c) {
   jobCategory = c;
   document.getElementById('btn-residential').classList.toggle('active', c === 'residential');
@@ -2063,7 +2070,7 @@ function generateCustomerPermitExplanation() {
   const state = window._lastLookupState || '';
   const fee = result.fee_range || result.fee || result.cost || 'Call the city to confirm the exact fee';
   const location = [city, state].filter(Boolean).join(', ') || 'your jurisdiction';
-  const isCommercial = primaryScope.startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial';
+  const isCommercial = primaryScope.startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial' || primaryScope === 'change_of_occupancy';
   // 2026-04-28: tier the justifier by occupancy. Earlier this was residential-
   // only and shipped "homeowner's insurance" / "selling your home" language to
   // commercial restaurant + office + retail TI responses (4/4 commercial Opus
@@ -4586,7 +4593,7 @@ function initAutocomplete() {
   textarea.addEventListener('input', () => {
     const val = textarea.value.trim().toLowerCase();
     if (val.length < 3) { dropdown.style.display = 'none'; return; }
-    const matches = JOB_TYPES_ALL.filter(j => j.toLowerCase().includes(val)).slice(0, 7);
+    const matches = getAutocompleteJobTypes().filter(j => j.toLowerCase().includes(val)).slice(0, 7);
     if (!matches.length) { dropdown.style.display = 'none'; return; }
     dropdown.innerHTML = matches.map(m =>
       `<div class="autocomplete-item" data-val="${esc(m)}">${esc(m)}</div>`
