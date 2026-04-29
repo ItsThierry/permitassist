@@ -1655,7 +1655,7 @@ def _load_verified_cities_rows() -> None:
         with sqlite3.connect(db_path) as conn:
             conn.row_factory = sqlite3.Row
             rows = conn.execute(
-                "SELECT city, state, portal_url, building_dept_phone, "
+                "SELECT city, state, portal_url, application_url, building_dept_phone, "
                 "building_dept_address, entity_type FROM verified_cities"
             ).fetchall()
             for r in rows:
@@ -1669,6 +1669,7 @@ def _load_verified_cities_rows() -> None:
                     "city": r["city"],
                     "state": r["state"],
                     "portal_url": r["portal_url"] or "",
+                    "application_url": r["application_url"] or "",
                     "phone": r["building_dept_phone"] or "",
                     "address": r["building_dept_address"] or "",
                     "entity_type": r["entity_type"] or "city",
@@ -1688,6 +1689,124 @@ def _get_verified_city_row(city: str, state: str) -> dict | None:
         return None
     _load_verified_cities_rows()
     return _VERIFIED_CITIES_ROWS.get((city.strip().lower(), state.strip().upper()))
+
+
+
+# B4 (2026-04-28): rulebook depth is deliberately separate from the existing
+# confidence score. Confidence describes output completeness/source quality;
+# rulebook_depth tells the user how deep our jurisdiction-specific rulebook is
+# for this city + scope. This is the integrity layer for 5,260 verified AHJs:
+# only the GTM cities below have stress-tested deep rulebooks today.
+DEEP_RULEBOOK_CITIES = frozenset({
+    ("phoenix", "AZ"),
+    ("las vegas", "NV"),
+    ("clark county", "NV"),
+    ("seattle", "WA"),
+    ("los angeles", "CA"),
+    ("dallas", "TX"),
+})
+
+TESTED_RULEBOOK_SCOPES = frozenset({
+    "restaurant_ti", "office_ti", "retail_ti",
+    "detached_adu", "jadu", "hillside_adu", "garage_conversion",
+    "kitchen_remodel", "panel_upgrade", "water_heater", "hvac_changeout",
+    "reroof", "foundation", "window_replacement", "deck", "patio_cover",
+})
+
+COMMON_RULEBOOK_SCOPES = frozenset({
+    "restaurant_ti", "office_ti", "retail_ti",
+    "detached_adu", "jadu", "hillside_adu", "garage_conversion", "adu",
+    "kitchen_remodel", "panel_upgrade", "water_heater", "hvac_changeout",
+    "reroof", "window_replacement", "deck", "patio_cover", "simple_trade",
+})
+
+
+def _display_scope_label(scope: str) -> str:
+    return (scope or "scope").replace("_", " ")
+
+
+def classify_rulebook_scope(job_type: str) -> str:
+    """Map free-text job_type into B4's rulebook-depth scope enum."""
+    job = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
+    if not job:
+        return "unknown"
+    if any(t in job for t in ("tribal", "reservation", "sovereign land", "federal enclave")):
+        return "edge_case"
+    if any(t in job for t in ("restaurant", "commercial kitchen", "food service", "type i hood", "grease interceptor")):
+        return "restaurant_ti"
+    if any(t in job for t in ("office ti", "office tenant improvement", "office buildout")):
+        return "office_ti"
+    if any(t in job for t in ("retail ti", "retail tenant improvement", "retail buildout", "store buildout", "boutique")):
+        return "retail_ti"
+    if any(t in job for t in ("hillside adu", "hillside accessory dwelling")):
+        return "hillside_adu"
+    if any(t in job for t in ("jadu", "junior accessory")):
+        return "jadu"
+    if any(t in job for t in ("garage conversion", "convert garage")):
+        return "garage_conversion"
+    if any(t in job for t in ("dadu", "detached adu", "detached accessory dwelling")):
+        return "detached_adu"
+    if "adu" in job or "accessory dwelling" in job:
+        return "adu"
+    if "kitchen remodel" in job or "kitchen renovation" in job:
+        return "kitchen_remodel"
+    if any(t in job for t in ("water heater", "tankless")):
+        return "water_heater"
+    if any(t in job for t in ("hvac", "furnace", "heat pump", "condenser", "air conditioner", "a/c", "ac changeout")):
+        return "hvac_changeout"
+    if any(t in job for t in ("reroof", "re-roof", "roof replacement", "roofing")):
+        return "reroof"
+    if "foundation" in job:
+        return "foundation"
+    if any(t in job for t in ("window replacement", "replace windows", "windows")):
+        return "window_replacement"
+    if "panel upgrade" in job or "service upgrade" in job:
+        return "panel_upgrade"
+    if "patio cover" in job or "pergola" in job:
+        return "patio_cover"
+    if "deck" in job:
+        return "deck"
+    if any(t in job for t in ("electrical", "plumbing", "mechanical", "trade permit")):
+        return "simple_trade"
+    return "unknown"
+
+
+def apply_rulebook_depth(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Add B4 rulebook_depth metadata to a permit result without touching confidence."""
+    if not isinstance(result, dict):
+        return result
+    city_name = (city or result.get("location", "").split(",")[0] or "").strip()
+    state_code = (state or "").strip().upper()
+    scope = classify_rulebook_scope(job_type)
+    city_key = (city_name.lower(), state_code)
+    ahj = result.get("applying_office") or f"{city_name} building department" or "the AHJ"
+
+    if city_key in DEEP_RULEBOOK_CITIES:
+        if scope in TESTED_RULEBOOK_SCOPES:
+            depth = "DEEP"
+            reason = "GTM-test: Top 5 GTM city + tested scope: depth-graded by 4-city Opus review and 30-scenario stress test on 2026-04-28"
+            disclaimer = f"Confidence: HIGH — verified rulebook depth for {city_name} on {_display_scope_label(scope)}"
+        else:
+            depth = "STATE_DEFAULT" if scope == "edge_case" else "MEDIUM"
+            reason = "fallback: GTM city, but scope is outside the 2026-04-28 tested rulebook matrix"
+            disclaimer = "Confidence: MEDIUM — verified jurisdiction + state code, scope-specific rulebook is general" if depth == "MEDIUM" else f"Confidence: BASELINE — verified jurisdiction, but scope-specific rulebook is generic; verify with {ahj}"
+    else:
+        vrow = _get_verified_city_row(city_name, state_code)
+        has_apply_url = bool(vrow and (vrow.get("portal_url") or vrow.get("application_url")))
+        has_state_amendment = state_code in STATE_AMENDMENT_CITATIONS
+        if has_apply_url and has_state_amendment and scope in COMMON_RULEBOOK_SCOPES:
+            depth = "MEDIUM"
+            reason = f"state-amendment: verified_cities.db has jurisdiction apply URL and {state_code} has A7 state amendments; scope uses general rulebook"
+            disclaimer = "Confidence: MEDIUM — verified jurisdiction + state code, scope-specific rulebook is general"
+        else:
+            depth = "STATE_DEFAULT"
+            reason = "fallback: minimal verified jurisdiction data or uncommon/edge-case scope; using generic state/default rulebook"
+            disclaimer = f"Confidence: BASELINE — verified jurisdiction, but scope-specific rulebook is generic; verify with {ahj}"
+
+    result["rulebook_depth"] = depth
+    result["_rulebook_depth_reason"] = reason
+    result["_rulebook_depth_disclaimer"] = disclaimer
+    return result
 
 def _load_knowledge():
     global _TRADES_KB, _STATES_KB, _CITIES_KB
@@ -6552,6 +6671,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             hedge_companion_permits(cached, job_type)
             enrich_result_with_serper_sources(cached, job_type, city, state)
             apply_fee_verify_caveat(cached)
+            apply_rulebook_depth(cached, job_type, city, state)
             return cached
 
     # ── Check auto-verified data first ──
@@ -7462,6 +7582,7 @@ Return ONLY the JSON object."""
     # issues are found, redacts the bad fields, downgrades confidence to
     # "low", and sets needs_review=True so the UI surfaces the warning.
     validate_and_sanitize_permit_result(result, job_type, city, state)
+    apply_rulebook_depth(result, job_type, city, state)
 
     save_cache(key, job_type, job_category, city, state, zip_code, result)
     return result

@@ -1,0 +1,10 @@
+{
+  "job_summary": "water heater replacement",
+  "location": "Honolulu, HI",
+  "applying_office": "Honolulu Department of Planning and Permitting",
+  "apply_url": "https://example.gov/permits",
+  "confidence": "high",
+  "rulebook_depth": "STATE_DEFAULT",
+  "_rulebook_depth_reason": "fallback: minimal verified jurisdiction data or uncommon/edge-case scope; using generic state/default rulebook",
+  "_rulebook_depth_disclaimer": "Confidence: BASELINE — verified jurisdiction, but scope-specific rulebook is generic; verify with Honolulu Department of Planning and Permitting"
+}

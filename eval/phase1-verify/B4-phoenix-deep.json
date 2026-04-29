@@ -1,0 +1,10 @@
+{
+  "job_summary": "restaurant TI with hood",
+  "location": "Phoenix, AZ",
+  "applying_office": "Phoenix Planning and Development Department",
+  "apply_url": "https://example.gov/permits",
+  "confidence": "high",
+  "rulebook_depth": "DEEP",
+  "_rulebook_depth_reason": "GTM-test: Top 5 GTM city + tested scope: depth-graded by 4-city Opus review and 30-scenario stress test on 2026-04-28",
+  "_rulebook_depth_disclaimer": "Confidence: HIGH — verified rulebook depth for Phoenix on restaurant ti"
+}

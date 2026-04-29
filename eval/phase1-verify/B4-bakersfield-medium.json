@@ -1,0 +1,10 @@
+{
+  "job_summary": "restaurant TI",
+  "location": "Bakersfield, CA",
+  "applying_office": "City of Bakersfield Building Division",
+  "apply_url": "https://example.gov/permits",
+  "confidence": "high",
+  "rulebook_depth": "MEDIUM",
+  "_rulebook_depth_reason": "state-amendment: verified_cities.db has jurisdiction apply URL and CA has A7 state amendments; scope uses general rulebook",
+  "_rulebook_depth_disclaimer": "Confidence: MEDIUM — verified jurisdiction + state code, scope-specific rulebook is general"
+}
