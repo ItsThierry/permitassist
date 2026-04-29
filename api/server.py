@@ -2514,6 +2514,116 @@ def get_rejection_fix_plan(job_id: str, rejection_text: str, city: str, state: s
     return build_fix_plan_text(get_rejection_fix_result(job_id, rejection_text, city, state, job_type))
 
 
+# ── Cities page SSR (Fix 10) ──────────────────────────────────────────────────
+# Render frontend/cities.html with real city counts injected so crawlers and
+# pre-JS visitors see "5,260 Total / 5,000 Cities / 260 Counties / 50 States"
+# instead of the "Loading verified cities..." placeholder. Falls back to
+# stable hardcoded numbers if the SQLite read fails — never the legacy 263
+# fallback. The /api/verified-cities JSON path is unchanged and is what
+# powers the interactive grid once JS hydrates.
+
+_CITIES_PAGE_CACHE: dict = {"ts": 0.0, "html": None}
+_CITIES_PAGE_CACHE_TTL_SECS = 300  # 5 min — cheap to recompute, no need to be tighter
+
+_CITIES_PAGE_HARDCODED_FALLBACK = {
+    # 2026-04-28 snapshot of knowledge/verified_cities.db. Used only if SQLite
+    # is unreachable so we never fall back to the legacy 263-city number.
+    "total": 5260, "city": 3195, "county": 2065, "state": 50,
+}
+
+
+def _read_verified_cities_counts() -> dict:
+    """Return {total, city, county, state} from knowledge/data verified_cities.db.
+
+    Returns the hardcoded fallback when the DB is unreachable so we never
+    serve the 263-row legacy number.
+    """
+    try:
+        import sqlite3 as _sql
+        _knowledge_db = os.path.join(os.path.dirname(__file__), "..", "knowledge", "verified_cities.db")
+        _data_db = os.path.join(os.path.dirname(__file__), "..", "data", "verified_cities.db")
+        _db_path = _knowledge_db if os.path.exists(_knowledge_db) else _data_db
+        if not os.path.exists(_db_path):
+            return dict(_CITIES_PAGE_HARDCODED_FALLBACK)
+        with _sql.connect(_db_path) as _conn:
+            row = _conn.execute(
+                """SELECT
+                       COUNT(*) AS total,
+                       SUM(CASE WHEN COALESCE(entity_type,'city')='city' THEN 1 ELSE 0 END) AS city,
+                       SUM(CASE WHEN entity_type='county' THEN 1 ELSE 0 END) AS county,
+                       COUNT(DISTINCT state) AS state
+                   FROM verified_cities"""
+            ).fetchone()
+        total = int(row[0] or 0)
+        # Defend against an empty / partially-populated table by falling back
+        # rather than serving a bad number.
+        if total < 1000:
+            return dict(_CITIES_PAGE_HARDCODED_FALLBACK)
+        return {
+            "total": total,
+            "city": int(row[1] or 0),
+            "county": int(row[2] or 0),
+            "state": int(row[3] or 0),
+        }
+    except Exception as _err:
+        print(f"[cities-ssr] count read failed, using hardcoded fallback: {_err}")
+        return dict(_CITIES_PAGE_HARDCODED_FALLBACK)
+
+
+def _format_count(n: int) -> str:
+    return f"{n:,}"
+
+
+def render_cities_page_ssr(html_path: str) -> bytes:
+    """Read cities.html and inject real counts into the hero stats placeholders.
+
+    Uses a 5-minute in-process cache so repeat hits don't touch SQLite. Crawlers
+    that don't run JS now see real numbers instead of em-dashes; the JS still
+    overwrites these once /api/verified-cities returns.
+    """
+    import time as _time
+    now = _time.time()
+    cached = _CITIES_PAGE_CACHE.get("html")
+    if cached and (now - _CITIES_PAGE_CACHE.get("ts", 0.0)) < _CITIES_PAGE_CACHE_TTL_SECS:
+        return cached
+
+    with open(html_path, "rb") as _f:
+        html = _f.read().decode("utf-8")
+
+    counts = _read_verified_cities_counts()
+    replacements = {
+        '<span id="total-count">—</span>': f'<span id="total-count">{_format_count(counts["total"])}</span>',
+        '<span id="city-count">—</span>':  f'<span id="city-count">{_format_count(counts["city"])}</span>',
+        '<span id="county-count">—</span>': f'<span id="county-count">{_format_count(counts["county"])}</span>',
+        '<span id="state-count">—</span>': f'<span id="state-count">{_format_count(counts["state"])}</span>',
+    }
+    for old, new in replacements.items():
+        html = html.replace(old, new)
+
+    # Replace the loading div with a noscript-friendly summary so non-JS
+    # crawlers see real content instead of "Loading verified cities...".
+    noscript_summary = (
+        f'<div class="loading">Loading verified cities…</div>'
+        f'<noscript><div style="padding:24px 0;color:var(--text2);font-size:14px;line-height:1.7">'
+        f'PermitAssist verifies permit requirements across <strong>{_format_count(counts["total"])}'
+        f'</strong> US jurisdictions — '
+        f'{_format_count(counts["city"])} cities and {_format_count(counts["county"])} counties '
+        f'covering all {_format_count(counts["state"])} states. '
+        f'Enable JavaScript to browse the full searchable list, or visit '
+        f'<a href="/">PermitAssist</a> to look up a permit directly.'
+        f'</div></noscript>'
+    )
+    html = html.replace(
+        '<div class="loading">Loading verified cities...</div>',
+        noscript_summary,
+    )
+
+    body = html.encode("utf-8")
+    _CITIES_PAGE_CACHE["ts"] = now
+    _CITIES_PAGE_CACHE["html"] = body
+    return body
+
+
 # ── Request handler ───────────────────────────────────────────────────────────
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
@@ -2763,7 +2873,20 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             self.send_file(os.path.join(FRONTEND_DIR, "index.html"), "text/html; charset=utf-8")
         elif path in ("/cities", "/cities.html", "/cities/"):
-            self.send_file(os.path.join(FRONTEND_DIR, "cities.html"), "text/html; charset=utf-8")
+            _cities_path = os.path.join(FRONTEND_DIR, "cities.html")
+            try:
+                _body = render_cities_page_ssr(_cities_path)
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(_body)))
+                # Crawlers benefit from short caching; humans get fresh data anyway
+                # because the JS overwrites the injected numbers post-hydration.
+                self.send_header("Cache-Control", "public, max-age=300")
+                self.end_headers()
+                self.wfile.write(_body)
+            except Exception as _ssr_err:
+                print(f"[cities-ssr] render failed, serving raw HTML: {_ssr_err}")
+                self.send_file(_cities_path, "text/html; charset=utf-8")
 
         # ── Trade-specific landing pages ──────────────────────────────────────
         elif path in ("/roofing", "/roofing/"):
