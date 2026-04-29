@@ -5596,6 +5596,27 @@ def _has_placeholder(value) -> bool:
 # URL whose host classifies as EXCLUDED, replacing with the AHJ name.
 _URL_REGEX = re.compile(r'https?://[^\s)\]\}>"\'`]+', re.IGNORECASE)
 
+# Exact domains/host patterns observed as hallucinated fee-source leaks in the
+# 2026-04-28 four-city review. Some (notably pw.lacounty.gov and ojp.gov) can
+# classify as OFFICIAL by broad .gov rules, but they are still wrong for
+# contractor-facing permit-fee prose in these scenarios.
+_FREE_TEXT_FEE_URL_DENYLIST = (
+    "pw.lacounty.gov",
+    "ojp.gov",
+    "archive.org",
+    "kauffman.org",
+)
+
+
+def _is_denied_free_text_fee_url(url: str) -> bool:
+    try:
+        host = (urlparse(url).netloc or "").lower()
+    except Exception:
+        return True
+    if host.startswith("www."):
+        host = host[4:]
+    return any(host == denied or host.endswith(f".{denied}") for denied in _FREE_TEXT_FEE_URL_DENYLIST)
+
 
 def _strip_excluded_urls_from_text(text: str, ahj_name: str = "the building department") -> str:
     """Strip URLs that don't belong in contractor-facing free text.
@@ -5623,8 +5644,10 @@ def _strip_excluded_urls_from_text(text: str, ahj_name: str = "the building depa
             # Free-text URLs must be OFFICIAL (.gov / .us / .mil / municipal /
             # vetted AHJ allowlist). SUPPLEMENTARY and EXCLUDED both get
             # stripped — supplementary research sources don't belong in
-            # "verify in <URL>" contractor-facing text.
-            if cls != SOURCE_CLASS_OFFICIAL:
+            # "verify in <URL>" contractor-facing text. The explicit denylist
+            # catches official-looking but wrong-jurisdiction/archive hosts from
+            # the four-city review (e.g., pw.lacounty.gov for City of LA fees).
+            if cls != SOURCE_CLASS_OFFICIAL or _is_denied_free_text_fee_url(url):
                 return f"[verify with {ahj_name}]"
         except Exception:
             return f"[verify with {ahj_name}]"
@@ -5657,7 +5680,12 @@ def sanitize_free_text_urls(result: dict, city: str, state: str) -> dict:
         # SUPPLEMENTARY (.org research / archive sources) and EXCLUDED both
         # get stripped because both lead to "wait, why am I verifying my
         # Phoenix permit fee at kauffman.org?" credibility hits.
-        bad = [u.rstrip('.,;:!?') for u in urls if classify_source_url(u.rstrip('.,;:!?')) != SOURCE_CLASS_OFFICIAL]
+        bad = [
+            u.rstrip('.,;:!?')
+            for u in urls
+            if classify_source_url(u.rstrip('.,;:!?')) != SOURCE_CLASS_OFFICIAL
+            or _is_denied_free_text_fee_url(u.rstrip('.,;:!?'))
+        ]
         if not bad:
             continue
         cleaned = _strip_excluded_urls_from_text(original, ahj_name=ahj)
