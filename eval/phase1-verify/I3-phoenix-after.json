@@ -1,0 +1,13 @@
+{
+  "_last_verified_at": "2026-04-28",
+  "_rulebook_depth_disclaimer": "Confidence: HIGH \u2014 verified rulebook depth for Phoenix on restaurant ti",
+  "_rulebook_depth_reason": "GTM-test: Top 5 GTM city + tested scope: depth-graded by 4-city Opus review and 30-scenario stress test on 2026-04-28",
+  "apply_url": "https://www.phoenix.gov/pdd/development/permits",
+  "applying_office": "Phoenix Planning and Development Department",
+  "city": "Phoenix",
+  "confidence": "high",
+  "job_type": "restaurant TI with hood and grease interceptor",
+  "permit_verdict": "YES",
+  "rulebook_depth": "DEEP",
+  "state": "AZ"
+}

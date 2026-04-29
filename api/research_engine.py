@@ -1720,6 +1720,9 @@ COMMON_RULEBOOK_SCOPES = frozenset({
     "reroof", "window_replacement", "deck", "patio_cover", "simple_trade",
 })
 
+RULEBOOK_STRESS_TEST_VERIFIED_AT = "2026-04-28"
+RULEBOOK_ENGINE_COMMIT_VERIFIED_AT = "2026-04-29"
+
 
 def _display_scope_label(scope: str) -> str:
     return (scope or "scope").replace("_", " ")
@@ -1806,6 +1809,12 @@ def apply_rulebook_depth(result: dict, job_type: str, city: str, state: str) -> 
     result["rulebook_depth"] = depth
     result["_rulebook_depth_reason"] = reason
     result["_rulebook_depth_disclaimer"] = disclaimer
+    if depth == "DEEP":
+        result["_last_verified_at"] = RULEBOOK_STRESS_TEST_VERIFIED_AT if scope in TESTED_RULEBOOK_SCOPES else RULEBOOK_ENGINE_COMMIT_VERIFIED_AT
+    elif depth == "MEDIUM":
+        result["_last_verified_at"] = RULEBOOK_ENGINE_COMMIT_VERIFIED_AT
+    else:
+        result.pop("_last_verified_at", None)
     return result
 
 def _load_knowledge():
