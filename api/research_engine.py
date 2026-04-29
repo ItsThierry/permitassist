@@ -4171,6 +4171,172 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
     return None
 
 
+
+_RESIDENTIAL_PRIMARY_SCOPE_ALIASES = {"residential", "residential_adu", "residential_detached_adu", "residential_jadu", "residential_hillside_adu", "residential_garage_conversion", "residential_kitchen_remodel", "residential_addition", "residential_water_heater", "residential_hvac_changeout", "residential_panel_upgrade", "residential_reroof", "residential_window_replacement", "residential_foundation", "residential_deck"}
+
+
+def infer_residential_scope(job_type: str, primary_scope: str = "") -> str:
+    """A9: infer specific residential scope for permit-name normalization only."""
+    scope = (primary_scope or "").strip().lower().replace("-", "_").replace(" ", "_")
+    if scope in _RESIDENTIAL_PRIMARY_SCOPE_ALIASES and scope not in ("residential", "residential_adu"):
+        return scope
+    job = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
+    if not job:
+        return scope or "residential"
+
+    is_adu = _scope_has_any(job, ["adu", "accessory dwelling", "detached accessory dwelling", "dadu", "granny flat", "in-law suite", "in law suite", "secondary dwelling", "secondary unit"])
+    if is_adu and _scope_has_any(job, ["hillside", "slope", "steep", "grading", "geotech", "geology"]):
+        return "residential_hillside_adu"
+    if _scope_has_any(job, ["jadu", "junior accessory dwelling", "junior adu"]):
+        return "residential_jadu"
+    if is_adu and _scope_has_any(job, ["garage conversion", "convert garage", "garage into", "attached garage"]):
+        return "residential_garage_conversion"
+    if is_adu and _scope_has_any(job, ["detached", "new build", "new construction", "dadu", "backyard cottage", "standalone", "stand-alone"]):
+        return "residential_detached_adu"
+    if is_adu:
+        return "residential_detached_adu"
+    if _scope_has_any(job, ["kitchen remodel", "kitchen renovation"]):
+        return "residential_kitchen_remodel"
+    if _scope_has_any(job, ["addition", "add bedroom", "add bathroom", "room addition", "sf addition", "sq ft addition", "square foot addition"]):
+        return "residential_addition"
+    if "water heater" in job:
+        return "residential_water_heater"
+    if _scope_has_any(job, ["hvac", "condenser", "air conditioner", "air conditioning", "a/c", "heat pump", "furnace", "mini split", "mini-split", "changeout", "change out"]):
+        return "residential_hvac_changeout"
+    if _scope_has_any(job, ["panel upgrade", "service upgrade", "200 amp", "200amp", "400 amp", "400amp", "electrical panel"]):
+        return "residential_panel_upgrade"
+    if _scope_has_any(job, ["reroof", "re-roof", "roof tear", "tear-off", "tear off", "shingle roof", "replace roof"]):
+        return "residential_reroof"
+    if _scope_has_any(job, ["window replacement", "replace window", "windows", "window/door", "door replacement"]):
+        return "residential_window_replacement"
+    if _scope_has_any(job, ["foundation", "pier and beam", "pier-and-beam", "slab repair", "structural foundation"]):
+        return "residential_foundation"
+    if _scope_has_any(job, ["deck", "patio cover", "balcony"]):
+        return "residential_deck"
+    return scope or "residential"
+
+
+def _extract_square_footage(job_type: str) -> str:
+    text = job_type or ""
+    match = re.search(r"(\d[\d,]*)\s*(?:sq\.?\s*ft|sf|square\s*feet|square\s*foot)", text, re.I)
+    return match.group(1).replace(",", "") if match else ""
+
+
+def _residential_specific_permit_name(scope: str, job_type: str, city: str, state: str) -> str | None:
+    city_l = (city or "").strip().lower()
+    state_u = (state or "").strip().upper()
+    sf = _extract_square_footage(job_type)
+    if scope == "residential_detached_adu":
+        if city_l == "seattle" and state_u == "WA":
+            return "DADU Building Permit"
+        return "Detached ADU Building Permit"
+    if scope == "residential_jadu":
+        return "JADU Conversion Permit"
+    if scope == "residential_hillside_adu":
+        if city_l in ("los angeles", "la") and state_u == "CA":
+            return "Hillside ADU Residential Building Permit (LADBS)"
+        return "Hillside ADU Residential Building Permit"
+    if scope == "residential_garage_conversion":
+        return "Garage Conversion Building Permit + Change of Occupancy (per scope)"
+    if scope == "residential_kitchen_remodel":
+        return "Residential Alteration — Kitchen Remodel"
+    if scope == "residential_addition":
+        return f"Residential Building Permit — Addition ({sf} sf)" if sf else "Residential Building Permit — Addition"
+    if scope == "residential_water_heater":
+        return "Plumbing Permit — Water Heater Replacement"
+    if scope == "residential_hvac_changeout":
+        return "Mechanical Permit — HVAC Equipment Replacement"
+    if scope == "residential_panel_upgrade":
+        return "Electrical Permit — Service Upgrade (200A)" if re.search(r"200\s*amp|200a", job_type or "", re.I) else "Electrical Permit — Service Upgrade"
+    if scope == "residential_reroof":
+        return "Roofing Permit — Reroof"
+    if scope == "residential_window_replacement":
+        if city_l in ("los angeles", "la") and state_u == "CA":
+            return "Express Permit — Window/Door Replacement"
+        return "Building Permit — Window/Door Replacement"
+    if scope == "residential_foundation":
+        return "Building Permit — Foundation Repair (Pier and Beam)" if re.search(r"pier", job_type or "", re.I) else "Building Permit — Foundation Repair"
+    if scope == "residential_deck":
+        return f"Building Permit — Deck ({sf} sf)" if sf else "Building Permit — Deck"
+    return None
+
+
+def _is_already_specific_residential_name(name: str, scope: str) -> bool:
+    text = (name or "").lower()
+    if scope == "residential_hillside_adu":
+        return "hillside" in text and "adu" in text
+    wanted = {
+        "residential_detached_adu": ("detached adu", "dadu", "accessory dwelling"),
+        "residential_jadu": ("jadu", "junior accessory"),
+        "residential_garage_conversion": ("garage conversion", "change of occupancy"),
+        "residential_kitchen_remodel": ("kitchen",),
+        "residential_addition": ("addition",),
+        "residential_water_heater": ("water heater",),
+        "residential_hvac_changeout": ("hvac", "equipment", "changeout", "replacement"),
+        "residential_panel_upgrade": ("service upgrade", "panel upgrade", "200a"),
+        "residential_reroof": ("reroof", "re-roof", "roofing"),
+        "residential_window_replacement": ("window", "door"),
+        "residential_foundation": ("foundation", "structural"),
+        "residential_deck": ("deck",),
+    }.get(scope, ())
+    return bool(wanted and any(w in text for w in wanted))
+
+
+def apply_residential_permit_name_specificity(result: dict, job_type: str, city: str, state: str) -> dict:
+    """A9: replace vague residential permit labels with scope-specific names.
+
+    Runs after permit assembly. It never adds permits and never touches commercial
+    scopes, preserving A3 office/retail TI behavior and simple-trade one-permit
+    residential outputs.
+    """
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope in _COMMERCIAL_PRIMARY_SCOPES:
+        return result
+
+    scope = infer_residential_scope(job_type, primary_scope)
+    specific = _residential_specific_permit_name(scope, job_type or "", city, state)
+    permits = result.get("permits_required")
+    if not specific or not isinstance(permits, list) or not permits:
+        return result
+
+    generic_names = {"residential alteration", "adu conversion", "building permit", "garage conversion", "hillside", "plumbing", "mechanical", "electrical"}
+    renamed = []
+    for idx, permit in enumerate(permits):
+        if not isinstance(permit, dict):
+            continue
+        name = str(permit.get("permit_type") or permit.get("name") or "").strip()
+        family = _permit_family(permit)
+        is_primary_slot = idx == 0 or (scope in ("residential_water_heater",) and family == "plumbing") or (scope in ("residential_hvac_changeout",) and family == "mechanical") or (scope in ("residential_panel_upgrade",) and family == "electrical") or (scope not in ("residential_water_heater", "residential_hvac_changeout", "residential_panel_upgrade") and family in ("building", ""))
+        if not is_primary_slot:
+            # Secondary trade permit names get their own specificity from their family/scope below.
+            if scope == "residential_kitchen_remodel" and family == "electrical" and not _is_already_specific_residential_name(name, "residential_panel_upgrade"):
+                if re.search(r"panel|service|200\s*amp|200a", job_type or "", re.I):
+                    permit["permit_type"] = _residential_specific_permit_name("residential_panel_upgrade", job_type or "", city, state)
+                    renamed.append({"index": idx, "from": name, "to": permit["permit_type"]})
+            continue
+        if _is_already_specific_residential_name(name, scope):
+            continue
+        if name.lower() in generic_names or len(name) < 28 or any(g in name.lower() for g in generic_names):
+            permit["permit_type"] = specific
+            if not permit.get("portal_selection") or str(permit.get("portal_selection", "")).strip().lower() in generic_names:
+                permit["portal_selection"] = specific
+            renamed.append({"index": idx, "from": name, "to": specific})
+            continue
+
+    if renamed:
+        result["_a9_residential_permit_names"] = {"scope": scope, "renamed": renamed}
+        logic = result.get("permits_required_logic")
+        if isinstance(logic, list):
+            for item in logic:
+                if isinstance(item, dict):
+                    for change in renamed:
+                        if item.get("permit_type") == change["from"]:
+                            item["permit_type"] = change["to"]
+    return result
+
 def _derive_permit_logic(result: dict) -> list[dict]:
     logic = []
     for permit in result.get("permits_required") or []:
@@ -7037,6 +7203,7 @@ Return ONLY the JSON object."""
 
     apply_scope_aware_permit_classification(result, job_type)
     enforce_ti_min_permits_floor(result, job_type, city, state)
+    apply_residential_permit_name_specificity(result, job_type, city, state)
     apply_state_expert_pack(result, city, state, job_type)
 
     # 2026-04-28: Hidden Trigger Detector V1. Deterministic detection of
