@@ -4062,6 +4062,106 @@ def apply_scope_aware_permit_classification(result: dict, job_type: str) -> dict
     return result
 
 
+
+
+def _permit_family(permit: dict) -> str:
+    """Best-effort family classifier for required permit de-duping."""
+    if not isinstance(permit, dict):
+        return ""
+    text = " ".join(str(permit.get(k) or "") for k in ("permit_type", "portal_selection", "notes")).lower()
+    if any(t in text for t in ("fire alarm", "sprinkler", "fire sprinkler", "fire suppression")):
+        return "fire"
+    if "sign" in text or "signage" in text:
+        return "sign"
+    if "plumb" in text or "fixture" in text or "restroom" in text or "sewer" in text:
+        return "plumbing"
+    if "mechanical" in text or "hvac" in text or "duct" in text or "ventilation" in text or "rtu" in text:
+        return "mechanical"
+    if "electrical" in text or "lighting" in text or "branch circuit" in text or "panel" in text:
+        return "electrical"
+    if "building" in text or "tenant improvement" in text or "alteration" in text or "interior" in text:
+        return "building"
+    return ""
+
+
+def _ahj_companion_permit_name(family: str, primary_scope: str, city: str, state: str, verified: bool) -> tuple[str, str]:
+    """Return AHJ-safe permit labels.
+
+    verified_cities.db currently verifies AHJ existence/contact/portal, not a
+    per-family permit-name catalog. When the AHJ row exists, use conservative
+    portal-style commercial labels; otherwise use plain generic family names.
+    Both avoid fabricated city-specific titles.
+    """
+    scope_label = "Commercial Office TI" if primary_scope == "commercial_office_ti" else "Commercial Retail TI"
+    generic = {
+        "building": (f"Building Permit — Tenant Improvement ({scope_label})", "Building - Tenant Improvement / Alteration"),
+        "mechanical": ("Mechanical Permit", "Mechanical Permit"),
+        "plumbing": ("Plumbing Permit", "Plumbing Permit"),
+        "electrical": ("Electrical Permit", "Electrical Permit"),
+        "sign": ("Sign Permit", "Sign Permit"),
+        "fire": ("Fire Alarm / Fire Sprinkler Permit", "Fire Alarm / Fire Sprinkler Permit"),
+    }
+    verified_names = {
+        "building": (f"Building Permit — Tenant Improvement / Commercial Alteration ({scope_label})", "Commercial Building Permit - Tenant Improvement"),
+        "mechanical": ("Mechanical Permit — Commercial Tenant Improvement", "Mechanical Permit - Commercial Interior Alteration"),
+        "plumbing": ("Plumbing Permit — Commercial Tenant Improvement", "Plumbing Permit - Commercial Interior Alteration"),
+        "electrical": ("Electrical Permit — Commercial Tenant Improvement", "Electrical Permit - Commercial Interior Alteration"),
+        "sign": ("Sign Permit — Commercial Storefront / Wall Sign", "Sign Permit - Commercial"),
+        "fire": ("Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement", "Fire Alarm / Fire Sprinkler Permit - Commercial"),
+    }
+    return (verified_names if verified else generic).get(family, generic[family])
+
+
+def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: str) -> dict:
+    """A3: ensure office/retail TI required permits include core MEP families.
+
+    Runs after model/scope assembly and before final render/cache. Restaurant,
+    residential, and simple-trade scopes are intentionally untouched.
+    """
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope not in ("commercial_office_ti", "commercial_retail_ti"):
+        return result
+    permits = result.get("permits_required")
+    if not isinstance(permits, list):
+        permits = []
+        result["permits_required"] = permits
+
+    job = (job_type or "").lower()
+    required = ["building", "mechanical", "electrical"]
+    if primary_scope == "commercial_office_ti":
+        required.append("plumbing")
+    else:
+        if any(t in job for t in ("restroom", "bathroom", "toilet", "lavatory", "sink", "kitchen", "plumbing")):
+            required.append("plumbing")
+        required.append("sign")
+    if any(t in job for t in ("change of occupancy", "change of use", "sprinkler", "fire alarm", "relocate sprinkler", "sprinkler relocation", ">50% sprinkler", "more than 50% sprinkler")):
+        required.append("fire")
+
+    existing = {_permit_family(p) for p in permits if isinstance(p, dict)}
+    verified_row = _get_verified_city_row(city, state)
+    verified = bool(verified_row)
+    added = []
+    for family in required:
+        if family in existing:
+            continue
+        permit_type, portal = _ahj_companion_permit_name(family, primary_scope, city, state, verified)
+        notes = f"Added by A3 TI permit-floor guardrail: {family} review is a core companion permit family for {primary_scope.replace('_', ' ')} scope. Verify exact AHJ portal label before submittal."
+        permits.append(_scope_permit(permit_type, portal, notes))
+        existing.add(family)
+        added.append(family)
+
+    if added:
+        result["_a3_min_permits"] = {"scope": primary_scope, "floor": 4, "added_families": added, "verified_city_row": verified}
+        logic = result.get("permits_required_logic") if isinstance(result.get("permits_required_logic"), list) else []
+        for p in permits[-len(added):]:
+            logic.append({"permit_type": p.get("permit_type"), "included_because": p.get("notes"), "scope_trigger": "A3 commercial TI min_permits floor"})
+        result["permits_required_logic"] = logic
+        result["permit_verdict"] = "YES"
+    return result
+
 def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str) -> dict:
     """Append deterministic state expert notes (currently California)."""
     if not isinstance(result, dict):
@@ -5946,6 +6046,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             elif 'fee_calculator' not in cached:
                 cached['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
             apply_scope_aware_permit_classification(cached, job_type)
+            enforce_ti_min_permits_floor(cached, job_type, city, state)
             apply_state_expert_pack(cached, city, state, job_type)
             hedge_companion_permits(cached, job_type)
             enrich_result_with_serper_sources(cached, job_type, city, state)
@@ -6797,6 +6898,7 @@ Return ONLY the JSON object."""
         result['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
 
     apply_scope_aware_permit_classification(result, job_type)
+    enforce_ti_min_permits_floor(result, job_type, city, state)
     apply_state_expert_pack(result, city, state, job_type)
 
     # 2026-04-28: Hidden Trigger Detector V1. Deterministic detection of
