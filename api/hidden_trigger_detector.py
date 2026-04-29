@@ -452,15 +452,28 @@ HIDDEN_TRIGGER_REGISTRY = [
         "primary_scope": "residential_single_trade",
     },
     {
-        "id": "residential_water_heater_pan_tp_seismic",
+        "id": "residential_water_heater_pan_tp",
         "severity": "medium",
-        "title": "Water heater replacement can trigger pan, T&P discharge, expansion, and seismic strapping details",
-        "why_it_matters": "A simple swap often fails inspection when discharge piping, pan drain, combustion air, expansion control, or seismic restraint is missing.",
-        "fired_by": [r"\bwater heater\b", r"\btankless\b", r"\bhybrid water heater\b", r"\bheat pump water heater\b", r"\bt&p\b", r"\bseismic strap\b"],
-        "likely_required_actions": ["Show T&P discharge termination", "Add drain pan where leakage damage is possible", "Verify combustion air/venting or electrical circuit", "Add seismic restraint where locally required"],
+        "title": "Water heater replacement requires pan, T&P discharge, expansion, and combustion-air details",
+        "why_it_matters": "A simple swap often fails inspection when discharge piping, pan drain, combustion air, or expansion control is missing.",
+        "fired_by": [r"\bwater heater\b", r"\btankless\b", r"\bhybrid water heater\b", r"\bheat pump water heater\b", r"\bt&p\b"],
+        "likely_required_actions": ["Show T&P discharge termination", "Add drain pan where leakage damage is possible", "Verify combustion air/venting or electrical circuit", "Confirm expansion control on closed systems"],
         "companion_permits": ["Plumbing/mechanical/electrical trade permit as locally required"],
         "agencies": ["AHJ Plumbing/Mechanical Dept"],
-        "citations": ["IPC §504.6", "IPC §504.7", "IRC §P2801.6", "State seismic strapping amendments [verify before merging]"],
+        "citations": ["IPC §504.6", "IPC §504.7", "IRC §P2801.6"],
+        "primary_scope": "residential_single_trade",
+    },
+    {
+        "id": "residential_water_heater_seismic_strap",
+        "severity": "medium",
+        "title": "Water heater seismic strapping required in seismic-zone amendments",
+        "why_it_matters": "California, Alaska, and other state seismic amendments require water heater anchoring at the upper and lower thirds. Inspectors fail finals over missing or improper straps.",
+        "fired_by": [r"\bwater heater\b", r"\btankless\b", r"\bhybrid water heater\b", r"\bheat pump water heater\b", r"\bseismic strap\b"],
+        "regions": ["seismic_strap_required"],
+        "likely_required_actions": ["Strap water heater at upper and lower thirds", "Use approved seismic strap or listed restraint per local amendment", "Verify gas flex connector and earthquake gas shutoff if locally required"],
+        "companion_permits": [],
+        "agencies": ["AHJ Plumbing/Mechanical Dept"],
+        "citations": ["CPC §507.2 [California seismic amendment]", "IRC §P2801.6", "Local seismic strap ordinance [verify before merging]"],
         "primary_scope": "residential_single_trade",
     },
     {
@@ -607,9 +620,50 @@ TRIGGER_JURISDICTION_PREFIXES = {
     "la_": {"state": "ca", "city_any": {"los angeles", "la"}},
 }
 
+# Named regions for the explicit `regions` / `not_regions` schema keys. Use
+# these on triggers that need geographic gating but do not follow the
+# city-prefix ID convention (seismic strap, HVHZ NOA, named historic districts,
+# etc.). All present constraints inside a region must match (AND semantics).
+NAMED_REGIONS = {
+    "seismic_strap_required": {
+        # States with statewide water-heater seismic strapping amendments. Other
+        # states (e.g. NV, OR, WA) have partial or local rules; expand here when
+        # a verified citation justifies it.
+        "states": {"ca", "ak"},
+    },
+    "fl_coastal_hvhz": {
+        # High Velocity Hurricane Zone — Miami-Dade and Broward counties (FBC).
+        "states": {"fl"},
+        "city_any": {
+            "miami", "miami beach", "miami gardens", "north miami", "north miami beach",
+            "coral gables", "doral", "hialeah", "homestead", "key biscayne", "aventura",
+            "sunny isles beach", "cutler bay", "palmetto bay", "pinecrest", "kendall",
+            "fort lauderdale", "hollywood", "pompano beach", "pembroke pines", "davie",
+            "plantation", "sunrise", "coral springs", "deerfield beach", "weston",
+        },
+    },
+    "named_historic_district": {
+        # Triggers gated to this region only fire when the job context names a
+        # historic district / HPC review. Geography is text-driven, not
+        # state-driven, so any state passes when text matches.
+        "text_any_pattern": [
+            r"\bhistoric district\b",
+            r"\bhistoric preservation\b",
+            r"\bhpc\b",
+            r"\bcertificate of appropriateness\b",
+            r"\bnational register\b",
+            r"\blandmark commission\b",
+        ],
+    },
+}
+
 # Strip these helper keys if future registries add them. Current registry uses
 # only the public schema, but keeping this makes the detector safe to extend.
 PRIVATE_TRIGGER_KEYS = {"_notes", "_jurisdiction", "_scope_aliases"}
+
+# Schema keys that exist on the trigger dict but should not be returned to the
+# caller because they are internal gating metadata.
+INTERNAL_TRIGGER_KEYS = {"regions", "not_regions"}
 
 
 def _normalize(value: Any) -> str:
@@ -729,8 +783,66 @@ def _trigger_matches(trigger: dict, text: str) -> bool:
     return any(_pattern_matches(pattern, text) for pattern in trigger.get("fired_by", []))
 
 
+def _region_token_applies(token: str, city: str, state: str, text: str) -> bool:
+    """Resolve a `regions` / `not_regions` token against (city, state, text).
+
+    Tokens may be a 2-letter state code (e.g. "ca") or a named region defined
+    in NAMED_REGIONS. Inside a named region, every present constraint
+    (`states`, `city_any`, `text_any_pattern`) must pass.
+    """
+    token_norm = _normalize(token).replace(" ", "_")
+    if not token_norm:
+        return False
+
+    state_norm = _normalize(state)
+    city_norm = _normalize(city)
+
+    # Bare state code shortcut.
+    if len(token_norm) == 2 and token_norm.isalpha():
+        return state_norm == token_norm
+
+    region = NAMED_REGIONS.get(token_norm)
+    if not region:
+        return False
+
+    states = region.get("states")
+    if states and state_norm not in {_normalize(s) for s in states}:
+        return False
+
+    city_any = region.get("city_any")
+    if city_any:
+        cities = {_normalize(c) for c in city_any}
+        # Allow either an exact city-arg match or the name appearing in job text
+        # (helps when caller passes a county or alt spelling).
+        if city_norm not in cities and not any(c in text for c in cities):
+            return False
+
+    text_patterns = region.get("text_any_pattern")
+    if text_patterns and not any(_pattern_matches(p, text) for p in text_patterns):
+        return False
+
+    return True
+
+
+def _region_applies(trigger: dict, city: str, state: str, text: str) -> bool:
+    """Return False iff this trigger's `regions`/`not_regions` exclude this job."""
+    regions = trigger.get("regions")
+    if regions and not any(_region_token_applies(t, city, state, text) for t in regions):
+        return False
+
+    not_regions = trigger.get("not_regions")
+    if not_regions and any(_region_token_applies(t, city, state, text) for t in not_regions):
+        return False
+
+    return True
+
+
 def _public_trigger(trigger: dict) -> dict:
-    clean = {k: copy.deepcopy(v) for k, v in trigger.items() if k not in PRIVATE_TRIGGER_KEYS}
+    clean = {
+        k: copy.deepcopy(v)
+        for k, v in trigger.items()
+        if k not in PRIVATE_TRIGGER_KEYS and k not in INTERNAL_TRIGGER_KEYS
+    }
     # Make sure all expected public fields exist, even if a future appended
     # trigger omitted an optional list.
     clean.setdefault("likely_required_actions", [])
@@ -747,8 +859,8 @@ def detect_hidden_triggers(job_type: str, city: str, state: str, primary_scope: 
     Deterministic V1 rules:
     - Match only lowercased user job text plus selected structured base-result
       occupancy/scope fields. No LLM calls, no network calls.
-    - A trigger must pass scope gating, jurisdiction gating, and at least one
-      `fired_by` regex/token match.
+    - A trigger must pass scope gating, jurisdiction gating, region gating
+      (`regions` / `not_regions`), and at least one `fired_by` regex/token match.
     - Residential single-trade triggers are suppressed for commercial primary
       scopes.
     - Returned dicts are copies, so callers can safely mutate/sanitize them.
@@ -767,6 +879,8 @@ def detect_hidden_triggers(job_type: str, city: str, state: str, primary_scope: 
         if not _scope_applies(trigger.get("primary_scope", ""), primary_scope, text):
             continue
         if not _jurisdiction_applies(trigger_id, city, state, text):
+            continue
+        if not _region_applies(trigger, city, state, text):
             continue
         if not _trigger_matches(trigger, text):
             continue
