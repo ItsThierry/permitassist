@@ -1,0 +1,34 @@
+{
+  "_sources_locality_dropped": [
+    {
+      "field": "sources",
+      "url": "https://lebanon.in.gov/egov/documents/permit-fees.pdf"
+    },
+    {
+      "field": "sources",
+      "url": "https://www.govinfo.gov/content/pkg/CFR-2024-title24/pdf/CFR-2024-title24.pdf"
+    },
+    {
+      "field": "fee_source",
+      "url": "https://govinfo.gov/bad.pdf"
+    },
+    {
+      "field": "fee_range",
+      "url": "free_text"
+    },
+    {
+      "field": "confidence_reason",
+      "url": "free_text"
+    }
+  ],
+  "applying_office": "Dallas Building Inspection",
+  "building_dept_phone": "214-948-4480",
+  "confidence_reason": "Rejected bad federal citation ; Dallas source remains.",
+  "fee_range": "Restaurant TI fees must be verified at [verify with Dallas Building Inspection 214-948-4480] and Dallas fee schedule.",
+  "fee_source": null,
+  "permit_summary": "3,200 sf Dallas restaurant TI with hood, grease interceptor, ADA restroom, patio.",
+  "sources": [
+    "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/default.aspx",
+    "https://www.ada.gov/resources/2010-standards/"
+  ]
+}
