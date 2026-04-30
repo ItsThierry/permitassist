@@ -89,8 +89,8 @@ SERPER_API_KEY = os.environ.get("SERPER_API_KEY", "")
 # rather than silently using a key checked into git history (was a security gap
 # fixed 2026-04-26).
 BRAVE_SEARCH_API_KEY = os.environ.get("BRAVE_SEARCH_API_KEY", "")
-ACCELA_APP_ID = os.environ.get("ACCELA_APP_ID", "639125015399507099")
-ACCELA_APP_SECRET = os.environ.get("ACCELA_APP_SECRET", "a516edb01cab4261baf14a478ee3c9ac")
+ACCELA_APP_ID = os.environ.get("ACCELA_APP_ID")
+ACCELA_APP_SECRET = os.environ.get("ACCELA_APP_SECRET")
 
 # Cache TTL ceiling (days). Permit rules and fees update quarterly in many
 # cities; 30 days was too long. Combined with ETag polling (added 2026-04-26)

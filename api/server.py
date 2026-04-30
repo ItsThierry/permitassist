@@ -2978,7 +2978,7 @@ class Handler(BaseHTTPRequestHandler):
             mode = params.get("hub.mode", [""])[0]
             token = params.get("hub.verify_token", [""])[0]
             challenge = params.get("hub.challenge", [""])[0]
-            FB_VERIFY_TOKEN = os.environ.get("FB_WEBHOOK_VERIFY_TOKEN", "permitassist_webhook_2026")
+            FB_VERIFY_TOKEN = os.environ.get("FB_WEBHOOK_VERIFY_TOKEN")
             if mode == "subscribe" and token == FB_VERIFY_TOKEN:
                 self.send_response(200)
                 self.send_header("Content-Type", "text/plain")
@@ -4716,7 +4716,7 @@ if __name__ == "__main__":
 
 # ── Messenger Bot Helper ──────────────────────────────────────────────────────
 
-MESSENGER_PAGE_TOKEN = os.environ.get("FB_PAGE_TOKEN", "EAASqNZBDxbWcBRWNr7TqKGrVrweoAeZBmIsIvAHveRvDVH2AIQrWnobiQgBJhcb2lanZB8MemR8OWUfA5hwe35WjPlJrYxmrf67vpe65zv4u3kWKWlwu8XTLnSdZB3QdgCovdCr5zZCTRanfkwu1AvxZA11OHdtPN3dhPrelQj4aXYN0q2R9Q61i88OgjyQwhy46ezVlf4DgZDZD")
+MESSENGER_PAGE_TOKEN = os.environ.get("FB_PAGE_TOKEN")
 
 TRADE_LINKS = {
     "roof": ("roofing", "https://permitassist.io/roofing"),
