@@ -4378,8 +4378,8 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/process-onboarding-emails":
             try:
                 admin_token = self.headers.get("X-Admin-Token", "")
-                if ADMIN_TOKEN and admin_token != ADMIN_TOKEN:
-                    self.send_json(401, {"error": "Invalid admin token"})
+                if not ADMIN_TOKEN or not hmac.compare_digest(admin_token, ADMIN_TOKEN):
+                    self.send_json(401, {"error": "Admin token required"})
                     return
                 sent = process_onboarding_emails()
                 self.send_json(200, {"sent": sent, "status": "ok"})
@@ -4390,8 +4390,8 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/check-permit-reminders":
             try:
                 admin_token = self.headers.get("X-Admin-Token", "")
-                if ADMIN_TOKEN and admin_token != ADMIN_TOKEN:
-                    self.send_json(401, {"error": "Invalid admin token"})
+                if not ADMIN_TOKEN or not hmac.compare_digest(admin_token, ADMIN_TOKEN):
+                    self.send_json(401, {"error": "Admin token required"})
                     return
                 sent = process_permit_issued_reminders()
                 self.send_json(200, {"sent": sent, "status": "ok"})
