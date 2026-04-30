@@ -1,0 +1,509 @@
+{
+  "job_summary": "4,500 sf commercial office tenant improvement on the 3rd floor in Dallas, TX. Scope includes new demising partitions, office buildout, ceiling and lighting changes, sprinkler head relocation, electrical/data work, and accessible path of travel upgrades. This triggers a commercial building permit for the interior alteration, plus separate trade permits for electrical and fire sprinkler work. Because the scope includes accessibility improvements, plan review will also look at ADA/TAS path-of-travel compliance and any required restroom/entry/route upgrades tied to the altered area.",
+  "total_cost_estimate": "$180,000 - $450,000",
+  "location": "Dallas, TX",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Commercial Interior Alteration / Tenant Improvement",
+      "portal_selection": "Commercial Building Permit - Interior Alteration / Tenant Finish-Out",
+      "required": true,
+      "notes": "Required for the new demising partitions, office buildout, ceiling modifications, and accessible path of travel work. Dallas will review the full tenant improvement scope under commercial plan review."
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Interior Alteration",
+      "portal_selection": "Electrical Permit - Commercial Interior Alteration",
+      "required": true,
+      "notes": "Required for new lighting, power, data-related electrical work, and any new circuits, devices, or panel modifications associated with the tenant finish-out."
+    },
+    {
+      "permit_type": "Fire Sprinkler Permit — Sprinkler Head Relocation",
+      "portal_selection": "Fire Sprinkler Permit - Head Relocation / Modification",
+      "required": true,
+      "notes": "Required because sprinkler heads are being relocated. This is typically reviewed by fire prevention / fire marshal and may require stamped sprinkler shop drawings."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Commercial Interior Alteration / Tenant Improvement",
+      "included_because": "The scope is a commercial tenant improvement with new partitions, office buildout, ceiling changes, and accessible path of travel work, all of which are building-code regulated interior alterations requiring commercial plan review.",
+      "scope_trigger": "New demising partitions, office buildout, ceiling changes, accessible path of travel"
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Interior Alteration",
+      "included_because": "The job includes electrical and data work, which typically means new wiring, devices, lighting circuits, or panel/circuit changes inside the tenant space.",
+      "scope_trigger": "Electrical/data work and lighting changes"
+    },
+    {
+      "permit_type": "Fire Sprinkler Permit — Sprinkler Head Relocation",
+      "included_because": "Relocating sprinkler heads is a fire protection system modification and requires separate fire sprinkler review and inspection.",
+      "scope_trigger": "Sprinkler head relocation"
+    }
+  ],
+  "applying_office": "Dallas Development Services Department",
+  "apply_url": "https://developdallas.dallascityhall.com/PermitDallas/",
+  "apply_pdf": null,
+  "apply_phone": "(214) 948-4480",
+  "apply_address": "320 E. Jefferson Blvd., Room 118, Dallas, TX 75203",
+  "apply_google_maps": "https://www.google.com/maps?q=320+E.+Jefferson+Blvd.,+Room+118,+Dallas,+TX+75203",
+  "fee_range": "Fee Estimate: **$16,500-$26,000+** (structured floor — see breakdown). Components: ~$11,000 base permit + plan review (Dallas, TX commercial office TI floor) × 1.1× jurisdiction multiplier + $2,000 demising-wall adder + $4,000 fire-sprinkler-modify adder + $3,000 ada-path-of-travel adder. **Verify against current fee schedule before quoting.**",
+  "approval_timeline": {
+    "simple": "Not typically OTC for a 4,500 sf commercial TI; expect intake and plan review before permit issuance",
+    "complex": "4-8 weeks for commercial plan review in Dallas, longer if ADA/TAS, fire sprinkler, or revisions are required"
+  },
+  "inspections": [
+    {
+      "stage": "Commercial Building Rough-In",
+      "description": "Inspector verifies framing of new demising partitions, fireblocking, rated wall assemblies where required, door hardware/egress clearances, ceiling grid support, and that work matches approved plans before walls and ceilings are closed.",
+      "timing": "After framing and above-ceiling work are complete, before insulation, drywall closure, or ceiling tile installation"
+    },
+    {
+      "stage": "Electrical Rough-In",
+      "description": "Inspector checks new branch-circuit wiring, box fill, conductor support, grounding/bonding, device locations, lighting rough-in, emergency/egress lighting if shown on plans, and clear access to panels and disconnects.",
+      "timing": "Before insulation, drywall, or ceiling closure"
+    },
+    {
+      "stage": "Fire Sprinkler Rough-In / Hydrostatic or Modification Inspection",
+      "description": "Inspector verifies sprinkler head relocation matches approved shop drawings, pipe routing and hangers are correct, coverage is maintained, heads are not obstructed by new partitions or ceiling features, and any required pressure test or flush is completed.",
+      "timing": "Before ceiling closure and before final occupancy"
+    },
+    {
+      "stage": "Final Commercial TI Inspection",
+      "description": "Inspector verifies the finished tenant space matches approved plans, exits and accessible route are clear, doors and hardware function, lighting works, electrical devices are installed, sprinkler heads are in final locations, and all life-safety items are complete.",
+      "timing": "After all work is complete and before occupancy"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through Dallas Development Services / PermitDallas online portal: https://developdallas.dallascityhall.com/PermitDallas/ or call (214) 948-4480. Dallas Building Inspection Division also uses phone scheduling for some inspections. Plan ahead: commercial inspections should be requested at least 24 hours in advance, and fire sprinkler inspections may need additional lead time depending on the fire marshal's schedule.",
+  "license_required": "Commercial general contractor pulls the building permit on behalf of the tenant/owner, and the appropriate Texas-licensed trade contractors pull their own trade permits or are listed on the application as required. Electrical work requires a TECL-licensed electrical contractor/master electrician; sprinkler work requires the properly licensed fire sprinkler contractor. The permit is still required.",
+  "city_contractor_registration": "Dallas requires contractor registration with the city each year. Verify the contractor registration is current before submitting any permit application; an expired registration can block permit processing. Renewal is annual.",
+  "what_to_bring": [
+    "Completed commercial permit application and project address/unit information",
+    "Full plan set showing demolition, new partitions, reflected ceiling plan, lighting plan, life-safety/egress, and accessible path of travel details",
+    "Electrical scope sheet with panel schedule, load information, and lighting/device layout",
+    "Fire sprinkler shop drawings or sprinkler modification drawings for head relocation",
+    "Contractor registration information and Texas license numbers for the GC and trade contractors",
+    "Owner/tenant authorization letter and valuation for the project"
+  ],
+  "common_mistakes": [
+    "Submitting the permit application without verifying current Dallas contractor registration status — an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting.",
+    "Undervaluing the project on the application — Dallas uses a permit valuation system and lowball numbers can trigger audit, correction, and penalty fees.",
+    "Treating sprinkler head relocation as a minor field change instead of a separate fire sprinkler permit and inspection",
+    "Forgetting that accessible path of travel upgrades can trigger additional ADA/TAS review items beyond the tenant space itself",
+    "Starting demolition or ceiling work before the commercial permit and trade permits are issued and posted"
+  ],
+  "pro_tips": [
+    "Check your Dallas contractor registration renewal date before starting any permit application — registration lapses are the #1 avoidable rejection reason.",
+    "Use a realistic project valuation from the start; Dallas flags undervalued commercial TI permits and can hold issuance until the valuation is corrected.",
+    "If the tenant improvement affects exits, restrooms, or the route from the public entrance, include those sheets in the first plan submittal so you do not get bounced for ADA/TAS revisions.",
+    "Coordinate sprinkler head relocation early with the fire sprinkler contractor — ceiling layout changes often force head spacing or coverage revisions after the architectural plans are already drawn.",
+    "For a 3rd-floor TI, confirm elevator access and material staging rules with the building owner before inspection day so the inspector can reach all areas without delay."
+  ],
+  "code_citation": {
+    "section": "IBC 105.1",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish or change the occupancy of a building or structure..."
+  },
+  "companion_permits": [
+    {
+      "permit_type": "Mechanical Permit — Commercial HVAC Alteration",
+      "reason": "May be required if: HVAC equipment, ductwork, or ventilation is added or modified.",
+      "required_if": "HVAC equipment, ductwork, or ventilation is added or modified",
+      "certainty": "possible",
+      "requirement_label": "May be required based on scope"
+    },
+    {
+      "permit_type": "Plumbing Permit — Commercial Interior Alteration",
+      "reason": "May be required if: Any plumbing fixture or piping relocation is included in the TI.",
+      "required_if": "Any plumbing fixture or piping relocation is included in the TI",
+      "certainty": "possible",
+      "requirement_label": "May be required based on scope"
+    },
+    {
+      "permit_type": "Fire Alarm Permit — Commercial Fire Alarm Modification",
+      "reason": "May be required if: Fire alarm devices or circuits are altered by the new layout.",
+      "required_if": "Fire alarm devices or circuits are altered by the new layout",
+      "certainty": "conditional",
+      "requirement_label": "May be required based on scope"
+    }
+  ],
+  "zoning_hoa_flag": "For a downtown commercial office TI, HOA is usually not applicable, but landlord approval, lease restrictions, and any downtown overlay or historic-district rules can affect exterior signage, façade work, or construction hours. If the project changes occupancy, egress, or parking demand, zoning review may also be triggered.",
+  "sources": [
+    "https://www.dallascounty.org/departments/duas/applications-permits.php",
+    "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "https://aca-prod.accela.com/dallastx/default.aspx",
+    "https://www.govinfo.gov/content/pkg/CZIC-hc62-i52-1985/html/CZIC-hc62-i52-1985.htm"
+  ],
+  "confidence": "medium",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "_fee_unverified": true,
+  "maps_url": "https://www.google.com/maps?q=320+E.+Jefferson+Blvd.,+Room+118,+Dallas,+TX+75203",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "last_verified_at": "2026-04-12T17:46:53.426701",
+  "_field_sources": {
+    "apply_url": "auto_verified:https://permitmint.com/guides/electrical/texas/dallas/",
+    "applying_office": "auto_verified:https://permitmint.com/guides/electrical/texas/dallas/",
+    "apply_phone": "auto_verified:https://permitmint.com/guides/electrical/texas/dallas/",
+    "apply_address": "auto_verified:https://permitmint.com/guides/electrical/texas/dallas/",
+    "fee_range": "auto_verified:https://permitmint.com/guides/electrical/texas/dallas/",
+    "permits_required": "model_training",
+    "approval_timeline": "model_training",
+    "common_mistakes": "model_training",
+    "pro_tips": "model_training",
+    "total_cost_estimate": "model_training"
+  },
+  "needs_review": true,
+  "missing_fields": [
+    "fee_range"
+  ],
+  "confidence_reason": "Verified city/trade data found from official sources. Needs review for: fee_range",
+  "_meta": {
+    "generated_at": "2026-04-28T21:03:17.631099",
+    "response_ms": 15750,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 6,
+    "city_match_level": "city",
+    "job_type": "4,500 sf commercial office tenant improvement on 3rd floor: new demising partitions, office buildout, ceiling and lighting changes, sprinkler head relocation, electrical/data, accessible path of travel",
+    "city": "Dallas",
+    "state": "TX",
+    "zip_code": "75201",
+    "job_category": "commercial",
+    "auto_verified": true,
+    "missing_fields": [
+      "fee_range"
+    ]
+  },
+  "fee_source": {
+    "url": "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "title": "[PDF] List of Post-Construction BMP Appendices - City of Lebanon, Indiana",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://aca-prod.accela.com/dallastx/default.aspx",
+    "title": "Message Bar - Accela Citizen Access",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "title": "[PDF] List of Post-Construction BMP Appendices - City of Lebanon, Indiana",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://www.govinfo.gov/content/pkg/CZIC-hc62-i52-1985/html/CZIC-hc62-i52-1985.htm",
+    "title": "Post disaster response and mitigation of future losses proceedings ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "title": "[PDF] List of Post-Construction BMP Appendices - City of Lebanon, Indiana",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 90,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "commercial_office_ti",
+  "checklist": [
+    "Verify your contractor license is current and valid in TX",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Identify altered primary-function area: if scope alters an area where major activity occurs, an accessible path of travel to the altered area is required unless technically infeasible / disproportionate (2010 ADA §202.4; 28 CFR §36.403(a))",
+    "20% disproportionality cap: ADA path-of-travel work exceeding 20% of alteration cost is disproportionate at the federal level, but lower-cost items must still be prioritized (28 CFR §36.403(f)(1))",
+    "Accessible exterior route: site arrival points + accessible parking/passenger loading + curb ramps + walking surfaces + ramps/landings + slope/cross-slope + door clearances to altered area (2010 ADA §§206.2.1, 206.4, 403, 404, 405, 406)",
+    "Restroom path + restroom upgrades: if restrooms serve the altered area, accessible route + door + turning space + lavatory + water closet + grab bars + clearances + signage (2010 ADA §§213, 603-606, 609, 703)",
+    "Parking + passenger loading: recalculate accessible-stall count + van space + access aisle + signage for affected parking serving the altered area (2010 ADA §§208, 502, 503; 28 CFR §36.403(e)(1))",
+    "Drinking fountains, phones, and signage along the path: tactile/visual signs, room ID, directional, fountain units, public phones if any (2010 ADA §§211, 216, 602, 703, 704)",
+    "Doors, thresholds, and hardware on the route: clear width + maneuvering clearance + opening force + thresholds + lever/operable hardware + protruding objects (2010 ADA §§303, 307, 309, 404)",
+    "ADA fixture counts per IBC Table 2902.1 (1 toilet + 1 lavatory per 1–25 occupants per sex; verify current edition)",
+    "Demising wall fire-rated assembly between tenants per IBC 706.3 (1-hour typical; 2-hour for higher-occupancy adjacencies)",
+    "Accessible-parking ratio per IBC 1106 + 1106.4 (1 per 25 spaces; 1 of every 6 must be van-accessible)",
+    "Exit access travel distance ≤200 ft (sprinklered) / ≤75 ft (non-sprinklered) per IBC 1017",
+    "Sprinkler head additions or relocations: hydraulic recalc + permit + 5-year cert update per NFPA 13/25",
+    "Lighting power density per IECC C405 (e.g. ≤0.79 W/sf for open-plan office)",
+    "Mechanical zoning per IMC 403 with tenant-controlled VAV / ductless on each occupied space",
+    "Fire alarm initiating-device coordination with base building (smoke detectors at HVAC return per NFPA 72 §17.7)",
+    "Accessible route from accessible entrance to all tenant areas per ADA §206 — no thresholds >½ in unbeveled",
+    "Means of egress: 2 exits required if occupant load >49 OR travel distance exceeds limits per IBC 1006",
+    "Energy code envelope + windows + insulation comply with IECC C402 if exterior wall is touched",
+    "Asbestos / lead survey for buildings pre-1980 if disturbing partitions, ceilings, or flooring",
+    "Glass + glazing: safety glazing per IBC 2406 in any pane within 24 in of doors or 60 in of floor",
+    "Confirm the required license is active and matches the application: Commercial general contractor pulls the building permit on behalf of the tenant/owner, and the appropriate Texas-licensed trade contractors pull their own trade permits or are listed on the application as required. Electrical work requires a TECL-licensed electrical contractor/master electrician; sprinkler work requires the properly licensed fire sprinkler contractor. The permit is still required.",
+    "Bring 2 copies of all documents to Dallas Development Services Department"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Expired annual city contractor registration",
+      "frequency": "very_common",
+      "fix": "Renew at dallas.gov/dsd annually — expiration causes silent rejection"
+    },
+    {
+      "pattern": "Project value underestimation flagged by plan reviewer",
+      "frequency": "common",
+      "fix": "Use contractor cost estimating software for accurate value — audits can add penalty fees"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "fee_calculator": {
+    "fee": null,
+    "formula": null,
+    "confidence": "none",
+    "note": "Provide job_value to calculate an exact fee where formulas are available."
+  },
+  "expert_notes": [
+    {
+      "title": "No statewide general-contractor license for residential work",
+      "note": "Texas does not require general contractors, home-improvement specialists, or handyman services to hold a state license — licensing is handled by trade-specific boards (TDLR for electrical/HVAC, TSBPE for plumbing) and by individual cities/counties. Confirm the AHJ's local registration requirements (most large cities require contractor registration even though the state does not), and never assume a sister-state GC license carries over. Trade subs still must hold the specific TDLR/TSBPE license below.",
+      "applies_to": "All residential GC and remodel work in Texas",
+      "source": "https://www.procore.com/library/texas-contractors-license"
+    },
+    {
+      "title": "TDLR Air Conditioning & Refrigeration Contractor license required for HVAC",
+      "note": "Any HVAC contractor performing work in Texas must hold a TDLR Air Conditioning and Refrigeration Contractor license — application fee is $115 and the license must list the proper environment (Class A unlimited tonnage vs Class B ≤25 tons cooling / ≤1.5M Btu heating) and endorsement (cooling, heating, or commercial refrigeration). Verify the contractor's TDLR license number and class match the scope before pulling a mechanical permit; mismatched class is a common rejection reason.",
+      "applies_to": "All HVAC installation, replacement, and alteration work",
+      "source": "https://www.tdlr.texas.gov/acr/contractor-apply.htm"
+    },
+    {
+      "title": "TSBPE plumbing license required before bidding or working",
+      "note": "The Texas State Board of Plumbing Examiners requires a Journeyman or Master plumber license prior to bidding or completing any plumbing work — there is no de minimis dollar threshold like California's $500 rule. Licenses renew annually and require six hours of CPE per the Plumbing License Law; apprentices may only work under direct supervision. Confirm the responsible Master Plumber's license is active on the TSBPE lookup before submitting plumbing plans, since an expired license blocks permit issuance.",
+      "applies_to": "All plumbing work statewide",
+      "source": "https://tsbpe.texas.gov/license-types/"
+    },
+    {
+      "title": "TDLR is the umbrella regulator for most building trades",
+      "note": "TDLR licenses and regulates 39 industries including electricians, HVAC contractors, elevator/escalator, boilers, and industrialized housing — but plumbing sits with TSBPE, not TDLR. When a job involves multiple trades, expect parallel licensing checks at two separate state agencies plus the local AHJ's contractor-registration desk. Pull the TDLR license-search and TSBPE license-search results into the permit packet to pre-empt plan-check holds.",
+      "applies_to": "Multi-trade residential and light-commercial projects",
+      "source": "https://www.tdlr.texas.gov/"
+    },
+    {
+      "title": "2021 IRC/IBC/IMC/IFGC effective for industrialized housing as of July 1, 2024",
+      "note": "The Texas Commission of Licensing and Regulation adopted the 2021 editions of the IRC, IBC, IMC, IFGC, and related codes for industrialized housing and buildings on May 21, 2024, with an effective date of July 1, 2024. Modular and IHB projects built or shipped after that date must conform; site-built projects follow the AHJ's locally-adopted edition (often still 2015 or 2018 IRC in smaller jurisdictions). Always confirm the local edition before drafting — Texas has no uniform statewide site-built code.",
+      "applies_to": "Industrialized housing, modular, and IHB-stamped projects",
+      "source": "https://www.tdlr.texas.gov/news/2024/06/17/industrialized-housing-and-buildings-adoption-of-new-code-editions/"
+    },
+    {
+      "title": "SB 783 (eff. Sept 1, 2025) — energy code update path via SECO",
+      "note": "Texas SB 783 took effect September 1, 2025 and directs the State Energy Conservation Office (SECO) to evaluate and adopt updated IECC editions for residential and commercial construction, with amendment authority. The last statutorily-adopted residential energy code was the 2015 IECC, so any project at the 2025-2026 boundary should confirm whether the AHJ has moved to the 2021 or 2024 IECC under SECO's updated rulemaking. Build energy-compliance documentation against the AHJ's currently-enforced edition, not the state's default.",
+      "applies_to": "New residential and commercial construction energy compliance",
+      "source": "https://legiscan.com/TX/text/SB783/id/3057306/Texas-2025-SB783-Introduced.html"
+    },
+    {
+      "title": "HB 3167 platting shot clock — 30 days for municipal action",
+      "note": "Under HB 3167 (Local Govt Code Chapter 212), municipalities must approve, approve with conditions, or disapprove a plat or plan within 30 days of filing — silence is deemed approval. Disapproval must be in writing with specific reasons tied to ordinance or statute, and the applicant has the right to a 15-day cure-and-resubmit. Use this clock as leverage when a city stalls a subdivision or replat needed for ADU or infill projects.",
+      "applies_to": "Subdivision plats, replats, and site plans subject to municipal review",
+      "source": "https://www.tml.org/DocumentCenter/View/4166/Platting-Shot-Clock-Process-11-2023-PDF"
+    },
+    {
+      "title": "Development-review shot clock for permit applications",
+      "note": "Recent Texas legislation extends shot-clock concepts beyond platting to broader development reviews, capping the time municipalities can take to act on permit-related submittals before approval is presumed or fee refunds are triggered. This narrows the window for cities to demand iterative resubmittals and gives applicants statutory grounds to escalate stalled residential permits. Document the application's complete-submittal date in writing so the clock is provable if escalation is needed.",
+      "applies_to": "Municipal residential permit and development-review timelines",
+      "source": "https://www.freese.com/blog/new-texas-legislation-sets-shot-clock-for-development-reviews/"
+    },
+    {
+      "title": "TDI Windstorm (WPI-8) certification required in First Tier coastal counties",
+      "note": "The Texas Department of Insurance Windstorm Inspection Program applies to designated catastrophe areas — the 14 First Tier coastal counties (Aransas, Brazoria, Calhoun, Cameron, Chambers, Galveston, Jefferson, Kenedy, Kleberg, Matagorda, Nueces, Refugio, San Patricio, Willacy) plus parts of Harris east of SH 146. New construction, additions, and re-roofs in these areas need a WPI-8 / WPI-8-C certificate of compliance issued by an appointed engineer or TDI inspector to be eligible for TWIA windstorm coverage. This is a SEPARATE filing from the building permit and must be scheduled in phases (foundation, framing, roof) — missing an inspection phase voids the certificate.",
+      "applies_to": "New construction, additions, and re-roofs in First Tier coastal counties",
+      "source": "https://www.tdi.texas.gov/wind/generalquestio.html"
+    },
+    {
+      "title": "TWIA insurability hinges on windstorm certification",
+      "note": "To bind a Texas Windstorm Insurance Association policy on a coastal property, the structure must be certified as meeting the windstorm-resistant building-code requirements for its tier — without a current WPI-8 (or post-2020 equivalent), the property is uninsurable through TWIA and most private carriers will follow suit. Schedule the engineer-of-record windstorm inspection BEFORE drywall closes the framing, since a missed framing inspection cannot be reconstructed after the fact and the homeowner loses coverage at closing.",
+      "applies_to": "Coastal Texas residential construction needing windstorm insurance",
+      "source": "https://www.twia.org/windstorm-certification/"
+    },
+    {
+      "title": "Floodplain permit required separate from building permit",
+      "note": "Texas participates in the NFIP through county and municipal floodplain administrators — any development (including fill, grading, accessory structures, and substantial improvements) within a SFHA Zone A/AE/VE requires a floodplain development permit in addition to the building permit, and substantial-improvement work (>50% market value) triggers full base-flood-elevation compliance for the entire structure. In Harris County and other large counties, the floodplain office is a separate desk from permitting; confirm the determination letter and elevation certificate are in the packet before submittal.",
+      "applies_to": "Any work within a FEMA SFHA or local floodplain overlay",
+      "source": "https://oce.harriscountytx.gov/Services/Permits/Floodplain-Management"
+    },
+    {
+      "title": "Municipally-owned utilities and electric co-ops opted out of retail choice",
+      "note": "Per PUC rule, municipally-owned electric utilities and electric cooperatives have had the right since January 1, 2002 to opt out of competitive retail choice — most have. For new service or solar interconnection in muni/co-op territory (e.g., Austin Energy, CPS Energy, Pedernales EC, Sam Houston EC), follow the utility's own interconnection and net-metering tariff, not ERCOT/PUC retail rules. This is a parallel filing to the electrical permit and often has its own application, fee, and inspection schedule.",
+      "applies_to": "New service, solar PV, and battery interconnection in muni/co-op territory",
+      "source": "https://www.puc.texas.gov/consumer-help/faq/muni/Default.aspx"
+    },
+    {
+      "title": "Co-op permit-number prerequisite for new electric service",
+      "note": "Many Texas electric cooperatives — including Sam Houston EC and Heart of Texas EC — will not energize new construction until the contractor provides the local AHJ's permit number and a completed New Construction Application. Submit the co-op's service application in parallel with the building permit (not after final inspection) because meter-set lead times in rural co-op territory routinely run 4-8 weeks and can stall CO issuance.",
+      "applies_to": "New residential service in electric-cooperative territory",
+      "source": "https://www.samhouston.net/member-services/permit-requirements/"
+    },
+    {
+      "title": "ERCOT Chapter 25 rules govern PV/battery interconnection in competitive territory",
+      "note": "In ERCOT competitive-retail areas (Oncor, CenterPoint, AEP TX, TNMP), distributed-generation interconnection follows PUC Substantive Rules Chapter 25 — the homeowner's TDU (not the REP) processes the interconnection agreement, and the project requires a signed IA before the meter is set to bidirectional. File the IA application as soon as the system design is final; TDU review can run 4-6 weeks and is independent of the city's electrical permit.",
+      "applies_to": "Solar PV and battery interconnection in ERCOT competitive territory",
+      "source": "https://www.puc.texas.gov/agency/rulesnlaws/subrules/electric/Default.aspx"
+    }
+  ],
+  "hidden_triggers": [
+    {
+      "id": "commercial_ti_demising_wall_fire_acoustic_separation",
+      "severity": "high",
+      "title": "Demising wall changes may require rated tenant separation and acoustic details",
+      "why_it_matters": "Moving a tenant separation can affect fire-resistance continuity, penetrations, structure, ceiling plenum, egress, and landlord acoustic criteria. It is commonly under-scoped as 'just a partition.'",
+      "fired_by": [
+        "\\bdemising wall\\b",
+        "\\btenant separation\\b",
+        "\\bsuite split\\b",
+        "\\bcombine suites\\b",
+        "\\bnew demising\\b"
+      ],
+      "likely_required_actions": [
+        "Identify required wall type/rating",
+        "Show continuity to deck and protected penetrations",
+        "Confirm landlord STC/acoustic requirement"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Landlord/owner reviewer"
+      ],
+      "citations": [
+        "IBC §708",
+        "IBC §706",
+        "STC ≥40 landlord/acoustic criterion [verify before merging]"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_sprinkler_relocation_hydraulic_recalc",
+      "severity": "high",
+      "title": "Sprinkler head relocation can require hydraulic recalculation and separate fire permit",
+      "why_it_matters": "Ceiling, wall, storage, or occupancy changes can invalidate sprinkler spacing/coverage. Fire reviewers may require hydraulic calculations and current inspection/certification records.",
+      "fired_by": [
+        "\\bsprinkler relocation\\b",
+        "\\bsprinkler head relocation\\b",
+        "\\brelocate sprinkler\\b",
+        "\\bmove sprinkler heads\\b",
+        "\\bnew ceiling\\b",
+        "\\bopen ceiling\\b",
+        "\\bstorage racks\\b"
+      ],
+      "likely_required_actions": [
+        "Have sprinkler contractor review layout",
+        "Submit shop drawings/hydraulic calc if required",
+        "Confirm 5-year inspection/certification status"
+      ],
+      "companion_permits": [
+        "Fire sprinkler permit"
+      ],
+      "agencies": [
+        "Fire Prevention",
+        "Licensed sprinkler contractor"
+      ],
+      "citations": [
+        "NFPA 13",
+        "NFPA 25",
+        "IFC §901.6"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_accessible_route_existing_building_alteration",
+      "severity": "medium",
+      "title": "Commercial alteration can require accessible-route/path-of-travel upgrades",
+      "why_it_matters": "Even when the requested work is not 'an ADA project,' altered primary-function areas can require accessible route, restroom, drinking fountain, parking, and entrance upgrades within the disproportionality cap.",
+      "fired_by": [
+        "\\btenant improvement\\b",
+        "\\bti\\b",
+        "\\bprimary function\\b",
+        "\\baccessible route\\b",
+        "\\bpath of travel\\b",
+        "\\bfront counter\\b",
+        "\\breception\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare path-of-travel analysis",
+        "Budget required accessible upgrades",
+        "Document 20% disproportionality cap if used"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR §36.403",
+        "2010 ADA Standards §202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_lighting_iecc_controls",
+      "severity": "medium",
+      "title": "Lighting changes trigger IECC lighting-power and automatic-control checks",
+      "why_it_matters": "Replacing or reconfiguring lighting can require COMcheck/energy forms, lighting power density compliance, occupancy sensors, daylight controls, and automatic shutoff details.",
+      "fired_by": [
+        "\\blighting\\b",
+        "\\blight fixtures\\b",
+        "\\bled retrofit\\b",
+        "\\btrack lighting\\b",
+        "\\boccupancy sensors?\\b",
+        "\\bdaylight controls?\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare lighting compliance / COMcheck if required",
+        "Show control zones and automatic shutoff",
+        "Coordinate emergency egress lighting"
+      ],
+      "companion_permits": [
+        "Electrical permit, if separated locally"
+      ],
+      "agencies": [
+        "AHJ Electrical/Energy reviewer"
+      ],
+      "citations": [
+        "IECC §C405",
+        "ASHRAE 90.1 [where adopted]"
+      ],
+      "primary_scope": "commercial_ti"
+    }
+  ],
+  "_fee_floor_components": {
+    "scope": "commercial_office_ti",
+    "scope_note": "plan review + permit + sprinkler hydraulic recalc",
+    "sqft": 4500,
+    "base_floor": 11000,
+    "jurisdiction_multiplier": 1.1,
+    "jurisdiction_label": "Dallas, TX",
+    "jurisdiction_rationale": "commercial plan review / fire review stack in major Texas metro [verify Dallas Development Services fees]",
+    "trigger_adders": [
+      {
+        "key": "demising_wall",
+        "add_min": 1000,
+        "add_max": 3000,
+        "rationale": "fire-rated assembly + STC field test"
+      },
+      {
+        "key": "fire_sprinkler_modify",
+        "add_min": 2000,
+        "add_max": 6000,
+        "rationale": "hydraulic recalc + permit"
+      },
+      {
+        "key": "ada_path_of_travel",
+        "add_min": 1500,
+        "add_max": 5000,
+        "rationale": "20% rule alterations"
+      }
+    ],
+    "structured_low": 16500,
+    "structured_high": 26000,
+    "llm_fee_high_end": null
+  },
+  "_fee_adjusted": true,
+  "_fee_floor_check": "llm_below_floor_adjusted"
+}

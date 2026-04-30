@@ -1,0 +1,735 @@
+{
+  "job_summary": "3,200 sf commercial restaurant tenant improvement in Dallas, TX for a change of occupancy from B to A-2 assembly, including Type I kitchen hood installation, grease interceptor, ADA restroom and path-of-travel upgrades, sprinkler modifications, fire/life-safety review, and outdoor patio seating. This triggers a commercial building permit for the change of use/interior alteration, plus separate mechanical, plumbing, electrical, and fire protection reviews/permits as applicable. Outdoor patio seating may also trigger zoning/site review and possibly a separate patio/encroachment approval depending on whether it is on private property or public right-of-way.",
+  "total_cost_estimate": "$250,000 - $650,000",
+  "location": "Dallas, TX",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Commercial Interior Alteration / Change of Occupancy (B to A-2)",
+      "portal_selection": "Commercial Building Permit - Interior Alteration / Change of Occupancy",
+      "required": true,
+      "notes": "Required for the tenant improvement, occupancy change from B to A-2, ADA path of travel upgrades, and any code-triggered life-safety/building work. Dallas will review occupancy, egress, accessibility, and any structural or rated assembly impacts under the commercial building permit."
+    },
+    {
+      "permit_type": "Mechanical Permit — Commercial Kitchen Hood / Exhaust System",
+      "portal_selection": "Mechanical Permit - Commercial Kitchen Hood",
+      "required": true,
+      "notes": "Required for the Type I kitchen hood, exhaust duct, make-up air, and any associated mechanical equipment or penetrations. Fire/life-safety and grease-laden vapor exhaust details are typically reviewed with this permit."
+    },
+    {
+      "permit_type": "Plumbing Permit — Grease Interceptor Installation",
+      "portal_selection": "Plumbing Permit - Grease Interceptor",
+      "required": true,
+      "notes": "Required for the grease interceptor and any associated sanitary drainage modifications serving the restaurant kitchen."
+    },
+    {
+      "permit_type": "Plumbing Permit — ADA Restroom Fixture Alteration",
+      "portal_selection": "Plumbing Permit - Commercial Fixture Alteration",
+      "required": true,
+      "notes": "Required if restroom fixtures, water closets, lavatories, floor drains, or waste/vent piping are being added, moved, or replaced as part of the ADA restroom upgrade."
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Tenant Improvement",
+      "portal_selection": "Electrical Permit - Commercial Tenant Improvement",
+      "required": true,
+      "notes": "Required for any new circuits, lighting, receptacles, hood controls, equipment connections, emergency/egress lighting, or panel modifications tied to the restaurant buildout."
+    },
+    {
+      "permit_type": "Fire Permit — Sprinkler Modification",
+      "portal_selection": "Fire Protection Permit - Fire Sprinkler Modification",
+      "required": true,
+      "notes": "Required for sprinkler head relocations, coverage changes, hydraulic recalculation, or any fire protection work affected by the new restaurant layout and occupancy change."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Commercial Interior Alteration / Change of Occupancy (B to A-2)",
+      "included_because": "The scope explicitly includes a change of occupancy from B to A-2 assembly and ADA path of travel upgrades, which are building-code items handled under the commercial building permit and plan review.",
+      "scope_trigger": "Change of occupancy B to A-2, tenant improvement, ADA path of travel upgrades"
+    },
+    {
+      "permit_type": "Mechanical Permit — Commercial Kitchen Hood / Exhaust System",
+      "included_because": "A Type I kitchen hood is commercial mechanical equipment and requires mechanical review for exhaust, make-up air, clearances, and penetrations.",
+      "scope_trigger": "Type I kitchen hood"
+    },
+    {
+      "permit_type": "Plumbing Permit — Grease Interceptor Installation",
+      "included_because": "Restaurants with commercial food prep require grease interceptor work when the kitchen drainage system is installed or modified.",
+      "scope_trigger": "Grease interceptor"
+    },
+    {
+      "permit_type": "Plumbing Permit — ADA Restroom Fixture Alteration",
+      "included_because": "ADA restroom upgrades commonly involve fixture relocation or replacement, which triggers plumbing review when drains, vents, or water lines are changed.",
+      "scope_trigger": "ADA restroom upgrades"
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Tenant Improvement",
+      "included_because": "Restaurant TI work typically includes lighting, receptacles, equipment connections, hood controls, and possibly panel/circuit changes.",
+      "scope_trigger": "Tenant improvement electrical work implied by restaurant buildout"
+    },
+    {
+      "permit_type": "Fire Permit — Sprinkler Modification",
+      "included_because": "The scope explicitly includes sprinkler modifications, which require fire protection review and permit.",
+      "scope_trigger": "Sprinkler modifications"
+    }
+  ],
+  "applying_office": "Dallas Development Services Department",
+  "apply_url": "https://developdallas.dallascityhall.com/PermitDallas/",
+  "apply_pdf": null,
+  "apply_phone": "(214) 948-4480",
+  "apply_address": "320 E. Jefferson Blvd., Room 118, Dallas, TX 75203",
+  "apply_google_maps": "https://www.google.com/maps?q=320+E.+Jefferson+Blvd.,+Room+118,+Dallas,+TX+75203",
+  "fee_range": "Fee Estimate: **$24,000-$42,500+** (structured floor — see breakdown). Components: ~$13,000 base permit + plan review (Dallas, TX commercial restaurant TI floor) × 1.1× jurisdiction multiplier + $3,500 change-of-occupancy adder + $5,500 hood-fire-suppression adder + $2,500 grease-interceptor adder + $4,000 fire-sprinkler-modify adder + $3,000 ada-path-of-travel adder. **Verify against current fee schedule before quoting.**",
+  "approval_timeline": {
+    "simple": "Over-the-counter or same-day only for very limited trade items; this project is a commercial TI and will not be same-day. Expect intake plus routed plan review.",
+    "complex": "4-8 weeks for commercial plan review in Dallas, longer if fire/life-safety, accessibility, sprinkler, or occupancy review cycles back for corrections."
+  },
+  "inspections": [
+    {
+      "stage": "Building Rough-In / Framing",
+      "description": "Inspector checks rated corridor and tenant separations, egress path widths, door swings, accessibility clearances, restroom layout, any wall framing changes, and that the new A-2 occupancy layout matches approved plans before concealment.",
+      "timing": "Before drywall, ceiling closure, or covering any rated assemblies"
+    },
+    {
+      "stage": "Mechanical Rough-In",
+      "description": "Inspector verifies Type I hood duct routing, welded/sealed grease duct construction, hood clearances, make-up air provisions, exhaust termination, fire suppression coordination, and that penetrations through rated assemblies are protected.",
+      "timing": "Before duct concealment and before hood system is energized"
+    },
+    {
+      "stage": "Plumbing Rough-In",
+      "description": "Inspector checks grease interceptor location and sizing, sanitary waste routing, venting, fixture rough-ins, ADA restroom fixture heights/clearances, and that any floor drain or waste line changes match approved plans.",
+      "timing": "Before slab patching, wall closure, or fixture set"
+    },
+    {
+      "stage": "Electrical Rough-In",
+      "description": "Inspector verifies branch-circuit sizing, receptacle placement, GFCI/AFCI where applicable, hood control wiring, emergency/egress lighting, panel schedule updates, and equipment disconnects if installed.",
+      "timing": "Before insulation, ceiling closure, or final device installation"
+    },
+    {
+      "stage": "Fire Sprinkler Rough-In / Hydrostatic as Applicable",
+      "description": "Inspector or fire protection reviewer checks sprinkler head relocation, coverage changes, hydraulic calculations, obstruction issues from new hood or soffits, and that the modified system still provides code-compliant coverage for the A-2 layout.",
+      "timing": "Before ceiling closure and before final occupancy"
+    },
+    {
+      "stage": "Final Building / Life-Safety",
+      "description": "Inspector verifies final ADA path of travel, restroom accessibility, exit signage, emergency lighting, fire extinguisher placement, hood/fire suppression final sign-off, sprinkler final approval, and that the space matches the approved occupancy and occupant load.",
+      "timing": "After all trades are complete and before opening to the public"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the Dallas permit portal at https://developdallas.dallascityhall.com/PermitDallas/ or through the inspection request function tied to the permit record. Dallas inspections are typically requested online; if you must call, use (214) 948-4480. For commercial TI work, book each trade inspection separately and give at least 24 hours advance notice; plan for longer lead time if fire sprinkler or life-safety inspections need coordination with multiple reviewers. Verify the permit is active and posted before requesting inspections.",
+  "license_required": "Commercial contractor pulls the permit on behalf of the tenant/owner, and the appropriate Texas license number must appear on each trade application: commercial general contractor for the building permit, TDLR-licensed electrical contractor for electrical work, TSBPE-licensed master plumber for plumbing, and the appropriate mechanical/HVAC contractor for hood/mechanical work. The permit is still required; the licensed contractor is the one who submits and signs for the trade permit.",
+  "city_contractor_registration": "Dallas requires contractors to register with the city each year. Verify the current Dallas contractor registration status before submitting any permit application; an expired or lapsed registration can block the application. Renewal is annual.",
+  "what_to_bring": [
+    "Completed commercial permit application and project address/tenant suite information",
+    "Full plan set showing occupancy change, life-safety plan, ADA path of travel, restroom layout, hood plan, grease interceptor details, and sprinkler changes",
+    "Contractor license numbers and current Dallas contractor registration proof for each trade",
+    "Equipment cut sheets for the Type I hood, exhaust fan, make-up air unit, grease interceptor, and any electrical equipment",
+    "Code/occupant load and accessibility details, including door hardware, restroom clearances, and egress calculations",
+    "Owner/tenant authorization letter and lease exhibit if the contractor is filing on behalf of the tenant"
+  ],
+  "common_mistakes": [
+    "Submitting the permit application without verifying current Dallas contractor registration status — an expired or lapsed city registration will block your application silently.",
+    "Undervaluing the project on the permit application — Dallas uses a valuation system and can audit or assess penalty fees if the declared value is too low.",
+    "Forgetting that a B to A-2 occupancy change triggers full life-safety and accessibility review, not just trade permits.",
+    "Installing the Type I hood or grease duct before the mechanical permit and fire review are approved.",
+    "Assuming the sprinkler contractor can just 'field adjust' heads without a formal fire protection permit and approved plans.",
+    "Missing ADA path-of-travel upgrades outside the suite, including route to restrooms and accessible entry details."
+  ],
+  "pro_tips": [
+    "Check your Dallas contractor registration renewal date before starting any permit application — registration lapses are one of the most common avoidable rejection reasons.",
+    "Use the permit valuation carefully and realistically; Dallas flags low valuations, and a clean valuation up front is faster than an audit later.",
+    "If the patio seating is on public right-of-way or affects sidewalks, ask about a separate encroachment or zoning approval before you submit the building permit.",
+    "Bring a coordinated life-safety sheet with occupant load, exit widths, restroom counts, and ADA route details; that cuts down correction cycles on A-2 restaurant TI reviews.",
+    "Have hood, grease interceptor, and sprinkler submittals coordinated before first intake so the plan reviewer is not waiting on trade-specific sheets."
+  ],
+  "code_citation": {
+    "section": "IBC 2021 Section 302.1 / 303.1 / 1001.2 and IRC/IBC permit authority via local code adoption; Dallas permit authority under local ordinance",
+    "text": "Occupancy classification shall be determined by the nature of the use of the building or space. Assembly Group A-2 includes food and drink consumption. A permit is required for construction, alteration, and change of occupancy as adopted by the local jurisdiction."
+  },
+  "companion_permits": [
+    {
+      "permit_type": "Zoning / Site Plan Review",
+      "reason": "May be required if: Outdoor patio seating is added, expanded, or located in a way that affects site circulation, setbacks, or occupancy load.",
+      "required_if": "Outdoor patio seating is added, expanded, or located in a way that affects site circulation, setbacks, or occupancy load",
+      "certainty": "possible",
+      "requirement_label": "May be required based on scope"
+    },
+    {
+      "permit_type": "Right-of-Way / Encroachment Permit",
+      "reason": "May be required if: Any portion of the patio seating or associated features is in public right-of-way.",
+      "required_if": "Any portion of the patio seating or associated features is in public right-of-way",
+      "certainty": "conditional",
+      "requirement_label": "May be required based on scope"
+    }
+  ],
+  "zoning_hoa_flag": "Outdoor patio seating may be subject to Dallas zoning, site plan, and possibly right-of-way/encroachment rules. If the patio is visible from a historic district or overlay area, additional design review may apply. For a restaurant use, confirm occupant load, parking, and accessible route compliance before finalizing the patio layout.",
+  "sources": [
+    "https://dallas.gov",
+    "https://www.dallascounty.org/departments/pubworks/permits-development.php",
+    "https://dallas.gov/",
+    "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "https://aca-prod.accela.com/dallastx/default.aspx",
+    "https://www.govinfo.gov/content/pkg/CZIC-hc62-i52-1985/html/CZIC-hc62-i52-1985.htm"
+  ],
+  "confidence": "medium",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "_fee_unverified": true,
+  "maps_url": "https://www.google.com/maps?q=320+E.+Jefferson+Blvd.,+Room+118,+Dallas,+TX+75203",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "last_verified_at": "2026-04-12T17:47:00.037673",
+  "_field_sources": {
+    "apply_url": "auto_verified:https://dallas.gov/",
+    "applying_office": "auto_verified:https://dallas.gov/",
+    "apply_phone": "auto_verified:https://dallas.gov/",
+    "apply_address": "auto_verified:https://dallas.gov/",
+    "fee_range": "auto_verified:https://dallas.gov/",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": true,
+  "missing_fields": [
+    "fee_range"
+  ],
+  "confidence_reason": "Verified city/trade data found from official sources. Needs review for: fee_range",
+  "_meta": {
+    "generated_at": "2026-04-28T21:03:01.359726",
+    "response_ms": 23382,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 6,
+    "city_match_level": "city",
+    "job_type": "3,200 sf commercial restaurant tenant improvement: change of occupancy B to A-2 assembly, Type I kitchen hood, grease interceptor, ADA restroom and path of travel upgrades, sprinkler modifications, fire/life-safety review, outdoor patio seating",
+    "city": "Dallas",
+    "state": "TX",
+    "zip_code": "75201",
+    "job_category": "commercial",
+    "auto_verified": true,
+    "missing_fields": [
+      "fee_range"
+    ]
+  },
+  "fee_source": {
+    "url": "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "title": "[PDF] List of Post-Construction BMP Appendices - City of Lebanon, Indiana",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://aca-prod.accela.com/dallastx/default.aspx",
+    "title": "Message Bar - Accela Citizen Access",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "title": "[PDF] List of Post-Construction BMP Appendices - City of Lebanon, Indiana",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://www.govinfo.gov/content/pkg/CZIC-hc62-i52-1985/html/CZIC-hc62-i52-1985.htm",
+    "title": "Post disaster response and mitigation of future losses proceedings ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "title": "[PDF] List of Post-Construction BMP Appendices - City of Lebanon, Indiana",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 90,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "commercial_restaurant",
+  "checklist": [
+    "Verify your contractor license is current and valid in TX",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Type I commercial exhaust hood listed/labeled per UL 710 with NFPA 96 compliance and AHJ-approved capture velocity per IMC 507",
+    "ANSUL R-102 (or equivalent UL 300) hood suppression: post-install discharge test certificate + every-6-month cleaning + annual inspection per NFPA 96 §11",
+    "ANSUL discharge auto-shutoffs all hood gas + electric fuel sources per IMC 507.7 — verify with AHJ during witness test",
+    "Grease interceptor sized per IPC 1003.3.4 by drainage fixture units (4-comp + mop typically 50+ GPM hydromechanical OR 750–1,500 gal exterior gravity); located ≤25 ft developed length from fixtures",
+    "Makeup air system balanced to ±10% of hood exhaust per IMC 506.3.4; tempered if > 35°F differential to prevent backdraft",
+    "Indirect waste with air gap on dishwasher, ice maker, prep sink, and steam kettle per IPC 802; commercial dishwasher backflow prevention (RPZ) per IPC 608.13.2",
+    "Dedicated mop sink with hose bib in janitor closet (IBC 902.3 / local health code) — required before health dept sign-off",
+    "ADA fixture counts per IBC Table 2902.1 + 60 in turning radius + lavatory pipe wrap insulation per ADA §606.5 + mirror reflective edge ≤40 in AFF per ADA §603.3",
+    "Local health department food establishment plan review + final inspection sign-off REQUIRED before Certificate of Occupancy (parallel filing — file early)",
+    "TABC / state liquor authority clearance if alcohol service — separate filing from building permit",
+    "Walk-in cooler envelope per IECC 403.10.1 (≥R-25 medium-temp panels, ≥R-32 freezer panels); door gasket seal verification at final",
+    "Existing sprinkler system reuse: hydraulic recalc for new layout + current 5-year cert per NFPA 25; new heads in cooking equipment area must be K-25+ per NFPA 13",
+    "Floor drains within 5 ft of kitchen equipment per IPC 411 with backwater valves where required",
+    "Fire alarm + emergency lighting per NFPA 72/101 with current battery capacity test on file",
+    "Change of occupancy memo (B/M → A-2): include occupant load + exits + restroom count + sprinkler/fire-alarm impacts per IEBC §1001.2/1001.3 + IBC §303.3 (Group A-2)",
+    "Maricopa County (or local equivalent) Environmental Services Department food-establishment plan review + final inspection sign-off REQUIRED before opening — coordinate with City CO schedule (MCESD: maricopa.gov)",
+    "Backflow prevention on EVERY food-service water connection: carbonated beverage (ASSE 1022 dual check), chemical dispenser at mop/service sinks, hose bibbs, dish-machine/ice/RO/espresso, pre-rinse — testable assemblies certified annually",
+    "Outdoor patio / sidewalk dining: verify city zoning (use permit may apply, e.g. Phoenix ZO §1207); include patio in occupant load + exiting + accessible route + sprinkler/awning review",
+    "Phoenix-specific (or equivalent local rule): contractor must be AZ ROC licensed AND associated with the Phoenix SHAPE PHX permit account before submittal (A.R.S. Title 32 Ch. 10) — frequently-missed pre-submittal blocker",
+    "Realistic fee warning: a 3,200 sq ft restaurant TI in Phoenix typically lands $8K–$25K+ across plan review + permit + fire + utility + health + zoning. Reject token min-fee outputs; calculate from the live fee schedule before quoting",
+    "Occupancy reclassification: identify existing approved occupancy + proposed group; require code-official approval + new/updated Certificate of Occupancy (IEBC §§1001.1, 1001.2, 1001.3; IBC Ch. 3)",
+    "Height/area limit recheck: compare new occupancy hazard category to existing construction type, allowable area, frontage/sprinkler increases, fire-wall strategy (IEBC §1011.5; IBC Ch. 5)",
+    "Fire-resistance + separation reassessment: re-verify fire barriers, horizontal assemblies, exterior wall ratings/openings, shaft enclosures, mixed-occupancy separations for the new hazard category (IEBC §§1011.1, 1011.5.3, 1011.6/7; IBC Ch. 7)",
+    "Fire protection re-run: sprinkler, fire alarm, hood suppression, and monitoring requirements at the new occupancy + IBC/IFC Ch. 9 thresholds (IEBC §§1004.1, 1011.2; IFC Ch. 9)",
+    "Means of egress recalculation: occupant load + number of exits + egress capacity + travel distance + common path + dead ends + door hardware updated to new occupancy (IEBC §§1005.1, 1011.4; IBC Ch. 10)",
+    "Accessibility / path-of-travel trigger: alterations to primary-function areas trigger ADA upgrades to altered area + serving amenities (2010 ADA §202.4 + 28 CFR §36.403)",
+    "Mechanical ventilation/exhaust recheck against the new occupancy: IMC ventilation, commercial-kitchen exhaust + makeup air, hazardous exhaust, energy compliance (IEBC §1008.1; IMC Ch. 4-6 + §507)",
+    "Plumbing demand + fixture-count recheck: water supply, sanitary load, fixture count, food-handling waste, grease/oil interceptors, chemical-waste approval (IEBC §§1009.1-1009.4; IPC Ch. 4 + 10)",
+    "Identify altered primary-function area: if scope alters an area where major activity occurs, an accessible path of travel to the altered area is required unless technically infeasible / disproportionate (2010 ADA §202.4; 28 CFR §36.403(a))",
+    "20% disproportionality cap: ADA path-of-travel work exceeding 20% of alteration cost is disproportionate at the federal level, but lower-cost items must still be prioritized (28 CFR §36.403(f)(1))",
+    "Accessible exterior route: site arrival points + accessible parking/passenger loading + curb ramps + walking surfaces + ramps/landings + slope/cross-slope + door clearances to altered area (2010 ADA §§206.2.1, 206.4, 403, 404, 405, 406)",
+    "Restroom path + restroom upgrades: if restrooms serve the altered area, accessible route + door + turning space + lavatory + water closet + grab bars + clearances + signage (2010 ADA §§213, 603-606, 609, 703)",
+    "Parking + passenger loading: recalculate accessible-stall count + van space + access aisle + signage for affected parking serving the altered area (2010 ADA §§208, 502, 503; 28 CFR §36.403(e)(1))",
+    "Drinking fountains, phones, and signage along the path: tactile/visual signs, room ID, directional, fountain units, public phones if any (2010 ADA §§211, 216, 602, 703, 704)",
+    "Doors, thresholds, and hardware on the route: clear width + maneuvering clearance + opening force + thresholds + lever/operable hardware + protruding objects (2010 ADA §§303, 307, 309, 404)",
+    "Confirm the required license is active and matches the application: Commercial contractor pulls the permit on behalf of the tenant/owner, and the appropriate Texas license number must appear on each trade application: commercial general contractor for the building permit, TDLR-licensed electrical contractor for electrical work, TSBPE-licensed master plumber for plumbing, and the appropriate mechanical/HVAC contractor for hood/mechanical work. The permit is still required; the licensed contractor is the one who submits and signs for the trade permit.",
+    "Bring 2 copies of all documents to Dallas Development Services Department"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Expired annual city contractor registration",
+      "frequency": "very_common",
+      "fix": "Renew at dallas.gov/dsd annually — expiration causes silent rejection"
+    },
+    {
+      "pattern": "Project value underestimation flagged by plan reviewer",
+      "frequency": "common",
+      "fix": "Use contractor cost estimating software for accurate value — audits can add penalty fees"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "fee_calculator": {
+    "fee": null,
+    "formula": null,
+    "confidence": "none",
+    "note": "Provide job_value to calculate an exact fee where formulas are available."
+  },
+  "expert_notes": [
+    {
+      "title": "No statewide general-contractor license for residential work",
+      "note": "Texas does not require general contractors, home-improvement specialists, or handyman services to hold a state license — licensing is handled by trade-specific boards (TDLR for electrical/HVAC, TSBPE for plumbing) and by individual cities/counties. Confirm the AHJ's local registration requirements (most large cities require contractor registration even though the state does not), and never assume a sister-state GC license carries over. Trade subs still must hold the specific TDLR/TSBPE license below.",
+      "applies_to": "All residential GC and remodel work in Texas",
+      "source": "https://www.procore.com/library/texas-contractors-license"
+    },
+    {
+      "title": "TDLR Air Conditioning & Refrigeration Contractor license required for HVAC",
+      "note": "Any HVAC contractor performing work in Texas must hold a TDLR Air Conditioning and Refrigeration Contractor license — application fee is $115 and the license must list the proper environment (Class A unlimited tonnage vs Class B ≤25 tons cooling / ≤1.5M Btu heating) and endorsement (cooling, heating, or commercial refrigeration). Verify the contractor's TDLR license number and class match the scope before pulling a mechanical permit; mismatched class is a common rejection reason.",
+      "applies_to": "All HVAC installation, replacement, and alteration work",
+      "source": "https://www.tdlr.texas.gov/acr/contractor-apply.htm"
+    },
+    {
+      "title": "TSBPE plumbing license required before bidding or working",
+      "note": "The Texas State Board of Plumbing Examiners requires a Journeyman or Master plumber license prior to bidding or completing any plumbing work — there is no de minimis dollar threshold like California's $500 rule. Licenses renew annually and require six hours of CPE per the Plumbing License Law; apprentices may only work under direct supervision. Confirm the responsible Master Plumber's license is active on the TSBPE lookup before submitting plumbing plans, since an expired license blocks permit issuance.",
+      "applies_to": "All plumbing work statewide",
+      "source": "https://tsbpe.texas.gov/license-types/"
+    },
+    {
+      "title": "TDLR is the umbrella regulator for most building trades",
+      "note": "TDLR licenses and regulates 39 industries including electricians, HVAC contractors, elevator/escalator, boilers, and industrialized housing — but plumbing sits with TSBPE, not TDLR. When a job involves multiple trades, expect parallel licensing checks at two separate state agencies plus the local AHJ's contractor-registration desk. Pull the TDLR license-search and TSBPE license-search results into the permit packet to pre-empt plan-check holds.",
+      "applies_to": "Multi-trade residential and light-commercial projects",
+      "source": "https://www.tdlr.texas.gov/"
+    },
+    {
+      "title": "2021 IRC/IBC/IMC/IFGC effective for industrialized housing as of July 1, 2024",
+      "note": "The Texas Commission of Licensing and Regulation adopted the 2021 editions of the IRC, IBC, IMC, IFGC, and related codes for industrialized housing and buildings on May 21, 2024, with an effective date of July 1, 2024. Modular and IHB projects built or shipped after that date must conform; site-built projects follow the AHJ's locally-adopted edition (often still 2015 or 2018 IRC in smaller jurisdictions). Always confirm the local edition before drafting — Texas has no uniform statewide site-built code.",
+      "applies_to": "Industrialized housing, modular, and IHB-stamped projects",
+      "source": "https://www.tdlr.texas.gov/news/2024/06/17/industrialized-housing-and-buildings-adoption-of-new-code-editions/"
+    },
+    {
+      "title": "SB 783 (eff. Sept 1, 2025) — energy code update path via SECO",
+      "note": "Texas SB 783 took effect September 1, 2025 and directs the State Energy Conservation Office (SECO) to evaluate and adopt updated IECC editions for residential and commercial construction, with amendment authority. The last statutorily-adopted residential energy code was the 2015 IECC, so any project at the 2025-2026 boundary should confirm whether the AHJ has moved to the 2021 or 2024 IECC under SECO's updated rulemaking. Build energy-compliance documentation against the AHJ's currently-enforced edition, not the state's default.",
+      "applies_to": "New residential and commercial construction energy compliance",
+      "source": "https://legiscan.com/TX/text/SB783/id/3057306/Texas-2025-SB783-Introduced.html"
+    },
+    {
+      "title": "HB 3167 platting shot clock — 30 days for municipal action",
+      "note": "Under HB 3167 (Local Govt Code Chapter 212), municipalities must approve, approve with conditions, or disapprove a plat or plan within 30 days of filing — silence is deemed approval. Disapproval must be in writing with specific reasons tied to ordinance or statute, and the applicant has the right to a 15-day cure-and-resubmit. Use this clock as leverage when a city stalls a subdivision or replat needed for ADU or infill projects.",
+      "applies_to": "Subdivision plats, replats, and site plans subject to municipal review",
+      "source": "https://www.tml.org/DocumentCenter/View/4166/Platting-Shot-Clock-Process-11-2023-PDF"
+    },
+    {
+      "title": "Development-review shot clock for permit applications",
+      "note": "Recent Texas legislation extends shot-clock concepts beyond platting to broader development reviews, capping the time municipalities can take to act on permit-related submittals before approval is presumed or fee refunds are triggered. This narrows the window for cities to demand iterative resubmittals and gives applicants statutory grounds to escalate stalled residential permits. Document the application's complete-submittal date in writing so the clock is provable if escalation is needed.",
+      "applies_to": "Municipal residential permit and development-review timelines",
+      "source": "https://www.freese.com/blog/new-texas-legislation-sets-shot-clock-for-development-reviews/"
+    },
+    {
+      "title": "TDI Windstorm (WPI-8) certification required in First Tier coastal counties",
+      "note": "The Texas Department of Insurance Windstorm Inspection Program applies to designated catastrophe areas — the 14 First Tier coastal counties (Aransas, Brazoria, Calhoun, Cameron, Chambers, Galveston, Jefferson, Kenedy, Kleberg, Matagorda, Nueces, Refugio, San Patricio, Willacy) plus parts of Harris east of SH 146. New construction, additions, and re-roofs in these areas need a WPI-8 / WPI-8-C certificate of compliance issued by an appointed engineer or TDI inspector to be eligible for TWIA windstorm coverage. This is a SEPARATE filing from the building permit and must be scheduled in phases (foundation, framing, roof) — missing an inspection phase voids the certificate.",
+      "applies_to": "New construction, additions, and re-roofs in First Tier coastal counties",
+      "source": "https://www.tdi.texas.gov/wind/generalquestio.html"
+    },
+    {
+      "title": "TWIA insurability hinges on windstorm certification",
+      "note": "To bind a Texas Windstorm Insurance Association policy on a coastal property, the structure must be certified as meeting the windstorm-resistant building-code requirements for its tier — without a current WPI-8 (or post-2020 equivalent), the property is uninsurable through TWIA and most private carriers will follow suit. Schedule the engineer-of-record windstorm inspection BEFORE drywall closes the framing, since a missed framing inspection cannot be reconstructed after the fact and the homeowner loses coverage at closing.",
+      "applies_to": "Coastal Texas residential construction needing windstorm insurance",
+      "source": "https://www.twia.org/windstorm-certification/"
+    },
+    {
+      "title": "Floodplain permit required separate from building permit",
+      "note": "Texas participates in the NFIP through county and municipal floodplain administrators — any development (including fill, grading, accessory structures, and substantial improvements) within a SFHA Zone A/AE/VE requires a floodplain development permit in addition to the building permit, and substantial-improvement work (>50% market value) triggers full base-flood-elevation compliance for the entire structure. In Harris County and other large counties, the floodplain office is a separate desk from permitting; confirm the determination letter and elevation certificate are in the packet before submittal.",
+      "applies_to": "Any work within a FEMA SFHA or local floodplain overlay",
+      "source": "https://oce.harriscountytx.gov/Services/Permits/Floodplain-Management"
+    },
+    {
+      "title": "Municipally-owned utilities and electric co-ops opted out of retail choice",
+      "note": "Per PUC rule, municipally-owned electric utilities and electric cooperatives have had the right since January 1, 2002 to opt out of competitive retail choice — most have. For new service or solar interconnection in muni/co-op territory (e.g., Austin Energy, CPS Energy, Pedernales EC, Sam Houston EC), follow the utility's own interconnection and net-metering tariff, not ERCOT/PUC retail rules. This is a parallel filing to the electrical permit and often has its own application, fee, and inspection schedule.",
+      "applies_to": "New service, solar PV, and battery interconnection in muni/co-op territory",
+      "source": "https://www.puc.texas.gov/consumer-help/faq/muni/Default.aspx"
+    },
+    {
+      "title": "Co-op permit-number prerequisite for new electric service",
+      "note": "Many Texas electric cooperatives — including Sam Houston EC and Heart of Texas EC — will not energize new construction until the contractor provides the local AHJ's permit number and a completed New Construction Application. Submit the co-op's service application in parallel with the building permit (not after final inspection) because meter-set lead times in rural co-op territory routinely run 4-8 weeks and can stall CO issuance.",
+      "applies_to": "New residential service in electric-cooperative territory",
+      "source": "https://www.samhouston.net/member-services/permit-requirements/"
+    },
+    {
+      "title": "ERCOT Chapter 25 rules govern PV/battery interconnection in competitive territory",
+      "note": "In ERCOT competitive-retail areas (Oncor, CenterPoint, AEP TX, TNMP), distributed-generation interconnection follows PUC Substantive Rules Chapter 25 — the homeowner's TDU (not the REP) processes the interconnection agreement, and the project requires a signed IA before the meter is set to bidirectional. File the IA application as soon as the system design is final; TDU review can run 4-6 weeks and is independent of the city's electrical permit.",
+      "applies_to": "Solar PV and battery interconnection in ERCOT competitive territory",
+      "source": "https://www.puc.texas.gov/agency/rulesnlaws/subrules/electric/Default.aspx"
+    }
+  ],
+  "hidden_triggers": [
+    {
+      "id": "commercial_change_of_occupancy_b_to_a2_or_m_sprinkler_general",
+      "severity": "high",
+      "title": "Change of occupancy (B/S to A-2/M) can trigger sprinkler retrofit and IEBC review",
+      "why_it_matters": "Converting an office, warehouse, or retail tenant to assembly or mercantile crosses occupancy classifications. The new occupant load can cross IBC 903.2 sprinkler thresholds and require an IEBC change-of-occupancy analysis even when the construction work looks small.",
+      "fired_by": [
+        "\\bchange of (use|occupancy)\\b",
+        "\\b(b|s|s[-\\s]?1|s[-\\s]?2|m)\\s*(to|-)\\s*(a[-\\s]?2|a[-\\s]?3|a|m)\\b",
+        "\\b(office|warehouse|retail|storage)\\s+(to|into|converted to|conversion to)\\s+(restaurant|tavern|bar|assembly|gym|theater|mercantile|retail)\\b",
+        "\\bwarehouse\\s+into\\b",
+        "\\bs[-\\s]?1\\s+warehouse\\b",
+        "\\biebc\\b",
+        "\\bchange[-\\s]?of[-\\s]?use\\b"
+      ],
+      "likely_required_actions": [
+        "Run IEBC change-of-occupancy analysis (Chapter 10)",
+        "Recompute occupant load and check IBC 903.2 sprinkler thresholds",
+        "Update accessible route and restroom/fixture counts to the higher occupancy",
+        "Coordinate fire-alarm and egress lighting for the proposed occupancy"
+      ],
+      "companion_permits": [
+        "Fire sprinkler permit if retrofit/relocation triggered",
+        "Fire alarm permit if devices/coverage change"
+      ],
+      "agencies": [
+        "AHJ Building Dept",
+        "Fire Prevention"
+      ],
+      "citations": [
+        "IEBC Chapter 10 [verify adopted edition before merging]",
+        "IBC §903.2",
+        "IBC §1004",
+        "IBC §2902"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "restaurant_grease_interceptor_fog_review",
+      "severity": "high",
+      "title": "Grease interceptor / FOG review may be required for commercial food prep",
+      "why_it_matters": "FOG requirements are often enforced by sewer/environmental agencies outside the normal building-permit checklist. Missing sizing or location approval can force plumbing redesign.",
+      "fired_by": [
+        "\\bgrease interceptor\\b",
+        "\\bgrease trap\\b",
+        "\\bfog\\b",
+        "\\bcommercial kitchen\\b",
+        "\\b3[-\\s]?compartment sink\\b"
+      ],
+      "likely_required_actions": [
+        "Size interceptor from fixture/equipment schedule",
+        "Confirm location/access with sewer or environmental authority",
+        "Show sampling port/cleanout details if required"
+      ],
+      "companion_permits": [
+        "FOG / industrial waste / sewer approval, if required"
+      ],
+      "agencies": [
+        "Sewer authority",
+        "Environmental Services",
+        "AHJ Plumbing Dept"
+      ],
+      "citations": [
+        "IPC §1003.3.1",
+        "Local sewer-use ordinance [verify before merging]"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_occupant_load_and_egress_recalc",
+      "severity": "high",
+      "title": "Restaurant seating changes require occupant-load and egress recalculation",
+      "why_it_matters": "Adding dining, bar, queueing, or patio seats can change the required number of exits, door swing, panic hardware, travel distance, restroom counts, and fire-alarm assumptions.",
+      "fired_by": [
+        "\\bseating\\b",
+        "\\bdining\\b",
+        "\\bbar\\b",
+        "\\bpatio\\b",
+        "\\bbanquet\\b",
+        "\\boccupant load\\b",
+        "\\ba[-\\s]?2\\b",
+        "\\boffice\\s+(to|into)\\s+restaurant\\b"
+      ],
+      "likely_required_actions": [
+        "Add occupant-load table by room/area",
+        "Show common path, exit access travel distance, and exit count",
+        "Coordinate exit signage/emergency lighting"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Fire Prevention"
+      ],
+      "citations": [
+        "IBC §1004",
+        "IBC §1006",
+        "IBC §1017",
+        "IBC §1010"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_food_establishment_health_review_general",
+      "severity": "high",
+      "title": "Restaurant work needs local health-department food-establishment plan review",
+      "why_it_matters": "Health-department review usually runs in parallel with the building permit and approves finish schedule, hand sinks, three-compartment sink, warewashing, refrigeration, and food-flow. Missing it can hold the certificate of occupancy even when building review is finished.",
+      "fired_by": [
+        "\\brestaurant\\b",
+        "\\bfood establishment\\b",
+        "\\bcommercial kitchen\\b",
+        "\\bprep kitchen\\b",
+        "\\bcafe\\b",
+        "\\btavern\\b",
+        "\\bbar\\b.*\\b(food|kitchen|grill)\\b",
+        "\\bdishwasher\\b",
+        "\\bwalk[-\\s]?in cooler\\b"
+      ],
+      "likely_required_actions": [
+        "Submit food-establishment plans and equipment schedule to local health department",
+        "Show finish schedule, hand sinks, mop sink, three-compartment / warewashing, refrigeration",
+        "Coordinate health inspection before final CO"
+      ],
+      "companion_permits": [
+        "Health-department food-establishment plan review"
+      ],
+      "agencies": [
+        "Local / county health department",
+        "AHJ Building Dept"
+      ],
+      "citations": [
+        "FDA Food Code as adopted by local health authority [verify edition before merging]"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_restroom_ada_path_of_travel_20_percent",
+      "severity": "high",
+      "title": "Restroom alteration can trigger ADA path-of-travel upgrades",
+      "why_it_matters": "Altering a primary-function area or restroom can require upgrades to the accessible route, restrooms, drinking fountains, telephones, and parking up to the 20% disproportionality cap.",
+      "fired_by": [
+        "\\brestroom\\b",
+        "\\btoilet room\\b",
+        "\\bada bathroom\\b",
+        "\\bbathroom remodel\\b",
+        "\\baccessible restroom\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare ADA path-of-travel cost allocation",
+        "Show accessible route to altered area",
+        "Verify restroom clearances, accessories, lavatory, mirror, and door hardware"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR §36.403(f)",
+        "2010 ADA Standards §202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "commercial_ti_accessible_route_existing_building_alteration",
+      "severity": "medium",
+      "title": "Commercial alteration can require accessible-route/path-of-travel upgrades",
+      "why_it_matters": "Even when the requested work is not 'an ADA project,' altered primary-function areas can require accessible route, restroom, drinking fountain, parking, and entrance upgrades within the disproportionality cap.",
+      "fired_by": [
+        "\\btenant improvement\\b",
+        "\\bti\\b",
+        "\\bprimary function\\b",
+        "\\baccessible route\\b",
+        "\\bpath of travel\\b",
+        "\\bfront counter\\b",
+        "\\breception\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare path-of-travel analysis",
+        "Budget required accessible upgrades",
+        "Document 20% disproportionality cap if used"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR §36.403",
+        "2010 ADA Standards §202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_plumbing_fixture_count_change",
+      "severity": "medium",
+      "title": "Occupancy or occupant-load change can alter required restroom fixture counts",
+      "why_it_matters": "A retail/office/assembly change may look like tenant buildout but can require additional fixtures or accessible upgrades if occupant load or use category changes.",
+      "fired_by": [
+        "\\bchange of occupancy\\b",
+        "\\bchange of use\\b",
+        "\\boccupant load\\b",
+        "\\brestroom\\b",
+        "\\bassembly\\b",
+        "\\btraining room\\b",
+        "\\bshowroom\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare occupant-load and plumbing-fixture-count table",
+        "Check accessible fixture requirements",
+        "Coordinate any restroom expansion with path-of-travel obligations"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building/Plumbing Dept"
+      ],
+      "citations": [
+        "IPC §403.1",
+        "IBC §2902",
+        "2010 ADA Standards §213"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "restaurant_fire_alarm_monitoring_modification",
+      "severity": "medium",
+      "title": "Restaurant occupancy or suppression work may require fire-alarm interface review",
+      "why_it_matters": "Suppression systems, duct detectors, occupant load, and sprinkler changes can all require alarm interlocks, monitoring updates, or a separate fire-alarm submittal.",
+      "fired_by": [
+        "\\bfire alarm\\b",
+        "\\bmonitoring\\b",
+        "\\bduct detector\\b",
+        "\\bansul\\b",
+        "\\bsprinkler\\b",
+        "\\ba[-\\s]?2\\b"
+      ],
+      "likely_required_actions": [
+        "Confirm whether alarm shop drawings are deferred or separate",
+        "Show suppression/alarm interface sequence",
+        "Update monitoring account and acceptance testing"
+      ],
+      "companion_permits": [
+        "Fire alarm permit, if devices/interface change"
+      ],
+      "agencies": [
+        "Fire Prevention",
+        "Alarm contractor"
+      ],
+      "citations": [
+        "IFC §907.1.1",
+        "NFPA 72"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_plumbing_fixture_count_recalc",
+      "severity": "medium",
+      "title": "Restaurant seat count can change required plumbing fixtures",
+      "why_it_matters": "Dining, bar, patio, and assembly occupant loads can push the project over restroom fixture thresholds, affecting cost, space planning, and accessibility upgrades.",
+      "fired_by": [
+        "\\bseats?\\b",
+        "\\bdining\\b",
+        "\\bbar\\b",
+        "\\bpatio\\b",
+        "\\boccupant load\\b",
+        "\\brestroom\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare occupant-load and fixture-count table",
+        "Verify male/female or all-gender fixture distribution rules",
+        "Coordinate accessible restroom clearances"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Plumbing Dept",
+        "AHJ Building Dept"
+      ],
+      "citations": [
+        "IPC §403.1",
+        "IBC §2902"
+      ],
+      "primary_scope": "commercial_restaurant"
+    }
+  ],
+  "_fee_floor_components": {
+    "scope": "commercial_restaurant",
+    "scope_note": "plan review + permit + fire + utility + health",
+    "sqft": 3200,
+    "base_floor": 13000,
+    "jurisdiction_multiplier": 1.1,
+    "jurisdiction_label": "Dallas, TX",
+    "jurisdiction_rationale": "commercial plan review / fire review stack in major Texas metro [verify Dallas Development Services fees]",
+    "trigger_adders": [
+      {
+        "key": "change_of_occupancy",
+        "add_min": 2000,
+        "add_max": 5000,
+        "rationale": "IEBC §1001-1011 review + new CO"
+      },
+      {
+        "key": "hood_fire_suppression",
+        "add_min": 3000,
+        "add_max": 8000,
+        "rationale": "separate fire-prevention permit + acceptance test"
+      },
+      {
+        "key": "grease_interceptor",
+        "add_min": 1000,
+        "add_max": 4000,
+        "rationale": "sized + reviewed + utility coordination"
+      },
+      {
+        "key": "fire_sprinkler_modify",
+        "add_min": 2000,
+        "add_max": 6000,
+        "rationale": "hydraulic recalc + permit"
+      },
+      {
+        "key": "ada_path_of_travel",
+        "add_min": 1500,
+        "add_max": 5000,
+        "rationale": "20% rule alterations"
+      }
+    ],
+    "structured_low": 24000,
+    "structured_high": 42500,
+    "llm_fee_high_end": null
+  },
+  "_fee_adjusted": true,
+  "_fee_floor_check": "llm_below_floor_adjusted"
+}

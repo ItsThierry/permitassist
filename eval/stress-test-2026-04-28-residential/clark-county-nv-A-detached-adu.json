@@ -1,0 +1,355 @@
+{
+  "job_summary": "Detached accessory dwelling unit (ADU), 750 sf, on a single-family residential lot in Las Vegas, NV 89118. This scope triggers a Building Permit for the detached dwelling structure, plus companion trade permits for electrical, plumbing, and mechanical work if the ADU includes those systems (which it almost always does). Because this is a new detached dwelling unit, expect plan review, site plan review, energy compliance, and separate inspections for foundation, framing, rough trades, insulation, and final.",
+  "total_cost_estimate": "$180,000 - $320,000",
+  "location": "Las Vegas, NV",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — ADU Conversion / Residential Alteration",
+      "portal_selection": "Building - Accessory Dwelling Unit (ADU)",
+      "required": true,
+      "notes": "Master building permit for occupancy conversion, life-safety, framing, fire separation, and egress."
+    },
+    {
+      "permit_type": "Electrical Permit — ADU Circuits / Service Load",
+      "portal_selection": "Electrical - ADU / Residential Alteration",
+      "required": true,
+      "notes": "Required for new circuits, smoke/CO alarms, load calculations, subpanel, or service changes."
+    },
+    {
+      "permit_type": "Plumbing Permit — ADU Kitchen/Bath/Laundry",
+      "portal_selection": "Plumbing - ADU Fixtures / DWV",
+      "required": true,
+      "notes": "Required for kitchen, bath, laundry, water supply, sewer, and DWV work."
+    },
+    {
+      "permit_type": "Mechanical Permit — ADU HVAC / Ventilation",
+      "portal_selection": "Mechanical - ADU HVAC / Ventilation",
+      "required": true,
+      "notes": "Required for HVAC, bath/kitchen exhaust, ventilation, combustion air, or ducts."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — ADU Conversion / Residential Alteration",
+      "included_because": "ADU conversion changes occupancy/use and needs a master building permit.",
+      "scope_trigger": "ADU/conversion scope"
+    },
+    {
+      "permit_type": "Electrical Permit — ADU Circuits / Service Load",
+      "included_because": "ADUs require dedicated electrical scope for circuits, alarms, load calculations, and possible subpanel/service work.",
+      "scope_trigger": "ADU electrical systems"
+    },
+    {
+      "permit_type": "Plumbing Permit — ADU Kitchen/Bath/Laundry",
+      "included_because": "ADUs normally add or legalize kitchen/bath/laundry plumbing and DWV work.",
+      "scope_trigger": "ADU plumbing fixtures"
+    },
+    {
+      "permit_type": "Mechanical Permit — ADU HVAC / Ventilation",
+      "included_because": "ADUs need conditioned-space HVAC/ventilation review under mechanical code and Title 24 in California.",
+      "scope_trigger": "ADU mechanical/ventilation systems"
+    }
+  ],
+  "applying_office": "Clark County Building Department / Southern Nevada Building Officials",
+  "apply_url": "https://www.clarkcountynv.gov/business/building/permits",
+  "apply_pdf": null,
+  "apply_phone": "Search Google Maps: Clark County Building Department Las Vegas NV permit office",
+  "apply_address": "4701 W Russell Rd, Las Vegas, NV 89118",
+  "apply_google_maps": "https://www.google.com/maps?q=4701+W+Russell+Rd,+Las+Vegas,+NV+89118",
+  "fee_range": "Fee Estimate: **$11,000-$11,000+** (structured floor — see breakdown). Components: ~$9,000 base permit + plan review (Las Vegas, NV residential ADU floor) × 1.2× jurisdiction multiplier. **Verify against current fee schedule before quoting.**",
+  "approval_timeline": {
+    "simple": "Over-the-counter intake is not typical for a new detached ADU; expect plan review. If the submittal is complete, initial routing is often 1-2 weeks.",
+    "complex": "1-2 weeks for residential plan review in straightforward cases; longer if zoning, energy, fire access, or corrections are needed."
+  },
+  "inspections": [
+    {
+      "stage": "Pre-Construction / Site",
+      "description": "Inspector verifies approved site plan, setbacks, lot coverage, utility routing, and that the ADU location matches the approved plans before foundation work proceeds.",
+      "timing": "Before excavation or footing placement"
+    },
+    {
+      "stage": "Foundation / Footing",
+      "description": "Inspector checks footing depth, width, rebar placement, anchor bolts, hold-downs, soil bearing assumptions, and any required slab edge details before concrete is placed.",
+      "timing": "After forms/rebar are set, before concrete pour"
+    },
+    {
+      "stage": "Framing",
+      "description": "Inspector verifies wall framing, roof framing, shear/bracing, header sizes, nailing, connectors, stair/landing details, and that the built structure matches approved plans.",
+      "timing": "After framing is complete and before insulation or drywall"
+    },
+    {
+      "stage": "Rough Electrical",
+      "description": "Inspector checks panel location, conductor sizing, breaker sizing, box fill, receptacle spacing, GFCI/AFCI protection, smoke/CO alarm wiring, grounding/bonding, and any dedicated appliance circuits.",
+      "timing": "Before insulation and drywall conceal wiring"
+    },
+    {
+      "stage": "Rough Plumbing",
+      "description": "Inspector verifies water supply piping, DWV slope and venting, fixture locations, cleanouts, water heater connections, and gas piping pressure test if gas is installed.",
+      "timing": "Before insulation and drywall conceal piping"
+    },
+    {
+      "stage": "Rough Mechanical",
+      "description": "Inspector checks HVAC equipment sizing, duct layout, return/supply placement, condensate drainage, combustion air if applicable, bath exhaust, and equipment clearances.",
+      "timing": "Before insulation and drywall conceal ducts or equipment connections"
+    },
+    {
+      "stage": "Insulation / Energy",
+      "description": "Inspector verifies insulation R-values, air sealing, window U-factor/SHGC compliance, and energy documentation for the new dwelling unit.",
+      "timing": "After insulation is installed, before drywall"
+    },
+    {
+      "stage": "Final",
+      "description": "Inspector confirms all fixtures, devices, smoke/CO alarms, HVAC operation, address posting if required, handrails/guards, egress, and that the ADU is complete and safe for occupancy.",
+      "timing": "After all work is complete and utilities are on"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the Clark County online permit/inspection portal at https://www.clarkcountynv.gov/business/building/permits. Las Vegas-area inspections are typically scheduled online with about 2-3 business days lead time; book at least 24 hours ahead, and earlier for foundation and framing milestones. If you need help, use the Clark County Building Department main line from the county website and have the permit number ready.",
+  "license_required": "Licensed Nevada contractor pulls the permit on behalf of the owner; the contractor license number must appear on the application. For a detached ADU, the general building contractor typically pulls the building permit, and the electrical, plumbing, and mechanical contractors pull their own trade permits if those trades are separate.",
+  "city_contractor_registration": null,
+  "what_to_bring": [
+    "Completed permit application and contractor license information",
+    "Two or more sets of construction plans showing site plan, floor plan, elevations, foundation, framing, electrical, plumbing, and mechanical layouts",
+    "Plot plan with setbacks, lot coverage, utility locations, and ADU square footage",
+    "Energy compliance documents for the new dwelling unit",
+    "Owner authorization letter if the contractor is submitting on behalf of the property owner",
+    "Product cut sheets for HVAC equipment, water heater, windows, and any special structural connectors"
+  ],
+  "common_mistakes": [
+    "Submitting the ADU as a simple accessory structure instead of a new dwelling unit — that can bounce the application at plan review",
+    "Forgetting separate electrical, plumbing, and mechanical permits for the new unit's systems",
+    "Missing setback or lot coverage issues on the site plan — Clark County will catch this before permit issuance",
+    "Starting excavation before the permit is issued and posted — inspectors can stop the job",
+    "Not coordinating utility service capacity early enough for the new dwelling unit",
+    "Assuming the City of Las Vegas handles the permit when the property is actually in Clark County jurisdiction"
+  ],
+  "pro_tips": [
+    "Verify the parcel is in Clark County jurisdiction before you submit — Las Vegas and Clark County are separate permit jurisdictions, and strip properties can fall under different rules.",
+    "Bring a clean site plan with dimensions, setbacks, and utility routing on day one; missing site data is one of the fastest ways to get plan review corrections.",
+    "Have HVAC sizing and energy docs ready up front — Clark County inspectors in the desert care about cooling load and equipment sizing.",
+    "Check your contractor registration and license status before opening the portal; an expired registration can block the application without much warning.",
+    "If the ADU includes gas appliances, coordinate the gas piping and appliance specs before rough-in so the plumbing and mechanical inspections pass the first time."
+  ],
+  "code_citation": {
+    "section": "IRC R105.1",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish or change the occupancy of a building or structure..."
+  },
+  "companion_permits": [],
+  "zoning_hoa_flag": "Yes. A detached ADU on a single-family lot can be limited by zoning setbacks, lot coverage, height, parking, and utility easements. HOA rules may also restrict detached accessory structures, exterior appearance, and placement. Verify the parcel's zoning district and any HOA CC&Rs before finalizing the plan.",
+  "sources": [
+    "https://www.clarkcountynv.gov/business/building",
+    "https://www.clarkcountynv.gov/business/building/permits",
+    "https://www.lasvegasnevada.gov/Business/Permits-Licenses/Building-Permits/Permit-Fee-Estimator",
+    "https://www.lasvegasnevada.gov/Business/Planning-Zoning/Building-Safety",
+    "https://files.lasvegasnevada.gov/planning/Title-19-Permissible-Uses.pdf"
+  ],
+  "confidence": "high",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "maps_url": "https://www.google.com/maps?q=4701+W+Russell+Rd,+Las+Vegas,+NV+89118",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_field_sources": {
+    "apply_url": "city_kb",
+    "fee_range": "machine_extracted",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "apply_phone": "web_search",
+    "apply_address": "web_search",
+    "applying_office": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": false,
+  "missing_fields": [],
+  "confidence_reason": "City-specific match supported by live web research",
+  "_meta": {
+    "generated_at": "2026-04-28T21:00:31.640256",
+    "response_ms": 19863,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 6,
+    "city_match_level": "city",
+    "job_type": "Detached accessory dwelling unit 750 sf on single-family residential lot.",
+    "city": "Las Vegas",
+    "state": "NV",
+    "zip_code": "89118",
+    "job_category": "residential",
+    "auto_verified": false,
+    "missing_fields": []
+  },
+  "fee_source": {
+    "url": "https://www.lasvegasnevada.gov/Business/Permits-Licenses/Building-Permits/Permit-Fee-Estimator",
+    "title": "Permit Fee Estimator",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://www.lasvegasnevada.gov/Business/Planning-Zoning/Building-Safety",
+    "title": "Building & Safety - City of Las Vegas",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://files.lasvegasnevada.gov/planning/Title-19-Permissible-Uses.pdf",
+    "title": "[PDF] table of contents - chapter 19.04 permissible uses - City of Las Vegas",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://files.lasvegasnevada.gov/planning/Title-19-Permissible-Uses.pdf",
+    "title": "[PDF] table of contents - chapter 19.04 permissible uses - City of Las Vegas",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://files.lasvegasnevada.gov/planning/Title-19-Permissible-Uses.pdf",
+    "title": "[PDF] table of contents - chapter 19.04 permissible uses - City of Las Vegas",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 5,
+  "serper_cache_hits": 0,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 80,
+  "permit_ready_label": "Mostly ready — verify fees",
+  "permit_ready_missing": [
+    "permit office phone not found — call to verify"
+  ],
+  "_primary_scope": "residential_adu",
+  "checklist": [
+    "Verify your contractor license is current and valid in NV",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "ESS clearances per NFPA 855 (≥3 ft from openings, doors, windows; verify state/AHJ override)",
+    "Battery commissioning report from manufacturer (required for inspection sign-off)",
+    "ESS hazardous-voltage labeling per UL 9540 / 9540A on each enclosure",
+    "AC disconnect labeling 'Warning: Dual Power Source' per NEC 705.10 at the main service",
+    "AC disconnect within sight of the inverter (NEC 690.13 / 705.20)",
+    "Working clearance at ESS enclosure: 30 in wide × 36 in depth × 6.5 ft height (NEC 110.26)",
+    "ESS marking at the main service identifying battery feed-in source per NEC 706.10",
+    "Smoke + CO alarms in every sleeping room AND each level (interconnected if hardwired)",
+    "Egress window in every sleeping room: 5.7 sq ft net (5.0 if grade), 24 in min height, 20 in min width, sill ≤44 in",
+    "Fire-rated assembly between dwelling units (1-hour wall + 1-hour ceiling typical)",
+    "Independent or accessory-metered electrical service (varies by state — confirm with utility)",
+    "Energy code compliance for the new conditioned space (Title 24 in CA; IECC adopted version elsewhere)",
+    "Confirm the required license is active and matches the application: Licensed Nevada contractor pulls the permit on behalf of the owner; the contractor license number must appear on the application. For a detached ADU, the general building contractor typically pulls the building permit, and the electrical, plumbing, and mechanical contractors pull their own trade permits if those trades are separate.",
+    "Bring 2 copies of all documents to Clark County Building Department / Southern Nevada Building Officials"
+  ],
+  "rejection_patterns": [],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "job_value": 175000,
+  "fee_calculator": {
+    "fee": 1002.5,
+    "formula": "$40 base + $5.50/thousand of job value",
+    "confidence": "high",
+    "note": "Verify current fee schedule — rates may have changed"
+  },
+  "expert_notes": [
+    {
+      "title": "NSCB license classifications — A, B, and 42 C-subclasses",
+      "note": "The Nevada State Contractors Board issues licenses under three classes: Class A (General Engineering), Class B (General Building), and Classification C with 42 distinct subcontracting fields (e.g., C-2 Electrical, C-1 Plumbing, C-21 HVAC/Refrigeration). Per NRS 624.215, a contractor may only bid or contract within their licensed classification AND under their monetary limit — exceeding either voids contract enforceability and lien rights. Always print the license number and monetary limit on bids and contracts before submitting to the AHJ.",
+      "applies_to": "All paid construction work in Nevada requiring a contractor license",
+      "source": "https://www.nvcontractorsboard.com/licensing/license-classifications/"
+    },
+    {
+      "title": "NSCB Licensure by Endorsement — 4-year same-QI rule",
+      "note": "Out-of-state contractors can shortcut Nevada licensing via the Endorsement path, but only if they (1) hold an active license in the endorsing state with the SAME qualified individual for the past four years and (2) have not been investigated for misconduct. Switching the qualifying individual within those four years disqualifies the application and forces the full Nevada exam path. Confirm QI continuity in the endorsing state's records before filing the endorsement application.",
+      "applies_to": "Out-of-state contractors seeking to operate in Nevada",
+      "source": "https://www.nvcontractorsboard.com/licensing/licensure-by-endorsement/"
+    },
+    {
+      "title": "Statewide energy code — 2024 IECC adopted with March 12, 2025 revisions (NAC 701)",
+      "note": "The Governor's Office of Energy adopted the 2024 IECC as published effective August 18, 2024, then issued revisions on March 12, 2025 under NAC 701. Local jurisdictions adopt on their own schedules, so confirm which edition (and revision date) the AHJ is enforcing on the application date — drawings produced under the unrevised 2024 IECC may need envelope or mechanical updates before plan check accepts them.",
+      "applies_to": "All new construction and additions subject to Nevada energy code review",
+      "source": "https://www.energy.nv.gov/notices2/nac-701-building-energy-codes/"
+    },
+    {
+      "title": "Washoe County code transition — July 1, 2025 effective with Jan 1, 2026 cutoff",
+      "note": "In Washoe County (Reno/Sparks/unincorporated), the new code editions took effect July 1, 2025 with a transition window allowing in-flight projects to remain under the prior cycle through January 1, 2026. Submittals dated on or after Jan 1, 2026 must comply fully with the new editions; partial submissions made before the cutoff should be tracked carefully because the AHJ can require resubmission under the newer code if the application goes stale.",
+      "applies_to": "Permit applications in Washoe County crossing the 2026-01-01 cutoff",
+      "source": "https://snarsca.com/blog/iecc-adoption-and-its-affects-on-las-vegas-contractors/"
+    },
+    {
+      "title": "Southern Nevada Energy Conservation Code 2024 — effective January 11, 2026",
+      "note": "Clark County and the Southern Nevada code-coordinated jurisdictions adopted the S. NV Energy Conservation Code 2024 (built on the 2024 IECC) effective January 11, 2026. The Southern Nevada Amendments are published separately from the IECC base text and modify mechanical, envelope, and rating-index sections — verify drawings reference the Southern Nevada amended sections, not the unamended IECC, for any Clark County project.",
+      "applies_to": "Permits in Clark County and coordinated Southern Nevada jurisdictions",
+      "source": "https://up.codes/viewer/clark-nevada/s-nv-energy-conservation-code-2024"
+    },
+    {
+      "title": "Southern Nevada HERS® Index (ERI) compliance path — Section 406 amendment",
+      "note": "All Southern Nevada code jurisdictions amended Section 406 to accept a HERS Index / Energy Rating Index option as an alternative compliance path to prescriptive or performance methods. This is significant for builders who can't easily meet prescriptive envelope U-values — a third-party HERS rater can certify ERI compliance instead. Confirm the rater is RESNET-certified and that the AHJ accepts the ERI target in effect at the application date.",
+      "applies_to": "Residential energy compliance in Clark County and Southern Nevada jurisdictions",
+      "source": "https://www.resnet.us/articles/southern-nv-code-jurisdictions-accept-a-hers-index-option-to-energy-code/"
+    },
+    {
+      "title": "No unified statewide residential building code — local AHJ controls",
+      "note": "Nevada has statewide baseline codes enforced by the State Fire Marshal, but residential building permits for 1- and 2-family homes are handled entirely by local city and county building departments. This means there is no single state-issued residential permit; you must identify the correct AHJ (incorporated city OR unincorporated county) for each parcel and follow that jurisdiction's adopted code edition and amendments — they often differ between Clark, Washoe, and rural counties.",
+      "applies_to": "All residential permit scoping in Nevada",
+      "source": "https://permitsguide.com/nevada"
+    },
+    {
+      "title": "City-or-county jurisdiction split under NRS Chapter 278",
+      "note": "Under NRS 278 (Planning and Zoning), a parcel falls under the jurisdiction of the incorporated city OR the surrounding county, not both — overlap is rare and limited to specific extraterritorial agreements. Pull the parcel's APN from the county assessor and confirm whether it sits inside city limits before filing; submitting to the wrong AHJ is a common cause of weeks of delay because the receiving jurisdiction cannot transfer the application — it must be refiled.",
+      "applies_to": "Determining the correct permitting AHJ for any Nevada parcel",
+      "source": "https://www.leg.state.nv.us/nrs/nrs-278.html"
+    },
+    {
+      "title": "State Public Works Division iWorQ portal — state-owned projects only",
+      "note": "Construction on state-owned land or state buildings is permitted through the State Public Works Division (SPWD) via the iWorQ portal, NOT through local city/county building departments. SPWD reviews against the codes adopted for state facilities, which can lag local adoption. Private residential and commercial work never goes through SPWD; routing a private project to iWorQ will be rejected and you'll lose the filing window.",
+      "applies_to": "Construction on State of Nevada-owned property and state facilities",
+      "source": "https://publicworks.nv.gov/uploadedFiles/publicworksnvgov/content/Services/Permitting_Code_Enforcement/Permitting%20%20Code%20Enforcement%20Process.pdf"
+    },
+    {
+      "title": "Floodplain management — NFIP coordination via Nevada Division of Water Resources",
+      "note": "Nevada Division of Water Resources runs the state's floodplain management program in coordination with FEMA's National Flood Insurance Program; local jurisdictions adopt floodplain ordinances to remain NFIP-eligible. Before designing in or near a SFHA (Zone A/AE/AO/X-shaded), confirm the adopted base flood elevation, finished-floor freeboard requirement, and whether a CLOMR/LOMR will be required — many Nevada AHJs require finished floor at BFE+1 ft or higher and reject drawings without an elevation certificate at final.",
+      "applies_to": "Construction within FEMA Special Flood Hazard Areas in Nevada",
+      "source": "https://water.nv.gov/index.php/programs/floodplain-management"
+    },
+    {
+      "title": "Water rights and federal-lands coordination — State Engineer per NRS 328",
+      "note": "Per NRS 328.120, the State Engineer (within the Division of Water Resources) provides technical advice on water rights, reclamation, flood control, and watershed protection — and water rights are required separately from the building permit for new wells, surface diversions, or changes of use. On parcels adjacent to or crossing BLM/federal land, the project may also need a federal right-of-way or special-use authorization that runs in parallel with the local building permit and often takes longer than the construction permit itself.",
+      "applies_to": "Projects requiring water rights or touching federal lands in Nevada",
+      "source": "https://www.leg.state.nv.us/nrs/NRS-328.html"
+    },
+    {
+      "title": "Clark County plan-review timing tiers — 7-day commercial path requires <$100k valuation",
+      "note": "Clark County operates tiered plan-review timelines: the Commercial 7-Day expedited path requires prior Zoning approval AND a project valuation under $100,000; everything else falls into Residential Minor, Standard Plan, or full Commercial review with longer queues. Inflate the valuation to be safe and you knock yourself out of the 7-day track — itemize labor and materials honestly to stay eligible, and have the Zoning sign-off in hand before submitting to plan review.",
+      "applies_to": "Clark County commercial and residential plan submittals",
+      "source": "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/plan_review/plan-review-timelines"
+    },
+    {
+      "title": "Northern Nevada amendments to the 2024 IECC — Elko County and rural N. NV",
+      "note": "Northern/rural counties (Elko County and the Northern Nevada code-coordinated jurisdictions) adopted their own amendments to the 2024 IECC for residential energy efficiency. These amendments diverge from the Southern Nevada amendment package, so envelope assemblies, mechanical efficiencies, and duct-leakage targets that pass Clark County plan check may fail in Elko or vice versa. Pull the local amendment PDF for the specific AHJ and check it against the drawings before submission.",
+      "applies_to": "Residential energy compliance in Elko County and Northern Nevada jurisdictions",
+      "source": "https://www.elkocountynv.gov/calendar_app/departments/Building%20&%20Safety/2024%20Elko%20County%20Amendments.pdf?t=202601291912310"
+    },
+    {
+      "title": "Architect/residential-designer notification under NRS 278.589",
+      "note": "NRS 278.589 requires the city or county building official to notify the State Board of Architecture, Interior Design and Residential Design when certain plan submittals are made — this is the mechanism by which the Board polices unlicensed practice of architecture/residential design on Nevada permits. Plans submitted by an unlicensed designer for projects that exceed the residential-designer scope can trigger a Board complaint and stall the permit; confirm the designer's NSBAIDRD credentials and stamp authority before submission.",
+      "applies_to": "Permit submittals using stamped or designer-prepared drawings in Nevada",
+      "source": "https://www.leg.state.nv.us/nrs/nrs-278.html"
+    }
+  ],
+  "hidden_triggers": [],
+  "_fee_floor_components": {
+    "scope": "residential_adu",
+    "scope_note": "building + MEP + accessibility + plan check",
+    "sqft": 750,
+    "base_floor": 9000,
+    "jurisdiction_multiplier": 1.2,
+    "jurisdiction_label": "Las Vegas, NV",
+    "jurisdiction_rationale": "Clark County / Las Vegas commercial valuation and fire review on TI scopes [verify applicable AHJ fee schedule]",
+    "trigger_adders": [],
+    "structured_low": 11000,
+    "structured_high": 11000,
+    "llm_fee_high_end": 4500.0
+  },
+  "_fee_adjusted": true,
+  "_fee_floor_check": "llm_below_floor_adjusted"
+}

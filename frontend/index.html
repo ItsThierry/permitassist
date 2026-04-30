@@ -2710,6 +2710,54 @@ function getPermitDisplayName(d) {
     : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
 }
 
+// Known historic / HPC districts. Keyed by `${city}|${state}` (state is the
+// two-letter code). Each district lists keywords that, when present in the
+// user-typed address text, signal the property is likely under HPC review.
+// This is a guidance hint, not a determination — the banner instructs the
+// user to confirm with the local landmarks commission. Expand as we ship.
+const HPC_DISTRICTS = {
+  'Milwaukee|WI': [
+    { name: 'Yankee Hill Historic District', keywords: ['yankee hill', 'n marshall', 'n cass', 'n franklin'], commission: 'Milwaukee Historic Preservation Commission', url: 'https://city.milwaukee.gov/HPC' },
+    { name: 'Brewers Hill Historic District', keywords: ['brewers hill', 'n hubbard', 'e brown'], commission: 'Milwaukee Historic Preservation Commission', url: 'https://city.milwaukee.gov/HPC' },
+    { name: 'Concordia Historic District', keywords: ['concordia', 'w state', 'w wells', 'n 31st'], commission: 'Milwaukee Historic Preservation Commission', url: 'https://city.milwaukee.gov/HPC' },
+  ],
+  'Chicago|IL': [
+    { name: 'Prairie Avenue Historic District', keywords: ['prairie ave', 'prairie avenue'], commission: 'Chicago Commission on Chicago Landmarks', url: 'https://www.chicago.gov/city/en/depts/dcd/supp_info/landmarks_in_chicago.html' },
+    { name: 'Old Town Triangle', keywords: ['old town', 'n wells'], commission: 'Chicago Commission on Chicago Landmarks', url: 'https://www.chicago.gov/city/en/depts/dcd/supp_info/landmarks_in_chicago.html' },
+  ],
+  'Boston|MA': [
+    { name: 'Beacon Hill Historic District', keywords: ['beacon hill', 'pinckney', 'mt vernon', 'mount vernon', 'chestnut'], commission: 'Beacon Hill Architectural Commission', url: 'https://www.boston.gov/landmarks-and-historic-districts' },
+    { name: 'Back Bay Historic District', keywords: ['back bay', 'commonwealth ave', 'marlborough', 'newbury'], commission: 'Back Bay Architectural Commission', url: 'https://www.boston.gov/landmarks-and-historic-districts' },
+  ],
+  'New Orleans|LA': [
+    { name: 'Vieux Carré (French Quarter)', keywords: ['french quarter', 'vieux carre', 'royal st', 'bourbon', 'chartres'], commission: 'Vieux Carré Commission', url: 'https://nola.gov/vcc/' },
+    { name: 'Garden District', keywords: ['garden district', 'prytania', 'magazine'], commission: 'Historic District Landmarks Commission', url: 'https://nola.gov/hdlc/' },
+  ],
+  'Alexandria|VA': [
+    { name: 'Old & Historic Alexandria District', keywords: ['old town', 'king st', 'cameron', 'duke st', 'prince st'], commission: 'Alexandria Board of Architectural Review', url: 'https://www.alexandriava.gov/Planning' },
+  ],
+  'Charleston|SC': [
+    { name: 'Charleston Old & Historic District', keywords: ['meeting st', 'church st', 'tradd', 'broad st', 'east bay'], commission: 'Charleston Board of Architectural Review', url: 'https://www.charleston-sc.gov/179/Board-of-Architectural-Review' },
+  ],
+  'Savannah|GA': [
+    { name: 'Savannah Historic District', keywords: ['bull st', 'oglethorpe', 'broughton', 'liberty st', 'bay st'], commission: 'Savannah Historic District Board of Review', url: 'https://www.savannahga.gov/' },
+  ],
+};
+
+function getHpcHint(city, state, address) {
+  if (!address || !city || !state) return null;
+  const key = `${city}|${(state || '').toUpperCase()}`;
+  const districts = HPC_DISTRICTS[key];
+  if (!districts) return null;
+  const a = address.toLowerCase();
+  for (const d of districts) {
+    if (d.keywords.some(k => a.includes(k))) {
+      return d;
+    }
+  }
+  return null;
+}
+
 function getJurisdictionDisplay(d, city, state, jobAddress) {
   const levelRaw = d.data_source || d._meta?.city_match_level || '';
   const level = ['city_database', 'city'].includes(levelRaw) ? 'city'
@@ -2873,6 +2921,14 @@ function renderResults(d, job, city, state) {
   }
   const heroUpdatedRaw = d.last_verified_at || d._meta?.generated_at || '';
   const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown';
+  const rulebookDepth = String(d.rulebook_depth || '').toUpperCase();
+  const lastVerifiedRaw = d._last_verified_at || (rulebookDepth === 'DEEP' ? '2026-04-28' : (rulebookDepth === 'MEDIUM' ? '2026-04-29' : ''));
+  const lastVerifiedLabel = /^\d{4}-\d{2}-\d{2}$/.test(String(lastVerifiedRaw))
+    ? String(lastVerifiedRaw)
+    : (lastVerifiedRaw ? new Date(lastVerifiedRaw).toISOString().slice(0, 10) : '');
+  const lastVerifiedBadge = lastVerifiedLabel && rulebookDepth !== 'STATE_DEFAULT'
+    ? `<span class="badge ${rulebookDepth === 'DEEP' ? 'badge-green' : 'badge-blue'}">Last verified ${esc(lastVerifiedLabel)}</span>`
+    : '';
   const confidenceReason = d.confidence_reason || '';
   const jurisdiction = getJurisdictionDisplay(d, city, state, jobAddress);
   const nextSteps = getNextSteps(d, job, city, state);
@@ -2925,7 +2981,7 @@ function renderResults(d, job, city, state) {
   
   html += `<div class="result-hero">
     <div class="result-job">${esc(job)}</div>
-    <div class="result-loc">📍 ${esc(city || 'Unknown city')}, ${esc(state || '')}</div>
+    <div class="result-loc">📍 ${esc(city || 'Unknown city')}, ${esc(state || '')} ${lastVerifiedBadge}</div>
     <div class="result-badges">
       <span class="badge ${verdict==='yes'?'badge-green':verdict==='no'?'badge-red':'badge-yellow'}">${verdict === 'yes' ? '✅ PERMIT REQUIRED' : verdict === 'no' ? '❌ NO PERMIT' : '⚠️ MAYBE'}</span>
       ${fee && !d._fee_unverified ? `<span class="badge badge-blue" style="white-space:normal;max-width:100%">💰 ${esc(fee)}</span>` : ''}
@@ -4327,7 +4383,7 @@ async function doLookup() {
   try {
     const res = await fetch('/api/permit', {
       method: 'POST', headers: getAuthHeaders(),
-      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, job_category: jobCategory })
+      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, address, job_category: jobCategory })
     });
     stopProgress();
     const data = await res.json();
@@ -4476,7 +4532,8 @@ async function doLookupWithOffline() {
     if (parsed.job_type && parsed.city && parsed.state) {
       const cached = await getFromIDB(parsed.job_type, parsed.city, parsed.state);
       if (cached) {
-        currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, data: cached.data, ts: cached.ts };
+        const offlineAddress = document.getElementById('address')?.value.trim() || '';
+        currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, address: offlineAddress, data: cached.data, ts: cached.ts };
         document.getElementById('search-form').style.display = 'none';
         document.getElementById('results').style.display = 'block';
         document.getElementById('offline-result-notice').classList.add('show');

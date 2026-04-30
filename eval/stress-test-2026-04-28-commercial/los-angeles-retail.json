@@ -1,0 +1,392 @@
+{
+  "job_summary": "2,000 sf commercial retail tenant improvement in Los Angeles, CA 90015. This scope triggers a Building Permit for the tenant improvement/interior alteration, plus separate trade permits for electrical and lighting work. Because the scope includes storefront signage, accessible entrance, and ADA path of travel upgrades, expect plan check and possible additional approvals if the work affects the public right-of-way or exterior façade. If the signage is illuminated or electrically connected, it also triggers electrical review. If façade work changes the exterior wall/opening or storefront framing, that stays under the building permit and may require structural details.",
+  "total_cost_estimate": "$85,000 - $220,000",
+  "location": "Los Angeles, CA",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Commercial Tenant Improvement",
+      "portal_selection": "Commercial Tenant Improvement",
+      "required": true,
+      "notes": "Required for the 2,000 sf retail buildout, accessible entrance work, ADA path of travel upgrades, and any façade/storefront alterations that are part of the tenant improvement scope."
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Interior Lighting and Power",
+      "portal_selection": "Electrical Permit - Commercial",
+      "required": true,
+      "notes": "Required for new or modified lighting, receptacles, circuits, controls, and any electrical work tied to the retail buildout."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Commercial Tenant Improvement",
+      "included_because": "The job is a commercial retail tenant improvement with interior buildout, accessible entrance work, ADA path of travel upgrades, and façade/storefront improvements. That is a building permit scope, not just a trade permit.",
+      "scope_trigger": "2,000 sf commercial retail tenant improvement, façade improvements, accessible entrance, ADA path of travel upgrades"
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Interior Lighting and Power",
+      "included_because": "The scope explicitly includes electrical and lighting work, which requires a separate electrical permit in Los Angeles.",
+      "scope_trigger": "electrical and lighting"
+    }
+  ],
+  "applying_office": "Los Angeles Department of Building and Safety (LADBS)",
+  "apply_url": "https://www.ladbs.org/services/apply-for-a-permit",
+  "apply_pdf": null,
+  "apply_phone": "(213) 482-0000",
+  "apply_address": "201 N. Figueroa Street, Los Angeles, CA 90012",
+  "apply_google_maps": "https://www.google.com/maps?q=201+N.+Figueroa+Street,+Los+Angeles,+CA+90012",
+  "fee_range": "Fee Estimate: **$7,500-$11,000+** (structured floor — see breakdown). Components: ~$4,000 base permit + plan review (Los Angeles, CA commercial retail TI floor) × 1.5× jurisdiction multiplier + $3,000 ada-path-of-travel adder. **Verify against current fee schedule before quoting.**",
+  "approval_timeline": {
+    "simple": "Over-the-counter intake or online submittal can start same day, but commercial TI permits usually move into plan check; expect 3-8 weeks for approval.",
+    "complex": "3-8 weeks for commercial plan review, longer if ADA path of travel, façade, signage, or Bureau of Engineering review is triggered."
+  },
+  "inspections": [
+    {
+      "stage": "Building Rough Framing / Interior Alteration",
+      "description": "Inspector checks framing layout, fireblocking, rated assemblies if any, accessibility clearances at the entrance, and that approved plans match field conditions before walls are closed.",
+      "timing": "Before drywall, finishes, or concealment of framing and accessibility details"
+    },
+    {
+      "stage": "Electrical Rough-In",
+      "description": "Inspector verifies branch-circuit routing, box fill, conductor sizing, grounding/bonding, dedicated circuits for lighting or equipment, and any required emergency/egress lighting wiring before concealment.",
+      "timing": "Before insulation, drywall, or ceiling closure"
+    },
+    {
+      "stage": "Final Building / Accessibility",
+      "description": "Inspector checks final ADA path of travel, accessible entrance slope and landing dimensions, door clear width, hardware, thresholds, restroom/accessibility items if altered, and that storefront/facade work matches approved plans.",
+      "timing": "After all finishes, signage, and accessibility items are complete"
+    },
+    {
+      "stage": "Final Electrical",
+      "description": "Inspector verifies fixture installation, switching, panel labeling, required lighting levels/controls, emergency lighting if applicable, and that all devices are safe and operational.",
+      "timing": "After trim-out and before occupancy"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through LADBS online services at https://www.ladbs.org/services/apply-for-a-permit or by calling (213) 482-0000. For inspections in the City of Los Angeles, use 311 inside the city or the automated inspection request line at (888) 524-2845 / (888) LA4-BUILD. Minimum advance notice is typically 24 hours; book earlier for commercial work because routes fill fast. If the job is near the public right-of-way, confirm whether Bureau of Engineering sign-off is needed before final inspection.",
+  "license_required": "Licensed California contractor pulls the permit on the tenant's or owner's behalf — the contractor's CSLB license number must appear on the application. For this scope, the building contractor typically coordinates the permit, while the C-10 electrical contractor pulls the electrical permit or is listed on the application. The permit is still required.",
+  "city_contractor_registration": "Los Angeles City requires a CSLB license and an LA City Business Tax Registration Certificate (BTRC). Contractors are often rejected at the counter if the BTRC is missing or expired. Verify the BTRC is current before submitting any LADBS application.",
+  "what_to_bring": [
+    "Completed LADBS permit application and project address",
+    "CSLB license number and LA City Business Tax Registration Certificate (BTRC)",
+    "Tenant improvement plans showing floor plan, life-safety, accessibility, and electrical layout",
+    "Equipment and fixture cut sheets for lighting, exit signs, and any powered storefront/signage components",
+    "ADA path of travel details and accessibility calculations",
+    "Owner/tenant authorization letter and lease exhibit if the tenant is pulling through a contractor"
+  ],
+  "common_mistakes": [
+    "Submitting the application without a current LA City Business Tax Registration Certificate — LADBS can reject the permit at intake even if the CSLB license is valid.",
+    "Forgetting that ADA path of travel upgrades are part of the TI scope — the city may require additional accessibility corrections beyond the tenant space itself.",
+    "Assuming storefront signage is automatically covered by the building permit — illuminated or electrically connected signage often needs separate electrical review and may need sign approval.",
+    "Starting façade or entrance work before confirming whether Bureau of Engineering review is needed for any work affecting the sidewalk, curb, or public right-of-way.",
+    "Leaving electrical and lighting off the permit set — LADBS will flag unpermitted circuits, fixtures, or emergency lighting during plan check or inspection."
+  ],
+  "pro_tips": [
+    "Bring the LA City BTRC and CSLB license info to the first submittal — missing either one is a common reason commercial TI permits get bounced.",
+    "If the storefront work touches the sidewalk, curb ramp, or public way, check Bureau of Engineering early so you do not get stuck waiting after plan check.",
+    "Include the ADA path of travel scope on the first plan set; trying to add accessibility later usually triggers a resubmittal and delays occupancy.",
+    "For lighting, submit fixture cut sheets and a reflected ceiling plan together — it speeds electrical plan check and reduces correction cycles.",
+    "Check your Los Angeles contractor registration renewal date before starting any permit application — registration lapses are one of the most avoidable rejection reasons."
+  ],
+  "code_citation": {
+    "section": "CBC 105.1 and CBC 11B-202.4",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish, or change the occupancy of a building or structure shall first make application for and obtain the required permit. Alterations affecting an area of primary function shall provide an accessible path of travel to the altered area."
+  },
+  "companion_permits": [
+    {
+      "permit_type": "Sign Permit — Commercial Wall Sign / Illuminated Sign",
+      "reason": "May be required if: new sign installation, illuminated sign, or sign attachment to façade.",
+      "required_if": "new sign installation, illuminated sign, or sign attachment to façade",
+      "certainty": "likely",
+      "requirement_label": "May be required based on scope"
+    },
+    {
+      "permit_type": "Bureau of Engineering Approval — Public Right-of-Way / Curb Ramp / Sidewalk Work",
+      "reason": "May be required if: work in or adjacent to the public right-of-way.",
+      "required_if": "work in or adjacent to the public right-of-way",
+      "certainty": "conditional",
+      "requirement_label": "May be required based on scope"
+    }
+  ],
+  "zoning_hoa_flag": "Commercial storefront work in Los Angeles can be delayed by sign ordinance limits, façade design review, and any historic district or overlay zone rules. If the building is in a historic district or special overlay, exterior façade changes and signage may need additional zoning or design review approval before permit issuance.",
+  "sources": [
+    "https://www.ladbs.org",
+    "https://www.ladbs.org/services/apply-for-a-permit",
+    "https://www.cslb.ca.gov",
+    "https://211la.org/services/HxdAzraxwhq7ErpyHW5Q2y7c1qKpk/building-permits",
+    "https://www.cityofindustry.org/183/Los-Angeles-County-Building-Safety-Plan-",
+    "https://planning.lacity.gov/staffrpt/mnd/Pub_100517/ENV-2016-3609.pdf",
+    "https://dbs.lacity.gov/our-organization/locations-offices",
+    "https://ldh.la.gov/assets/oph/Center-EH/engineering/Plumbing/Part_XIV_LA_State_Plumbing_Code.pdf"
+  ],
+  "confidence": "high",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "maps_url": "https://www.google.com/maps?q=201+N.+Figueroa+Street,+Los+Angeles,+CA+90012",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "last_verified_at": "2026-04-12T17:49:01.137304",
+  "_field_sources": {
+    "apply_url": "auto_verified:https://www.cityofindustry.org/183/Los-Angeles-County-Building-Safety-Plan-",
+    "applying_office": "auto_verified:https://www.cityofindustry.org/183/Los-Angeles-County-Building-Safety-Plan-",
+    "apply_phone": "auto_verified:https://www.cityofindustry.org/183/Los-Angeles-County-Building-Safety-Plan-",
+    "apply_address": "auto_verified:https://www.cityofindustry.org/183/Los-Angeles-County-Building-Safety-Plan-",
+    "fee_range": "auto_verified:https://www.cityofindustry.org/183/Los-Angeles-County-Building-Safety-Plan-",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": false,
+  "missing_fields": [],
+  "confidence_reason": "Verified city/trade data found from official sources",
+  "_meta": {
+    "generated_at": "2026-04-28T21:02:37.240703",
+    "response_ms": 16963,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 6,
+    "city_match_level": "city",
+    "job_type": "2,000 sf commercial retail tenant improvement: sales floor buildout, storefront signage, facade improvements, accessible entrance and ADA path of travel upgrades, electrical and lighting",
+    "city": "Los Angeles",
+    "state": "CA",
+    "zip_code": "90015",
+    "job_category": "commercial",
+    "auto_verified": true,
+    "missing_fields": []
+  },
+  "fee_source": {
+    "url": "https://planning.lacity.gov/staffrpt/mnd/Pub_100517/ENV-2016-3609.pdf",
+    "title": "[PDF] 200 N. Spring Street, Room 750 • Los Angeles, CA 90012 Environme",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://dbs.lacity.gov/our-organization/locations-offices",
+    "title": "Locations & Offices - LADBS",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://ldh.la.gov/assets/oph/Center-EH/engineering/Plumbing/Part_XIV_LA_State_Plumbing_Code.pdf",
+    "title": "[PDF] Title 51 PUBLIC HEALTH―SANITARY CODE Part XIV. Plumbing ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://ldh.la.gov/assets/oph/Center-EH/engineering/Plumbing/Part_XIV_LA_State_Plumbing_Code.pdf",
+    "title": "[PDF] Title 51 PUBLIC HEALTH―SANITARY CODE Part XIV. Plumbing ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://planning.lacity.gov/pdiscaseinfo/document/MjE0MDQw0/46e6f77e-051c-4e11-ad6d-6ce8558211cd/pdd",
+    "title": "[PDF] DEPARTMENT OF - Los Angeles City Planning",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 100,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "commercial_retail_ti",
+  "checklist": [
+    "Verify your contractor license is current and valid in CA",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Identify altered primary-function area: if scope alters an area where major activity occurs, an accessible path of travel to the altered area is required unless technically infeasible / disproportionate (2010 ADA §202.4; 28 CFR §36.403(a))",
+    "20% disproportionality cap: ADA path-of-travel work exceeding 20% of alteration cost is disproportionate at the federal level, but lower-cost items must still be prioritized (28 CFR §36.403(f)(1))",
+    "Accessible exterior route: site arrival points + accessible parking/passenger loading + curb ramps + walking surfaces + ramps/landings + slope/cross-slope + door clearances to altered area (2010 ADA §§206.2.1, 206.4, 403, 404, 405, 406)",
+    "Restroom path + restroom upgrades: if restrooms serve the altered area, accessible route + door + turning space + lavatory + water closet + grab bars + clearances + signage (2010 ADA §§213, 603-606, 609, 703)",
+    "Parking + passenger loading: recalculate accessible-stall count + van space + access aisle + signage for affected parking serving the altered area (2010 ADA §§208, 502, 503; 28 CFR §36.403(e)(1))",
+    "Drinking fountains, phones, and signage along the path: tactile/visual signs, room ID, directional, fountain units, public phones if any (2010 ADA §§211, 216, 602, 703, 704)",
+    "Doors, thresholds, and hardware on the route: clear width + maneuvering clearance + opening force + thresholds + lever/operable hardware + protruding objects (2010 ADA §§303, 307, 309, 404)",
+    "Occupancy load calc per IBC 1004 (mercantile = 60 sf gross/occupant for sales floor; 300 sf for stockroom)",
+    "Egress capacity sized to occupant load: 0.2 in/occupant for stairs, 0.15 in/occupant for level egress per IBC 1005",
+    "Accessible route from accessible entrance to all customer-accessible areas per ADA §206",
+    "ADA fixture counts per IBC Table 2902.1 (mercantile uses lower ratios — verify current edition)",
+    "Exterior signage permit (often a SEPARATE permit from the building TI — confirm with city sign code)",
+    "Fire alarm strobe coverage per NFPA 72 §18.5 (visible from any point, candela-rated to room area)",
+    "Sprinkler hydraulic recalc required if shelving / racking exceeds 12 ft (NFPA 13 §3.3.4 storage occupancy)",
+    "Storefront glazing: safety glazing per IBC 2406 for any pane within 24 in of door or 60 in of floor",
+    "Demising wall fire-rated per IBC 706.3 + STC ≥40 between tenants if not factory-built",
+    "Means of egress: ≥2 exits if occupant load >49 OR floor area >3,000 sf in M occupancy per IBC 1006",
+    "Public restroom availability per IBC 2902.3 (required for retail >150 occupants OR >300 ft from public restroom)",
+    "Energy code lighting + envelope per IECC C405 / C402 if HVAC or exterior wall is touched",
+    "Health department clearance if any food/beverage prep beyond pre-packaged sales",
+    "Confirm the required license is active and matches the application: Licensed California contractor pulls the permit on the tenant's or owner's behalf — the contractor's CSLB license number must appear on the application. For this scope, the building contractor typically coordinates the permit, while the C-10 electrical contractor pulls the electrical permit or is listed on the application. The permit is still required.",
+    "Bring 2 copies of all documents to Los Angeles Department of Building and Safety (LADBS)"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Missing CSLB license AND LA City Business Tax Registration Certificate",
+      "frequency": "very_common",
+      "fix": "Both required — get BTRC at finance.lacity.org before permit application"
+    },
+    {
+      "pattern": "Bureau of Engineering approval missing for projects near public streets",
+      "frequency": "common",
+      "fix": "Submit to Bureau of Engineering separately from Building & Safety"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "fee_calculator": {
+    "fee": null,
+    "formula": null,
+    "confidence": "none",
+    "note": "Provide job_value to calculate an exact fee where formulas are available."
+  },
+  "expert_notes": [
+    {
+      "title": "California ADU 60-day ministerial shot clock",
+      "note": "California state law (AB 881 / Govt Code 65852.2) requires the city to approve or deny ADU permits within 60 days of a complete application. If they exceed this, you have grounds to escalate.",
+      "applies_to": "ADU jobs",
+      "source": "California Government Code 65852.2(b)(1)"
+    },
+    {
+      "title": "California ADU impact-fee exemption under 750 sq ft",
+      "note": "Impact fees waived for ADUs under 750 sq ft per California Government Code 65852.2(f)(3).",
+      "applies_to": "ADU jobs under 750 sq ft",
+      "source": "California Government Code 65852.2(f)(3)"
+    },
+    {
+      "title": "Title 24 / CF1R energy compliance",
+      "note": "Title 24 energy compliance and CF1R documentation are required for new construction and alterations that change conditioned space. Solar mandate may apply for new detached ADUs depending on scope.",
+      "applies_to": "New construction, ADUs, and conditioned-space alterations",
+      "source": "California Energy Code / Title 24"
+    },
+    {
+      "title": "Cal Fire VHFHSZ check",
+      "note": "Check whether the parcel is in a Cal Fire Very High Fire Hazard Severity Zone (VHFHSZ). Pasadena, Malibu, Santa Barbara, and parts of Los Angeles County can trigger additional fire-resistive material and defensible-space requirements.",
+      "applies_to": "Wildfire-prone California jurisdictions",
+      "source": "https://osfm.fire.ca.gov/divisions/community-wildfire-preparedness-and-mitigation/wildland-hazards-building-codes/fire-hazard-severity-zones-maps/"
+    },
+    {
+      "title": "CSLB licensing — $500 unlicensed-work threshold",
+      "note": "California Contractors State License Board (CSLB) requires a license for any single project with combined labor + materials at $500 or more. Unlicensed contracting above that threshold is a misdemeanor (B&P §7028). Verify license + classification (e.g. B General Building, C-10 Electrical, C-36 Plumbing, C-20 HVAC) on the CSLB lookup before quoting; expired or suspended licenses void the contract and block lien rights.",
+      "applies_to": "All paid construction work in California ≥ $500",
+      "source": "https://www.cslb.ca.gov/Consumers/HireAContractor/CheckTheLicenseFirst.aspx"
+    },
+    {
+      "title": "SB 9 lot split + 2-unit ministerial path",
+      "note": "SB 9 (Govt Code §65852.21 / §66411.7) lets owners of single-family-zoned parcels split a lot into two and/or build a duplex per resulting parcel under ministerial review (no public hearing, no CEQA). Combined with ADU/JADU rules this can yield up to 4 units on a former SFR lot. Owner must sign a 3-year owner-occupancy affidavit on lot splits. Cities can impose objective design standards but cannot deny qualifying SB 9 projects.",
+      "applies_to": "Single-family-zoned residential infill and duplex conversions",
+      "source": "https://www.hcd.ca.gov/policy-and-research/accessory-dwelling-units"
+    },
+    {
+      "title": "California Building Standards Code triennial cycle (2025 → 2026 enforcement)",
+      "note": "California adopts a new Title 24 / CBSC edition every three years. The 2025 California Building/Residential/Plumbing/Electrical/Mechanical/Energy/Green Building Standards Codes were published Jul 1, 2025 and become enforceable Jan 1, 2026 statewide. Permit applications submitted before Jan 1, 2026 may still be reviewed under the 2022 code at the AHJ's discretion — confirm which code edition applies before submitting drawings.",
+      "applies_to": "Permit applications crossing the 2026-01-01 code-change boundary",
+      "source": "https://www.dgs.ca.gov/BSC"
+    },
+    {
+      "title": "CALGreen mandatory + EV-ready / solar-ready requirements",
+      "note": "CALGreen (Title 24 Part 11) sets statewide green-building minimums: low-VOC finishes, water-use reduction (≤1.28 gpf toilets, ≤1.8 gpm kitchen faucets), EV-ready raceway in new SFR garages, and solar-ready zone for new low-rise residential. Tier 1/Tier 2 voluntary measures may be locally mandated (e.g., San Francisco, Santa Monica). Plan check rejection is common when the EV raceway or solar-ready zone is omitted from new SFR/ADU drawings.",
+      "applies_to": "New construction and major remodels statewide",
+      "source": "https://www.dgs.ca.gov/BSC/CALGreen"
+    },
+    {
+      "title": "California municipal utility coordination",
+      "note": "Local utility is Los Angeles Department of Water and Power (LADWP) — service/interconnection coordination goes through the city utility, not SoCal Edison/PG&E.",
+      "applies_to": "Electrical service, solar, battery, EV, and utility-interconnection work",
+      "source": "California municipal utility rules"
+    },
+    {
+      "title": "Local VHFHSZ risk flag",
+      "note": "Los Angeles may include Very High Fire Hazard Severity Zone parcels. Verify the address on the Cal Fire VHFHSZ map before quoting exterior materials or ADU/solar scope.",
+      "applies_to": "Address-specific wildfire overlay check",
+      "source": "https://osfm.fire.ca.gov/divisions/community-wildfire-preparedness-and-mitigation/wildland-hazards-building-codes/fire-hazard-severity-zones-maps/"
+    }
+  ],
+  "hidden_triggers": [
+    {
+      "id": "commercial_ti_accessible_route_existing_building_alteration",
+      "severity": "medium",
+      "title": "Commercial alteration can require accessible-route/path-of-travel upgrades",
+      "why_it_matters": "Even when the requested work is not 'an ADA project,' altered primary-function areas can require accessible route, restroom, drinking fountain, parking, and entrance upgrades within the disproportionality cap.",
+      "fired_by": [
+        "\\btenant improvement\\b",
+        "\\bti\\b",
+        "\\bprimary function\\b",
+        "\\baccessible route\\b",
+        "\\bpath of travel\\b",
+        "\\bfront counter\\b",
+        "\\breception\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare path-of-travel analysis",
+        "Budget required accessible upgrades",
+        "Document 20% disproportionality cap if used"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR §36.403",
+        "2010 ADA Standards §202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_lighting_iecc_controls",
+      "severity": "medium",
+      "title": "Lighting changes trigger IECC lighting-power and automatic-control checks",
+      "why_it_matters": "Replacing or reconfiguring lighting can require COMcheck/energy forms, lighting power density compliance, occupancy sensors, daylight controls, and automatic shutoff details.",
+      "fired_by": [
+        "\\blighting\\b",
+        "\\blight fixtures\\b",
+        "\\bled retrofit\\b",
+        "\\btrack lighting\\b",
+        "\\boccupancy sensors?\\b",
+        "\\bdaylight controls?\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare lighting compliance / COMcheck if required",
+        "Show control zones and automatic shutoff",
+        "Coordinate emergency egress lighting"
+      ],
+      "companion_permits": [
+        "Electrical permit, if separated locally"
+      ],
+      "agencies": [
+        "AHJ Electrical/Energy reviewer"
+      ],
+      "citations": [
+        "IECC §C405",
+        "ASHRAE 90.1 [where adopted]"
+      ],
+      "primary_scope": "commercial_ti"
+    }
+  ],
+  "_fee_floor_components": {
+    "scope": "commercial_retail_ti",
+    "scope_note": "plan review + permit + storefront + sign",
+    "sqft": 2000,
+    "base_floor": 4000,
+    "jurisdiction_multiplier": 1.5,
+    "jurisdiction_label": "Los Angeles, CA",
+    "jurisdiction_rationale": "LADBS + BOE/LAFD/Planning overlays; high cost-of-government metro [verify current LADBS fee estimator]",
+    "trigger_adders": [
+      {
+        "key": "ada_path_of_travel",
+        "add_min": 1500,
+        "add_max": 5000,
+        "rationale": "20% rule alterations"
+      }
+    ],
+    "structured_low": 7500,
+    "structured_high": 11000,
+    "llm_fee_high_end": 6500.0
+  },
+  "_fee_adjusted": true,
+  "_fee_floor_check": "llm_below_floor_adjusted"
+}

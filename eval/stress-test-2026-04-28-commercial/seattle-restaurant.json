@@ -1,0 +1,722 @@
+{
+  "job_summary": "3,200 sf commercial restaurant tenant improvement in Seattle: change of occupancy from B to A-2 assembly, new Type I kitchen hood, grease interceptor, ADA restroom and path-of-travel upgrades, sprinkler modifications, fire/life-safety review, and outdoor patio seating in an existing 1980s strip mall. This is a commercial TI and will trigger a Building Permit for change of use/alteration, Mechanical permit for the Type I hood, Plumbing permit for grease interceptor/restroom work, Electrical permit for any new circuits/equipment, and separate fire/life-safety review/approval through the building review process. Because it is a change of occupancy and patio seating, expect plan review rather than OTC.",
+  "total_cost_estimate": "$180,000 - $650,000",
+  "location": "Seattle, WA",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Commercial Tenant Improvement / Change of Occupancy (B to A-2)",
+      "portal_selection": "Commercial Tenant Improvement",
+      "required": true,
+      "notes": "Required for the change of occupancy, interior alterations, ADA path-of-travel upgrades, patio seating improvements, and coordination of fire/life-safety review. In Seattle, the building permit is the main permit for commercial TI and change-of-use work."
+    },
+    {
+      "permit_type": "Mechanical Permit — Commercial Kitchen Hood / Type I Hood Installation",
+      "portal_selection": "Mechanical - Commercial Hood / Kitchen Exhaust",
+      "required": true,
+      "notes": "Required for the Type I hood, exhaust fan, ductwork, make-up air coordination, and any associated mechanical equipment serving the restaurant kitchen."
+    },
+    {
+      "permit_type": "Plumbing Permit — Grease Interceptor and Restroom Fixture Alterations",
+      "portal_selection": "Plumbing - Commercial Fixture/Interceptor",
+      "required": true,
+      "notes": "Required for the grease interceptor and any restroom plumbing changes tied to the ADA restroom upgrade. In Seattle, plumbing is handled through the plumbing authority, not the building permit alone."
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial TI Power and Equipment Connections",
+      "portal_selection": "Electrical - Commercial Tenant Improvement",
+      "required": true,
+      "notes": "Required for new circuits, hood controls, make-up air equipment, lighting changes, receptacles, and any panel or feeder modifications associated with the TI."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Commercial Tenant Improvement / Change of Occupancy (B to A-2)",
+      "included_because": "The scope includes a change of occupancy from B to A-2 assembly plus interior alterations, ADA upgrades, and patio seating. That is classic commercial TI/change-of-use work and requires building review.",
+      "scope_trigger": "Change of occupancy, interior tenant improvement, ADA path-of-travel upgrades, outdoor patio seating"
+    },
+    {
+      "permit_type": "Mechanical Permit — Commercial Kitchen Hood / Type I Hood Installation",
+      "included_because": "A Type I kitchen hood is a commercial mechanical system with exhaust and make-up air components, so it needs a mechanical permit separate from the building permit.",
+      "scope_trigger": "Type I kitchen hood"
+    },
+    {
+      "permit_type": "Plumbing Permit — Grease Interceptor and Restroom Fixture Alterations",
+      "included_because": "Restaurant grease interceptors and restroom plumbing changes are plumbing scope and are not covered by the building permit alone.",
+      "scope_trigger": "Grease interceptor, ADA restroom plumbing changes"
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial TI Power and Equipment Connections",
+      "included_because": "Commercial kitchen equipment, hood controls, lighting, receptacles, and any service/panel changes require electrical permitting.",
+      "scope_trigger": "Commercial TI electrical work, hood controls, lighting, receptacles, panel/feeders"
+    }
+  ],
+  "applying_office": "Seattle Department of Construction & Inspections (SDCI)",
+  "apply_url": "https://cosaccela.seattle.gov",
+  "apply_pdf": null,
+  "apply_phone": "(206) 684-8600",
+  "apply_address": "700 5th Ave, Suite 2000, Seattle, WA 98104",
+  "apply_google_maps": "https://www.google.com/maps?q=700+5th+Ave,+Suite+2000,+Seattle,+WA+98104",
+  "fee_range": "Fee Estimate: **$26,500-$45,000+** (structured floor — see breakdown). Components: ~$13,000 base permit + plan review (Seattle, WA commercial restaurant TI floor) × 1.3× jurisdiction multiplier + $3,500 change-of-occupancy adder + $5,500 hood-fire-suppression adder + $2,500 grease-interceptor adder + $4,000 fire-sprinkler-modify adder + $3,000 ada-path-of-travel adder. **Verify against current fee schedule before quoting.**",
+  "approval_timeline": {
+    "simple": "1-5 business days for straightforward OTC trade permits; not likely for this scope because change of occupancy and commercial TI usually need plan review",
+    "complex": "4-12 weeks for commercial plan review in Seattle, longer if fire/life-safety, accessibility, or MUP issues are triggered"
+  },
+  "inspections": [
+    {
+      "stage": "Building / Framing / Rough-In",
+      "description": "Inspector checks tenant-space layout against approved plans, rated corridor and tenant separations, accessibility clearances, door hardware, restroom dimensions, path-of-travel upgrades, and any structural changes tied to the patio or interior buildout.",
+      "timing": "After framing and before concealment of walls, ceilings, and finishes"
+    },
+    {
+      "stage": "Mechanical Rough-In",
+      "description": "Inspector verifies Type I hood duct routing, grease duct clearances, exhaust fan installation, make-up air provisions, fire suppression coordination, and required clearances from combustibles.",
+      "timing": "Before ceilings are closed and before hood system is energized"
+    },
+    {
+      "stage": "Plumbing Rough-In",
+      "description": "Inspector checks grease interceptor sizing/location, fixture rough-ins, venting, trap arms, cleanouts, and ADA restroom fixture placement and clearances.",
+      "timing": "Before walls are closed and before fixtures are set"
+    },
+    {
+      "stage": "Electrical Rough-In",
+      "description": "Inspector verifies branch-circuit sizing, GFCI/AFCI where applicable, equipment disconnects, hood controls, lighting circuits, panel labeling, and any feeder/service changes.",
+      "timing": "Before insulation, drywall, or ceiling closure"
+    },
+    {
+      "stage": "Final / Life Safety",
+      "description": "Inspector confirms final ADA accessibility, exit signage and egress, hood suppression final approval, sprinkler modifications, emergency lighting, occupancy load posting, and that all approved plans match the built work.",
+      "timing": "After all trades are complete and before occupancy"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the Seattle Services Portal: https://services.seattle.gov/Portal/welcome.aspx. Use the permit/record number in the portal to request inspections. Seattle also lists inspection scheduling by phone at (206) 684-8900. Plan ahead: commercial inspections should be requested at least 24 hours in advance, and some coordinated life-safety inspections may need more lead time. Typical SDCI office contact is (206) 684-8600, Mon-Fri business hours.",
+  "license_required": "Licensed Washington contractors pull the permits for their trade scope. For electrical work, a WA L&I electrical contractor with EL01A/EL02A credentials pulls the electrical permit and the license number must be on the application. For plumbing, a WA L&I licensed plumber/contractor pulls the plumbing permit. The building permit for the TI is typically pulled by the general contractor or owner’s authorized representative, depending on the project setup.",
+  "city_contractor_registration": "Seattle uses SDCI permitting through the Seattle Services Portal, and some projects also require a Master Use Permit or other land-use review. Verify whether the contractor and business are properly set up in the portal before applying. No separate city contractor registration like Phoenix/Dallas was identified in the provided data, but Seattle commercial projects often need coordinated portal access and project registration before submittal.",
+  "what_to_bring": [
+    "Completed commercial TI permit application and project description",
+    "Full plan set showing existing and proposed floor plans, life-safety plan, accessibility upgrades, and patio seating layout",
+    "Mechanical drawings for Type I hood, exhaust, make-up air, and equipment schedule",
+    "Plumbing drawings for grease interceptor, restroom fixtures, and any drain/vent changes",
+    "Electrical drawings and load calculations for kitchen equipment, lighting, and any panel/service changes",
+    "Contractor license information and owner authorization letter if filing on behalf of the tenant"
+  ],
+  "common_mistakes": [
+    "Submitting the TI as a simple trade permit instead of a commercial building permit with change-of-occupancy review — Seattle will route it back for full plan review",
+    "Forgetting that a Type I hood usually triggers coordinated mechanical, electrical, and fire-suppression review, not just a hood install permit",
+    "Missing ADA path-of-travel upgrades outside the tenant space, which can expand the scope to common areas and restrooms",
+    "Assuming the grease interceptor is optional or can be sized later — Seattle reviewers will want it shown on the plumbing plans before approval",
+    "Starting work before the permit is issued and posted — Seattle can issue stop-work orders and require re-review",
+    "Submitting without checking whether a Master Use Permit or land-use review is triggered for the patio seating or occupancy change"
+  ],
+  "pro_tips": [
+    "For Seattle commercial TI, get the life-safety and accessibility sheets right the first time — those are common plan-review delay points.",
+    "If the patio seating changes occupant load or egress, show it on the same plan set so reviewers do not kick it back for a separate revision.",
+    "Seattle is strict on energy and ventilation compliance; include equipment schedules and hood/make-up air details up front to avoid correction cycles.",
+    "Check whether the project triggers a Master Use Permit before you submit the building permit — that can be the hidden schedule killer in Seattle.",
+    "Seattle inspectors enforce work-hour limits and noise rules; plan noisy demo and rooftop/mechanical work accordingly to avoid complaints and delays."
+  ],
+  "code_citation": {
+    "section": "IBC 2021 Section 105.1; Seattle Building Code adoption; IBC Chapter 3 (Occupancy Classification) and Chapter 11 (Accessibility)",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish or change the occupancy of a building or structure shall first make application to the building official and obtain the required permit."
+  },
+  "companion_permits": [
+    {
+      "permit_type": "Fire/Life-Safety Review",
+      "reason": "May be required if: Fire alarm, sprinkler, hood suppression, egress, or occupancy-load changes are included in the final design.",
+      "required_if": "Fire alarm, sprinkler, hood suppression, egress, or occupancy-load changes are included in the final design",
+      "certainty": "likely",
+      "requirement_label": "May be required based on scope"
+    },
+    {
+      "permit_type": "Fire Sprinkler Permit / Fire Protection Permit",
+      "reason": "May be required if: Any sprinkler relocation, addition, or hydraulic change is shown on the plans.",
+      "required_if": "Any sprinkler relocation, addition, or hydraulic change is shown on the plans",
+      "certainty": "likely",
+      "requirement_label": "May be required based on scope"
+    },
+    {
+      "permit_type": "Master Use Permit (MUP)",
+      "reason": "May be required if: Outdoor patio seating, site changes, or land-use thresholds trigger SDCI land-use review.",
+      "required_if": "Outdoor patio seating, site changes, or land-use thresholds trigger SDCI land-use review",
+      "certainty": "possible",
+      "requirement_label": "May be required based on scope"
+    },
+    {
+      "permit_type": "Right-of-Way / Street Use Permit",
+      "reason": "May be required if: Any encroachment into sidewalk, curb lane, or public ROW is proposed.",
+      "required_if": "Any encroachment into sidewalk, curb lane, or public ROW is proposed",
+      "certainty": "conditional",
+      "requirement_label": "May be required based on scope"
+    }
+  ],
+  "zoning_hoa_flag": "Seattle commercial TI projects can be delayed by land-use review, Master Use Permit requirements, and site-specific zoning limits on outdoor patio seating. If the strip mall is in a shoreline, historic, or design-review area, additional review may apply. HOA issues are less common for a strip mall, but landlord approval and any lease restrictions on patio seating, signage, grease exhaust routing, or exterior equipment placement should be checked before submittal.",
+  "sources": [
+    "https://www.seattle.gov/sdci",
+    "https://cosaccela.seattle.gov",
+    "https://services.seattle.gov/Portal/welcome.aspx",
+    "https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "https://lni.wa.gov/licensing-permits",
+    "https://clerk.seattle.gov/search/results?s3=&s4=&s5=&s1=&s2=&S6=&Sect4=AND&l=200&Sect2=THESON&Sect3=PLURON&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2F%7Epublic%2Fcbor1.htm&r=33&f=G&s7=%22BUILDING-CODES%22%5BINDX%5D",
+    "https://www.seattle.gov/a/156593",
+    "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM."
+  ],
+  "confidence": "high",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "maps_url": "https://www.google.com/maps?q=700+5th+Ave,+Suite+2000,+Seattle,+WA+98104",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_sources_locality_dropped": [
+    "https://kingcounty.gov/en/dept/local-services/certificates-permits-licenses/permits/permits-inspections-codes-buildings-land-use/permit-forms-application-materials/fees"
+  ],
+  "last_verified_at": "2026-04-12T17:52:46.551175",
+  "_field_sources": {
+    "apply_url": "auto_verified:https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "applying_office": "auto_verified:https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "apply_phone": "auto_verified:https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "apply_address": "auto_verified:https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "fee_range": "auto_verified:https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": false,
+  "missing_fields": [],
+  "confidence_reason": "Verified city/trade data found from official sources",
+  "_meta": {
+    "generated_at": "2026-04-28T21:01:03.040634",
+    "response_ms": 21056,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 4,
+    "city_match_level": "city",
+    "job_type": "3,200 sf commercial restaurant tenant improvement: change of occupancy B to A-2 assembly, Type I kitchen hood, grease interceptor, ADA restroom and path of travel upgrades, sprinkler modifications, fire/life-safety review, outdoor patio seating in a 1980s strip mall",
+    "city": "Seattle",
+    "state": "WA",
+    "zip_code": "98101",
+    "job_category": "commercial",
+    "auto_verified": true,
+    "missing_fields": []
+  },
+  "fee_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&s4=&s5=&s1=&s2=&S6=&Sect4=AND&l=200&Sect2=THESON&Sect3=PLURON&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2F%7Epublic%2Fcbor1.htm&r=33&f=G&s7=%22BUILDING-CODES%22%5BINDX%5D",
+    "title": "Seattle City Council Bills and Ordinances",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "title": "Contact Us - Phone Numbers - SDCI | seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://www.seattle.gov/a/156593",
+    "title": "[PDF] Tenant Improvement Program Health and Safety Project List",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM.",
+    "title": "Ordinance 122528 - Online Information Resources - Seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM.",
+    "title": "Ordinance 122528 - Online Information Resources - Seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 100,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "commercial_restaurant",
+  "checklist": [
+    "Verify your contractor license is current and valid in WA",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Type I commercial exhaust hood listed/labeled per UL 710 with NFPA 96 compliance and AHJ-approved capture velocity per IMC 507",
+    "ANSUL R-102 (or equivalent UL 300) hood suppression: post-install discharge test certificate + every-6-month cleaning + annual inspection per NFPA 96 §11",
+    "ANSUL discharge auto-shutoffs all hood gas + electric fuel sources per IMC 507.7 — verify with AHJ during witness test",
+    "Grease interceptor sized per IPC 1003.3.4 by drainage fixture units (4-comp + mop typically 50+ GPM hydromechanical OR 750–1,500 gal exterior gravity); located ≤25 ft developed length from fixtures",
+    "Makeup air system balanced to ±10% of hood exhaust per IMC 506.3.4; tempered if > 35°F differential to prevent backdraft",
+    "Indirect waste with air gap on dishwasher, ice maker, prep sink, and steam kettle per IPC 802; commercial dishwasher backflow prevention (RPZ) per IPC 608.13.2",
+    "Dedicated mop sink with hose bib in janitor closet (IBC 902.3 / local health code) — required before health dept sign-off",
+    "ADA fixture counts per IBC Table 2902.1 + 60 in turning radius + lavatory pipe wrap insulation per ADA §606.5 + mirror reflective edge ≤40 in AFF per ADA §603.3",
+    "Local health department food establishment plan review + final inspection sign-off REQUIRED before Certificate of Occupancy (parallel filing — file early)",
+    "TABC / state liquor authority clearance if alcohol service — separate filing from building permit",
+    "Walk-in cooler envelope per IECC 403.10.1 (≥R-25 medium-temp panels, ≥R-32 freezer panels); door gasket seal verification at final",
+    "Existing sprinkler system reuse: hydraulic recalc for new layout + current 5-year cert per NFPA 25; new heads in cooking equipment area must be K-25+ per NFPA 13",
+    "Floor drains within 5 ft of kitchen equipment per IPC 411 with backwater valves where required",
+    "Fire alarm + emergency lighting per NFPA 72/101 with current battery capacity test on file",
+    "Change of occupancy memo (B/M → A-2): include occupant load + exits + restroom count + sprinkler/fire-alarm impacts per IEBC §1001.2/1001.3 + IBC §303.3 (Group A-2)",
+    "Maricopa County (or local equivalent) Environmental Services Department food-establishment plan review + final inspection sign-off REQUIRED before opening — coordinate with City CO schedule (MCESD: maricopa.gov)",
+    "Backflow prevention on EVERY food-service water connection: carbonated beverage (ASSE 1022 dual check), chemical dispenser at mop/service sinks, hose bibbs, dish-machine/ice/RO/espresso, pre-rinse — testable assemblies certified annually",
+    "Outdoor patio / sidewalk dining: verify city zoning (use permit may apply, e.g. Phoenix ZO §1207); include patio in occupant load + exiting + accessible route + sprinkler/awning review",
+    "Phoenix-specific (or equivalent local rule): contractor must be AZ ROC licensed AND associated with the Phoenix SHAPE PHX permit account before submittal (A.R.S. Title 32 Ch. 10) — frequently-missed pre-submittal blocker",
+    "Realistic fee warning: a 3,200 sq ft restaurant TI in Phoenix typically lands $8K–$25K+ across plan review + permit + fire + utility + health + zoning. Reject token min-fee outputs; calculate from the live fee schedule before quoting",
+    "Occupancy reclassification: identify existing approved occupancy + proposed group; require code-official approval + new/updated Certificate of Occupancy (IEBC §§1001.1, 1001.2, 1001.3; IBC Ch. 3)",
+    "Height/area limit recheck: compare new occupancy hazard category to existing construction type, allowable area, frontage/sprinkler increases, fire-wall strategy (IEBC §1011.5; IBC Ch. 5)",
+    "Fire-resistance + separation reassessment: re-verify fire barriers, horizontal assemblies, exterior wall ratings/openings, shaft enclosures, mixed-occupancy separations for the new hazard category (IEBC §§1011.1, 1011.5.3, 1011.6/7; IBC Ch. 7)",
+    "Fire protection re-run: sprinkler, fire alarm, hood suppression, and monitoring requirements at the new occupancy + IBC/IFC Ch. 9 thresholds (IEBC §§1004.1, 1011.2; IFC Ch. 9)",
+    "Means of egress recalculation: occupant load + number of exits + egress capacity + travel distance + common path + dead ends + door hardware updated to new occupancy (IEBC §§1005.1, 1011.4; IBC Ch. 10)",
+    "Accessibility / path-of-travel trigger: alterations to primary-function areas trigger ADA upgrades to altered area + serving amenities (2010 ADA §202.4 + 28 CFR §36.403)",
+    "Mechanical ventilation/exhaust recheck against the new occupancy: IMC ventilation, commercial-kitchen exhaust + makeup air, hazardous exhaust, energy compliance (IEBC §1008.1; IMC Ch. 4-6 + §507)",
+    "Plumbing demand + fixture-count recheck: water supply, sanitary load, fixture count, food-handling waste, grease/oil interceptors, chemical-waste approval (IEBC §§1009.1-1009.4; IPC Ch. 4 + 10)",
+    "Identify altered primary-function area: if scope alters an area where major activity occurs, an accessible path of travel to the altered area is required unless technically infeasible / disproportionate (2010 ADA §202.4; 28 CFR §36.403(a))",
+    "20% disproportionality cap: ADA path-of-travel work exceeding 20% of alteration cost is disproportionate at the federal level, but lower-cost items must still be prioritized (28 CFR §36.403(f)(1))",
+    "Accessible exterior route: site arrival points + accessible parking/passenger loading + curb ramps + walking surfaces + ramps/landings + slope/cross-slope + door clearances to altered area (2010 ADA §§206.2.1, 206.4, 403, 404, 405, 406)",
+    "Restroom path + restroom upgrades: if restrooms serve the altered area, accessible route + door + turning space + lavatory + water closet + grab bars + clearances + signage (2010 ADA §§213, 603-606, 609, 703)",
+    "Parking + passenger loading: recalculate accessible-stall count + van space + access aisle + signage for affected parking serving the altered area (2010 ADA §§208, 502, 503; 28 CFR §36.403(e)(1))",
+    "Drinking fountains, phones, and signage along the path: tactile/visual signs, room ID, directional, fountain units, public phones if any (2010 ADA §§211, 216, 602, 703, 704)",
+    "Doors, thresholds, and hardware on the route: clear width + maneuvering clearance + opening force + thresholds + lever/operable hardware + protruding objects (2010 ADA §§303, 307, 309, 404)",
+    "Confirm the required license is active and matches the application: Licensed Washington contractors pull the permits for their trade scope. For electrical work, a WA L&I electrical contractor with EL01A/EL02A credentials pulls the electrical permit and the license number must be on the application. For plumbing, a WA L&I licensed plumber/contractor pulls the plumbing permit. The building permit for the TI is typically pulled by the general contractor or owner’s authorized representative, depending on the project setup.",
+    "Bring 2 copies of all documents to Seattle Department of Construction & Inspections (SDCI)"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Missing Master Use Permit (MUP) in addition to building permit",
+      "frequency": "common",
+      "fix": "Check if project requires MUP at seattle.gov/sdci before applying"
+    },
+    {
+      "pattern": "Noise ordinance violation during construction",
+      "frequency": "common",
+      "fix": "Work hours: 7am-10pm weekdays, 9am-10pm weekends — strictly enforced"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "fee_calculator": {
+    "fee": null,
+    "formula": null,
+    "confidence": "none",
+    "note": "Provide job_value to calculate an exact fee where formulas are available."
+  },
+  "expert_notes": [
+    {
+      "title": "Washington State Building Code 2021 edition effective March 15, 2024",
+      "note": "After multiple delays, the 2021 Washington State Building Code (IBC, IRC, IMC, UPC, IFC, and WSEC-R) became enforceable statewide on March 15, 2024, replacing the 2018 edition. Confirm with the AHJ which edition applies to your application — vested permits submitted before that date may still be reviewed under 2018, but new submittals must comply with 2021 amendments. Drawings still referencing 2018 sections are a common plan-check rejection.",
+      "applies_to": "All residential and commercial permit applications statewide",
+      "source": "https://sbcc.wa.gov/news/revised-effective-date-2021-codes-march-15-2024"
+    },
+    {
+      "title": "2024 Code adoption cycle delayed — May 2027 effective date expected",
+      "note": "The State Building Code Council (SBCC) has slipped the 2024 IBC/IRC/IECC adoption cycle. Current staff estimate is final adoption by June 2026 with codes going into effect roughly May 2027 — about a 6-month slip from the prior schedule. Plan multi-year projects under 2021 code with an eye to the 2027 transition; permits vested before the new effective date generally remain under 2021.",
+      "applies_to": "Long-lead residential projects crossing the 2027 code-change boundary",
+      "source": "https://www.linkedin.com/posts/p-hanks_recap-from-todays-wa-state-building-code-activity-7376025613402329088-SuRN"
+    },
+    {
+      "title": "Washington State Energy Code Residential (WSEC-R) 2021 — based on 2021 IECC with state amendments",
+      "note": "The 2021 WSEC-R has been in effect since March 15, 2024 and applies to all one- and two-family dwellings and townhouses up to three stories. WSEC-R adopts the 2021 IECC with significant Washington amendments — notably the credit-based energy-efficiency point system in R406 (additional credits required over the 2018 edition) and high-efficiency HVAC/water-heating mandates. Submit an R406 credit worksheet with every new SFR/ADU permit; missing credits is the single most common WSEC-R rejection.",
+      "applies_to": "New SFR, ADU, townhouse, and additions creating conditioned space",
+      "source": "https://up.codes/viewer/washington/wa-energy-code-residential-provisions-2021"
+    },
+    {
+      "title": "L&I contractor registration required — no statewide \"general contractor license\"",
+      "note": "Washington does NOT have a CSLB-style state contractor license. Instead, the Department of Labor & Industries (L&I) requires every construction contractor to register with L&I, post a continuous bond ($12,000 general / $6,000 specialty), and carry liability insurance. Verify the contractor on the L&I \"Verify a Contractor\" lookup before signing — unregistered contracting forfeits lien rights and is grounds for civil penalties under RCW 18.27.",
+      "applies_to": "All paid construction work statewide",
+      "source": "https://lni.wa.gov/licensing-permits/contractors/register-as-a-contractor/"
+    },
+    {
+      "title": "Electricians and plumbers licensed separately by L&I — not by L&I contractor registration alone",
+      "note": "L&I licenses electricians and plumbers as a separate program from contractor registration. Electrical work requires a 01 General or 02 Residential electrical contractor license plus certified electrician (e.g., 06A residential specialty, 07 journey-level), and plumbing requires a plumbing contractor license plus a certified plumber. A general contractor registration alone does NOT permit a firm to pull electrical or plumbing permits — that work must be subbed to a separately licensed electrical/plumbing contractor.",
+      "applies_to": "Any project with electrical or plumbing scope",
+      "source": "https://www.lni.wa.gov/licensing-permits/"
+    },
+    {
+      "title": "HVAC has no dedicated state license — relies on contractor registration + 06A/06B for line-voltage work",
+      "note": "Washington does not issue a stand-alone HVAC license. HVAC firms register as L&I specialty contractors; any line-voltage electrical work on the install (e.g., disconnects, condenser whips, furnace hookups) requires a 06A (HVAC/Refrigeration) or 06B specialty electrician under the L&I electrical program. Low-voltage thermostat wiring may fall under the 06 specialty as well — confirm scope before sending an unlicensed tech to do final electrical connections.",
+      "applies_to": "HVAC change-outs, new installs, and heat-pump conversions",
+      "source": "https://www.lumberfi.com/wiki/washington-hvac-license-requirements"
+    },
+    {
+      "title": "Separate L&I electrical permit + state electrical inspection (parallel filing)",
+      "note": "Most jurisdictions in Washington do NOT issue electrical permits — those are pulled directly from L&I by the licensed electrical contractor (or the homeowner doing their own work on a single-family residence they own and occupy). The L&I state electrical inspector — not the city building inspector — performs the rough-in and final electrical inspections. Budget a separate L&I permit fee and a separate inspection schedule on top of the building permit; cities like Seattle and Spokane that issue their own electrical permits are the exception, not the rule.",
+      "applies_to": "Electrical scope on residential projects outside Seattle/Spokane and a few other delegated cities",
+      "source": "https://www.lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/"
+    },
+    {
+      "title": "Critical Areas Ordinance (CAO) — every city/county must regulate wetlands, streams, and geo-hazards",
+      "note": "The state Growth Management Act requires every Washington city and county to adopt a Critical Areas Ordinance protecting wetlands, fish and wildlife habitat, frequently flooded areas, geologically hazardous areas (landslide, seismic, erosion), and critical aquifer recharge areas. If any portion of the parcel — including required buffers (often 50–300 ft from a wetland or stream) — falls in a critical area, expect a critical-area study, mitigation plan, and possibly a reasonable-use exception before the building permit can issue. Always pull the parcel-level CAO map before quoting; a missed wetland buffer can add 3–6 months and a wetland biologist to the project.",
+      "applies_to": "Any parcel touching a wetland, stream, steep slope, or designated geo-hazard",
+      "source": "https://kingcounty.gov/en/dept/local-services/certificates-permits-licenses/permits/permits-inspections-codes-buildings-land-use/permit-forms-application-materials/land-use/critical-areas"
+    },
+    {
+      "title": "Shoreline Management Act — separate Substantial Development / Conditional Use / Variance permit",
+      "note": "Construction within 200 feet of an ordinary high-water mark on a shoreline of the state (most marine waters, lakes ≥20 acres, and streams with mean annual flow ≥20 cfs) triggers the Shoreline Management Act. Work over $9,047 (the 2024 statutory threshold, indexed every 5 years) generally requires a Shoreline Substantial Development Permit issued by the local government and reviewed by Department of Ecology — Ecology's review adds 21 days minimum, and shoreline permits do not become effective until 14 days after Ecology's filing date. File this in PARALLEL with the building permit, not after.",
+      "applies_to": "Residential work within 200 ft of a shoreline of the state",
+      "source": "https://apps.ecology.wa.gov/publications/documents/1706029.pdf"
+    },
+    {
+      "title": "Statewide DNR Wildfire Hazard Map — defensible space and WUI building requirements",
+      "note": "The Department of Natural Resources maintains a statewide map categorizing wildfire hazard as low, moderate, high, or very high. Parcels in high/very-high zones (much of eastern Washington and parts of the Cascade foothills) trigger IWUIC-derived ignition-resistant construction (Class A roof, ember-resistant vents, 5 ft non-combustible zone) and defensible-space inspections from the local fire marshal. Pull the DNR map for the parcel before specifying siding, eaves, or decking — substituting non-rated materials in a high-hazard zone is a common rejection.",
+      "applies_to": "New construction and major remodels in DNR-mapped high/very-high wildfire hazard zones",
+      "source": "https://dnr.wa.gov/wildfire-resources/wildfire-prevention/wildfire-hazard-and-risk-mapping"
+    },
+    {
+      "title": "RCW 43.42.080 coordinated permit timelines — not a hard shot clock",
+      "note": "Unlike California's 60-day ADU clock, Washington has no statewide ministerial shot clock for residential permits. RCW 43.42.080 lets the Office of Regulatory Innovation and Assistance (ORIA) coordinate timelines across participating state agencies, but timelines \"shall not be shorter than those otherwise required\" by other law. Local LDC-060(H) infill provisions target 60 days (no public hearing) or 80 days (with hearing), but these are goals, not guarantees — BIAW data puts the statewide average residential permit at ~6.5 months. Set client expectations accordingly and track vesting carefully.",
+      "applies_to": "All residential permit applications — managing client timeline expectations",
+      "source": "https://app.leg.wa.gov/rcw/default.aspx?cite=43.42.080"
+    },
+    {
+      "title": "Permit vesting reform — minimum 2-year vesting for projects ≤50 units (2026 legislation)",
+      "note": "Washington's vested-rights doctrine attaches to a complete building-permit application — the project is reviewed under the code in effect on the application date, even if codes change later. 2026 legislation moving through the Senate would lock that vesting for a minimum of 2 years on projects of 50 or fewer residential units. Practically: file a complete application before a known code change (e.g., the 2024 cycle effective ~May 2027) to lock in 2021 code, but track the bill's final form before relying on the 2-year floor.",
+      "applies_to": "Residential infill and small-multifamily timing decisions around code-change boundaries",
+      "source": "https://wacities.org/advocacy/News/advocacy-news/2026/03/06/bill-proposes-reforms-to-project-permit-vesting---permit-shot-clocks"
+    },
+    {
+      "title": "RCW 64.06.020 Form 17 seller disclosure — improvements without permits must be disclosed",
+      "note": "Almost all residential resales in Washington require the seller to deliver a completed Form 17 Seller Disclosure Statement under RCW 64.06.020. The form specifically asks whether additions, conversions, or remodels were done with required permits and final inspections. Unpermitted ADU conversions, finished basements, or garage conversions surface here — and disclosed-but-unpermitted work is a frequent trigger for retroactive permit applications, which the AHJ will review under CURRENT code, not the code in effect when the work was originally done.",
+      "applies_to": "Resale prep and retroactive permit work on previously unpermitted improvements",
+      "source": "https://app.leg.wa.gov/rcw/default.aspx?cite=64.06.020"
+    },
+    {
+      "title": "Flood Hazard Overlay District — separate floodplain development permit on top of building permit",
+      "note": "Parcels in a FEMA Special Flood Hazard Area (Zone A, AE, VE) fall under the local Flood Hazard Overlay District and require a separate floodplain development permit in addition to the building permit. Lowest-floor elevation (typically 1–2 ft above BFE depending on jurisdiction), flood vents on enclosed areas below BFE, and a post-construction Elevation Certificate sealed by a licensed surveyor are all standard requirements. File the floodplain permit and order the EC up front — discovering the parcel is in an SFHA at framing inspection is a project-killer.",
+      "applies_to": "Any residential work in a FEMA-mapped Special Flood Hazard Area",
+      "source": "https://experience.arcgis.com/experience/5978c68aeb2f495db07ddab1c3aa1048/page/Flood-Hazard-Overlay-District"
+    }
+  ],
+  "hidden_triggers": [
+    {
+      "id": "commercial_change_of_occupancy_b_to_a2_or_m_sprinkler_general",
+      "severity": "high",
+      "title": "Change of occupancy (B/S to A-2/M) can trigger sprinkler retrofit and IEBC review",
+      "why_it_matters": "Converting an office, warehouse, or retail tenant to assembly or mercantile crosses occupancy classifications. The new occupant load can cross IBC 903.2 sprinkler thresholds and require an IEBC change-of-occupancy analysis even when the construction work looks small.",
+      "fired_by": [
+        "\\bchange of (use|occupancy)\\b",
+        "\\b(b|s|s[-\\s]?1|s[-\\s]?2|m)\\s*(to|-)\\s*(a[-\\s]?2|a[-\\s]?3|a|m)\\b",
+        "\\b(office|warehouse|retail|storage)\\s+(to|into|converted to|conversion to)\\s+(restaurant|tavern|bar|assembly|gym|theater|mercantile|retail)\\b",
+        "\\bwarehouse\\s+into\\b",
+        "\\bs[-\\s]?1\\s+warehouse\\b",
+        "\\biebc\\b",
+        "\\bchange[-\\s]?of[-\\s]?use\\b"
+      ],
+      "likely_required_actions": [
+        "Run IEBC change-of-occupancy analysis (Chapter 10)",
+        "Recompute occupant load and check IBC 903.2 sprinkler thresholds",
+        "Update accessible route and restroom/fixture counts to the higher occupancy",
+        "Coordinate fire-alarm and egress lighting for the proposed occupancy"
+      ],
+      "companion_permits": [
+        "Fire sprinkler permit if retrofit/relocation triggered",
+        "Fire alarm permit if devices/coverage change"
+      ],
+      "agencies": [
+        "AHJ Building Dept",
+        "Fire Prevention"
+      ],
+      "citations": [
+        "IEBC Chapter 10 [verify adopted edition before merging]",
+        "IBC §903.2",
+        "IBC §1004",
+        "IBC §2902"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "restaurant_grease_interceptor_fog_review",
+      "severity": "high",
+      "title": "Grease interceptor / FOG review may be required for commercial food prep",
+      "why_it_matters": "FOG requirements are often enforced by sewer/environmental agencies outside the normal building-permit checklist. Missing sizing or location approval can force plumbing redesign.",
+      "fired_by": [
+        "\\bgrease interceptor\\b",
+        "\\bgrease trap\\b",
+        "\\bfog\\b",
+        "\\bcommercial kitchen\\b",
+        "\\b3[-\\s]?compartment sink\\b"
+      ],
+      "likely_required_actions": [
+        "Size interceptor from fixture/equipment schedule",
+        "Confirm location/access with sewer or environmental authority",
+        "Show sampling port/cleanout details if required"
+      ],
+      "companion_permits": [
+        "FOG / industrial waste / sewer approval, if required"
+      ],
+      "agencies": [
+        "Sewer authority",
+        "Environmental Services",
+        "AHJ Plumbing Dept"
+      ],
+      "citations": [
+        "IPC §1003.3.1",
+        "Local sewer-use ordinance [verify before merging]"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_occupant_load_and_egress_recalc",
+      "severity": "high",
+      "title": "Restaurant seating changes require occupant-load and egress recalculation",
+      "why_it_matters": "Adding dining, bar, queueing, or patio seats can change the required number of exits, door swing, panic hardware, travel distance, restroom counts, and fire-alarm assumptions.",
+      "fired_by": [
+        "\\bseating\\b",
+        "\\bdining\\b",
+        "\\bbar\\b",
+        "\\bpatio\\b",
+        "\\bbanquet\\b",
+        "\\boccupant load\\b",
+        "\\ba[-\\s]?2\\b",
+        "\\boffice\\s+(to|into)\\s+restaurant\\b"
+      ],
+      "likely_required_actions": [
+        "Add occupant-load table by room/area",
+        "Show common path, exit access travel distance, and exit count",
+        "Coordinate exit signage/emergency lighting"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Fire Prevention"
+      ],
+      "citations": [
+        "IBC §1004",
+        "IBC §1006",
+        "IBC §1017",
+        "IBC §1010"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_food_establishment_health_review_general",
+      "severity": "high",
+      "title": "Restaurant work needs local health-department food-establishment plan review",
+      "why_it_matters": "Health-department review usually runs in parallel with the building permit and approves finish schedule, hand sinks, three-compartment sink, warewashing, refrigeration, and food-flow. Missing it can hold the certificate of occupancy even when building review is finished.",
+      "fired_by": [
+        "\\brestaurant\\b",
+        "\\bfood establishment\\b",
+        "\\bcommercial kitchen\\b",
+        "\\bprep kitchen\\b",
+        "\\bcafe\\b",
+        "\\btavern\\b",
+        "\\bbar\\b.*\\b(food|kitchen|grill)\\b",
+        "\\bdishwasher\\b",
+        "\\bwalk[-\\s]?in cooler\\b"
+      ],
+      "likely_required_actions": [
+        "Submit food-establishment plans and equipment schedule to local health department",
+        "Show finish schedule, hand sinks, mop sink, three-compartment / warewashing, refrigeration",
+        "Coordinate health inspection before final CO"
+      ],
+      "companion_permits": [
+        "Health-department food-establishment plan review"
+      ],
+      "agencies": [
+        "Local / county health department",
+        "AHJ Building Dept"
+      ],
+      "citations": [
+        "FDA Food Code as adopted by local health authority [verify edition before merging]"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_restroom_ada_path_of_travel_20_percent",
+      "severity": "high",
+      "title": "Restroom alteration can trigger ADA path-of-travel upgrades",
+      "why_it_matters": "Altering a primary-function area or restroom can require upgrades to the accessible route, restrooms, drinking fountains, telephones, and parking up to the 20% disproportionality cap.",
+      "fired_by": [
+        "\\brestroom\\b",
+        "\\btoilet room\\b",
+        "\\bada bathroom\\b",
+        "\\bbathroom remodel\\b",
+        "\\baccessible restroom\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare ADA path-of-travel cost allocation",
+        "Show accessible route to altered area",
+        "Verify restroom clearances, accessories, lavatory, mirror, and door hardware"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR §36.403(f)",
+        "2010 ADA Standards §202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "commercial_ti_accessible_route_existing_building_alteration",
+      "severity": "medium",
+      "title": "Commercial alteration can require accessible-route/path-of-travel upgrades",
+      "why_it_matters": "Even when the requested work is not 'an ADA project,' altered primary-function areas can require accessible route, restroom, drinking fountain, parking, and entrance upgrades within the disproportionality cap.",
+      "fired_by": [
+        "\\btenant improvement\\b",
+        "\\bti\\b",
+        "\\bprimary function\\b",
+        "\\baccessible route\\b",
+        "\\bpath of travel\\b",
+        "\\bfront counter\\b",
+        "\\breception\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare path-of-travel analysis",
+        "Budget required accessible upgrades",
+        "Document 20% disproportionality cap if used"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR §36.403",
+        "2010 ADA Standards §202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_plumbing_fixture_count_change",
+      "severity": "medium",
+      "title": "Occupancy or occupant-load change can alter required restroom fixture counts",
+      "why_it_matters": "A retail/office/assembly change may look like tenant buildout but can require additional fixtures or accessible upgrades if occupant load or use category changes.",
+      "fired_by": [
+        "\\bchange of occupancy\\b",
+        "\\bchange of use\\b",
+        "\\boccupant load\\b",
+        "\\brestroom\\b",
+        "\\bassembly\\b",
+        "\\btraining room\\b",
+        "\\bshowroom\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare occupant-load and plumbing-fixture-count table",
+        "Check accessible fixture requirements",
+        "Coordinate any restroom expansion with path-of-travel obligations"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building/Plumbing Dept"
+      ],
+      "citations": [
+        "IPC §403.1",
+        "IBC §2902",
+        "2010 ADA Standards §213"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "restaurant_fire_alarm_monitoring_modification",
+      "severity": "medium",
+      "title": "Restaurant occupancy or suppression work may require fire-alarm interface review",
+      "why_it_matters": "Suppression systems, duct detectors, occupant load, and sprinkler changes can all require alarm interlocks, monitoring updates, or a separate fire-alarm submittal.",
+      "fired_by": [
+        "\\bfire alarm\\b",
+        "\\bmonitoring\\b",
+        "\\bduct detector\\b",
+        "\\bansul\\b",
+        "\\bsprinkler\\b",
+        "\\ba[-\\s]?2\\b"
+      ],
+      "likely_required_actions": [
+        "Confirm whether alarm shop drawings are deferred or separate",
+        "Show suppression/alarm interface sequence",
+        "Update monitoring account and acceptance testing"
+      ],
+      "companion_permits": [
+        "Fire alarm permit, if devices/interface change"
+      ],
+      "agencies": [
+        "Fire Prevention",
+        "Alarm contractor"
+      ],
+      "citations": [
+        "IFC §907.1.1",
+        "NFPA 72"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_plumbing_fixture_count_recalc",
+      "severity": "medium",
+      "title": "Restaurant seat count can change required plumbing fixtures",
+      "why_it_matters": "Dining, bar, patio, and assembly occupant loads can push the project over restroom fixture thresholds, affecting cost, space planning, and accessibility upgrades.",
+      "fired_by": [
+        "\\bseats?\\b",
+        "\\bdining\\b",
+        "\\bbar\\b",
+        "\\bpatio\\b",
+        "\\boccupant load\\b",
+        "\\brestroom\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare occupant-load and fixture-count table",
+        "Verify male/female or all-gender fixture distribution rules",
+        "Coordinate accessible restroom clearances"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Plumbing Dept",
+        "AHJ Building Dept"
+      ],
+      "citations": [
+        "IPC §403.1",
+        "IBC §2902"
+      ],
+      "primary_scope": "commercial_restaurant"
+    }
+  ],
+  "_fee_floor_components": {
+    "scope": "commercial_restaurant",
+    "scope_note": "plan review + permit + fire + utility + health",
+    "sqft": 3200,
+    "base_floor": 13000,
+    "jurisdiction_multiplier": 1.3,
+    "jurisdiction_label": "Seattle, WA",
+    "jurisdiction_rationale": "SDCI valuation-based scaling and separate trade/fire review common [verify current SDCI fee subtitle]",
+    "trigger_adders": [
+      {
+        "key": "change_of_occupancy",
+        "add_min": 2000,
+        "add_max": 5000,
+        "rationale": "IEBC §1001-1011 review + new CO"
+      },
+      {
+        "key": "hood_fire_suppression",
+        "add_min": 3000,
+        "add_max": 8000,
+        "rationale": "separate fire-prevention permit + acceptance test"
+      },
+      {
+        "key": "grease_interceptor",
+        "add_min": 1000,
+        "add_max": 4000,
+        "rationale": "sized + reviewed + utility coordination"
+      },
+      {
+        "key": "fire_sprinkler_modify",
+        "add_min": 2000,
+        "add_max": 6000,
+        "rationale": "hydraulic recalc + permit"
+      },
+      {
+        "key": "ada_path_of_travel",
+        "add_min": 1500,
+        "add_max": 5000,
+        "rationale": "20% rule alterations"
+      }
+    ],
+    "structured_low": 26500,
+    "structured_high": 45000,
+    "llm_fee_high_end": 12000.0
+  },
+  "_fee_adjusted": true,
+  "_fee_floor_check": "llm_below_floor_adjusted"
+}
