@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""Medical clinic tenant-improvement coverage tests."""
+
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+import api.research_engine as engine
+from api.fee_realism_guardrail import apply_fee_realism_guardrail
+from api.hidden_trigger_detector import detect_hidden_triggers
+
+MEDICAL_IDS = {
+    "medical_clinic_exam_room_plumbing",
+    "medical_clinic_medical_gas_review",
+    "medical_clinic_infection_control_pressure_relationships",
+    "medical_clinic_accessibility_path_of_travel",
+    "medical_clinic_xray_or_radiology_shielding",
+    "medical_clinic_fire_life_safety_and_alarm",
+}
+
+
+def ids(job, city="Austin", state="TX", primary_scope="commercial_medical_clinic_ti"):
+    return {t["id"] for t in detect_hidden_triggers(job, city, state, primary_scope, {})}
+
+
+def enriched(job="medical clinic tenant improvement with exam rooms, hand sinks, med gas, ADA restroom, fire alarm and x-ray room", city="Austin", state="TX"):
+    result = {
+        "_primary_scope": "commercial_medical_clinic_ti",
+        "fee_range": "$450 electrical + $750 plumbing",
+        "permits_required": [{"permit_type": "Building Permit", "portal_selection": "Building Permit", "required": True, "notes": "seed"}],
+        "companion_permits": [],
+        "pro_tips": [],
+        "watch_out": [],
+        "common_mistakes": [],
+        "inspections": [],
+    }
+    result["hidden_triggers"] = detect_hidden_triggers(job, city, state, "commercial_medical_clinic_ti", result)
+    engine.apply_medical_clinic_ti_rulebook(result, job, city, state)
+    engine.enforce_ti_min_permits_floor(result, job, city, state)
+    return result
+
+
+def test_medical_clinic_scope_is_not_flattened_to_office_ti():
+    assert engine.detect_primary_scope("medical clinic TI with exam rooms, hand sinks, med gas and x-ray room") == "commercial_medical_clinic_ti"
+    assert engine.detect_primary_scope("dental clinic tenant improvement with nitrous oxide and sterilization room") == "commercial_medical_clinic_ti"
+
+
+def test_medical_clinic_ti_fires_clinic_specific_triggers():
+    got = ids("medical clinic tenant improvement with exam rooms, hand sinks, med gas, fire alarm, ADA restroom, and x-ray room")
+    assert "medical_clinic_exam_room_plumbing" in got
+    assert "medical_clinic_medical_gas_review" in got
+    assert "medical_clinic_xray_or_radiology_shielding" in got
+    assert "medical_clinic_accessibility_path_of_travel" in got
+
+
+def test_medical_clinic_rulebook_adds_contractor_grade_guidance():
+    out = enriched()
+    combined = " | ".join(out["pro_tips"] + out["watch_out"] + out["common_mistakes"] + out["inspections"]).lower()
+    assert "exam room" in combined
+    assert "medical gas" in combined
+    assert "infection" in combined or "pressure" in combined
+    assert "ada" in combined or "path-of-travel" in combined
+
+
+def test_medical_clinic_min_permit_floor_includes_mep_fire_and_health_review():
+    out = enriched()
+    families = {engine._permit_family(p) for p in out["permits_required"]}
+    assert {"building", "mechanical", "electrical", "plumbing", "fire"}.issubset(families)
+    companion_text = " | ".join(c.get("permit_type", "") for c in out["companion_permits"]).lower()
+    assert "medical gas" in companion_text
+    assert "health" in companion_text or "licensing" in companion_text
+
+
+def test_medical_clinic_fee_floor_overrides_residential_trade_anchors():
+    result = {
+        "fee_range": "$450 electrical + $750 plumbing",
+        "hidden_triggers": [{"id": trigger_id} for trigger_id in MEDICAL_IDS],
+    }
+    guarded = apply_fee_realism_guardrail(
+        result,
+        "4200 sqft medical clinic tenant improvement with exam sinks, med gas, fire alarm and x-ray room",
+        "Austin",
+        "TX",
+        "commercial_medical_clinic_ti",
+    )
+    assert guarded["_fee_adjusted"] is True
+    assert guarded["_fee_floor_components"]["scope"] == "commercial_medical_clinic_ti"
+    assert guarded["_fee_floor_components"]["structured_low"] >= 10000
+    assert "$450" not in guarded["fee_range"]
+
+
+def test_restaurant_and_residential_do_not_include_medical_clinic_triggers():
+    restaurant = ids("restaurant TI with hood, grease interceptor and dining", "Phoenix", "AZ", "commercial_restaurant")
+    residential = ids("bathroom remodel with new sink and electrical", "Austin", "TX", "residential")
+    assert not (restaurant & MEDICAL_IDS)
+    assert not (residential & MEDICAL_IDS)

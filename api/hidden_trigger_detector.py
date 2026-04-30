@@ -586,6 +586,82 @@ HIDDEN_TRIGGER_REGISTRY = [
 
 
     # ------------------------------------------------------------------
+    # Medical clinic / dental clinic TI triggers (6)
+    # ------------------------------------------------------------------
+    {
+        "id": "medical_clinic_exam_room_plumbing",
+        "severity": "high",
+        "title": "Exam rooms and treatment rooms usually trigger plumbing / hand-sink review",
+        "why_it_matters": "Clinic layouts commonly need hand-washing sinks, accessible restrooms, fixture-count confirmation, backflow protection, and medical/dental equipment waste coordination. Missing plumbing scope can stall health/licensing or final inspections.",
+        "fired_by": [r"\bexam rooms?\b", r"\btreatment rooms?\b", r"\bprocedure rooms?\b", r"\bhand sinks?\b", r"\blavator(y|ies)\b", r"\bdental chair\b", r"\bsterilization room\b", r"\bmedical clinic\b", r"\bdental clinic\b"],
+        "likely_required_actions": ["Show exam-room sink locations and fixture schedule", "Confirm plumbing fixture counts and accessible restroom clearances", "Coordinate backflow/indirect waste for medical or dental equipment"],
+        "companion_permits": ["Plumbing permit / medical fixture review"],
+        "agencies": ["AHJ Building/Plumbing Dept", "Health-care licensing or local health reviewer"],
+        "citations": ["IPC §403", "IPC §608", "IBC Chapter 11", "FGI Guidelines / local health-care licensing standards [verify applicability]"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+    {
+        "id": "medical_clinic_medical_gas_review",
+        "severity": "high",
+        "title": "Medical gas / nitrous / oxygen systems require specialty review and certified installer coordination",
+        "why_it_matters": "Medical gas is not ordinary plumbing. Piping, alarms, valves, source equipment, installer qualifications, pressure tests, and verification reports are often separate submittals and can block opening if missed.",
+        "fired_by": [r"\bmed(?:ical)? gas\b", r"\boxygen\b", r"\bnitrous oxide\b", r"\bvacc?uum\b", r"\bnurse call\b", r"\bzone valve\b", r"\bNFPA\s*99\b"],
+        "likely_required_actions": ["Identify gas types and outlets by room", "Use certified medical-gas installer/verifier where required", "Submit pressure-test, alarm, valve, and verification documentation before final"],
+        "companion_permits": ["Medical gas permit / specialty plumbing permit"],
+        "agencies": ["AHJ Plumbing/Mechanical Dept", "Fire Prevention", "Health-care licensing reviewer"],
+        "citations": ["NFPA 99", "ASSE 6010/6020/6030 [verify local adoption]"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+    {
+        "id": "medical_clinic_infection_control_pressure_relationships",
+        "severity": "high",
+        "title": "Clinic HVAC can require ventilation, pressure relationship, and infection-control documentation",
+        "why_it_matters": "Exam, procedure, sterilization, lab, and treatment areas can have ventilation and pressure requirements beyond a normal office TI. Reviewers may ask for air changes, exhaust, filtration, and infection-control details.",
+        "fired_by": [r"\bprocedure room\b", r"\btreatment room\b", r"\bsterilization\b", r"\blab\b", r"\bnegative pressure\b", r"\bpositive pressure\b", r"\binfection control\b", r"\bmedical clinic\b", r"\bdental clinic\b"],
+        "likely_required_actions": ["Add ventilation schedule by room type", "Show pressure relationships/exhaust where required", "Coordinate infection-control notes with construction phasing and final testing"],
+        "companion_permits": ["Mechanical permit / clinic ventilation review"],
+        "agencies": ["AHJ Mechanical Dept", "Health-care licensing or infection-control reviewer"],
+        "citations": ["IMC §403", "ASHRAE 170 / FGI Guidelines [verify applicability]"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+    {
+        "id": "medical_clinic_accessibility_path_of_travel",
+        "severity": "high",
+        "title": "Clinic alterations need ADA path-of-travel plus accessible exam/restroom details",
+        "why_it_matters": "Medical and dental clinics are public accommodations. Altered reception, exam rooms, toilet rooms, corridors, doors, counters, and parking can trigger ADA path-of-travel upgrades and accessible medical-service access details.",
+        "fired_by": [r"\bmedical clinic\b", r"\bdental clinic\b", r"\bexam rooms?\b", r"\baccessible\b", r"\bada\b", r"\bpath[-\s]?of[-\s]?travel\b", r"\brestroom\b", r"\breception\b"],
+        "likely_required_actions": ["Prepare ADA path-of-travel cost allocation", "Verify exam-room doors, turning spaces, accessible route, counters, and toilet-room clearances", "Confirm accessible parking/passenger-loading route if site work is affected"],
+        "companion_permits": [],
+        "agencies": ["AHJ Building Dept", "Accessibility reviewer"],
+        "citations": ["2010 ADA Standards §202.4", "28 CFR §36.403", "IBC Chapter 11"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+    {
+        "id": "medical_clinic_xray_or_radiology_shielding",
+        "severity": "high",
+        "title": "X-ray / radiology rooms can require shielding plan and state radiation registration",
+        "why_it_matters": "X-ray, dental panoramic, CT, or radiology equipment may need physicist shielding calculations, lead-lined assemblies, warning lights/signage, electrical coordination, and state radiation-device registration before use.",
+        "fired_by": [r"\bx[-\s]?ray\b", r"\bradiology\b", r"\bct scanner\b", r"\bdental pano\b", r"\bpanoramic x[-\s]?ray\b", r"\blead shielding\b", r"\bshielding plan\b"],
+        "likely_required_actions": ["Order shielding design from qualified physicist where required", "Show lead-lined walls/doors/view windows and electrical equipment requirements", "Register radiation-producing equipment with the state before operation"],
+        "companion_permits": ["Radiation-device registration / shielding review"],
+        "agencies": ["State radiation-control program", "AHJ Building/Electrical Dept"],
+        "citations": ["State radiation-control rules [verify state-specific program]", "NCRP shielding guidance [verify design basis]"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+    {
+        "id": "medical_clinic_fire_life_safety_and_alarm",
+        "severity": "medium",
+        "title": "Clinic layout changes can require fire alarm, sprinkler, egress, and emergency-lighting coordination",
+        "why_it_matters": "New exam rooms, corridors, treatment rooms, waiting areas, storage, oxygen/medical gas, or suite separations can affect egress, occupant load, fire alarm notification, sprinkler coverage, and emergency lighting.",
+        "fired_by": [r"\bmedical clinic\b", r"\bdental clinic\b", r"\bfire alarm\b", r"\bsprinkler\b", r"\begress\b", r"\bemergency lighting\b", r"\bwaiting room\b", r"\bmedical gas\b"],
+        "likely_required_actions": ["Recalculate occupant load and egress paths", "Coordinate fire alarm notification and sprinkler coverage with room layout", "Add emergency-lighting/exit-sign updates where paths change"],
+        "companion_permits": ["Fire alarm permit", "Fire sprinkler permit if devices/heads change"],
+        "agencies": ["Fire Prevention", "AHJ Building Dept"],
+        "citations": ["IBC Ch. 10", "IBC §907", "NFPA 13", "NFPA 72"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+
+    # ------------------------------------------------------------------
     # Generic commercial TI triggers (8)
     # ------------------------------------------------------------------
     {
@@ -932,6 +1008,7 @@ COMMERCIAL_SCOPES = {
     "commercial",
     "commercial_ti",
     "commercial_office_ti",
+    "commercial_medical_clinic_ti",
     "commercial_retail_ti",
     "commercial_restaurant",
     "commercial_restaurant_ti",
@@ -1099,6 +1176,13 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
         return (
             primary_scope_norm == _normalize("commercial_retail_ti")
             or ("retail" in text and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
+        )
+
+    if trigger_scope_norm == _normalize("commercial_medical_clinic_ti"):
+        clinic_terms = ("medical clinic", "medical office", "dental clinic", "health clinic", "exam room", "med gas", "medical gas", "x ray", "x-ray", "radiology")
+        return (
+            primary_scope_norm == _normalize("commercial_medical_clinic_ti")
+            or (any(term in text for term in clinic_terms) and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
         )
 
     if trigger_scope_norm == _normalize("commercial_ti"):

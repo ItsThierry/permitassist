@@ -1495,6 +1495,23 @@ CHECKLIST_SCOPE = {
             "Glass + glazing: safety glazing per IBC 2406 in any pane within 24 in of doors or 60 in of floor",
         ],
     },
+    "commercial_medical_clinic_ti": {
+        "tokens": [
+            "medical clinic", "medical office tenant", "clinic tenant improvement", "clinic ti",
+            "dental clinic", "dental office tenant", "health clinic", "exam room", "exam rooms",
+            "treatment room", "procedure room", "medical gas", "med gas", "x-ray", "radiology",
+        ],
+        "items": [
+            "Commercial clinic TI building permit: identify B / ambulatory-care / outpatient occupancy basis, suite size, occupant load, egress, rated corridors, and certificate-of-occupancy conditions before submittal.",
+            "Exam-room plumbing: show hand sinks, accessible restroom fixture count, backflow protection, indirect waste, sterilization-room fixtures, and dental/medical equipment utility connections.",
+            "Medical gas / nitrous / oxygen: submit NFPA 99-style outlet schedule, alarms, zone valves, source equipment, pressure test, and verifier documentation when gas systems are in scope.",
+            "Clinic HVAC / infection-control: provide room-by-room ventilation schedule, exhaust, pressure relationships, filtration, and construction infection-control notes where procedure/sterilization/lab spaces exist.",
+            "ADA path-of-travel: verify accessible route, reception/check-in counter, exam-room door/turning clearances, toilet rooms, parking/passenger loading, signage, and 20% disproportionality cap documentation.",
+            "X-ray / radiology: obtain shielding design or state radiation-control registration where equipment is installed; coordinate lead-lined assemblies, warning lights/signage, and electrical requirements.",
+            "Fire/life-safety: coordinate fire alarm notification appliances, sprinkler head layout, emergency lighting/exit signs, suite separation, and storage/oxygen hazards with Fire Prevention.",
+            "Health-care licensing / local health review: confirm whether the clinic type needs state or local health-care licensing approval separate from the building permit before opening.",
+        ],
+    },
     "commercial_retail_ti": {
         "tokens": [
             "retail tenant improvement", "retail ti", "retail buildout", "store buildout",
@@ -2519,9 +2536,16 @@ def detect_primary_scope(job_type: str) -> str:
     )):
         return 'commercial_restaurant'
     if any(t in job_lc for t in (
+        'medical clinic', 'medical office tenant', 'dental clinic', 'dental office tenant',
+        'health clinic', 'clinic tenant improvement', 'clinic ti', 'exam room',
+        'exam rooms', 'med gas', 'medical gas', 'nitrous oxide', 'x-ray', 'x ray',
+        'radiology', 'sterilization room',
+    )):
+        return 'commercial_medical_clinic_ti'
+    if any(t in job_lc for t in (
         'office tenant improvement', 'office ti', 'office buildout',
         'co-working', 'coworking', 'professional office',
-        'medical office tenant', 'dental office tenant', 'law office',
+        'law office',
     )):
         return 'commercial_office_ti'
     if any(t in job_lc for t in (
@@ -2565,7 +2589,7 @@ _RESIDENTIAL_TRADE_SCOPES = frozenset({
 
 _COMMERCIAL_PRIMARY_SCOPES = frozenset({
     'commercial_restaurant', 'commercial_office_ti', 'commercial_retail_ti',
-    'multifamily', 'commercial',
+    'commercial_medical_clinic_ti', 'multifamily', 'commercial',
 })
 
 
@@ -4640,7 +4664,12 @@ def _ahj_companion_permit_name(family: str, primary_scope: str, city: str, state
     portal-style commercial labels; otherwise use plain generic family names.
     Both avoid fabricated city-specific titles.
     """
-    scope_label = "Commercial Office TI" if primary_scope == "commercial_office_ti" else "Commercial Retail TI"
+    if primary_scope == "commercial_medical_clinic_ti":
+        scope_label = "Commercial Medical Clinic TI"
+    elif primary_scope == "commercial_office_ti":
+        scope_label = "Commercial Office TI"
+    else:
+        scope_label = "Commercial Retail TI"
     generic = {
         "building": (f"Building Permit — Tenant Improvement ({scope_label})", "Building - Tenant Improvement / Alteration"),
         "mechanical": ("Mechanical Permit", "Mechanical Permit"),
@@ -4741,6 +4770,83 @@ def apply_retail_ti_rulebook(result: dict, job_type: str, city: str, state: str)
 
     return result
 
+
+# Launch blocker #7 (2026-04-30): deterministic medical clinic TI enrichment.
+# Keeps clinic/dental outpatient buildouts from being treated like ordinary office TI.
+def apply_medical_clinic_ti_rulebook(result: dict, job_type: str, city: str, state: str) -> dict:
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope != "commercial_medical_clinic_ti":
+        return result
+
+    def ensure_list(key: str) -> list:
+        if not isinstance(result.get(key), list):
+            result[key] = []
+        return result[key]
+
+    def add_unique(key: str, items: list[str]) -> None:
+        arr = ensure_list(key)
+        seen = {str(x).strip().lower() for x in arr if isinstance(x, str)}
+        for item in items:
+            if item.lower() not in seen:
+                arr.append(item)
+                seen.add(item.lower())
+
+    add_unique("pro_tips", [
+        "Treat medical clinic TI as a specialty commercial buildout, not a plain office: confirm exam-room plumbing, medical gas, infection-control/HVAC, accessibility, fire/life-safety, and health-care licensing paths before pricing.",
+        "Ask the owner early whether the clinic includes x-ray/radiology, oxygen/nitrous/medical gas, sterilization, lab work, procedure rooms, or state-licensed health-care services — each can add separate reviews.",
+        "Coordinate architect/MEP, medical-gas verifier, equipment vendor, and health/licensing reviewer before submitting so room names, fixture schedules, ventilation, and equipment utility loads match.",
+    ])
+    add_unique("watch_out", [
+        "A clinic with exam rooms, treatment rooms, medical gas, or x-ray can be rejected if submitted as generic office TI with only building/electrical scope.",
+        "Health-care licensing or state/local health review may control opening even after the building permit is final; verify this path before promising an opening date.",
+        "Medical gas and x-ray shielding often need specialty documentation and third-party verification; missing it can block final inspection or equipment operation.",
+    ])
+    add_unique("common_mistakes", [
+        "Forgetting exam-room sinks, fixture counts, backflow/indirect waste, or accessible restroom upgrades in the plumbing scope.",
+        "Leaving medical gas, nitrous/oxygen, alarms, zone valves, and verifier paperwork out of the permit package.",
+        "Using ordinary office HVAC assumptions instead of confirming ventilation, exhaust, pressure relationships, filtration, and infection-control needs for procedure/sterilization/lab rooms.",
+        "Missing ADA path-of-travel documentation for reception, exam rooms, restrooms, route, parking/passenger loading, and check-in counters.",
+    ])
+    add_unique("inspections", [
+        "Building rough/final — verify clinic layout, occupancy basis, egress, corridors, accessibility, fire-rated assemblies, and certificate-of-occupancy conditions.",
+        "Plumbing rough/final — verify exam-room hand sinks, accessible restrooms, backflow protection, indirect waste, dental/medical equipment connections, and fixture counts.",
+        "Mechanical balance / infection-control verification — confirm ventilation, exhaust, pressure relationships, filtration, and room-use assumptions where clinic functions require them.",
+        "Medical gas pressure test / verifier final if oxygen, nitrous, vacuum, alarms, zone valves, or gas outlets are installed or modified.",
+        "Fire alarm / sprinkler / life-safety final — verify notification appliance coverage, sprinkler head layout, emergency lighting, exit signs, and any oxygen/medical-gas hazard coordination.",
+        "Radiology/x-ray shielding or state radiation registration verification if radiation-producing equipment is installed.",
+    ])
+
+    companions = ensure_list("companion_permits")
+    existing_companions = {str(c.get("permit_type") if isinstance(c, dict) else c).strip().lower() for c in companions}
+    for trig in result.get("hidden_triggers") or []:
+        if not isinstance(trig, dict) or not str(trig.get("id", "")).startswith("medical_clinic_"):
+            continue
+        for permit in trig.get("companion_permits") or []:
+            key = str(permit).strip().lower()
+            if key and key not in existing_companions:
+                companions.append({
+                    "permit_type": permit,
+                    "reason": trig.get("why_it_matters") or f"Medical clinic TI rulebook trigger {trig.get('id')}",
+                    "certainty": "likely" if trig.get("severity") == "medium" else "almost_certain",
+                })
+                existing_companions.add(key)
+
+    baseline = [
+        ("Health-care licensing / local health review", "Clinic opening may require state or local health-care approval separate from the building permit; verify by clinic type."),
+        ("Fire alarm / fire sprinkler permit if devices or heads change", "Clinic layouts commonly affect notification coverage, sprinkler spacing, emergency lighting, and egress."),
+    ]
+    for permit, reason in baseline:
+        key = permit.lower()
+        if key not in existing_companions:
+            companions.append({"permit_type": permit, "reason": reason, "certainty": "likely"})
+            existing_companions.add(key)
+
+    return result
+
+
 def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: str) -> dict:
     """A3: ensure office/retail TI required permits include core MEP families.
 
@@ -4751,7 +4857,7 @@ def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: 
         return result
     primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
     result.setdefault("_primary_scope", primary_scope)
-    if primary_scope not in ("commercial_office_ti", "commercial_retail_ti"):
+    if primary_scope not in ("commercial_office_ti", "commercial_retail_ti", "commercial_medical_clinic_ti"):
         return result
     permits = result.get("permits_required")
     if not isinstance(permits, list):
@@ -6675,6 +6781,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             elif 'fee_calculator' not in cached:
                 cached['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
             apply_scope_aware_permit_classification(cached, job_type)
+            apply_medical_clinic_ti_rulebook(cached, job_type, city, state)
             enforce_ti_min_permits_floor(cached, job_type, city, state)
             apply_state_expert_pack(cached, city, state, job_type)
             hedge_companion_permits(cached, job_type)
@@ -7550,6 +7657,7 @@ Return ONLY the JSON object."""
             primary_scope=primary_scope_for_triggers, result=result,
         )
         apply_retail_ti_rulebook(result, job_type, city, state)
+        apply_medical_clinic_ti_rulebook(result, job_type, city, state)
     except Exception as e:
         print(f"[hidden_triggers] Failed: {e}")
         result["hidden_triggers"] = []
