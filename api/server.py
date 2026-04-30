@@ -92,6 +92,23 @@ APP_BASE_URL           = os.environ.get("APP_BASE_URL", "https://permitassist.io
 ADMIN_TOKEN            = os.environ.get("PERMITASSIST_ADMIN_TOKEN", "")
 REMINDER_LOOKAHEAD_DAYS = 30
 REMINDER_CHECK_SECONDS  = 3600
+POSTHOG_PUBLIC_KEY     = os.environ.get("POSTHOG_PUBLIC_KEY", "")
+POSTHOG_HOST           = os.environ.get("POSTHOG_HOST", "https://us.i.posthog.com").rstrip("/")
+SENTRY_DSN             = os.environ.get("SENTRY_DSN", "")
+SENTRY_ENVIRONMENT     = os.environ.get("SENTRY_ENVIRONMENT", os.environ.get("RAILWAY_ENVIRONMENT_NAME", "production"))
+
+if SENTRY_DSN:
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            environment=SENTRY_ENVIRONMENT,
+            traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.05")),
+            send_default_pii=False,
+        )
+        print("[sentry] backend enabled")
+    except Exception as e:
+        print(f"[sentry] backend disabled: {e}")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -2624,6 +2641,32 @@ def render_cities_page_ssr(html_path: str) -> bytes:
     return body
 
 
+def observability_head_snippet() -> str:
+    """Return optional browser observability scripts. Empty when env vars are absent."""
+    snippets: list[str] = []
+    if SENTRY_DSN:
+        snippets.append(
+            "<script src=\"https://browser.sentry-cdn.com/8.55.0/bundle.tracing.min.js\" "
+            "crossorigin=\"anonymous\"></script>\n"
+            "<script>\n"
+            "window.Sentry && Sentry.init({\n"
+            f"  dsn: {json.dumps(SENTRY_DSN)},\n"
+            f"  environment: {json.dumps(SENTRY_ENVIRONMENT)},\n"
+            "  tracesSampleRate: 0.05,\n"
+            "  sendDefaultPii: false\n"
+            "});\n"
+            "</script>"
+        )
+    if POSTHOG_PUBLIC_KEY:
+        snippets.append(
+            "<script>\n"
+            "!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(\".\");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement(\"script\")).type=\"text/javascript\",p.crossOrigin=\"anonymous\",p.async=!0,p.src=s.api_host.replace(\".i.posthog.com\",\"-assets.i.posthog.com\")+\"/static/array.js\",(r=t.getElementsByTagName(\"script\")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a=\"posthog\",u.people=u.people||[],u.toString=function(t){var e=\"posthog\";return\"posthog\"!==a&&(e+=\".\"+a),t||(e+=\" (stub)\"),e},u.people.toString=function(){return u.toString(1)+\".people (stub)\"},o=\"capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags reloadFeatureFlags getFeatureFlag getFeatureFlagPayload group\".split(\" \"),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);\n"
+            f"posthog.init({json.dumps(POSTHOG_PUBLIC_KEY)}, {{api_host: {json.dumps(POSTHOG_HOST)}, person_profiles: 'identified_only'}});\n"
+            "</script>"
+        )
+    return "\n".join(snippets)
+
+
 # ── Request handler ───────────────────────────────────────────────────────────
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
@@ -2657,6 +2700,14 @@ class Handler(BaseHTTPRequestHandler):
         try:
             with open(path, "rb") as f:
                 body = f.read()
+            if "text/html" in content_type:
+                snippet = observability_head_snippet()
+                if snippet:
+                    html = body.decode("utf-8", errors="ignore")
+                    marker = "</head>"
+                    if marker in html:
+                        html = html.replace(marker, snippet + "\n" + marker, 1)
+                        body = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
