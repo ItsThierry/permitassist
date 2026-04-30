@@ -4771,6 +4771,82 @@ def apply_retail_ti_rulebook(result: dict, job_type: str, city: str, state: str)
     return result
 
 
+# Launch blocker #8 (2026-04-30): deterministic office TI enrichment.
+# Keeps ordinary office buildouts contractor-grade instead of thin generic commercial TI.
+def apply_office_ti_rulebook(result: dict, job_type: str, city: str, state: str) -> dict:
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope != "commercial_office_ti":
+        return result
+
+    def ensure_list(key: str) -> list:
+        if not isinstance(result.get(key), list):
+            result[key] = []
+        return result[key]
+
+    def add_unique(key: str, items: list[str]) -> None:
+        arr = ensure_list(key)
+        seen = {str(x).strip().lower() for x in arr if isinstance(x, str)}
+        for item in items:
+            if item.lower() not in seen:
+                arr.append(item)
+                seen.add(item.lower())
+
+    add_unique("pro_tips", [
+        "Treat office TI as a building/MEP/fire/accessibility coordination job: demising partitions, ceiling/lighting, HVAC zoning, low-voltage/data, ADA path-of-travel, and fire alarm/sprinkler drawings can each drive separate reviews.",
+        "Get existing reflected ceiling, sprinkler, fire alarm, HVAC diffuser/return, and low-voltage pathways before pricing — moving walls without these backgrounds creates change orders.",
+        "Confirm landlord/building engineer requirements early for after-hours work, fire-life-safety shutdowns, low-voltage pathways, air-balance reports, and certificate-of-occupancy signoff.",
+    ])
+    add_unique("watch_out", [
+        "Generic office TI answers often miss low-voltage/data permits, fire alarm/sprinkler deferred submittals, and HVAC balancing; those can delay tenant move-in even when the building permit is issued.",
+        "New demising walls or conference rooms can break existing egress, strobe visibility, sprinkler spacing, return-air paths, and ventilation assumptions.",
+        "ADA path-of-travel and restroom work can be required even when the office remodel feels mostly cosmetic; document the 20% disproportionality analysis if applicable.",
+    ])
+    add_unique("common_mistakes", [
+        "Submitting partition plans without reflected ceiling, sprinkler, alarm/strobe, diffuser/return, and emergency-lighting coordination.",
+        "Forgetting commercial energy-code forms for lighting controls, occupancy sensors, daylight zones, HVAC controls, or envelope/glazing changes.",
+        "Leaving low-voltage/data/security/access-control out of the permit set or ignoring plenum-rated cable, firestopping, and controlled-door egress release requirements.",
+        "Assuming existing restrooms and reception counters are acceptable without verifying accessible route, door clearances, hardware, signage, and path-of-travel obligations.",
+    ])
+    add_unique("inspections", [
+        "Building rough/final — verify demising partitions, rated assemblies, firestopping, doors/hardware, egress, accessibility, and CO/suite conditions.",
+        "Electrical rough/final — verify lighting layout, controls, emergency lighting, exit signs, panels, receptacles, and equipment schedules.",
+        "Mechanical rough/final or air-balance verification — confirm HVAC zoning, ventilation, diffuser/return layout, thermostat locations, transfer air, and TAB report if required.",
+        "Low-voltage / data / access-control inspection if required — verify cable routing, plenum ratings, firestopping, card-reader egress releases, and fire-alarm interface.",
+        "Fire alarm / sprinkler acceptance test if partitions, ceilings, notification appliances, duct detectors, or sprinkler heads changed.",
+        "Energy compliance final — verify lighting power density, controls, commissioning/checklists, and any COMcheck/Title 24/WSEC documentation.",
+    ])
+
+    companions = ensure_list("companion_permits")
+    existing_companions = {str(c.get("permit_type") if isinstance(c, dict) else c).strip().lower() for c in companions}
+    for trig in result.get("hidden_triggers") or []:
+        if not isinstance(trig, dict) or not str(trig.get("id", "")).startswith("office_"):
+            continue
+        for permit in trig.get("companion_permits") or []:
+            key = str(permit).strip().lower()
+            if key and key not in existing_companions:
+                companions.append({
+                    "permit_type": permit,
+                    "reason": trig.get("why_it_matters") or f"Office TI rulebook trigger {trig.get('id')}",
+                    "certainty": "likely" if trig.get("severity") == "medium" else "almost_certain",
+                })
+                existing_companions.add(key)
+
+    baseline = [
+        ("Low-voltage / data cabling permit if cabling, access control, AV, or security systems are installed", "Office TIs commonly include telecom/data/access-control work that may be permitted separately or inspected by electrical/fire reviewers."),
+        ("Fire alarm / fire sprinkler permit if devices or heads change", "Office partitions, ceiling grids, storage, and conference rooms commonly affect alarm notification and sprinkler coverage."),
+    ]
+    for permit, reason in baseline:
+        key = permit.lower()
+        if key not in existing_companions:
+            companions.append({"permit_type": permit, "reason": reason, "certainty": "likely"})
+            existing_companions.add(key)
+
+    return result
+
+
 # Launch blocker #7 (2026-04-30): deterministic medical clinic TI enrichment.
 # Keeps clinic/dental outpatient buildouts from being treated like ordinary office TI.
 def apply_medical_clinic_ti_rulebook(result: dict, job_type: str, city: str, state: str) -> dict:
@@ -6781,6 +6857,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             elif 'fee_calculator' not in cached:
                 cached['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
             apply_scope_aware_permit_classification(cached, job_type)
+            apply_office_ti_rulebook(cached, job_type, city, state)
             apply_medical_clinic_ti_rulebook(cached, job_type, city, state)
             enforce_ti_min_permits_floor(cached, job_type, city, state)
             apply_state_expert_pack(cached, city, state, job_type)
@@ -7657,6 +7734,7 @@ Return ONLY the JSON object."""
             primary_scope=primary_scope_for_triggers, result=result,
         )
         apply_retail_ti_rulebook(result, job_type, city, state)
+        apply_office_ti_rulebook(result, job_type, city, state)
         apply_medical_clinic_ti_rulebook(result, job_type, city, state)
     except Exception as e:
         print(f"[hidden_triggers] Failed: {e}")
