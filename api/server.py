@@ -3566,23 +3566,6 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(200, {"status": "ok"})  # Always 200 to Facebook
             return
 
-        # ── Debug endpoint — echo headers and body info ───────────────────
-        if path == "/api/debug-headers":
-            info = {
-                "headers": dict(self.headers),
-                "content_length": self.headers.get("Content-Length"),
-                "transfer_encoding": self.headers.get("Transfer-Encoding"),
-            }
-            # Try reading body
-            try:
-                cl = int(self.headers.get("Content-Length", 0))
-                body = self.rfile.read(cl) if cl > 0 else b""
-                info["body_read_via_content_length"] = body.decode("utf-8", errors="replace")
-            except Exception as e:
-                info["body_read_error"] = str(e)
-            self.send_json(200, info)
-            return
-
         # ── Saved jurisdictions ────────────────────────────────────────────
         if path == "/api/jurisdictions/save":
             try:
