@@ -1453,8 +1453,8 @@ def upsert_permit_issued_reminder(email: str, job_id: str, job_name: str, city: 
 def verify_stripe_signature(payload: bytes, sig_header: str, secret: str) -> bool:
     """Verify Stripe webhook signature using HMAC-SHA256."""
     if not secret:
-        print("[stripe-webhook] No STRIPE_WEBHOOK_SECRET — skipping signature check")
-        return True
+        print("[stripe-webhook] STRIPE_WEBHOOK_SECRET missing — rejecting webhook")
+        return False
     try:
         parts: dict[str, list] = {}
         for item in sig_header.split(","):
