@@ -2809,6 +2809,48 @@ function getNextSteps(d, job, city, state) {
   return steps.slice(0, 4);
 }
 
+function buildUncertaintyWarnings(d) {
+  d = d || {};
+  const warnings = [];
+  const confidence = String(d.confidence || '').toLowerCase();
+  const dataSourceRaw = String(d.data_source || d._meta?.city_match_level || '').toLowerCase();
+  const missingFields = Array.isArray(d.missing_fields) ? d.missing_fields.filter(Boolean) : [];
+  const validationIssues = Array.isArray(d._validation_issues) ? d._validation_issues : [];
+  const hasOfficialSources = Array.isArray(d.sources) && d.sources.some(src => {
+    const url = typeof src === 'string' ? src : (src && src.url) || '';
+    return /\.gov|\.us|accela\.com|ladbs\.org|seattle\.gov|phoenix\.gov|nyc\.gov|sfgov\.org/i.test(url);
+  });
+
+  if (d.needs_review) {
+    warnings.push('Engine flagged this answer for human review. Verify each field with the AHJ before relying on it.');
+  }
+  if (confidence === 'low' || !confidence) {
+    warnings.push('Low or missing confidence. Do not quote or start work from this result until the building department confirms it.');
+  }
+  if (d.county_fallback === true || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
+    warnings.push('County-level fallback used. City-specific permit names, fees, and inspections may differ.');
+  }
+  if (!dataSourceRaw || ['general', 'state', 'state_rules', 'model_training'].includes(dataSourceRaw)) {
+    warnings.push('No city-level official-source match is confirmed for this lookup.');
+  }
+  if (missingFields.length) {
+    warnings.push(`Missing fields: ${missingFields.slice(0, 6).join(', ')}.`);
+  }
+  validationIssues.slice(0, 4).forEach(issue => {
+    const field = issue && (issue.field || issue.kind || issue.name);
+    const message = issue && (issue.message || issue.reason || issue.detail);
+    warnings.push([field, message].filter(Boolean).join(': ') || 'Validation issue needs review.');
+  });
+  if (d._fee_unverified || /call|confirm|varies|estimate/i.test(String(d.fee_range || d.fee || ''))) {
+    warnings.push('Fee is not firm. Confirm with the permit office before quoting the customer.');
+  }
+  if (!hasOfficialSources && dataSourceRaw !== 'city_database' && dataSourceRaw !== 'city') {
+    warnings.push('No official source link is attached to this result. Treat it as a verification checklist, not final authority.');
+  }
+
+  return [...new Set(warnings)].slice(0, 8);
+}
+
 function renderResults(d, job, city, state) {
   window._lastLookupResult = d;
   window._lastLookupJob = job || '';
@@ -2858,6 +2900,15 @@ function renderResults(d, job, city, state) {
   // County fallback notice
   if (countyNote) {
     html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
+  }
+
+  const uncertaintyWarnings = buildUncertaintyWarnings(d);
+  if (uncertaintyWarnings.length) {
+    html += `<div class="uncertainty-warning-card" style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:0 10px 20px rgba(220,38,38,0.08)">
+      <div style="font-size:13px;font-weight:900;color:#991b1b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⚠️ Verify before relying on this result</div>
+      <div style="font-size:14px;color:#7f1d1d;line-height:1.55;margin-bottom:10px;font-weight:650">This result has uncertainty that can affect bid price, permit intake, or final inspection. Confirm these items with the AHJ before quoting or starting work.</div>
+      <ul class="bullet-list" style="margin-top:8px;color:#7f1d1d">${uncertaintyWarnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
+    </div>`;
   }
 
   // Homeowner mode — special "Did they pull the permit?" section
@@ -3431,6 +3482,7 @@ function renderResultAsReport(d, job, city, state) {
   const confidenceReason = d.confidence_reason || '';
   const needsReview = !!d.needs_review;
   const hiddenTriggers = Array.isArray(d.hidden_triggers) ? d.hidden_triggers : [];
+  const reportUncertaintyWarnings = buildUncertaintyWarnings(d);
 
   // Field renderer helper — returns "<value>" or _missing marker
   const _v = (s) => {
@@ -3467,6 +3519,14 @@ function renderResultAsReport(d, job, city, state) {
     html += `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400e;margin-top:8px">⚠️ <strong>Engine flagged this answer for review</strong> — verify each field with the AHJ before relying on it.</div>`;
   }
   html += `</div>`;
+
+  if (reportUncertaintyWarnings.length) {
+    html += `<div style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:14px 18px;margin-bottom:14px;color:#7f1d1d">
+      <div style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#991b1b;margin-bottom:6px">⚠️ Report needs verification</div>
+      <div style="font-size:13px;line-height:1.5;margin-bottom:8px;font-weight:650">This warning is intentionally shown in report/print view so uncertainty is not hidden when the result is copied, shared, or saved as PDF.</div>
+      <ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.55">${reportUncertaintyWarnings.map(w => `<li>${_esc(w)}</li>`).join('')}</ul>
+    </div>`;
+  }
 
   // Hidden triggers — render BEFORE field 1 (per spec)
   if (hiddenTriggers.length > 0) {
@@ -3697,11 +3757,17 @@ function copyResult() {
   const timeline = d.approval_timeline?.simple || d.approval_timeline?.complex || 'Varies';
   const office = d.applying_office || '';
   const phone = d.apply_phone || '';
+  const uncertaintyWarnings = buildUncertaintyWarnings(d);
   let t = `PERMIT SUMMARY — ${job} in ${city}, ${state}\n`;
   t += `Permit needed: ${permitName}\n`;
   t += `Fee: ${fee}\n`;
   t += `Timeline: ${timeline}\n`;
   if (office || phone) t += `Apply at: ${office}${office && phone ? ' — ' : ''}${phone}\n`;
+  if (uncertaintyWarnings.length) {
+    t += `\nVERIFY BEFORE RELYING:\n`;
+    t += `Uncertainty / verification warnings:\n`;
+    t += uncertaintyWarnings.map(w => `- ${w}`).join('\n') + '\n';
+  }
   t += `Generated by PermitAssist (permitassist.io)`;
   navigator.clipboard.writeText(t).then(() => showCopy('✅ Copied!')).catch(() => alert(t));
 }
