@@ -23,6 +23,7 @@ import ipaddress
 import sqlite3
 import string
 import requests
+import socket
 import threading
 import time
 import uuid
@@ -1778,21 +1779,113 @@ def validate_api_key(auth_header: str) -> tuple[str | None, str | None]:
         return (None, None)
 
 
+def _is_unsafe_webhook_ip(ip_value: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(ip_value)
+    except ValueError:
+        return True
+    return any([
+        ip.is_loopback,
+        ip.is_private,
+        ip.is_link_local,
+        ip.is_multicast,
+        ip.is_reserved,
+        ip.is_unspecified,
+    ])
+
+
+def validate_webhook_callback_url(callback_url: str) -> str:
+    """Return a normalized customer webhook URL or raise ValueError.
+
+    Customer webhook delivery is outbound server-side traffic, so reject common SSRF
+    targets: non-HTTPS schemes, credentials in URLs, localhost/private IPs, and
+    hostnames resolving to localhost/private/link-local/reserved addresses.
+    """
+    url = str(callback_url or "").strip()
+    if not url:
+        raise ValueError("Valid HTTPS callback_url required")
+
+    parsed = urlparse(url)
+    if parsed.scheme.lower() != "https" or not parsed.netloc:
+        raise ValueError("Webhook callback_url must use HTTPS")
+    if parsed.username or parsed.password:
+        raise ValueError("Webhook callback_url cannot include credentials")
+    if not parsed.hostname:
+        raise ValueError("Webhook callback_url must include a host")
+
+    host = parsed.hostname.rstrip(".").lower()
+    if host in {"localhost", "localhost.localdomain"} or host.endswith(".localhost"):
+        raise ValueError("Webhook callback_url host is not allowed")
+
+    port = parsed.port or 443
+    try:
+        literal_ip = ipaddress.ip_address(host)
+        if _is_unsafe_webhook_ip(str(literal_ip)):
+            raise ValueError("Webhook callback_url host is not allowed")
+    except ValueError as exc:
+        if "not allowed" in str(exc):
+            raise
+        try:
+            addresses = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+        except socket.gaierror as dns_error:
+            raise ValueError("Webhook callback_url host could not be resolved") from dns_error
+        if not addresses:
+            raise ValueError("Webhook callback_url host could not be resolved")
+        for address in addresses:
+            resolved_ip = address[4][0]
+            if _is_unsafe_webhook_ip(resolved_ip):
+                raise ValueError("Webhook callback_url host resolves to a private or unsafe address")
+
+    return url
+
+
+def canonical_customer_webhook_body(body: dict) -> str:
+    return json.dumps(body, sort_keys=True, separators=(",", ":"))
+
+
+def build_customer_webhook_signature_headers(integration_key: str, body: dict) -> dict:
+    timestamp = str(int(time.time()))
+    event_id = f"evt_{uuid.uuid4().hex}"
+    body_json = canonical_customer_webhook_body(body)
+    signed_payload = f"{timestamp}.{body_json}"
+    signature = hmac.new(str(integration_key or "").encode("utf-8"), signed_payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    return {
+        "Content-Type": "application/json",
+        "X-PermitAssist-Webhook-Id": event_id,
+        "X-PermitAssist-Webhook-Timestamp": timestamp,
+        "X-PermitAssist-Webhook-Signature": f"sha256={signature}",
+    }
+
+
+def verify_customer_webhook_signature(integration_key: str, body_json: str, timestamp: str, signature_header: str) -> bool:
+    if not integration_key or not body_json or not timestamp or not signature_header:
+        return False
+    expected = hmac.new(
+        str(integration_key).encode("utf-8"),
+        f"{timestamp}.{body_json}".encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    provided = signature_header.split("sha256=", 1)[-1] if signature_header.startswith("sha256=") else signature_header
+    return hmac.compare_digest(expected, provided)
+
+
 def create_webhook_integration(email: str, name: str, callback_url: str, field_mapping: dict | None = None) -> dict:
     integration_key = f"wh_{secrets.token_urlsafe(18)}"
     now = utc_now().isoformat()
-    clean_mapping = field_mapping or {
+    clean_callback_url = validate_webhook_callback_url(callback_url)
+    default_mapping = {
         "job_type": "job_type",
         "city": "city",
         "state": "state",
-        "callback_url": "callback_url",
         "zip_code": "zip_code",
     }
+    clean_mapping = dict(field_mapping) if isinstance(field_mapping, dict) else default_mapping
+    clean_mapping.pop("callback_url", None)
     conn = sqlite3.connect(CACHE_DB)
     cur = conn.cursor()
     cur.execute(
         "INSERT INTO webhook_integrations (email, integration_key, name, callback_url, field_mapping, created_at, last_triggered_at, trigger_count) VALUES (?,?,?,?,?,?,?,0)",
-        (email.lower().strip(), integration_key, (name or "Webhook").strip()[:80], callback_url.strip(), json.dumps(clean_mapping), now, None)
+        (email.lower().strip(), integration_key, (name or "Webhook").strip()[:80], clean_callback_url, json.dumps(clean_mapping), now, None)
     )
     conn.commit()
     integration_id = cur.lastrowid
@@ -1801,7 +1894,7 @@ def create_webhook_integration(email: str, name: str, callback_url: str, field_m
         "id": integration_id,
         "name": (name or "Webhook").strip()[:80],
         "integration_key": integration_key,
-        "callback_url": callback_url.strip(),
+        "callback_url": clean_callback_url,
         "field_mapping": clean_mapping,
         "created_at": now,
         "last_triggered_at": None,
@@ -1871,9 +1964,9 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
             city = resolve_webhook_field(payload, mapping, "city")
             state = resolve_webhook_field(payload, mapping, "state")
             zip_code = resolve_webhook_field(payload, mapping, "zip_code")
-            callback_url = str(payload.get("callback_url") or integration.get("callback_url") or "").strip()
-            if not (job_type and city and state and callback_url):
-                raise ValueError("Webhook requires job_type, city, state, and callback_url")
+            callback_url = validate_webhook_callback_url(integration.get("callback_url") or "")
+            if not (job_type and city and state):
+                raise ValueError("Webhook requires job_type, city, and state")
             result = research_permit(job_type, city, state, zip_code)
             body = {
                 "ok": True,
@@ -1883,14 +1976,20 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
                 "integration": integration.get("name") or "Webhook",
                 "result": result,
             }
-            requests.post(callback_url, json=body, timeout=20)
+            body_json = canonical_customer_webhook_body(body)
+            headers = build_customer_webhook_signature_headers(integration.get("integration_key") or "", body)
+            requests.post(callback_url, data=body_json, headers=headers, timeout=20, allow_redirects=False)
             mark_webhook_triggered(integration["integration_key"])
         except Exception as e:
             print(f"[webhook] Delivery error: {e}")
-            callback_url = str(payload.get("callback_url") or integration.get("callback_url") or "").strip()
+            callback_url = str(integration.get("callback_url") or "").strip()
             if callback_url:
                 try:
-                    requests.post(callback_url, json={"ok": False, "error": str(e)}, timeout=20)
+                    callback_url = validate_webhook_callback_url(callback_url)
+                    body = {"ok": False, "error": str(e)}
+                    body_json = canonical_customer_webhook_body(body)
+                    headers = build_customer_webhook_signature_headers(integration.get("integration_key") or "", body)
+                    requests.post(callback_url, data=body_json, headers=headers, timeout=20, allow_redirects=False)
                 except Exception:
                     pass
     threading.Thread(target=_worker, daemon=True).start()
@@ -3984,9 +4083,10 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(403, {"error": "Paid plan required"})
                     return
                 data = self.read_json_body()
-                callback_url = str(data.get("callback_url", "")).strip()
-                if not callback_url.startswith("http"):
-                    self.send_json(400, {"error": "Valid callback_url required"})
+                try:
+                    callback_url = validate_webhook_callback_url(str(data.get("callback_url", "")).strip())
+                except ValueError as exc:
+                    self.send_json(400, {"error": str(exc)})
                     return
                 field_mapping = data.get("field_mapping") or {}
                 if isinstance(field_mapping, str):
@@ -4008,7 +4108,7 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 data = self.read_json_body()
                 run_webhook_lookup_async(integration, data)
-                self.send_json(202, {"accepted": True, "integration": integration.get("name") or "Webhook", "callback_url": data.get("callback_url") or integration.get("callback_url")})
+                self.send_json(202, {"accepted": True, "integration": integration.get("name") or "Webhook", "callback_url": integration.get("callback_url")})
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
