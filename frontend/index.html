@@ -2018,6 +2018,14 @@ const COMMERCIAL_FAIL_POINTS = {
     'Exterior signage permit not pulled separately from the building TI',
     'Means of egress: <2 exits provided when occupant load > 49 OR floor area > 3,000 sf (IBC 1006)',
   ],
+  commercial_medical_clinic_ti: [
+    'B vs I-2 occupancy question not resolved for procedure/anesthesia scope (IBC 304 / 308, IBC 422)',
+    'Exam/procedure-room hand sinks, accessible restroom clearances, and fixture counts not verified before rough-in',
+    'Mechanical ventilation / pressure relationship schedule missing for treatment, sterilization, lab, or procedure rooms (ASHRAE 170 / IMC 403)',
+    'Medical gas, oxygen, nitrous, vacuum, or nurse-call rough-in not coordinated with certified installer/verifier (NFPA 99)',
+    'Fire alarm, sprinkler coverage, emergency lighting, and egress updates not coordinated with the new clinic layout',
+    'Health-care licensing / infection-control / radiation shielding submittals not confirmed where the program triggers them',
+  ],
   multifamily: [
     'Fire-rated wall assembly between dwelling units not continuous through ceiling / floor (IBC 706)',
     'Type B accessible-unit ratio not provided per IBC 1107.6.2',
@@ -2070,7 +2078,7 @@ function generateCustomerPermitExplanation() {
   const state = window._lastLookupState || '';
   const fee = result.fee_range || result.fee || result.cost || 'Call the city to confirm the exact fee';
   const location = [city, state].filter(Boolean).join(', ') || 'your jurisdiction';
-  const isCommercial = primaryScope.startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial' || primaryScope === 'change_of_occupancy';
+  const isCommercial = isCommercialPrimaryScope(primaryScope);
   // 2026-04-28: tier the justifier by occupancy. Earlier this was residential-
   // only and shipped "homeowner's insurance" / "selling your home" language to
   // commercial restaurant + office + retail TI responses (4/4 commercial Opus
@@ -2809,7 +2817,7 @@ function getNextSteps(d, job, city, state) {
   if (d.approval_timeline?.simple || d.approval_timeline?.complex) {
     steps.push(`Plan around the approval timeline: ${d.approval_timeline.simple || d.approval_timeline.complex}.`);
   }
-  if ((d.inspections || []).length) {
+  if (normalizeInspectionItems(d.inspections || []).length) {
     steps.push('Post the permit on site and schedule inspections in the right order.');
   }
   return steps.slice(0, 4);
@@ -2868,6 +2876,30 @@ function normalizeLicenseRequirementCopy(value) {
     .replace(/no\s+permit\s+if\s+licensed/gi, 'Licensed contractor pulls the permit — work still requires a permit');
 }
 
+function isCommercialPrimaryScope(primaryScope) {
+  return String(primaryScope || '').startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial' || primaryScope === 'change_of_occupancy';
+}
+
+function normalizeInspectionItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items.map(item => {
+    if (typeof item === 'string') {
+      const title = item.trim();
+      return title ? { title, description: '' } : null;
+    }
+    if (item && typeof item === 'object') {
+      const title = String(item.stage || item.title || item.name || '').trim();
+      const description = String(item.description || item.notes || item.detail || '').trim();
+      const timing = String(item.timing || '').trim();
+      // Hide fixed-slot placeholders like {stage:'Inspection'} or empty dicts.
+      if (!title && !description && !timing) return null;
+      if (/^inspection$/i.test(title) && !description && !timing) return null;
+      return { ...item, title: title || description, description, timing };
+    }
+    return null;
+  }).filter(Boolean);
+}
+
 function renderResults(d, job, city, state) {
   window._lastLookupResult = d;
   window._lastLookupJob = job || '';
@@ -2875,7 +2907,7 @@ function renderResults(d, job, city, state) {
   window._lastLookupState = state || '';
   const verdict = verdictState(d);
   const permits = d.permits_required || [];
-  const insps = d.inspections || [];
+  const insps = normalizeInspectionItems(d.inspections || []);
   const tips = d.pro_tips || [];
   const mistakes = d.common_mistakes || [];
   const checklist = d.what_to_bring || d.checklist || [];
@@ -3223,7 +3255,10 @@ function renderResults(d, job, city, state) {
   }
 
   if (verdict !== 'no') {
-    html += `<div class="card permit-explainer-card"><div class="section-label">📋 Customer Permit Justifier</div><div style="font-size:14px;color:var(--text2);line-height:1.6">Need to explain the permit to the homeowner fast? Open this and copy it into a text, email, or quote.</div><div class="permit-explainer-actions"><button class="action-btn" onclick="toggleCustomerExplanation()">📋 Get Customer Explanation</button><button class="action-btn" onclick="copyCustomerExplanation()">📋 Copy to Clipboard</button></div><div class="permit-explainer-copy" id="customer-explanation-box" style="display:none"></div></div>`;
+    const justifierIntro = isCommercialPrimaryScope(d?._primary_scope)
+      ? 'Need to explain the permit to the tenant, landlord, or owner fast? Open this and copy it into a text, email, or quote.'
+      : 'Need to explain the permit to the homeowner fast? Open this and copy it into a text, email, or quote.';
+    html += `<div class="card permit-explainer-card"><div class="section-label">📋 Customer Permit Justifier</div><div style="font-size:14px;color:var(--text2);line-height:1.6">${esc(justifierIntro)}</div><div class="permit-explainer-actions"><button class="action-btn" onclick="toggleCustomerExplanation()">📋 Get Customer Explanation</button><button class="action-btn" onclick="copyCustomerExplanation()">📋 Copy to Clipboard</button></div><div class="permit-explainer-copy" id="customer-explanation-box" style="display:none"></div></div>`;
   }
 
   // City contractor registration alert
@@ -3483,8 +3518,10 @@ function renderResultAsReport(d, job, city, state) {
   const tl = d.approval_timeline || {};
   const reqs = (Array.isArray(d.requirements) && d.requirements.length) ? d.requirements
              : (Array.isArray(d.documents_needed) ? d.documents_needed : []);
-  const inspections = Array.isArray(d.inspect_checklist) ? d.inspect_checklist
-                    : (Array.isArray(d.inspections) ? d.inspections : []);
+  const inspections = normalizeInspectionItems(Array.isArray(d.inspect_checklist) ? d.inspect_checklist
+                    : (Array.isArray(d.inspections) ? d.inspections : []))
+                    .map(ins => ins.title || ins.stage || ins.description || ins.notes || '')
+                    .filter(Boolean);
   const failureRisks = Array.isArray(d.common_mistakes) ? d.common_mistakes : [];
   const sources = Array.isArray(d.sources) ? d.sources.filter(Boolean) : [];
   const validationIssues = Array.isArray(d._validation_issues) ? d._validation_issues : [];
@@ -4109,7 +4146,7 @@ function emailToForeman() {
     fetch('/api/email-report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, job, city, state, data })
+      body: JSON.stringify({ email, job, city, state, data: { ...data, inspections: normalizeInspectionItems(data.inspections || []) } })
     })
       .then(r => r.json())
       .then(r => {
@@ -4158,7 +4195,7 @@ function downloadReport() {
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])];
   const tips = (d.pro_tips || []).slice(0, 4);
   const mistakes = (d.common_mistakes || []).slice(0, 4);
-  const inspections = (d.inspections || []).slice(0, 6);
+  const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
   const sources = (d.sources || []).slice(0, 5);
   const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
@@ -4290,7 +4327,7 @@ function printResult() {
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])];  
   const tips = (d.pro_tips || []).slice(0, 4);
   const mistakes = (d.common_mistakes || []).slice(0, 4);
-  const inspections = (d.inspections || []).slice(0, 6);
+  const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
   const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';

@@ -39,7 +39,7 @@ def test_email_to_foreman_uses_event_listeners_not_inline_interpolated_fetch():
     body = _function_body("emailToForeman")
     assert "addEventListener('click', send)" in body
     assert "addEventListener('keydown'" in body
-    assert "body: JSON.stringify({ email, job, city, state, data })" in body
+    assert "body: JSON.stringify({ email, job, city, state, data: { ...data, inspections: normalizeInspectionItems(data.inspections || []) } })" in body
     assert "onclick=\"(function()" not in body
     assert "window._lastLookupResult||{}" not in body
     assert "job:'${esc(job)}'" not in body
@@ -78,3 +78,24 @@ def test_inspection_accordion_and_result_buttons_present_in_standard_view():
         "saveJobToTracker()",
     ]:
         assert action in body
+
+
+def test_commercial_justifier_header_is_scope_aware_not_homeowner_only():
+    body = _function_body("renderResults")
+    justifier_start = body.index("const justifierIntro")
+    justifier_block = body[justifier_start: body.index("// City contractor registration alert", justifier_start)]
+    assert "isCommercialPrimaryScope(d?._primary_scope)" in justifier_block
+    assert "tenant, landlord, or owner" in justifier_block
+    assert "homeowner fast" in justifier_block
+
+
+def test_inspection_items_are_normalized_and_empty_placeholders_hidden():
+    body = _function_body("normalizeInspectionItems")
+    assert "typeof item === 'string'" in body
+    assert "stage:'Inspection'" in body
+    assert "/^inspection$/i.test(title)" in body
+    render_body = _function_body("renderResults")
+    assert "const insps = normalizeInspectionItems(d.inspections || [])" in render_body
+    assert "normalizeInspectionItems(d.inspections || []).length" in HTML
+    assert "normalizeInspectionItems(Array.isArray(d.inspect_checklist)" in HTML
+    assert ".map(ins => ins.title || ins.stage || ins.description || ins.notes || '')" in HTML
