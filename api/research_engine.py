@@ -5146,7 +5146,7 @@ def enforce_commercial_primary_permit_guardrail(result: dict, job_type: str, cit
         "city": city,
         "state": state,
     }
-    if repaired:
+    if repaired and not already_marked:
         result["confidence"] = downgrade_confidence(str(result.get("confidence") or "medium").lower(), 1)
         reason = (result.get("confidence_reason") or "").strip()
         append = "Structured primary permit was reconciled to commercial TI; verify exact AHJ portal label before quoting or starting work."

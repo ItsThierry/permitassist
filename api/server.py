@@ -477,6 +477,7 @@ def init_db():
     # Feedback can be submitted before the first permit lookup on a fresh
     # volume. Initialize the engine cache table here too so flagging a result
     # never 500s just because research_engine.init_cache() has not run yet.
+    # Keep this DDL in sync with api.research_engine.init_cache().
     conn.execute("""
         CREATE TABLE IF NOT EXISTS permit_cache (
             cache_key       TEXT PRIMARY KEY,

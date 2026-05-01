@@ -223,3 +223,54 @@ def test_cache_hit_path_repairs_stale_commercial_residential_primary(monkeypatch
     assert out["_cached"] is True
     assert out["_commercial_primary_permit_guardrail"]["repaired"] is True
     assert "residential" not in _permit_blob(out)
+
+
+def test_guardrail_is_idempotent_after_repair():
+    result = {
+        "confidence": "high",
+        "confidence_reason": "Initial model confidence.",
+        "permits_required": [
+            {"permit_type": "Mechanical Permit — HVAC System Replacement (Residential)", "portal_selection": "Mechanical - HVAC Changeout / Replacement", "required": True, "notes": "wrong cached primary"}
+        ],
+        "permits_required_logic": [],
+        "companion_permits": [],
+    }
+    job = "commercial office TI with partitions and HVAC diffuser relocation"
+
+    engine.enforce_commercial_primary_permit_guardrail(result, job, "Denver", "CO")
+    first_confidence = result["confidence"]
+    first_reason = result["confidence_reason"]
+    first_logic_count = len(result["permits_required_logic"])
+    engine.enforce_commercial_primary_permit_guardrail(result, job, "Denver", "CO")
+
+    assert first_confidence == "medium"
+    assert result["confidence"] == first_confidence
+    assert result["confidence_reason"] == first_reason
+    assert len(result["permits_required_logic"]) == first_logic_count
+    _assert_commercial_ti_primary(result)
+
+
+def test_ti_min_floor_does_not_add_sign_for_office_or_medical_without_signage():
+    cases = [
+        ("commercial office TI with partitions, ceiling grid, HVAC diffuser relocation and ADA restroom", "commercial_office_ti"),
+        ("commercial tenant improvement converting office to medical clinic with exam rooms, hand sinks and HVAC ventilation", "commercial_medical_clinic_ti"),
+    ]
+    for job, expected_scope in cases:
+        result = {"permits_required": [], "permits_required_logic": []}
+        result["_primary_scope"] = engine.detect_primary_scope(job)
+
+        engine.enforce_ti_min_permits_floor(result, job, "Denver", "CO")
+
+        assert result["_primary_scope"] == expected_scope
+        assert "sign" not in {engine._permit_family(p) for p in result["permits_required"]}
+
+
+def test_ti_min_floor_keeps_sign_for_retail_signage_scope():
+    job = "commercial retail TI buildout with storefront signage, lighting and ADA restroom"
+    result = {"permits_required": [], "permits_required_logic": []}
+    result["_primary_scope"] = engine.detect_primary_scope(job)
+
+    engine.enforce_ti_min_permits_floor(result, job, "Austin", "TX")
+
+    assert result["_primary_scope"] == "commercial_retail_ti"
+    assert "sign" in {engine._permit_family(p) for p in result["permits_required"]}
