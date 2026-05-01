@@ -414,6 +414,295 @@ def enrich_result_response(result: dict, job_type: str, city: str, state: str) -
 
     return result
 
+
+# ── PermitIQ trust layer helpers ─────────────────────────────────────────────
+_COMMERCIAL_SCOPE_TOKENS = (
+    "tenant improvement", " ti", "commercial", "restaurant", "clinic",
+    "dental", "medical", "office", "retail", "change of use",
+    "change of occupancy", "buildout", "build-out", "tenant finish",
+    "storefront", "demising", "exam room", "type i hood",
+)
+_RESIDENTIAL_PRIMARY_TOKENS = (
+    "residential", "single-family", "single family", "dwelling",
+    "water heater", "hvac", "furnace", "roof", "reroof", "minor trade",
+)
+_COMMERCIAL_PRIMARY_TOKENS = (
+    "commercial", "tenant improvement", "interior alteration", "building permit",
+    "change of occupancy", "change of use", "alteration", "buildout", "build-out",
+)
+
+
+def _is_commercial_scope(job_type: str, result: dict | None = None) -> bool:
+    text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
+    return any(token in text for token in _COMMERCIAL_SCOPE_TOKENS)
+
+
+def _primary_permit_text(result: dict) -> str:
+    permits = result.get("permits_required") or []
+    if permits and isinstance(permits[0], dict):
+        p = permits[0]
+        return str(p.get("permit_type") or p.get("name") or p.get("title") or "")
+    return ""
+
+
+def _safe_external_url(url: str) -> str:
+    """Return http(s) URLs only; block javascript:, data:, and relative HTML href tricks."""
+    url = str(url or "").strip()
+    if not url:
+        return ""
+    parsed = urlparse(url)
+    if parsed.scheme.lower() not in ("http", "https") or not parsed.netloc:
+        return ""
+    return url
+
+
+def _render_safe_link(url: str, label: str | None = None) -> str:
+    safe = _safe_external_url(url)
+    if not safe:
+        return ""
+    text = html.escape(label or safe)
+    href = html.escape(safe, quote=True)
+    return f"<a target='_blank' rel='noopener noreferrer' href='{href}'>{text}</a>"
+
+
+def _source_dicts(result: dict) -> list[dict]:
+    out = []
+    for item in result.get("sources") or []:
+        if isinstance(item, str):
+            url = _safe_external_url(item)
+            if url:
+                out.append({"url": url, "title": "Official source", "snippet": ""})
+        elif isinstance(item, dict):
+            url = _safe_external_url(item.get("url") or item.get("link") or "")
+            if url:
+                out.append({
+                    "url": url,
+                    "title": str(item.get("title") or item.get("name") or "Official source"),
+                    "snippet": str(item.get("snippet") or item.get("quote") or item.get("text") or ""),
+                })
+    return out
+
+
+def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Final safety gate before a PermitIQ result is shown to users.
+
+    This is deliberately conservative: repair obvious commercial-primary leaks
+    and expose uncertainty instead of letting a polished but mismatched report
+    reach a contractor.
+    """
+    warnings = list(result.get("quality_warnings") or [])
+    primary = _primary_permit_text(result)
+    primary_l = primary.lower()
+    commercial = _is_commercial_scope(job_type, result)
+    sources = _source_dicts(result)
+
+    if commercial:
+        has_commercial_primary = any(token in primary_l for token in _COMMERCIAL_PRIMARY_TOKENS)
+        has_residential_leak = any(token in primary_l for token in _RESIDENTIAL_PRIMARY_TOKENS) and not has_commercial_primary
+        if has_residential_leak or not primary:
+            fixed_primary = "Building Permit — Commercial Tenant Improvement / Interior Alteration"
+            if "restaurant" in (job_type or "").lower():
+                fixed_primary = "Building Permit — Tenant Improvement / Restaurant Interior Alteration"
+            elif any(t in (job_type or "").lower() for t in ("medical", "clinic", "dental", "exam room")):
+                fixed_primary = "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration"
+            elif "office" in (job_type or "").lower():
+                fixed_primary = "Building Permit — Tenant Improvement / Office Interior Alteration"
+            elif "retail" in (job_type or "").lower():
+                fixed_primary = "Building Permit — Commercial Interior Alteration / Tenant Improvement"
+            permits = result.get("permits_required") or []
+            if permits and isinstance(permits[0], dict):
+                permits[0]["permit_type"] = fixed_primary
+                permits[0]["required"] = True
+                permits[0]["notes"] = (permits[0].get("notes") or "Commercial scope safety gate repaired the primary permit; verify exact AHJ naming before quoting.")
+            else:
+                result["permits_required"] = [{"permit_type": fixed_primary, "required": True, "notes": "Commercial scope safety gate inserted likely primary permit; verify exact AHJ naming before quoting."}]
+            result["_primary_scope"] = result.get("_primary_scope") or "commercial"
+            warnings.append("Commercial scope detected; primary permit was repaired or forced away from residential/trade-only leakage. Verify exact AHJ permit name before quoting.")
+
+        elif not has_commercial_primary:
+            warnings.append("Commercial scope detected, but the primary permit name is AHJ-specific or not in the commercial allow-list; verify exact AHJ naming before quoting.")
+
+        companion_text = " ".join(str(x) for x in (result.get("companion_permits") or result.get("permits_required") or [])).lower()
+        required_companions = ["electrical", "mechanical", "plumbing"]
+        if "restaurant" in (job_type or "").lower():
+            required_companions += ["fire", "health", "grease", "hood"]
+        if any(t in (job_type or "").lower() for t in ("medical", "clinic", "dental")):
+            required_companions += ["fire", "accessibility", "medical gas"]
+        missing = [token for token in required_companions if token not in companion_text]
+        if missing:
+            warnings.append("Commercial scope may require companion reviews/permits not fully proven here: " + ", ".join(missing[:5]) + ".")
+
+    if str(result.get("confidence") or "").lower() == "high" and not sources:
+        result["confidence"] = "medium"
+        warnings.append("Confidence downgraded because no source URLs were attached to the result.")
+
+    if warnings:
+        deduped = []
+        for w in warnings:
+            if w and w not in deduped:
+                deduped.append(w)
+        result["quality_warnings"] = deduped
+        result["needs_review"] = True
+    return result
+
+
+def build_claim_citations(result: dict) -> list[dict]:
+    """Attach field-level provenance without inventing quotes.
+
+    If retrieved snippets are unavailable, the claim is labeled needs_verification
+    rather than pretending a quote exists.
+    """
+    sources = _source_dicts(result)
+    first = sources[0] if sources else {}
+    checked = utc_now().date().isoformat()
+
+    def confidence_for(field: str) -> str:
+        if not sources:
+            return "needs_verification"
+        if first.get("snippet"):
+            return str(result.get("confidence") or "medium").lower()
+        return "needs_verification"
+
+    fields = [
+        ("permit_type", _primary_permit_text(result), "Likely primary permit type"),
+        ("apply_url", result.get("apply_url"), "Where to start the application"),
+        ("fee_range", result.get("fee_range"), "Estimated fee range"),
+        ("approval_timeline", result.get("approval_timeline"), "Estimated approval timeline"),
+        ("inspections", result.get("inspections") or result.get("inspect_checklist"), "Likely inspections"),
+    ]
+    citations = []
+    for idx, (field, value, label) in enumerate(fields, 1):
+        if value in (None, "", [], {}):
+            continue
+        snippet = first.get("snippet", "")
+        citations.append({
+            "id": f"C{idx}",
+            "field": field,
+            "claim": label,
+            "value": str(value) if not isinstance(value, str) else value,
+            # Keep the source URL attached even when no quoted snippet exists so
+            # users can verify the claim themselves. Missing snippets still force
+            # needs_verification; we just do not pretend the URL proves the field.
+            "source_url": first.get("url", ""),
+            "source_title": first.get("title", ""),
+            "quoted_snippet": snippet,
+            "checked_at": checked,
+            "confidence": confidence_for(field),
+        })
+    result["claim_citations"] = citations
+    if any(c["confidence"] == "needs_verification" for c in citations):
+        result.setdefault("quality_warnings", [])
+        warning = "Some report claims do not yet have quoted source snippets; verify with the AHJ before relying on them."
+        if warning not in result["quality_warnings"]:
+            result["quality_warnings"].append(warning)
+    return citations
+
+
+def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict:
+    url = result.get("apply_url") or ""
+    lower = url.lower()
+    platform = "unknown"
+    if "accela" in lower or "citizenaccess" in lower:
+        platform = "Accela / Citizen Access"
+    elif "tyler" in lower or "energov" in lower:
+        platform = "Tyler / EnerGov"
+    elif "opengov" in lower:
+        platform = "OpenGov"
+    elif url.lower().endswith(".pdf"):
+        platform = "PDF / paper form"
+    elif url:
+        platform = "city portal / AHJ website"
+
+    commercial = _is_commercial_scope(job_type, result)
+    permit_type = _primary_permit_text(result) or "Permit type needs AHJ verification"
+    steps = [
+        f"Open the {platform} start URL.",
+        "Create or sign into the contractor/applicant account if required.",
+        f"Look for the closest permit category to: {permit_type}.",
+        "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission.",
+        "Stop before final submit, payment, signature, or legal attestation until the AHJ details are verified.",
+    ]
+    if commercial:
+        steps.insert(3, "For commercial TI, check whether separate building, MEP, fire/life-safety, accessibility, health, or change-of-occupancy reviews are required.")
+    apply_path = {
+        "support_level": "verified path" if url else "partial path",
+        "platform": platform,
+        "portal_url": url,
+        "login_required": "likely" if platform != "PDF / paper form" else "not_applicable_or_unknown",
+        "permit_category": "Commercial Building / Tenant Improvement" if commercial else "Residential / Trade Permit",
+        "permit_type": permit_type,
+        "portal_selection_path": steps[:3],
+        "likely_documents": ["scope of work", "plans/drawings if required", "contractor license", "valuation", "owner authorization"],
+        "steps": steps,
+        "stop_before": "final submit, payment, signature, or legal attestation",
+        "verification_note": "PermitAssist guides the application pathway; verify exact portal choice with the AHJ before filing.",
+    }
+    result["apply_path"] = apply_path
+    return apply_path
+
+
+def record_beta_event(event: str, payload: dict | None = None, email: str = "") -> None:
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        payload_json = json.dumps(payload or {}, sort_keys=True)
+        if len(payload_json) > 8000:
+            payload_json = json.dumps({"truncated": True, "prefix": payload_json[:7800]}, sort_keys=True)
+        conn.execute(
+            "INSERT INTO beta_events (event,email,payload_json,created_at) VALUES (?,?,?,?)",
+            (str(event)[:80], (email or "").lower().strip(), payload_json, utc_now().isoformat()),
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[beta-events] record error: {e}")
+
+
+def save_beta_feedback(email: str, job_type: str, city: str, state: str, useful: str, knew_next_step: str, missing: str, ahj_confirmed: str, use_again: str) -> dict:
+    feedback_id = str(uuid.uuid4())
+    now = utc_now().isoformat()
+    conn = sqlite3.connect(CACHE_DB)
+    conn.execute(
+        """
+        INSERT INTO beta_feedback (id,email,job_type,city,state,useful,knew_next_step,missing,ahj_confirmed,use_again,created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        """,
+        (feedback_id, (email or "").lower().strip(), job_type[:500], city[:120], state[:20], useful[:40], knew_next_step[:40], missing[:2000], ahj_confirmed[:40], use_again[:40], now),
+    )
+    conn.commit()
+    conn.close()
+    record_beta_event("beta_feedback_submitted", {"city": city, "state": state, "useful": useful, "use_again": use_again}, email)
+    return {"id": feedback_id, "received": True}
+
+
+def render_white_label_report_html(data: dict) -> str:
+    result = data.get("result") or {}
+    contractor = html.escape(str(data.get("contractor_name") or "Contractor"))
+    client = html.escape(str(data.get("client_name") or "Client / Property"))
+    job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
+    location = html.escape(", ".join(x for x in [str(data.get("city") or ""), str(data.get("state") or "")] if x))
+    citations = result.get("claim_citations") or build_claim_citations(result)
+    permits = result.get("permits_required") or []
+    permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or "<li>Permit type needs AHJ verification.</li>"
+    safe_apply_url = _safe_external_url(result.get('apply_url') or '')
+    footnotes = "".join(
+        f"<li><strong>{html.escape(c.get('id',''))}</strong> {html.escape(c.get('claim',''))}: "
+        f"{html.escape(c.get('quoted_snippet') or 'No quoted snippet available yet — verify with AHJ.')} "
+        f"<br>{_render_safe_link(c.get('source_url','')) or 'No safe source URL attached'} "
+        f"<em>Checked {html.escape(c.get('checked_at',''))}; confidence {html.escape(c.get('confidence',''))}</em></li>"
+        for c in citations
+    ) or "<li>No citations attached yet; verify with AHJ.</li>"
+    warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in (result.get("quality_warnings") or []))
+    return f"""<!doctype html>
+<html><head><meta charset='utf-8'><title>Permit research report</title>
+<style>body{{font-family:Arial,sans-serif;max-width:820px;margin:32px auto;color:#172033;line-height:1.45}}.brand{{border-bottom:3px solid #0f766e;padding-bottom:12px;margin-bottom:24px}}.muted{{color:#64748b}}.card{{border:1px solid #dbe3ea;border-radius:12px;padding:16px;margin:16px 0}}@media print{{button{{display:none}}body{{margin:0.5in}}}}</style></head>
+<body><button onclick='window.print()'>Print / Save PDF</button><div class='brand'><h1>{contractor}</h1><div class='muted'>Permit research prepared for {client}</div></div>
+<h2>{job}</h2><p><strong>Location:</strong> {location}</p>
+<div class='card'><h3>Likely permits</h3><ul>{permit_items}</ul></div>
+<div class='card'><h3>How to apply</h3><p>{html.escape(str((result.get('apply_path') or {}).get('verification_note') or 'Verify exact filing path with the AHJ.'))}</p><p><strong>Start URL:</strong> {_render_safe_link(safe_apply_url) or 'Not found'}</p></div>
+{f"<div class='card'><h3>Warnings</h3><ul>{warnings}</ul></div>" if warnings else ""}
+<div class='card'><h3>Source footnotes</h3><ol>{footnotes}</ol></div>
+<p class='muted'>PermitAssist is guidance only. Verify exact permit type with the AHJ before quoting or starting work.</p></body></html>"""
+
 # ── Telegram notifications ────────────────────────────────────────────────────
 def notify_telegram(message: str):
     """Fire-and-forget Telegram message. Non-blocking."""
@@ -474,6 +763,30 @@ def init_db():
             state       TEXT,
             issue       TEXT,
             submitted_at TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS beta_events (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            event        TEXT NOT NULL,
+            email        TEXT,
+            payload_json TEXT,
+            created_at   TEXT NOT NULL
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS beta_feedback (
+            id             TEXT PRIMARY KEY,
+            email          TEXT,
+            job_type       TEXT,
+            city           TEXT,
+            state          TEXT,
+            useful         TEXT,
+            knew_next_step TEXT,
+            missing        TEXT,
+            ahj_confirmed  TEXT,
+            use_again      TEXT,
+            created_at     TEXT NOT NULL
         )
     """)
     # Feedback can be submitted before the first permit lookup on a fresh
@@ -718,6 +1031,8 @@ def init_db():
         "api_keys",
         "webhook_integrations",
         "saved_jurisdictions",
+        "beta_events",
+        "beta_feedback",
     }
     missing_tables = sorted(expected_tables - preexisting_tables)
     if missing_tables:
@@ -2488,6 +2803,15 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
     result = research_permit(normalized_job, normalized_city, normalized_state)
     current_hash = _city_watch_payload_hash(result)
     changed = bool(last_hash and last_hash != current_hash)
+    digest = {
+        "job_type": normalized_job,
+        "city": normalized_city,
+        "state": normalized_state,
+        "required_permits": [p.get('permit_type', 'Permit') for p in (result.get("permits_required") or []) if isinstance(p, dict)][:8],
+        "fee_range": result.get('fee_range') or result.get('fee') or 'Check with city',
+        "apply_url": result.get('apply_url') or '',
+        "checked_at": utc_now().isoformat(),
+    }
     now = utc_now().isoformat()
     if changed:
         requirements = result.get("what_to_bring") or result.get("requirements") or result.get("documents_needed") or []
@@ -2519,7 +2843,7 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
         conn.execute("UPDATE city_watch SET last_hash=? WHERE id=?", [current_hash, watch_id])
     conn.commit()
     conn.close()
-    return {"watched": True, "changed": changed, "last_hash": current_hash}
+    return {"watched": True, "changed": changed, "last_hash": current_hash, "digest": digest}
 
 
 def build_fix_plan_text(fix_result: dict) -> str:
@@ -3676,11 +4000,24 @@ class Handler(BaseHTTPRequestHandler):
                 from urllib.parse import parse_qs as _pqs
                 params = _pqs(urlparse(self.path).query)
                 email = params.get("email", [""])[0].strip().lower()
+                plan = params.get("plan", ["free"])[0].strip().lower() or "free"
                 if not email:
                     self.send_json(400, {"error": "email param required"})
                     return True
+                if plan not in ("free", "solo", "team"):
+                    self.send_json(400, {"error": "plan must be free, solo, or team"})
+                    return True
                 token = create_session_token(email)
-                self.send_json(200, {"token": token, "email": email})
+                if plan != "free":
+                    now = utc_now().isoformat()
+                    conn = sqlite3.connect(CACHE_DB)
+                    conn.execute(
+                        "UPDATE users SET plan=?, last_login=? WHERE email=?",
+                        (plan, now, email),
+                    )
+                    conn.commit()
+                    conn.close()
+                self.send_json(200, {"token": token, "email": email, "plan": plan, "paid": plan != "free"})
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
             return True
@@ -3924,6 +4261,15 @@ class Handler(BaseHTTPRequestHandler):
 
                 # Benchmark requests bypass the cache so we measure fresh
                 # pipeline behavior, not pre-cached results.
+                record_beta_event("lookup_started", {
+                    "city": city,
+                    "state": state,
+                    "job_category": job_category,
+                    "commercial_scope": _is_commercial_scope(job_type),
+                    "paid": paid,
+                    "sample_demo": is_sample_demo,
+                    "benchmark": is_benchmark,
+                }, user_email or "")
                 _use_cache = not is_benchmark
                 result = research_permit(
                     job_type, city, state, zip_code,
@@ -3971,9 +4317,23 @@ class Handler(BaseHTTPRequestHandler):
                     result['apply_phone'] = result.get('apply_google_maps', '')
 
                 result = enrich_result_response(result, job_type, city, state)
+                result = apply_permitiq_quality_gate(result, job_type, city, state)
+                build_apply_path(result, job_type, city, state)
+                build_claim_citations(result)
 
-                # Record stats
+                # Record stats and beta telemetry
                 record_lookup_stat(job_type, city, state, is_cached)
+                record_beta_event("lookup_completed", {
+                    "city": city,
+                    "state": state,
+                    "job_category": job_category,
+                    "commercial_scope": _is_commercial_scope(job_type, result),
+                    "confidence": result.get("confidence"),
+                    "needs_review": result.get("needs_review", False),
+                    "cached": is_cached,
+                    "paid": paid,
+                    "free_limit_remaining": result.get("remaining_lookups"),
+                }, user_email or "")
 
                 # No Telegram on lookups — only notify on paying customers
 
@@ -3981,6 +4341,10 @@ class Handler(BaseHTTPRequestHandler):
 
             except Exception as e:
                 print(f"[permit] Error: {e}")
+                try:
+                    record_beta_event("lookup_failed", {"error_type": type(e).__name__, "path": "/api/permit"})
+                except Exception:
+                    pass
                 import traceback; traceback.print_exc()
                 self.send_json(500, {"error": "Lookup failed — please try again"})
 
@@ -4042,6 +4406,65 @@ class Handler(BaseHTTPRequestHandler):
                     }
                 })
             except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        # ── Beta telemetry / feedback / white-label report ─────────────────
+        elif path == "/api/beta-event":
+            try:
+                data = self.read_json_body()
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else ""
+                if not user_email:
+                    self.send_json(401, {"error": "login_required"})
+                    return
+                event = (data.get("event") or "client_event").strip()[:80]
+                payload = data.get("payload") if isinstance(data.get("payload"), dict) else data
+                record_beta_event(event, payload, user_email)
+                self.send_json(200, {"recorded": True})
+            except Exception as e:
+                print(f"[beta-event] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/beta-feedback":
+            try:
+                data = self.read_json_body()
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else ""
+                if not user_email:
+                    self.send_json(401, {"error": "login_required"})
+                    return
+                saved = save_beta_feedback(
+                    user_email,
+                    data.get("job_type", ""),
+                    data.get("city", ""),
+                    data.get("state", ""),
+                    data.get("useful", ""),
+                    data.get("knew_next_step", ""),
+                    data.get("missing", ""),
+                    data.get("ahj_confirmed", ""),
+                    data.get("use_again", ""),
+                )
+                self.send_json(200, saved)
+            except Exception as e:
+                print(f"[beta-feedback] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/white-label-report":
+            try:
+                data = self.read_json_body()
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else ""
+                if not user_email:
+                    self.send_json(401, {"error": "login_required"})
+                    return
+                html_doc = render_white_label_report_html(data)
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(html_doc.encode("utf-8"))
+            except Exception as e:
+                print(f"[white-label-report] Error: {e}")
                 self.send_json(500, {"error": str(e)})
 
         # ── Feedback ──────────────────────────────────────────────────────

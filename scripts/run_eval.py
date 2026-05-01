@@ -157,12 +157,16 @@ def evaluate(case: dict, response: dict) -> dict:
     apply_url = (response.get("apply_url") or "").lower()
     primary_scope = response.get("_primary_scope") or ""
     permits = response.get("permits_required") or []
+    primary_permit = ""
+    if permits and isinstance(permits[0], dict):
+        primary_permit = str(permits[0].get("permit_type") or permits[0].get("name") or "")
     sources = _sources_list(response)
     checklist_text = _checklist_text(response)
     hidden_triggers = response.get("hidden_triggers") or []
     fee_range = response.get("fee_range") or ""
     fee_high = _get_fee_high_end(fee_range)
     validation_issues = response.get("_validation_issues") or []
+    confidence = str(response.get("confidence") or "").lower()
 
     def _check(name: str, passed: bool, detail: str = "") -> None:
         checks.append({"name": name, "passed": bool(passed), "detail": detail})
@@ -183,6 +187,17 @@ def evaluate(case: dict, response: dict) -> dict:
     if "must_primary_scope" in rubric:
         expected = rubric["must_primary_scope"]
         _check("primary_scope", primary_scope == expected, f"expected={expected!r} got={primary_scope!r}")
+
+    # primary permit text correctness
+    if "must_primary_permit_match" in rubric:
+        pat = rubric["must_primary_permit_match"]
+        passed = bool(re.search(pat, primary_permit, re.IGNORECASE)) if primary_permit else False
+        _check("primary_permit_match", passed, f"pat={pat!r} got={primary_permit!r}")
+
+    if "must_primary_permit_not_match" in rubric:
+        pat = rubric["must_primary_permit_not_match"]
+        passed = not bool(re.search(pat, primary_permit, re.IGNORECASE)) if primary_permit else True
+        _check("primary_permit_not_match", passed, f"pat={pat!r} got={primary_permit!r}")
 
     # min permits count
     if "permits_min" in rubric:
@@ -245,6 +260,14 @@ def evaluate(case: dict, response: dict) -> dict:
         passed = fee_high is None or fee_high <= ceiling
         _check("fee_max", passed, f"ceiling=${ceiling} got={'$' + str(int(fee_high)) if fee_high else 'unparseable'}")
 
+    # high confidence needs at least one source; otherwise force calibration failure
+    if rubric.get("must_confidence_not_high_without_sources"):
+        _check(
+            "confidence_not_high_without_sources",
+            not (confidence == "high" and len(sources) == 0),
+            f"confidence={confidence!r} sources_count={len(sources)}",
+        )
+
     # validation gate didn't catch placeholder leaks
     if rubric.get("must_validation_no_placeholder"):
         placeholder_issues = [i for i in validation_issues if i.get("kind") == "placeholder"]
@@ -265,6 +288,7 @@ def evaluate(case: dict, response: dict) -> dict:
         "total": total_n,
         "checks": checks,
         "engine_primary_scope": primary_scope,
+        "engine_primary_permit": primary_permit,
         "engine_apply_url": response.get("apply_url"),
         "engine_permits_count": len(permits),
         "engine_sources_count": len(sources),
@@ -339,13 +363,21 @@ def main() -> int:
     if scored:
         residential = [r for r in scored if r.get("category") == "residential"]
         commercial = [r for r in scored if r.get("category") == "commercial"]
+        scopes: dict[str, list[dict]] = {}
+        for r in scored:
+            scopes.setdefault(r.get("scope") or "unknown", []).append(r)
+        verticals = {
+            scope: round(sum(item["score"] for item in rows) / len(rows), 1)
+            for scope, rows in sorted(scopes.items())
+        }
         agg = {
             "overall": round(sum(r["score"] for r in scored) / len(scored), 1),
             "residential": round(sum(r["score"] for r in residential) / len(residential), 1) if residential else None,
             "commercial": round(sum(r["score"] for r in commercial) / len(commercial), 1) if commercial else None,
+            "verticals": verticals,
         }
     else:
-        agg = {"overall": None, "residential": None, "commercial": None}
+        agg = {"overall": None, "residential": None, "commercial": None, "verticals": {}}
 
     print()
     print("=" * 80)
@@ -353,6 +385,10 @@ def main() -> int:
     print(f"  Overall:     {agg['overall']}")
     print(f"  Residential: {agg['residential']}")
     print(f"  Commercial:  {agg['commercial']}")
+    if agg.get("verticals"):
+        print("  Verticals:")
+        for scope, score in agg["verticals"].items():
+            print(f"    {scope:32s} {score}")
     print("=" * 80)
 
     if not args.no_write:
