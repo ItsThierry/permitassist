@@ -474,6 +474,26 @@ def init_db():
             submitted_at TEXT
         )
     """)
+    # Feedback can be submitted before the first permit lookup on a fresh
+    # volume. Initialize the engine cache table here too so flagging a result
+    # never 500s just because research_engine.init_cache() has not run yet.
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS permit_cache (
+            cache_key       TEXT PRIMARY KEY,
+            job_type        TEXT,
+            job_category    TEXT,
+            city            TEXT,
+            state           TEXT,
+            zip_code        TEXT,
+            result_json     TEXT,
+            created_at      TEXT,
+            hits            INTEGER DEFAULT 0,
+            source_url      TEXT,
+            etag            TEXT,
+            last_modified   TEXT,
+            last_checked_at TEXT
+        )
+    """)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS shared_results (
             slug        TEXT PRIMARY KEY,
