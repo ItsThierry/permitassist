@@ -2280,16 +2280,22 @@ async function refreshAccountBadge(){
 
 function updateCounterBarFromServer(used, remaining, plan){
   if(!document.getElementById('counter-bar'))return;
-  if(plan==='solo'||plan==='team'){
+  const normalizedUsed = Number.isFinite(Number(used)) ? Math.max(0, Number(used)) : 0;
+  const normalizedRemaining = Number.isFinite(Number(remaining)) ? Number(remaining) : Math.max(0, FREE_LIMIT - normalizedUsed);
+  if(plan==='solo'||plan==='team'||normalizedRemaining<0){
+    _serverFreeLookupsUsed = 0;
+    _userIsPaid = true;
     document.getElementById('counter-bar').style.display='none';return;
   }
+  _serverFreeLookupsUsed = normalizedUsed;
+  _userIsPaid = false;
   const bar=document.getElementById('counter-bar'),text=document.getElementById('counter-text');
   if(!bar)return;
-  const total=FREE_LIMIT,pct=Math.round(used/total*100);
-  text.textContent=remaining===0?'3 free lookups — no reset. Upgrade for unlimited':`${used} of ${total} free lookups used, no reset`;
+  const total=FREE_LIMIT,pct=Math.max(0,Math.min(100,Math.round(normalizedUsed/total*100)));
+  text.textContent=normalizedRemaining===0?'3 free lookups — no reset. Upgrade for unlimited':`${Math.min(normalizedUsed,total)} of ${total} free lookups used, no reset`;
   const fill=bar.querySelector('.counter-progress-fill');
   if(fill)requestAnimationFrame(()=>fill.style.width=pct+'%');
-  bar.style.borderColor=remaining===0?'rgba(239,68,68,0.4)':'';
+  bar.style.borderColor=normalizedRemaining===0?'rgba(239,68,68,0.4)':'';
   bar.style.display='block';
 }
 
@@ -3641,11 +3647,21 @@ function renderResultAsReport(d, job, city, state) {
 
   html += `</div>`;
 
-  // Footer with copy/print actions
-  html += `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:12px">`;
+  // Footer with copy/share/print actions. Keep these in report view so a user
+  // who switches to the contractor-grade report can still copy, share, email,
+  // flag, and save as PDF without returning to standard view.
+  html += `<div class="action-row action-row-3 no-print" style="margin-top:12px">`;
   html += `<button class="action-btn" onclick="renderStandardView()">📄 Standard view</button>`;
-  html += `<button class="action-btn" onclick="window.print()">🖨️ Print / Save PDF</button>`;
+  html += `<button class="action-btn" onclick="copyResult()">📋 Copy</button>`;
+  html += `<button class="action-btn" onclick="shareResult()">🔗 Share</button>`;
   html += `</div>`;
+  html += `<div class="action-row action-row-3 no-print">`;
+  html += `<button class="action-btn" onclick="emailToForeman()">📤 Email to Foreman</button>`;
+  html += `<button class="action-btn" onclick="window.print()">🖨️ Print / Save PDF</button>`;
+  html += `<button class="action-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button>`;
+  html += `</div>`;
+  html += `<div id="copy-feedback" class="copy-feedback no-print">✅ Copied to clipboard!</div>`;
+  html += `<span class="flag-feedback-inline no-print" id="flag-feedback-inline">Thanks for flagging. We'll review this within 30 days.</span>`;
 
   return html;
 }
@@ -3735,7 +3751,9 @@ async function shareResult() {
     showShareModal(r.url);
   } catch (e) {
     console.error('Share error:', e);
-    showCopy('✅ Link copied (app URL)');
+    const fallbackUrl = window.location.href;
+    await navigator.clipboard.writeText(fallbackUrl).catch(() => {});
+    showCopy('✅ App link copied — share the report from this page.');
   } finally {
     if (btn) { btn.innerHTML = origText; btn.disabled = false; }
   }
@@ -4062,24 +4080,6 @@ function emailToForeman() {
   if (!currentResult) return;
   const { job, city, state, data } = currentResult;
 
-  const doSend = email => {
-    const btn = document.getElementById('email-foreman-send-btn');
-    if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
-    fetch('/api/email-report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, job, city, state, data })
-    })
-      .then(r => r.json()).then(r => {
-        document.getElementById('email-foreman-modal')?.remove();
-        showCopy(r.sent ? `✅ Report sent to ${email}` : '⚠️ Could not send — try Share Report instead.');
-      })
-      .catch(() => {
-        document.getElementById('email-foreman-modal')?.remove();
-        showCopy('⚠️ Could not send — try Share Report instead.');
-      });
-  };
-
   document.getElementById('email-foreman-modal')?.remove();
   const m = document.createElement('div');
   m.id = 'email-foreman-modal';
@@ -4091,22 +4091,40 @@ function emailToForeman() {
       <input id="email-foreman-input" type="email" placeholder="foreman@company.com" autocomplete="email"
         style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#f8fafc;font-size:15px;margin-bottom:12px;outline:none"/>
       <button id="email-foreman-send-btn"
-        style="width:100%;background:#1a56db;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:10px"
-        onclick="(function(){
-          const inp=document.getElementById('email-foreman-input'),val=inp?inp.value.trim():'';
-          if(!val||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val)){inp.style.border='1px solid #ef4444';inp.focus();return;}
-          inp.style.border='';
-          const btn=document.getElementById('email-foreman-send-btn');
-          if(btn){btn.textContent='Sending\u2026';btn.disabled=true;}
-          fetch('/api/email-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:val,job:'${esc(job)}',city:'${esc(city)}',state:'${esc(state)}',data:window._lastLookupResult||{}})})
-            .then(r=>r.json()).then(r=>{document.getElementById('email-foreman-modal')?.remove();showCopy(r.sent?'\u2705 Report sent to '+val:'\u26a0\ufe0f Could not send \u2014 try Share Report instead.');})
-            .catch(()=>{document.getElementById('email-foreman-modal')?.remove();showCopy('\u26a0\ufe0f Could not send \u2014 try Share Report instead.');});
-        })()"
-      >Send to Foreman</button>
-      <button onclick="document.getElementById('email-foreman-modal').remove()" style="width:100%;background:none;border:1px solid #334155;border-radius:10px;color:#64748b;font-size:14px;padding:11px;cursor:pointer">Cancel</button>
+        style="width:100%;background:#1a56db;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:10px">Send to Foreman</button>
+      <button id="email-foreman-cancel-btn" style="width:100%;background:none;border:1px solid #334155;border-radius:10px;color:#64748b;font-size:14px;padding:11px;cursor:pointer">Cancel</button>
     </div>`;
   document.body.appendChild(m);
-  setTimeout(() => document.getElementById('email-foreman-input')?.focus(), 100);
+  const input = document.getElementById('email-foreman-input');
+  const sendBtn = document.getElementById('email-foreman-send-btn');
+  const cancelBtn = document.getElementById('email-foreman-cancel-btn');
+  const send = () => {
+    const email = (input?.value || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (input) { input.style.border = '1px solid #ef4444'; input.focus(); }
+      return;
+    }
+    if (input) input.style.border = '';
+    if (sendBtn) { sendBtn.textContent = 'Sending…'; sendBtn.disabled = true; }
+    fetch('/api/email-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, job, city, state, data })
+    })
+      .then(r => r.json())
+      .then(r => {
+        document.getElementById('email-foreman-modal')?.remove();
+        showCopy(r.sent ? `✅ Report sent to ${email}` : '⚠️ Could not send — try Share Report instead.');
+      })
+      .catch(() => {
+        document.getElementById('email-foreman-modal')?.remove();
+        showCopy('⚠️ Could not send — try Share Report instead.');
+      });
+  };
+  if (sendBtn) sendBtn.addEventListener('click', send);
+  if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); send(); } });
+  if (cancelBtn) cancelBtn.addEventListener('click', () => document.getElementById('email-foreman-modal')?.remove());
+  setTimeout(() => input?.focus(), 100);
 }
 
 function copyForQuote() {
@@ -4133,7 +4151,7 @@ function downloadReport() {
   const fee = d.fee_range || '';
   const tl = d.approval_timeline || {};
   const tlText = tl.simple || tl.complex || '';
-  const licenseNote = d.license_required || '';
+  const licenseNote = normalizeLicenseRequirementCopy(d.license_required || '');
   const cityRegNote = (d.city_contractor_registration && d.city_contractor_registration !== 'null') ? d.city_contractor_registration : '';
   const companions = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
   const permits = (d.permits_required || []);
@@ -4266,7 +4284,7 @@ function printResult() {
   const fee = d.fee_range || '';
   const tl = d.approval_timeline || {};
   const tlText = tl.simple || tl.complex || '';
-  const licenseNote = d.license_required || '';
+  const licenseNote = normalizeLicenseRequirementCopy(d.license_required || '');
   const companions = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
   const permits = (d.permits_required || []);
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])];  
