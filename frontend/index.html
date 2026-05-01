@@ -1522,7 +1522,7 @@
 
       <!-- What's Included Feature Grid -->
       <div style="margin:28px 0 8px;padding:24px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:540px;margin-inline:auto">
-        <h2 style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--brand);text-align:center;margin-bottom:16px">Everything included with Pro</h2>
+        <h2 style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--brand);text-align:center;margin-bottom:16px">Everything included with Solo</h2>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div style="display:flex;align-items:flex-start;gap:10px">
             <span style="font-size:20px">📂</span>
@@ -1636,7 +1636,7 @@
 <div class="upgrade-modal" id="upgrade-modal" aria-hidden="true" onclick="handleUpgradeOverlayClick(event)">
   <div class="upgrade-modal-card" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title">
     <button class="upgrade-modal-close" type="button" aria-label="Close upgrade modal" onclick="closeUpgrade()">×</button>
-    <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Pro</div>
+    <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Solo</div>
     <div class="upgrade-modal-accent"></div>
     <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
 
@@ -1654,7 +1654,7 @@
     </ul>
 
     <ul class="upgrade-feature-list" id="upgrade-features-team" hidden>
-      <li><span class="upgrade-feature-check">✓</span><span>Everything in Pro</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Everything in Solo</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Up to 3 team seats</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Shared job board</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>48hr city requests</span></li>
@@ -2851,6 +2851,17 @@ function buildUncertaintyWarnings(d) {
   return [...new Set(warnings)].slice(0, 8);
 }
 
+function normalizeLicenseRequirementCopy(value) {
+  return String(value || '')
+    .replace(/([A-Za-z]+)-Licensed\s+([A-Za-z\s]+?)\(s\)/g, '$1-licensed $2s')
+    .replace(/\blicensed\s+(plumber|electrician|contractor|hvac\s+tech(?:nician)?|roofer)\(s\)/gi, (m, trade) =>
+      `licensed ${trade}s`)
+    .replace(/(^|[^-])\blicensed\s+(plumber|electrician|contractor|hvac\s+tech(?:nician)?|roofer)\b(?!\s*(?:\(|s\b))/gi, (m, prefix, trade) =>
+      `${prefix}Licensed ${trade.charAt(0).toUpperCase()+trade.slice(1)} (they pull the permit for you — permit is still required)`)
+    .replace(/must\s+be\s+pulled\s+by\s+a\s+licensed/gi, 'Permit is pulled by a licensed')
+    .replace(/no\s+permit\s+if\s+licensed/gi, 'Licensed contractor pulls the permit — work still requires a permit');
+}
+
 function renderResults(d, job, city, state) {
   window._lastLookupResult = d;
   window._lastLookupJob = job || '';
@@ -2873,11 +2884,7 @@ function renderResults(d, job, city, state) {
   const applyPdf = d.apply_pdf || '';
   const countyNote = d.county_fallback_note || '';
   const licenseRaw = d.license_required || '';
-  const licenseDisplay = licenseRaw
-    .replace(/licensed\s+(plumber|electrician|contractor|hvac\s+tech(?:nician)?|roofer)/gi, (m, trade) =>
-      `Licensed ${trade.charAt(0).toUpperCase()+trade.slice(1)} (they pull the permit for you — permit is still required)`)
-    .replace(/must\s+be\s+pulled\s+by\s+a\s+licensed/gi, 'Permit is pulled by a licensed')
-    .replace(/no\s+permit\s+if\s+licensed/gi, 'Licensed contractor pulls the permit — work still requires a permit');
+  const licenseDisplay = normalizeLicenseRequirementCopy(licenseRaw);
 
   let html = '';
 
@@ -2901,6 +2908,8 @@ function renderResults(d, job, city, state) {
   if (countyNote) {
     html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
   }
+
+  html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
 
   const uncertaintyWarnings = buildUncertaintyWarnings(d);
   if (uncertaintyWarnings.length) {
@@ -3520,6 +3529,8 @@ function renderResultAsReport(d, job, city, state) {
   }
   html += `</div>`;
 
+  html += `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.5">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
+
   if (reportUncertaintyWarnings.length) {
     html += `<div style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:14px 18px;margin-bottom:14px;color:#7f1d1d">
       <div style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#991b1b;margin-bottom:6px">⚠️ Report needs verification</div>
@@ -3573,7 +3584,8 @@ function renderResultAsReport(d, job, city, state) {
   html += row(6, 'Portal / link', portalLink);
   // 7. Who may apply
   let whoMay = '';
-  if (license) whoMay += _esc(license);
+  const licenseDisplayForReport = normalizeLicenseRequirementCopy(license);
+  if (licenseDisplayForReport) whoMay += _esc(licenseDisplayForReport);
   if (cityReg) whoMay += (whoMay ? ' · ' : '') + 'City contractor registration: ' + _esc(cityReg);
   html += row(7, 'Who may apply', whoMay || _missing);
   // 8. Required documents
@@ -3763,6 +3775,7 @@ function copyResult() {
   t += `Fee: ${fee}\n`;
   t += `Timeline: ${timeline}\n`;
   if (office || phone) t += `Apply at: ${office}${office && phone ? ' — ' : ''}${phone}\n`;
+  t += `\nPERMITASSIST GUIDANCE ONLY: Verify exact permit type with the AHJ before quoting or starting work.\n`;
   if (uncertaintyWarnings.length) {
     t += `\nVERIFY BEFORE RELYING:\n`;
     t += `Uncertainty / verification warnings:\n`;
