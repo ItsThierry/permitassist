@@ -4301,6 +4301,17 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
     def add_logic(permit_type: str, because: str, trigger: str) -> None:
         logic.append({"permit_type": permit_type, "included_because": because, "scope_trigger": trigger})
 
+    primary_scope = detect_primary_scope(job)
+    if _is_commercial_ti_scope(primary_scope, job):
+        permits, commercial_logic = _commercial_ti_required_permit_set(primary_scope, job)
+        logic.extend(commercial_logic)
+        return {
+            "scope_classification": primary_scope,
+            "permits_required": permits,
+            "permits_required_logic": logic,
+            "companion_permits": _commercial_ti_secondary_companions(primary_scope),
+        }
+
     # Solar first so "roof solar" scopes don't collapse into a reroof permit.
     if has_solar:
         # Mount-type detection: prevents the "ground-mount job labeled as Roof-Mounted
@@ -4668,6 +4679,10 @@ def _ahj_companion_permit_name(family: str, primary_scope: str, city: str, state
         scope_label = "Commercial Medical Clinic TI"
     elif primary_scope == "commercial_office_ti":
         scope_label = "Commercial Office TI"
+    elif primary_scope == "commercial_restaurant":
+        scope_label = "Commercial Restaurant TI"
+    elif primary_scope == "commercial":
+        scope_label = "Commercial Tenant Improvement"
     else:
         scope_label = "Commercial Retail TI"
     generic = {
@@ -4947,7 +4962,8 @@ def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: 
     else:
         if any(t in job for t in ("restroom", "bathroom", "toilet", "lavatory", "sink", "kitchen", "plumbing")):
             required.append("plumbing")
-        required.append("sign")
+        if primary_scope == "commercial_retail_ti" or any(t in job for t in ("sign", "signage", "storefront")):
+            required.append("sign")
     if any(t in job for t in ("change of occupancy", "change of use", "sprinkler", "fire alarm", "relocate sprinkler", "sprinkler relocation", ">50% sprinkler", "more than 50% sprinkler")):
         required.append("fire")
 
@@ -4972,6 +4988,171 @@ def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: 
         result["permits_required_logic"] = logic
         result["permit_verdict"] = "YES"
     return result
+
+
+def _is_commercial_ti_scope(primary_scope: str, job_type: str) -> bool:
+    if primary_scope in {"commercial_restaurant", "commercial_office_ti", "commercial_retail_ti", "commercial_medical_clinic_ti"}:
+        return True
+    if primary_scope != "commercial":
+        return False
+    job = (job_type or "").lower()
+    return _scope_has_any(job, [
+        "tenant improvement", " ti", "t.i.", "interior alteration", "interior remodel",
+        "buildout", "build-out", "change of use", "change of occupancy", "occupancy change",
+        "fit out", "fit-out",
+    ])
+
+
+def _commercial_ti_building_permit(primary_scope: str) -> dict:
+    building_name = {
+        "commercial_restaurant": "Building Permit — Tenant Improvement / Restaurant Interior Alteration",
+        "commercial_office_ti": "Building Permit — Tenant Improvement / Office Interior Alteration",
+        "commercial_retail_ti": "Building Permit — Tenant Improvement / Retail Interior Alteration",
+        "commercial_medical_clinic_ti": "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration",
+        "commercial": "Building Permit — Commercial Interior Alteration / Change of Use",
+    }.get(primary_scope, "Building Permit — Commercial Interior Alteration / Change of Use")
+    return _scope_permit(
+        building_name,
+        "Commercial Building Permit - Tenant Improvement / Interior Alteration",
+        "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. Verify exact AHJ portal label before submittal.",
+    )
+
+
+def _commercial_ti_companion_permits(primary_scope: str, job_type: str) -> list[dict]:
+    job = (job_type or "").lower()
+    companions = [
+        _scope_permit("Mechanical Permit — Commercial Tenant Improvement", "Mechanical Permit - Commercial Interior Alteration", "Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope commonly requires mechanical review."),
+        _scope_permit("Electrical Permit — Commercial Tenant Improvement", "Electrical Permit - Commercial Interior Alteration", "Commercial lighting, panels, branch circuits, equipment, emergency lighting, and controls commonly require electrical review."),
+    ]
+    if primary_scope in {"commercial_restaurant", "commercial_office_ti", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["sink", "restroom", "bathroom", "plumbing", "grease", "interceptor", "kitchen", "fixture"]):
+        companions.append(_scope_permit("Plumbing Permit — Commercial Tenant Improvement", "Plumbing Permit - Commercial Interior Alteration", "Commercial fixtures, restrooms, sinks, grease/dental/medical equipment, or DWV changes commonly require plumbing review."))
+    if primary_scope in {"commercial_restaurant", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["fire alarm", "sprinkler", "hood", "suppression", "ansul", "fire suppression"]):
+        companions.append(_scope_permit("Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement", "Fire Alarm / Fire Sprinkler Permit - Commercial", "Commercial TI frequently affects fire alarm, sprinkler, hood suppression, egress, emergency lighting, or life-safety review."))
+    if primary_scope == "commercial_retail_ti" or _scope_has_any(job, ["sign", "signage", "storefront"]):
+        companions.append(_scope_permit("Sign Permit — Commercial Storefront / Wall Sign", "Sign Permit - Commercial", "Retail/storefront changes commonly require separate sign review if signage is included."))
+    return companions
+
+
+def _commercial_ti_required_permit_set(primary_scope: str, job_type: str) -> tuple[list[dict], list[dict]]:
+    permits = [_commercial_ti_building_permit(primary_scope)]
+    logic = [{
+        "permit_type": permits[0]["permit_type"],
+        "included_because": "Commercial TI/change-of-use scopes must lead with a building/interior-alteration permit; trade permits are companion permits unless the job is only a trade changeout.",
+        "scope_trigger": f"detected primary scope {primary_scope}",
+    }]
+    for permit in _commercial_ti_companion_permits(primary_scope, job_type):
+        permits.append(permit)
+        logic.append({
+            "permit_type": permit.get("permit_type"),
+            "included_because": permit.get("notes"),
+            "scope_trigger": f"commercial TI {_permit_family(permit)} companion family",
+        })
+    return permits, logic
+
+
+def _commercial_ti_secondary_companions(primary_scope: str) -> list[dict]:
+    companions: list[dict] = []
+    if primary_scope == "commercial_restaurant":
+        companions.extend([
+            {"permit_type": "Health Department / Food Establishment Review", "reason": "Restaurant buildouts commonly require health review before opening.", "certainty": "almost_certain"},
+            {"permit_type": "Grease Interceptor / FOG Approval", "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.", "certainty": "likely"},
+        ])
+    elif primary_scope == "commercial_medical_clinic_ti":
+        companions.extend([
+            {"permit_type": "Health-care licensing / local health review", "reason": "Clinic opening may require licensing or health-care approval separate from building permit final.", "certainty": "likely"},
+            {"permit_type": "Medical gas / x-ray specialty review if included", "reason": "Medical gas, nitrous/oxygen/vacuum, or radiology equipment can require specialty documentation and verification.", "certainty": "conditional"},
+        ])
+    elif primary_scope == "commercial_office_ti":
+        companions.append({"permit_type": "Low-voltage / data cabling permit if cabling, access control, AV, or security systems are installed", "reason": "Office TIs commonly include telecom/data/access-control work that may be permitted separately or inspected by electrical/fire reviewers.", "certainty": "likely"})
+    companions.append({"permit_type": "Accessibility / ADA path-of-travel verification", "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.", "certainty": "likely"})
+    return companions
+
+
+def _is_residential_or_trade_only_primary(permit: dict) -> bool:
+    if not isinstance(permit, dict):
+        return True
+    text = " ".join(str(permit.get(k, "")) for k in ("permit_type", "portal_selection", "notes", "description")).lower()
+    if "residential" in text:
+        return True
+    if any(bad in text for bad in ("hvac changeout", "hvac system replacement", "changeout / replacement")):
+        return True
+    return _permit_family(permit) != "building"
+
+
+def enforce_commercial_primary_permit_guardrail(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Ensure commercial TI scopes never ship a residential/trade primary card.
+
+    The model/narrative can understand commercial TI while stale structured JSON still
+    puts residential HVAC first. This reconciles the structured card against the
+    detected scope and repairs to a commercial building/TI primary, while marking the
+    result needs_review so a contractor sees verification caution instead of fake certainty.
+    """
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result["_primary_scope"] = primary_scope
+    if not _is_commercial_ti_scope(primary_scope, job_type or ""):
+        return result
+
+    permits = result.get("permits_required")
+    if not isinstance(permits, list):
+        permits = []
+    permits = [p for p in permits if isinstance(p, dict)]
+    primary = permits[0] if permits else {}
+    repaired = _is_residential_or_trade_only_primary(primary)
+
+    building_primary = _commercial_ti_building_permit(primary_scope)
+    ordered: list[dict] = []
+    if repaired:
+        ordered.append(building_primary)
+    else:
+        # Keep a valid AHJ-specific building/TI primary, but normalize any accidental residential wording.
+        primary_text = " ".join(str(primary.get(k, "")) for k in ("permit_type", "portal_selection", "notes")).lower()
+        if "residential" in primary_text:
+            primary = building_primary
+            repaired = True
+        ordered.append(primary)
+
+    existing_families = {_permit_family(ordered[0])}
+    for p in _commercial_ti_companion_permits(primary_scope, job_type):
+        fam = _permit_family(p)
+        if fam not in existing_families:
+            ordered.append(p)
+            existing_families.add(fam)
+    for p in permits[1:]:
+        text = " ".join(str(p.get(k, "")) for k in ("permit_type", "portal_selection", "notes", "description")).lower()
+        if "residential" in text or "hvac changeout" in text or "hvac system replacement" in text:
+            continue
+        fam = _permit_family(p)
+        if fam and fam not in existing_families:
+            ordered.append(p)
+            existing_families.add(fam)
+
+    already_marked = isinstance(result.get("_commercial_primary_permit_guardrail"), dict)
+    result["permits_required"] = ordered
+    result["permit_verdict"] = "YES"
+    result["needs_review"] = bool(result.get("needs_review")) or repaired
+    logic = result.get("permits_required_logic") if isinstance(result.get("permits_required_logic"), list) else []
+    if not already_marked:
+        logic.append({
+            "permit_type": ordered[0].get("permit_type"),
+            "included_because": "Commercial TI/change-of-use scopes must lead with a commercial building/interior alteration permit; residential/trade-only primary cards are blocked.",
+            "scope_trigger": "Batch 1 commercial primary-permit guardrail",
+        })
+    result["permits_required_logic"] = logic
+    result["_commercial_primary_permit_guardrail"] = {
+        "scope": primary_scope,
+        "repaired": repaired,
+        "city": city,
+        "state": state,
+    }
+    if repaired:
+        result["confidence"] = downgrade_confidence(str(result.get("confidence") or "medium").lower(), 1)
+        reason = (result.get("confidence_reason") or "").strip()
+        append = "Structured primary permit was reconciled to commercial TI; verify exact AHJ portal label before quoting or starting work."
+        result["confidence_reason"] = f"{reason} {append}".strip()
+    return result
+
 
 def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str) -> dict:
     """Append deterministic state expert notes (currently California)."""
@@ -6860,6 +7041,8 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             apply_office_ti_rulebook(cached, job_type, city, state)
             apply_medical_clinic_ti_rulebook(cached, job_type, city, state)
             enforce_ti_min_permits_floor(cached, job_type, city, state)
+            enforce_commercial_primary_permit_guardrail(cached, job_type, city, state)
+            validate_and_sanitize_permit_result(cached, job_type, city, state)
             apply_state_expert_pack(cached, city, state, job_type)
             hedge_companion_permits(cached, job_type)
             enrich_result_with_serper_sources(cached, job_type, city, state)
@@ -7739,6 +7922,11 @@ Return ONLY the JSON object."""
     except Exception as e:
         print(f"[hidden_triggers] Failed: {e}")
         result["hidden_triggers"] = []
+
+    # Final commercial structured-card reconciliation. This stays outside the
+    # hidden-trigger try/except so a detector failure cannot let a residential
+    # HVAC/changeout card leak as the primary permit for commercial TI.
+    enforce_commercial_primary_permit_guardrail(result, job_type, city, state)
 
     # 2026-04-28: Fee Realism Guardrail V1. Closes the systematic 3-10x under-
     # quote bug Opus 4.7 grading caught across all 4 cities of restaurant TI
