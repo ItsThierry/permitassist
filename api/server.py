@@ -4302,6 +4302,7 @@ class Handler(BaseHTTPRequestHandler):
                     if fallback_url:
                         result['apply_url'] = fallback_url
                         result['_url_warning'] = None
+                        result.pop('_apply_url_locality_warning', None)
 
                 # Strip PDF from apply_url → apply_pdf (server-side safety net)
                 result = strip_pdf_from_result(result)
