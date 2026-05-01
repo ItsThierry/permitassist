@@ -2512,6 +2512,45 @@ def get_rejection_patterns(city: str, state: str, job_type: str) -> list[dict]:
         return []
 
 
+def _looks_like_commercial_trade_only_scope(job_type: str) -> bool:
+    """Detect commercial-location single-trade work that should not become TI.
+
+    A phrase like "RTU replacement at strip mall" has commercial/retail words,
+    but the project is a trade-only swap unless it also says TI/buildout/change
+    of use/interior alteration. Keep those out of named TI scopes so the Batch 1
+    guardrail does not replace a correct mechanical primary with building/TI.
+    """
+    job = (job_type or "").lower()
+    if not job:
+        return False
+    ti_markers = (
+        "tenant improvement", " t.i.", " ti ", " ti,", " ti.", " ti-", "buildout", "build-out",
+        "interior alteration", "interior remodel", "change of use", "change of occupancy",
+        "occupancy change", "convert", "converting", "demising", "partition", "partitions",
+        "new restaurant", "new clinic", "new office", "new retail",
+    )
+    if any(t in job for t in ti_markers):
+        return False
+    commercial_location_markers = (
+        "commercial", "strip mall", "mall", "grocery store", "restaurant", "office",
+        "professional office", "retail", "store", "tenant space", "suite", "warehouse",
+    )
+    trade_markers = (
+        "rtu", "rooftop unit", "hvac", "condenser", "compressor", "furnace", "mini split",
+        "walk-in cooler", "walk in cooler", "walk-in freezer", "walk in freezer",
+        "panel", "electrical", "plumbing", "water heater", "hood", "exhaust fan",
+    )
+    swap_markers = (
+        "replace", "replacement", "changeout", "change-out", "swap", "like-for-like",
+        "like for like", "repair", "service", "install", "installation", "add", "upgrade",
+    )
+    return (
+        any(t in job for t in commercial_location_markers)
+        and any(t in job for t in trade_markers)
+        and any(t in job for t in swap_markers)
+    )
+
+
 def detect_primary_scope(job_type: str) -> str:
     """Identify the primary occupancy/project class for a permit query.
 
@@ -2527,6 +2566,8 @@ def detect_primary_scope(job_type: str) -> str:
       multifamily | commercial (generic) | residential_adu | residential (default)
     """
     job_lc = (job_type or "").lower()
+    if _looks_like_commercial_trade_only_scope(job_lc):
+        return 'commercial'
 
     # Commercial restaurant — strongest signal
     if any(t in job_lc for t in (

@@ -57,6 +57,9 @@ def test_free_lookup_counter_syncs_server_state_and_hides_for_paid_users():
 
 def test_lookup_counter_only_advances_from_server_response_not_client_side_guess():
     assert "function incrementLookup(){return getLookupCount()}" in HTML
+    sync_body = _function_body("syncLookupCounterFromResponse")
+    assert "remaining<0" in sync_body
+    assert sync_body.index("remaining<0") < sync_body.index("used>=0")
     submit_body = _function_body("doLookup")
     assert "syncLookupCounterFromResponse(res,data);" in submit_body
     assert "incrementLookup()" not in submit_body

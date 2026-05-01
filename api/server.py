@@ -19,6 +19,7 @@ import os
 import csv
 import hmac
 import hashlib
+import html
 import ipaddress
 import sqlite3
 import string
@@ -3782,7 +3783,7 @@ class Handler(BaseHTTPRequestHandler):
                 paid = is_paid_user(user_email) if user_email else False
                 unlimited = is_sample_demo or paid or is_unlimited_lookup_ip(ip) or is_benchmark
                 used_before = 0 if unlimited else get_effective_free_usage(ip, fingerprint)
-                response_headers = build_free_lookup_headers(used_before)
+                response_headers = {} if unlimited else build_free_lookup_headers(used_before)
 
                 if not is_sample_demo and not is_benchmark:
                     limited, retry_after = check_rate_limit(ip)
@@ -3975,9 +3976,9 @@ class Handler(BaseHTTPRequestHandler):
 
                 notify_telegram(
                     f"⚠️ <b>Feedback — Possible Wrong Info</b>\n"
-                    f"Job: {job_type}\n"
-                    f"Location: {city}, {state}\n"
-                    f"Issue: {issue or '(no detail provided)'}"
+                    f"Job: {html.escape(job_type)}\n"
+                    f"Location: {html.escape(city)}, {html.escape(state)}\n"
+                    f"Issue: {html.escape(issue or '(no detail provided)')}"
                 )
 
                 print(f"[feedback] Flagged and cache cleared: {job_type} in {city}, {state}")

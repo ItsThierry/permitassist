@@ -274,3 +274,44 @@ def test_ti_min_floor_keeps_sign_for_retail_signage_scope():
 
     assert result["_primary_scope"] == "commercial_retail_ti"
     assert "sign" in {engine._permit_family(p) for p in result["permits_required"]}
+
+
+def test_named_commercial_location_trade_only_phrases_do_not_become_ti_scope():
+    cases = [
+        "RTU replacement at strip mall suite, like-for-like rooftop unit swap only",
+        "install walk-in cooler at grocery store, electrical connection only",
+        "HVAC changeout at professional office, replace existing condenser only",
+    ]
+    for job in cases:
+        assert engine.detect_primary_scope(job) == "commercial"
+        assert engine._looks_like_commercial_trade_only_scope(job) is True
+
+
+def test_guardrail_does_not_force_named_location_trade_only_work_into_ti_primary():
+    cases = [
+        "RTU replacement at strip mall suite, like-for-like rooftop unit swap only",
+        "install walk-in cooler at grocery store, electrical connection only",
+        "HVAC changeout at professional office, replace existing condenser only",
+    ]
+    for job in cases:
+        result = {
+            "confidence": "high",
+            "permits_required": [
+                {"permit_type": "Mechanical Permit — Commercial HVAC / Equipment Replacement", "portal_selection": "Mechanical Permit", "required": True, "notes": "single-trade commercial equipment work"}
+            ],
+            "permits_required_logic": [],
+            "companion_permits": [],
+        }
+        original = [dict(p) for p in result["permits_required"]]
+
+        engine.enforce_commercial_primary_permit_guardrail(result, job, "Phoenix", "AZ")
+
+        assert result["permits_required"] == original
+        assert result["_primary_scope"] == "commercial"
+        assert "_commercial_primary_permit_guardrail" not in result
+
+
+def test_trade_only_detection_preserves_explicit_commercial_ti():
+    job = "commercial retail TI buildout in strip mall with new storefront signage and HVAC diffuser relocation"
+    assert engine._looks_like_commercial_trade_only_scope(job) is False
+    assert engine.detect_primary_scope(job) == "commercial_retail_ti"
