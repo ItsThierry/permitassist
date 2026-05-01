@@ -21,6 +21,7 @@ import hmac
 import hashlib
 import html
 import ipaddress
+import re
 import sqlite3
 import string
 import requests
@@ -2762,6 +2763,93 @@ def render_cities_page_ssr(html_path: str) -> bytes:
     return body
 
 
+_CITY_SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*-[a-z]{2}$")
+
+
+_CITY_LANDING_TRADES = [
+    ("HVAC", "hvac"),
+    ("Electrical", "electrical"),
+    ("Roofing", "roofing"),
+    ("Plumbing", "plumbing"),
+    ("Mini-split", "mini-split"),
+    ("EV charger", "ev-charger"),
+    ("Generator", "generator"),
+    ("Deck", "deck"),
+    ("Solar", "solar"),
+]
+
+
+def city_slug_to_display(slug: str) -> tuple[str, str] | None:
+    """Convert `houston-tx` to (`Houston`, `TX`) for legacy /city/* pages."""
+    slug = (slug or "").strip().lower().strip("/")
+    if not _CITY_SLUG_RE.match(slug):
+        return None
+    city_part, state = slug.rsplit("-", 1)
+    city_name = " ".join(part.capitalize() for part in city_part.split("-") if part)
+    return city_name, state.upper()
+
+
+def render_city_landing_page(slug: str) -> bytes | None:
+    """Render a lightweight legacy /city/{city-state} page instead of 404ing.
+
+    The canonical pSEO URLs are /permits/{trade}/{city-state}; this page keeps
+    old/external /city/* links useful and funnels users to the active permit
+    pages and the main lookup tool.
+    """
+    display = city_slug_to_display(slug)
+    if not display:
+        return None
+    city_name, state = display
+    title = f"Permit requirements in {city_name}, {state}"
+    escaped_title = html.escape(title)
+    escaped_city = html.escape(city_name)
+    escaped_state = html.escape(state)
+    links = "".join(
+        f'<a class="card" href="/permits/{trade_slug}/{html.escape(slug)}">'
+        f'<strong>{html.escape(label)} permits</strong><span>{html.escape(label)} permit requirements in {escaped_city}, {escaped_state}</span></a>'
+        for label, trade_slug in _CITY_LANDING_TRADES
+    )
+    body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{escaped_title} — PermitAssist</title>
+  <meta name="description" content="Find building, trade, and contractor permit requirements for {escaped_city}, {escaped_state}." />
+  <link rel="canonical" href="https://permitassist.io/city/{html.escape(slug)}" />
+  <style>
+    body{{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#0f2044;color:#fff}}
+    .wrap{{max-width:960px;margin:0 auto;padding:32px 20px 56px}}
+    .nav{{display:flex;justify-content:space-between;align-items:center;margin-bottom:56px}}
+    .brand{{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:800}}
+    .brand img{{width:32px;height:32px;border-radius:8px}}
+    .btn{{display:inline-block;background:#1a56db;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:800}}
+    .hero{{margin-bottom:32px}}
+    h1{{font-size:clamp(32px,5vw,54px);line-height:1.05;margin:0 0 14px}}
+    p{{color:rgba(255,255,255,.78);font-size:18px;line-height:1.65;max-width:760px}}
+    .grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:26px}}
+    .card{{display:block;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:18px;color:#fff;text-decoration:none}}
+    .card:hover{{background:rgba(255,255,255,.13)}}
+    .card strong{{display:block;font-size:17px;margin-bottom:6px}}
+    .card span{{display:block;color:rgba(255,255,255,.68);font-size:14px;line-height:1.45}}
+    .note{{margin-top:28px;font-size:14px;color:rgba(255,255,255,.62)}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <nav class="nav"><a class="brand" href="/"><img src="/logo.png" alt="" />PermitAssist</a><a class="btn" href="/">Run a free lookup</a></nav>
+    <section class="hero">
+      <h1>{escaped_title}</h1>
+      <p>Choose a common permit type below, or run a live PermitAssist lookup for your exact scope. Always verify final requirements with the local AHJ before quoting or starting work.</p>
+    </section>
+    <section class="grid" aria-label="Permit pages for {escaped_city}, {escaped_state}">{links}</section>
+    <p class="note">Legacy city URL preserved for users and crawlers. Canonical detailed pages live under /permits/{{permit-type}}/{html.escape(slug)}.</p>
+  </main>
+</body>
+</html>"""
+    return body.encode("utf-8")
+
+
 def observability_head_snippet() -> str:
     """Return optional browser observability scripts. Empty when env vars are absent."""
     snippets: list[str] = []
@@ -3044,6 +3132,21 @@ class Handler(BaseHTTPRequestHandler):
         }
         if path in ("/", "/index.html"):
             self.send_file(os.path.join(FRONTEND_DIR, "index.html"), "text/html; charset=utf-8")
+        elif path == "/logo.png":
+            self.send_file(os.path.join(FRONTEND_DIR, "icons", "logo.png"), "image/png")
+        elif path.startswith("/city/"):
+            slug = path[len("/city/"):].strip("/").lower()
+            body = render_city_landing_page(slug)
+            if body is None:
+                self.send_response(404)
+                self.end_headers()
+            else:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "public, max-age=300")
+                self.end_headers()
+                self.wfile.write(body)
         elif path in ("/cities", "/cities.html", "/cities/"):
             _cities_path = os.path.join(FRONTEND_DIR, "cities.html")
             try:
