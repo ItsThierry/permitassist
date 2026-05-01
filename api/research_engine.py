@@ -410,7 +410,22 @@ _UNIVERSAL_LOCALITY_DOMAINS = frozenset({
     "icc-safe.org", "iccsafe.org", "icc-es.org", "nfpa.org", "iapmo.org", "ashrae.org",
 })
 
-_PLATFORM_VENDOR_DOMAINS = frozenset({"accela.com", "publicstuff.com", "citizenserve.com"})
+_PLATFORM_VENDOR_DOMAINS = frozenset({
+    "accela.com",
+    "aca-prod.accela.com",
+    "publicstuff.com",
+    "citizenserve.com",
+    "etrakit.com",
+    "etrakit.net",
+    "mygovernmentonline.org",
+    "mygovonline.com",
+    "opengov.com",
+    "viewpointcloud.com",
+    "tylertech.com",
+    "tylerhost.net",
+    "civicaccess.com",
+})
+_PLATFORM_VENDOR_DOMAINS_BY_SPECIFICITY = tuple(sorted(_PLATFORM_VENDOR_DOMAINS, key=lambda d: (-len(d), d)))
 
 _AHJ_DOMAIN_ALLOWLIST: dict[tuple[str, str], set[str]] = {
     ("phoenix", "az"): {"phoenix.gov", "az.gov", "azdeq.gov", "azroc.gov", "roc.az.gov"},
@@ -419,6 +434,9 @@ _AHJ_DOMAIN_ALLOWLIST: dict[tuple[str, str], set[str]] = {
     ("seattle", "wa"): {"seattle.gov", "kingcounty.gov", "wa.gov", "lni.wa.gov", "ecology.wa.gov"},
     ("los angeles", "ca"): {"lacity.org", "ladbs.org", "ca.gov", "cslb.ca.gov"},
     ("dallas", "tx"): {"dallascityhall.com", "dallascounty.org", "tx.gov", "tdlr.texas.gov", "texas.gov", "txdmv.gov"},
+    # 2026-05-01 stress100 manual verification: City of Fredericksburg, TX uses fbgtx.org
+    # as its official municipal domain; OpenClaw scorer correctly kept it flagged until verified.
+    ("fredericksburg", "tx"): {"fbgtx.org"},
 }
 
 # Explicit wrong-AHJ regressions from cda4106/four-city review. Keep these ahead
@@ -486,10 +504,55 @@ def locality_allowed_domains(city: str, state: str) -> set[str]:
     state_key = (state or "").lower().strip()
     domains = set(_AHJ_DOMAIN_ALLOWLIST.get((city_key, state_key), set()))
     domains |= _verified_city_domains(city, state)
-    if state_key:
-        domains.add(f"{state_key}.gov")
-        domains.add(f"{state_key}.us")
+    # Shared SaaS permit portals must not become blanket AHJ proof from the DB/allowlist.
+    # They are evaluated by the stricter vendor-token branch below.
+    domains = {d for d in domains if not _host_matches_any(d, _PLATFORM_VENDOR_DOMAINS)}
+    # Do not blanket-allow every municipal subdomain under a state ccTLD-like host
+    # (for example `*.or.gov`) because that can turn SouthBend into Bend.
+    # City/state-token fallback below handles unseeded official hosts safely.
     return domains
+
+
+def _text_has_locality_token(text: str, city: str, state: str = "") -> bool:
+    """Exact-ish city/AHJ token match; avoids Bend matching SouthBend."""
+    if not text:
+        return False
+    normalized = text.lower()
+    for token in _city_match_tokens(city, state):
+        token = (token or "").lower().strip()
+        if len(token) < 3:
+            continue
+        parts = [p for p in re.split(r"[^a-z0-9]+", token) if p]
+        if len(parts) > 1:
+            pattern = r"(?<![a-z0-9])" + r"[^a-z0-9]+".join(re.escape(p) for p in parts) + r"(?![a-z0-9])"
+            if re.search(pattern, normalized):
+                return True
+        else:
+            pattern = r"(?<![a-z0-9])" + re.escape(token) + r"(?![a-z0-9])"
+            for match in re.finditer(pattern, normalized):
+                prior = normalized[:match.start()]
+                prev_word = re.search(r"([a-z0-9]+)[^a-z0-9]+$", prior)
+                if prev_word and prev_word.group(1) in {"north", "south", "east", "west", "northeast", "northwest", "southeast", "southwest"}:
+                    continue
+                return True
+    return False
+
+
+def _vendor_locality_text(domain: str, url: str) -> str:
+    """URL account text for shared permit SaaS portals.
+
+    Includes tenant subdomain labels plus path/query, while not treating the shared
+    vendor suffix itself as locality proof.
+    """
+    parsed = urlparse(url)
+    host_prefixes: list[str] = []
+    for vendor in _PLATFORM_VENDOR_DOMAINS_BY_SPECIFICITY:
+        if _domain_matches(domain, vendor):
+            if domain != vendor and domain.endswith("." + vendor):
+                prefix = domain[: -(len(vendor) + 1)]
+                host_prefixes.append(prefix.replace(".", " ").replace("-", " ").replace("_", " "))
+            break
+    return " ".join(host_prefixes + [parsed.path or "", parsed.query or ""])
 
 
 def is_url_allowed_for_locality(url: str, city: str, state: str, result: dict | None = None) -> bool:
@@ -505,16 +568,19 @@ def is_url_allowed_for_locality(url: str, city: str, state: str, result: dict | 
     allowed = locality_allowed_domains(city, state)
     if _host_matches_any(domain, allowed):
         return True
+    if _host_matches_any(domain, _PLATFORM_VENDOR_DOMAINS):
+        # Vendor portals are legitimate permit infrastructure, but the shared
+        # vendor host alone does not prove jurisdiction. Require the URL account
+        # text itself (tenant subdomain, path, or query) to carry the queried AHJ
+        # token with token boundaries. Do not let applying_office/portal prose
+        # corroborate a wrong portal URL.
+        return _text_has_locality_token(_vendor_locality_text(domain, url), city, state)
     if classify_source_url(url) == SOURCE_CLASS_EXCLUDED:
         return False
-    if _host_matches_any(domain, _PLATFORM_VENDOR_DOMAINS):
-        hay = " ".join(str((result or {}).get(k, "")) for k in ("apply_url", "applying_office", "portal_name", "permit_summary")).lower()
-        return any(vendor in hay for vendor in _PLATFORM_VENDOR_DOMAINS if _domain_matches(domain, vendor))
     # Conservative fallback for non-seeded cities: official host/path with city token AND same-state TLD.
     parsed = urlparse(url)
     full = f"{domain} {(parsed.path or '').lower()}"
-    city_tokens = {t for t in _city_match_tokens(city, state) if len(t) >= 3}
-    if city_tokens and any(t in full for t in city_tokens):
+    if _text_has_locality_token(full, city, state):
         if state_key and (domain.endswith(f".{state_key}.gov") or domain.endswith(f".{state_key}.us")):
             return True
         if domain.endswith((".gov", ".us")) and any(tok in full for tok in _state_match_tokens(state) if len(tok) >= 3):
@@ -555,7 +621,7 @@ def _strip_nonlocal_urls_from_text(text: str, city: str, state: str, result: dic
 
 
 def apply_source_locality_hard_block(result: dict, city: str, state: str) -> dict:
-    """Apply A1 locality filtering to citations, *_source URL fields, and prose."""
+    """Apply A1 locality filtering to citations, apply URL, *_source URL fields, and prose."""
     if not isinstance(result, dict):
         return result
     dropped: list[dict] = []
@@ -565,6 +631,18 @@ def apply_source_locality_hard_block(result: dict, city: str, state: str) -> dic
     for src in pre_sources:
         if src not in result["sources"]:
             dropped.append({"field": "sources", "url": src})
+
+    apply_url = result.get("apply_url")
+    if isinstance(apply_url, str) and apply_url.startswith("http"):
+        if not is_url_allowed_for_locality(apply_url, city, state, result=result):
+            dropped.append({"field": "apply_url", "url": apply_url})
+            result["apply_url"] = None
+            result["_apply_url_locality_warning"] = (
+                f"The online application URL did not match {city}, {state}; "
+                "verify the portal directly with the local building department."
+            )
+        else:
+            result.pop("_apply_url_locality_warning", None)
 
     for key, value in list(result.items()):
         if key.endswith("_source") and isinstance(value, str) and value.startswith("http"):
@@ -596,6 +674,94 @@ def apply_source_locality_hard_block(result: dict, city: str, state: str) -> dic
 
     if dropped:
         result["_sources_locality_dropped"] = (result.get("_sources_locality_dropped") or []) + dropped[:10]
+    return result
+
+
+def apply_residential_stress_quality_floor(result: dict, job_type: str, city: str = "", state: str = "") -> dict:
+    """Fill thin-but-safe residential stress outputs with contractor-grade structure.
+
+    This is deliberately generic and deterministic: it does not invent local fees,
+    sources, or AHJ-specific rules. It only prevents fresh small-city residential
+    outputs from failing structural checks because they omitted a complex timeline
+    or returned a one-item inspection list for common scopes.
+    """
+    if not isinstance(result, dict):
+        return result
+    no_permit_verdicts = {"NO", "NOT REQUIRED", "NONE", "EXEMPT", "NOT NEEDED"}
+    if str(result.get("permit_verdict") or "").upper().strip() in no_permit_verdicts:
+        return result
+    job_lc = (job_type or "").lower()
+    if any(t in job_lc for t in ("commercial", "tenant improvement", " ti", "office", "restaurant", "retail", "clinic", "medical")):
+        return result
+    primary_scope_raw = result.get("_primary_scope")
+    primary_scope = primary_scope_raw if isinstance(primary_scope_raw, str) and primary_scope_raw else detect_primary_scope(job_type or "")
+    primary_scope = str(primary_scope or "")
+    if primary_scope in _COMMERCIAL_PRIMARY_SCOPES:
+        return result
+    result["_primary_scope"] = primary_scope
+
+    job_lc = (job_type or "").lower()
+    if any(t in job_lc for t in ("pool", "spa", "hot tub", "swimming")):
+        scope = "pool"
+        timeline = {"simple": "2-4 weeks", "complex": "4-8+ weeks if structural, barrier, grading, utility, or HOA/zoning review is required"}
+        inspections = [
+            "Pool steel/bonding inspection before gunite or shell placement.",
+            "Underground plumbing pressure test and electrical trench/bonding inspection before cover.",
+            "Barrier/alarms/fencing final plus pool equipment electrical/mechanical final.",
+        ]
+        docs = ["Site plan with pool/spa location, setbacks, equipment pad, fencing/barrier details, and drainage/grading notes."]
+    elif any(t in job_lc for t in ("roof", "reroof", "re-roof", "tear-off", "tear off", "shingle")):
+        scope = "roof"
+        timeline = {"simple": "same day to 1 week", "complex": "1-3+ weeks if structural repairs, historic/design review, HOA, or wildfire/wind exposure rules apply"}
+        inspections = [
+            "Tear-off/decking inspection if sheathing or structural deck repairs are required.",
+            "Dry-in/underlayment inspection where the AHJ requires it before covering.",
+            "Roof final inspection for flashing, ventilation, product approval, and debris cleanup.",
+        ]
+        docs = ["Roof scope/spec sheet showing material, underlayment, flashing, ventilation, roof pitch, and whether decking will be replaced."]
+    elif any(t in job_lc for t in ("addition", "add bedroom", "add bathroom", "room addition", "home addition")):
+        scope = "addition"
+        timeline = {"simple": "3-6 weeks", "complex": "6-12+ weeks if structural engineering, zoning setbacks, utility upgrades, or plan-review corrections are required"}
+        inspections = [
+            "Foundation/footing inspection before concrete placement.",
+            "Framing/shear/hold-down inspection before insulation or drywall.",
+            "If the scope includes electrical, plumbing, or mechanical work, rough inspections are typically required before cover.",
+            "Insulation/energy inspection and final building inspection before occupancy/use.",
+        ]
+        docs = ["Scaled plans with site plan/setbacks, structural details, energy compliance, floor plan, elevations, and MEP scope notes."]
+    else:
+        return result
+
+    tl = result.get("approval_timeline")
+    if not isinstance(tl, dict):
+        result["approval_timeline"] = dict(timeline)
+    else:
+        tl.setdefault("simple", timeline["simple"])
+        tl.setdefault("complex", timeline["complex"])
+        result["approval_timeline"] = tl
+
+    existing = result.get("inspections") if isinstance(result.get("inspections"), list) else []
+    seen = {str(x).strip().lower() for x in existing}
+    for item in inspections:
+        if item.lower() not in seen:
+            existing.append(item)
+            seen.add(item.lower())
+    result["inspections"] = existing
+
+    docs_list = result.get("what_to_bring") if isinstance(result.get("what_to_bring"), list) else []
+    doc_seen = {str(x).strip().lower() for x in docs_list}
+    for item in docs:
+        if item.lower() not in doc_seen:
+            docs_list.append(item)
+            doc_seen.add(item.lower())
+    result["what_to_bring"] = docs_list
+    notes = result.get("_quality_floor_notes")
+    if not isinstance(notes, list):
+        notes = []
+    note = f"residential_{scope}_stress_quality_floor"
+    if note not in notes:
+        notes.append(note)
+    result["_quality_floor_notes"] = notes
     return result
 
 
@@ -7720,6 +7886,8 @@ Return ONLY the JSON object."""
     except Exception as _e:
         # Defensive — never let the filter break the engine
         print(f"[locality_filter] failed: {_e}")
+
+    apply_residential_stress_quality_floor(result, job_type, city, state)
 
     if _verified_entry and _verified_entry.get("verified_at"):
         result["last_verified_at"] = _verified_entry.get("verified_at")

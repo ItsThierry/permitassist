@@ -10,6 +10,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import api.research_engine as engine
 
 
+RESIDENTIAL_THIN_CASES = [
+    ("Knoxville", "TN", "residential room addition with new bedroom and bathroom", "addition"),
+    ("Sedona", "AZ", "residential swimming pool and spa", "pool"),
+    ("Spokane", "WA", "residential roof tear-off and reroof shingles", "roof"),
+]
+
+
 def _blank_result():
     return {
         "permit_verdict": "YES",
@@ -124,3 +131,68 @@ def test_scope_solar_battery_is_two_city_permits_with_utility_companion():
     assert "battery" in permits or "ess" in permits
     assert "utility interconnection" in companions
     assert len(result["permits_required_logic"]) == 2
+
+
+def test_residential_stress_quality_floor_fills_thin_addition_pool_roof_cases():
+    for city, state, job_type, expected_scope in RESIDENTIAL_THIN_CASES:
+        result = engine.apply_residential_stress_quality_floor({
+            "permit_verdict": "YES",
+            "approval_timeline": {"simple": "varies"},
+            "inspections": ["Final inspection"],
+        }, job_type, city, state)
+        assert result["approval_timeline"].get("complex")
+        assert len(result["inspections"]) >= 3
+        assert result["what_to_bring"]
+        assert f"residential_{expected_scope}_stress_quality_floor" in result["_quality_floor_notes"]
+
+
+def test_residential_stress_quality_floor_does_not_touch_commercial_ti():
+    result = {"approval_timeline": {"simple": "varies"}, "inspections": ["Final inspection"]}
+    unchanged = engine.apply_residential_stress_quality_floor(result.copy(), "commercial office tenant improvement", "Dallas", "TX")
+    assert unchanged == result
+
+
+def test_residential_stress_quality_floor_replaces_non_list_note_metadata():
+    result = engine.apply_residential_stress_quality_floor({
+        "approval_timeline": {},
+        "inspections": [],
+        "_quality_floor_notes": "bad-shape",
+    }, "residential swimming pool", "Sedona", "AZ")
+    assert result["_quality_floor_notes"] == ["residential_pool_stress_quality_floor"]
+
+
+def test_residential_stress_quality_floor_skips_no_permit_results():
+    for verdict in ("NO", "NOT REQUIRED", "NONE", "EXEMPT", "NOT NEEDED"):
+        result = {"permit_verdict": verdict, "approval_timeline": {}, "inspections": []}
+        unchanged = engine.apply_residential_stress_quality_floor(result.copy(), "residential roof repair", "Spokane", "WA")
+        assert unchanged == result
+
+
+def test_residential_stress_quality_floor_is_idempotent():
+    result = {
+        "permit_verdict": "YES",
+        "approval_timeline": {},
+        "inspections": [],
+        "_primary_scope": "residential",
+    }
+    once = engine.apply_residential_stress_quality_floor(result, "residential room addition", "Knoxville", "TN")
+    twice = engine.apply_residential_stress_quality_floor(once, "residential room addition", "Knoxville", "TN")
+    assert twice["_quality_floor_notes"] == ["residential_addition_stress_quality_floor"]
+    assert len(twice["inspections"]) == len(set(twice["inspections"]))
+
+
+def test_residential_stress_quality_floor_does_not_touch_commercial_mixed_pool_scope():
+    result = {"permit_verdict": "YES", "approval_timeline": {}, "inspections": []}
+    unchanged = engine.apply_residential_stress_quality_floor(result.copy(), "commercial pool deck at residential complex", "Dallas", "TX")
+    assert unchanged == result
+
+
+def test_residential_stress_quality_floor_normalizes_malformed_primary_scope():
+    result = engine.apply_residential_stress_quality_floor({
+        "permit_verdict": "YES",
+        "approval_timeline": {},
+        "inspections": [],
+        "_primary_scope": ["bad-shape"],
+    }, "residential swimming pool", "Sedona", "AZ")
+    assert result["_primary_scope"] == "residential"
+    assert result["_quality_floor_notes"] == ["residential_pool_stress_quality_floor"]

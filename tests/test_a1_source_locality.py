@@ -64,6 +64,123 @@ def test_la_hillside_adu_rejects_la_county_public_works_regression():
     assert "pw.lacounty.gov" not in result["fee_range"]
 
 
+def test_bend_adu_rejects_la_county_public_works_apply_url_regression():
+    result = {
+        "applying_office": "City of Bend Building Safety Division",
+        "apply_url": "https://pw.lacounty.gov/building-and-safety/permits",
+        "sources": ["https://bendoregon.gov/services/permits-licenses/adu-resources-hub/"],
+    }
+    apply_source_locality_hard_block(result, "Bend", "OR")
+    assert result["apply_url"] is None
+    assert result["sources"] == ["https://bendoregon.gov/services/permits-licenses/adu-resources-hub/"]
+    assert result["_apply_url_locality_warning"].startswith("The online application URL did not match Bend, OR")
+
+
+def test_valid_apply_url_clears_stale_locality_warning():
+    result = {
+        "applying_office": "City of Bend Building Safety Division",
+        "apply_url": "https://bendoregon.gov/services/permits-licenses/adu-resources-hub/",
+        "sources": [],
+        "_apply_url_locality_warning": "stale warning",
+    }
+    apply_source_locality_hard_block(result, "Bend", "OR")
+    assert result["apply_url"].startswith("https://bendoregon.gov")
+    assert "_apply_url_locality_warning" not in result
+
+
+def test_non_http_apply_urls_are_ignored_without_warning_or_crash():
+    for url in ("", "mailto:permits@example.gov", "tel:5551212"):
+        result = {"apply_url": url, "sources": []}
+        apply_source_locality_hard_block(result, "Bend", "OR")
+        assert result["apply_url"] == url
+        assert "_apply_url_locality_warning" not in result
+
+
+def test_fredericksburg_tx_official_abbreviation_domain_is_allowed():
+    url = "https://www.fbgtx.org/890/Permit-Applications"
+    assert is_url_allowed_for_locality(url, "Fredericksburg", "TX")
+    assert filter_sources_by_locality([url], "Fredericksburg", "TX") == [url]
+
+
+def test_fredericksburg_tx_abbreviation_domain_not_allowed_for_virginia_city():
+    url = "https://www.fbgtx.org/890/Permit-Applications"
+    assert not is_url_allowed_for_locality(url, "Fredericksburg", "VA")
+    assert filter_sources_by_locality([url], "Fredericksburg", "VA") == []
+
+
+def test_unseeded_state_level_source_without_city_token_is_not_ahj_proof():
+    assert not is_url_allowed_for_locality("https://www.oregon.gov/bcd/Pages/permits.aspx", "Bend", "OR")
+
+
+def test_known_vendor_apply_url_is_not_dropped_without_city_host_token():
+    result = {
+        "applying_office": "Example Building Department",
+        "apply_url": "https://aca-prod.accela.com/example/Default.aspx",
+        "sources": ["https://example.gov/building/permits"],
+    }
+    apply_source_locality_hard_block(result, "Example", "EX")
+    assert result["apply_url"] == "https://aca-prod.accela.com/example/Default.aspx"
+
+
+def test_vendor_tenant_subdomain_with_city_token_is_allowed():
+    assert is_url_allowed_for_locality("https://bend.viewpointcloud.com/categories/1082", "Bend", "OR")
+
+
+def test_vendor_added_after_source_classifier_still_reaches_token_check():
+    assert is_url_allowed_for_locality("https://bend.tylerhost.net/energovprod/selfservice", "Bend", "OR")
+
+
+def test_vendor_specificity_prefers_longest_matching_suffix():
+    assert is_url_allowed_for_locality("https://bend.aca-prod.accela.com/Default.aspx", "Bend", "OR")
+    assert not is_url_allowed_for_locality("https://southbend.aca-prod.accela.com/Default.aspx", "Bend", "OR")
+
+
+def test_known_vendor_apply_url_without_city_token_is_dropped_even_if_prose_matches():
+    result = {
+        "applying_office": "City of Bend Accela Building Portal",
+        "portal_name": "Accela Bend online permits",
+        "apply_url": "https://aca-prod.accela.com/account123/Default.aspx",
+        "sources": ["https://bendoregon.gov/services/permits-licenses/adu-resources-hub/"],
+    }
+    apply_source_locality_hard_block(result, "Bend", "OR")
+    assert result["apply_url"] is None
+
+
+def test_known_vendor_apply_url_is_dropped_when_path_points_to_wrong_jurisdiction():
+    result = {
+        "applying_office": "City of Bend Building Safety Division",
+        "apply_url": "https://aca-prod.accela.com/lacounty/Default.aspx",
+        "sources": ["https://bendoregon.gov/services/permits-licenses/adu-resources-hub/"],
+    }
+    apply_source_locality_hard_block(result, "Bend", "OR")
+    assert result["apply_url"] is None
+
+
+def test_known_vendor_apply_url_does_not_substring_match_wrong_city():
+    result = {
+        "applying_office": "City of Bend Building Safety Division",
+        "apply_url": "https://aca-prod.accela.com/southbend/Default.aspx",
+        "sources": ["https://bendoregon.gov/services/permits-licenses/adu-resources-hub/"],
+    }
+    apply_source_locality_hard_block(result, "Bend", "OR")
+    assert result["apply_url"] is None
+
+
+def test_known_vendor_apply_url_does_not_directional_match_wrong_city():
+    result = {
+        "applying_office": "City of Bend Building Safety Division",
+        "apply_url": "https://north-bend.viewpointcloud.com/categories/permits",
+        "sources": ["https://bendoregon.gov/services/permits-licenses/adu-resources-hub/"],
+    }
+    apply_source_locality_hard_block(result, "Bend", "OR")
+    assert result["apply_url"] is None
+
+
+def test_non_vendor_official_fallback_does_not_substring_match_wrong_city():
+    assert not is_url_allowed_for_locality("https://southbend.or.gov/permits", "Bend", "OR")
+    assert not is_url_allowed_for_locality("https://north-bend.or.gov/permits", "Bend", "OR")
+
+
 def test_phoenix_commercial_rejects_non_ahj_residential_solar_domain():
     result = _base_result(
         sources=["https://www.gosolarapp.org/solarapp/residential-solar-permit"],
