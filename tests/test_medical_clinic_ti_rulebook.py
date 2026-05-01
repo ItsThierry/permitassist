@@ -54,6 +54,25 @@ def test_medical_clinic_ti_fires_clinic_specific_triggers():
     assert "medical_clinic_accessibility_path_of_travel" in got
 
 
+def test_medical_clinic_ti_suppresses_multifamily_trigger_pool_even_with_surrounding_r2_context():
+    job = (
+        "medical clinic tenant improvement with two procedure rooms, exam sinks, med gas, "
+        "sprinkler relocation, and x-ray in a mixed-use building with apartments/R-2 above"
+    )
+    got = ids(job, "Cambridge", "MA", "commercial_medical_clinic_ti")
+    assert "medical_clinic_exam_room_plumbing" in got
+    assert "medical_clinic_medical_gas_review" in got
+    assert "multifamily_type_b_accessible_unit_ratio" not in got
+    assert "multifamily_nfpa_13r_sprinkler_coverage_limits" not in got
+
+
+def test_legitimate_multifamily_scope_still_fires_multifamily_trigger_pool():
+    job = "multifamily apartment building renovation with Type B accessible units, NFPA 13R sprinkler work, and R-2 corridors"
+    got = ids(job, "Austin", "TX", "multifamily")
+    assert "multifamily_type_b_accessible_unit_ratio" in got
+    assert "multifamily_nfpa_13r_sprinkler_coverage_limits" in got
+
+
 def test_medical_clinic_rulebook_adds_contractor_grade_guidance():
     out = enriched()
     combined = " | ".join(out["pro_tips"] + out["watch_out"] + out["common_mistakes"] + out["inspections"]).lower()

@@ -1288,6 +1288,16 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
         return not _is_commercial_scope(primary_scope_norm)
 
     if trigger_scope_norm == "multifamily":
+        # Multifamily is a competing template family, not a generic add-on for
+        # every commercial project that mentions residential context. A medical
+        # clinic / office / restaurant TI in a mixed-use building can mention
+        # apartments, R-2, sprinklers, or dwelling units in surrounding-building
+        # context without becoming a multifamily project. Only allow the
+        # multifamily trigger pool when the shared primary classifier routed the
+        # job to multifamily. This prevents Type B unit-count / NFPA 13R apartment
+        # triggers from leaking into single-tenant commercial healthcare TI.
+        if _is_commercial_scope(primary_scope_norm) and primary_scope_norm not in {_normalize(s) for s in MULTIFAMILY_SCOPES}:
+            return False
         return primary_scope_norm in {_normalize(s) for s in MULTIFAMILY_SCOPES} or bool(re.search(r"\b(multifamily|multi[-\s]?family|apartment|apartments|r[-\s]?2)\b", text))
 
     return False
