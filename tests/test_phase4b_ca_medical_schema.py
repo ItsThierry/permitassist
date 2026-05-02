@@ -68,6 +68,8 @@ def test_ca_ordinary_private_medical_office_gets_title24_energy_without_cdph_ove
     assert result["occupancy_analysis"]["requires_i2_review"] is False
 
     text = _combined_text(result).lower()
+    assert "california state overlay" in text
+    assert "texas state overlay" not in text
     assert "title 24" in text
     assert "state license is required to operate a surgc" not in text
 
@@ -198,6 +200,20 @@ def test_ca_negation_does_not_suppress_later_real_xray_or_medgas_scope():
     assert "ca_surgc_asc_license_certification_trigger" not in triggered
     assert "ca_rhb_xray_registration_dental_medical" in triggered
     assert "ca_cpc_dental_medgas_vacuum" in triggered
+
+
+def test_ca_rule_injection_is_idempotent_for_customer_fields():
+    result = _base_result()
+    scope = "Los Angeles CA dental clinic TI with panoramic x-ray, nitrous, medical gas outlets, no surgery or anesthesia"
+    first = engine.apply_medical_clinic_ti_rulebook(result, scope, "Los Angeles", "CA")
+    second = engine.apply_medical_clinic_ti_rulebook(first, scope, "Los Angeles", "CA")
+
+    for key in ("pro_tips", "what_to_bring", "watch_out"):
+        values = second.get(key, [])
+        assert len(values) == len({str(value).strip().lower() for value in values}), key
+
+    permit_types = [str(item.get("permit_type") or "").strip().lower() for item in second.get("companion_permits", []) if isinstance(item, dict)]
+    assert len(permit_types) == len(set(permit_types))
 
 
 def test_phase4b_healthcare_rules_do_not_leak_into_office_or_other_unpopulated_states():

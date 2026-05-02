@@ -5611,14 +5611,14 @@ def apply_state_schema_context(result: dict, job_type: str, city: str, state: st
         for rule in triggered_rules:
             if not isinstance(rule, dict):
                 continue
-            title = str(rule.get("title") or "Texas state overlay").strip()
+            state_name = str(context.get("state_name") or context.get("state") or "State").strip()
             confidence = str(rule.get("confidence") or "medium").strip()
-            source_title = str(rule.get("source_title") or "official Texas source").strip()
+            source_title = str(rule.get("source_title") or f"official {state_name} source").strip()
             summary = str(rule.get("summary") or "").strip().rstrip(".")
-            add_unique("pro_tips", [
-                f"Texas state overlay ({confidence} confidence): {summary}. Source: {source_title}."
-            ])
-            add_unique("what_to_bring", rule.get("contractor_guidance") or [])
+            tips = [f"{state_name} state overlay ({confidence} confidence): {summary}. Source: {source_title}."]
+            guidance = [str(item or "").strip() for item in (rule.get("contractor_guidance") or [])]
+            tips.extend(item for item in guidance if item)
+            add_unique("pro_tips", tips)
             add_unique("watch_out", rule.get("watch_out") or [])
             for companion in rule.get("companion_permits") or []:
                 if not isinstance(companion, dict):

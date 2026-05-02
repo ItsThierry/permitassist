@@ -9,6 +9,7 @@ improvement.
 from __future__ import annotations
 
 from copy import deepcopy
+import re
 from typing import Any
 
 PHASE3_TARGET_STATES = ("CA", "TX", "FL", "MA")
@@ -53,6 +54,11 @@ _HEALTHCARE_OVERLAY_TEMPLATES: dict[str, dict[str, Any]] = {
         "label": "Infection-control HVAC / ventilation assumptions",
         "question": "Do procedure, sterilization, lab, or treatment rooms require special exhaust, pressure, filtration, or air-balance verification?",
         "citation_topics": ["mechanical/health ventilation standard", "sterilization/procedure room requirement", "TAB/commissioning expectation"],
+    },
+    "energy_code": {
+        "label": "Energy-code forms / nonresidential compliance",
+        "question": "Does the clinic TI include lighting, HVAC, envelope, controls, water-heating, acceptance-testing, or other energy-code form scope?",
+        "citation_topics": ["state energy code", "nonresidential compliance forms", "acceptance testing"],
     },
     "accessibility": {
         "label": "Accessibility / path-of-travel overlay",
@@ -207,7 +213,7 @@ _TX_MEDICAL_CLINIC_RULES: list[dict[str, Any]] = [
                 "certainty": "conditional",
             }
         ],
-        "trigger_terms": ["medical gas", "med gas", "medical oxygen", "oxygen piping", "oxygen outlet", "nitrous", "medical vacuum", "dental vacuum", "vacuum line", "vacuum lines", "zone valve", "zone valves", "gas outlet", "gas outlets", "med gas alarm", "medical gas alarm", "zone valve alarm", "medical gas source equipment", "gas manifold", "bulk oxygen"],
+        "trigger_terms": ["medical gas", "med gas", "medical oxygen", "oxygen piping", "oxygen outlet", "nitrous", "medical vacuum", "dental vacuum", "vacuum line", "vacuum lines", "zone valve", "zone valves", "medical gas outlet", "medical gas outlets", "med gas outlet", "med gas outlets", "dental gas outlet", "dental gas outlets", "med gas alarm", "medical gas alarm", "zone valve alarm", "medical gas source equipment", "gas manifold", "bulk oxygen"],
         "source_title": "Texas State Law Library — Building Codes in Texas",
         "source_url": "https://guides.sll.texas.gov/building-codes/texas",
         "source_quote": "Local governments may have adopted different or newer versions than the minimum statewide requirements.",
@@ -327,7 +333,7 @@ _CA_MEDICAL_CLINIC_RULES: list[dict[str, Any]] = [
     },
     {
         "id": "ca_title24_part6_energy_forms_nonresidential_ti",
-        "overlay": "infection_control_hvac",
+        "overlay": "energy_code",
         "title": "California Title 24 Part 6 nonresidential energy forms for clinic alterations",
         "applies": "triggered_by_energy_alteration_scope",
         "summary": "California clinic TI may need Title 24 Part 6 nonresidential energy compliance forms when lighting, mechanical, envelope, controls, or water-heating scope is touched; Energy Code Ace provides utility-sponsored California Energy Code compliance-form tools for identifying required forms before AHJ submittal.",
@@ -521,6 +527,10 @@ def validate_state_rule_schema(schema: dict[str, Any] | None) -> list[str]:
     if phase not in (3, 4):
         errors.append("phase must be 3 or 4")
     populated_schema = phase == 4 or schema.get("population_status") != "not_populated"
+    if phase == 3 and schema.get("population_status") in {"partially_populated", "populated"}:
+        errors.append("phase must be 4 when population_status is populated or partially_populated")
+    if phase == 4 and schema.get("population_status") == "not_populated":
+        errors.append("phase must be 3 when population_status is not_populated")
     if not populated_schema:
         if schema.get("coverage_level") != "schema_only":
             errors.append("coverage_level must remain schema_only until Phase 4 population")
@@ -600,6 +610,8 @@ def _term_is_negated(text: str, normalized_term: str) -> bool:
     if any(marker in text for marker in direct_markers):
         return True
     if normalized_term == "licensed clinic" and " not hsc 1200 licensed clinic" in text:
+        return True
+    if re.search(rf"\bnot\s+(?:a\s+|an\s+|the\s+|performing\s+|used\s+as\s+|including\s+)?{re.escape(normalized_term)}\b", text):
         return True
     for marker in (" no ", " without ", " excluding ", " not including "):
         start = text.find(marker)

@@ -151,6 +151,7 @@ def test_phase4a_false_positive_terms_do_not_overwarn_ordinary_clinics():
         "Houston TX clinic TI with ultrasound imaging displays only, no x-ray, no surgery or anesthesia",
         "Fort Worth TX dental clinic TI with oral sedation only, no surgery or anesthesia or PACU",
         "Plano TX clinic TI with central vacuum cleaner closet and oxygen sensor for HVAC monitoring, no surgery or anesthesia",
+        "San Antonio TX clinic TI with natural gas outlet for water heater and kitchenette, no medical gas, no nitrous, no surgery",
     ]
 
     for scope in false_positive_scopes:

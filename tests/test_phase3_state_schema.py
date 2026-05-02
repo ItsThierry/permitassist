@@ -206,6 +206,7 @@ def test_phase3_validator_rejects_populated_or_fake_citation_shapes():
     assert any("no_fake_citations" in error for error in errors)
     assert any("citation_status must be verified" in error for error in errors)
     assert any("needs source_url and source_title" in error for error in errors)
+    assert any("phase must be 4" in error for error in errors)
 
 
 def test_phase3_get_state_rule_schema_returns_deep_copy():
