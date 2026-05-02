@@ -221,8 +221,10 @@ def test_phase4c_healthcare_rules_do_not_leak_into_office_or_ma_unpopulated_stat
         "MA",
     )
     assert ma["state_schema_context"]["state"] == "MA"
-    assert ma["state_schema_context"]["population_status"] == "not_populated"
-    assert ma["state_schema_context"]["triggered_rules"] == []
+    assert ma["state_schema_context"]["population_status"] == "partially_populated"
+    assert ma["state_schema_context"]["coverage_level"] == "phase4d_ma_medical_clinic_ti"
+    assert ma["state_schema_context"]["triggered_rules"]
+    assert not any(rule["id"].startswith("fl_") for rule in ma["state_schema_context"]["triggered_rules"])
 
 
 def test_phase4c_sources_stay_out_of_code_citation_until_renderers_are_ready():

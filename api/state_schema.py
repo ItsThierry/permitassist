@@ -3,7 +3,7 @@
 Phase 3 created citation-ready CA/TX/FL/MA state overlay slots without fake
 state-rule claims. Phase 4 populates those slots one careful state/vertical at a
 time. Phase 4A populated Texas medical/dental clinic TI, Phase 4B populated
-California, and Phase 4C populates Florida.
+California, Phase 4C populates Florida, and Phase 4D populates Massachusetts.
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ PHASE3_TARGET_STATES = ("CA", "TX", "FL", "MA")
 PHASE4A_TX_VERIFIED_ON = "2026-05-02"
 PHASE4B_CA_VERIFIED_ON = "2026-05-02"
 PHASE4C_FL_VERIFIED_ON = "2026-05-02"
+PHASE4D_MA_VERIFIED_ON = "2026-05-02"
 
 _STATE_NAMES = {
     "CA": "California",
@@ -534,6 +535,161 @@ _FL_MEDICAL_CLINIC_RULES: list[dict[str, Any]] = [
 ]
 
 
+_MA_MEDICAL_CLINIC_RULES: list[dict[str, Any]] = [
+    {
+        "id": "ma_780cmr_local_ahj_accessibility_baseline",
+        "overlay": "accessibility",
+        "title": "Massachusetts State Building Code, local AHJ, and accessibility baseline for clinic alterations",
+        "applies": "all_ma_medical_clinic_ti",
+        "summary": "Massachusetts clinic TI should be coordinated against 780 CMR, the Massachusetts State Building Code, with local building/fire official review, inspections, certificate/opening path, 521 CMR accessibility obligations, and specialized codes such as plumbing/gas, electrical, fire, elevator, and stretch/specialized energy codes where applicable.",
+        "contractor_guidance": [
+            "For Massachusetts clinic TI, verify the current locally enforced 780 CMR edition, local building/fire AHJ requirements, 521 CMR/ADA accessibility scope, specialized codes, inspections, and certificate/opening requirements before quoting.",
+            "Show occupancy basis, egress, fire/life-safety, accessible route/restrooms/reception/exam-room features if affected, MEP scope, and local inspection path on the permit set."
+        ],
+        "watch_out": [
+            "Do not treat Massachusetts medical/dental clinic TI as one statewide online permit path; local AHJ/fire review and owner licensing facts still control the permit and opening path."
+        ],
+        "companion_permits": [],
+        "trigger_terms": [],
+        "source_title": "Mass.gov — 780 CMR Tenth Edition Massachusetts Amendments",
+        "source_url": "https://www.mass.gov/doc/bbrs-10th-edition-building-code/download",
+        "source_quote": "780 CMR, otherwise known as the Massachusetts State Building Code",
+        "secondary_source_title": "Mass.gov — Physical accessibility requirements",
+        "secondary_source_url": "https://www.mass.gov/info-details/physical-accessibility-requirements",
+        "confidence": "high",
+    },
+    {
+        "id": "ma_dph_clinic_license_plan_review",
+        "overlay": "healthcare_licensing",
+        "title": "Massachusetts DPH clinic licensure and construction/architectural-plan review",
+        "applies": "triggered_by_dph_clinic_license_terms",
+        "summary": "Massachusetts 105 CMR 140 sets standards for clinics and requires entities meeting the clinic definition to obtain a DPH clinic license. The regulation covers ambulatory medical, surgical, dental, rehab, and mental-health services, but excludes medical office buildings and solo/group practices wholly owned and controlled by practitioners. Licensed clinics must coordinate certificates of inspection, architectural plans for construction/alterations/additions, and prior written DPH approval before construction.",
+        "contractor_guidance": [
+            "If the Massachusetts scope mentions DPH licensed clinic status, urgent care clinic, clinic licensure, satellite clinic, mobile service, or architectural plans for a licensed clinic, verify DPH licensing and construction/plan-review requirements before promising opening from building final alone.",
+            "Ask the owner whether this is an ordinary private physician/dental office or a DPH-licensed clinic; 105 CMR 140 excludes some practitioner-owned office/practice arrangements, and that fact changes the state opening path."
+        ],
+        "watch_out": [
+            "DPH clinic license/plan approval can be a separate opening blocker from local building permit final when the owner program falls under 105 CMR 140."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "Massachusetts DPH clinic licensure / construction or architectural-plan approval verification if licensed clinic facts apply",
+                "reason": "105 CMR 140 identifies clinic licensure, certificates of inspection, architectural plans for alterations/additions, and prior written DPH construction approval for covered clinics.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["dph licensed clinic", "massachusetts licensed clinic", "clinic license", "clinic licensure", "105 cmr 140", "urgent care clinic", "satellite clinic", "licensed mobile clinic", "licensed dental clinic", "licensed medical clinic", "architectural plans for alterations", "architectural plans for additions", "dph construction approval"],
+        "source_title": "Mass.gov — 105 CMR 140.000 Licensure of Clinics",
+        "source_url": "https://www.mass.gov/doc/105-cmr-140-licensure-of-clinics/download",
+        "source_quote": "105 CMR 140.000 sets forth standards for the maintenance and operation of clinics.",
+        "confidence": "high",
+    },
+    {
+        "id": "ma_dph_asc_surgery_license_review",
+        "overlay": "ambulatory_care_thresholds",
+        "title": "Massachusetts DPH ambulatory surgery / ASC clinic-license trigger",
+        "applies": "triggered_by_surgery_asc_anesthesia_pacu",
+        "summary": "Massachusetts 105 CMR 140 treats ambulatory surgery centers as clinic-licensure territory and defines an ASC as an entity subject to licensure to provide surgical services. Surgery, ASC/day-surgery, operating rooms, anesthesia, PACU, or recovery-bay scope should be verified with DPH and the local AHJ before pricing as ordinary clinic TI.",
+        "contractor_guidance": [
+            "If the Massachusetts clinic includes an ASC/day-surgery program, operating rooms, surgical services, general anesthesia, deep sedation, PACU, or recovery bays, verify DPH clinic/ASC licensing and construction/architectural-plan review before pricing it like ordinary clinic TI.",
+            "Do not promise patient-care/opening from local final inspection alone when DPH licensure, plan approval, survey, or ASC program approval remains unresolved."
+        ],
+        "watch_out": [
+            "Massachusetts ASC/surgical projects can have DPH clinic-licensure and plan-review blockers separate from the local building permit."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "Massachusetts DPH ambulatory surgery/ASC clinic licensure and construction review if surgical/ASC program is in scope",
+                "reason": "105 CMR 140 identifies ambulatory surgery center licensing within the clinic licensure framework.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["surgery", "surgical", "operating room", "operating rooms", "operating room suite", "operating suite", "asc", "ambulatory surgery", "ambulatory surgical", "ambulatory surgery center", "day surgery", "surgery center", "general anesthesia", "deep sedation", "pacu", "recovery bay", "recovery bays"],
+        "source_title": "Mass.gov — 105 CMR 140.000 Licensure of Clinics",
+        "source_url": "https://www.mass.gov/doc/105-cmr-140-licensure-of-clinics/download",
+        "source_quote": "Ambulatory Surgery Center (ASC). An entity subject to licensure or licensed under M.G.L. c. 111, § 51 and 105 CMR 140.000 to provide surgical services.",
+        "confidence": "high",
+    },
+    {
+        "id": "ma_dph_radiation_control_xray",
+        "overlay": "radiology_xray",
+        "title": "Massachusetts DPH radiation-control coordination for X-ray/radiology equipment",
+        "applies": "triggered_by_xray_radiology_ct",
+        "summary": "Massachusetts 105 CMR 120 applies to persons who receive, possess, use, transfer, own, or acquire any source of radiation. Dental/medical X-ray, CBCT, CT, fluoroscopy, mammography, and similar ionizing-radiation equipment should trigger DPH radiation-control registration/licensing/shielding/vendor coordination; ultrasound or MRI alone should not trigger this X-ray rule.",
+        "contractor_guidance": [
+            "If the Massachusetts dental/medical clinic includes X-ray, CBCT/cone beam, panoramic, CT, fluoroscopy, C-arm, or mammography equipment, coordinate DPH radiation-control registration/licensing, shielding/vendor documentation, and equipment-install timing before opening.",
+            "Keep radiation-control tasks separate from the local TI permit checklist so the owner understands both paths."
+        ],
+        "watch_out": [
+            "Radiation-control registration, licensing, shielding, or inspection tasks can become an opening blocker even when the local Massachusetts TI permit is ready."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "Massachusetts DPH radiation-control registration/licensing and shielding verification if ionizing-radiation equipment is included",
+                "reason": "105 CMR 120 broadly applies to persons who receive, possess, use, transfer, own, or acquire radiation sources.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["x-ray", "xray", "radiology", "radiographic", "panoramic", "cbct", "cone beam", "ct scanner", "fluoroscopy", "c-arm", "mammography"],
+        "source_title": "Mass.gov — 105 CMR 120.00: The control of radiation",
+        "source_url": "https://www.mass.gov/regulations/105-CMR-12000-the-control-of-radiation",
+        "source_quote": "105 CMR 120.000 applies to all persons who receive, possess, use, transfer, own, or acquire any source of radiation",
+        "secondary_source_title": "Mass.gov — Radiation Control Program regulations",
+        "secondary_source_url": "https://www.mass.gov/lists/radiation-control-program-regulations",
+        "confidence": "high",
+    },
+    {
+        "id": "ma_plumbing_gas_medical_gas_coordination",
+        "overlay": "medical_gas",
+        "title": "Massachusetts plumbing/gas-fitting coordination for medical gas, nitrous, oxygen, and vacuum systems",
+        "applies": "triggered_by_medical_gas_nitrous_oxygen_vacuum",
+        "summary": "Massachusetts 248 CMR 10 governs installation, alteration, replacement, repair, removal, and construction of plumbing; 248 CMR 3 governs administrative requirements for plumbing and gas-fitting work; and 248 CMR 4 through 8 govern fuel-gas piping systems and related accessories. Treat medical/dental gas, nitrous, oxygen piping/outlets, medical/dental vacuum, zone valves, manifolds, and alarms as local plumbing/gas-fitting/fire/code coordination rather than ordinary plumbing only.",
+        "contractor_guidance": [
+            "If the Massachusetts clinic scope includes nitrous, medical oxygen, medical/dental vacuum, medical-gas outlets, zone valves, manifolds, or gas alarms, verify 248 CMR plumbing/gas-fitting permit/inspection coordination and local AHJ/fire review before rough-in.",
+            "Carry testing/verifier/vendor documentation time separately from ordinary plumbing; the exact permit split and inspection path should be verified with the local AHJ."
+        ],
+        "watch_out": [
+            "Do not price Massachusetts medical gas/nitrous/vacuum as ordinary plumbing only; 248 CMR coordination, local AHJ inspection, and specialty verification can affect schedule and cost."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "Massachusetts medical gas / nitrous / oxygen / vacuum plumbing-gas-fitting-fire coordination if included",
+                "reason": "Mass.gov 248 CMR pages identify plumbing/gas-fitting administrative, plumbing-code, and fuel-gas-code requirements that can apply to system installation/alteration/inspection.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["medical gas", "med gas", "medical oxygen", "oxygen piping", "oxygen outlet", "nitrous", "medical vacuum", "dental vacuum", "vacuum line", "vacuum lines", "zone valve", "zone valves", "medical gas outlet", "medical gas outlets", "med gas outlet", "med gas outlets", "dental gas outlet", "dental gas outlets", "med gas alarm", "medical gas alarm", "zone valve alarm", "medical gas source equipment", "gas manifold", "bulk oxygen"],
+        "source_title": "Mass.gov — 248 CMR 10.00: Uniform state plumbing code",
+        "source_url": "https://www.mass.gov/regulations/248-CMR-1000-uniform-state-plumbing-code",
+        "source_quote": "248 CMR 10 governs the requirements for the installation, alteration, removal, replacement, repair, or construction of all plumbing.",
+        "secondary_source_title": "Mass.gov — 248 CMR 3.00: General provisions governing plumbing and gas fitting work",
+        "secondary_source_url": "https://www.mass.gov/regulations/248-CMR-300-general-provisions-governing-the-conduct-of-plumbing-and-gas-fitting-work-performed-in-the-commonwealth",
+        "confidence": "high",
+    },
+    {
+        "id": "ma_energy_code_commercial_alteration_scope",
+        "overlay": "energy_code",
+        "title": "Massachusetts commercial energy-code documentation coordination for clinic alterations",
+        "applies": "triggered_by_energy_alteration_scope",
+        "summary": "Massachusetts clinic TI that touches lighting, HVAC/mechanical systems, envelope, lighting/HVAC/energy controls, water heating, or energy-calculation scope should verify commercial energy-code forms, calculations, testing, and local stretch/specialized-code requirements with the AHJ. Finish-only work should not be over-warned.",
+        "contractor_guidance": [
+            "For Massachusetts clinic TI, budget for energy-code documentation when lighting, HVAC/mechanical systems, envelope, lighting/HVAC/energy controls, or water-heating scope is touched.",
+            "Verify AHJ-required commercial energy forms/calculations, stretch/specialized-code applicability, and inspection/acceptance-test responsibilities before permit submittal."
+        ],
+        "watch_out": [
+            "Energy-code documentation can delay Massachusetts plan review when lighting/HVAC/controls scope is included but forms, calculations, or testing documents are missing."
+        ],
+        "companion_permits": [],
+        "trigger_terms": ["lighting", "hvac", "mechanical alteration", "mechanical alterations", "mechanical systems", "envelope", "lighting controls", "hvac controls", "energy controls", "water heating", "water-heating", "energy code", "energy forms", "energy calculation", "energy calculations"],
+        "source_title": "Mass.gov — 780 CMR 13.00 Energy Conservation",
+        "source_url": "https://www.mass.gov/doc/7th-edition-780-cmr-massachusetts-building-code-780-cmr-1300-energy-conservation/download",
+        "source_quote": "Plans, specifications, calculations, and a Mandatory Checklist approved by the Board of Building Regulations and Standards must be submitted.",
+        "secondary_source_title": "Mass.gov — 780 CMR Tenth Edition Massachusetts Amendments",
+        "secondary_source_url": "https://www.mass.gov/doc/bbrs-10th-edition-building-code/download",
+        "confidence": "medium",
+    },
+]
+
 def _citation_hooks(topics: list[str]) -> list[dict[str, str]]:
     return [
         {
@@ -664,6 +820,16 @@ _populate_medical_clinic_schema(
     note_key="phase4c_note",
     note="FL medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
     verified_on=PHASE4C_FL_VERIFIED_ON,
+)
+
+_populate_medical_clinic_schema(
+    STATE_RULE_SCHEMAS["MA"],
+    rules=_MA_MEDICAL_CLINIC_RULES,
+    coverage_level="phase4d_ma_medical_clinic_ti",
+    warning="Massachusetts medical/dental clinic TI overlay is populated for Phase 4D with cited state sources. Use it as state-level triage; local AHJ/fire review, DPH/licensing facts, current 780 CMR/specialized codes, and owner program still control final submittal/opening requirements.",
+    note_key="phase4d_note",
+    note="MA medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
+    verified_on=PHASE4D_MA_VERIFIED_ON,
 )
 
 
@@ -803,7 +969,7 @@ def _job_has_any(job: str, terms: list[str]) -> bool:
 
 def _rule_applies(rule: dict[str, Any], job_type: str) -> bool:
     applies = rule.get("applies")
-    if applies in {"all_tx_medical_clinic_ti", "all_ca_medical_clinic_ti", "all_fl_medical_clinic_ti"}:
+    if applies in {"all_tx_medical_clinic_ti", "all_ca_medical_clinic_ti", "all_fl_medical_clinic_ti", "all_ma_medical_clinic_ti"}:
         return True
     return _job_has_any(job_type or "", list(rule.get("trigger_terms") or []))
 
@@ -831,7 +997,7 @@ def compact_state_schema_context(state: str, vertical: str, job_type: str = "") 
         return None
 
     triggered_rules: list[dict[str, Any]] = []
-    if schema.get("state") in {"TX", "CA", "FL"} and vertical == "medical_clinic_ti":
+    if schema.get("state") in {"TX", "CA", "FL", "MA"} and vertical == "medical_clinic_ti":
         for slot in overlays.values():
             for rule in slot.get("populated_rules") or []:
                 if _rule_applies(rule, job_type):

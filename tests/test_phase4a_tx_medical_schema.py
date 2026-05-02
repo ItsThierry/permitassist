@@ -140,8 +140,10 @@ def test_tx_phase4a_healthcare_rules_do_not_leak_into_office_ti_or_other_states(
         "MA",
     )
     assert ma["state_schema_context"]["state"] == "MA"
-    assert ma["state_schema_context"]["population_status"] == "not_populated"
-    assert "triggered_rules" not in ma["state_schema_context"] or ma["state_schema_context"]["triggered_rules"] == []
+    assert ma["state_schema_context"]["population_status"] == "partially_populated"
+    assert ma["state_schema_context"]["coverage_level"] == "phase4d_ma_medical_clinic_ti"
+    assert ma["state_schema_context"]["triggered_rules"]
+    assert not any(rule["id"].startswith("tx_") for rule in ma["state_schema_context"]["triggered_rules"])
 
 
 def test_phase4a_false_positive_terms_do_not_overwarn_ordinary_clinics():

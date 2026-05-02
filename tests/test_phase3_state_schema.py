@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Phase 3 state schema design tests.
 
-Phase 3 is architecture, not full state-rule population. These tests make sure
-we have a stable, citation-ready schema for state overlays without pretending
-that MA/TX/CA/FL healthcare rules are already fully researched.
+Phase 3 created the architecture. Phase 4A-D now populates the first
+TX/CA/FL/MA medical-clinic slices while preserving schema safety and no fake
+renderer citations.
 """
 
 import os
@@ -34,11 +34,25 @@ def _base_result(scope="commercial_medical_clinic_ti"):
     }
 
 
-def _schema_only_state():
-    for state in PHASE3_TARGET_STATES:
-        if get_state_rule_schema(state)["coverage_level"] == "schema_only":
-            return state
-    raise AssertionError("No schema-only Phase 3 state remains for negative schema tests")
+def _synthetic_schema_only():
+    schema = get_state_rule_schema("MA")
+    schema["phase"] = 3
+    schema["coverage_level"] = "schema_only"
+    schema["population_status"] = "not_populated"
+    schema["requires_population_before_state_specific_claims"] = True
+    schema.pop("populated_verticals", None)
+    for slot in schema["healthcare_overlays"].values():
+        slot["status"] = "needs_population"
+        slot["rule_summary"] = ""
+        slot["contractor_guidance"] = []
+        slot["risk_flags"] = []
+        slot["populated_rules"] = []
+        for hook in slot["citation_hooks"]:
+            hook["source_url"] = ""
+            hook["source_title"] = ""
+            hook["citation_status"] = "needs_population"
+            hook["verified_on"] = ""
+    return schema
 
 
 def test_phase3_target_state_schemas_exist_and_validate():
@@ -61,9 +75,9 @@ def test_phase3_target_state_schemas_exist_and_validate():
             assert schema["coverage_level"] == "phase4c_fl_medical_clinic_ti"
             assert schema["population_status"] == "partially_populated"
         else:
-            assert schema["phase"] == 3
-            assert schema["coverage_level"] == "schema_only"
-            assert schema["population_status"] == "not_populated"
+            assert schema["phase"] == 4
+            assert schema["coverage_level"] == "phase4d_ma_medical_clinic_ti"
+            assert schema["population_status"] == "partially_populated"
         assert schema["citation_policy"]["no_fake_citations"] is True
 
 
@@ -100,7 +114,7 @@ def test_phase3_unknown_state_returns_none_instead_of_generic_fake_schema():
     assert "state_schema_context" not in result
 
 
-def test_phase3_state_schema_context_is_attached_to_medical_clinic_results_without_claiming_population():
+def test_phase3_state_schema_context_is_attached_to_medical_clinic_results_without_fake_citations():
     result = engine.apply_medical_clinic_ti_rulebook(
         _base_result(),
         "medical clinic tenant improvement with exam rooms and x-ray, no surgery or overnight stay",
@@ -110,17 +124,17 @@ def test_phase3_state_schema_context_is_attached_to_medical_clinic_results_witho
 
     context = result["state_schema_context"]
     assert context["state"] == "MA"
-    assert context["phase"] == 3
-    assert context["coverage_level"] == "schema_only"
-    assert context["population_status"] == "not_populated"
-    assert context["requires_population_before_state_specific_claims"] is True
-    assert "verify with ahj" in context["contractor_warning"].lower()
+    assert context["phase"] == 4
+    assert context["coverage_level"] == "phase4d_ma_medical_clinic_ti"
+    assert context["population_status"] == "partially_populated"
+    assert context["requires_population_before_state_specific_claims"] is False
     assert context["overlay_slots"]
+    assert context["triggered_rules"]
 
     citation_blob = str(result.get("code_citation", ""))
     assert "Massachusetts healthcare overlay" not in citation_blob
     assert "needs population" not in citation_blob.lower()
-    assert "not a verified rule" not in citation_blob.lower()
+    assert "mass.gov" not in citation_blob.lower()
 
 
 def test_phase3_state_schema_context_attaches_to_all_target_states_without_fake_urls_or_rules():
@@ -146,10 +160,9 @@ def test_phase3_state_schema_context_attaches_to_all_target_states_without_fake_
             assert context["population_status"] == "partially_populated"
             assert context["triggered_rules"]
         else:
-            assert context["coverage_level"] == "schema_only"
-            assert context["population_status"] == "not_populated"
-            assert "http" not in str(context).lower()
-            assert "not populated" in context["contractor_warning"].lower()
+            assert context["coverage_level"] == "phase4d_ma_medical_clinic_ti"
+            assert context["population_status"] == "partially_populated"
+            assert context["triggered_rules"]
         assert "§" not in str(context)
 
 
@@ -205,7 +218,7 @@ def test_phase3_schema_context_does_not_attach_to_unsupported_scope():
 
 
 def test_phase3_validator_rejects_populated_or_fake_citation_shapes():
-    schema = get_state_rule_schema(_schema_only_state())
+    schema = _synthetic_schema_only()
     schema["population_status"] = "populated"
     schema["coverage_level"] = "full"
     schema["citation_policy"] = {"no_fake_citations": False}
@@ -225,14 +238,15 @@ def test_phase3_validator_rejects_populated_or_fake_citation_shapes():
 
 
 def test_phase3_get_state_rule_schema_returns_deep_copy():
-    first = get_state_rule_schema(_schema_only_state())
+    first = get_state_rule_schema("MA")
     first["healthcare_overlays"]["medical_gas"]["status"] = "mutated"
     first["healthcare_overlays"]["medical_gas"]["citation_hooks"][0]["source_url"] = "https://example.com/mutation"
 
-    second = get_state_rule_schema(_schema_only_state())
+    second = get_state_rule_schema("MA")
 
-    assert second["healthcare_overlays"]["medical_gas"]["status"] == "needs_population"
-    assert second["healthcare_overlays"]["medical_gas"]["citation_hooks"][0]["source_url"] == ""
+    assert second["healthcare_overlays"]["medical_gas"]["status"] == "populated"
+    assert second["healthcare_overlays"]["medical_gas"]["citation_hooks"][0]["source_url"] != "https://example.com/mutation"
+    assert second["healthcare_overlays"]["medical_gas"]["citation_hooks"][0]["source_url"].startswith("https://www.mass.gov/")
 
 
 def test_phase3_compact_context_rejects_unknown_vertical():
