@@ -1021,17 +1021,41 @@ def compact_state_schema_context(state: str, vertical: str, job_type: str = "") 
                 if _rule_applies(rule, job_type):
                     triggered_rules.append(_safe_rule_for_context(rule))
 
+    populated_for_verticals = list(schema.get("populated_for_verticals") or schema.get("populated_verticals") or [])
+    active_vertical_populated = vertical in set(populated_for_verticals)
+    if active_vertical_populated:
+        coverage_level = schema["coverage_level"]
+        population_status = schema["population_status"]
+        populated_phase = schema.get("populated_phase", "")
+        requires_population = schema["requires_population_before_state_specific_claims"]
+        contractor_warning = schema["contractor_warning"]
+    else:
+        # Do not let the medical/dental Phase 4 slice make restaurant/office
+        # contexts look verified. Unpopulated active verticals may expose the
+        # checklist architecture only; customer-visible state-specific claims
+        # still require active-vertical evidence population.
+        state_lower = str(schema["state"]).lower()
+        coverage_level = f"needs_verification_{state_lower}_{vertical}"
+        population_status = "needs_verification"
+        populated_phase = ""
+        requires_population = True
+        label = vertical.replace("_", " ")
+        contractor_warning = (
+            f"{schema['state_name']} {label} state overlay is not populated with verified active-vertical rules yet. "
+            "Use this as a checklist only; verify with AHJ and cited state/local sources before quoting."
+        )
+
     return {
         "state": schema["state"],
         "state_name": schema["state_name"],
         "phase": schema["phase"],
-        "coverage_level": schema["coverage_level"],
-        "population_status": schema["population_status"],
-        "populated_phase": schema.get("populated_phase", ""),
-        "populated_for_verticals": list(schema.get("populated_for_verticals") or schema.get("populated_verticals") or []),
+        "coverage_level": coverage_level,
+        "population_status": population_status,
+        "populated_phase": populated_phase,
+        "populated_for_verticals": populated_for_verticals,
         "active_vertical": vertical,
-        "active_vertical_populated": vertical in set(schema.get("populated_for_verticals") or schema.get("populated_verticals") or []),
-        "requires_population_before_state_specific_claims": schema["requires_population_before_state_specific_claims"],
+        "active_vertical_populated": active_vertical_populated,
+        "requires_population_before_state_specific_claims": requires_population,
         "vertical": vertical,
         "overlay_slots": [
             {
@@ -1052,5 +1076,5 @@ def compact_state_schema_context(state: str, vertical: str, job_type: str = "") 
             for key, slot in overlays.items()
         ],
         "triggered_rules": triggered_rules,
-        "contractor_warning": schema["contractor_warning"],
+        "contractor_warning": contractor_warning,
     }

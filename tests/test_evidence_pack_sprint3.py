@@ -69,9 +69,13 @@ def test_state_schema_context_has_clear_active_vertical_metadata_for_qa():
     assert medical["active_vertical_populated"] is True
     assert medical["triggered_rules"]
 
-    # The schema can still show the historical state coverage level, but QA now
-    # has an explicit active-vertical flag showing restaurant rules are not yet populated.
-    assert restaurant["coverage_level"] == "phase4a_tx_medical_clinic_ti"
+    # Unpopulated active verticals must fail closed instead of borrowing the
+    # historical medical/dental coverage label and warning text.
+    assert restaurant["coverage_level"] == "needs_verification_tx_restaurant_ti"
+    assert restaurant["population_status"] == "needs_verification"
+    assert restaurant["requires_population_before_state_specific_claims"] is True
+    assert "restaurant ti" in restaurant["contractor_warning"].lower()
+    assert "medical" not in restaurant["contractor_warning"].lower()
     assert restaurant["active_vertical"] == "restaurant_ti"
     assert restaurant["active_vertical_populated"] is False
     assert restaurant["triggered_rules"] == []

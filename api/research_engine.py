@@ -1604,11 +1604,11 @@ CHECKLIST_SCOPE = {
             "Fire alarm + emergency lighting per NFPA 72/101 with current battery capacity test on file",
             # 2026-04-28: additions sourced from Forge / commercial-state-pack-draft.
             "Change of occupancy memo (B/M → A-2): include occupant load + exits + restroom count + sprinkler/fire-alarm impacts per IEBC §1001.2/1001.3 + IBC §303.3 (Group A-2)",
-            "Maricopa County (or local equivalent) Environmental Services Department food-establishment plan review + final inspection sign-off REQUIRED before opening — coordinate with City CO schedule (MCESD: maricopa.gov)",
+            "Local health department food-establishment plan review + final inspection sign-off REQUIRED before opening — coordinate with City CO schedule (verify local environmental-health portal early)",
             "Backflow prevention on EVERY food-service water connection: carbonated beverage (ASSE 1022 dual check), chemical dispenser at mop/service sinks, hose bibbs, dish-machine/ice/RO/espresso, pre-rinse — testable assemblies certified annually",
-            "Outdoor patio / sidewalk dining: verify city zoning (use permit may apply, e.g. Phoenix ZO §1207); include patio in occupant load + exiting + accessible route + sprinkler/awning review",
-            "Phoenix-specific (or equivalent local rule): contractor must be AZ ROC licensed AND associated with the Phoenix SHAPE PHX permit account before submittal (A.R.S. Title 32 Ch. 10) — frequently-missed pre-submittal blocker",
-            "Realistic fee warning: a 3,200 sq ft restaurant TI in Phoenix typically lands $8K–$25K+ across plan review + permit + fire + utility + health + zoning. Reject token min-fee outputs; calculate from the live fee schedule before quoting",
+            "Outdoor patio / sidewalk dining: verify city zoning/use permits; include patio in occupant load + exiting + accessible route + sprinkler/awning review",
+            "Contractor/account pre-submittal blocker: verify the city requires contractor license/registration association with the online permit account before submittal",
+            "Realistic fee warning: restaurant TI fees can materially exceed minimum building-permit fees across plan review + permit + fire + utility + health + zoning. Reject token min-fee outputs; calculate from the live fee schedule before quoting",
         ],
     },
     "change_of_occupancy": {
@@ -2737,6 +2737,8 @@ def detect_primary_scope(job_type: str) -> str:
       multifamily | commercial (generic) | residential_adu | residential (default)
     """
     job_lc = (job_type or "").lower()
+    if _is_residential_home_office_scope(job_lc):
+        return 'residential'
     if _looks_like_commercial_trade_only_scope(job_lc):
         return 'commercial'
 
@@ -2758,6 +2760,7 @@ def detect_primary_scope(job_type: str) -> str:
         return 'commercial_medical_clinic_ti'
     if any(t in job_lc for t in (
         'office tenant improvement', 'office ti', 'office buildout',
+        'office interior alteration', 'tenant space office',
         'co-working', 'coworking', 'professional office',
         'law office',
     )):
@@ -4483,6 +4486,27 @@ def _scope_has_any(job: str, phrases: list[str]) -> bool:
     return any(p in job for p in phrases)
 
 
+def _is_residential_home_office_scope(job_type: str) -> bool:
+    """True for non-commercial spare-bedroom/home-office use inside a dwelling."""
+    job = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
+    if not job:
+        return False
+    if not _scope_has_any(job, ["home office", "spare bedroom", "bedroom into office", "bedroom to office"]):
+        return False
+    commercial_signals = [
+        "tenant improvement", "office tenant improvement", "office ti", "commercial",
+        "suite", "tenant space", "change of occupancy", "change of use", "public access",
+        "customer visits", "customers", "client visits", "employees", "storefront",
+    ]
+    if _scope_has_any(job, commercial_signals):
+        # Explicit negations keep residential home-office ambiguity out of the
+        # commercial Office TI path.
+        negated_public = _scope_has_any(job, ["no customer", "no customers", "no public access", "no client visits", "without customers"])
+        if not negated_public:
+            return False
+    return _scope_has_any(job, ["no structural", "non structural", "non-structural", "paint", "flooring", "furniture", "desk", "shelving"])
+
+
 def _scope_permit(permit_type: str, portal_selection: str, notes: str, required: bool | str = True) -> dict:
     return {
         "permit_type": permit_type,
@@ -4849,6 +4873,8 @@ def apply_scope_aware_permit_classification(result: dict, job_type: str) -> dict
         return result
     classified = classify_scope_required_permits(job_type)
     if classified:
+        if _is_residential_home_office_scope(job_type):
+            return result
         result["permits_required"] = classified["permits_required"]
         result["permits_required_logic"] = classified["permits_required_logic"]
         result["companion_permits"] = classified.get("companion_permits", result.get("companion_permits", []))
@@ -5469,6 +5495,23 @@ def enforce_commercial_primary_permit_guardrail(result: dict, job_type: str, cit
     result needs_review so a contractor sees verification caution instead of fake certainty.
     """
     if not isinstance(result, dict):
+        return result
+    if _is_residential_home_office_scope(job_type):
+        result["_primary_scope"] = "residential"
+        result["permit_verdict"] = "NO"
+        result["permits_required"] = [{
+            "permit_type": "No building permit likely — Residential Home Office / Non-Structural Use",
+            "portal_selection": "Verify with AHJ if any electrical, structural, signage, customer access, or occupancy change is added",
+            "required": False,
+            "notes": "Spare-bedroom/home-office use with no structural work, no public access, and no customer visits is residential use; do not treat it as a tenant-space alteration.",
+        }]
+        result["permits_required_logic"] = [{
+            "permit_type": result["permits_required"][0]["permit_type"],
+            "included_because": "Residential home-office ambiguity guard: no structural work, no customer visits, and no public access keeps the scope residential.",
+            "scope_trigger": "residential home office / spare bedroom with no public-access signals",
+        }]
+        result["companion_permits"] = []
+        result["needs_review"] = True
         return result
     primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
     result["_primary_scope"] = primary_scope

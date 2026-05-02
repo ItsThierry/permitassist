@@ -112,7 +112,7 @@ HIDDEN_TRIGGER_REGISTRY = [
         "likely_required_actions": ["Start liquor-license filing in parallel", "Coordinate city clerk/local governing body routing", "Keep bar/seating floor plan consistent across permit and liquor submittals"],
         "companion_permits": ["Liquor license / local governing body review"],
         "agencies": ["State liquor authority", "City Clerk", "AHJ Building Dept"],
-        "citations": ["A.R.S. Title 4 [verify Arizona license class before merging]"],
+        "citations": ["State liquor-control authority rules [verify local license class and city/county routing before opening]"],
         "primary_scope": "commercial_restaurant",
     },
     {
