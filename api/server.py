@@ -543,6 +543,167 @@ MIAMI_DADE_ONLINE_SERVICES_SNIPPET = (
     "submit and check the status of permit applications."
 )
 
+FIELD_EVIDENCE_FIELDS = (
+    "permit_type",
+    "apply_url",
+    "fee_range",
+    "approval_timeline",
+    "inspections",
+)
+FIELD_EVIDENCE_ALIASES = {
+    "fees": "fee_range",
+    "timeline": "approval_timeline",
+    "inspect_checklist": "inspections",
+    "portal_url": "apply_url",
+}
+OFFICIAL_SOURCE_TYPES = {"official_ahj", "official_state", "trusted_portal"}
+FIELD_EVIDENCE_WARNING = (
+    "Some report claims do not yet have quoted source snippets for their specific fields; "
+    "verify with the AHJ before relying on them."
+)
+
+
+def _canonical_field_name(field: str) -> str:
+    field = str(field or "").strip()
+    return FIELD_EVIDENCE_ALIASES.get(field, field)
+
+
+def _field_evidence_map(result: dict) -> dict:
+    evidence = result.get("field_evidence") or {}
+    if not isinstance(evidence, dict):
+        return {}
+    normalized: dict[str, list[dict]] = {}
+    for raw_field, raw_items in evidence.items():
+        field = _canonical_field_name(raw_field)
+        if field not in FIELD_EVIDENCE_FIELDS:
+            continue
+        items = raw_items if isinstance(raw_items, list) else [raw_items]
+        cleaned = []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            cleaned.append({
+                "source_url": item.get("source_url") or item.get("url") or "",
+                "source_title": item.get("source_title") or item.get("title") or "Official source",
+                "quoted_snippet": item.get("quoted_snippet") or item.get("snippet") or item.get("quote") or "",
+                "source_type": item.get("source_type") or "fallback",
+                "supports_field": bool(item.get("supports_field")),
+                "confidence_signal": str(item.get("confidence_signal") or item.get("confidence") or "needs_verification").lower(),
+                "last_verified": item.get("last_verified") or item.get("checked_at") or "",
+            })
+        if cleaned:
+            normalized.setdefault(field, []).extend(cleaned)
+    return normalized
+
+
+def _append_field_evidence(result: dict, field: str, evidence_item: dict) -> None:
+    field = _canonical_field_name(field)
+    if field not in FIELD_EVIDENCE_FIELDS:
+        return
+    field_evidence = result.get("field_evidence") if isinstance(result.get("field_evidence"), dict) else {}
+    items = field_evidence.get(field)
+    if not isinstance(items, list):
+        items = []
+    normalized_item = {
+        "source_url": evidence_item.get("source_url") or evidence_item.get("url") or "",
+        "source_title": evidence_item.get("source_title") or evidence_item.get("title") or "Official source",
+        "quoted_snippet": evidence_item.get("quoted_snippet") or evidence_item.get("snippet") or evidence_item.get("quote") or "",
+        "source_type": evidence_item.get("source_type") or "fallback",
+        "supports_field": bool(evidence_item.get("supports_field")),
+        "confidence_signal": str(evidence_item.get("confidence_signal") or evidence_item.get("confidence") or "needs_verification").lower(),
+        "last_verified": evidence_item.get("last_verified") or utc_now().date().isoformat(),
+    }
+    source_url_key = normalized_item["source_url"]
+    if not any(str(existing.get("source_url") or "") == source_url_key for existing in items):
+        field_evidence[field] = [normalized_item] + items
+    result["field_evidence"] = field_evidence
+
+
+def _source_is_official_or_trusted(item: dict) -> bool:
+    source_type = str(item.get("source_type") or "").strip().lower()
+    if source_type in OFFICIAL_SOURCE_TYPES:
+        return True
+    parsed = urlparse(str(item.get("source_url") or ""))
+    host = (parsed.hostname or "").lower()
+    return host == "miamidade.gov" or host.endswith(".miamidade.gov") or host.endswith(".gov")
+
+
+def _snippet_has_any(snippet: str, words: tuple[str, ...]) -> bool:
+    snippet_l = str(snippet or "").lower()
+    return any(word in snippet_l for word in words)
+
+
+def _url_looks_like_disallowed_apply_path(url: str) -> bool:
+    parsed = urlparse(str(url or ""))
+    lower = str(url or "").lower()
+    if parsed.scheme not in {"http", "https"}:
+        return True
+    disallowed_tokens = (
+        ".pdf",
+        "fee",
+        "ecobuilt.miamidade.gov",
+        "department",
+        "contact-us",
+    )
+    if "epsportal" not in lower:
+        disallowed_tokens = disallowed_tokens + ("/permits",)
+    return any(token in lower for token in disallowed_tokens)
+
+
+def enforce_strict_field_confidence(field: str, value, evidence_list: list[dict] | None) -> dict:
+    """Strict customer-visible field confidence gate.
+
+    A field can only stay high when its own evidence item has a safe source,
+    direct quote, supports_field=True, and field-specific vocabulary.
+    """
+    field = _canonical_field_name(field)
+    evidence_items = evidence_list if isinstance(evidence_list, list) else []
+    best = evidence_items[0] if evidence_items else {}
+    requested = str(best.get("confidence_signal") or "needs_verification").lower()
+    quote = str(best.get("quoted_snippet") or "")
+    supports = bool(best.get("supports_field"))
+    official = _source_is_official_or_trusted(best) if best else False
+
+    reason = "missing field-specific evidence"
+    allowed_high = False
+    if field == "apply_url":
+        quote_l = quote.lower()
+        allowed_high = (
+            supports
+            and official
+            and _snippet_has_any(quote, ("apply", "application", "submit", "submission"))
+            and _snippet_has_any(quote_l, ("portal", "online", "start", "permit"))
+            and not _url_looks_like_disallowed_apply_path(str(value or best.get("source_url") or ""))
+        )
+        reason = "apply_url needs official/trusted application portal evidence with an apply/submit/start quote"
+    elif field == "permit_type":
+        allowed_high = supports and official and _snippet_has_any(quote, ("permit", "tenant improvement", "alteration", "building permit"))
+        reason = "permit_type needs a direct permit-category quote"
+    elif field == "fee_range":
+        allowed_high = supports and official and _snippet_has_any(quote, ("fee", "fees", "fee schedule", "valuation", "$", "percent", "%", "per square foot"))
+        reason = "fee_range needs an official fee/valuation/rate quote"
+    elif field == "approval_timeline":
+        allowed_high = supports and official and _snippet_has_any(quote, ("days", "weeks", "business day", "business days", "turnaround", "review time", "plan review"))
+        reason = "approval_timeline needs official review-time language"
+    elif field == "inspections":
+        allowed_high = supports and official and _snippet_has_any(quote, ("inspection", "inspections", "rough inspection", "final inspection", "mechanical inspection", "electrical inspection", "plumbing inspection", "fire inspection", "health inspection", "walkthrough"))
+        reason = "inspections need an official inspection/checklist quote"
+
+    confidence = requested if requested in {"medium", "partial", "needs_verification"} else "needs_verification"
+    if requested == "high" and allowed_high:
+        confidence = "high"
+    elif requested == "high" or not evidence_items:
+        confidence = "needs_verification"
+
+    return {
+        "field": field,
+        "confidence": confidence,
+        "evidence": best,
+        "needs_review": confidence == "needs_verification",
+        "warning": "" if confidence == "high" else reason,
+    }
+
+
 
 def _is_miami_dade_context(city: str, state: str, result: dict) -> bool:
     haystack = " ".join([
@@ -589,6 +750,26 @@ def _apply_miami_dade_verified_portal_override(result: dict, city: str, state: s
     }
     existing_sources = result.get("sources") if isinstance(result.get("sources"), list) else []
     result["sources"] = [official_source] + [src for src in existing_sources if src != official_source]
+
+    _append_field_evidence(result, "apply_url", {
+        "source_url": MIAMI_DADE_ONLINE_SERVICES_URL,
+        "source_title": "Miami-Dade County Building Online Services — Permit Submission Portal",
+        "quoted_snippet": MIAMI_DADE_ONLINE_SERVICES_SNIPPET,
+        "source_type": "official_ahj",
+        "supports_field": True,
+        "confidence_signal": "high",
+        "last_verified": utc_now().date().isoformat(),
+    })
+    for weak_field in ("fee_range", "approval_timeline", "inspections"):
+        _append_field_evidence(result, weak_field, {
+            "source_url": MIAMI_DADE_ONLINE_SERVICES_URL,
+            "source_title": "Miami-Dade County Building Online Services — Permit Submission Portal",
+            "quoted_snippet": "",
+            "source_type": "official_ahj_unverified",
+            "supports_field": False,
+            "confidence_signal": "needs_verification",
+            "last_verified": utc_now().date().isoformat(),
+        })
 
     field_confidence = dict(result.get("field_confidence") or {})
     field_confidence.update({
@@ -698,31 +879,14 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
 def build_claim_citations(result: dict) -> list[dict]:
     """Attach field-level provenance without inventing quotes.
 
-    If retrieved snippets are unavailable, the claim is labeled needs_verification
-    rather than pretending a quote exists.
+    Field-specific evidence wins over generic sources. Generic source URLs may
+    still be shown for user verification, but they cannot make a field high
+    confidence unless the strict validator accepts evidence for that exact field.
     """
     sources = _source_dicts(result)
     first = sources[0] if sources else {}
     checked = utc_now().date().isoformat()
-
-    def confidence_for(field: str) -> str:
-        field_confidence = result.get("field_confidence") or {}
-        explicit = str(field_confidence.get(field) or "").strip().lower()
-        if explicit:
-            return explicit
-        if field == "fee_range":
-            explicit = str(field_confidence.get("fees") or "").strip().lower()
-            if explicit:
-                return explicit
-        if field == "approval_timeline":
-            explicit = str(field_confidence.get("timeline") or "").strip().lower()
-            if explicit:
-                return explicit
-        if not sources:
-            return "needs_verification"
-        if first.get("snippet"):
-            return str(result.get("confidence") or "medium").lower()
-        return "needs_verification"
+    field_evidence = _field_evidence_map(result)
 
     fields = [
         ("permit_type", _primary_permit_text(result), "Likely primary permit type"),
@@ -732,30 +896,43 @@ def build_claim_citations(result: dict) -> list[dict]:
         ("inspections", result.get("inspections") or result.get("inspect_checklist"), "Likely inspections"),
     ]
     citations = []
+    strict_warnings = []
     for idx, (field, value, label) in enumerate(fields, 1):
         if value in (None, "", [], {}):
             continue
-        snippet = first.get("snippet", "")
+        evidence_items = field_evidence.get(field) or []
+        strict = enforce_strict_field_confidence(field, value, evidence_items)
+        evidence = strict.get("evidence") or {}
+
+        # Legacy fallback: keep a safe source URL visible for the contractor to
+        # verify manually, but keep confidence at needs_verification.
+        source_url = evidence.get("source_url") or first.get("url", "")
+        source_title = evidence.get("source_title") or first.get("title", "")
+        snippet = evidence.get("quoted_snippet") or ""
+        confidence = strict["confidence"]
+        if confidence == "needs_verification" and strict.get("warning"):
+            strict_warnings.append(strict["warning"])
+
         citations.append({
             "id": f"C{idx}",
             "field": field,
             "claim": label,
             "value": str(value) if not isinstance(value, str) else value,
-            # Keep the source URL attached even when no quoted snippet exists so
-            # users can verify the claim themselves. Missing snippets still force
-            # needs_verification; we just do not pretend the URL proves the field.
-            "source_url": first.get("url", ""),
-            "source_title": first.get("title", ""),
+            "source_url": source_url,
+            "source_title": source_title,
             "quoted_snippet": snippet,
-            "checked_at": checked,
-            "confidence": confidence_for(field),
+            "checked_at": evidence.get("last_verified") or checked,
+            "confidence": confidence,
         })
     result["claim_citations"] = citations
     if any(c["confidence"] == "needs_verification" for c in citations):
         result.setdefault("quality_warnings", [])
-        warning = "Some report claims do not yet have quoted source snippets; verify with the AHJ before relying on them."
-        if warning not in result["quality_warnings"]:
-            result["quality_warnings"].append(warning)
+        if FIELD_EVIDENCE_WARNING not in result["quality_warnings"]:
+            result["quality_warnings"].append(FIELD_EVIDENCE_WARNING)
+        for warning in strict_warnings:
+            if warning and warning not in result["quality_warnings"]:
+                result["quality_warnings"].append(warning)
+        result["needs_review"] = True
     return citations
 
 
