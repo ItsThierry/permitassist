@@ -44,6 +44,9 @@ def enriched(job="medical clinic tenant improvement with exam rooms, hand sinks,
 def test_medical_clinic_scope_is_not_flattened_to_office_ti():
     assert engine.detect_primary_scope("medical clinic TI with exam rooms, hand sinks, med gas and x-ray room") == "commercial_medical_clinic_ti"
     assert engine.detect_primary_scope("dental clinic tenant improvement with nitrous oxide and sterilization room") == "commercial_medical_clinic_ti"
+    assert engine.detect_primary_scope("ambulatory surgical center ASC tenant improvement with operating room, PACU and medical gas") == "commercial_medical_clinic_ti"
+    assert engine.detect_primary_scope("ASC tenant improvement with sterile processing and recovery bays") == "commercial_medical_clinic_ti"
+    assert engine.detect_primary_scope("outpatient surgery buildout with pre-op and recovery bays") == "commercial_medical_clinic_ti"
 
 
 def test_medical_clinic_ti_fires_clinic_specific_triggers():
@@ -114,3 +117,112 @@ def test_restaurant_and_residential_do_not_include_medical_clinic_triggers():
     residential = ids("bathroom remodel with new sink and electrical", "Austin", "TX", "residential")
     assert not (restaurant & MEDICAL_IDS)
     assert not (residential & MEDICAL_IDS)
+
+
+def test_phase2_ordinary_medical_clinic_defaults_to_business_occupancy_basis():
+    analysis = engine.classify_healthcare_occupancy(
+        "medical clinic tenant improvement with exam rooms, check-in, sinks, x-ray, no sedation or overnight stay"
+    )
+    assert analysis["classification"] == "likely_business_group_b"
+    assert analysis["risk_level"] == "medium"
+    assert analysis["requires_i2_review"] is False
+    assert "Business Group B" in analysis["summary"]
+    assert any("outpatient" in reason.lower() for reason in analysis["reasons"])
+    assert any("sedation" in item.lower() for item in analysis["verify_before_quote"])
+
+
+def test_phase2_non_healthcare_office_does_not_get_healthcare_occupancy_analysis():
+    analysis = engine.classify_healthcare_occupancy("office tenant improvement with conference rooms, lighting, data cabling and finishes")
+    assert analysis["applies"] is False
+    assert analysis["classification"] == "not_healthcare_occupancy_scope"
+    assert analysis["requires_i2_review"] is False
+
+
+def test_phase2_dental_sterilization_room_stays_business_group_b_without_surgical_scope():
+    analysis = engine.classify_healthcare_occupancy(
+        "dental clinic tenant improvement with exam rooms, nitrous oxide, sterilization room, and no surgery or overnight stays"
+    )
+    assert analysis["applies"] is True
+    assert analysis["classification"] == "likely_business_group_b"
+    assert analysis["requires_i2_review"] is False
+    assert analysis["risk_level"] == "medium"
+
+
+def test_phase2_explicit_no_surgery_no_sedation_no_overnight_stays_medium_risk():
+    analysis = engine.classify_healthcare_occupancy(
+        "outpatient medical clinic TI with exam rooms, no surgery, no operating room, no anesthesia, and no overnight stays"
+    )
+    assert analysis["classification"] == "likely_business_group_b"
+    assert analysis["requires_i2_review"] is False
+    assert not any("Surgical center" in reason for reason in analysis["reasons"])
+
+
+def test_phase2_unrelated_negation_does_not_hide_real_operating_room_signal():
+    analysis = engine.classify_healthcare_occupancy(
+        "medical clinic TI with no exterior signage, operating room with anesthesia and PACU recovery"
+    )
+    assert analysis["classification"] == "possible_i2_ambulatory_care_review"
+    assert analysis["requires_i2_review"] is True
+
+
+def test_phase2_negated_self_preservation_phrase_does_not_force_high_risk():
+    analysis = engine.classify_healthcare_occupancy(
+        "outpatient medical clinic TI with exam rooms; patients are not incapable of self-preservation"
+    )
+    assert analysis["classification"] == "likely_business_group_b"
+    assert analysis["requires_i2_review"] is False
+
+
+def test_phase2_asc_without_clinic_wording_still_enters_high_risk_path():
+    analysis = engine.classify_healthcare_occupancy("ASC operating rooms with PACU recovery bays")
+    assert analysis["applies"] is True
+    assert analysis["classification"] == "possible_i2_ambulatory_care_review"
+    assert analysis["requires_i2_review"] is True
+
+
+def test_phase2_surgical_center_flags_i2_ambulatory_care_review_without_overclaiming():
+    job = (
+        "commercial tenant improvement for ambulatory surgical center / ASC with two operating rooms, "
+        "pre-op and PACU recovery bays, oxygen, medical gas, nurse call, sterile processing, "
+        "moderate sedation and patients may be incapable of self-preservation during procedures"
+    )
+    analysis = engine.classify_healthcare_occupancy(job)
+    assert analysis["classification"] == "possible_i2_ambulatory_care_review"
+    assert analysis["risk_level"] == "high"
+    assert analysis["requires_i2_review"] is True
+    assert "not a normal office/clinic TI" in analysis["summary"]
+    assert any("ASC" in permit["permit_type"] or "surgical" in permit["permit_type"].lower() for permit in analysis["companion_permits"])
+    assert any("I-2" in cite or "422" in cite for cite in analysis["citations"])
+
+
+def test_phase2_medical_rulebook_surfaces_occupancy_analysis_in_customer_output():
+    job = (
+        "Austin TX surgical center tenant improvement with operating room, PACU recovery, "
+        "sterile processing, oxygen medical gas, nurse call and moderate sedation"
+    )
+    out = enriched(job, city="Austin", state="TX")
+    analysis = out["occupancy_analysis"]
+    assert analysis["classification"] == "possible_i2_ambulatory_care_review"
+    assert out["needs_review"] is True
+    combined = " | ".join(
+        out["pro_tips"] + out["watch_out"] + out["common_mistakes"] + out["what_to_bring"] + out["inspections"]
+    )
+    assert "B vs I-2" in combined
+    assert "not a normal office/clinic TI" in combined
+    companion_text = " | ".join(c.get("permit_type", "") for c in out["companion_permits"])
+    assert "Surgical center" in companion_text or "ASC" in companion_text
+
+
+def test_phase2_medium_risk_clinic_rulebook_surfaces_business_group_b_guidance():
+    out = enriched(
+        "Cambridge MA medical clinic tenant improvement with exam rooms, sinks, x-ray, no surgery and no overnight stays",
+        city="Cambridge",
+        state="MA",
+    )
+    analysis = out["occupancy_analysis"]
+    assert analysis["classification"] == "likely_business_group_b"
+    assert analysis["requires_i2_review"] is False
+    combined = " | ".join(out["pro_tips"] + out["what_to_bring"] + out["watch_out"] + out["common_mistakes"])
+    assert "Business Group B" in combined
+    assert "verify B vs I-2" in combined
+    assert "not a normal office/clinic TI" not in combined

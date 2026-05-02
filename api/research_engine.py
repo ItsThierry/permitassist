@@ -2742,11 +2742,13 @@ def detect_primary_scope(job_type: str) -> str:
         'ansul', 'walk-in cooler', 'walk-in freezer', 'kitchen build-out',
     )):
         return 'commercial_restaurant'
-    if any(t in job_lc for t in (
+    if re.search(r'\basc\b', job_lc) or any(t in job_lc for t in (
         'medical clinic', 'medical office tenant', 'dental clinic', 'dental office tenant',
         'health clinic', 'clinic tenant improvement', 'clinic ti', 'exam room',
         'exam rooms', 'med gas', 'medical gas', 'nitrous oxide', 'x-ray', 'x ray',
-        'radiology', 'sterilization room',
+        'radiology', 'sterilization room', 'surgical center', 'ambulatory surgical center',
+        'operating room', 'operating rooms', 'pacu', 'pre-op', 'pre op',
+        'recovery bay', 'recovery bays', 'outpatient surgery',
     )):
         return 'commercial_medical_clinic_ti'
     if any(t in job_lc for t in (
@@ -5069,6 +5071,136 @@ def apply_office_ti_rulebook(result: dict, job_type: str, city: str, state: str)
     return result
 
 
+def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
+    return any(term in text for term in terms)
+
+
+def _contains_positive_any(text: str, terms: tuple[str, ...], negations: tuple[str, ...] = ()) -> bool:
+    """Return true when a term appears without an obvious adjacent negation phrase."""
+    for term in terms:
+        start = 0
+        while True:
+            idx = text.find(term, start)
+            if idx < 0:
+                break
+            prefix = text[max(0, idx - 48): idx]
+            # Suppress local phrases like "no surgery", "without surgery or operating room",
+            # but do not let unrelated earlier words like "no exterior signage, operating room"
+            # hide a real healthcare signal.
+            if negations and re.search(r"(?:no|without|not|never|excludes?|does not include|doesn't include|none of)\s+(?:\w+[\s/-]+){0,2}$", prefix):
+                start = idx + len(term)
+                continue
+            return True
+    return False
+
+
+def classify_healthcare_occupancy(job_type: str) -> dict:
+    """Phase 2 healthcare occupancy triage for B vs I-2 / ambulatory-care review.
+
+    This is intentionally a risk/verification layer, not a definitive code
+    ruling. Ordinary outpatient medical/dental clinic TIs usually start from a
+    Business Group B basis. Surgical center / ASC / anesthesia / PACU /
+    incapable-of-self-preservation signals are promoted to a high-risk review
+    path so the customer does not price it like a normal office/clinic TI.
+    """
+    text = f" {(job_type or '').lower()} "
+    outpatient_terms = (
+        "medical clinic", "dental clinic", "health clinic", "medical office",
+        "exam room", "exam rooms", "check-in", "check in", "x-ray", "x ray",
+        "radiology", "treatment room", "clinic ti",
+    )
+    surgical_terms = (
+        "ambulatory surgical center", "surgical center", " asc ", "outpatient surgery",
+        "operating room", "operating rooms", "procedure room",
+        "procedure rooms", "pre-op", "pre op", "post-op", "post op", "pacu",
+        "recovery bay", "recovery bays", "recovery room", "sterile processing",
+        "surgery", "surgical suite",
+    )
+    anesthesia_terms = (
+        "anesthesia", "moderate sedation", "deep sedation", "general anesthesia",
+        "sedation", "anesthetic", "anesthesiology",
+    )
+    self_preservation_terms = (
+        "incapable of self-preservation", "incapable of self preservation",
+        "not capable of self-preservation", "not capable of self preservation",
+        "non-ambulatory", "patients under anesthesia", "patient under anesthesia",
+    )
+    overnight_terms = ("overnight", "24 hour", "24-hour", "inpatient", "patient beds", "licensed beds")
+    negations = ("no ", "without ", "not ")
+
+    has_outpatient = _contains_any(text, outpatient_terms)
+    has_surgical = _contains_positive_any(text, surgical_terms, negations)
+    has_anesthesia = _contains_positive_any(text, anesthesia_terms, negations)
+    # Also use local negation handling here; "not incapable of self-preservation"
+    # should not create a false high-risk result.
+    has_self_preservation = _contains_positive_any(text, self_preservation_terms, negations)
+    has_overnight = _contains_positive_any(text, overnight_terms, negations)
+    high_risk = has_surgical or has_anesthesia or has_self_preservation or has_overnight
+    applies = has_outpatient or high_risk
+
+    base = {
+        "applies": applies,
+        "occupancy_question": "B vs I-2 / ambulatory-care facility review",
+        "citations": [
+            "IBC Chapter 3 — occupancy classification [verify adopted edition]",
+            "IBC Group B outpatient clinic basis [verify AHJ interpretation]",
+            "IBC Group I-2 / ambulatory-care facility provisions [verify thresholds]",
+            "IBC §422 Ambulatory Care Facilities [verify applicability]",
+            "IEBC change-of-occupancy provisions [verify adopted edition]",
+        ],
+    }
+    if not applies:
+        return {
+            **base,
+            "classification": "not_healthcare_occupancy_scope",
+            "risk_level": "none",
+            "requires_i2_review": False,
+            "summary": "No healthcare occupancy signals detected; do not apply medical clinic/ASC occupancy guidance to this scope.",
+            "reasons": [],
+            "verify_before_quote": [],
+            "companion_permits": [],
+        }
+    if high_risk:
+        return {
+            **base,
+            "classification": "possible_i2_ambulatory_care_review",
+            "risk_level": "high",
+            "requires_i2_review": True,
+            "summary": "Possible I-2 / ambulatory-care facility review — not a normal office/clinic TI. Verify B vs I-2, IBC 422, fire/life-safety, licensing, and infection-control path before quoting or promising opening dates.",
+            "reasons": [
+                reason for reason, present in (
+                    ("Surgical center / ASC / procedure-room signal present", has_surgical),
+                    ("Sedation/anesthesia signal present", has_anesthesia),
+                    ("Patient self-preservation concern present", has_self_preservation),
+                    ("Overnight/inpatient-care signal present", has_overnight),
+                ) if present
+            ],
+            "verify_before_quote": [
+                "Confirm whether the AHJ classifies this as Business Group B, I-2, or ambulatory-care facility under adopted IBC/IEBC.",
+                "Ask for procedure/anesthesia/sedation level, recovery/PACU layout, patient self-preservation assumptions, and licensed bed/overnight status.",
+                "Coordinate architect, MEP/fire protection, medical-gas verifier, infection-control/licensing reviewer, and fire marshal before permit intake.",
+            ],
+            "companion_permits": [
+                {"permit_type": "Surgical center / ASC occupancy classification review", "reason": "Procedure/anesthesia/recovery scope can move the project out of ordinary Business Group B clinic assumptions.", "certainty": "likely"},
+                {"permit_type": "Health-care licensing / infection-control review", "reason": "ASC/surgical programs often need licensing or health review separate from the building permit.", "certainty": "likely"},
+            ],
+        }
+    return {
+        **base,
+        "classification": "likely_business_group_b",
+        "risk_level": "medium",
+        "requires_i2_review": False,
+        "summary": "Likely outpatient Business Group B clinic basis, but verify B vs I-2/ambulatory-care status with the AHJ if any procedure, sedation, recovery, or self-preservation issue exists.",
+        "reasons": ["Outpatient clinic/exam-room signal present"],
+        "verify_before_quote": [
+            "Confirm no surgery/ASC program, anesthesia/sedation, PACU/recovery bays, inpatient/overnight care, or patient self-preservation issue is in scope.",
+            "Show occupancy basis, occupant load, suite separation, egress, accessibility, and certificate-of-occupancy path on the permit set.",
+            "If sedation/procedure scope appears later, reclassify for possible I-2/IBC 422 review before pricing.",
+        ],
+        "companion_permits": [],
+    }
+
+
 # Launch blocker #7 (2026-04-30): deterministic medical clinic TI enrichment.
 # Keeps clinic/dental outpatient buildouts from being treated like ordinary office TI.
 def apply_medical_clinic_ti_rulebook(result: dict, job_type: str, city: str, state: str) -> dict:
@@ -5117,6 +5249,34 @@ def apply_medical_clinic_ti_rulebook(result: dict, job_type: str, city: str, sta
         "Radiology/x-ray shielding or state radiation registration verification if radiation-producing equipment is installed.",
     ])
 
+    occupancy = classify_healthcare_occupancy(job_type or "")
+    result["occupancy_analysis"] = occupancy
+    if occupancy.get("requires_i2_review"):
+        result["needs_review"] = True
+        add_unique("watch_out", [occupancy["summary"]])
+        add_unique("common_mistakes", [
+            "Pricing an ASC/surgical/procedure buildout as ordinary Business Group B office/clinic TI before the AHJ resolves B vs I-2 / ambulatory-care classification.",
+        ])
+        add_unique("what_to_bring", occupancy.get("verify_before_quote") or [])
+        add_unique("inspections", [
+            "Occupancy/life-safety pre-final — verify B vs I-2 / ambulatory-care classification, IBC 422 conditions, egress, fire alarm/sprinkler coverage, medical gas, and licensing signoffs before opening.",
+        ])
+    else:
+        add_unique("pro_tips", [occupancy["summary"]])
+        add_unique("what_to_bring", occupancy.get("verify_before_quote") or [])
+
+    citations = result.get("code_citation")
+    if not isinstance(citations, list):
+        citations = _code_citation_items(citations)
+    seen_citations = {str(c.get("code") or c.get("section") or c).strip().lower() for c in citations if c}
+    for citation in occupancy.get("citations") or []:
+        key = str(citation).lower()
+        if key not in seen_citations:
+            citations.append({"code": citation, "type": "occupancy_analysis", "scope": primary_scope})
+            seen_citations.add(key)
+    if citations:
+        result["code_citation"] = citations
+
     companions = ensure_list("companion_permits")
     existing_companions = {str(c.get("permit_type") if isinstance(c, dict) else c).strip().lower() for c in companions}
     for trig in result.get("hidden_triggers") or []:
@@ -5140,6 +5300,14 @@ def apply_medical_clinic_ti_rulebook(result: dict, job_type: str, city: str, sta
         key = permit.lower()
         if key not in existing_companions:
             companions.append({"permit_type": permit, "reason": reason, "certainty": "likely"})
+            existing_companions.add(key)
+
+    for companion in occupancy.get("companion_permits") or []:
+        if not isinstance(companion, dict):
+            continue
+        key = str(companion.get("permit_type") or "").strip().lower()
+        if key and key not in existing_companions:
+            companions.append(companion)
             existing_companions.add(key)
 
     return result
