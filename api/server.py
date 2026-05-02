@@ -619,13 +619,39 @@ def _append_field_evidence(result: dict, field: str, evidence_item: dict) -> Non
     result["field_evidence"] = field_evidence
 
 
-def _source_is_official_or_trusted(item: dict) -> bool:
-    source_type = str(item.get("source_type") or "").strip().lower()
-    if source_type in OFFICIAL_SOURCE_TYPES:
-        return True
+def _source_host(item: dict) -> str:
     parsed = urlparse(str(item.get("source_url") or ""))
-    host = (parsed.hostname or "").lower()
-    return host == "miamidade.gov" or host.endswith(".miamidade.gov") or host.endswith(".gov")
+    return (parsed.hostname or "").lower()
+
+
+def _host_matches_expected(host: str, expected_url: str) -> bool:
+    expected_host = (urlparse(str(expected_url or "")).hostname or "").lower()
+    if not expected_host:
+        return True
+    return expected_host == host or expected_host.endswith("." + host) or host.endswith("." + expected_host)
+
+
+def _source_is_official_or_trusted(item: dict, *, expected_url: str = "") -> bool:
+    source_type = str(item.get("source_type") or "").strip().lower()
+    host = _source_host(item)
+    if not host:
+        return False
+
+    # Official source labels prove the source class, not that an unrelated
+    # external application URL is valid. URL-valued fields still need compatible
+    # source/value hosts.
+    if source_type in OFFICIAL_SOURCE_TYPES:
+        return _host_matches_expected(host, expected_url)
+
+    if host == "miamidade.gov" or host.endswith(".miamidade.gov"):
+        return _host_matches_expected(host, expected_url)
+
+    if host.endswith(".gov"):
+        # Generic .gov pages can preserve a verification link, but they should
+        # not prove a jurisdiction-specific apply path hosted somewhere else.
+        return _host_matches_expected(host, expected_url)
+
+    return False
 
 
 def _snippet_has_any(snippet: str, words: tuple[str, ...]) -> bool:
@@ -633,21 +659,28 @@ def _snippet_has_any(snippet: str, words: tuple[str, ...]) -> bool:
     return any(word in snippet_l for word in words)
 
 
+def _apply_path_segments(url: str) -> tuple[str, ...]:
+    parsed = urlparse(str(url or ""))
+    return tuple(segment.lower() for segment in parsed.path.split("/") if segment)
+
+
 def _url_looks_like_disallowed_apply_path(url: str) -> bool:
     parsed = urlparse(str(url or ""))
-    lower = str(url or "").lower()
+    host = (parsed.hostname or "").lower()
+    path = (parsed.path or "").lower()
+    segments = _apply_path_segments(url)
     if parsed.scheme not in {"http", "https"}:
         return True
-    disallowed_tokens = (
-        ".pdf",
-        "fee",
-        "ecobuilt.miamidade.gov",
-        "department",
-        "contact-us",
-    )
-    if "epsportal" not in lower:
-        disallowed_tokens = disallowed_tokens + ("/permits",)
-    return any(token in lower for token in disallowed_tokens)
+    if host == "ecobuilt.miamidade.gov" or host.endswith(".ecobuilt.miamidade.gov"):
+        return True
+    if path.endswith(".pdf"):
+        return True
+    disallowed_segments = {"fee", "fees", "department", "departments", "contact-us", "contact"}
+    if any(segment in disallowed_segments or segment.endswith("-fees") for segment in segments):
+        return True
+    if "epsportal" not in path and segments == ("permits",):
+        return True
+    return False
 
 
 def enforce_strict_field_confidence(field: str, value, evidence_list: list[dict] | None) -> dict:
@@ -662,10 +695,11 @@ def enforce_strict_field_confidence(field: str, value, evidence_list: list[dict]
     requested = str(best.get("confidence_signal") or "needs_verification").lower()
     quote = str(best.get("quoted_snippet") or "")
     supports = bool(best.get("supports_field"))
-    official = _source_is_official_or_trusted(best) if best else False
+    official = _source_is_official_or_trusted(best, expected_url=str(value or "")) if best else False
 
     reason = "missing field-specific evidence"
     allowed_high = False
+    allowed_partial = False
     if field == "apply_url":
         quote_l = quote.lower()
         allowed_high = (
@@ -675,24 +709,36 @@ def enforce_strict_field_confidence(field: str, value, evidence_list: list[dict]
             and _snippet_has_any(quote_l, ("portal", "online", "start", "permit"))
             and not _url_looks_like_disallowed_apply_path(str(value or best.get("source_url") or ""))
         )
+        allowed_partial = (
+            supports
+            and official
+            and _snippet_has_any(quote_l, ("apply", "application", "submit", "submission"))
+            and _snippet_has_any(quote_l, ("portal", "online", "start"))
+            and not _url_looks_like_disallowed_apply_path(str(value or best.get("source_url") or ""))
+        )
         reason = "apply_url needs official/trusted application portal evidence with an apply/submit/start quote"
     elif field == "permit_type":
         allowed_high = supports and official and _snippet_has_any(quote, ("permit", "tenant improvement", "alteration", "building permit"))
+        allowed_partial = supports and official and _snippet_has_any(quote, ("permit", "building", "application"))
         reason = "permit_type needs a direct permit-category quote"
     elif field == "fee_range":
         allowed_high = supports and official and _snippet_has_any(quote, ("fee", "fees", "fee schedule", "valuation", "$", "percent", "%", "per square foot"))
+        allowed_partial = allowed_high
         reason = "fee_range needs an official fee/valuation/rate quote"
     elif field == "approval_timeline":
         allowed_high = supports and official and _snippet_has_any(quote, ("days", "weeks", "business day", "business days", "turnaround", "review time", "plan review"))
+        allowed_partial = allowed_high
         reason = "approval_timeline needs official review-time language"
     elif field == "inspections":
         allowed_high = supports and official and _snippet_has_any(quote, ("inspection", "inspections", "rough inspection", "final inspection", "mechanical inspection", "electrical inspection", "plumbing inspection", "fire inspection", "health inspection", "walkthrough"))
+        allowed_partial = supports and official and _snippet_has_any(quote, ("inspection", "certificate", "final", "rough", "fire", "health"))
         reason = "inspections need an official inspection/checklist quote"
 
-    confidence = requested if requested in {"medium", "partial", "needs_verification"} else "needs_verification"
     if requested == "high" and allowed_high:
         confidence = "high"
-    elif requested == "high" or not evidence_items:
+    elif requested in {"medium", "partial"} and allowed_partial:
+        confidence = requested
+    else:
         confidence = "needs_verification"
 
     return {
@@ -876,6 +922,24 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     return result
 
 
+def _sync_field_confidence_from_claim_citations(result: dict, citations: list[dict]) -> None:
+    """Make legacy field_confidence mirror strict claim citations for core fields."""
+    legacy = dict(result.get("field_confidence") or {})
+    citation_confidence_by_field = {}
+    for citation in citations:
+        field = _canonical_field_name(citation.get("field"))
+        if field in FIELD_EVIDENCE_FIELDS:
+            citation_confidence_by_field[field] = citation.get("confidence") or "needs_verification"
+
+    for field in FIELD_EVIDENCE_FIELDS:
+        confidence = citation_confidence_by_field.get(field, "needs_verification")
+        legacy[field] = confidence
+        for alias, canonical in FIELD_EVIDENCE_ALIASES.items():
+            if canonical == field:
+                legacy[alias] = confidence
+    result["field_confidence"] = legacy
+
+
 def build_claim_citations(result: dict) -> list[dict]:
     """Attach field-level provenance without inventing quotes.
 
@@ -925,6 +989,7 @@ def build_claim_citations(result: dict) -> list[dict]:
             "confidence": confidence,
         })
     result["claim_citations"] = citations
+    _sync_field_confidence_from_claim_citations(result, citations)
     if any(c["confidence"] == "needs_verification" for c in citations):
         result.setdefault("quality_warnings", [])
         if FIELD_EVIDENCE_WARNING not in result["quality_warnings"]:

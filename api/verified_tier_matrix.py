@@ -198,6 +198,43 @@ VERIFIED_TIER_MATRIX: tuple[VerifiedTierCase, ...] = (
 )
 
 
+def readiness_from_claim_citations(claim_citations: list[dict]) -> dict[str, str]:
+    """Summarize strict field confidence into verified-tier readiness labels."""
+    readiness = {field: "needs_verification" for field in CORE_EVIDENCE_FIELDS}
+    for citation in claim_citations or []:
+        field = str(citation.get("field") or "")
+        if field not in readiness:
+            continue
+        confidence = str(citation.get("confidence") or "needs_verification").lower()
+        if confidence == "high":
+            readiness[field] = "verified"
+        elif confidence in {"medium", "partial"}:
+            readiness[field] = "partial"
+        else:
+            readiness[field] = "needs_verification"
+    return readiness
+
+
+def evaluate_case_result(case: VerifiedTierCase, result: dict) -> dict:
+    """Compare a result's strict citations/warnings against a matrix case."""
+    case.validate()
+    actual = readiness_from_claim_citations(result.get("claim_citations") or [])
+    mismatches = {
+        field: {"expected": expected, "actual": actual.get(field)}
+        for field, expected in case.field_expectations.items()
+        if actual.get(field) != expected
+    }
+    warnings = result.get("quality_warnings") or []
+    if case.warnings_visible and not warnings:
+        mismatches["warnings_visible"] = {"expected": True, "actual": False}
+    return {
+        "case_id": case.case_id,
+        "passed": not mismatches,
+        "actual_field_readiness": actual,
+        "mismatches": mismatches,
+    }
+
+
 def validate_verified_tier_matrix() -> None:
     seen = set()
     for case in VERIFIED_TIER_MATRIX:
