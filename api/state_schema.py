@@ -2,8 +2,8 @@
 
 Phase 3 created citation-ready CA/TX/FL/MA state overlay slots without fake
 state-rule claims. Phase 4 populates those slots one careful state/vertical at a
-time. The first populated slice is Phase 4A: Texas medical/dental clinic tenant
-improvement.
+time. Phase 4A populated Texas medical/dental clinic TI, Phase 4B populated
+California, and Phase 4C populates Florida.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ PHASE3_TARGET_STATES = ("CA", "TX", "FL", "MA")
 
 PHASE4A_TX_VERIFIED_ON = "2026-05-02"
 PHASE4B_CA_VERIFIED_ON = "2026-05-02"
+PHASE4C_FL_VERIFIED_ON = "2026-05-02"
 
 _STATE_NAMES = {
     "CA": "California",
@@ -379,6 +380,159 @@ _CA_MEDICAL_CLINIC_RULES: list[dict[str, Any]] = [
     },
 ]
 
+_FL_MEDICAL_CLINIC_RULES: list[dict[str, Any]] = [
+    {
+        "id": "fl_fbc_local_ahj_accessibility_baseline",
+        "overlay": "accessibility",
+        "title": "Florida Building Code, local AHJ, and accessibility baseline for clinic alterations",
+        "applies": "all_fl_medical_clinic_ti",
+        "summary": "Florida Statutes make the Florida Building Code applicable to building alteration, modification, repair, and related work; Florida accessibility law incorporates ADA-aligned accessibility requirements. For clinic TI, use this as state-level code/accessibility triage while the local building/fire AHJ controls permit intake, local amendments, inspections, and CO/opening path.",
+        "contractor_guidance": [
+            "For Florida clinic TI, verify the current Florida Building Code edition, local AHJ amendments, fire/life-safety review, accessibility scope, and certificate/opening requirements before quoting.",
+            "Show occupancy basis, egress, fire/life-safety, accessible route/restrooms/reception/exam-room features if affected, MEP scope, and local inspection path on the permit set."
+        ],
+        "watch_out": [
+            "Do not treat Florida medical/dental clinic TI as one statewide online permit path; local AHJ submittal, fire review, inspections, and CO/opening requirements still control."
+        ],
+        "companion_permits": [],
+        "trigger_terms": [],
+        "source_title": "Florida Statutes Sec. 553.73 — Florida Building Code",
+        "source_url": "https://www.leg.state.fl.us/Statutes/index.cfm?App_mode=Display_Statute&URL=0500-0599/0553/Sections/0553.73.html",
+        "source_quote": "The Florida Building Code shall contain or incorporate by reference all laws and rules which pertain to and govern the design, construction, erection, alteration, modification, repair, and demolition of public and private buildings, structures, and facilities",
+        "secondary_source_title": "Florida Statutes Sec. 553.502 — Accessibility intent",
+        "secondary_source_url": "https://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&Search_String=&URL=0500-0599/0553/Sections/0553.502.html",
+        "confidence": "high",
+    },
+    {
+        "id": "fl_ahca_health_care_clinic_license_check",
+        "overlay": "healthcare_licensing",
+        "title": "Florida AHCA health care clinic licensure verification",
+        "applies": "triggered_by_ahca_health_care_clinic_license_terms",
+        "summary": "Florida AHCA licenses health care clinics where health care services are provided and charges are tendered for reimbursement, with special application/inspection and MRI accreditation requirements for applicable licensed clinics. Ordinary private physician or dental offices should not be assumed to require AHCA clinic licensure without owner/program facts.",
+        "contractor_guidance": [
+            "If the Florida scope mentions AHCA/licensed health care clinic status, reimbursement clinic operations, MRI services, mobile clinic, or portable equipment provider use, verify AHCA health care clinic licensing and inspection requirements before promising opening from building final alone.",
+            "Ask the owner whether this is a private physician/dental office or an AHCA-licensed health care clinic; the answer changes the state opening path."
+        ],
+        "watch_out": [
+            "AHCA licensure inspection or MRI accreditation can be a separate opening blocker from local building permit final when the owner program falls under AHCA clinic rules."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "Florida AHCA health care clinic licensing / inspection verification if licensed clinic, MRI, mobile clinic, portable equipment provider, or reimbursement-clinic facts apply",
+                "reason": "AHCA health care clinic rules can apply separately from local building-permit issuance for covered clinic programs.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["ahca licensed health care clinic", "florida licensed health care clinic", "health care clinic license", "healthcare clinic license", "health care clinic licensure", "healthcare clinic licensure", "reimbursement clinic", "mri services", "magnetic resonance imaging", "mobile clinic", "portable equipment provider"],
+        "source_title": "Florida AHCA — Health Care Clinics",
+        "source_url": "https://ahca.myflorida.com/health-quality-assurance/bureau-of-health-facility-regulation/hospital-outpatient-services-unit/health-care-clinics",
+        "source_quote": "licenses entities where health care services are provided to individuals and which tender charges for reimbursement for such services, including a mobile clinic and a portable equipment provider",
+        "secondary_source_title": "Florida AHCA — Health Care Clinic Licensing Requirements",
+        "secondary_source_url": "https://ahca.myflorida.com/health-quality-assurance/bureau-of-health-facility-regulation/hospital-outpatient-services-unit/health-care-clinics/licensing-requirements",
+        "confidence": "high",
+    },
+    {
+        "id": "fl_ahca_asc_opc_review_when_surgical",
+        "overlay": "ambulatory_care_thresholds",
+        "title": "Florida AHCA ambulatory surgical center / Office of Plans and Construction trigger",
+        "applies": "triggered_by_surgery_asc_anesthesia_pacu",
+        "summary": "Florida AHCA defines an ambulatory surgery center as a licensed facility not part of a hospital with the primary purpose of elective surgical care where the patient is admitted and discharged within 24 hours. AHCA says initial ASC applicants must have a current project under Office of Plans and Construction review before licensure, and a license is required before patient care.",
+        "contractor_guidance": [
+            "If the Florida clinic includes an ASC/day-surgery program, operating rooms, surgical services, general anesthesia, deep sedation, PACU, or recovery bays, verify AHCA ASC licensing and Office of Plans and Construction review before pricing it like ordinary clinic TI.",
+            "Do not promise patient-care/opening from local final inspection alone when AHCA ASC licensure, OPC review, survey, or license issuance remains unresolved."
+        ],
+        "watch_out": [
+            "Florida ASC/surgical projects can require AHCA Office of Plans and Construction review and licensure before patient care, separate from the local building permit."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "Florida AHCA ASC licensing / Office of Plans and Construction review if ASC/surgical program is in scope",
+                "reason": "Florida AHCA identifies ASC licensure and OPC building-code-compliance review as part of initial ASC opening.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["surgery", "surgical", "operating room", "operating rooms", "operating room suite", "operating suite", "asc", "ambulatory surgery", "ambulatory surgical", "ambulatory surgery center", "day surgery", "surgery center", "general anesthesia", "deep sedation", "pacu", "recovery bay", "recovery bays"],
+        "source_title": "Florida AHCA — Ambulatory Surgical Center",
+        "source_url": "https://ahca.myflorida.com/health-quality-assurance/bureau-of-health-facility-regulation/hospital-outpatient-services-unit/ambulatory-surgical-center",
+        "source_quote": "Initial applicants must first have a current project under review with AHCA’s Office of Plans and Construction for building code compliance.",
+        "confidence": "high",
+    },
+    {
+        "id": "fl_doh_xray_registration_dental_medical",
+        "overlay": "radiology_xray",
+        "title": "Florida DOH ionizing radiation machine / dental X-ray registration and inspection",
+        "applies": "triggered_by_xray_radiology_ct",
+        "summary": "Florida Department of Health Radiation Control provides annual radiation machine registration and fee payment for X-ray machines, registers more than 21,000 facilities, and lists dental machines among inspected equipment categories. X-ray/CBCT/radiology equipment should trigger DOH registration/inspection/shielding coordination; ultrasound or MRI alone should not trigger X-ray registration.",
+        "contractor_guidance": [
+            "If the Florida dental/medical clinic includes X-ray, CBCT/cone beam, panoramic, CT, fluoroscopy, C-arm, or mammography equipment, coordinate Florida Department of Health radiation machine registration, shielding/vendor documentation, and equipment install timing before opening.",
+            "Keep DOH radiation-machine registration/inspection tasks separate from the local TI permit checklist so the owner understands both paths."
+        ],
+        "watch_out": [
+            "Radiation-machine registration, inspection, or shielding documentation can become an opening blocker even when the local Florida TI permit is ready."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "Florida DOH radiation machine registration / X-ray inspection and shielding verification if ionizing equipment is included",
+                "reason": "Florida DOH Radiation Control handles radiation machine registration and inspection categories including dental machines.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["x-ray", "xray", "radiology", "radiographic", "panoramic", "cbct", "cone beam", "ct scanner", "fluoroscopy", "c-arm", "mammography"],
+        "source_title": "Florida Department of Health — Ionizing Radiation Machines (X-Ray)",
+        "source_url": "https://www.floridahealth.gov/licensing-regulations/radiation-control/ionizing-radiation-machines-x-ray/",
+        "source_quote": "View annual radiation machine registration information and pay registration fees.",
+        "confidence": "high",
+    },
+    {
+        "id": "fl_medical_gas_certified_contractor",
+        "overlay": "medical_gas",
+        "title": "Florida medical gas contractor and workforce certification trigger",
+        "applies": "triggered_by_medical_gas_nitrous_oxygen_vacuum",
+        "summary": "Florida medical gas work has contractor/workforce certification requirements. Florida Administrative Code 61G4-15.031 requires licensed plumbing contractors and workers performing medical gas systems work to complete a 32-hour Board-approved medical gas course tied to NFPA 99C and ASSE Series 6000; F.S. 489.1136 covers tubing, pipe, or conduit transporting gaseous substances for medical purposes.",
+        "contractor_guidance": [
+            "If the Florida clinic scope includes nitrous, medical oxygen, medical/dental vacuum, medical-gas outlets, zone valves, manifolds, or alarms, verify certified medical-gas contractor/workforce credentials and local plumbing/mechanical/fire permit split before rough-in.",
+            "Carry verifier/testing/documentation time separately from ordinary plumbing; certification and local inspection details can affect rough-in, pressure testing, labeling, and final approval."
+        ],
+        "watch_out": [
+            "Do not price Florida medical gas/nitrous/vacuum as ordinary plumbing only; certified contractor/workforce and local AHJ inspection requirements can affect schedule and cost."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "Certified medical gas / nitrous / oxygen / vacuum contractor verification and local MEP/fire permit coordination if included",
+                "reason": "Florida statutes and administrative rules impose medical-gas certification requirements in addition to local permit/inspection requirements.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["medical gas", "med gas", "medical oxygen", "oxygen piping", "oxygen outlet", "nitrous", "medical vacuum", "dental vacuum", "vacuum line", "vacuum lines", "zone valve", "zone valves", "medical gas outlet", "medical gas outlets", "med gas outlet", "med gas outlets", "dental gas outlet", "dental gas outlets", "med gas alarm", "medical gas alarm", "zone valve alarm", "medical gas source equipment", "gas manifold", "bulk oxygen"],
+        "source_title": "Florida Statutes Sec. 489.1136 — Medical gas certification",
+        "source_url": "https://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&Search_String=&URL=0400-0499/0489/Sections/0489.1136.html",
+        "source_quote": "any plumbing contractor who wishes to engage in the business of installation, improvement, repair, or maintenance of any tubing, pipe, or similar conduit used to transport gaseous or partly gaseous substances for medical purposes",
+        "secondary_source_title": "Florida Administrative Code 61G4-15.031 — Medical Gas Certification",
+        "secondary_source_url": "https://www.flrules.org/gateway/ruleNo.asp?id=61G4-15.031",
+        "confidence": "high",
+    },
+    {
+        "id": "fl_energy_code_commercial_alteration_scope",
+        "overlay": "energy_code",
+        "title": "Florida Energy Conservation Code commercial alteration coordination",
+        "applies": "triggered_by_energy_alteration_scope",
+        "summary": "The Florida Building Code, 8th Edition (2023), is effective statewide for the current code cycle. Clinic TI that touches lighting, HVAC/mechanical systems, envelope, lighting/HVAC/energy controls, water heating, or energy-calculation scope should verify commercial energy-code submittal and inspection requirements with the local AHJ; finish-only work should not be over-warned.",
+        "contractor_guidance": [
+            "For Florida clinic TI, budget for Florida Energy Conservation Code documentation when lighting, HVAC/mechanical systems, envelope, lighting/HVAC/energy controls, or water-heating scope is touched.",
+            "Verify the AHJ-required commercial energy forms/calculations and inspection responsibilities before permit submittal."
+        ],
+        "watch_out": [
+            "Energy-code documentation can delay Florida plan review when lighting/HVAC/controls scope is included but forms or calculations are missing."
+        ],
+        "companion_permits": [],
+        "trigger_terms": ["lighting", "hvac", "mechanical alteration", "mechanical alterations", "mechanical systems", "envelope", "lighting controls", "hvac controls", "energy controls", "water heating", "water-heating", "energy code", "energy forms", "energy calculation", "energy calculations"],
+        "source_title": "Florida Building Commission — Florida Building Code homepage",
+        "source_url": "https://www.floridabuilding.org/",
+        "source_quote": "The Effective Date for the Florida Building Code, 8th Edition (2023), is December 31, 2023.",
+        "confidence": "medium",
+    },
+]
+
 
 def _citation_hooks(topics: list[str]) -> list[dict[str, str]]:
     return [
@@ -500,6 +654,16 @@ _populate_medical_clinic_schema(
     note_key="phase4b_note",
     note="CA medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
     verified_on=PHASE4B_CA_VERIFIED_ON,
+)
+
+_populate_medical_clinic_schema(
+    STATE_RULE_SCHEMAS["FL"],
+    rules=_FL_MEDICAL_CLINIC_RULES,
+    coverage_level="phase4c_fl_medical_clinic_ti",
+    warning="Florida medical/dental clinic TI overlay is populated for Phase 4C with cited state sources. Use it as state-level triage; local AHJ, AHCA/DOH/licensing facts, current Florida Building Code edition, and owner program still control final submittal/opening requirements.",
+    note_key="phase4c_note",
+    note="FL medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
+    verified_on=PHASE4C_FL_VERIFIED_ON,
 )
 
 
@@ -639,7 +803,7 @@ def _job_has_any(job: str, terms: list[str]) -> bool:
 
 def _rule_applies(rule: dict[str, Any], job_type: str) -> bool:
     applies = rule.get("applies")
-    if applies in {"all_tx_medical_clinic_ti", "all_ca_medical_clinic_ti"}:
+    if applies in {"all_tx_medical_clinic_ti", "all_ca_medical_clinic_ti", "all_fl_medical_clinic_ti"}:
         return True
     return _job_has_any(job_type or "", list(rule.get("trigger_terms") or []))
 
@@ -667,7 +831,7 @@ def compact_state_schema_context(state: str, vertical: str, job_type: str = "") 
         return None
 
     triggered_rules: list[dict[str, Any]] = []
-    if schema.get("state") in {"TX", "CA"} and vertical == "medical_clinic_ti":
+    if schema.get("state") in {"TX", "CA", "FL"} and vertical == "medical_clinic_ti":
         for slot in overlays.values():
             for rule in slot.get("populated_rules") or []:
                 if _rule_applies(rule, job_type):

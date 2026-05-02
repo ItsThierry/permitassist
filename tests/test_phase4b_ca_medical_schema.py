@@ -226,15 +226,15 @@ def test_phase4b_healthcare_rules_do_not_leak_into_office_or_other_unpopulated_s
     assert office["state_schema_context"]["vertical"] == "office_ti"
     assert office["state_schema_context"]["triggered_rules"] == []
 
-    fl = engine.apply_medical_clinic_ti_rulebook(
+    ma = engine.apply_medical_clinic_ti_rulebook(
         _base_result(),
-        "Miami FL dental clinic TI with x-ray and nitrous",
-        "Miami",
-        "FL",
+        "Boston MA dental clinic TI with x-ray and nitrous",
+        "Boston",
+        "MA",
     )
-    assert fl["state_schema_context"]["state"] == "FL"
-    assert fl["state_schema_context"]["population_status"] == "not_populated"
-    assert fl["state_schema_context"]["triggered_rules"] == []
+    assert ma["state_schema_context"]["state"] == "MA"
+    assert ma["state_schema_context"]["population_status"] == "not_populated"
+    assert ma["state_schema_context"]["triggered_rules"] == []
 
 
 def test_phase4b_sources_stay_out_of_code_citation_until_renderers_are_ready():

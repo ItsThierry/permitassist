@@ -34,6 +34,13 @@ def _base_result(scope="commercial_medical_clinic_ti"):
     }
 
 
+def _schema_only_state():
+    for state in PHASE3_TARGET_STATES:
+        if get_state_rule_schema(state)["coverage_level"] == "schema_only":
+            return state
+    raise AssertionError("No schema-only Phase 3 state remains for negative schema tests")
+
+
 def test_phase3_target_state_schemas_exist_and_validate():
     assert PHASE3_TARGET_STATES == ("CA", "TX", "FL", "MA")
     for state in PHASE3_TARGET_STATES:
@@ -48,6 +55,10 @@ def test_phase3_target_state_schemas_exist_and_validate():
         elif state == "CA":
             assert schema["phase"] == 4
             assert schema["coverage_level"] == "phase4b_ca_medical_clinic_ti"
+            assert schema["population_status"] == "partially_populated"
+        elif state == "FL":
+            assert schema["phase"] == 4
+            assert schema["coverage_level"] == "phase4c_fl_medical_clinic_ti"
             assert schema["population_status"] == "partially_populated"
         else:
             assert schema["phase"] == 3
@@ -130,6 +141,10 @@ def test_phase3_state_schema_context_attaches_to_all_target_states_without_fake_
             assert context["coverage_level"] == "phase4b_ca_medical_clinic_ti"
             assert context["population_status"] == "partially_populated"
             assert context["triggered_rules"]
+        elif state == "FL":
+            assert context["coverage_level"] == "phase4c_fl_medical_clinic_ti"
+            assert context["population_status"] == "partially_populated"
+            assert context["triggered_rules"]
         else:
             assert context["coverage_level"] == "schema_only"
             assert context["population_status"] == "not_populated"
@@ -190,7 +205,7 @@ def test_phase3_schema_context_does_not_attach_to_unsupported_scope():
 
 
 def test_phase3_validator_rejects_populated_or_fake_citation_shapes():
-    schema = get_state_rule_schema("FL")
+    schema = get_state_rule_schema(_schema_only_state())
     schema["population_status"] = "populated"
     schema["coverage_level"] = "full"
     schema["citation_policy"] = {"no_fake_citations": False}
@@ -210,11 +225,11 @@ def test_phase3_validator_rejects_populated_or_fake_citation_shapes():
 
 
 def test_phase3_get_state_rule_schema_returns_deep_copy():
-    first = get_state_rule_schema("FL")
+    first = get_state_rule_schema(_schema_only_state())
     first["healthcare_overlays"]["medical_gas"]["status"] = "mutated"
     first["healthcare_overlays"]["medical_gas"]["citation_hooks"][0]["source_url"] = "https://example.com/mutation"
 
-    second = get_state_rule_schema("FL")
+    second = get_state_rule_schema(_schema_only_state())
 
     assert second["healthcare_overlays"]["medical_gas"]["status"] == "needs_population"
     assert second["healthcare_overlays"]["medical_gas"]["citation_hooks"][0]["source_url"] == ""
