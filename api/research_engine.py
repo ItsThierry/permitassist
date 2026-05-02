@@ -5568,6 +5568,9 @@ def apply_state_schema_context(result: dict, job_type: str, city: str, state: st
     primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
     vertical_by_scope = {
         "commercial_medical_clinic_ti": "medical_clinic_ti",
+        # Restaurant scopes are historically normalized as commercial_restaurant
+        # in the production pipeline; keep the newer *_ti alias for direct tests.
+        "commercial_restaurant": "restaurant_ti",
         "commercial_restaurant_ti": "restaurant_ti",
         "commercial_office_ti": "office_ti",
     }

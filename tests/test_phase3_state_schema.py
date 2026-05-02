@@ -140,9 +140,16 @@ def test_phase3_general_overlay_context_is_available_for_office_and_restaurant_t
         "Miami",
         "FL",
     )
+    production_restaurant = engine.apply_state_schema_context(
+        _base_result("commercial_restaurant"),
+        "restaurant tenant improvement with hood and grease interceptor",
+        "Miami",
+        "FL",
+    )
 
     assert office["state_schema_context"]["vertical"] == "office_ti"
     assert restaurant["state_schema_context"]["vertical"] == "restaurant_ti"
+    assert production_restaurant["state_schema_context"]["vertical"] == "restaurant_ti"
     assert {slot["key"] for slot in office["state_schema_context"]["overlay_slots"]} >= {
         "adopted_code_editions",
         "energy_code",
