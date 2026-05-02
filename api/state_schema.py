@@ -14,6 +14,7 @@ from typing import Any
 PHASE3_TARGET_STATES = ("CA", "TX", "FL", "MA")
 
 PHASE4A_TX_VERIFIED_ON = "2026-05-02"
+PHASE4B_CA_VERIFIED_ON = "2026-05-02"
 
 _STATE_NAMES = {
     "CA": "California",
@@ -217,6 +218,162 @@ _TX_MEDICAL_CLINIC_RULES: list[dict[str, Any]] = [
 ]
 
 
+_CA_MEDICAL_CLINIC_RULES: list[dict[str, Any]] = [
+    {
+        "id": "ca_title24_local_ahj_oshpd3_awareness",
+        "overlay": "occupancy_classification",
+        "title": "California Title 24 baseline, local AHJ, and OSHPD 3 clinic awareness",
+        "applies": "all_ca_medical_clinic_ti",
+        "summary": "California commercial clinic TI must be coordinated against the California Building Standards Code, Title 24, plus local AHJ amendments. HCAI explains that OSHPD 3 clinic requirements apply only to clinics licensed under Health and Safety Code Section 1200 and outpatient services of a hospital licensed under Section 1250.",
+        "contractor_guidance": [
+            "For California clinic TI, verify the locally enforced Title 24 edition/parts, city amendments, fire marshal requirements, and whether the owner program is a licensed clinic/outpatient hospital service before pricing it as ordinary medical office TI.",
+            "Show occupancy basis, accessibility, CALGreen/energy scope, fire/life-safety, plumbing/mechanical/electrical, and certificate-of-occupancy path on the permit set."
+        ],
+        "watch_out": [
+            "Do not assume every California medical office is OSHPD 3/HCAI-reviewed; HCAI says OSHPD 3 clinic requirements apply to specific licensed clinic/hospital outpatient categories."
+        ],
+        "companion_permits": [],
+        "trigger_terms": [],
+        "source_title": "California Building Standards Commission — Codes",
+        "source_url": "https://www.dgs.ca.gov/bsc/codes",
+        "source_quote": "The California Building Standards Code is a compilation of three types of building standards from three different origins:",
+        "secondary_source_title": "HCAI — Codes and Regulations / OSHPD 3 Clinics",
+        "secondary_source_url": "https://hcai.ca.gov/facilities/building-safety/codes-and-regulations/",
+        "confidence": "high",
+    },
+    {
+        "id": "ca_cdph_pcc_license_when_primary_care_clinic",
+        "overlay": "healthcare_licensing",
+        "title": "California CDPH primary care clinic licensure trigger",
+        "applies": "triggered_by_primary_care_clinic_license_terms",
+        "summary": "CDPH explains that primary care clinic applications require a physical plant and control-of-property documentation, and HCAI identifies licensed Health and Safety Code Section 1200 clinics as OSHPD 3 clinic territory. This is a licensing/opening path, not just a local building permit issue.",
+        "contractor_guidance": [
+            "If the California scope is a licensed primary care/community/free clinic, FQHC-like clinic, or hospital outpatient clinic, verify CDPH licensing/CAB packet status and OSHPD 3/HCAI applicability before promising opening after local permit final.",
+            "Ask the owner whether this is a private physician/dental office, a licensed primary care clinic, a community/free clinic, or outpatient services of a hospital; the answer changes the state review path."
+        ],
+        "watch_out": [
+            "Licensed clinic status can create state licensing/survey/application blockers separate from city plan check and inspection."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "CDPH primary care clinic licensing / CAB application path if HSC 1200 licensed clinic is in scope",
+                "reason": "California licensed primary care clinics have CDPH licensing and physical-plant documentation requirements beyond local permit issuance.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["primary care clinic", "community clinic", "free clinic", "fqhc", "federally qualified health center", "licensed clinic", "hsc 1200", "section 1200", "hospital outpatient", "outpatient services of a hospital", "oshpd 3", "oshpd-3"],
+        "source_title": "CDPH — Primary Care Clinic FAQs",
+        "source_url": "https://www.cdph.ca.gov/Programs/CHCQ/LCP/Pages/Primary-Care-Clinic-FAQs.aspx",
+        "source_quote": "Yes. According to HSC § 1226(a), a physical plant and control of property documentation are required to apply for PCC licensure.",
+        "secondary_source_title": "HCAI — Codes and Regulations / OSHPD 3 Clinics",
+        "secondary_source_url": "https://hcai.ca.gov/facilities/building-safety/codes-and-regulations/",
+        "confidence": "high",
+    },
+    {
+        "id": "ca_surgc_asc_license_certification_trigger",
+        "overlay": "ambulatory_care_thresholds",
+        "title": "California surgical clinic / ASC licensure or certification trigger",
+        "applies": "triggered_by_surgery_asc_anesthesia_pacu",
+        "summary": "CDPH states that a state license is required to operate a California Surgical Clinic (SURGC) unless exempt, and defines SURGC/ASC around ambulatory surgical care or surgical services for patients not requiring hospitalization/over-24-hour stays. Physician/dentist-owned office exemptions may matter and must be verified by counsel/CDPH.",
+        "contractor_guidance": [
+            "If the California clinic includes operating rooms, ASC/SURGC/day surgery, surgical services, PACU/recovery, general anesthesia, or deep sedation, verify CDPH SURGC/ASC licensing or certification and any HCAI/OSHPD 3/local life-safety path before pricing it like ordinary clinic TI.",
+            "Do not promise opening from local final inspection alone when SURGC/ASC licensing, exemption status, certification, or survey remains unresolved."
+        ],
+        "watch_out": [
+            "California surgical/ASC programs can have CDPH/CMS/licensure/exemption questions separate from local building permit approval."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "CDPH Surgical Clinic (SURGC) license / ASC certification path if surgical/ASC program is in scope",
+                "reason": "California CDPH application materials and FAQs identify SURGC/ASC licensing/certification requirements and exemptions.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["surgery", "surgical", "operating room", "operating rooms", "operating suite", "asc", "ambulatory surgery", "ambulatory surgical", "surgc", "surgery center", "day surgery", "general anesthesia", "deep sedation", "pacu", "recovery bay", "recovery bays"],
+        "source_title": "CDPH — Ambulatory Surgery Center FAQs",
+        "source_url": "https://www.cdph.ca.gov/Programs/CHCQ/LCP/Pages/Ambulatory-Surgery-Center-FAQs.aspx",
+        "source_quote": "A state license is required to operate a SURGC in California unless exempt.",
+        "secondary_source_title": "CDPH — SURGC-ASC Initial Application Packet",
+        "secondary_source_url": "https://www.cdph.ca.gov/Programs/CHCQ/LCP/Pages/AppPacket/SURGC-ASC-Initial.aspx",
+        "confidence": "high",
+    },
+    {
+        "id": "ca_rhb_xray_registration_dental_medical",
+        "overlay": "radiology_xray",
+        "title": "California CDPH/RHB radiation-machine registration and dental X-ray inspection",
+        "applies": "triggered_by_xray_radiology_ct",
+        "summary": "California CDPH Radiologic Health Branch says entities acquiring radiation machines must register with RHB within 30 days, and dental X-ray providers are inspected by RHB on average every five years with posted-room and radiation-protection-program expectations.",
+        "contractor_guidance": [
+            "If California dental/medical clinic TI includes X-ray, CBCT, panoramic, CT, fluoroscopy, or radiology equipment, coordinate CDPH/RHB registration, shielding/vendor documentation, room posting, and equipment install timing before opening.",
+            "Keep RHB registration/inspection/radiation safety tasks separate from the city building permit checklist so the owner understands both paths."
+        ],
+        "watch_out": [
+            "Radiation-machine registration and dental X-ray compliance can become an opening blocker even when the local TI permit is ready."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "CDPH/RHB radiation machine registration / dental X-ray compliance if radiology equipment is included",
+                "reason": "California RHB registration is required after acquiring radiation machines and dental X-ray providers are subject to RHB inspection/compliance expectations.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["x-ray", "xray", "radiology", "radiographic", "panoramic", "cbct", "cone beam", "ct scanner", "fluoroscopy", "c-arm"],
+        "source_title": "CDPH/RHB — Radiation Machine Registration",
+        "source_url": "https://www.cdph.ca.gov/Programs/CEH/DRSEM/pages/rhb-x-ray/registration.aspx",
+        "source_quote": "Title 17, California Code of Regulations § 30108 requires that when an entity acquires a radiation machine, they must register with the Radiologic Health Branch (RHB) within 30 days.",
+        "secondary_source_title": "CDPH/RHB — Dental X-ray Providers",
+        "secondary_source_url": "https://www.cdph.ca.gov/Programs/CEH/DRSEM/Pages/RHB-X-ray/ICE/Dental.aspx",
+        "confidence": "high",
+    },
+    {
+        "id": "ca_title24_part6_energy_forms_nonresidential_ti",
+        "overlay": "infection_control_hvac",
+        "title": "California Title 24 Part 6 nonresidential energy forms for clinic alterations",
+        "applies": "triggered_by_energy_alteration_scope",
+        "summary": "California clinic TI may need Title 24 Part 6 nonresidential energy compliance forms when lighting, mechanical, envelope, controls, or water-heating scope is touched; Energy Code Ace provides utility-sponsored California Energy Code compliance-form tools for identifying required forms before AHJ submittal.",
+        "contractor_guidance": [
+            "For California clinic TI, budget for Title 24 Part 6 nonresidential energy compliance forms when lighting, mechanical, envelope, controls, or water-heating scope is touched.",
+            "Use the current code-year NRCC/NRCI form path and verify any HERS/acceptance testing requirements before permit submittal."
+        ],
+        "watch_out": [
+            "California energy documentation can delay plan check even for ordinary clinic TI if forms/acceptance testing are missing."
+        ],
+        "companion_permits": [],
+        "trigger_terms": ["lighting", "hvac", "mechanical", "envelope", "lighting controls", "water heating", "water-heating", "title 24 energy", "energy forms", "nrcc", "nrci", "acceptance testing"],
+        "source_title": "Energy Code Ace — Get Forms",
+        "source_url": "https://energycodeace.com/content/get-forms",
+        "source_quote": "Use this tool before your permit submittal to determine which forms will be required for your Addition, Alteration or New Construction project.",
+        "confidence": "high",
+    },
+    {
+        "id": "ca_cpc_dental_medgas_vacuum",
+        "overlay": "medical_gas",
+        "title": "California Plumbing Code dental gas/vacuum and medical gas coordination",
+        "applies": "triggered_by_medical_gas_nitrous_oxygen_vacuum",
+        "summary": "California Plumbing Code materials include dental gas and vacuum systems and medical gas/vacuum content tied to Title 24/local enforcement. Treat nitrous, oxygen, medical/dental vacuum, medical-gas outlets, zone valves, manifolds, and alarms as local plumbing/mechanical/fire review plus verifier/vendor coordination.",
+        "contractor_guidance": [
+            "If California dental/clinic scope includes nitrous, medical oxygen, medical gas outlets, dental/medical vacuum, zone valves, manifolds, or gas alarms, carry a separate plumbing/mechanical/fire coordination and verification line item.",
+            "Verify local AHJ permit split and inspection/third-party verifier expectations before rough-in; do not price it as ordinary plumbing only."
+        ],
+        "watch_out": [
+            "California dental gas/vacuum/medical gas details can affect rough-in, pressure testing, labeling, inspection, and final approval."
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "Dental/medical gas and vacuum local plumbing/mechanical/fire review if included",
+                "reason": "California Title 24/CPC/local enforcement can require specialty review and verification for dental/medical gas and vacuum systems.",
+                "certainty": "conditional",
+            }
+        ],
+        "trigger_terms": ["medical gas", "med gas", "medical oxygen", "oxygen piping", "oxygen outlet", "nitrous", "medical vacuum", "dental vacuum", "vacuum line", "vacuum lines", "zone valve", "zone valves", "medical gas outlet", "medical gas outlets", "med gas outlet", "med gas outlets", "med gas alarm", "medical gas alarm", "zone valve alarm", "medical gas source equipment", "gas manifold", "bulk oxygen"],
+        "source_title": "2025 California Plumbing Code — IAPMO ePub",
+        "source_url": "https://epubs.iapmo.org/2025/CPC/",
+        "source_quote": "Part V – Dental Gas and Vacuum Systems. 1327.0 Dental Gas and Vacuum Systems.",
+        "confidence": "medium",
+    },
+]
+
+
 def _citation_hooks(topics: list[str]) -> list[dict[str, str]]:
     return [
         {
@@ -275,19 +432,18 @@ def _build_schema(state: str) -> dict[str, Any]:
     }
 
 
-def _populate_tx_medical_clinic_schema(schema: dict[str, Any]) -> None:
+def _populate_medical_clinic_schema(schema: dict[str, Any], *, rules: list[dict[str, Any]], coverage_level: str, warning: str, note_key: str, note: str, verified_on: str) -> None:
     schema["phase"] = 4
-    schema["coverage_level"] = "phase4a_tx_medical_clinic_ti"
+    schema["coverage_level"] = coverage_level
     schema["population_status"] = "partially_populated"
     schema["requires_population_before_state_specific_claims"] = False
-    schema["populated_verticals"] = ["medical_clinic_ti"]
-    schema["contractor_warning"] = (
-        "Texas medical/dental clinic TI overlay is populated for Phase 4A with cited state sources. "
-        "Use it as state-level triage; city AHJ/local amendments and owner/licensing facts still control final submittal requirements."
-    )
-    schema["citation_policy"]["phase4a_note"] = "TX medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations."
+    populated = set(schema.get("populated_verticals") or [])
+    populated.add("medical_clinic_ti")
+    schema["populated_verticals"] = sorted(populated)
+    schema["contractor_warning"] = warning
+    schema["citation_policy"][note_key] = note
 
-    for rule in _TX_MEDICAL_CLINIC_RULES:
+    for rule in rules:
         slot = schema["healthcare_overlays"][rule["overlay"]]
         slot["status"] = "populated"
         slot.setdefault("populated_rules", []).append(deepcopy(rule))
@@ -304,7 +460,7 @@ def _populate_tx_medical_clinic_schema(schema: dict[str, Any]) -> None:
                     "source_url": rule["source_url"],
                     "source_title": rule["source_title"],
                     "citation_status": "verified",
-                    "verified_on": PHASE4A_TX_VERIFIED_ON,
+                    "verified_on": verified_on,
                 }
             )
         if rule.get("secondary_source_url") and not any(hook.get("source_url") == rule["secondary_source_url"] for hook in slot.get("citation_hooks", [])):
@@ -313,7 +469,7 @@ def _populate_tx_medical_clinic_schema(schema: dict[str, Any]) -> None:
                 "source_url": rule["secondary_source_url"],
                 "source_title": rule.get("secondary_source_title", ""),
                 "citation_status": "verified",
-                "verified_on": PHASE4A_TX_VERIFIED_ON,
+                "verified_on": verified_on,
             })
 
 
@@ -321,7 +477,24 @@ STATE_RULE_SCHEMAS: dict[str, dict[str, Any]] = {
     state: _build_schema(state)
     for state in PHASE3_TARGET_STATES
 }
-_populate_tx_medical_clinic_schema(STATE_RULE_SCHEMAS["TX"])
+_populate_medical_clinic_schema(
+    STATE_RULE_SCHEMAS["TX"],
+    rules=_TX_MEDICAL_CLINIC_RULES,
+    coverage_level="phase4a_tx_medical_clinic_ti",
+    warning="Texas medical/dental clinic TI overlay is populated for Phase 4A with cited state sources. Use it as state-level triage; city AHJ/local amendments and owner/licensing facts still control final submittal requirements.",
+    note_key="phase4a_note",
+    note="TX medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
+    verified_on=PHASE4A_TX_VERIFIED_ON,
+)
+_populate_medical_clinic_schema(
+    STATE_RULE_SCHEMAS["CA"],
+    rules=_CA_MEDICAL_CLINIC_RULES,
+    coverage_level="phase4b_ca_medical_clinic_ti",
+    warning="California medical/dental clinic TI overlay is populated for Phase 4B with cited state sources. Use it as state-level triage; local AHJ, Title 24 edition, HCAI/CDPH licensing facts, and owner program still control final submittal requirements.",
+    note_key="phase4b_note",
+    note="CA medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
+    verified_on=PHASE4B_CA_VERIFIED_ON,
+)
 
 
 def get_state_rule_schema(state: str) -> dict[str, Any] | None:
@@ -421,9 +594,12 @@ def _term_is_negated(text: str, normalized_term: str) -> bool:
         f" without {normalized_term}",
         f" excluding {normalized_term}",
         f" exclude {normalized_term}",
+        f" not {normalized_term}",
         f" not including {normalized_term}",
     )
     if any(marker in text for marker in direct_markers):
+        return True
+    if normalized_term == "licensed clinic" and " not hsc 1200 licensed clinic" in text:
         return True
     for marker in (" no ", " without ", " excluding ", " not including "):
         start = text.find(marker)
@@ -451,7 +627,7 @@ def _job_has_any(job: str, terms: list[str]) -> bool:
 
 def _rule_applies(rule: dict[str, Any], job_type: str) -> bool:
     applies = rule.get("applies")
-    if applies == "all_tx_medical_clinic_ti":
+    if applies in {"all_tx_medical_clinic_ti", "all_ca_medical_clinic_ti"}:
         return True
     return _job_has_any(job_type or "", list(rule.get("trigger_terms") or []))
 
@@ -479,7 +655,7 @@ def compact_state_schema_context(state: str, vertical: str, job_type: str = "") 
         return None
 
     triggered_rules: list[dict[str, Any]] = []
-    if schema.get("state") == "TX" and vertical == "medical_clinic_ti":
+    if schema.get("state") in {"TX", "CA"} and vertical == "medical_clinic_ti":
         for slot in overlays.values():
             for rule in slot.get("populated_rules") or []:
                 if _rule_applies(rule, job_type):
