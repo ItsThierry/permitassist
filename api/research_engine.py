@@ -32,6 +32,11 @@ except ImportError:  # server.py imports research_engine as a top-level module
     from state_packs import get_state_expert_notes
 
 try:
+    from .state_schema import compact_state_schema_context
+except ImportError:  # server.py imports research_engine as a top-level module
+    from state_schema import compact_state_schema_context
+
+try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 except Exception:
@@ -5251,6 +5256,7 @@ def apply_medical_clinic_ti_rulebook(result: dict, job_type: str, city: str, sta
 
     occupancy = classify_healthcare_occupancy(job_type or "")
     result["occupancy_analysis"] = occupancy
+    apply_state_schema_context(result, job_type, city, state)
     if occupancy.get("requires_i2_review"):
         result["needs_review"] = True
         add_unique("watch_out", [occupancy["summary"]])
@@ -5546,6 +5552,34 @@ def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str) 
             existing.append(note)
             seen.add(title)
     result["expert_notes"] = existing
+    return result
+
+
+def apply_state_schema_context(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Attach Phase 3 state schema context without claiming populated rules.
+
+    Phase 3 is only the architecture/citation-hook layer for CA/TX/FL/MA. It
+    must not fabricate state-specific conclusions or add placeholder items to
+    code_citation. Customer-visible citation lists should contain real cited
+    code/rule sources only; schema-only hooks live under state_schema_context.
+    """
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    vertical_by_scope = {
+        "commercial_medical_clinic_ti": "medical_clinic_ti",
+        "commercial_restaurant_ti": "restaurant_ti",
+        "commercial_office_ti": "office_ti",
+    }
+    vertical = vertical_by_scope.get(primary_scope)
+    if not vertical:
+        return result
+
+    context = compact_state_schema_context(state, vertical)
+    if not context:
+        return result
+
+    result["state_schema_context"] = context
     return result
 
 
@@ -8277,6 +8311,7 @@ Return ONLY the JSON object."""
     enforce_ti_min_permits_floor(result, job_type, city, state)
     apply_residential_permit_name_specificity(result, job_type, city, state)
     apply_state_expert_pack(result, city, state, job_type)
+    apply_state_schema_context(result, job_type, city, state)
 
     # 2026-04-28: Hidden Trigger Detector V1. Deterministic detection of
     # permit blockers the user didn't ask about (hood→fire suppression,
