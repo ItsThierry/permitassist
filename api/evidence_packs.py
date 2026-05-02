@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from copy import deepcopy
 from typing import Any
+from urllib.parse import urlparse
 
 try:  # package import in tests/app
     from .state_schema import STATE_RULE_SCHEMAS, get_state_rule_schema
@@ -163,7 +164,7 @@ def build_evidence_pack_from_state_schema(schema: dict[str, Any], *, active_vert
     rules = _rules_from_schema(schema, active_vertical)
     if not rules:
         raise ValueError(f"{schema.get('state')} {active_vertical} has no populated rules")
-    return EvidencePack(
+    pack = EvidencePack(
         state=str(schema.get("state") or ""),
         state_name=str(schema.get("state_name") or ""),
         verticals=populated_verticals,
@@ -176,6 +177,10 @@ def build_evidence_pack_from_state_schema(schema: dict[str, Any], *, active_vert
         coverage_level=str(schema.get("coverage_level") or ""),
         population_status=str(schema.get("population_status") or ""),
     )
+    errors = validate_evidence_pack(pack)
+    if errors:
+        raise ValueError(f"invalid evidence pack for {pack.state} {active_vertical}: {errors}")
+    return pack
 
 
 _TX_RESTAURANT_TI_EXAMPLE = EvidencePack(
@@ -285,6 +290,12 @@ def validate_evidence_pack(pack: EvidencePack) -> list[str]:
             errors.append("every rule needs id and title")
         if not rule.source_url or not rule.source_title or not rule.source_quote:
             errors.append(f"{rule.id or rule.title} needs source_url, source_title, and source_quote")
+        source_url = str(rule.source_url or "")
+        parsed_url = urlparse(source_url)
+        if source_url and parsed_url.scheme not in {"http", "https"}:
+            errors.append(f"{rule.id or rule.title} source_url must use http or https")
+        if source_url and not parsed_url.netloc:
+            errors.append(f"{rule.id or rule.title} source_url must include a hostname")
         if rule.confidence == "high" and not rule.source_quote:
             errors.append(f"{rule.id} high confidence requires direct source_quote")
     return errors

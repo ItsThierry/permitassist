@@ -147,7 +147,7 @@ def test_validate_evidence_pack_blocks_false_verified_and_missing_proof():
                 title="Bad high-confidence rule without direct quote",
                 overlay="health",
                 summary="Unsafe synthetic example for validator coverage.",
-                source_url="https://example.invalid/source",
+                source_url="javascript:alert(1)",
                 source_title="Example source",
                 source_quote="",
                 confidence="high",
@@ -178,6 +178,8 @@ def test_validate_evidence_pack_blocks_false_verified_and_missing_proof():
     assert any("field_defaults missing core fields" in error for error in errors)
     assert any("apply_url cannot be verified" in error for error in errors)
     assert any("needs source_url, source_title, and source_quote" in error for error in errors)
+    assert any("source_url must use http or https" in error for error in errors)
+    assert any("source_url must include a hostname" in error for error in errors)
     assert any("high confidence requires direct source_quote" in error for error in errors)
 
 
@@ -260,3 +262,40 @@ def test_schema_adapter_filters_general_overlay_rules_by_requested_vertical():
 
     assert [rule.id for rule in restaurant_pack.overlay_rules] == ["zz_restaurant_food_rule"]
     assert [rule.id for rule in office_pack.overlay_rules] == ["zz_office_fixture_rule"]
+
+def test_schema_adapter_fails_closed_when_schema_pack_fails_validation():
+    schema = {
+        "state": "ZZ",
+        "state_name": "Test State",
+        "populated_verticals": ["restaurant_ti"],
+        "coverage_level": "test_general_overlays",
+        "population_status": "partially_populated",
+        "general_overlays": {
+            "bad_slot": {
+                "citation_hooks": [],
+                "populated_rules": [
+                    {
+                        "id": "zz_restaurant_bad_url_rule",
+                        "verticals": ["restaurant_ti"],
+                        "title": "Restaurant bad URL rule",
+                        "overlay": "food_health",
+                        "summary": "Invalid source URL should fail closed.",
+                        "source_url": "javascript:alert(1)",
+                        "source_title": "Bad source",
+                        "source_quote": "Bad quote.",
+                        "confidence": "medium",
+                        "applies": "zz_restaurant_ti",
+                    },
+                ],
+            }
+        },
+    }
+
+    try:
+        build_evidence_pack_from_state_schema(schema, active_vertical="restaurant_ti")
+    except ValueError as exc:
+        assert "invalid evidence pack" in str(exc)
+        assert "last_verified is required" in str(exc)
+        assert "source_url must use http or https" in str(exc)
+    else:
+        raise AssertionError("invalid schema evidence pack should fail closed")
