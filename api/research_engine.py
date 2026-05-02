@@ -2722,6 +2722,45 @@ def _looks_like_commercial_trade_only_scope(job_type: str) -> bool:
     )
 
 
+def _phrase_is_negated(job_lc: str, phrase: str) -> bool:
+    """Return True when a scope phrase appears in an explicit negation window."""
+    phrase_re = re.escape(phrase).replace(r"\ ", r"\s+")
+    if not phrase.endswith("s"):
+        phrase_re = rf"{phrase_re}s?"
+    return re.search(
+        rf"\b(?:no|not|without|excluding|exclude|does\s+not\s+include|no\s+public)\b(?:\W+\w+){{0,5}}\W+{phrase_re}\b",
+        job_lc,
+    ) is not None
+
+
+def _has_positive_scope_phrase(job_lc: str, phrases: tuple[str, ...]) -> bool:
+    for phrase in phrases:
+        phrase_re = re.escape(phrase).replace(r"\ ", r"\s+")
+        if not phrase.endswith("s"):
+            phrase_re = rf"{phrase_re}s?"
+        for match in re.finditer(rf"\b{phrase_re}\b", job_lc):
+            prefix = job_lc[max(0, match.start() - 80):match.start()]
+            if not re.search(r"\b(?:no|not|without|excluding|exclude|does\s+not\s+include|no\s+public)\b(?:\W+\w+){0,5}\W*$", prefix):
+                return True
+    return False
+
+
+def _has_non_restaurant_use_negation(job_lc: str) -> bool:
+    negated = (
+        "restaurant", "public food service", "food service", "type i hood", "type 1 hood",
+        "hood", "grease interceptor", "grease trap", "cooking equipment", "commercial kitchen",
+    )
+    return any(_phrase_is_negated(job_lc, phrase) for phrase in negated)
+
+
+def _has_non_clinic_use_negation(job_lc: str) -> bool:
+    negated = (
+        "medical clinic", "clinic", "dental services", "dental service", "exam room",
+        "exam rooms", "x-ray", "x ray", "nitrous", "sterilization room", "medical clinic use",
+    )
+    return any(_phrase_is_negated(job_lc, phrase) for phrase in negated)
+
+
 def detect_primary_scope(job_type: str) -> str:
     """Identify the primary occupancy/project class for a permit query.
 
@@ -2742,21 +2781,22 @@ def detect_primary_scope(job_type: str) -> str:
     if _looks_like_commercial_trade_only_scope(job_lc):
         return 'commercial'
 
-    # Commercial restaurant — strongest signal
-    if any(t in job_lc for t in (
+    restaurant_phrases = (
         'restaurant', 'commercial kitchen', 'food service', ' cafe', 'fast-casual',
-        'fast casual', 'tavern', 'brewery', 'type i hood', 'grease interceptor',
+        'fast casual', 'tavern', 'brewery', 'type i hood', 'type 1 hood', 'grease interceptor',
         'ansul', 'walk-in cooler', 'walk-in freezer', 'kitchen build-out',
-    )):
+    )
+    if _has_positive_scope_phrase(job_lc, restaurant_phrases):
         return 'commercial_restaurant'
-    if re.search(r'\basc\b', job_lc) or any(t in job_lc for t in (
+    clinic_phrases = (
         'medical clinic', 'medical office tenant', 'dental clinic', 'dental office tenant',
         'health clinic', 'clinic tenant improvement', 'clinic ti', 'exam room',
         'exam rooms', 'med gas', 'medical gas', 'nitrous oxide', 'x-ray', 'x ray',
         'radiology', 'sterilization room', 'surgical center', 'ambulatory surgical center',
         'operating room', 'operating rooms', 'pacu', 'pre-op', 'pre op',
         'recovery bay', 'recovery bays', 'outpatient surgery',
-    )):
+    )
+    if re.search(r'\basc\b', job_lc) or _has_positive_scope_phrase(job_lc, clinic_phrases):
         return 'commercial_medical_clinic_ti'
     if any(t in job_lc for t in (
         'office tenant improvement', 'office ti', 'office buildout',
@@ -2777,10 +2817,25 @@ def detect_primary_scope(job_type: str) -> str:
     )):
         return 'multifamily'
     # Generic commercial — no specific subtype detected but commercial markers present
+    if ("no commercial use" in job_lc or "not commercial" in job_lc) and any(t in job_lc for t in ("residential", "single-family", "single family", "home", "homeschool")):
+        return 'residential'
+
     if any(t in job_lc for t in (
         'commercial tenant improvement', 'commercial buildout', 'commercial building',
-        'industrial ', 'warehouse', 'change of occupancy', 'a-2 occupancy',
-        'b-occupancy', 'mercantile', 'assembly occupancy', 'change of use',
+        'commercial warehouse', 'new commercial', 'industrial ', 'warehouse',
+        'mercantile', 'a-2 occupancy', 'b-occupancy', 'change of occupancy',
+        'change of use',
+    )):
+        return 'commercial'
+
+    if any(t in job_lc for t in (
+        'assembly occupancy', 'assembly building', 'public assembly', 'church',
+        'classroom', 'school', 'institutional',
+    )) and any(t in job_lc for t in (
+        'tenant improvement', ' ti ', ' t.i.', 'buildout', 'build-out', 'renovation',
+        'remodel', 'alteration', 'partition', 'partitions', 'ceiling', 'lighting',
+        'fire alarm', 'accessible route', 'signage', 'doors', 'change of use',
+        'change of occupancy',
     )):
         return 'commercial'
 
@@ -5406,7 +5461,8 @@ def _is_commercial_ti_scope(primary_scope: str, job_type: str) -> bool:
     return _scope_has_any(job, [
         "tenant improvement", " ti", "t.i.", "interior alteration", "interior remodel",
         "buildout", "build-out", "change of use", "change of occupancy", "occupancy change",
-        "fit out", "fit-out",
+        "fit out", "fit-out", "renovation", "remodel", "alteration", "partition",
+        "partitions", "classroom", "assembly", "fire alarm", "accessible route",
     ])
 
 

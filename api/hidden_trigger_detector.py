@@ -1247,6 +1247,36 @@ def _is_commercial_scope(primary_scope: str) -> bool:
     return scope in {_normalize(s) for s in COMMERCIAL_SCOPES} or scope.startswith("commercial")
 
 
+def _phrase_is_negated_for_trigger(text: str, phrase: str) -> bool:
+    phrase_re = re.escape(phrase).replace(r"\ ", r"\s+")
+    if not phrase.endswith("s"):
+        phrase_re = rf"{phrase_re}s?"
+    return re.search(
+        rf"\b(?:no|not|without|excluding|exclude|does\s+not\s+include|no\s+public)\b(?:\W+\w+){{0,5}}\W+{phrase_re}\b",
+        text,
+    ) is not None
+
+
+def _has_positive_trigger_term(text: str, terms: tuple[str, ...]) -> bool:
+    return any(term in text and not _phrase_is_negated_for_trigger(text, term) for term in terms)
+
+
+def _pattern_matches_unnegated(pattern: str, text: str) -> bool:
+    """Match fired_by regex only when the specific occurrence is not negated."""
+    try:
+        matches = list(re.finditer(pattern, text, flags=re.IGNORECASE))
+    except re.error:
+        token = _normalize(pattern)
+        if not token:
+            return False
+        matches = list(re.finditer(re.escape(token), text, flags=re.IGNORECASE))
+    for match in matches:
+        prefix = text[max(0, match.start() - 80):match.start()]
+        if not re.search(r"\b(?:no|not|without|excluding|exclude|does\s+not\s+include|no\s+public)\b(?:\W+\w+){0,5}\W*$", prefix):
+            return True
+    return False
+
+
 def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
     trigger_scope_norm = _normalize(trigger_scope)
     primary_scope_norm = _normalize(primary_scope)
@@ -1255,9 +1285,10 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
         return True
 
     if trigger_scope_norm == _normalize("commercial_restaurant"):
+        restaurant_terms = ("restaurant", "food service", "commercial kitchen", "type i hood", "type 1 hood", "grease interceptor", "grease trap")
         return (
             primary_scope_norm in {_normalize("commercial_restaurant"), _normalize("commercial_restaurant_ti")}
-            or ("restaurant" in text and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
+            or (_has_positive_trigger_term(text, restaurant_terms) and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
         )
 
     if trigger_scope_norm == _normalize("commercial_retail_ti"):
@@ -1267,10 +1298,10 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
         )
 
     if trigger_scope_norm == _normalize("commercial_medical_clinic_ti"):
-        clinic_terms = ("medical clinic", "medical office", "dental clinic", "health clinic", "exam room", "med gas", "medical gas", "x ray", "x-ray", "radiology")
+        clinic_terms = ("medical clinic", "medical office", "dental clinic", "health clinic", "exam room", "exam rooms", "med gas", "medical gas", "x ray", "x-ray", "radiology", "nitrous", "sterilization room")
         return (
             primary_scope_norm == _normalize("commercial_medical_clinic_ti")
-            or (any(term in text for term in clinic_terms) and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
+            or (_has_positive_trigger_term(text, clinic_terms) and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
         )
 
     if trigger_scope_norm == _normalize("commercial_ti"):
@@ -1337,7 +1368,7 @@ def _pattern_matches(pattern: str, text: str) -> bool:
 
 
 def _trigger_matches(trigger: dict, text: str) -> bool:
-    return any(_pattern_matches(pattern, text) for pattern in trigger.get("fired_by", []))
+    return any(_pattern_matches_unnegated(pattern, text) for pattern in trigger.get("fired_by", []))
 
 
 def _region_token_applies(token: str, city: str, state: str, text: str) -> bool:
