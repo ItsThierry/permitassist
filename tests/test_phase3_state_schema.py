@@ -41,9 +41,14 @@ def test_phase3_target_state_schemas_exist_and_validate():
         errors = validate_state_rule_schema(schema)
         assert errors == []
         assert schema["state"] == state
-        assert schema["phase"] == 3
-        assert schema["coverage_level"] == "schema_only"
-        assert schema["population_status"] == "not_populated"
+        if state == "TX":
+            assert schema["phase"] == 4
+            assert schema["coverage_level"] == "phase4a_tx_medical_clinic_ti"
+            assert schema["population_status"] == "partially_populated"
+        else:
+            assert schema["phase"] == 3
+            assert schema["coverage_level"] == "schema_only"
+            assert schema["population_status"] == "not_populated"
         assert schema["citation_policy"]["no_fake_citations"] is True
 
 
@@ -64,10 +69,14 @@ def test_phase3_schema_has_required_healthcare_overlay_slots_with_citation_hooks
 
     for key in required:
         slot = overlays[key]
-        assert slot["status"] == "needs_population"
+        assert slot["status"] in {"needs_population", "populated"}
         assert slot["citation_hooks"]
-        assert all(hook["citation_status"] == "needs_population" for hook in slot["citation_hooks"])
-        assert all(hook["source_url"] == "" for hook in slot["citation_hooks"])
+        if slot["status"] == "needs_population":
+            assert all(hook["citation_status"] == "needs_population" for hook in slot["citation_hooks"])
+            assert all(hook["source_url"] == "" for hook in slot["citation_hooks"])
+        else:
+            assert all(hook["citation_status"] == "verified" for hook in slot["citation_hooks"])
+            assert all(hook["source_url"].startswith("https://") for hook in slot["citation_hooks"])
 
 
 def test_phase3_unknown_state_returns_none_instead_of_generic_fake_schema():
@@ -109,11 +118,16 @@ def test_phase3_state_schema_context_attaches_to_all_target_states_without_fake_
         )
         context = result["state_schema_context"]
         assert context["state"] == state
-        assert context["coverage_level"] == "schema_only"
-        assert context["population_status"] == "not_populated"
-        assert "http" not in str(context).lower()
+        if state == "TX":
+            assert context["coverage_level"] == "phase4a_tx_medical_clinic_ti"
+            assert context["population_status"] == "partially_populated"
+            assert context["triggered_rules"]
+        else:
+            assert context["coverage_level"] == "schema_only"
+            assert context["population_status"] == "not_populated"
+            assert "http" not in str(context).lower()
+            assert "not populated" in context["contractor_warning"].lower()
         assert "§" not in str(context)
-        assert "not populated" in context["contractor_warning"].lower()
 
 
 def test_phase3_state_schema_context_is_idempotent_and_preserves_real_citations():
@@ -124,7 +138,7 @@ def test_phase3_state_schema_context_is_idempotent_and_preserves_real_citations(
 
     assert second["code_citation"] == original_citation
     assert second["state_schema_context"]["state"] == "TX"
-    assert str(second).count("Texas state overlay schema is ready") == 1
+    assert str(second).count("Texas medical/dental clinic TI overlay is populated") == 1
 
 
 def test_phase3_general_overlay_context_is_available_for_office_and_restaurant_ti():
@@ -179,12 +193,11 @@ def test_phase3_validator_rejects_populated_or_fake_citation_shapes():
 
     errors = validate_state_rule_schema(schema)
 
-    assert any("population_status" in error for error in errors)
+    assert any("populated_rules required" in error for error in errors)
     assert any("coverage_level" in error for error in errors)
     assert any("no_fake_citations" in error for error in errors)
-    assert any("status must be needs_population" in error for error in errors)
-    assert any("source_url must stay blank" in error for error in errors)
-    assert any("citation_status must be needs_population" in error for error in errors)
+    assert any("citation_status must be verified" in error for error in errors)
+    assert any("needs source_url and source_title" in error for error in errors)
 
 
 def test_phase3_get_state_rule_schema_returns_deep_copy():
@@ -220,7 +233,7 @@ def test_phase3_medical_rulebook_plus_pipeline_call_is_idempotent_and_keeps_cita
 
     assert result["code_citation"] == before_citation
     assert result["state_schema_context"]["state"] == "TX"
-    assert str(result).count("Texas state overlay schema is ready") == 1
+    assert str(result).count("Texas medical/dental clinic TI overlay is populated") == 1
 
 
 def test_phase3_state_schema_never_changes_code_citation_for_target_states():

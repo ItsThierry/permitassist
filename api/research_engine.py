@@ -5578,11 +5578,55 @@ def apply_state_schema_context(result: dict, job_type: str, city: str, state: st
     if not vertical:
         return result
 
-    context = compact_state_schema_context(state, vertical)
+    context = compact_state_schema_context(state, vertical, job_type)
     if not context:
         return result
 
     result["state_schema_context"] = context
+
+    # Phase 4 populated state slices may add contractor-visible guidance, but
+    # keep official source URLs under state_schema_context until renderers have a
+    # dedicated citation surface for state-overlay sources.
+    triggered_rules = context.get("triggered_rules") if isinstance(context, dict) else []
+    if isinstance(triggered_rules, list) and triggered_rules:
+        def ensure_list(key: str) -> list:
+            if not isinstance(result.get(key), list):
+                result[key] = []
+            return result[key]
+
+        def add_unique(key: str, items: list[str]) -> None:
+            arr = ensure_list(key)
+            seen = {str(x).strip().lower() for x in arr if isinstance(x, str)}
+            for item in items:
+                text = str(item or "").strip()
+                if text and text.lower() not in seen:
+                    arr.append(text)
+                    seen.add(text.lower())
+
+        companion_permits = ensure_list("companion_permits")
+        existing_companions = {
+            str(c.get("permit_type") if isinstance(c, dict) else c).strip().lower()
+            for c in companion_permits
+        }
+        for rule in triggered_rules:
+            if not isinstance(rule, dict):
+                continue
+            title = str(rule.get("title") or "Texas state overlay").strip()
+            confidence = str(rule.get("confidence") or "medium").strip()
+            source_title = str(rule.get("source_title") or "official Texas source").strip()
+            summary = str(rule.get("summary") or "").strip().rstrip(".")
+            add_unique("pro_tips", [
+                f"Texas state overlay ({confidence} confidence): {summary}. Source: {source_title}."
+            ])
+            add_unique("what_to_bring", rule.get("contractor_guidance") or [])
+            add_unique("watch_out", rule.get("watch_out") or [])
+            for companion in rule.get("companion_permits") or []:
+                if not isinstance(companion, dict):
+                    continue
+                key = str(companion.get("permit_type") or "").strip().lower()
+                if key and key not in existing_companions:
+                    companion_permits.append(companion)
+                    existing_companions.add(key)
     return result
 
 
