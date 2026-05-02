@@ -117,6 +117,55 @@ def test_white_label_report_surfaces_state_overlay_without_unsafe_url_promotion(
     assert "not final legal/code authority" in html
 
 
+def test_miami_dade_fee_page_is_not_treated_as_verified_apply_path(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration"}],
+        "apply_url": "https://www.miamidade.gov/global/economy/building/building-permit-fees.page",
+        "sources": ["https://www.miamidade.gov/global/economy/building/building-permit-fees.page"],
+        "fee_range": "$12,500-$12,500+ — verify against current fee schedule before quoting",
+        "approval_timeline": {"complex": "4-12 weeks; verify with AHJ"},
+        "inspections": ["Building rough/final", "MEP rough/final"],
+        "quality_warnings": [],
+    }
+
+    apply_path = server.build_apply_path(
+        result,
+        "dental clinic tenant improvement with x-ray and nitrous",
+        "Miami",
+        "FL",
+    )
+    citations = server.build_claim_citations(result)
+
+    assert result["apply_url"] == "https://www.miamidade.gov/Apps/RER/EPSPortal"
+    assert result["_apply_url_replaced_from"].endswith("building-permit-fees.page")
+    assert apply_path["support_level"] == "verified path"
+    assert apply_path["portal_url"] == "https://www.miamidade.gov/Apps/RER/EPSPortal"
+    assert any("fee/info page was not treated as the verified application path" in w for w in result["quality_warnings"])
+
+    by_field = {c["field"]: c for c in citations}
+    assert by_field["apply_url"]["confidence"] == "high"
+    assert "Permit Submission Portal" in by_field["apply_url"]["quoted_snippet"]
+    assert by_field["fee_range"]["confidence"] == "needs_verification"
+    assert by_field["approval_timeline"]["confidence"] == "needs_verification"
+
+
+def test_miami_dade_broken_ecobuilt_url_is_replaced_with_official_eps_portal(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration"}],
+        "apply_url": "https://ecobuilt.miamidade.gov",
+        "sources": [{"url": "https://ecobuilt.miamidade.gov", "title": "Miami-Dade EcoBuilt", "snippet": ""}],
+    }
+
+    apply_path = server.build_apply_path(result, "medical clinic TI", "Miami", "FL")
+
+    assert result["apply_url"] == "https://www.miamidade.gov/Apps/RER/EPSPortal"
+    assert result["_apply_url_replaced_from"] == "https://ecobuilt.miamidade.gov"
+    assert apply_path["support_level"] == "verified path"
+    assert result["sources"][0]["url"] == "https://www.miamidade.gov/global/economy/building/online-services.page"
+
+
 def test_frontend_state_overlay_runtime_filters_unsafe_urls_and_malformed_arrays(tmp_path):
     script = "\n".join([
         "const esc = (v) => String(v ?? '').replace(/[&<>\\\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\\\"':'&quot;',\"'\":'&#039;'}[ch]));",

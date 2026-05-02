@@ -536,6 +536,84 @@ def render_state_overlay_report_html(result: dict) -> str:
     return "".join(parts)
 
 
+MIAMI_DADE_EPS_PORTAL_URL = "https://www.miamidade.gov/Apps/RER/EPSPortal"
+MIAMI_DADE_ONLINE_SERVICES_URL = "https://www.miamidade.gov/global/economy/building/online-services.page"
+MIAMI_DADE_ONLINE_SERVICES_SNIPPET = (
+    "Building Online Services lists the Permit Submission Portal for building permit-related services: "
+    "submit and check the status of permit applications."
+)
+
+
+def _is_miami_dade_context(city: str, state: str, result: dict) -> bool:
+    haystack = " ".join([
+        str(city or ""),
+        str(state or ""),
+        str(result.get("jurisdiction") or ""),
+        str(result.get("applying_office") or ""),
+        str(result.get("apply_url") or ""),
+        " ".join(str((src or {}).get("url") if isinstance(src, dict) else src) for src in (result.get("sources") or [])),
+    ]).lower()
+    return (
+        ("miami" in haystack and (str(state or "").upper() == "FL" or "florida" in haystack))
+        or "miamidade.gov" in haystack
+        or "miami-dade" in haystack
+    )
+
+
+def _miami_dade_apply_url_needs_override(url: str) -> bool:
+    lower = str(url or "").lower().rstrip("/")
+    if not lower:
+        return False
+    return any(token in lower for token in (
+        "ecobuilt.miamidade.gov",
+        "/building-permit-fees.page",
+        "/permits",
+        "/epermittingmenu/home/permits",
+    ))
+
+
+def _apply_miami_dade_verified_portal_override(result: dict, city: str, state: str) -> None:
+    if not _is_miami_dade_context(city, state, result):
+        return
+    current_url = str(result.get("apply_url") or "")
+    if not _miami_dade_apply_url_needs_override(current_url):
+        return
+
+    result["_apply_url_replaced_from"] = current_url
+    result["apply_url"] = MIAMI_DADE_EPS_PORTAL_URL
+
+    official_source = {
+        "title": "Miami-Dade County Building Online Services — Permit Submission Portal",
+        "url": MIAMI_DADE_ONLINE_SERVICES_URL,
+        "snippet": MIAMI_DADE_ONLINE_SERVICES_SNIPPET,
+    }
+    existing_sources = result.get("sources") if isinstance(result.get("sources"), list) else []
+    result["sources"] = [official_source] + [src for src in existing_sources if src != official_source]
+
+    field_confidence = dict(result.get("field_confidence") or {})
+    field_confidence.update({
+        "apply_url": "high",
+        "portal_url": "high",
+        "fee_range": "needs_verification",
+        "fees": "needs_verification",
+        "approval_timeline": "needs_verification",
+        "timeline": "needs_verification",
+        "inspections": "needs_verification",
+    })
+    result["field_confidence"] = field_confidence
+
+    warnings = list(result.get("quality_warnings") or [])
+    warning = (
+        "Miami-Dade fee/info page was not treated as the verified application path; "
+        "PermitAssist points to the official EPS Permit Submission Portal and leaves fees, timelines, "
+        "and inspection details for AHJ verification."
+    )
+    if warning not in warnings:
+        warnings.append(warning)
+    result["quality_warnings"] = warnings
+    result["needs_review"] = True
+
+
 def _source_dicts(result: dict) -> list[dict]:
     out = []
     for item in result.get("sources") or []:
@@ -628,6 +706,18 @@ def build_claim_citations(result: dict) -> list[dict]:
     checked = utc_now().date().isoformat()
 
     def confidence_for(field: str) -> str:
+        field_confidence = result.get("field_confidence") or {}
+        explicit = str(field_confidence.get(field) or "").strip().lower()
+        if explicit:
+            return explicit
+        if field == "fee_range":
+            explicit = str(field_confidence.get("fees") or "").strip().lower()
+            if explicit:
+                return explicit
+        if field == "approval_timeline":
+            explicit = str(field_confidence.get("timeline") or "").strip().lower()
+            if explicit:
+                return explicit
         if not sources:
             return "needs_verification"
         if first.get("snippet"):
@@ -670,6 +760,7 @@ def build_claim_citations(result: dict) -> list[dict]:
 
 
 def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict:
+    _apply_miami_dade_verified_portal_override(result, city, state)
     url = result.get("apply_url") or ""
     lower = url.lower()
     platform = "unknown"
