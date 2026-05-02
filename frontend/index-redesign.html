@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="description" content="PermitAssist — AI-powered permit research for contractors. Get exact requirements, fees, and contact details in seconds." />
+  <title>PermitAssist Redesign Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: light;
+      --brand: #2563EB;
+      --brand-dark: #1D4ED8;
+      --bg: #F5F7FF;
+      --surface: #FFFFFF;
+      --surface2: #F0F4FF;
+      --text: #0F172A;
+      --text2: #475569;
+      --border: #E2E8F0;
+      --green: #059669;
+      --yellow: #D97706;
+      --red: #DC2626;
+      --muted: #94A3B8;
+      --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+      --shadow: 0 10px 30px rgba(15,23,42,0.08);
+      --r: 16px;
+      --r-sm: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+      font-size: 17px;
+      line-height: 1.65;
+      font-weight: 500;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, textarea { font: inherit; }
+    .icon { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; flex: 0 0 auto; }
+    .icon-sm { width: 17px; height: 17px; }
+
+    .app { width: 100%; max-width: 680px; margin: 0 auto; min-height: 100vh; overflow: hidden; }
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: rgba(255,255,255,0.92);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+    }
+    .logo-text { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.1; }
+    .logo-text em { color: var(--brand); font-style: normal; }
+    .logo-tagline { color: var(--text2); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+    .nav-right { display: none; align-items: center; gap: 8px; }
+    .nav-link { color: var(--text2); font-size: 13px; font-weight: 700; padding: 8px 12px; border-radius: 999px; }
+    .nav-link:hover { background: var(--surface2); color: var(--text); }
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 40px;
+      padding: 9px 15px;
+      border-radius: 999px;
+      background: var(--brand);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 8px 20px rgba(37,99,235,0.22);
+    }
+    .hamburger { display: flex; flex-direction: column; gap: 5px; width: 36px; border: 0; background: transparent; }
+    .hamburger span { height: 2px; border-radius: 999px; background: var(--text); }
+
+    .section { padding: 20px; }
+    .hero { padding-top: 32px; text-align: center; }
+    .hero-copy h1 {
+      font-size: 38px;
+      line-height: 1.08;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: 0;
+    }
+    .hero-copy h1 em { display: block; color: var(--brand); font-style: normal; }
+    .hero-sub { max-width: 460px; margin: 12px auto 0; color: var(--text2); font-size: 17px; line-height: 1.6; }
+    .pricing-pills {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 20px auto;
+      max-width: 430px;
+    }
+    .price-pill {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 44px;
+      padding: 9px 14px;
+      border: 1px solid rgba(37,99,235,.22);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--brand);
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--shadow-sm);
+    }
+    .hero-grid { display: grid; gap: 18px; }
+    .search-card {
+      background: linear-gradient(135deg, rgba(37,99,235,.04), #fff 64%);
+      border: 1.5px solid rgba(37,99,235,.15);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(37,99,235,.08), inset 0 1px 0 rgba(255,255,255,.8);
+      text-align: left;
+    }
+    .mode-toggle, .toggle-row {
+      display: flex;
+      gap: 3px;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface2);
+    }
+    .mode-toggle { max-width: 340px; margin-bottom: 14px; }
+    .toggle-btn {
+      flex: 1;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      min-height: 38px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--text2);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .toggle-btn.active { background: var(--brand); color: #fff; }
+    .form-label, label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text2);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .form-group { margin-bottom: 14px; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    input, textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-sm);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      padding: 14px 16px;
+      font-size: 16px;
+      transition: border-color .15s ease, box-shadow .2s ease;
+    }
+    textarea { min-height: 94px; resize: vertical; line-height: 1.5; }
+    input:focus, textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 4px rgba(37,99,235,.10); }
+    .field-with-icon { position: relative; }
+    .field-with-icon .mic-button {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 999px;
+      color: var(--text2);
+      background: rgba(15,23,42,.05);
+    }
+    .field-with-icon textarea { padding-right: 58px; }
+    .location-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 44px;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--brand);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .lookup-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      width: 100%;
+      min-height: 60px;
+      border: 0;
+      border-radius: var(--r-sm);
+      background: linear-gradient(135deg, var(--brand-dark), var(--brand) 55%, #3B82F6);
+      color: #fff;
+      cursor: default;
+      font-size: 17px;
+      font-weight: 900;
+      box-shadow: 0 4px 16px rgba(37,99,235,.35);
+    }
+    .sample-column { display: none; }
+    .sample-card {
+      position: relative;
+      border: 1px solid rgba(37,99,235,.18);
+      border-radius: 22px;
+      background: var(--surface);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      text-align: left;
+    }
+    .sample-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .confidence {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(5,150,105,.08);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .sample-tag { color: var(--muted); font-size: 12px; font-style: italic; font-weight: 700; }
+    .sample-title { font-size: 20px; line-height: 1.25; font-weight: 900; letter-spacing: 0; }
+    .sample-detail-list { list-style: none; margin-top: 18px; display: grid; gap: 10px; }
+    .sample-detail-list li {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      font-size: 14px;
+    }
+    .sample-detail-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+    .sample-detail-list strong { color: var(--text); text-align: right; }
+    .trust-callout {
+      margin-top: 16px;
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1.45;
+      font-weight: 850;
+      text-align: center;
+    }
+    .trust-strip {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .trust-inner { padding: 18px 20px; text-align: center; }
+    .trust-stat { font-size: 15px; font-weight: 850; color: var(--text); }
+    .trade-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
+    .trade-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface2);
+      color: var(--text2);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .section-wrap { padding: 20px; }
+    .section-head { max-width: 760px; margin: 0 auto 18px; text-align: center; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .section-title { font-size: 26px; line-height: 1.15; font-weight: 900; letter-spacing: 0; }
+    .section-sub { margin-top: 8px; color: var(--text2); font-size: 15px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow-sm);
+    }
+    .how-steps { display: grid; gap: 12px; }
+    .how-step { padding: 20px; text-align: center; }
+    .step-icon {
+      display: grid;
+      place-items: center;
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 12px;
+      border: 1px solid rgba(37,99,235,.15);
+      border-radius: 999px;
+      color: var(--brand);
+      background: rgba(37,99,235,.06);
+    }
+    .step-num { color: var(--brand); font-size: 11px; font-weight: 900; text-transform: uppercase; }
+    .step-label { margin-top: 4px; font-size: 14px; line-height: 1.4; font-weight: 850; }
+    .roi-stats { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
+    .roi-stat { padding: 18px 10px; text-align: center; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .roi-stat:nth-child(2n) { border-right: 0; }
+    .roi-stat:nth-last-child(-n + 2) { border-bottom: 0; }
+    .roi-number { color: var(--brand); font-size: 18px; line-height: 1.1; font-weight: 900; }
+    .roi-label { margin-top: 6px; color: var(--text2); font-size: 11px; line-height: 1.4; font-weight: 700; }
+    .roi-calc { padding: 20px; text-align: center; }
+    .roi-question { color: var(--text); font-size: 14px; font-weight: 850; }
+    .static-slider {
+      position: relative;
+      max-width: 410px;
+      height: 5px;
+      margin: 18px auto 12px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+    .static-slider::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 20%; border-radius: inherit; background: var(--brand); }
+    .static-slider::after {
+      content: "";
+      position: absolute;
+      left: 20%;
+      top: 50%;
+      width: 22px;
+      height: 22px;
+      border: 3px solid #fff;
+      border-radius: 999px;
+      background: var(--brand);
+      transform: translate(-50%, -50%);
+      box-shadow: 0 2px 8px rgba(37,99,235,.35);
+    }
+    .roi-slider-val { color: var(--brand); font-size: 14px; font-weight: 850; }
+    .roi-results { display: flex; justify-content: center; gap: 32px; margin-top: 16px; flex-wrap: wrap; }
+    .roi-big { color: var(--brand); font-size: 28px; line-height: 1.1; font-weight: 900; }
+    .roi-small { color: var(--text2); font-size: 12px; font-weight: 750; }
+    .old-vs-new { overflow: hidden; }
+    .old-vs-new-cols { display: grid; grid-template-columns: 1fr; }
+    .old-col, .new-col { padding: 18px 20px; }
+    .old-col { background: rgba(220,38,38,.04); }
+    .new-col { background: rgba(37,99,235,.04); border-top: 2px solid var(--brand); }
+    .col-title { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 900; margin-bottom: 10px; }
+    .old-col .col-title { color: var(--red); }
+    .new-col .col-title { color: var(--brand); }
+    .vs-item { padding: 7px 0; border-bottom: 1px solid var(--border); color: var(--text2); font-size: 13px; line-height: 1.5; }
+    .vs-item:last-child { border-bottom: 0; }
+    .compare-grid { display: grid; gap: 10px; }
+    .compare-card { padding: 16px; }
+    .compare-card.winner { border-color: var(--brand); background: rgba(37,99,235,.05); }
+    .compare-name { font-size: 14px; font-weight: 900; }
+    .winner .compare-name { color: var(--brand); }
+    .compare-price { margin: 4px 0 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); color: var(--text2); font-size: 12px; font-weight: 850; }
+    .feature-list { list-style: none; display: grid; gap: 7px; }
+    .feature-list li { display: flex; align-items: flex-start; gap: 8px; color: var(--text2); font-size: 13px; line-height: 1.45; }
+    .check { color: var(--green); margin-top: 1px; }
+    .warn { color: var(--yellow); margin-top: 1px; }
+    .xmark { color: var(--red); margin-top: 1px; }
+    .pricing-grid { display: grid; gap: 14px; }
+    .pricing-card { display: flex; flex-direction: column; padding: 22px; }
+    .pricing-card.featured { border: 2px solid var(--brand); box-shadow: 0 20px 45px rgba(37,99,235,.13); }
+    .plan-kicker { color: var(--brand); font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .8px; }
+    .plan-title { margin-top: 5px; font-size: 24px; font-weight: 900; }
+    .plan-price { margin: 6px 0 14px; font-size: 15px; color: var(--text2); font-weight: 800; }
+    .plan-price strong { color: var(--text); font-size: 30px; line-height: 1; }
+    .plan-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      margin: 0 0 16px;
+      border-radius: var(--r-sm);
+      border: 1px solid rgba(37,99,235,.3);
+      background: var(--surface);
+      color: var(--brand);
+      font-weight: 900;
+    }
+    .featured .plan-cta { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .pricing-card .feature-list { margin-top: auto; }
+    .footer {
+      padding: 28px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .footer a { color: var(--brand); }
+
+    @media (min-width: 481px) {
+      .old-vs-new-cols { grid-template-columns: 1fr 1fr; }
+      .new-col { border-top: 0; border-left: 2px solid var(--brand); }
+      .pricing-pills { flex-direction: row; justify-content: center; max-width: none; flex-wrap: wrap; }
+    }
+
+    @media (min-width: 768px) {
+      .how-steps, .compare-grid, .pricing-grid { grid-template-columns: repeat(3, 1fr); }
+      .roi-stats { grid-template-columns: repeat(4, 1fr); }
+      .roi-stat { border-bottom: 0; }
+      .roi-stat:nth-child(2n) { border-right: 1px solid var(--border); }
+      .roi-stat:last-child { border-right: 0; }
+    }
+
+    @media (min-width: 1024px) {
+      body { font-size: 17px; }
+      .app { max-width: none; }
+      .nav { padding: 16px 36px; }
+      .hamburger { display: none; }
+      .nav-right { display: flex; }
+      .section, .section-wrap, .trust-inner { max-width: 1200px; margin: 0 auto; padding-left: 32px; padding-right: 32px; }
+      .hero { padding-top: 76px; padding-bottom: 56px; text-align: left; }
+      .hero-grid {
+        grid-template-columns: minmax(0, 1.05fr) minmax(380px, .75fr);
+        align-items: center;
+        gap: 72px;
+      }
+      .hero-copy h1 { font-size: 62px; line-height: 1.02; max-width: 720px; }
+      .hero-copy h1 em { display: inline; }
+      .hero-sub { margin: 18px 0 0; max-width: 630px; font-size: 21px; line-height: 1.55; }
+      .pricing-pills { justify-content: flex-start; margin: 28px 0 24px; }
+      .price-pill { min-height: 42px; font-size: 13px; padding: 8px 14px; }
+      .search-card { max-width: 660px; padding: 26px; }
+      .sample-column { display: block; }
+      .trust-inner { padding-top: 24px; padding-bottom: 24px; }
+      .trust-stat { font-size: 18px; }
+      .trade-pill { font-size: 14px; }
+      .section-wrap { padding-top: 58px; padding-bottom: 58px; }
+      .section-title { font-size: 36px; }
+      .section-sub { font-size: 17px; }
+      .how-step { padding: 28px; }
+      .compare-card, .pricing-card { padding: 26px; }
+    }
+
+    @media (max-width: 480px) {
+      .logo-mark { width: 36px; height: 36px; border-radius: 9px; }
+      .logo-tagline { display: none; }
+      .nav { padding: 14px 20px; }
+      .hero-copy h1 { font-size: 38px; }
+      .hero-sub { font-size: 15px; }
+      .section, .section-wrap { padding-left: 20px; padding-right: 20px; }
+      .row-2 { grid-template-columns: 1fr; gap: 0; }
+      .section-title { font-size: 24px; }
+      .pricing-card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-hammer" viewBox="0 0 24 24"><path d="m15 12-8.5 8.5a2.1 2.1 0 0 1-3-3L12 9"/><path d="m17.6 3.4 3 3"/><path d="m14 6 4 4"/><path d="m4 16 4 4"/><path d="M17.6 3.4 12 9l3 3 5.6-5.6"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></symbol>
+    <symbol id="i-building" viewBox="0 0 24 24"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M6 12H4a2 2 0 0 0-2 2v8"/><path d="M18 9h2a2 2 0 0 1 2 2v11"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></symbol>
+    <symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></symbol>
+    <symbol id="i-dollar" viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M8 12h8"/><path d="M8 16h8"/><path d="M8 8h8"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.2 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.32 1.77.6 2.6a2 2 0 0 1-.45 2.11L8 9.7a16 16 0 0 0 6.3 6.3l1.27-1.27a2 2 0 0 1 2.11-.45c.83.28 1.7.48 2.6.6A2 2 0 0 1 22 16.92Z"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15"/><path d="M15 6v15"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 22V4"/><path d="M4 4h11l-1 4 1 4H4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  </svg>
+
+  <div class="app">
+    <nav class="nav" aria-label="Primary">
+      <a class="logo" href="#">
+        <div class="logo-mark">PA</div>
+        <div>
+          <div class="logo-text">Permit<em>Assist</em></div>
+          <div class="logo-tagline">For Contractors</div>
+        </div>
+      </a>
+      <div class="nav-right">
+        <a class="nav-link" href="#trades">Trades</a>
+        <a class="nav-link" href="#pricing">Pricing</a>
+        <a class="nav-link" href="/login">Login</a>
+        <a class="nav-cta" href="/signup">Try Free <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
+      </div>
+      <button class="hamburger" type="button" aria-label="Menu"><span></span><span></span><span></span></button>
+    </nav>
+
+    <main>
+      <section class="section hero">
+        <div class="hero-grid">
+          <div>
+            <div class="hero-copy">
+              <h1>Stop Googling. <em>Get the Permit.</em></h1>
+              <p class="hero-sub">Know exactly what permit to pull, before you dispatch.</p>
+            </div>
+            <div class="pricing-pills" aria-label="Pricing options">
+              <a class="price-pill" href="/signup">Free · 3 lookups</a>
+              <a class="price-pill" href="#pricing">Solo · $39.99/mo unlimited</a>
+              <a class="price-pill" href="#pricing">Team · $79.99/mo · 3 seats</a>
+            </div>
+            <form class="search-card" aria-label="Permit lookup mockup">
+              <div class="mode-toggle" role="group" aria-label="User type">
+                <button class="toggle-btn active" type="button"><svg class="icon icon-sm"><use href="#i-hammer"/></svg>Contractor</button>
+                <button class="toggle-btn" type="button"><svg class="icon icon-sm"><use href="#i-home"/></svg>Homeowner</button>
+              </div>
+              <div class="form-group">
+                <label>Job Address <span style="font-weight:500;text-transform:none;font-size:10px">(optional, helps with tricky jurisdictions)</span></label>
+                <input type="text" placeholder="e.g. 123 Main St" />
+              </div>
+              <div class="row-2">
+                <div class="form-group">
+                  <label>City</label>
+                  <input type="text" placeholder="e.g. Houston" />
+                </div>
+                <div class="form-group">
+                  <label>State</label>
+                  <input type="text" placeholder="e.g. TX" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Job Type</label>
+                <div class="toggle-row" role="group" aria-label="Job category">
+                  <button class="toggle-btn active" type="button"><svg class="icon icon-sm"><use href="#i-home"/></svg>Residential</button>
+                  <button class="toggle-btn" type="button"><svg class="icon icon-sm"><use href="#i-building"/></svg>Commercial</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Describe the job</label>
+                <div class="field-with-icon">
+                  <textarea placeholder="e.g. condenser changeout, panel upgrade, full tear-off, water heater swap, mini split install"></textarea>
+                  <button class="mic-button" type="button" aria-label="Speak your question"><svg class="icon icon-sm"><use href="#i-mic"/></svg></button>
+                </div>
+              </div>
+              <a class="location-link" href="#"><svg class="icon icon-sm"><use href="#i-map-pin"/></svg>Auto-detect my location</a>
+              <button class="lookup-btn" type="submit"><svg class="icon icon-sm"><use href="#i-search"/></svg>Find Permit Requirements</button>
+            </form>
+          </div>
+
+          <aside class="sample-column" aria-label="Sample result">
+            <div class="sample-card">
+              <div class="sample-top">
+                <span class="confidence">🟢 High confidence</span>
+                <span class="sample-tag">sample</span>
+              </div>
+              <div class="sample-title">Houston, TX<br>5-ton condenser changeout</div>
+              <ul class="sample-detail-list">
+                <li><span>Permit</span><strong>MEP permit required</strong></li>
+                <li><span>Fee</span><strong>~$112</strong></li>
+                <li><span>Inspection</span><strong>required</strong></li>
+                <li><span>Apply via</span><strong>HoustonPermittingCenter.gov</strong></li>
+              </ul>
+            </div>
+            <p class="trust-callout">Other tools won't tell you when they don't know. We will.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="trust-strip" id="trades">
+        <div class="trust-inner">
+          <div class="trust-stat">Trusted by [N] contractors across [M] cities</div>
+          <div class="trade-pills" aria-label="Trades">
+            <span class="trade-pill">HVAC</span>
+            <span class="trade-pill">Roofing</span>
+            <span class="trade-pill">Plumbing</span>
+            <span class="trade-pill">Electrical</span>
+            <span class="trade-pill">Solar</span>
+            <span class="trade-pill">Generator</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-wrap">
+        <div class="section-head">
+          <div class="eyebrow"><svg class="icon icon-sm"><use href="#i-clipboard"/></svg>How It Works</div>
+        </div>
+        <div class="how-steps">
+          <div class="card how-step">
+            <div class="step-icon"><svg class="icon"><use href="#i-map-pin"/></svg></div>
+            <div class="step-num">Step 1</div>
+            <h3 class="step-label">Enter your job type &amp; city</h3>
+          </div>
+          <div class="card how-step">
+            <div class="step-icon"><svg class="icon"><use href="#i-search"/></svg></div>
+            <div class="step-num">Step 2</div>
+            <h3 class="step-label">AI researches your exact jurisdiction</h3>
+          </div>
+          <div class="card how-step">
+            <div class="step-icon"><svg class="icon"><use href="#i-check"/></svg></div>
+            <div class="step-num">Step 3</div>
+            <h3 class="step-label">Get permit name, fees, timeline &amp; where to apply</h3>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-wrap">
+        <div class="section-head">
+          <div class="eyebrow"><svg class="icon icon-sm"><use href="#i-dollar"/></svg>The ROI Is Obvious</div>
+        </div>
+        <div class="card roi-stats">
+          <div class="roi-stat"><div class="roi-number">6-30 hrs</div><div class="roi-label">saved per permit lookup vs. calling building departments</div></div>
+          <div class="roi-stat"><div class="roi-number">$2K-$10K</div><div class="roi-label">in stop-work orders avoided per job</div></div>
+          <div class="roi-stat"><div class="roi-number">90%</div><div class="roi-label">less research time vs. calling building departments</div></div>
+          <div class="roi-stat"><div class="roi-number">$39.99/mo</div><div class="roi-label">vs. $500+/hr permit expediter</div></div>
+        </div>
+      </section>
+
+      <section class="section-wrap">
+        <div class="card roi-calc">
+          <div class="eyebrow"><svg class="icon icon-sm"><use href="#i-dollar"/></svg>See Your Savings</div>
+          <div class="roi-question">How many permit lookups do you do per month?</div>
+          <div class="static-slider" aria-hidden="true"></div>
+          <div class="roi-slider-val">10 lookups/month</div>
+          <div class="roi-results">
+            <div><div class="roi-big">40</div><div class="roi-small">hours saved/month</div></div>
+            <div><div class="roi-big">$3,400</div><div class="roi-small">in recovered time</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-wrap">
+        <div class="section-head">
+          <div class="eyebrow"><svg class="icon icon-sm"><use href="#i-flag"/></svg>The Difference Is Obvious</div>
+        </div>
+        <div class="card old-vs-new">
+          <div class="old-vs-new-cols">
+            <div class="old-col">
+              <h3 class="col-title"><svg class="icon icon-sm"><use href="#i-x"/></svg>The Old Way</h3>
+              <div class="vs-item">Call the building dept and get put on hold</div>
+              <div class="vs-item">Google it and find outdated PDFs</div>
+              <div class="vs-item">Drive to city hall just to find out</div>
+              <div class="vs-item">Get the wrong permit and waste $200+</div>
+              <div class="vs-item">Spend half a day on one job</div>
+            </div>
+            <div class="new-col">
+              <h3 class="col-title"><svg class="icon icon-sm"><use href="#i-check"/></svg>With PermitAssist</h3>
+              <div class="vs-item">Instant answer in under 60 seconds</div>
+              <div class="vs-item">AI-verified, jurisdiction-specific results</div>
+              <div class="vs-item">Know fees &amp; timeline before you show up</div>
+              <div class="vs-item">Exact permit name the clerk recognizes</div>
+              <div class="vs-item">Back on the job in minutes</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-wrap">
+        <div class="section-head">
+          <div class="eyebrow"><svg class="icon icon-sm"><use href="#i-search"/></svg>Why PermitAssist?</div>
+        </div>
+        <div class="compare-grid">
+          <div class="card compare-card winner">
+            <h3 class="compare-name">PermitAssist</h3>
+            <div class="compare-price">$39.99/mo · unlimited</div>
+            <ul class="feature-list">
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Instant — 30 seconds</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>100% self-serve</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>No demo call needed</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Checklists &amp; exact fees</li>
+            </ul>
+          </div>
+          <div class="card compare-card">
+            <h3 class="compare-name">Permit Expediter</h3>
+            <div class="compare-price">$500-$2,000 / project</div>
+            <ul class="feature-list">
+              <li><svg class="icon icon-sm warn"><use href="#i-alert"/></svg>Days to weeks</li>
+              <li><svg class="icon icon-sm warn"><use href="#i-phone"/></svg>Phone tag required</li>
+              <li><svg class="icon icon-sm warn"><use href="#i-dollar"/></svg>Per-project cost</li>
+              <li><svg class="icon icon-sm xmark"><use href="#i-x"/></svg>Overkill for most jobs</li>
+            </ul>
+          </div>
+          <div class="card compare-card">
+            <h3 class="compare-name">Googling It</h3>
+            <div class="compare-price">Free (but costly)</div>
+            <ul class="feature-list">
+              <li><svg class="icon icon-sm warn"><use href="#i-alert"/></svg>2-6 hours wasted</li>
+              <li><svg class="icon icon-sm warn"><use href="#i-alert"/></svg>Often wrong info</li>
+              <li><svg class="icon icon-sm xmark"><use href="#i-x"/></svg>No checklists</li>
+              <li><svg class="icon icon-sm xmark"><use href="#i-x"/></svg>No verified fees</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-wrap" id="pricing">
+        <div class="section-head">
+          <div class="eyebrow"><svg class="icon icon-sm"><use href="#i-dollar"/></svg>Pricing</div>
+          <h2 class="section-title">Pick the workflow that matches your crew.</h2>
+          <p class="section-sub">No demo calls, no contracts, no waiting on an expediter for routine jobs.</p>
+        </div>
+        <div class="pricing-grid">
+          <div class="card pricing-card">
+            <div class="plan-kicker">Free</div>
+            <h3 class="plan-title">Starter</h3>
+            <div class="plan-price"><strong>$0</strong> · 3 lookups</div>
+            <a class="plan-cta" href="/signup">Start Free</a>
+            <ul class="feature-list">
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>3 free lookups</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>No credit card</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Permit names, fees, timelines, and where to apply</li>
+            </ul>
+          </div>
+          <div class="card pricing-card featured">
+            <div class="plan-kicker">Solo</div>
+            <h3 class="plan-title">For working contractors</h3>
+            <div class="plan-price"><strong>$39.99</strong>/mo · unlimited</div>
+            <a class="plan-cta" href="/signup">Upgrade to Solo</a>
+            <ul class="feature-list">
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Unlimited lookups</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Foreman Brief PDF export</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Job tracking &amp; reminders</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Priority city requests</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Email support</li>
+            </ul>
+          </div>
+          <div class="card pricing-card">
+            <div class="plan-kicker">Team</div>
+            <h3 class="plan-title">For offices and crews</h3>
+            <div class="plan-price"><strong>$79.99</strong>/mo · 3 seats</div>
+            <a class="plan-cta" href="/signup">Start Team</a>
+            <ul class="feature-list">
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Everything in Pro</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Up to 3 team seats</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Shared job board</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>48hr city requests</li>
+              <li><svg class="icon icon-sm check"><use href="#i-check"/></svg>Office billing portal</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p><strong>Disclaimer:</strong> PermitAssist provides AI-generated guidance based on publicly available data. Permit requirements change frequently, and fees shown are estimates. The contractor is strictly responsible for verifying all exact requirements, fees, and timelines directly with the local building department (Authority Having Jurisdiction) prior to starting any work.</p>
+      <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved. &nbsp;·&nbsp; <a href="/help">Help</a> &nbsp;·&nbsp; <a href="/terms">Terms</a> &nbsp;·&nbsp; <a href="/privacy">Privacy</a></p>
+      <div style="font-size:11px;color:#94a3b8;margin-top:6px">PermitAssist is operated by an Indiana LLC. Information is AI-assisted research, not legal advice — verify final requirements with the AHJ before submitting.</div>
+    </footer>
+  </div>
+</body>
+</html>
