@@ -859,6 +859,19 @@ def _source_dicts(result: dict) -> list[dict]:
     return out
 
 
+def _commercial_job_token_present(job_text: str, tokens: tuple[str, ...]) -> bool:
+    """Return True when a vertical/commercial token appears outside a local negation phrase."""
+    text = (job_text or "").lower()
+    for token in tokens:
+        pattern = re.compile(r"\b" + re.escape(token.lower()).replace(r"\ ", r"\s+") + r"\b")
+        for match in pattern.finditer(text):
+            prefix = text[max(0, match.start() - 36):match.start()]
+            if re.search(r"\b(no|not|without|exclude(?:s|d|ing)?|excluding|explicitly\s+no)\b[\w\s,;/-]{0,32}$", prefix):
+                continue
+            return True
+    return False
+
+
 def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: str) -> dict:
     """Final safety gate before a PermitIQ result is shown to users.
 
@@ -877,13 +890,14 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
         has_residential_leak = any(token in primary_l for token in _RESIDENTIAL_PRIMARY_TOKENS) and not has_commercial_primary
         if has_residential_leak or not primary:
             fixed_primary = "Building Permit — Commercial Tenant Improvement / Interior Alteration"
-            if "restaurant" in (job_type or "").lower():
+            job_l = (job_type or "").lower()
+            if _commercial_job_token_present(job_type, ("restaurant", "food service", "commercial kitchen")):
                 fixed_primary = "Building Permit — Tenant Improvement / Restaurant Interior Alteration"
-            elif any(t in (job_type or "").lower() for t in ("medical", "clinic", "dental", "exam room")):
+            elif _commercial_job_token_present(job_type, ("medical clinic", "medical office", "dental clinic", "health clinic", "clinic tenant", "exam room")):
                 fixed_primary = "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration"
-            elif "office" in (job_type or "").lower():
+            elif "office" in job_l:
                 fixed_primary = "Building Permit — Tenant Improvement / Office Interior Alteration"
-            elif "retail" in (job_type or "").lower():
+            elif "retail" in job_l:
                 fixed_primary = "Building Permit — Commercial Interior Alteration / Tenant Improvement"
             permits = result.get("permits_required") or []
             if permits and isinstance(permits[0], dict):
@@ -900,9 +914,9 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
 
         companion_text = " ".join(str(x) for x in (result.get("companion_permits") or result.get("permits_required") or [])).lower()
         required_companions = ["electrical", "mechanical", "plumbing"]
-        if "restaurant" in (job_type or "").lower():
+        if _commercial_job_token_present(job_type, ("restaurant", "food service", "commercial kitchen")):
             required_companions += ["fire", "health", "grease", "hood"]
-        if any(t in (job_type or "").lower() for t in ("medical", "clinic", "dental")):
+        if _commercial_job_token_present(job_type, ("medical clinic", "medical office", "dental clinic", "health clinic", "clinic tenant", "exam room", "nitrous", "medical gas", "med gas")):
             required_companions += ["fire", "accessibility", "medical gas"]
         missing = [token for token in required_companions if token not in companion_text]
         if missing:

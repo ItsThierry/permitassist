@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "api"))
 
 import api.research_engine as engine
+import api.server as server
 from api.hidden_trigger_detector import detect_hidden_triggers
 
 
@@ -154,3 +155,55 @@ def test_residential_homeschool_classroom_no_commercial_use_stays_residential():
 def test_new_commercial_warehouse_shell_stays_commercial():
     job = "New commercial warehouse building shell with slab, structural steel, fire sprinklers, and site utilities."
     assert engine.detect_primary_scope(job) == "commercial"
+
+
+def test_quality_gate_does_not_warn_medical_gas_for_negated_retail_dental_products():
+    job = (
+        "Commercial retail tenant improvement for a store selling dental hygiene products; "
+        "new shelving, checkout counter, lighting and ADA restroom refresh; no dental services, "
+        "no exam rooms, no x-ray, no nitrous, no sterilization room, no medical clinic use."
+    )
+    result = {
+        "permit_verdict": "YES",
+        "confidence": "medium",
+        "permits_required": [
+            {
+                "permit_type": "Building Permit — Tenant Improvement / Retail Interior Alteration",
+                "portal_selection": "Commercial Building Permit - Tenant Improvement / Interior Alteration",
+                "required": True,
+                "notes": "Retail primary permit.",
+            },
+            {"permit_type": "Electrical Permit — Commercial Tenant Improvement"},
+            {"permit_type": "Mechanical Permit — Commercial Tenant Improvement"},
+            {"permit_type": "Plumbing Permit — Commercial Tenant Improvement"},
+        ],
+        "companion_permits": [],
+        "sources": [{"url": "https://www.austintexas.gov/department/building-permits", "title": "Austin permits"}],
+    }
+
+    gated = server.apply_permitiq_quality_gate(result, job, "Austin", "TX")
+    warning_text = " ".join(gated.get("quality_warnings") or []).lower()
+
+    assert "medical gas" not in warning_text
+    assert "health-care licensing" not in warning_text
+
+
+def test_quality_gate_still_warns_medical_gas_for_true_medical_clinic_scope():
+    job = "Commercial medical clinic TI with exam rooms, hand sinks, nitrous coordination and HVAC work."
+    result = {
+        "permit_verdict": "YES",
+        "confidence": "medium",
+        "permits_required": [
+            {"permit_type": "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration"},
+            {"permit_type": "Electrical Permit — Commercial Tenant Improvement"},
+            {"permit_type": "Mechanical Permit — Commercial Tenant Improvement"},
+            {"permit_type": "Plumbing Permit — Commercial Tenant Improvement"},
+        ],
+        "companion_permits": [],
+        "sources": [{"url": "https://www.austintexas.gov/department/building-permits", "title": "Austin permits"}],
+    }
+
+    gated = server.apply_permitiq_quality_gate(result, job, "Austin", "TX")
+    warning_text = " ".join(gated.get("quality_warnings") or []).lower()
+
+    assert "medical gas" in warning_text
