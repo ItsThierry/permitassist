@@ -465,6 +465,77 @@ def _render_safe_link(url: str, label: str | None = None) -> str:
     return f"<a target='_blank' rel='noopener noreferrer' href='{href}'>{text}</a>"
 
 
+def _state_overlay_report_bits(result: dict) -> tuple[list[dict], list[dict]]:
+    """Return renderer-safe state overlay rules and source links.
+
+    State schema context is planning guidance, not a code-citation replacement;
+    only surface allow-listed fields that the engine already placed in
+    state_schema_context.
+    """
+    ctx = result.get("state_schema_context") if isinstance(result, dict) else None
+    if not isinstance(ctx, dict):
+        return [], []
+    triggered_raw = ctx.get("triggered_rules")
+    rules = [r for r in triggered_raw if isinstance(r, dict)] if isinstance(triggered_raw, list) else []
+    sources: list[dict] = []
+
+    def add_source(title: str, url: str, verified_on: str = "") -> None:
+        safe = _safe_external_url(url)
+        if not safe or any(src["url"] == safe for src in sources):
+            return
+        sources.append({"title": str(title or "Official state source"), "url": safe, "verified_on": str(verified_on or "")})
+
+    overlay_slots = ctx.get("overlay_slots")
+    for slot in overlay_slots if isinstance(overlay_slots, list) else []:
+        if not isinstance(slot, dict):
+            continue
+        verified_sources = slot.get("verified_sources")
+        for src in verified_sources if isinstance(verified_sources, list) else []:
+            if isinstance(src, dict):
+                add_source(src.get("title") or "Official state source", src.get("url") or "", src.get("verified_on") or "")
+    for rule in rules:
+        add_source(rule.get("source_title") or "Official state source", rule.get("source_url") or "")
+        add_source(rule.get("secondary_source_title") or "Secondary official source", rule.get("secondary_source_url") or "")
+    return rules[:6], sources[:8]
+
+
+def render_state_overlay_report_html(result: dict) -> str:
+    ctx = result.get("state_schema_context") if isinstance(result, dict) else None
+    rules, sources = _state_overlay_report_bits(result)
+    if not isinstance(ctx, dict) or (not rules and not sources):
+        return ""
+    parts = [
+        "<div class='card'><h3>State overlay guidance</h3>",
+        "<p>" + html.escape(str(ctx.get("state_name") or ctx.get("state") or "State"))
+        + " overlay context is surfaced for contractor planning. It is not final legal/code authority; verify with the AHJ before filing.</p>",
+    ]
+    if rules:
+        parts.append("<ul>")
+        for rule in rules:
+            details = []
+            if rule.get("summary"):
+                details.append(html.escape(str(rule.get("summary"))))
+            contractor_guidance = rule.get("contractor_guidance")
+            for item in (contractor_guidance if isinstance(contractor_guidance, list) else [])[:3]:
+                details.append("Action: " + html.escape(str(item)))
+            watch_out = rule.get("watch_out")
+            for item in (watch_out if isinstance(watch_out, list) else [])[:2]:
+                details.append("Watch out: " + html.escape(str(item)))
+            source_link = _render_safe_link(rule.get("source_url") or "", rule.get("source_title") or None)
+            if source_link:
+                details.append("Source: " + source_link)
+            parts.append("<li><strong>" + html.escape(str(rule.get("title") or "State overlay rule")) + "</strong><br>" + "<br>".join(details) + "</li>")
+        parts.append("</ul>")
+    if sources:
+        parts.append("<p><strong>Official overlay sources checked:</strong></p><ul>")
+        for src in sources:
+            verified = f" — verified {html.escape(src['verified_on'])}" if src.get("verified_on") else ""
+            parts.append("<li>" + (_render_safe_link(src["url"], src.get("title") or src["url"]) or html.escape(src.get("title") or "Official source")) + verified + "</li>")
+        parts.append("</ul>")
+    parts.append("</div>")
+    return "".join(parts)
+
+
 def _source_dicts(result: dict) -> list[dict]:
     out = []
     for item in result.get("sources") or []:
@@ -692,6 +763,7 @@ def render_white_label_report_html(data: dict) -> str:
         for c in citations
     ) or "<li>No citations attached yet; verify with AHJ.</li>"
     warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in (result.get("quality_warnings") or []))
+    state_overlay_html = render_state_overlay_report_html(result)
     return f"""<!doctype html>
 <html><head><meta charset='utf-8'><title>Permit research report</title>
 <style>body{{font-family:Arial,sans-serif;max-width:820px;margin:32px auto;color:#172033;line-height:1.45}}.brand{{border-bottom:3px solid #0f766e;padding-bottom:12px;margin-bottom:24px}}.muted{{color:#64748b}}.card{{border:1px solid #dbe3ea;border-radius:12px;padding:16px;margin:16px 0}}@media print{{button{{display:none}}body{{margin:0.5in}}}}</style></head>
@@ -699,6 +771,7 @@ def render_white_label_report_html(data: dict) -> str:
 <h2>{job}</h2><p><strong>Location:</strong> {location}</p>
 <div class='card'><h3>Likely permits</h3><ul>{permit_items}</ul></div>
 <div class='card'><h3>How to apply</h3><p>{html.escape(str((result.get('apply_path') or {}).get('verification_note') or 'Verify exact filing path with the AHJ.'))}</p><p><strong>Start URL:</strong> {_render_safe_link(safe_apply_url) or 'Not found'}</p></div>
+{state_overlay_html}
 {f"<div class='card'><h3>Warnings</h3><ul>{warnings}</ul></div>" if warnings else ""}
 <div class='card'><h3>Source footnotes</h3><ol>{footnotes}</ol></div>
 <p class='muted'>PermitAssist is guidance only. Verify exact permit type with the AHJ before quoting or starting work.</p></body></html>"""
@@ -2346,14 +2419,14 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     office = esc(data.get("applying_office", ""))
     addr   = esc(data.get("apply_address", ""))
     phone  = esc(data.get("apply_phone", ""))
-    portal = esc(data.get("apply_url", ""))
-    maps   = esc(data.get("apply_google_maps", ""))
+    safe_portal = _safe_external_url(data.get("apply_url", ""))
+    safe_maps = _safe_external_url(data.get("apply_google_maps", ""))
     tl     = data.get("approval_timeline", {})
     timeline = esc(tl.get("simple", ""))
     permits  = data.get("permits_required", [])
     tips     = data.get("pro_tips", [])[:4]
     bring    = data.get("what_to_bring", [])[:5]
-    sources  = [s for s in (data.get("sources") or [])[:4] if s]
+    sources  = [_safe_external_url(s) for s in (data.get("sources") or [])[:4] if _safe_external_url(s)]
     license_r = esc(data.get("license_required", ""))
 
     # Build permit rows
@@ -2374,7 +2447,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
 
     tips_html    = "".join(f'<li style="padding:3px 0;color:#475569;font-size:13px">{esc(t)}</li>' for t in tips)
     bring_html   = "".join(f'<li style="padding:3px 0;color:#475569;font-size:13px">{esc(b)}</li>' for b in bring)
-    sources_html = "".join(f'<li style="padding:3px 0"><a href="{esc(s)}" style="color:#1a56db;font-size:12px">{esc(s)}</a></li>' for s in sources)
+    sources_html = "".join(f'<li style="padding:3px 0"><a href="{esc(s)}" target="_blank" rel="noopener noreferrer" style="color:#1a56db;font-size:12px">{esc(s)}</a></li>' for s in sources)
 
     contact_section = ""
     if office or phone or addr:
@@ -2384,7 +2457,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
           {('<a href="tel:' + ''.join(c for c in phone if c.isdigit() or c == '+') + '" style="font-size:22px;font-weight:900;color:#1a56db;text-decoration:none;display:block;margin-bottom:5px">' + phone + '</a>') if phone else ''}
           {('<div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:3px">' + office + '</div>') if office else ''}
           {('<div style="font-size:13px;color:#64748b;margin-bottom:8px">' + addr + '</div>') if addr else ''}
-          {('<a href="' + maps + '" style="display:inline-flex;align-items:center;gap:5px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 12px;font-size:13px;color:#1a56db;font-weight:700;text-decoration:none">📍 Open in Google Maps</a>') if maps else ''}
+          {('<a href="' + esc(safe_maps) + '" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:5px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 12px;font-size:13px;color:#1a56db;font-weight:700;text-decoration:none">📍 Open in Google Maps</a>') if safe_maps else ''}
         </div>"""
 
     # Plain text fallback
@@ -2396,8 +2469,8 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     if fee:      text_lines.append(f"\nFee: {data.get('fee_range','')}")
     if timeline: text_lines.append(f"Timeline: {tl.get('simple','')}")
     if office:   text_lines.append(f"Where: {data.get('applying_office','')}")
-    if portal:   text_lines.append(f"Online: {data.get('apply_url','')}")
-    if maps:     text_lines.append(f"Maps: {data.get('apply_google_maps','')}")
+    if safe_portal:   text_lines.append(f"Online: {safe_portal}")
+    if safe_maps:     text_lines.append(f"Maps: {safe_maps}")
     text_lines.append("\n---\nPermitAssist — permitassist.io")
 
     html = f"""<!DOCTYPE html>
@@ -2427,7 +2500,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     <!-- Contact / Maps -->
     {contact_section}
 
-    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:10px">🌐 Online Portal</div><a href="' + data.get('apply_url','') + '" style="color:#1a56db;font-size:13px;font-weight:600;word-break:break-all">' + portal + '</a></div>') if portal else ''}
+    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:10px">🌐 Online Portal</div><a href="' + esc(safe_portal) + '" target="_blank" rel="noopener noreferrer" style="color:#1a56db;font-size:13px;font-weight:600;word-break:break-all">' + esc(safe_portal) + '</a></div>') if safe_portal else ''}
 
     {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:8px">📎 What to Bring</div><ul style="margin-left:18px;padding:0">' + bring_html + '</ul></div>') if bring_html else ''}
 

@@ -2808,7 +2808,7 @@ function getJurisdictionDisplay(d, city, state, jobAddress) {
 
 function getNextSteps(d, job, city, state) {
   const permitName = getPermitDisplayName(d);
-  const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])].slice(0, 3);
+  const docs = [...new Set([...arrayItems(d.what_to_bring || d.checklist), ...arrayItems(d.requirements || d.documents_needed)])].slice(0, 3);
   const steps = [
     `Ask for \"${permitName}\" with the ${d.applying_office || `${city} building department`}.`,
     d.fee_range ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Confirm the fee and save the receipt / confirmation number.',
@@ -2855,6 +2855,12 @@ function buildUncertaintyWarnings(d) {
     const message = issue && (issue.message || issue.reason || issue.detail);
     warnings.push([field, message].filter(Boolean).join(': ') || 'Validation issue needs review.');
   });
+  if (Array.isArray(d.quality_warnings) && d.quality_warnings.length) {
+    d.quality_warnings.slice(0, 6).forEach(w => {
+      const text = String(w || '').trim();
+      if (text) warnings.push(`Quality gate: ${text}`);
+    });
+  }
   if (d._fee_unverified || /call|confirm|varies|estimate/i.test(String(d.fee_range || d.fee || ''))) {
     warnings.push('Fee is not firm. Confirm with the permit office before quoting the customer.');
   }
@@ -2901,6 +2907,92 @@ function normalizeInspectionItems(items) {
   }).filter(Boolean);
 }
 
+function safeExternalUrl(url) {
+  try {
+    const parsed = new URL(String(url || '').trim());
+    if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.hostname) return '';
+    return parsed.href;
+  } catch {
+    return '';
+  }
+}
+
+function arrayItems(value) {
+  return Array.isArray(value) ? value.filter(item => item !== null && item !== undefined) : [];
+}
+
+function normalizeStateOverlayReportData(d) {
+  const ctx = d && d.state_schema_context;
+  if (!ctx || typeof ctx !== 'object') return { ctx: null, rules: [], sources: [] };
+  const rules = Array.isArray(ctx.triggered_rules) ? ctx.triggered_rules.filter(r => r && typeof r === 'object') : [];
+  const sources = [];
+  (Array.isArray(ctx.overlay_slots) ? ctx.overlay_slots : []).forEach(slot => {
+    (Array.isArray(slot.verified_sources) ? slot.verified_sources : []).forEach(src => {
+      const url = safeExternalUrl(src && src.url);
+      const title = String(src && src.title || 'Official state source').trim();
+      if (!url) return;
+      if (!sources.some(existing => existing.url === url)) sources.push({ title, url, verified_on: String(src.verified_on || '').trim() });
+    });
+  });
+  rules.forEach(rule => {
+    const url = safeExternalUrl(rule.source_url);
+    if (url && !sources.some(existing => existing.url === url)) {
+      sources.push({ title: String(rule.source_title || 'Official state source').trim(), url, verified_on: '' });
+    }
+    const secondaryUrl = safeExternalUrl(rule.secondary_source_url);
+    if (secondaryUrl && !sources.some(existing => existing.url === secondaryUrl)) {
+      sources.push({ title: String(rule.secondary_source_title || 'Secondary official source').trim(), url: secondaryUrl, verified_on: '' });
+    }
+  });
+  return { ctx, rules, sources: sources.slice(0, 8) };
+}
+
+function buildStateOverlayCopyLines(d) {
+  const { ctx, rules, sources } = normalizeStateOverlayReportData(d);
+  const lines = [];
+  if (!ctx || (!rules.length && !sources.length)) return lines;
+  lines.push(`${ctx.state_name || ctx.state || 'State'} overlay guidance (${ctx.vertical || 'commercial scope'}): verify with AHJ before filing.`);
+  rules.slice(0, 4).forEach(rule => {
+    if (rule.summary) lines.push(`- ${rule.title || 'State rule'}: ${rule.summary}`);
+    (Array.isArray(rule.contractor_guidance) ? rule.contractor_guidance : []).slice(0, 3).forEach(item => lines.push(`  Action: ${item}`));
+    (Array.isArray(rule.watch_out) ? rule.watch_out : []).slice(0, 2).forEach(item => lines.push(`  Watch out: ${item}`));
+    const sourceUrl = safeExternalUrl(rule.source_url);
+    if (rule.source_title || sourceUrl) lines.push(`  Source: ${[rule.source_title, sourceUrl].filter(Boolean).join(' — ')}`);
+  });
+  if (!rules.length && sources.length) {
+    lines.push('- State overlay sources are attached, but no populated rule was triggered for this exact scope.');
+  }
+  sources.slice(0, 4).forEach(src => lines.push(`- Source checked: ${src.title}${src.url ? ` — ${src.url}` : ''}`));
+  return lines;
+}
+
+function renderStateOverlayReportHtml(d, escFn) {
+  const _esc = escFn || esc;
+  const { ctx, rules, sources } = normalizeStateOverlayReportData(d);
+  if (!ctx || (!rules.length && !sources.length)) return '';
+  let html = `<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:16px 20px;margin-bottom:14px">`;
+  html += `<div style="font-size:11px;font-weight:900;color:#334155;letter-spacing:1.1px;text-transform:uppercase;margin-bottom:6px">🏛️ State overlay guidance</div>`;
+  html += `<div style="font-size:13px;color:#475569;line-height:1.5;margin-bottom:10px">${_esc(ctx.state_name || ctx.state || 'State')} ${_esc(ctx.vertical || '')} overlay context is surfaced for contractor planning. It is not a final legal/code citation; verify with the AHJ before filing.</div>`;
+  if (rules.length) {
+    rules.slice(0, 5).forEach(rule => {
+      html += `<div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:10px">`;
+      html += `<div style="font-size:13px;font-weight:800;color:#0f172a">${_esc(rule.title || 'State overlay rule')} ${rule.confidence ? `<span style="font-size:10px;color:#64748b;font-weight:700">(${_esc(rule.confidence)} confidence)</span>` : ''}</div>`;
+      if (rule.summary) html += `<div style="font-size:13px;color:#334155;line-height:1.5;margin-top:4px">${_esc(rule.summary)}</div>`;
+      if (Array.isArray(rule.contractor_guidance) && rule.contractor_guidance.length) html += `<ul style="margin:6px 0 0 18px;padding:0;font-size:12px;color:#334155;line-height:1.5">${rule.contractor_guidance.slice(0,4).map(item => `<li>${_esc(item)}</li>`).join('')}</ul>`;
+      if (Array.isArray(rule.watch_out) && rule.watch_out.length) html += `<div style="font-size:12px;color:#991b1b;margin-top:6px"><strong>Watch out:</strong> ${_esc(rule.watch_out.slice(0,3).join(' · '))}</div>`;
+      if (Array.isArray(rule.companion_permits) && rule.companion_permits.length) html += `<div style="font-size:12px;color:#92400e;margin-top:6px"><strong>Companion permits:</strong> ${_esc(rule.companion_permits.map(cp => cp.permit_type || cp).filter(Boolean).slice(0,4).join(' · '))}</div>`;
+      const sourceUrl = safeExternalUrl(rule.source_url);
+      if (sourceUrl) html += `<div style="font-size:11px;color:#64748b;margin-top:6px">Source: <a href="${_esc(sourceUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--brand)">${_esc(rule.source_title || sourceUrl)}</a></div>`;
+      html += `</div>`;
+    });
+  }
+  if (sources.length) {
+    html += `<div style="font-size:12px;color:#475569;margin-top:10px"><strong>Official overlay sources checked:</strong><ul style="margin:4px 0 0 18px;padding:0">${sources.slice(0,6).map(src => `<li><a href="${_esc(src.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--brand)">${_esc(src.title || src.url)}</a>${src.verified_on ? ` <span style="color:#94a3b8">verified ${_esc(src.verified_on)}</span>` : ''}</li>`).join('')}</ul></div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
 function renderResults(d, job, city, state) {
   window._lastLookupResult = d;
   window._lastLookupJob = job || '';
@@ -2921,6 +3013,9 @@ function renderResults(d, job, city, state) {
   const fee = d.fee_range || d.fee || d.cost || '';
   const applyUrl = d.apply_url || '';
   const applyPdf = d.apply_pdf || '';
+  const safeMaps = safeExternalUrl(maps);
+  const safeApplyUrl = safeExternalUrl(applyUrl);
+  const safeApplyPdf = safeExternalUrl(applyPdf);
   const countyNote = d.county_fallback_note || '';
   const licenseRaw = d.license_required || '';
   const licenseDisplay = normalizeLicenseRequirementCopy(licenseRaw);
@@ -2963,8 +3058,8 @@ function renderResults(d, job, city, state) {
   if (searchMode === 'homeowner') {
     const permitRequired = (verdict === 'yes' || verdict === 'maybe');
     const permitName = (d.permits_required && d.permits_required[0] && d.permits_required[0].permit_type) || d.permit_name || 'a permit';
-    const officeLink = maps ? `<a href="${esc(maps)}" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">Find the Permit Office →</a>` : '';
-    const onlineLink = applyUrl ? `<a href="${esc(applyUrl)}" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">Search Permit Records Online →</a>` : '';
+    const officeLink = safeMaps ? `<a href="${esc(safeMaps)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;font-weight:700">Find the Permit Office →</a>` : '';
+    const onlineLink = safeApplyUrl ? `<a href="${esc(safeApplyUrl)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;font-weight:700">Search Permit Records Online →</a>` : '';
     if (permitRequired) {
       html += `<div style="background:rgba(245,158,11,0.10);border:1.5px solid rgba(245,158,11,0.45);border-radius:12px;padding:18px 20px;margin-bottom:14px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#d97706;margin-bottom:8px">🏠 Homeowner Summary — Was a Permit Required?</div>
@@ -3133,7 +3228,7 @@ function renderResults(d, job, city, state) {
   }
 
   // Companion permits warning
-  const companionPermits = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
+  const companionPermits = arrayItems(d.companion_permits).filter(cp => cp && (cp.certainty === 'almost_certain' || cp.certainty === 'likely'));
   if (companionPermits.length > 0) {
     html += `<div class="companion-card" style="background:#fffbeb; border:2px solid #f59e0b; border-radius:12px; padding:18px 20px; margin-bottom:16px;">
       <div class="section-label" style="color:#92400e; margin-bottom:10px;">⚠️ This Job Requires Multiple Permits</div>
@@ -3194,11 +3289,11 @@ function renderResults(d, job, city, state) {
     if (phone) {
       html += `<div class="apply-phone-note">📞 Or call <a href="tel:${normalizePhone(phone)}" style="color:var(--green);font-weight:700">${esc(phone)}</a> and ask for <strong>"${esc(portalName)}"</strong></div>`;
     }
-    if (maps) {
-      html += `<a class="find-office-btn" href="${esc(maps)}" target="_blank" rel="noopener">🗺️ Find the Office</a>`;
+    if (safeMaps) {
+      html += `<a class="find-office-btn" href="${esc(safeMaps)}" target="_blank" rel="noopener noreferrer">🗺️ Find the Office</a>`;
     }
-    if (applyPdf) {
-      html += `<a class="download-btn" href="${esc(applyPdf)}" target="_blank" rel="noopener" style="margin-top:12px">📄 Download Application (PDF)</a>`;
+    if (safeApplyPdf) {
+      html += `<a class="download-btn" href="${esc(safeApplyPdf)}" target="_blank" rel="noopener noreferrer" style="margin-top:12px">📄 Download Application (PDF)</a>`;
     }
     html += `</div>`;
   }
@@ -3213,14 +3308,14 @@ function renderResults(d, job, city, state) {
   }
 
   // Contact card
-  if (phone || office || maps) {
+  if (phone || office || safeMaps) {
     html += `<div class="card" style="${verdict==='maybe'?'border-color:rgba(245,158,11,0.4);':''}">
       ${verdict === 'maybe' ? '<div class="section-label" style="color:var(--yellow)">⚠️ Not sure? Call to confirm — takes 2 minutes</div>' : '<div class="section-label">📞 Contact</div>'}
       ${phone ? `<a class="contact-phone" href="tel:${normalizePhone(phone)}">${esc(phone)}</a>` : ''}
       ${office ? `<div class="contact-office">${esc(office)}</div>` : ''}
       ${officeAddress ? `<div class="contact-address">${esc(officeAddress)}</div>` : ''}
       <div class="mini-link-row">
-        ${maps ? `<a class="mini-link" href="${esc(maps)}" target="_blank" rel="noopener">🗺️ Find Building Department →</a>` : ''}
+        ${safeMaps ? `<a class="mini-link" href="${esc(safeMaps)}" target="_blank" rel="noopener noreferrer">🗺️ Find Building Department →</a>` : ''}
       </div>
     </div>`;
   }
@@ -3524,6 +3619,8 @@ function renderResultAsReport(d, job, city, state) {
                     .map(ins => ins.title || ins.stage || ins.description || ins.notes || '')
                     .filter(Boolean);
   const failureRisks = Array.isArray(d.common_mistakes) ? d.common_mistakes : [];
+  const qualityWarnings = Array.isArray(d.quality_warnings) ? d.quality_warnings.filter(Boolean) : [];
+  const claimCitations = Array.isArray(d.claim_citations) ? d.claim_citations.filter(Boolean) : [];
   const sources = Array.isArray(d.sources) ? d.sources.filter(Boolean) : [];
   const validationIssues = Array.isArray(d._validation_issues) ? d._validation_issues : [];
   const missingFields = Array.isArray(d.missing_fields) ? d.missing_fields : [];
@@ -3607,6 +3704,15 @@ function renderResultAsReport(d, job, city, state) {
     html += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#166534">✅ No hidden triggers detected for this scope.</div>`;
   }
 
+  html += renderStateOverlayReportHtml(d, _esc);
+
+  if (qualityWarnings.length) {
+    html += `<div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:12px;padding:14px 18px;margin-bottom:14px;color:#9a3412">`;
+    html += `<div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">🛡️ Quality gate warnings</div>`;
+    html += `<ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.55">${qualityWarnings.slice(0,8).map(w => `<li>${_esc(w)}</li>`).join('')}</ul>`;
+    html += `</div>`;
+  }
+
   // The 18 fields — locked order
   const row = (n, label, value) => `<div style="display:grid;grid-template-columns:32px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:800;color:var(--muted);text-align:right">${n}</div><div><div style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px">${_esc(label)}</div><div style="font-size:14px;color:var(--text);line-height:1.5">${value}</div></div></div>`;
 
@@ -3624,7 +3730,9 @@ function renderResultAsReport(d, job, city, state) {
   // 5. Application method
   html += row(5, 'Application method', appMethod);
   // 6. Portal / link
-  const portalLink = applyUrl ? `<a href="${_esc(applyUrl)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(applyUrl)}</a>` : _missing;
+  const safeApplyUrl = safeExternalUrl(applyUrl);
+  const safeApplyPdf = safeExternalUrl(applyPdf);
+  const portalLink = safeApplyUrl ? `<a href="${_esc(safeApplyUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--brand);word-break:break-all">${_esc(safeApplyUrl)}</a>` : _missing;
   html += row(6, 'Portal / link', portalLink);
   // 7. Who may apply
   let whoMay = '';
@@ -3650,12 +3758,13 @@ function renderResultAsReport(d, job, city, state) {
   html += row(12, 'Where to call', phoneBlock);
   // 13. Where to go
   const mapsUrl = address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address + ' ' + (city || '') + ' ' + (state || ''))}` : '';
-  const addressBlock = address ? `${_esc(address)}${mapsUrl ? ' · <a href="' + _esc(mapsUrl) + '" target="_blank" rel="noopener" style="color:var(--brand)">🗺️ map</a>' : ''}` : _missing;
+  const safeMapsUrl = safeExternalUrl(mapsUrl);
+  const addressBlock = address ? `${_esc(address)}${safeMapsUrl ? ' · <a href="' + _esc(safeMapsUrl) + '" target="_blank" rel="noopener noreferrer" style="color:var(--brand)">🗺️ map</a>' : ''}` : _missing;
   html += row(13, 'Where to go', addressBlock);
   // 14. Online application
   let appBlock = '';
-  if (applyUrl) appBlock += `<a href="${_esc(applyUrl)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(applyUrl)}</a>`;
-  if (applyPdf) appBlock += (appBlock ? '<div style="margin-top:4px">' : '') + `<a href="${_esc(applyPdf)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">📄 PDF application: ${_esc(applyPdf)}</a>` + (appBlock ? '</div>' : '');
+  if (safeApplyUrl) appBlock += `<a href="${_esc(safeApplyUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--brand);word-break:break-all">${_esc(safeApplyUrl)}</a>`;
+  if (safeApplyPdf) appBlock += (appBlock ? '<div style="margin-top:4px">' : '') + `<a href="${_esc(safeApplyPdf)}" target="_blank" rel="noopener noreferrer" style="color:var(--brand);word-break:break-all">📄 PDF application: ${_esc(safeApplyPdf)}</a>` + (appBlock ? '</div>' : '');
   html += row(14, 'Online application', appBlock || _missing);
   // 15. Failure risks
   html += row(15, 'Failure risks (top 5)', _list(failureRisks, 5));
@@ -3674,8 +3783,8 @@ function renderResultAsReport(d, job, city, state) {
     sourcesBlock = _missing;
   } else {
     sourcesBlock = '<ul style="margin:4px 0 0 18px;padding:0">' + sources.slice(0, 6).map(src => {
-      const url = typeof src === 'string' ? src : (src && src.url) || '';
-      return url ? `<li style="margin:2px 0"><a href="${_esc(url)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(url)}</a></li>` : '';
+      const url = safeExternalUrl(typeof src === 'string' ? src : (src && src.url) || '');
+      return url ? `<li style="margin:2px 0"><a href="${_esc(url)}" target="_blank" rel="noopener noreferrer" style="color:var(--brand);word-break:break-all">${_esc(url)}</a></li>` : '';
     }).filter(Boolean).join('') + '</ul>';
   }
   html += row(17, 'Official sources checked', sourcesBlock);
@@ -3684,6 +3793,16 @@ function renderResultAsReport(d, job, city, state) {
   html += row(18, 'Last checked + confidence', lastBlock);
 
   html += `</div>`;
+
+  if (claimCitations.length) {
+    const citationItems = claimCitations.slice(0, 8).map(c => {
+      const sourceUrl = safeExternalUrl(c.source_url);
+      const sourceLink = sourceUrl ? `<a href="${_esc(sourceUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--brand);word-break:break-all">${_esc(c.source_title || sourceUrl)}</a>` : 'No safe source URL attached';
+      const snippet = c.quoted_snippet ? _esc(String(c.quoted_snippet).slice(0, 260)) : 'No quoted snippet available yet — verify with AHJ.';
+      return `<li style="margin:6px 0"><strong>${_esc(c.id || c.field || 'Citation')}</strong> ${_esc(c.claim || c.field || 'Report claim')}: ${snippet}<div style="font-size:11px;color:var(--muted);margin-top:2px">${sourceLink} · confidence ${_esc(c.confidence || 'needs_verification')}</div></li>`;
+    }).join('');
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:14px"><div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">🔎 Claim source footnotes</div><ol style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.5">${citationItems}</ol></div>`;
+  }
 
   // Footer with copy/share/print actions. Keep these in report view so a user
   // who switches to the contractor-grade report can still copy, share, email,
@@ -3836,6 +3955,23 @@ function copyResult() {
     t += `\nVERIFY BEFORE RELYING:\n`;
     t += `Uncertainty / verification warnings:\n`;
     t += uncertaintyWarnings.map(w => `- ${w}`).join('\n') + '\n';
+  }
+  const companions = arrayItems(d.companion_permits).filter(cp => cp && (cp.certainty === 'almost_certain' || cp.certainty === 'likely')).slice(0, 6);
+  if (companions.length) {
+    t += `\nCOMPANION PERMITS / REVIEWS TO CHECK:\n`;
+    t += companions.map(cp => `- ${cp.permit_type || cp}: ${cp.reason || 'Verify with AHJ.'}`).join('\n') + '\n';
+  }
+  const docs = [...new Set([...arrayItems(d.what_to_bring || d.checklist), ...arrayItems(d.requirements || d.documents_needed)])].slice(0, 8);
+  if (docs.length) t += `\nWHAT TO BRING / UPLOAD:\n${docs.map(x => `- ${x}`).join('\n')}\n`;
+  const overlayLines = buildStateOverlayCopyLines(d);
+  if (overlayLines.length) t += `\nSTATE OVERLAY GUIDANCE (not final code authority):\n${overlayLines.join('\n')}\n`;
+  const citations = Array.isArray(d.claim_citations) ? d.claim_citations.filter(Boolean).slice(0, 6) : [];
+  if (citations.length) {
+    t += `\nCLAIM SOURCE FOOTNOTES:\n`;
+    t += citations.map(c => {
+      const sourceUrl = safeExternalUrl(c.source_url);
+      return `- ${c.id || c.field || 'C'} ${c.claim || c.field || 'claim'}: ${c.quoted_snippet || 'No quoted snippet yet — verify with AHJ.'}${sourceUrl ? ` Source: ${sourceUrl}` : ''}`;
+    }).join('\n') + '\n';
   }
   t += `Generated by PermitAssist (permitassist.io)`;
   navigator.clipboard.writeText(t).then(() => showCopy('✅ Copied!')).catch(() => alert(t));
@@ -4191,18 +4327,26 @@ function downloadReport() {
   const tlText = tl.simple || tl.complex || '';
   const licenseNote = normalizeLicenseRequirementCopy(d.license_required || '');
   const cityRegNote = (d.city_contractor_registration && d.city_contractor_registration !== 'null') ? d.city_contractor_registration : '';
-  const companions = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
-  const permits = (d.permits_required || []);
-  const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])];
-  const tips = (d.pro_tips || []).slice(0, 4);
-  const mistakes = (d.common_mistakes || []).slice(0, 4);
+  const companions = arrayItems(d.companion_permits).filter(cp => cp && (cp.certainty === 'almost_certain' || cp.certainty === 'likely'));
+  const permits = arrayItems(d.permits_required).filter(p => p && typeof p === 'object');
+  const docs = [...new Set([...arrayItems(d.what_to_bring || d.checklist), ...arrayItems(d.requirements || d.documents_needed)])];
+  const tips = arrayItems(d.pro_tips).slice(0, 6);
+  const mistakes = [...new Set([...arrayItems(d.common_mistakes), ...arrayItems(d.quality_warnings)])].slice(0, 8);
+  const stateOverlayHtml = renderStateOverlayReportHtml(d, efn);
+  const citationFootnotes = (Array.isArray(d.claim_citations) ? d.claim_citations : []).slice(0, 8).map(c => {
+    const sourceUrl = safeExternalUrl(c.source_url);
+    const link = sourceUrl ? `<a href="${efn(sourceUrl)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb">${efn(c.source_title || sourceUrl)}</a>` : 'No safe source URL attached';
+    return `<li style="font-size:12px;padding:4px 0"><strong>${efn(c.id || c.field || 'C')}</strong> ${efn(c.claim || c.field || 'Report claim')}: ${efn(c.quoted_snippet || 'No quoted snippet available yet — verify with AHJ.')}<div style="color:#64748b">${link} · confidence ${efn(c.confidence || 'needs_verification')}</div></li>`;
+  }).join('');
   const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
-  const sources = (d.sources || []).slice(0, 5);
+  const sources = arrayItems(d.sources).slice(0, 5);
   const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
   const offAddr = d.apply_address || '';
   const applyUrl = d.apply_url || '';
+  const safeMaps = safeExternalUrl(maps);
+  const safeApplyUrl = safeExternalUrl(applyUrl);
   const generated = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   function efn(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -4224,7 +4368,7 @@ function downloadReport() {
   const mistakeList = mistakes.map(m => `<li style="padding:3px 0;font-size:13px">${efn(m)}</li>`).join('');
   const inspList = inspections.map((ins, i) => `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:28px;font-size:12px;font-weight:700;color:#2563eb">${i+1}</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0"><strong style="font-size:13px">${efn(ins.stage||ins.title||'Inspection')}</strong>${ins.description ? `<div style="font-size:12px;color:#475569;margin-top:2px">${efn(ins.description)}</div>` : ''}${ins.timing ? `<div style="font-size:11px;color:#2563eb;font-weight:700;margin-top:2px">${efn(ins.timing)}</div>` : ''}</td></tr>`).join('');
   const stepsHtml = nextSteps.map((s,i) => `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:32px"><span style="background:#2563eb;color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${i+1}</span></td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:13px">${efn(s)}</td></tr>`).join('');
-  const sourceList = sources.map(s => `<li style="font-size:11px;padding:2px 0"><a href="${efn(s)}" style="color:#2563eb">${efn(s)}</a></li>`).join('');
+  const sourceList = sources.map(s => safeExternalUrl(typeof s === 'string' ? s : (s && s.url) || '')).filter(Boolean).map(s => `<li style="font-size:11px;padding:2px 0"><a href="${efn(s)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb">${efn(s)}</a></li>`).join('');
 
   const docSection = docItems ? `
   <div class="section">
@@ -4290,15 +4434,17 @@ function downloadReport() {
   ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; This Job Requires Multiple Permits</div><table>${companionRows}</table><div style="font-size:12px;color:#78350f;margin-top:8px">&#128161; Pull companion permits at the same time to avoid stop-work orders.</div></div>` : ''}
   ${cityRegNote ? `<div class="city-reg-alert"><div class="section-label" style="color:#92400e">&#127963;&#65039; City Contractor Registration Required</div><div style="font-size:13px;color:#78350f;line-height:1.6">${efn(cityRegNote)}</div></div>` : ''}
   ${fee || tlText || licenseNote ? `<div class="section"><div class="section-label">&#128176; Cost &middot; &#8987; Timeline &middot; &#129527; Who Pulls It</div><table class="kv">${fee ? `<tr><td>Fee</td><td><strong style="color:#059669;font-size:14px">${efn(fee)}</strong><div style="font-size:11px;color:#64748b;margin-top:4px">— typically added to job invoice</div></td></tr>` : ''}${tlText ? `<tr><td>Timeline</td><td>${efn(tlText)}</td></tr>` : ''}${tl.complex && tl.simple ? `<tr><td>Plan review</td><td>${efn(tl.complex)}</td></tr>` : ''}${licenseNote ? `<tr><td>Who pulls it</td><td>${efn(licenseNote)}</td></tr>` : ''}</table></div>` : ''}
-  ${office || phone ? `<div class="section"><div class="section-label">&#128222; Where to Apply</div>${phone ? `<div style="font-size:19px;font-weight:900;color:#2563eb">${efn(phone)}</div>` : ''}${office ? `<div style="font-size:14px;font-weight:700;margin-top:4px">${efn(office)}</div>` : ''}${offAddr ? `<div style="font-size:13px;color:#475569;margin-top:2px">${efn(offAddr)}</div>` : ''}${maps ? `<div style="margin-top:6px;font-size:12px"><a href="${efn(maps)}" style="color:#2563eb">&#128506;&#65039; Maps: ${efn(maps)}</a></div>` : ''}${applyUrl ? `<div style="margin-top:4px;font-size:12px"><a href="${efn(applyUrl)}" style="color:#2563eb">&#127760; Online: ${efn(applyUrl)}</a></div>` : ''}</div>` : ''}
+  ${office || phone ? `<div class="section"><div class="section-label">&#128222; Where to Apply</div>${phone ? `<div style="font-size:19px;font-weight:900;color:#2563eb">${efn(phone)}</div>` : ''}${office ? `<div style="font-size:14px;font-weight:700;margin-top:4px">${efn(office)}</div>` : ''}${offAddr ? `<div style="font-size:13px;color:#475569;margin-top:2px">${efn(offAddr)}</div>` : ''}${safeMaps ? `<div style="margin-top:6px;font-size:12px"><a href="${efn(safeMaps)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb">&#128506;&#65039; Maps: ${efn(safeMaps)}</a></div>` : ''}${safeApplyUrl ? `<div style="margin-top:4px;font-size:12px"><a href="${efn(safeApplyUrl)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb">&#127760; Online: ${efn(safeApplyUrl)}</a></div>` : ''}</div>` : ''}
   ${permitRows ? `<div class="section"><div class="section-label">&#128203; Permits Required</div><table>${permitRows}</table></div>` : ''}
   ${docSection}
+  ${stateOverlayHtml}
   ${stepsHtml ? `<div class="section"><div class="section-label">&#9989; Next Steps</div><table>${stepsHtml}</table></div>` : ''}
   ${inspList ? `<div class="section"><div class="section-label">&#128269; Inspection Stages</div><table>${inspList}</table></div>` : ''}
   ${tipList ? `<div class="section"><div class="section-label">&#128161; Pro Tips</div><ul class="plain">${tipList}</ul></div>` : ''}
   ${mistakeList ? `<div class="section" style="border-color:#fca5a5"><div class="section-label" style="color:#dc2626">&#9888;&#65039; Common Mistakes &mdash; Watch Out</div><ul class="plain">${mistakeList}</ul></div>` : ''}
   ${sourceList ? `<div class="section"><div class="section-label">&#128279; Sources</div><ul class="plain">${sourceList}</ul></div>` : ''}
-  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>Generated: ${efn(generated)}</footer>
+  ${citationFootnotes ? `<div class="section"><div class="section-label">&#128270; Claim Source Footnotes</div><ol class="plain">${citationFootnotes}</ol></div>` : ''}
+  <footer class="footer"><strong>PermitAssist &mdash; permitassist.io</strong><br/>&#128204; Always verify current requirements directly with your local building department before starting work.<br/>State overlay guidance is planning support, not final legal/code authority.<br/>Generated: ${efn(generated)}</footer>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body>
@@ -4323,17 +4469,19 @@ function printResult() {
   const tl = d.approval_timeline || {};
   const tlText = tl.simple || tl.complex || '';
   const licenseNote = normalizeLicenseRequirementCopy(d.license_required || '');
-  const companions = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
-  const permits = (d.permits_required || []);
-  const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])];  
-  const tips = (d.pro_tips || []).slice(0, 4);
-  const mistakes = (d.common_mistakes || []).slice(0, 4);
+  const companions = arrayItems(d.companion_permits).filter(cp => cp && (cp.certainty === 'almost_certain' || cp.certainty === 'likely'));
+  const permits = arrayItems(d.permits_required).filter(p => p && typeof p === 'object');
+  const docs = [...new Set([...arrayItems(d.what_to_bring || d.checklist), ...arrayItems(d.requirements || d.documents_needed)])];
+  const tips = arrayItems(d.pro_tips).slice(0, 4);
+  const mistakes = arrayItems(d.common_mistakes).slice(0, 4);
   const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
   const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
   const offAddr = d.apply_address || '';
   const applyUrl = d.apply_url || '';
+  const safeMaps = safeExternalUrl(maps);
+  const safeApplyUrl = safeExternalUrl(applyUrl);
   const generated = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   function efn(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -4417,7 +4565,7 @@ function printResult() {
   </div>
   ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; This Job Requires Multiple Permits</div><table>${companionRows}</table></div>` : ''}
   ${fee || tlText || licenseNote ? `<div class="section"><div class="section-label">&#128176; Cost &middot; &#8987; Timeline &middot; &#129527; Who Pulls It</div><table class="kv">${fee ? `<tr><td>Fee</td><td><strong style="color:#059669;font-size:14px">${efn(fee)}</strong><div style="font-size:11px;color:#64748b;margin-top:4px">— typically added to job invoice</div></td></tr>` : ''}${tlText ? `<tr><td>Timeline</td><td>${efn(tlText)}</td></tr>` : ''}${tl.complex && tl.simple ? `<tr><td>Plan review</td><td>${efn(tl.complex)}</td></tr>` : ''}${licenseNote ? `<tr><td>Who pulls it</td><td>${efn(licenseNote)}</td></tr>` : ''}</table></div>` : ''}
-  ${office || phone ? `<div class="section"><div class="section-label">&#128222; Where to Apply</div>${phone ? `<div style="font-size:19px;font-weight:900;color:#2563eb">${efn(phone)}</div>` : ''}${office ? `<div style="font-size:14px;font-weight:700;margin-top:4px">${efn(office)}</div>` : ''}${offAddr ? `<div style="font-size:13px;color:#475569;margin-top:2px">${efn(offAddr)}</div>` : ''}${maps ? `<div style="margin-top:6px;font-size:12px"><a href="${efn(maps)}">&#128506;&#65039; Maps: ${efn(maps)}</a></div>` : ''}${applyUrl ? `<div style="margin-top:4px;font-size:12px"><a href="${efn(applyUrl)}">&#127760; Online: ${efn(applyUrl)}</a></div>` : ''}</div>` : ''}
+  ${office || phone ? `<div class="section"><div class="section-label">&#128222; Where to Apply</div>${phone ? `<div style="font-size:19px;font-weight:900;color:#2563eb">${efn(phone)}</div>` : ''}${office ? `<div style="font-size:14px;font-weight:700;margin-top:4px">${efn(office)}</div>` : ''}${offAddr ? `<div style="font-size:13px;color:#475569;margin-top:2px">${efn(offAddr)}</div>` : ''}${safeMaps ? `<div style="margin-top:6px;font-size:12px"><a href="${efn(safeMaps)}" target="_blank" rel="noopener noreferrer">&#128506;&#65039; Maps: ${efn(safeMaps)}</a></div>` : ''}${safeApplyUrl ? `<div style="margin-top:4px;font-size:12px"><a href="${efn(safeApplyUrl)}" target="_blank" rel="noopener noreferrer">&#127760; Online: ${efn(safeApplyUrl)}</a></div>` : ''}</div>` : ''}
   ${permitRows ? `<div class="section"><div class="section-label">&#128203; Permits Required</div><table>${permitRows}</table></div>` : ''}
   ${docSection}
   ${stepsHtml ? `<div class="section"><div class="section-label">&#9989; Next Steps</div><table>${stepsHtml}</table></div>` : ''}
