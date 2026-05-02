@@ -725,6 +725,8 @@ def _build_schema(state: str) -> dict[str, Any]:
         "phase": 3,
         "coverage_level": "schema_only",
         "population_status": "not_populated",
+        "populated_phase": "",
+        "populated_for_verticals": [],
         "requires_population_before_state_specific_claims": True,
         "target_verticals": ["restaurant_ti", "medical_clinic_ti", "office_ti"],
         "citation_policy": {
@@ -748,14 +750,26 @@ def _build_schema(state: str) -> dict[str, Any]:
     }
 
 
-def _populate_medical_clinic_schema(schema: dict[str, Any], *, rules: list[dict[str, Any]], coverage_level: str, warning: str, note_key: str, note: str, verified_on: str) -> None:
+def _populate_medical_clinic_schema(
+    schema: dict[str, Any],
+    *,
+    rules: list[dict[str, Any]],
+    coverage_level: str,
+    populated_phase: str,
+    warning: str,
+    note_key: str,
+    note: str,
+    verified_on: str,
+) -> None:
     schema["phase"] = 4
     schema["coverage_level"] = coverage_level
     schema["population_status"] = "partially_populated"
+    schema["populated_phase"] = populated_phase
     schema["requires_population_before_state_specific_claims"] = False
     populated = set(schema.get("populated_verticals") or [])
     populated.add("medical_clinic_ti")
     schema["populated_verticals"] = sorted(populated)
+    schema["populated_for_verticals"] = sorted(populated)
     schema["contractor_warning"] = warning
     schema["citation_policy"][note_key] = note
 
@@ -797,6 +811,7 @@ _populate_medical_clinic_schema(
     STATE_RULE_SCHEMAS["TX"],
     rules=_TX_MEDICAL_CLINIC_RULES,
     coverage_level="phase4a_tx_medical_clinic_ti",
+    populated_phase="phase4a",
     warning="Texas medical/dental clinic TI overlay is populated for Phase 4A with cited state sources. Use it as state-level triage; city AHJ/local amendments and owner/licensing facts still control final submittal requirements.",
     note_key="phase4a_note",
     note="TX medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
@@ -806,6 +821,7 @@ _populate_medical_clinic_schema(
     STATE_RULE_SCHEMAS["CA"],
     rules=_CA_MEDICAL_CLINIC_RULES,
     coverage_level="phase4b_ca_medical_clinic_ti",
+    populated_phase="phase4b",
     warning="California medical/dental clinic TI overlay is populated for Phase 4B with cited state sources. Use it as state-level triage; local AHJ, Title 24 edition, HCAI/CDPH licensing facts, and owner program still control final submittal requirements.",
     note_key="phase4b_note",
     note="CA medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
@@ -816,6 +832,7 @@ _populate_medical_clinic_schema(
     STATE_RULE_SCHEMAS["FL"],
     rules=_FL_MEDICAL_CLINIC_RULES,
     coverage_level="phase4c_fl_medical_clinic_ti",
+    populated_phase="phase4c",
     warning="Florida medical/dental clinic TI overlay is populated for Phase 4C with cited state sources. Use it as state-level triage; local AHJ, AHCA/DOH/licensing facts, current Florida Building Code edition, and owner program still control final submittal/opening requirements.",
     note_key="phase4c_note",
     note="FL medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
@@ -826,6 +843,7 @@ _populate_medical_clinic_schema(
     STATE_RULE_SCHEMAS["MA"],
     rules=_MA_MEDICAL_CLINIC_RULES,
     coverage_level="phase4d_ma_medical_clinic_ti",
+    populated_phase="phase4d",
     warning="Massachusetts medical/dental clinic TI overlay is populated for Phase 4D with cited state sources. Use it as state-level triage; local AHJ/fire review, DPH/licensing facts, current 780 CMR/specialized codes, and owner program still control final submittal/opening requirements.",
     note_key="phase4d_note",
     note="MA medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
@@ -1009,6 +1027,10 @@ def compact_state_schema_context(state: str, vertical: str, job_type: str = "") 
         "phase": schema["phase"],
         "coverage_level": schema["coverage_level"],
         "population_status": schema["population_status"],
+        "populated_phase": schema.get("populated_phase", ""),
+        "populated_for_verticals": list(schema.get("populated_for_verticals") or schema.get("populated_verticals") or []),
+        "active_vertical": vertical,
+        "active_vertical_populated": vertical in set(schema.get("populated_for_verticals") or schema.get("populated_verticals") or []),
         "requires_population_before_state_specific_claims": schema["requires_population_before_state_specific_claims"],
         "vertical": vertical,
         "overlay_slots": [
