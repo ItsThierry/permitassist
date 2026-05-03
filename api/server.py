@@ -93,6 +93,7 @@ RESEND_API_KEY         = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL             = "hello@permitassist.io"
 APP_BASE_URL           = os.environ.get("APP_BASE_URL", "https://permitassist.io").rstrip("/")
 ADMIN_TOKEN            = os.environ.get("PERMITASSIST_ADMIN_TOKEN", "")
+QA_ACCOUNT_EMAIL       = os.environ.get("PERMITASSIST_QA_ACCOUNT_EMAIL", "qa@permitassist.io").strip().lower()
 REMINDER_LOOKAHEAD_DAYS = 30
 REMINDER_CHECK_SECONDS  = 3600
 POSTHOG_PUBLIC_KEY     = os.environ.get("POSTHOG_PUBLIC_KEY", "")
@@ -1343,6 +1344,8 @@ def init_db():
             plan_expires_at      TEXT,
             stripe_customer_id   TEXT,
             stripe_subscription_id TEXT,
+            internal_qa          INTEGER DEFAULT 0,
+            internal_note        TEXT,
             created_at           TEXT,
             last_login           TEXT
         )
@@ -1508,6 +1511,8 @@ def init_db():
     added_user_columns = ensure_table_columns(conn, "users", {
         "free_limit_notice_sent_at": "TEXT",
         "free_limit_email_sent": "INTEGER DEFAULT 0",
+        "internal_qa": "INTEGER DEFAULT 0",
+        "internal_note": "TEXT",
     })
     if added_user_columns:
         drift_fixes.append(f"users: added columns {', '.join(added_user_columns)}")
@@ -1596,14 +1601,15 @@ def get_user(email: str) -> dict | None:
         conn = sqlite3.connect(CACHE_DB)
         row = conn.execute(
             "SELECT id,email,plan,plan_expires_at,stripe_customer_id,"
-            "stripe_subscription_id,created_at,last_login,free_limit_notice_sent_at,free_limit_email_sent FROM users WHERE email=?",
+            "stripe_subscription_id,internal_qa,internal_note,created_at,last_login,free_limit_notice_sent_at,free_limit_email_sent FROM users WHERE email=?",
             [email.lower().strip()]
         ).fetchone()
         conn.close()
         if not row:
             return None
         cols = ["id","email","plan","plan_expires_at","stripe_customer_id",
-                "stripe_subscription_id","created_at","last_login","free_limit_notice_sent_at","free_limit_email_sent"]
+                "stripe_subscription_id","internal_qa","internal_note","created_at","last_login",
+                "free_limit_notice_sent_at","free_limit_email_sent"]
         return dict(zip(cols, row))
     except Exception as e:
         print(f"[user] Get error: {e}")
@@ -1627,6 +1633,32 @@ def get_or_create_user(email: str) -> dict:
     except Exception as e:
         print(f"[user] Create error: {e}")
     return get_user(email) or {"email": email, "plan": "free"}
+
+
+def mark_internal_qa_user(email: str, note: str = "internal QA account") -> None:
+    """Mark an account as internal QA so it gets unlimited lookups without being counted as paid."""
+    email = email.lower().strip()
+    if not email:
+        return
+    now = utc_now().isoformat()
+    conn = sqlite3.connect(CACHE_DB)
+    conn.execute(
+        "INSERT OR IGNORE INTO users (email, plan, created_at, last_login, internal_qa, internal_note) VALUES (?,?,?,?,?,?)",
+        (email, "free", now, now, 1, note),
+    )
+    conn.execute(
+        "UPDATE users SET internal_qa=1, internal_note=?, last_login=? WHERE email=?",
+        (note, now, email),
+    )
+    conn.commit()
+    conn.close()
+
+
+def is_internal_qa_user(email: str) -> bool:
+    if not email:
+        return False
+    user = get_user(email)
+    return bool(user and int(user.get("internal_qa") or 0) == 1)
 
 
 def is_paid_user(email: str) -> bool:
@@ -4041,9 +4073,10 @@ class Handler(BaseHTTPRequestHandler):
                 return
             user  = get_or_create_user(user_email)
             paid  = is_paid_user(user_email)
+            internal_qa = is_internal_qa_user(user_email)
             ip = self.client_ip()
             fingerprint = _normalize_fingerprint(self.headers.get("X-Client-Fingerprint", ""))
-            count = -1 if paid else get_effective_free_usage(ip, fingerprint)
+            count = -1 if (paid or internal_qa) else get_effective_free_usage(ip, fingerprint)
             try:
                 conn = sqlite3.connect(CACHE_DB)
                 team_rows = conn.execute(
@@ -4058,8 +4091,9 @@ class Handler(BaseHTTPRequestHandler):
                 "email":              user_email,
                 "plan":               user.get("plan", "free"),
                 "paid":               paid,
+                "internal_qa":        internal_qa,
                 "lookups_used":       count,
-                "lookups_remaining":  -1 if paid else max(0, FREE_LOOKUP_LIMIT - count),
+                "lookups_remaining":  -1 if (paid or internal_qa) else max(0, FREE_LOOKUP_LIMIT - count),
                 "reset_date":         None,
                 "plan_expires_at":    user.get("plan_expires_at"),
                 "team_members":       team_members,
@@ -4357,7 +4391,7 @@ class Handler(BaseHTTPRequestHandler):
             if not ADMIN_TOKEN:
                 self.send_json(403, {"error": "Admin review queue not configured"})
                 return
-            if admin_token != ADMIN_TOKEN:
+            if not hmac.compare_digest(admin_token, ADMIN_TOKEN):
                 self.send_json(401, {"error": "Invalid admin token"})
                 return
             qs = parse_qs(urlparse(self.path).query)
@@ -4458,7 +4492,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET_admin(self, path):
         """Handle GET requests for admin API endpoints."""
         admin_token = self.headers.get("X-Admin-Token", "")
-        if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+        if not ADMIN_TOKEN or not hmac.compare_digest(admin_token, ADMIN_TOKEN):
             self.send_json(401, {"error": "Admin token required"})
             return True
 
@@ -4492,6 +4526,7 @@ class Handler(BaseHTTPRequestHandler):
                 params = _pqs(urlparse(self.path).query)
                 email = params.get("email", [""])[0].strip().lower()
                 plan = params.get("plan", ["free"])[0].strip().lower() or "free"
+                internal_qa = (params.get("internal_qa", ["0"])[0] or "0").strip().lower() in ("1", "true", "yes")
                 if not email:
                     self.send_json(400, {"error": "email param required"})
                     return True
@@ -4508,7 +4543,36 @@ class Handler(BaseHTTPRequestHandler):
                     )
                     conn.commit()
                     conn.close()
-                self.send_json(200, {"token": token, "email": email, "plan": plan, "paid": plan != "free"})
+                if internal_qa:
+                    mark_internal_qa_user(email, "admin-created internal QA test session")
+                paid = is_paid_user(email)
+                self.send_json(200, {
+                    "token": token,
+                    "email": email,
+                    "plan": (get_user(email) or {}).get("plan", plan),
+                    "paid": paid,
+                    "internal_qa": is_internal_qa_user(email),
+                })
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+            return True
+
+        if path == "/api/admin/create-qa-account":
+            try:
+                email = (QA_ACCOUNT_EMAIL or "qa@permitassist.io").strip().lower()
+                if not email or "@" not in email:
+                    self.send_json(500, {"error": "QA account email is not configured"})
+                    return True
+                token = create_session_token(email)
+                mark_internal_qa_user(email, "dedicated internal QA account")
+                user = get_user(email) or {"plan": "free"}
+                self.send_json(200, {
+                    "token": token,
+                    "email": email,
+                    "plan": user.get("plan", "free"),
+                    "paid": is_paid_user(email),
+                    "internal_qa": is_internal_qa_user(email),
+                })
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
             return True
@@ -4712,7 +4776,8 @@ class Handler(BaseHTTPRequestHandler):
                 session_token = self.headers.get("X-Session-Token", "")
                 user_email = validate_session_token(session_token) if session_token else None
                 paid = is_paid_user(user_email) if user_email else False
-                unlimited = is_sample_demo or paid or is_unlimited_lookup_ip(ip) or is_benchmark
+                internal_qa = is_internal_qa_user(user_email) if user_email else False
+                unlimited = is_sample_demo or paid or internal_qa or is_unlimited_lookup_ip(ip) or is_benchmark
                 used_before = 0 if unlimited else get_effective_free_usage(ip, fingerprint)
                 response_headers = {} if unlimited else build_free_lookup_headers(used_before)
 
@@ -4727,7 +4792,7 @@ class Handler(BaseHTTPRequestHandler):
 
                     # Admin-bypass: if X-Admin-Token header matches ADMIN_TOKEN env, skip the free-tier limit
                     admin_token = self.headers.get("X-Admin-Token", "")
-                    if ADMIN_TOKEN and admin_token == ADMIN_TOKEN:
+                    if ADMIN_TOKEN and hmac.compare_digest(admin_token, ADMIN_TOKEN):
                         # Log the bypass for audit trail
                         print(f"[admin-bypass] /api/permit lookup bypass at {datetime.utcnow().isoformat()} email={data.get('email','')}")
                         # Skip free-tier limit check — proceed to engine
@@ -4746,7 +4811,8 @@ class Handler(BaseHTTPRequestHandler):
                 if is_benchmark:
                     print(f"[permit][BENCH] {job_type} in {city}, {state} — engine={force_model or 'default'} ip={ip}")
                 elif user_email:
-                    print(f"[permit] {job_type} in {city}, {state} — user={user_email} plan={'paid' if paid else 'free'} ip={ip} used={used_before}")
+                    plan_label = 'internal_qa' if internal_qa else ('paid' if paid else 'free')
+                    print(f"[permit] {job_type} in {city}, {state} — user={user_email} plan={plan_label} ip={ip} used={used_before}")
                 else:
                     print(f"[permit] {job_type} in {city}, {state} ({job_category}) — IP={ip} used={used_before}")
 
@@ -4758,6 +4824,7 @@ class Handler(BaseHTTPRequestHandler):
                     "job_category": job_category,
                     "commercial_scope": _is_commercial_scope(job_type),
                     "paid": paid,
+                    "internal_qa": internal_qa,
                     "sample_demo": is_sample_demo,
                     "benchmark": is_benchmark,
                 }, user_email or "")
@@ -4774,8 +4841,10 @@ class Handler(BaseHTTPRequestHandler):
                     used_after = max(*record_lookup_usage(ip, fingerprint))
                     response_headers = build_free_lookup_headers(used_after)
                     result["remaining_lookups"] = max(0, FREE_LOOKUP_LIMIT - used_after)
-                elif paid:
+                elif paid or internal_qa:
                     result["remaining_lookups"] = -1
+                    if internal_qa:
+                        result["internal_qa"] = True
                 elif unlimited:
                     result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
@@ -4824,6 +4893,7 @@ class Handler(BaseHTTPRequestHandler):
                     "needs_review": result.get("needs_review", False),
                     "cached": is_cached,
                     "paid": paid,
+                    "internal_qa": internal_qa,
                     "free_limit_remaining": result.get("remaining_lookups"),
                 }, user_email or "")
 
@@ -4834,7 +4904,11 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 print(f"[permit] Error: {e}")
                 try:
-                    record_beta_event("lookup_failed", {"error_type": type(e).__name__, "path": "/api/permit"})
+                    record_beta_event("lookup_failed", {
+                        "error_type": type(e).__name__,
+                        "path": "/api/permit",
+                        "internal_qa": bool(locals().get("internal_qa", False)),
+                    })
                 except Exception:
                     pass
                 import traceback; traceback.print_exc()
@@ -5564,7 +5638,7 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/admin/referral-credits":
             try:
                 admin_token = self.headers.get("X-Admin-Token", "")
-                if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+                if not ADMIN_TOKEN or not hmac.compare_digest(admin_token, ADMIN_TOKEN):
                     self.send_json(401, {"error": "Admin token required"})
                     return
                 import sqlite3 as _sqlite3
@@ -5586,7 +5660,7 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/admin/flags":
             try:
                 admin_token = self.headers.get("X-Admin-Token", "")
-                if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+                if not ADMIN_TOKEN or not hmac.compare_digest(admin_token, ADMIN_TOKEN):
                     self.send_json(401, {"error": "Admin token required"})
                     return
                 import sqlite3 as _sqlite3
@@ -5617,7 +5691,7 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/admin/flags/delete":
             try:
                 admin_token = self.headers.get("X-Admin-Token", "")
-                if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+                if not ADMIN_TOKEN or not hmac.compare_digest(admin_token, ADMIN_TOKEN):
                     self.send_json(401, {"error": "Admin token required"})
                     return
                 body = self.read_json_body()
@@ -5638,7 +5712,7 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/admin/stats":
             try:
                 admin_token = self.headers.get("X-Admin-Token", "")
-                if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+                if not ADMIN_TOKEN or not hmac.compare_digest(admin_token, ADMIN_TOKEN):
                     self.send_json(401, {"error": "Admin token required"})
                     return
                 import sqlite3 as _sqlite3

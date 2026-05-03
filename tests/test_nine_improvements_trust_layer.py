@@ -155,6 +155,77 @@ def test_admin_can_create_paid_test_session_for_smoke(tmp_path, monkeypatch):
     assert payload["remaining_lookups"] == -1
 
 
+def test_admin_can_create_internal_qa_session_without_counting_as_paid_customer(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "ADMIN_TOKEN", "admin.test")
+    server.research_permit = lambda *a, **k: {
+        "permit_verdict": "YES",
+        "confidence": "high",
+        "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration"}],
+        "sources": [],
+    }
+
+    with _LiveServer(server.Handler) as live:
+        email = urllib.parse.quote("qa@permitassist.io")
+        req = urllib.request.Request(
+            f"{live.base}/api/admin/create-session?email={email}&plan=free&internal_qa=1",
+            headers={"X-Admin-Token": "admin.test"},
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            session = json.loads(resp.read().decode("utf-8"))
+
+        assert session["email"] == "qa@permitassist.io"
+        assert session["plan"] == "free"
+        assert session["paid"] is False
+        assert session["internal_qa"] is True
+        user = server.get_user("qa@permitassist.io")
+        assert user["plan"] == "free"
+        assert user["internal_qa"] == 1
+        assert server.is_paid_user("qa@permitassist.io") is False
+        assert server.is_internal_qa_user("qa@permitassist.io") is True
+
+        status, headers, body = _post_json_response(
+            f"{live.base}/api/permit",
+            {"job_type": "commercial office TI", "city": "Boston", "state": "MA", "job_category": "commercial"},
+            {"X-Session-Token": session["token"], "X-Client-Fingerprint": "qa-fp"},
+        )
+
+    assert status == 200
+    assert "X-Free-Lookups-Used" not in headers
+    assert "X-Free-Lookups-Remaining" not in headers
+    payload = json.loads(body)
+    assert payload["remaining_lookups"] == -1
+    assert payload["internal_qa"] is True
+
+
+def test_admin_can_create_dedicated_qa_account_with_unlimited_session(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "ADMIN_TOKEN", "admin.test")
+    monkeypatch.setattr(server, "QA_ACCOUNT_EMAIL", "qa@permitassist.io")
+
+    with _LiveServer(server.Handler) as live:
+        missing_token = urllib.request.Request(f"{live.base}/api/admin/create-qa-account")
+        try:
+            urllib.request.urlopen(missing_token, timeout=5)
+            assert False, "dedicated QA account creation must require X-Admin-Token"
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 401
+
+        req = urllib.request.Request(
+            f"{live.base}/api/admin/create-qa-account",
+            headers={"X-Admin-Token": "admin.test"},
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            session = json.loads(resp.read().decode("utf-8"))
+
+    assert session["email"] == "qa@permitassist.io"
+    assert session["token"]
+    assert session["plan"] == "free"
+    assert session["paid"] is False
+    assert session["internal_qa"] is True
+    assert server.get_user("qa@permitassist.io")["internal_qa"] == 1
+
+
 def test_beta_feedback_and_white_label_report_endpoints(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "validate_session_token", lambda token: "beta@example.com" if token == "valid.test" else None)
