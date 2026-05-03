@@ -31,8 +31,31 @@ def test_verified_tier_matrix_skeleton_has_required_fields_and_target_verticals(
     }
     assert summary["by_vertical"]["restaurant_ti"] >= 3
     assert summary["by_vertical"]["medical_clinic_ti"] >= 4
-    assert summary["by_vertical"]["office_ti"] >= 3
+    assert summary["by_vertical"]["office_ti"] >= 4
     assert set(matrix.CORE_EVIDENCE_FIELDS) == set(summary["fields"])
+
+
+def test_fl_orlando_office_ti_matrix_case_evaluates_partial_readiness():
+    matrix_spec = util.spec_from_file_location(
+        "verified_tier_matrix",
+        Path(__file__).resolve().parents[1] / "api" / "verified_tier_matrix.py",
+    )
+    matrix = util.module_from_spec(matrix_spec)
+    matrix_spec.loader.exec_module(matrix)
+
+    case = next(case for case in matrix.VERIFIED_TIER_MATRIX if case.case_id == "fl_orlando_office_ti")
+    result = {
+        "claim_citations": [
+            {"field": field, "confidence": "partial"}
+            for field in matrix.CORE_EVIDENCE_FIELDS
+        ],
+        "quality_warnings": ["Verify local AHJ office TI apply path, fees, timeline, and inspections before quoting."],
+    }
+
+    evaluation = matrix.evaluate_case_result(case, result)
+
+    assert evaluation["passed"] is True
+    assert evaluation["actual_field_readiness"] == case.field_expectations
 
 
 def test_strict_validator_rejects_high_without_field_specific_quote(tmp_path, monkeypatch):

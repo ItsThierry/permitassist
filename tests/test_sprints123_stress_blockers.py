@@ -17,7 +17,7 @@ def _blob(value) -> str:
     return json.dumps(value, sort_keys=True, default=str).lower()
 
 
-def test_office_overlay_fails_closed_when_active_vertical_not_populated():
+def test_office_overlay_uses_active_vertical_metadata_after_office_population():
     ctx = compact_state_schema_context(
         "TX",
         "office_ti",
@@ -25,15 +25,15 @@ def test_office_overlay_fails_closed_when_active_vertical_not_populated():
     )
 
     assert ctx["active_vertical"] == "office_ti"
-    assert ctx["active_vertical_populated"] is False
-    assert ctx["population_status"] == "needs_verification"
-    assert ctx["requires_population_before_state_specific_claims"] is True
-    assert "needs_verification" in ctx["coverage_level"]
+    assert ctx["active_vertical_populated"] is True
+    assert ctx["population_status"] == "partially_populated"
+    assert ctx["requires_population_before_state_specific_claims"] is False
+    assert ctx["coverage_level"] == "phase4c_tx_office_ti"
     warning = ctx["contractor_warning"].lower()
-    assert "office ti" in warning
-    assert "not populated" in warning
+    assert "office ti overlay is populated" in warning
     assert "medical" not in warning
     assert "dental" not in warning
+    assert ctx["triggered_rules"]
 
 
 def test_restaurant_overlay_fails_closed_when_active_vertical_not_populated():

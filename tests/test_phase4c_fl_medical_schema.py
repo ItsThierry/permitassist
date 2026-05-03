@@ -212,7 +212,10 @@ def test_phase4c_healthcare_rules_do_not_leak_into_office_or_ma_unpopulated_stat
         "FL",
     )
     assert office["state_schema_context"]["vertical"] == "office_ti"
-    assert office["state_schema_context"]["triggered_rules"] == []
+    assert office["state_schema_context"]["active_vertical_populated"] is True
+    assert office["state_schema_context"]["coverage_level"] == "phase4c_fl_office_ti"
+    assert office["state_schema_context"]["triggered_rules"]
+    assert all(rule["id"].startswith("fl_office_") for rule in office["state_schema_context"]["triggered_rules"])
 
     ma = engine.apply_medical_clinic_ti_rulebook(
         _base_result(),

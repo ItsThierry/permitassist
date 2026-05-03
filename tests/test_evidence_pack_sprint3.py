@@ -64,7 +64,7 @@ def test_state_schema_context_has_clear_active_vertical_metadata_for_qa():
 
     assert medical["coverage_level"] == "phase4a_tx_medical_clinic_ti"
     assert medical["populated_phase"] == "phase4a"
-    assert medical["populated_for_verticals"] == ["medical_clinic_ti"]
+    assert medical["populated_for_verticals"] == ["medical_clinic_ti", "office_ti"]
     assert medical["active_vertical"] == "medical_clinic_ti"
     assert medical["active_vertical_populated"] is True
     assert medical["triggered_rules"]
@@ -108,19 +108,21 @@ def test_get_evidence_pack_has_manual_tx_restaurant_example_without_apply_path_c
     assert all(default.source_type == "state_vertical_overlay" for default in defaults.values())
 
 
-def test_adapter_rejects_unpopulated_verticals_in_existing_state_schema():
+def test_adapter_builds_populated_office_pack_without_cross_vertical_leakage():
     schema = get_state_rule_schema("TX")
 
     assert validate_state_rule_schema(schema) == []
-    try:
-        build_evidence_pack_from_state_schema(schema, active_vertical="office_ti")
-    except ValueError as exc:
-        assert "office_ti" in str(exc)
-    else:
-        raise AssertionError("office_ti adapter should reject unpopulated TX schema")
+    pack = build_evidence_pack_from_state_schema(schema, active_vertical="office_ti")
+
+    assert pack.active_vertical == "office_ti"
+    assert pack.coverage_level == "phase4c_tx_office_ti"
+    assert pack.overlay_rules
+    assert all(rule.id.startswith("tx_office_") for rule in pack.overlay_rules)
+    assert not any("restaurant" in rule.id or "medical" in rule.id for rule in pack.overlay_rules)
+    assert validate_evidence_pack(pack) == []
 
 
-def test_sprint3_metadata_does_not_change_customer_rule_injection_or_code_citation():
+def test_sprint3_metadata_keeps_code_citation_separate_after_office_population():
     result = _base_result("commercial_office_ti")
     before = result["code_citation"].copy()
     output = engine.apply_state_schema_context(
@@ -132,11 +134,12 @@ def test_sprint3_metadata_does_not_change_customer_rule_injection_or_code_citati
 
     context = output["state_schema_context"]
     assert context["active_vertical"] == "office_ti"
-    assert context["active_vertical_populated"] is False
-    assert context["triggered_rules"] == []
+    assert context["active_vertical_populated"] is True
+    assert context["coverage_level"] == "phase4c_tx_office_ti"
+    assert context["triggered_rules"]
+    assert all(rule["id"].startswith("tx_office_") for rule in context["triggered_rules"])
     assert output["code_citation"] == before
-    assert not output["pro_tips"]
-    assert not output["watch_out"]
+    assert output["pro_tips"] or output["watch_out"]
 
 
 def test_validate_evidence_pack_blocks_false_verified_and_missing_proof():
@@ -189,7 +192,10 @@ def test_validate_evidence_pack_blocks_false_verified_and_missing_proof():
 
 def test_public_pack_lookup_and_dict_surface_are_safe_for_unknowns_and_audits():
     assert get_evidence_pack("ZZ", "medical_clinic_ti") is None
-    assert get_evidence_pack("TX", "office_ti") is None
+    office_pack = get_evidence_pack("TX", "office_ti")
+    assert office_pack is not None
+    assert office_pack.coverage_level == "phase4c_tx_office_ti"
+    assert all(rule.id.startswith("tx_office_") for rule in office_pack.overlay_rules)
 
     pack = get_evidence_pack("TX", "restaurant_ti")
     data = pack.to_dict()

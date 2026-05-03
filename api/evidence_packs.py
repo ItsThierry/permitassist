@@ -110,6 +110,9 @@ def _schema_group_for_vertical(vertical: str) -> str:
 
 def _rule_matches_vertical(raw_rule: dict[str, Any], vertical: str) -> bool:
     """Avoid cross-vertical leakage if general overlays later hold multiple verticals."""
+    declared_scope = str(raw_rule.get("vertical_scope") or "").strip().lower()
+    if declared_scope:
+        return declared_scope == vertical
     declared_verticals = {str(v).strip().lower() for v in raw_rule.get("verticals") or [] if str(v).strip()}
     if declared_verticals:
         return vertical in declared_verticals
@@ -148,6 +151,9 @@ def _last_verified_from_schema(schema: dict[str, Any], vertical: str) -> str:
     verified = []
     for slot in (schema.get(group_name) or {}).values():
         for hook in slot.get("citation_hooks") or []:
+            declared_scope = str(hook.get("vertical_scope") or "").strip().lower()
+            if declared_scope and declared_scope != vertical:
+                continue
             if hook.get("citation_status") == "verified" and hook.get("verified_on"):
                 verified.append(str(hook["verified_on"]))
     return max(verified) if verified else ""
@@ -164,6 +170,11 @@ def build_evidence_pack_from_state_schema(schema: dict[str, Any], *, active_vert
     rules = _rules_from_schema(schema, active_vertical)
     if not rules:
         raise ValueError(f"{schema.get('state')} {active_vertical} has no populated rules")
+    coverage_level = str(
+        (schema.get("vertical_coverage_levels") or {}).get(active_vertical)
+        or schema.get("coverage_level")
+        or ""
+    )
     pack = EvidencePack(
         state=str(schema.get("state") or ""),
         state_name=str(schema.get("state_name") or ""),
@@ -174,7 +185,7 @@ def build_evidence_pack_from_state_schema(schema: dict[str, Any], *, active_vert
         last_verified=_last_verified_from_schema(schema, active_vertical),
         readiness="partial",
         source_system="state_schema_adapter",
-        coverage_level=str(schema.get("coverage_level") or ""),
+        coverage_level=coverage_level,
         population_status=str(schema.get("population_status") or ""),
     )
     errors = validate_evidence_pack(pack)

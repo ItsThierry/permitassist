@@ -215,7 +215,10 @@ def test_phase4d_healthcare_rules_do_not_leak_into_office_ti():
     )
     assert office["state_schema_context"]["vertical"] == "office_ti"
     assert office["state_schema_context"]["state"] == "MA"
-    assert office["state_schema_context"]["triggered_rules"] == []
+    assert office["state_schema_context"]["active_vertical_populated"] is True
+    assert office["state_schema_context"]["coverage_level"] == "phase4c_ma_office_ti"
+    assert office["state_schema_context"]["triggered_rules"]
+    assert all(rule["id"].startswith("ma_office_") for rule in office["state_schema_context"]["triggered_rules"])
 
 
 def test_phase4d_sources_stay_out_of_code_citation_until_renderers_are_ready():

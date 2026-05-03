@@ -18,6 +18,7 @@ PHASE4A_TX_VERIFIED_ON = "2026-05-02"
 PHASE4B_CA_VERIFIED_ON = "2026-05-02"
 PHASE4C_FL_VERIFIED_ON = "2026-05-02"
 PHASE4D_MA_VERIFIED_ON = "2026-05-02"
+PHASE4C_OFFICE_TI_VERIFIED_ON = "2026-05-03"
 
 _STATE_NAMES = {
     "CA": "California",
@@ -690,6 +691,227 @@ _MA_MEDICAL_CLINIC_RULES: list[dict[str, Any]] = [
     },
 ]
 
+_OFFICE_ENERGY_TRIGGER_TERMS = [
+    "lighting", "light fixture", "light fixtures", "occupancy sensor", "daylight sensor",
+    "lighting controls", "hvac", "mechanical", "air balance", "tab report", "ductwork",
+    "diffuser", "return air", "thermostat", "water heater", "envelope", "insulation",
+    "ceiling grid",
+]
+
+_STATE_OFFICE_TI_RULES: dict[str, list[dict[str, Any]]] = {
+    "TX": [
+        {
+            "id": "tx_office_ibc_local_ahj_ti_baseline",
+            "overlay": "adopted_code_editions",
+            "title": "Texas municipal commercial building-code baseline for office TI",
+            "applies": "all_tx_office_ti",
+            "summary": "Texas Local Government Code Sec. 214.216 applies the International Building Code baseline to municipal commercial buildings and alterations, but local city amendments and permit procedures still control the exact office TI submittal path.",
+            "contractor_guidance": [
+                "For Texas office TI, verify the city-adopted building/existing-building/fire/mechanical/plumbing/electrical editions, local amendments, and certificate-of-occupancy path before quoting.",
+                "Show tenant suite layout, occupant load/egress, doors/hardware, rated assemblies/firestopping, MEP scope, and any CO/change-of-occupancy notes on the permit set.",
+            ],
+            "watch_out": ["Do not treat Texas office TI as one statewide permit; commercial TI permits and inspections remain local AHJ-driven."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "Texas Local Government Code Sec. 214.216 — International Building Code",
+            "source_url": "https://statutes.capitol.texas.gov/Docs/LG/htm/LG.214.htm#214.216",
+            "source_quote": "The International Building Code ... applies to all commercial buildings in a municipality and to any alteration, remodeling, enlargement, or repair of those commercial buildings.",
+            "confidence": "high",
+        },
+        {
+            "id": "tx_office_tdlr_tas_accessibility",
+            "overlay": "accessibility",
+            "title": "Texas Accessibility Standards / TDLR office TI threshold",
+            "applies": "all_tx_office_ti",
+            "summary": "Texas office alterations must account for TAS accessibility. TDLR states projects under $50,000 are not required to submit for registration/review, but the project still must comply with TAS; projects at or above the threshold require TDLR/TABS coordination.",
+            "contractor_guidance": [
+                "For Texas office TI, check project cost early: at $50,000 or more, plan for TDLR/TABS registration and RAS review/inspection coordination; below the threshold, still design to TAS.",
+                "Carry accessible route, doors/hardware, restrooms, reception/counters, signage, and parking/passenger-loading impacts where the scope touches them.",
+            ],
+            "watch_out": [
+                "A local building permit approval does not by itself clear Texas Accessibility Standards obligations.",
+                "Treat TDLR/TABS registration as a cost-threshold coordination item, not an automatic companion permit for every Texas office TI.",
+            ],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "TDLR Architectural Barriers FAQ — project registration and review threshold",
+            "source_url": "https://www.tdlr.texas.gov/ab/abfaq.htm",
+            "source_quote": "If your project's total estimated cost is less than $50,000.00, you are not required to submit the project to the Department for registration and review, however, the project is still required to comply with TAS.",
+            "confidence": "high",
+        },
+        {
+            "id": "tx_office_energy_local_code_coordination",
+            "overlay": "energy_code",
+            "title": "Texas office TI energy-code/local amendment coordination",
+            "applies": "triggered_by_office_energy_scope",
+            "summary": "Texas state guidance notes local governments may adopt different or newer code versions than statewide minimums, so lighting, HVAC, envelope, and water-heating office TI work needs city-specific energy-code/form verification.",
+            "contractor_guidance": ["If the Texas office TI includes lighting controls, HVAC distribution/zoning, ceiling work affecting diffusers/returns, envelope, or water-heating, verify the city energy-code edition, forms, inspections, and TAB/commissioning expectations."],
+            "watch_out": ["Do not promise a Texas office TI submittal package is complete until local energy-code forms and inspections are checked for the AHJ."],
+            "companion_permits": [],
+            "trigger_terms": _OFFICE_ENERGY_TRIGGER_TERMS,
+            "source_title": "Texas State Law Library — Building Codes in Texas",
+            "source_url": "https://guides.sll.texas.gov/building-codes/texas",
+            "source_quote": "Local governments may have adopted different or newer versions than the minimum statewide requirements.",
+            "confidence": "medium",
+        },
+    ],
+    "CA": [
+        {
+            "id": "ca_office_title24_local_ahj_baseline",
+            "overlay": "adopted_code_editions",
+            "title": "California Title 24 / local AHJ baseline for office TI",
+            "applies": "all_ca_office_ti",
+            "summary": "California office TI must coordinate the California Building Standards Code, Title 24, with local AHJ amendments and plan-check requirements for the exact city/county jurisdiction.",
+            "contractor_guidance": [
+                "For California office TI, verify the current Title 24 parts/edition, local amendments, fire/life-safety review, and any certificate-of-occupancy or change-of-use path before pricing.",
+                "Show suite layout, occupant load/egress, accessibility/path of travel, rated assemblies/firestopping, MEP/lighting scope, and deferred fire sprinkler/alarm shop drawings where applicable.",
+            ],
+            "watch_out": ["Do not borrow county-specific, residential-only, or renewable-energy guidance for ordinary California commercial office TI unless the scope explicitly triggers it."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "California Building Standards Commission — Codes",
+            "source_url": "https://www.dgs.ca.gov/bsc/codes",
+            "source_quote": "The California Building Standards Code is a compilation of three types of building standards from three different origins:",
+            "confidence": "medium",
+        },
+        {
+            "id": "ca_office_title24_part6_nonresidential_energy_forms",
+            "overlay": "energy_code",
+            "title": "California Title 24 Part 6 nonresidential office TI forms",
+            "applies": "triggered_by_office_energy_scope",
+            "summary": "California Energy Code Ace says its forms tool should be used before permit submittal to determine required forms for addition, alteration, or new construction projects, making lighting/HVAC/controls office TI a form-check item.",
+            "contractor_guidance": ["If the California office TI includes lighting, lighting controls, HVAC, envelope, or water-heating work, identify required nonresidential Title 24 energy forms and acceptance-testing/commissioning documents before submittal."],
+            "watch_out": ["Finish-only California office refreshes may not need the same energy package; do not over-warn when the scope is paint/furniture/flooring only."],
+            "companion_permits": [],
+            "trigger_terms": _OFFICE_ENERGY_TRIGGER_TERMS,
+            "source_title": "Energy Code Ace — Get Forms",
+            "source_url": "https://energycodeace.com/content/get-forms",
+            "source_quote": "Use this tool before your permit submittal to determine which forms will be required for your Addition, Alteration or New Construction project.",
+            "confidence": "medium",
+        },
+        {
+            "id": "ca_office_accessibility_path_of_travel",
+            "overlay": "accessibility",
+            "title": "California office TI accessibility/path-of-travel verification",
+            "applies": "all_ca_office_ti",
+            "summary": "California office TI should be checked against Title 24 accessibility and local plan-check expectations for accessible route, restrooms, doors/hardware, counters, signage, parking/passenger loading, and path-of-travel scope.",
+            "contractor_guidance": ["Carry a California accessibility/path-of-travel review line item for office TI when walls, doors, restrooms, reception/counters, signage, or parking/path routes are touched."],
+            "watch_out": ["Do not hide California accessibility uncertainty in metadata only; mark AHJ verification when path-of-travel scope is unclear."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "California Building Standards Commission — Codes",
+            "source_url": "https://www.dgs.ca.gov/bsc/codes",
+            "source_quote": "The California Building Standards Code is a compilation of three types of building standards from three different origins:",
+            "confidence": "medium",
+        },
+    ],
+    "FL": [
+        {
+            "id": "fl_office_fbc_local_ahj_baseline",
+            "overlay": "adopted_code_editions",
+            "title": "Florida Building Code / local AHJ baseline for office TI",
+            "applies": "all_fl_office_ti",
+            "summary": "Florida Statutes Sec. 553.73 provides that the Florida Building Code governs design, construction, alteration, modification, repair, and demolition of public and private buildings, while the local AHJ controls office TI permit intake, reviews, inspections, and local amendments.",
+            "contractor_guidance": [
+                "For Florida office TI, verify the local city/county building department, current Florida Building Code edition, local flood/fire/accessibility amendments, and CO/change-of-use path before quoting.",
+                "Show tenant suite layout, egress, fire/life-safety, accessibility, MEP/lighting, and separate fire alarm/sprinkler shop drawing scope where applicable.",
+            ],
+            "watch_out": ["Florida has no single statewide office TI permit portal; incorporated city vs unincorporated county jurisdiction still matters."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "Florida Statutes Sec. 553.73 — Florida Building Code",
+            "source_url": "https://www.leg.state.fl.us/Statutes/index.cfm?App_mode=Display_Statute&URL=0500-0599/0553/Sections/0553.73.html",
+            "source_quote": "The Florida Building Code shall contain or incorporate by reference all laws and rules which pertain to and govern the design, construction, erection, alteration, modification, repair, and demolition of public and private buildings.",
+            "confidence": "high",
+        },
+        {
+            "id": "fl_office_energy_code_8th_edition_scope",
+            "overlay": "energy_code",
+            "title": "Florida office TI energy-code edition and forms check",
+            "applies": "triggered_by_office_energy_scope",
+            "summary": "The Florida Building Commission lists the Florida Building Code, 8th Edition (2023), as effective December 31, 2023, so office TI with lighting/HVAC/envelope/water-heating scope needs current local FBC energy-code/document verification.",
+            "contractor_guidance": ["If the Florida office TI includes lighting, HVAC, ceiling/diffuser changes, envelope, or water-heating, verify FBC Energy Conservation edition, local forms, inspections, and closeout/TAB expectations with the AHJ."],
+            "watch_out": ["Do not quote Florida office TI energy/form needs from another city or old code cycle without checking the AHJ."],
+            "companion_permits": [],
+            "trigger_terms": _OFFICE_ENERGY_TRIGGER_TERMS,
+            "source_title": "Florida Building Commission — Florida Building Code homepage",
+            "source_url": "https://www.floridabuilding.org/",
+            "source_quote": "The Effective Date for the Florida Building Code, 8th Edition (2023), is December 31, 2023.",
+            "confidence": "medium",
+        },
+        {
+            "id": "fl_office_accessibility_life_safety_local_review",
+            "overlay": "accessibility",
+            "title": "Florida office TI accessibility and life-safety local review",
+            "applies": "all_fl_office_ti",
+            "summary": "Florida office TI should preserve accessibility, egress, fire/life-safety, and local inspection coordination under the FBC/local AHJ permit path.",
+            "contractor_guidance": ["Carry accessibility, doors/hardware, restrooms, route, signage, fire alarm/sprinkler, emergency lighting/exit signs, and final building/fire inspection coordination in Florida office TI scope."],
+            "watch_out": ["Local Florida fire/accessibility review can create separate deferred submittals or inspections even when the main building permit is the primary path."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "Florida Statutes Sec. 553.73 — Florida Building Code",
+            "source_url": "https://www.leg.state.fl.us/Statutes/index.cfm?App_mode=Display_Statute&URL=0500-0599/0553/Sections/0553.73.html",
+            "source_quote": "The Florida Building Code shall contain or incorporate by reference all laws and rules which pertain to and govern the design, construction, erection, alteration, modification, repair, and demolition of public and private buildings.",
+            "confidence": "low",
+        },
+    ],
+    "MA": [
+        {
+            "id": "ma_office_780cmr_local_ahj_baseline",
+            "overlay": "adopted_code_editions",
+            "title": "Massachusetts 780 CMR / local building official baseline for office TI",
+            "applies": "all_ma_office_ti",
+            "summary": "Massachusetts office TI must coordinate 780 CMR, the Massachusetts State Building Code, with the local building official, fire department, and any local permitting procedures for the exact scope.",
+            "contractor_guidance": [
+                "For Massachusetts office TI, verify 780 CMR/current code edition, local building/fire review, egress/occupant load, accessibility, MEP/lighting, and certificate-of-inspection/occupancy implications before quoting.",
+                "Show office suite layout, rated assemblies/firestopping, doors/hardware, exit signs/emergency lighting, fire alarm/sprinkler impacts, and closeout inspections on the permit set.",
+            ],
+            "watch_out": ["Do not treat Massachusetts office TI as medical-clinic or DPH clinic work unless healthcare/licensed-clinic facts are actually present."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "Mass.gov — Tenth edition of the MA State Building Code 780",
+            "source_url": "https://www.mass.gov/handbook/tenth-edition-of-the-ma-state-building-code-780",
+            "source_quote": "The Building Code is found in the Code of Massachusetts Regulations at 780 CMR 1.00 to 115.00.",
+            "confidence": "high",
+        },
+        {
+            "id": "ma_office_521cmr_accessibility_coordination",
+            "overlay": "accessibility",
+            "title": "Massachusetts office TI accessibility / 521 CMR coordination",
+            "applies": "all_ma_office_ti",
+            "summary": "Massachusetts building-code guidance points to 521 CMR, the Architectural Access Board regulations, so office TI should check accessibility scope with local building review.",
+            "contractor_guidance": ["For Massachusetts office TI, verify 521 CMR/AAB accessibility impacts for route, doors/hardware, restrooms, counters, signage, parking/passenger loading, and altered public/common areas."],
+            "watch_out": ["Do not price Massachusetts office TI as finish-only if doors, restrooms, reception/counters, route, or parking access are touched."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "Mass.gov — AAB Rules and Regulations / Current Edition of 521 CMR",
+            "source_url": "https://www.mass.gov/aab-rules-and-regulations",
+            "source_quote": "These regulations, which are listed as Section 521 of the Code of Massachusetts Regulations, apply to all buildings and facilities in the Commonwealth that are open to members of the public.",
+            "secondary_source_title": "Mass.gov — 521 CMR 2006 Edition listing",
+            "secondary_source_url": "https://www.mass.gov/lists/521-cmr-2006-edition",
+            "confidence": "high",
+        },
+        {
+            "id": "ma_office_energy_code_mandatory_checklist",
+            "overlay": "energy_code",
+            "title": "Massachusetts office TI energy-code documents / checklist",
+            "applies": "triggered_by_office_energy_scope",
+            "summary": "Massachusetts 780 CMR energy guidance requires plans, specifications, calculations, and a BBRS-approved Mandatory Checklist, so office TI with lighting/HVAC/envelope/water-heating scope needs energy documentation verification.",
+            "contractor_guidance": ["If the Massachusetts office TI includes lighting, HVAC, ceiling/diffuser changes, envelope, or water-heating, verify required 780 CMR energy documents, calculations, checklist, inspections, and closeout items before submittal."],
+            "watch_out": ["Do not promise Massachusetts office TI closeout from building final alone when energy checklist/TAB/commissioning documents remain unresolved."],
+            "companion_permits": [],
+            "trigger_terms": _OFFICE_ENERGY_TRIGGER_TERMS,
+            "source_title": "Mass.gov — 780 CMR Tenth Edition, Chapter 13: Energy Efficiency Amendments",
+            "source_url": "https://www.mass.gov/regulations/780-CMR-tenth-edition-chapter-13-energy-efficiency-amendments",
+            "source_quote": "Chapter 13: Energy efficiency amendments is part of the Tenth Edition Base Code section of the Massachusetts State Building Code.",
+            "secondary_source_title": "Mass.gov — 10th Edition Chapter 13: Energy Efficiency PDF",
+            "secondary_source_url": "https://www.mass.gov/doc/10th-edition-chapter-13-energy-efficiency/download",
+            "confidence": "high",
+        },
+    ],
+}
+
+
 def _citation_hooks(topics: list[str]) -> list[dict[str, str]]:
     return [
         {
@@ -803,6 +1025,78 @@ def _populate_medical_clinic_schema(
             })
 
 
+
+def _populate_general_schema(
+    schema: dict[str, Any],
+    *,
+    vertical: str,
+    rules: list[dict[str, Any]],
+    coverage_level: str,
+    populated_phase: str,
+    warning: str,
+    note_key: str,
+    note: str,
+    verified_on: str,
+) -> None:
+    schema["phase"] = 4
+    existing_verticals = set(schema.get("populated_for_verticals") or schema.get("populated_verticals") or [])
+    existing_verticals.add(vertical)
+    schema["populated_verticals"] = sorted(existing_verticals)
+    schema["populated_for_verticals"] = sorted(existing_verticals)
+    schema["population_status"] = "partially_populated"
+    if not schema.get("populated_phase"):
+        schema["populated_phase"] = populated_phase
+    schema["requires_population_before_state_specific_claims"] = False
+    if schema.get("coverage_level") == "schema_only" or not str(schema.get("coverage_level") or "").startswith("phase4"):
+        schema["coverage_level"] = coverage_level
+    schema["citation_policy"][note_key] = note
+    schema.setdefault("vertical_warnings", {})[vertical] = warning
+    schema.setdefault("vertical_coverage_levels", {})[vertical] = coverage_level
+    schema.setdefault("vertical_populated_phases", {})[vertical] = populated_phase
+
+    for rule in rules:
+        slot = schema["general_overlays"][rule["overlay"]]
+        slot["status"] = "populated"
+        rule_copy = deepcopy(rule)
+        rule_copy["vertical_scope"] = vertical
+        slot.setdefault("populated_rules", []).append(rule_copy)
+        slot.setdefault("contractor_guidance_by_vertical", {}).setdefault(vertical, []).extend(rule.get("contractor_guidance") or [])
+        slot.setdefault("risk_flags_by_vertical", {}).setdefault(vertical, []).extend(rule.get("watch_out") or [])
+        if rule.get("summary"):
+            summaries = slot.setdefault("rule_summary_by_vertical", {}).setdefault(vertical, [])
+            if rule["summary"] not in summaries:
+                summaries.append(rule["summary"])
+        if not any(
+            hook.get("source_url") == rule["source_url"] and hook.get("vertical_scope") == vertical
+            for hook in slot.get("citation_hooks", [])
+        ):
+            if slot.get("status") == "populated" and slot.get("citation_hooks") and slot["citation_hooks"][0].get("citation_status") == "needs_population":
+                slot["citation_hooks"] = []
+            slot.setdefault("citation_hooks", []).append(
+                {
+                    "topic": rule["title"],
+                    "source_url": rule["source_url"],
+                    "source_title": rule["source_title"],
+                    "citation_status": "verified",
+                    "verified_on": verified_on,
+                    "vertical_scope": vertical,
+                }
+            )
+        if rule.get("secondary_source_url") and not any(
+            hook.get("source_url") == rule["secondary_source_url"] and hook.get("vertical_scope") == vertical
+            for hook in slot.get("citation_hooks", [])
+        ):
+            slot.setdefault("citation_hooks", []).append({
+                "topic": f"Secondary source for {rule['title']}",
+                "source_url": rule["secondary_source_url"],
+                "source_title": rule.get("secondary_source_title", ""),
+                "citation_status": "verified",
+                "verified_on": verified_on,
+                "vertical_scope": vertical,
+            })
+
+
+
 STATE_RULE_SCHEMAS: dict[str, dict[str, Any]] = {
     state: _build_schema(state)
     for state in PHASE3_TARGET_STATES
@@ -849,6 +1143,23 @@ _populate_medical_clinic_schema(
     note="MA medical_clinic_ti populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
     verified_on=PHASE4D_MA_VERIFIED_ON,
 )
+
+
+for _office_state, _office_rules in _STATE_OFFICE_TI_RULES.items():
+    _populate_general_schema(
+        STATE_RULE_SCHEMAS[_office_state],
+        vertical="office_ti",
+        rules=_office_rules,
+        coverage_level=f"phase4c_{_office_state.lower()}_office_ti",
+        populated_phase="phase4c_office_ti",
+        warning=(
+            f"{_STATE_NAMES[_office_state]} office TI overlay is populated for Phase 4C with cited state sources. "
+            "Use it as state-level triage; local AHJ amendments, exact permit intake, fire review, inspections, and certificate-of-occupancy path still control final submittal requirements."
+        ),
+        note_key="phase4c_office_ti_note",
+        note="Office TI populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
+        verified_on=PHASE4C_OFFICE_TI_VERIFIED_ON,
+    )
 
 
 def get_state_rule_schema(state: str) -> dict[str, Any] | None:
@@ -943,6 +1254,12 @@ def validate_state_rule_schema(schema: dict[str, Any] | None) -> list[str]:
                 for required in ("id", "title", "summary", "source_url", "source_title", "confidence"):
                     if not rule.get(required):
                         errors.append(f"{group_name}.{key}.populated_rules[{rule_idx}].{required} is required")
+                if group_name == "general_overlays" and not rule.get("vertical_scope") and not rule.get("verticals"):
+                    errors.append(f"{group_name}.{key}.populated_rules[{rule_idx}] must declare vertical_scope or verticals to prevent cross-vertical leakage")
+                if group_name == "general_overlays" and status == "populated":
+                    for hook_idx, hook in enumerate(hooks):
+                        if hook.get("citation_status") == "verified" and not hook.get("vertical_scope") and not hook.get("verticals"):
+                            errors.append(f"{group_name}.{key}.citation_hooks[{hook_idx}] must declare vertical_scope or verticals when populated")
     return errors
 
 
@@ -978,7 +1295,7 @@ def _job_has_any(job: str, terms: list[str]) -> bool:
     text = f" {job.lower().replace('-', ' ')} "
     for term in terms:
         normalized = term.lower().replace("-", " ")
-        if normalized not in text:
+        if not re.search(rf"\b{re.escape(normalized)}\b", text):
             continue
         if not _term_is_negated(text, normalized):
             return True
@@ -987,7 +1304,10 @@ def _job_has_any(job: str, terms: list[str]) -> bool:
 
 def _rule_applies(rule: dict[str, Any], job_type: str) -> bool:
     applies = rule.get("applies")
-    if applies in {"all_tx_medical_clinic_ti", "all_ca_medical_clinic_ti", "all_fl_medical_clinic_ti", "all_ma_medical_clinic_ti"}:
+    if applies in {
+        "all_tx_medical_clinic_ti", "all_ca_medical_clinic_ti", "all_fl_medical_clinic_ti", "all_ma_medical_clinic_ti",
+        "all_tx_office_ti", "all_ca_office_ti", "all_fl_office_ti", "all_ma_office_ti",
+    }:
         return True
     return _job_has_any(job_type or "", list(rule.get("trigger_terms") or []))
 
@@ -1015,20 +1335,23 @@ def compact_state_schema_context(state: str, vertical: str, job_type: str = "") 
         return None
 
     triggered_rules: list[dict[str, Any]] = []
-    if schema.get("state") in {"TX", "CA", "FL", "MA"} and vertical == "medical_clinic_ti":
+    populated_for_verticals = list(schema.get("populated_for_verticals") or schema.get("populated_verticals") or [])
+    active_vertical_populated = vertical in set(populated_for_verticals)
+    if schema.get("state") in {"TX", "CA", "FL", "MA"} and active_vertical_populated:
         for slot in overlays.values():
             for rule in slot.get("populated_rules") or []:
                 if _rule_applies(rule, job_type):
                     triggered_rules.append(_safe_rule_for_context(rule))
 
-    populated_for_verticals = list(schema.get("populated_for_verticals") or schema.get("populated_verticals") or [])
-    active_vertical_populated = vertical in set(populated_for_verticals)
     if active_vertical_populated:
-        coverage_level = schema["coverage_level"]
+        vertical_coverage = schema.get("vertical_coverage_levels") or {}
+        vertical_phases = schema.get("vertical_populated_phases") or {}
+        vertical_warnings = schema.get("vertical_warnings") or {}
+        coverage_level = vertical_coverage.get(vertical) or schema["coverage_level"]
         population_status = schema["population_status"]
-        populated_phase = schema.get("populated_phase", "")
+        populated_phase = vertical_phases.get(vertical) or schema.get("populated_phase", "")
         requires_population = schema["requires_population_before_state_specific_claims"]
-        contractor_warning = schema["contractor_warning"]
+        contractor_warning = vertical_warnings.get(vertical) or schema["contractor_warning"]
     else:
         # Do not let the medical/dental Phase 4 slice make restaurant/office
         # contexts look verified. Unpopulated active verticals may expose the
@@ -1045,6 +1368,37 @@ def compact_state_schema_context(state: str, vertical: str, job_type: str = "") 
             "Use this as a checklist only; verify with AHJ and cited state/local sources before quoting."
         )
 
+    overlay_slots = []
+    for key, slot in overlays.items():
+        slot_rules = [
+            rule for rule in slot.get("populated_rules") or []
+            if rule.get("vertical_scope") in {None, vertical}
+        ] if active_vertical_populated else []
+        slot_hooks = [
+            hook for hook in slot.get("citation_hooks") or []
+            if hook.get("vertical_scope") in {None, vertical}
+        ] if active_vertical_populated else []
+        if not slot_hooks:
+            slot_hooks = [
+                hook for hook in slot.get("citation_hooks") or []
+                if hook.get("citation_status") == "needs_population"
+            ]
+        overlay_slots.append({
+            "key": key,
+            "label": slot["label"],
+            "status": "populated" if slot_rules else "needs_population",
+            "citation_topics": [hook["topic"] for hook in slot_hooks],
+            "verified_sources": [
+                {
+                    "title": hook["source_title"],
+                    "url": hook["source_url"],
+                    "verified_on": hook.get("verified_on", ""),
+                }
+                for hook in slot_hooks
+                if hook.get("citation_status") == "verified" and hook.get("source_url")
+            ],
+        })
+
     return {
         "state": schema["state"],
         "state_name": schema["state_name"],
@@ -1057,24 +1411,7 @@ def compact_state_schema_context(state: str, vertical: str, job_type: str = "") 
         "active_vertical_populated": active_vertical_populated,
         "requires_population_before_state_specific_claims": requires_population,
         "vertical": vertical,
-        "overlay_slots": [
-            {
-                "key": key,
-                "label": slot["label"],
-                "status": slot["status"],
-                "citation_topics": [hook["topic"] for hook in slot["citation_hooks"]],
-                "verified_sources": [
-                    {
-                        "title": hook["source_title"],
-                        "url": hook["source_url"],
-                        "verified_on": hook.get("verified_on", ""),
-                    }
-                    for hook in slot["citation_hooks"]
-                    if hook.get("citation_status") == "verified" and hook.get("source_url")
-                ],
-            }
-            for key, slot in overlays.items()
-        ],
+        "overlay_slots": overlay_slots,
         "triggered_rules": triggered_rules,
         "contractor_warning": contractor_warning,
     }

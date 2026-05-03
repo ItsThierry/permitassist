@@ -148,6 +148,18 @@ VERIFIED_TIER_MATRIX: tuple[VerifiedTierCase, ...] = (
         state_overlay_visible=True,
     ),
     VerifiedTierCase(
+        case_id="fl_orlando_office_ti",
+        state="FL",
+        city="Orlando",
+        vertical="office_ti",
+        prompt="Office tenant improvement in Orlando with new partitions, lighting, HVAC diffuser relocation, data cabling, and exit signs.",
+        expected_primary_family="Building Permit — Tenant Improvement / Office Interior Alteration",
+        field_expectations={field: "partial" for field in CORE_EVIDENCE_FIELDS},
+        warnings_visible=True,
+        commercial_primary_correct=True,
+        state_overlay_visible=True,
+    ),
+    VerifiedTierCase(
         case_id="ma_boston_medical_clinic_ti",
         state="MA",
         city="Boston",
