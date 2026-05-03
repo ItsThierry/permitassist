@@ -8,11 +8,12 @@ surface state-level gotchas that contractors should always see.
 from __future__ import annotations
 
 from copy import deepcopy
+import re
 
 try:  # package import in tests/app
-    from .evidence_eligibility import filter_state_expert_notes
+    from .evidence_eligibility import filter_state_expert_notes, is_commercial_ti_scope
 except ImportError:  # direct script import
-    from evidence_eligibility import filter_state_expert_notes
+    from evidence_eligibility import filter_state_expert_notes, is_commercial_ti_scope
 
 CALIFORNIA_VHFHSZ_URL = (
     "https://osfm.fire.ca.gov/divisions/community-wildfire-preparedness-and-mitigation/"
@@ -44,6 +45,30 @@ CALIFORNIA_VHFHSZ_CITIES = {
     "la county",
     "los angeles county",
 }
+
+CALIFORNIA_CITY_FALLBACKS = {
+    "san diego",
+    "san jose",
+    "sacramento",
+    "fresno",
+}
+
+_CALIFORNIA_UTILITY_SCOPE_TERMS = (
+    "service upgrade",
+    "electrical service",
+    "utility coordination",
+    "utility interconnection",
+    "electrical interconnection",
+    "grid interconnection",
+    "electrical meter",
+    "utility meter",
+    "meter base",
+    "new service",
+    "service panel",
+    "main panel",
+    "switchgear",
+)
+
 
 # State pack registry last updated 2026-04-27.
 # States included: AZ, CA, CO, FL, GA, IL, NC, NY, TX, WA.
@@ -4645,17 +4670,18 @@ def get_state_expert_notes(state: str, city: str = "", job_description: str = ""
 
     notes = deepcopy(pack.get("expert_notes", []))
     city_key = (city or "").strip().lower()
+    commercial_ti = is_commercial_ti_scope(job_description, primary_scope)
 
     utility = CALIFORNIA_MUNICIPAL_UTILITIES.get(city_key) if state_upper == "CA" else None
-    if utility:
+    if utility and (not commercial_ti or _california_utility_scope_requested(job_description, primary_scope)):
         notes.append(
             {
                 "title": "California municipal utility coordination",
                 "note": (
-                    f"Local utility is {utility} — service/interconnection coordination goes through the city utility, "
-                    "not SoCal Edison/PG&E."
+                    f"Local utility is {utility} — electrical service and utility coordination go through that utility, "
+                    "not the surrounding investor-owned utility."
                 ),
-                "applies_to": "Electrical service, solar, battery, EV, and utility-interconnection work",
+                "applies_to": "Electrical service and utility coordination work",
                 "source": "California municipal utility rules",
             }
         )
@@ -4687,6 +4713,9 @@ def get_state_expert_notes(state: str, city: str = "", job_description: str = ""
             }
         )
 
+    if state_upper == "CA" and commercial_ti and city_key in CALIFORNIA_CITY_FALLBACKS:
+        notes.append(_california_city_fallback_note(city))
+
     return filter_state_expert_notes(
         notes,
         state=state_upper,
@@ -4694,3 +4723,30 @@ def get_state_expert_notes(state: str, city: str = "", job_description: str = ""
         job_description=job_description,
         primary_scope=primary_scope,
     )
+
+
+def _california_utility_scope_requested(job_description: str = "", primary_scope: str | None = None) -> bool:
+    text = f" {primary_scope or ''} {job_description or ''} ".lower()
+    for clause in re.split(r"[.;,]|\band\b", text):
+        for term in _CALIFORNIA_UTILITY_SCOPE_TERMS:
+            pattern = rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])"
+            if not re.search(pattern, clause):
+                continue
+            if re.search(r"\b(no|not|without|exclude|excluding|decline|declines|avoid|avoids)\b", clause):
+                continue
+            return True
+    return False
+
+
+def _california_city_fallback_note(city: str = "") -> dict:
+    city_name = (city or "this California city").strip() or "this California city"
+    return {
+        "title": "California city-level verification fallback",
+        "note": (
+            f"California state-level guidance applies; Title 24/local AHJ verification is still required. Verify {city_name} city-specific portal, checklist, "
+            "fees, plan-check timeline, inspections, and local AHJ amendments before quoting or submitting. "
+            "Do not borrow another California city or county's permit portal, utility, fire-zone, or historic-overlay rules."
+        ),
+        "applies_to": "California commercial tenant-improvement scopes where city-level evidence is not yet verified",
+        "source": "planning guidance; verify local AHJ",
+    }
