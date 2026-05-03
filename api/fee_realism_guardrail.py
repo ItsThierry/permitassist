@@ -417,8 +417,43 @@ def detect_fee_triggers_from_text(job_type: str) -> List[str]:
         if any(n in text for n in needles):
             triggers.append(key)
 
+    def add_hood_fire_suppression_if_cooking_scope() -> None:
+        # Bare "hood" is too broad for commercial office TI: copy-room exhaust
+        # hoods or non-cooking break-room ventilation should not add a
+        # restaurant-style fire-suppression fee. Require Type I/commercial
+        # cooking/suppression context, or strong kitchen-fire system terms.
+        strong_phrases = (
+            "type i hood",
+            "type 1 hood",
+            "commercial cooking hood",
+            "commercial kitchen hood",
+            "hood suppression",
+            "kitchen suppression",
+            "ansul",
+            "wet chemical",
+            "wet-chemical",
+            "fryer",
+            "griddle",
+        )
+        cooking_context = (
+            "commercial cooking",
+            "commercial kitchen",
+            "restaurant",
+            "fryer",
+            "griddle",
+            "ansul",
+            "wet chemical",
+            "wet-chemical",
+        )
+        if any(phrase in text for phrase in strong_phrases):
+            triggers.append("hood_fire_suppression")
+        elif "fire suppression" in text and any(ctx in text for ctx in cooking_context):
+            triggers.append("hood_fire_suppression")
+        elif "hood" in text and any(ctx in text for ctx in cooking_context):
+            triggers.append("hood_fire_suppression")
+
     add_if("change_of_occupancy", "change of occupancy", "change-of-occupancy", "new co", "certificate of occupancy", "occupancy change")
-    add_if("hood_fire_suppression", "hood", "type i", "type 1 hood", "ansul", "fire suppression", "kitchen suppression")
+    add_hood_fire_suppression_if_cooking_scope()
     add_if("grease_interceptor", "grease", "interceptor", "fats oils grease", "fog")
     add_if("hillside_grading", "hillside", "grading", "slope", "soils", "geology", "haul route")
     add_if("demising_wall", "demising", "tenant separation", "rated wall", "fire wall", "party wall")

@@ -93,6 +93,76 @@ def test_office_fee_floor_accounts_for_commercial_ti_complexity():
     assert "$300" not in guarded["fee_range"]
 
 
+def test_office_fee_floor_does_not_treat_incidental_exhaust_hood_as_restaurant_suppression():
+    result = {
+        "fee_range": "$500 permit fee",
+        "hidden_triggers": [],
+    }
+    guarded = apply_fee_realism_guardrail(
+        result,
+        "Boston MA office tenant improvement adding break room kitchenette, copy-room exhaust hood, janitor vacuum closet, ceiling grid, lighting controls, HVAC diffuser relocation, data cabling, accessibility, and fire alarm coordination",
+        "Boston",
+        "MA",
+        "commercial_office_ti",
+    )
+    assert guarded["_fee_adjusted"] is True
+    adders = {item["key"] for item in guarded["_fee_floor_components"]["trigger_adders"]}
+    assert "hood_fire_suppression" not in adders
+    assert "ada_path_of_travel" in adders
+    assert "hood-fire-suppression adder" not in guarded["fee_range"]
+
+
+def test_office_fee_floor_does_not_treat_fire_suppression_or_fume_hood_as_kitchen_hood_adder():
+    office_cases = [
+        "Boston MA office TI with sprinkler fire suppression upgrade, ceiling grid, lighting controls, accessibility, and fire alarm coordination",
+        "Boston MA lab support office TI with fume hood and chemical exhaust for a copy/sample room, ceiling grid, lighting controls, and accessibility",
+    ]
+    for job in office_cases:
+        guarded = apply_fee_realism_guardrail(
+            {"fee_range": "$500 permit fee", "hidden_triggers": []},
+            job,
+            "Boston",
+            "MA",
+            "commercial_office_ti",
+        )
+        adders = {item["key"] for item in guarded["_fee_floor_components"]["trigger_adders"]}
+        assert "hood_fire_suppression" not in adders
+        assert "hood-fire-suppression adder" not in guarded["fee_range"]
+
+
+def test_clear_suppression_equipment_terms_still_trigger_hood_suppression_adder():
+    for phrase in ("ANSUL system", "wet chemical suppression", "kitchen suppression system"):
+        guarded = apply_fee_realism_guardrail(
+            {"fee_range": "$500 permit fee", "hidden_triggers": []},
+            f"Boston MA restaurant tenant improvement with {phrase}, accessibility, and health department review",
+            "Boston",
+            "MA",
+            "commercial_restaurant",
+        )
+        adders = {item["key"] for item in guarded["_fee_floor_components"]["trigger_adders"]}
+        assert "hood_fire_suppression" in adders
+        assert "hood-fire-suppression adder" in guarded["fee_range"]
+
+
+def test_restaurant_fee_floor_still_adds_hood_suppression_for_type_i_commercial_cooking_scope():
+    result = {
+        "fee_range": "$500 permit fee",
+        "hidden_triggers": [],
+    }
+    guarded = apply_fee_realism_guardrail(
+        result,
+        "Boston MA restaurant tenant improvement with Type I hood, commercial cooking equipment, fryer, grease interceptor, fire suppression, accessibility, and health department review",
+        "Boston",
+        "MA",
+        "commercial_restaurant",
+    )
+    assert guarded["_fee_adjusted"] is True
+    adders = {item["key"] for item in guarded["_fee_floor_components"]["trigger_adders"]}
+    assert "hood_fire_suppression" in adders
+    assert "grease_interceptor" in adders
+    assert "hood-fire-suppression adder" in guarded["fee_range"]
+
+
 def test_retail_medical_and_residential_do_not_include_office_triggers():
     retail = ids("retail TI with storefront sign and sales floor", "Phoenix", "AZ", "commercial_retail_ti")
     medical = ids("medical clinic TI with exam rooms, med gas and x-ray", "Austin", "TX", "commercial_medical_clinic_ti")
