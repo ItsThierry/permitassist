@@ -434,6 +434,8 @@ _COMMERCIAL_PRIMARY_TOKENS = (
 
 def _is_commercial_scope(job_type: str, result: dict | None = None) -> bool:
     text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
+    if any(token in text for token in ("no commercial use", "not commercial", "no customers", "no customer visits", "no public access")) and any(token in text for token in ("residential", "home office", "spare bedroom")):
+        return False
     return any(token in text for token in _COMMERCIAL_SCOPE_TOKENS)
 
 
@@ -673,10 +675,25 @@ def _url_looks_like_disallowed_apply_path(url: str) -> bool:
         return True
     if host == "ecobuilt.miamidade.gov" or host.endswith(".ecobuilt.miamidade.gov"):
         return True
-    if path.endswith(".pdf"):
+    if path.endswith((".pdf", ".txt", ".csv", ".xml", ".json", ".zip")):
+        return True
+    lower_url = str(url or "").lower().rstrip("/")
+    known_bad_apply_urls = {
+        "https://www.boston.gov/departments/inspectional-services/apply-permit-online",
+        "https://aca.sandiego.gov",
+        "https://aca-prod.accela.com/phoenix",
+    }
+    if lower_url in known_bad_apply_urls:
         return True
     disallowed_segments = {"fee", "fees", "department", "departments", "contact-us", "contact"}
-    if any(segment in disallowed_segments or segment.endswith("-fees") for segment in segments):
+    if any(
+        segment in disallowed_segments
+        or segment.endswith(("-fees", "_fees"))
+        or "fee_schedule" in segment
+        or "feeschedule" in segment
+        or segment.startswith("fin_fee")
+        for segment in segments
+    ):
         return True
     if "epsportal" not in path and segments == ("permits",):
         return True
@@ -885,6 +902,15 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     commercial = _is_commercial_scope(job_type, result)
     sources = _source_dicts(result)
 
+    if not commercial:
+        stale_commercial_prefixes = (
+            "Commercial scope detected;",
+            "Commercial scope may require companion reviews/permits not fully proven here:",
+        )
+        warnings = [w for w in warnings if not any(str(w).startswith(prefix) for prefix in stale_commercial_prefixes)]
+        if result.get("_primary_scope") == "residential" and _primary_permit_text(result).lower().startswith("no building permit likely"):
+            result["companion_permits"] = []
+
     if commercial:
         has_commercial_primary = any(token in primary_l for token in _COMMERCIAL_PRIMARY_TOKENS)
         has_residential_leak = any(token in primary_l for token in _RESIDENTIAL_PRIMARY_TOKENS) and not has_commercial_primary
@@ -933,6 +959,8 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
                 deduped.append(w)
         result["quality_warnings"] = deduped
         result["needs_review"] = True
+    else:
+        result["quality_warnings"] = []
     return result
 
 
@@ -1018,6 +1046,13 @@ def build_claim_citations(result: dict) -> list[dict]:
 def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict:
     _apply_miami_dade_verified_portal_override(result, city, state)
     url = result.get("apply_url") or ""
+    # Keep apply-path labels synchronized with strict field-level evidence.
+    # A URL can be shown as a manual verification link, but it cannot be called
+    # a verified filing path unless the apply_url citation/field confidence is high.
+    if "claim_citations" not in result or "apply_url" not in (result.get("field_confidence") or {}):
+        build_claim_citations(result)
+    apply_confidence = _canonical_field_name("apply_url") and str((result.get("field_confidence") or {}).get("apply_url") or "needs_verification").lower()
+    apply_url_needs_review = apply_confidence != "high" or _url_looks_like_disallowed_apply_path(url)
     lower = url.lower()
     platform = "unknown"
     if "accela" in lower or "citizenaccess" in lower:
@@ -1043,7 +1078,7 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
     if commercial:
         steps.insert(3, "For commercial TI, check whether separate building, MEP, fire/life-safety, accessibility, health, or change-of-occupancy reviews are required.")
     apply_path = {
-        "support_level": "verified path" if url else "partial path",
+        "support_level": "verified path" if url and not apply_url_needs_review else ("needs verification" if url else "partial path"),
         "platform": platform,
         "portal_url": url,
         "login_required": "likely" if platform != "PDF / paper form" else "not_applicable_or_unknown",
@@ -1056,6 +1091,13 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
         "verification_note": "PermitAssist guides the application pathway; verify exact portal choice with the AHJ before filing.",
     }
     result["apply_path"] = apply_path
+    if apply_url_needs_review:
+        result["needs_review"] = True
+        warnings = list(result.get("quality_warnings") or [])
+        warning = "Apply path is not verified by field-specific portal evidence; confirm the start URL with the AHJ before filing."
+        if warning not in warnings:
+            warnings.append(warning)
+        result["quality_warnings"] = warnings
     return apply_path
 
 

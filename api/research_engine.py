@@ -2824,7 +2824,8 @@ def detect_primary_scope(job_type: str) -> str:
         'commercial tenant improvement', 'commercial buildout', 'commercial building',
         'commercial warehouse', 'new commercial', 'industrial ', 'warehouse',
         'mercantile', 'a-2 occupancy', 'b-occupancy', 'change of occupancy',
-        'change of use',
+        'change of use', 'fitness gym', 'commercial fitness', 'gym tenant improvement',
+        'fitness tenant improvement',
     )):
         return 'commercial'
 
@@ -2918,7 +2919,8 @@ def purge_solar_ess_residue(result: dict, job_type: str) -> dict:
     result.setdefault("_primary_scope", primary_scope)
     if primary_scope in _COMMERCIAL_PRIMARY_SCOPES:
         return result
-    if _a4_solar_ess_in_scope(result, job_type):
+    explicit_no_solar = bool(re.search(r"\bno\s+(?:new\s+|pv\s+|photovoltaic\s+)?solar\b|\bwithout\s+(?:pv\s+|photovoltaic\s+)?solar\b", str(job_type or "").lower()))
+    if _a4_solar_ess_in_scope(result, job_type) and not explicit_no_solar:
         return result
 
     removed = 0
@@ -2936,13 +2938,14 @@ def purge_solar_ess_residue(result: dict, job_type: str) -> dict:
             return values
         out = []
         for item in values:
+            no_solar_re = re.compile(r"solar|pv|photovoltaic|racking|rapid shutdown|utility interconnection|single-line|panel layout|roof load capacity", re.I)
             if isinstance(item, str):
-                if _A4_SOLAR_ESS_TEXT_RE.search(item):
+                if _A4_SOLAR_ESS_TEXT_RE.search(item) or (explicit_no_solar and no_solar_re.search(item)):
                     removed += 1
                     continue
                 out.append(item)
             elif isinstance(item, dict):
-                if drop_keyword_dicts and _A4_SOLAR_ESS_TEXT_RE.search(str(item)):
+                if drop_keyword_dicts and (_A4_SOLAR_ESS_TEXT_RE.search(str(item)) or (explicit_no_solar and no_solar_re.search(str(item)))):
                     removed += 1
                     continue
                 out.append(clean_dict(item))
@@ -2953,7 +2956,7 @@ def purge_solar_ess_residue(result: dict, job_type: str) -> dict:
     def clean_dict(obj: dict) -> dict:
         cleaned = dict(obj)
         for key, value in list(cleaned.items()):
-            if isinstance(value, str) and key in {"notes", "note", "description", "applies_to", "title"}:
+            if isinstance(value, str) and key in {"notes", "note", "description", "applies_to", "title", "permit_type", "portal_selection", "reason", "id", "name", "included_because", "scope_trigger"}:
                 cleaned[key] = clean_string(value)
             elif isinstance(value, list) and key in {"notes", "fail_points", "common_mistakes", "pro_tips", "watch_out"}:
                 cleaned[key] = clean_list(value)
@@ -2970,6 +2973,11 @@ def purge_solar_ess_residue(result: dict, job_type: str) -> dict:
     for key in ("inspections", "permits_required"):
         if isinstance(result.get(key), list):
             result[key] = [clean_dict(item) if isinstance(item, dict) else item for item in result[key]]
+    if isinstance(result.get("permits_required_logic"), list):
+        result["permits_required_logic"] = clean_list(result.get("permits_required_logic"), drop_keyword_dicts=False)
+    for key in ("companion_permits", "hidden_triggers"):
+        if isinstance(result.get(key), list):
+            result[key] = clean_list(result[key], drop_keyword_dicts=True)
     for key in ("sources", "state_expert_notes"):
         if isinstance(result.get(key), list):
             result[key] = clean_list(result[key], drop_keyword_dicts=True)
@@ -3163,7 +3171,7 @@ def generate_permit_checklist(job_type: str, city: str, state: str, result: dict
         job_lc = (job_type or "").lower()
         for scope_key, scope in CHECKLIST_SCOPE.items():
             tokens = scope.get("tokens") or []
-            if not any(t in job_lc for t in tokens):
+            if not _has_positive_scope_phrase(job_lc, tuple(tokens)):
                 continue
             if is_commercial and scope_key in _RESIDENTIAL_TRADE_SCOPES:
                 continue
@@ -3187,6 +3195,9 @@ def generate_permit_checklist(job_type: str, city: str, state: str, result: dict
             if formatted and formatted not in seen:
                 seen.add(formatted)
                 deduped.append(formatted)
+        if re.search(r"\bno\s+(?:new\s+|pv\s+|photovoltaic\s+)?solar\b|\bwithout\s+(?:pv\s+|photovoltaic\s+)?solar\b", job_lc):
+            no_solar_checklist_re = re.compile(r"solar|pv|photovoltaic|rapid shutdown|utility interconnection|single-line|panel layout|roof load capacity", re.I)
+            deduped = [item for item in deduped if not no_solar_checklist_re.search(item)]
         return deduped
     except Exception as e:
         print(f"[checklist] Failed: {e}")
@@ -4546,6 +4557,8 @@ def _is_residential_home_office_scope(job_type: str) -> bool:
     job = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
     if not job:
         return False
+    if _scope_has_any(job, ["no commercial use", "not commercial", "no business use"]) and _scope_has_any(job, ["residential", "home office", "spare bedroom", "home", "bedroom"]):
+        return _scope_has_any(job, ["no structural", "non structural", "non-structural", "paint", "flooring", "furniture", "desk", "shelving"])
     if not _scope_has_any(job, ["home office", "spare bedroom", "bedroom into office", "bedroom to office"]):
         return False
     commercial_signals = [
@@ -4586,7 +4599,7 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
     has_panel = _scope_has_any(job, ["panel upgrade", "service upgrade", "new panel", "subpanel", "sub-panel", "200 amp", "200amp", "400 amp", "400amp"])
     has_gas_line = _scope_has_any(job, ["gas line", "gas piping", "new gas", "relocate gas", "gas modification"])
     has_new_fixtures = _scope_has_any(job, ["new fixture", "new fixtures", "add fixture", "add fixtures", "fixture relocation", "new bathroom", "new kitchen"])
-    has_solar = _scope_has_any(job, ["solar", " pv", "photovoltaic"])
+    has_solar = _has_positive_scope_phrase(job, ("solar", "pv", "photovoltaic"))
     has_battery = _scope_has_any(job, ["battery", "ess", "energy storage", "powerwall"])
 
     logic: list[dict] = []
