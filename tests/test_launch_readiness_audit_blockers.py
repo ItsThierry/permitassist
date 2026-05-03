@@ -73,6 +73,70 @@ def test_disallowed_apply_urls_are_never_high_confidence_application_paths():
         assert strict["needs_review"] is True, url
 
 
+def test_final_claim_citation_downgrade_resyncs_existing_apply_path_support_label():
+    """Route ordering regression: final citation pass must not leave stale verified path."""
+    result = {
+        "permit_verdict": "YES",
+        "confidence": "medium",
+        "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Restaurant Interior Alteration"}],
+        "apply_url": "https://aca-prod.accela.com/ATLANTA/Cap/CapHome.aspx?module=Building",
+        "sources": [{"url": "https://aca-prod.accela.com/ATLANTA/Cap/CapHome.aspx?module=Building", "title": "Citizen Access"}],
+        # Simulate stale upstream confidence/citations from an earlier processing stage.
+        "field_confidence": {"apply_url": "high"},
+        "claim_citations": [{
+            "field": "apply_url",
+            "confidence": "high",
+            "source_url": "https://aca-prod.accela.com/ATLANTA/Cap/CapHome.aspx?module=Building",
+            "quoted_snippet": "Apply online through the portal.",
+        }],
+    }
+
+    apply_path = server.build_apply_path(result, "Commercial restaurant tenant improvement", "Atlanta", "GA")
+    assert apply_path["support_level"] == "verified path"
+
+    # The final citation pass is stricter: generic source fallback keeps the URL visible
+    # but downgrades confidence because there is no field-specific apply_url evidence.
+    server.build_claim_citations(result)
+
+    assert result["field_confidence"]["apply_url"] == "needs_verification"
+    assert result["apply_path"]["support_level"] != "verified path"
+    assert result.get("needs_review") is True
+
+
+
+def test_final_claim_citation_sync_is_downgrade_only_and_idempotent():
+    result = {
+        "permit_verdict": "YES",
+        "confidence": "medium",
+        "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration"}],
+        "apply_url": "https://aca-prod.accela.com/AUSTIN/Cap/CapApplyDisclaimer.aspx?module=Building",
+        "field_confidence": {"apply_url": "high"},
+        "field_evidence": {
+            "apply_url": [{
+                "source_url": "https://aca-prod.accela.com/AUSTIN/Cap/CapApplyDisclaimer.aspx?module=Building",
+                "source_title": "Austin Build + Connect",
+                "quoted_snippet": "Apply online through the permit portal and submit the application.",
+                "source_type": "official_ahj",
+                "supports_field": True,
+                "confidence_signal": "high",
+            }]
+        },
+        "apply_path": {
+            "support_level": "needs verification",
+            "portal_url": "https://aca-prod.accela.com/AUSTIN/Cap/CapApplyDisclaimer.aspx?module=Building",
+        },
+    }
+
+    server.build_claim_citations(result)
+    server.build_claim_citations(result)
+
+    assert result["field_confidence"]["apply_url"] == "high"
+    assert result["apply_path"]["support_level"] == "needs verification"
+    warning = "Apply path is not verified by field-specific portal evidence; confirm the start URL with the AHJ before filing."
+    assert (result.get("quality_warnings") or []).count(warning) <= 1
+
+
+
 def test_home_office_no_commercial_scope_has_residential_apply_path_and_no_commercial_warnings():
     job = "Private residential home office in a spare bedroom, no customers, no employees, no signage, no structural work, no commercial use."
     result = {

@@ -982,6 +982,29 @@ def _sync_field_confidence_from_claim_citations(result: dict, citations: list[di
     result["field_confidence"] = legacy
 
 
+def _sync_apply_path_support_from_field_confidence(result: dict) -> None:
+    """Downgrade an existing verified apply_path when final evidence no longer supports it."""
+    apply_path = result.get("apply_path")
+    if not isinstance(apply_path, dict):
+        return
+    current_support = str(apply_path.get("support_level") or "").lower()
+    if current_support != "verified path":
+        return
+    url = result.get("apply_url") or apply_path.get("portal_url") or ""
+    apply_confidence = str((result.get("field_confidence") or {}).get("apply_url") or "needs_verification").lower()
+    needs_review = apply_confidence != "high" or _url_looks_like_disallowed_apply_path(url)
+    if not needs_review:
+        return
+    apply_path["support_level"] = "needs verification" if url else "partial path"
+    result["needs_review"] = True
+    warnings = list(result.get("quality_warnings") or [])
+    warning = "Apply path is not verified by field-specific portal evidence; confirm the start URL with the AHJ before filing."
+    if warning not in warnings:
+        warnings.append(warning)
+    result["quality_warnings"] = warnings
+
+
+
 def build_claim_citations(result: dict) -> list[dict]:
     """Attach field-level provenance without inventing quotes.
 
@@ -1032,6 +1055,7 @@ def build_claim_citations(result: dict) -> list[dict]:
         })
     result["claim_citations"] = citations
     _sync_field_confidence_from_claim_citations(result, citations)
+    _sync_apply_path_support_from_field_confidence(result)
     if any(c["confidence"] == "needs_verification" for c in citations):
         result.setdefault("quality_warnings", [])
         if FIELD_EVIDENCE_WARNING not in result["quality_warnings"]:
