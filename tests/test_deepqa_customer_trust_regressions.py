@@ -88,6 +88,10 @@ def test_retail_dental_products_negation_stays_retail_not_medical_clinic():
     assert "medical clinic" not in primary
     hidden_ids = {t.get("id") for t in result.get("hidden_triggers", []) if isinstance(t, dict)}
     assert not any(str(tid).startswith("medical_clinic_") for tid in hidden_ids)
+    checklist = engine.generate_permit_checklist(job, "Austin", "TX", result)
+    checklist_text = " ".join(checklist).lower()
+    assert "medical gas" not in checklist_text
+    assert "health-care licensing" not in checklist_text
 
 
 def test_church_classroom_commercial_alteration_repairs_residential_hvac_primary():

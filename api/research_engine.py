@@ -3158,7 +3158,7 @@ def generate_permit_checklist(job_type: str, city: str, state: str, result: dict
         #    + battery_ess together).
         _COMMERCIAL_COMPETING_SCOPES = frozenset({
             'commercial_restaurant', 'commercial_office_ti',
-            'commercial_retail_ti', 'multifamily',
+            'commercial_retail_ti', 'commercial_medical_clinic_ti', 'multifamily',
         })
         job_lc = (job_type or "").lower()
         for scope_key, scope in CHECKLIST_SCOPE.items():
