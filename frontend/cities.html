@@ -105,6 +105,30 @@
     .footer { border-top: 1px solid var(--border); padding: 24px 0; margin-top: 36px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.7; }
     .footer a { color: var(--brand); text-decoration: none; font-weight: 600; }
   </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18087945418"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-18087945418', {
+      page_location: window.location.href,
+      allow_enhanced_conversions: true
+    });
+    (function(){
+      try {
+        const p = new URLSearchParams(window.location.search);
+        const isPaidRedirect = p.get('upgraded') === '1' || p.get('checkout') === 'success' || p.get('success') === '1';
+        if (isPaidRedirect && typeof gtag === 'function') {
+          gtag('event', 'conversion', {
+            send_to: 'AW-18087945418/7fnVCN6vgp4cEMrJgLFD',
+            value: 39.99,
+            currency: 'USD'
+          });
+        }
+      } catch (_) {}
+    })();
+  </script>
 </head>
 <body>
 <div id="app">

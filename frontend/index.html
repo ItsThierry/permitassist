@@ -2194,11 +2194,13 @@ function getAuthHeaders(){const t=getSessionToken();const h={'Content-Type':'app
 
 // Fire Google Ads conversion when user lands after successful Stripe payment
 (function(){
-  if(new URLSearchParams(window.location.search).get('upgraded')==='1'){
-    if(typeof gtag==='function'){
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const isPaidRedirect = p.get('upgraded') === '1' || p.get('checkout') === 'success' || p.get('success') === '1';
+    if(isPaidRedirect && typeof gtag==='function'){
       gtag('event','conversion',{'send_to':'AW-18087945418/7fnVCN6vgp4cEMrJgLFD','value':39.99,'currency':'USD'});
     }
-  }
+  } catch (_) {}
 })();
 
 // Pick up session token from URL on page load (after magic link redirect)
