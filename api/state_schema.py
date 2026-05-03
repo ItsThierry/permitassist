@@ -19,6 +19,7 @@ PHASE4B_CA_VERIFIED_ON = "2026-05-02"
 PHASE4C_FL_VERIFIED_ON = "2026-05-02"
 PHASE4D_MA_VERIFIED_ON = "2026-05-02"
 PHASE4C_OFFICE_TI_VERIFIED_ON = "2026-05-03"
+PHASE4D_RESTAURANT_TI_VERIFIED_ON = "2026-05-03"
 
 _STATE_NAMES = {
     "CA": "California",
@@ -698,6 +699,182 @@ _OFFICE_ENERGY_TRIGGER_TERMS = [
     "ceiling grid",
 ]
 
+_RESTAURANT_LIFE_SAFETY_TRIGGER_TERMS = [
+    "hood", "type i hood", "type 1 hood", "commercial kitchen", "kitchen equipment",
+    "grease interceptor", "grease trap", "cooking line", "exhaust", "makeup air",
+    "ansul", "fire suppression", "walk in cooler", "walk-in cooler", "dishwasher",
+    "3 compartment sink", "three compartment sink", "hand sink", "food prep",
+    "commercial kitchen equipment", "kitchen buildout", "kitchen build-out",
+    "oven", "fryer", "range", "warewashing",
+]
+
+_STATE_RESTAURANT_TI_RULES: dict[str, list[dict[str, Any]]] = {
+    "TX": [
+        {
+            "id": "tx_restaurant_ibc_local_ahj_baseline",
+            "overlay": "adopted_code_editions",
+            "title": "Texas commercial restaurant TI building-code / local AHJ baseline",
+            "applies": "all_tx_restaurant_ti",
+            "summary": "Texas restaurant TI should be scoped as local-AHJ commercial alteration work under the municipal IBC baseline; the city/county still controls permit intake, amendments, health, fire, plumbing, and CO requirements.",
+            "contractor_guidance": [
+                "For Texas restaurant TI, verify the city-adopted building/existing-building/fire/mechanical/plumbing/electrical editions, local amendments, food-health jurisdiction, and certificate-of-occupancy path before quoting.",
+                "Show kitchen equipment, Type I hood/exhaust and makeup air if present, grease interceptor or trap coordination, dining/egress/accessibility, restrooms, and deferred fire alarm/sprinkler/suppression scope on the permit set.",
+            ],
+            "watch_out": ["Do not treat Texas restaurant TI as one statewide permit path; food permits and construction permits can split between local health departments, DSHS, and the city/county AHJ."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "Texas Local Government Code Sec. 214.216 — International Building Code",
+            "source_url": "https://statutes.capitol.texas.gov/Docs/LG/htm/LG.214.htm#214.216",
+            "source_quote": "The International Building Code ... applies to all commercial buildings in a municipality and to any alteration, remodeling, enlargement, or repair of those commercial buildings.",
+            "confidence": "high",
+        },
+        {
+            "id": "tx_restaurant_dshs_local_health_department_split",
+            "overlay": "local_amendments",
+            "title": "Texas restaurant health-department / DSHS jurisdiction split",
+            "applies": "triggered_by_restaurant_life_safety_scope",
+            "summary": "Texas restaurant TI should separately verify whether the local health department or DSHS permits the retail food establishment, while building, plumbing, electrical, fire, and zoning remain local code-enforcement items.",
+            "contractor_guidance": ["When Texas restaurant scope includes kitchen equipment, hood, grease interceptor, food prep, dishwashing, or dining changes, identify the food-health permitting authority before promising opening timing."],
+            "watch_out": ["A city building permit final may not equal food-establishment opening approval."],
+            "companion_permits": [
+                {
+                    "permit_type": "Retail food establishment permit / local health department or Texas DSHS coordination",
+                    "reason": "Restaurant work can require food-establishment approval in parallel with local construction permits.",
+                    "certainty": "conditional",
+                }
+            ],
+            "trigger_terms": _RESTAURANT_LIFE_SAFETY_TRIGGER_TERMS,
+            "source_title": "Texas DSHS — Starting a New Retail Food Establishment Under DSHS Jurisdiction",
+            "source_url": "https://www.dshs.texas.gov/retail-food-establishments/permitting-information-retail-food-establishments/starting-a-new-retail",
+            "source_quote": "There are many local health departments in the State of Texas. You should contact your city or county office to determine if they permit facilities in your area.",
+            "confidence": "medium",
+        },
+    ],
+    "CA": [
+        {
+            "id": "ca_restaurant_title24_local_ahj_baseline",
+            "overlay": "adopted_code_editions",
+            "title": "California Title 24 / local AHJ baseline for restaurant TI",
+            "applies": "all_ca_restaurant_ti",
+            "summary": "California restaurant TI must coordinate the California Building Standards Code, Title 24, with local building/fire/health plan-check requirements for the exact city or county jurisdiction.",
+            "contractor_guidance": [
+                "For California restaurant TI, verify current Title 24 parts/edition, local amendments, fire/life-safety review, environmental-health plan check, food facility permit path, and certificate-of-occupancy implications before quoting.",
+                "Show dining/egress/accessibility, kitchen equipment, hoods/exhaust and makeup air if present, grease waste coordination, restrooms, plumbing fixture counts, and deferred fire sprinkler/alarm/suppression scope where applicable.",
+            ],
+            "watch_out": ["Do not borrow residential, solar, or county-only notes for California restaurant TI unless the scope explicitly triggers them."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "California Building Standards Commission — Codes",
+            "source_url": "https://www.dgs.ca.gov/bsc/codes",
+            "source_quote": "California's building codes ... are contained in the California Code of Regulations, Title 24.",
+            "confidence": "medium",
+        },
+        {
+            "id": "ca_restaurant_calcode_food_facility_plan_review",
+            "overlay": "local_amendments",
+            "title": "California Retail Food Code plan-review trigger for restaurant remodels",
+            "applies": "triggered_by_restaurant_life_safety_scope",
+            "summary": "California restaurant TI that builds or remodels a food facility should carry environmental-health plan review/approval as a parallel opening-risk item, not just a building permit checklist item.",
+            "contractor_guidance": ["When California restaurant scope includes food prep, kitchen equipment, hood/exhaust, grease waste, dishwashing, or dining/restroom changes, verify local Environmental Health plan-check submittal requirements before quoting."],
+            "watch_out": ["A California building permit should not be treated as complete for restaurant opening until food-facility plan approval and operating permit path are checked."],
+            "companion_permits": [
+                {
+                    "permit_type": "Local Environmental Health food-facility plan review / permit coordination",
+                    "reason": "California Retail Food Code plan review applies to food-facility construction or remodel work.",
+                    "certainty": "conditional",
+                }
+            ],
+            "trigger_terms": _RESTAURANT_LIFE_SAFETY_TRIGGER_TERMS,
+            "source_title": "California Health and Safety Code Sec. 114380 — Retail food facility plan review",
+            "source_url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?sectionNum=114380.&lawCode=HSC",
+            "source_quote": "A person proposing to build or remodel a food facility shall submit complete, easily readable plans drawn to scale, and specifications to the enforcement agency for review, and shall receive plan approval before starting any new construction or remodeling.",
+            "confidence": "high",
+        },
+    ],
+    "FL": [
+        {
+            "id": "fl_restaurant_fbc_local_ahj_baseline",
+            "overlay": "adopted_code_editions",
+            "title": "Florida Building Code / local AHJ baseline for restaurant TI",
+            "applies": "all_fl_restaurant_ti",
+            "summary": "Florida restaurant TI must coordinate the Florida Building Code, Florida Accessibility Code, fire/life-safety review, local AHJ permit intake, and food-service plan review for the exact jurisdiction and operator type.",
+            "contractor_guidance": [
+                "For Florida restaurant TI, verify city/county building department, current FBC edition, local fire review, health/DBPR food-service jurisdiction, grease/utility requirements, and CO/change-of-use path before quoting.",
+                "Show kitchen equipment, hoods/exhaust and makeup air if present, grease interceptor or trap coordination, dining/egress/accessibility, restrooms, and deferred fire alarm/sprinkler/suppression scope where applicable.",
+            ],
+            "watch_out": ["Florida food service may involve different health/DBPR/local paths depending on establishment type; do not promise one statewide restaurant permit path."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "Florida Statutes Sec. 553.73 — Florida Building Code",
+            "source_url": "https://www.leg.state.fl.us/Statutes/index.cfm?App_mode=Display_Statute&URL=0500-0599/0553/Sections/0553.73.html",
+            "source_quote": "The Florida Building Code shall contain or incorporate by reference all laws and rules which pertain to and govern the design, construction, erection, alteration, modification, repair, and demolition of public and private buildings.",
+            "confidence": "high",
+        },
+        {
+            "id": "fl_restaurant_food_hygiene_plan_review_remodel",
+            "overlay": "local_amendments",
+            "title": "Florida food hygiene plan review for construction or extensive remodeling",
+            "applies": "triggered_by_restaurant_life_safety_scope",
+            "summary": "Florida restaurant TI with construction or extensive remodeling should flag food-hygiene/food-service plan review as a parallel approval path when kitchen, food prep, dishwashing, hood, or grease scope is present.",
+            "contractor_guidance": ["If the Florida restaurant TI changes the kitchen, hood/exhaust, grease waste, food prep, warewashing, service counter, dining, or restroom layout, verify food-service plan review with the applicable agency before quoting opening dates."],
+            "watch_out": ["Do not treat building final as opening clearance if food-service plan review or license inspection remains unresolved."],
+            "companion_permits": [
+                {
+                    "permit_type": "Food-service / food-hygiene plan review and operating approval coordination",
+                    "reason": "Florida food-service work can require review before construction or extensive remodeling proceeds.",
+                    "certainty": "conditional",
+                }
+            ],
+            "trigger_terms": _RESTAURANT_LIFE_SAFETY_TRIGGER_TERMS,
+            "source_title": "Florida DBPR Hotels and Restaurants — Plan Review",
+            "source_url": "https://www2.myfloridalicense.com/hotels-restaurants/licensing/plan-review/",
+            "source_quote": "To begin Florida’s public food service licensing process or to approve a remodel, the law requires the division to review establishment plans for sanitation and safety concerns.",
+            "confidence": "high",
+        },
+    ],
+    "MA": [
+        {
+            "id": "ma_restaurant_780cmr_local_ahj_baseline",
+            "overlay": "adopted_code_editions",
+            "title": "Massachusetts 780 CMR / local building official baseline for restaurant TI",
+            "applies": "all_ma_restaurant_ti",
+            "summary": "Massachusetts restaurant TI must coordinate 780 CMR, local building/fire review, 521 CMR accessibility, food-establishment plan review, and local board-of-health/opening approvals for the exact municipality.",
+            "contractor_guidance": [
+                "For Massachusetts restaurant TI, verify the 780 CMR edition, local building/fire department, board-of-health food-establishment process, accessibility scope, grease/utility requirements, and certificate-of-inspection/occupancy implications before quoting.",
+                "Show kitchen equipment, hoods/exhaust and makeup air if present, grease trap/interceptor coordination, dining/egress/accessibility, restrooms, and deferred fire alarm/sprinkler/suppression scope where applicable.",
+            ],
+            "watch_out": ["Do not price Massachusetts restaurant TI as ordinary office TI; food-service, fire-suppression, accessibility, and local board-of-health opening items can control schedule."],
+            "companion_permits": [],
+            "trigger_terms": [],
+            "source_title": "Mass.gov — Tenth edition of the MA State Building Code 780",
+            "source_url": "https://www.mass.gov/handbook/tenth-edition-of-the-ma-state-building-code-780",
+            "source_quote": "The Building Code is found in the Code of Massachusetts Regulations at 780 CMR 1.00 to 115.00.",
+            "confidence": "high",
+        },
+        {
+            "id": "ma_restaurant_food_code_plan_review_and_grease_waste",
+            "overlay": "local_amendments",
+            "title": "Massachusetts Food Code plan-review and grease-waste coordination",
+            "applies": "triggered_by_restaurant_life_safety_scope",
+            "summary": "Massachusetts restaurant TI should flag board-of-health food-establishment review and grease-waste coordination when kitchen, warewashing, food prep, hood, grease, or dining scope is present.",
+            "contractor_guidance": ["When Massachusetts restaurant work includes food prep, cooking, hood/exhaust, grease trap/interceptor, dishwashing, or dining/restroom changes, verify local board-of-health plan review, food permit, and sewer/grease requirements before promising opening timing."],
+            "watch_out": ["Building/fire signoff may not clear a Massachusetts restaurant to open if local health/food permit or grease-waste approval remains unresolved."],
+            "companion_permits": [
+                {
+                    "permit_type": "Local board-of-health food-establishment plan review / permit coordination",
+                    "reason": "Food-establishment construction/remodel scope can require local health approval in parallel with building/fire permits.",
+                    "certainty": "conditional",
+                }
+            ],
+            "trigger_terms": _RESTAURANT_LIFE_SAFETY_TRIGGER_TERMS,
+            "source_title": "Mass.gov — 2013 Food Code merged with 105 CMR 590.000",
+            "source_url": "https://www.mass.gov/doc/2013-food-code-merged-with-105-cmr-590-0/download",
+            "source_quote": "FOOD ESTABLISHMENT drainage systems, including grease traps, that convey SEWAGE shall be designed and installed as specified under 105 CMR 590.004(F) and 105 CMR 590.005(A).",
+            "confidence": "medium",
+        },
+    ],
+}
+
 _STATE_OFFICE_TI_RULES: dict[str, list[dict[str, Any]]] = {
     "TX": [
         {
@@ -1145,6 +1322,23 @@ _populate_medical_clinic_schema(
 )
 
 
+for _restaurant_state, _restaurant_rules in _STATE_RESTAURANT_TI_RULES.items():
+    _populate_general_schema(
+        STATE_RULE_SCHEMAS[_restaurant_state],
+        vertical="restaurant_ti",
+        rules=_restaurant_rules,
+        coverage_level=f"phase4d_{_restaurant_state.lower()}_restaurant_ti",
+        populated_phase="phase4d_restaurant_ti",
+        warning=(
+            f"{_STATE_NAMES[_restaurant_state]} restaurant TI overlay is populated for Phase 4D with cited state sources. "
+            "Use it as state-level triage; local AHJ amendments, exact permit intake, health/fire review, inspections, and certificate-of-occupancy or food-permit path still control final submittal/opening requirements."
+        ),
+        note_key="phase4d_restaurant_ti_note",
+        note="Restaurant TI populated rules may appear under state_schema_context, but code_citation remains reserved for renderer-ready citations.",
+        verified_on=PHASE4D_RESTAURANT_TI_VERIFIED_ON,
+    )
+
+
 for _office_state, _office_rules in _STATE_OFFICE_TI_RULES.items():
     _populate_general_schema(
         STATE_RULE_SCHEMAS[_office_state],
@@ -1306,6 +1500,7 @@ def _rule_applies(rule: dict[str, Any], job_type: str) -> bool:
     applies = rule.get("applies")
     if applies in {
         "all_tx_medical_clinic_ti", "all_ca_medical_clinic_ti", "all_fl_medical_clinic_ti", "all_ma_medical_clinic_ti",
+        "all_tx_restaurant_ti", "all_ca_restaurant_ti", "all_fl_restaurant_ti", "all_ma_restaurant_ti",
         "all_tx_office_ti", "all_ca_office_ti", "all_fl_office_ti", "all_ma_office_ti",
     }:
         return True
@@ -1340,6 +1535,8 @@ def compact_state_schema_context(state: str, vertical: str, job_type: str = "") 
     if schema.get("state") in {"TX", "CA", "FL", "MA"} and active_vertical_populated:
         for slot in overlays.values():
             for rule in slot.get("populated_rules") or []:
+                if rule.get("vertical_scope") not in {None, vertical}:
+                    continue
                 if _rule_applies(rule, job_type):
                     triggered_rules.append(_safe_rule_for_context(rule))
 

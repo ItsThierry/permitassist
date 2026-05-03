@@ -86,7 +86,9 @@ def test_office_ti_secondary_sources_surface_only_for_active_office_vertical():
         for slot in restaurant["overlay_slots"]
         for source in slot["verified_sources"]
     }
-    assert restaurant_urls == set()
+    assert "https://www.mass.gov/lists/521-cmr-2006-edition" not in restaurant_urls
+    assert "https://www.mass.gov/doc/10th-edition-chapter-13-energy-efficiency/download" not in restaurant_urls
+    assert "https://www.mass.gov/handbook/tenth-edition-of-the-ma-state-building-code-780" in restaurant_urls
 
 
 def test_state_overlay_tip_includes_rule_confidence_label():
@@ -210,14 +212,16 @@ def test_tx_tdlr_threshold_stays_warning_not_auto_companion_permit():
     assert "cost-threshold" in warning_blob
 
 
-def test_restaurant_still_fails_closed_until_restaurant_cell_is_populated():
+def test_restaurant_ti_now_has_active_vertical_evidence_without_office_or_medical_leakage():
     ctx = compact_state_schema_context("TX", "restaurant_ti", "Dallas TX restaurant TI with hood and grease interceptor")
-    assert ctx["active_vertical_populated"] is False
-    assert ctx["population_status"] == "needs_verification"
-    assert "restaurant ti" in ctx["contractor_warning"].lower()
+    assert ctx["active_vertical_populated"] is True
+    assert ctx["population_status"] == "partially_populated"
+    assert ctx["coverage_level"] == "phase4d_tx_restaurant_ti"
+    assert ctx["populated_phase"] == "phase4d_restaurant_ti"
+    ids = _ids(ctx)
+    assert "tx_restaurant_ibc_local_ahj_baseline" in ids
+    assert "tx_restaurant_dshs_local_health_department_split" in ids
+    assert all(rule_id.startswith("tx_restaurant_") for rule_id in ids)
     assert "medical" not in ctx["contractor_warning"].lower()
-    assert ctx["triggered_rules"] == []
-    assert all(slot["status"] == "needs_population" for slot in ctx["overlay_slots"])
-    assert all(slot["verified_sources"] == [] for slot in ctx["overlay_slots"])
-    assert "office" not in _blob(ctx["overlay_slots"])
+    assert not any("office_" in rule_id for rule_id in ids)
     assert "tdlr.texas.gov/ab/abfaq" not in _blob(ctx["overlay_slots"])

@@ -36,7 +36,7 @@ def test_office_overlay_uses_active_vertical_metadata_after_office_population():
     assert ctx["triggered_rules"]
 
 
-def test_restaurant_overlay_fails_closed_when_active_vertical_not_populated():
+def test_restaurant_overlay_is_populated_for_state_evidence_but_still_ahj_cautious():
     ctx = compact_state_schema_context(
         "TX",
         "restaurant_ti",
@@ -44,14 +44,15 @@ def test_restaurant_overlay_fails_closed_when_active_vertical_not_populated():
     )
 
     assert ctx["active_vertical"] == "restaurant_ti"
-    assert ctx["active_vertical_populated"] is False
-    assert ctx["population_status"] == "needs_verification"
-    assert "needs_verification" in ctx["coverage_level"]
+    assert ctx["active_vertical_populated"] is True
+    assert ctx["population_status"] == "partially_populated"
+    assert ctx["coverage_level"] == "phase4d_tx_restaurant_ti"
     warning = ctx["contractor_warning"].lower()
-    assert "restaurant ti" in warning
-    assert "not populated" in warning
+    assert "restaurant ti overlay is populated" in warning
+    assert "local ahj" in warning
     assert "medical" not in warning
     assert "dental" not in warning
+    assert ctx["triggered_rules"]
 
 
 def test_medical_overlay_keeps_verified_medical_context_when_populated():

@@ -64,21 +64,21 @@ def test_state_schema_context_has_clear_active_vertical_metadata_for_qa():
 
     assert medical["coverage_level"] == "phase4a_tx_medical_clinic_ti"
     assert medical["populated_phase"] == "phase4a"
-    assert medical["populated_for_verticals"] == ["medical_clinic_ti", "office_ti"]
+    assert medical["populated_for_verticals"] == ["medical_clinic_ti", "office_ti", "restaurant_ti"]
     assert medical["active_vertical"] == "medical_clinic_ti"
     assert medical["active_vertical_populated"] is True
     assert medical["triggered_rules"]
 
-    # Unpopulated active verticals must fail closed instead of borrowing the
-    # historical medical/dental coverage label and warning text.
-    assert restaurant["coverage_level"] == "needs_verification_tx_restaurant_ti"
-    assert restaurant["population_status"] == "needs_verification"
-    assert restaurant["requires_population_before_state_specific_claims"] is True
+    # Restaurant active vertical is now populated by the Phase 4D restaurant slice;
+    # it should fail closed only for local AHJ/apply-path certainty, not for state overlay evidence.
+    assert restaurant["coverage_level"] == "phase4d_tx_restaurant_ti"
+    assert restaurant["population_status"] == "partially_populated"
+    assert restaurant["requires_population_before_state_specific_claims"] is False
     assert "restaurant ti" in restaurant["contractor_warning"].lower()
     assert "medical" not in restaurant["contractor_warning"].lower()
     assert restaurant["active_vertical"] == "restaurant_ti"
-    assert restaurant["active_vertical_populated"] is False
-    assert restaurant["triggered_rules"] == []
+    assert restaurant["active_vertical_populated"] is True
+    assert restaurant["triggered_rules"]
 
 
 def test_get_evidence_pack_has_manual_tx_restaurant_example_without_apply_path_claims():
