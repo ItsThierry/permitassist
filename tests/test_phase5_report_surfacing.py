@@ -139,12 +139,13 @@ def test_miami_dade_fee_page_is_not_treated_as_verified_apply_path(tmp_path, mon
 
     assert result["apply_url"] == "https://www.miamidade.gov/Apps/RER/EPSPortal"
     assert result["_apply_url_replaced_from"].endswith("building-permit-fees.page")
-    assert apply_path["support_level"] == "verified path"
+    assert apply_path["support_level"] == "needs verification"
     assert apply_path["portal_url"] == "https://www.miamidade.gov/Apps/RER/EPSPortal"
     assert any("fee/info page was not treated as the verified application path" in w for w in result["quality_warnings"])
+    assert any("exact permit selection is proven" in w for w in result["quality_warnings"])
 
     by_field = {c["field"]: c for c in citations}
-    assert by_field["apply_url"]["confidence"] == "high"
+    assert by_field["apply_url"]["confidence"] == "needs_verification"
     assert "Permit Submission Portal" in by_field["apply_url"]["quoted_snippet"]
     assert by_field["fee_range"]["confidence"] == "needs_verification"
     assert by_field["approval_timeline"]["confidence"] == "needs_verification"
@@ -162,8 +163,37 @@ def test_miami_dade_broken_ecobuilt_url_is_replaced_with_official_eps_portal(tmp
 
     assert result["apply_url"] == "https://www.miamidade.gov/Apps/RER/EPSPortal"
     assert result["_apply_url_replaced_from"] == "https://ecobuilt.miamidade.gov"
-    assert apply_path["support_level"] == "verified path"
+    assert apply_path["support_level"] == "needs verification"
     assert result["sources"][0]["url"] == "https://www.miamidade.gov/global/economy/building/online-services.page"
+    assert result["field_confidence"]["apply_url"] == "needs_verification"
+    assert result["field_confidence"]["portal_url"] == "needs_verification"
+
+
+def test_miami_dade_eps_portal_is_not_overclaimed_for_phase4_scored_verticals(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    scenarios = [
+        ("restaurant tenant improvement with hood and grease interceptor", "Building Permit — Tenant Improvement / Restaurant Interior Alteration"),
+        ("office tenant improvement with partitions and lighting", "Building Permit — Tenant Improvement / Office Interior Alteration"),
+        ("replace residential water heater", "Residential Water Heater Permit"),
+    ]
+
+    for job_type, permit_type in scenarios:
+        result = {
+            "permits_required": [{"permit_type": permit_type}],
+            "apply_url": "https://www.miamidade.gov/global/economy/building/building-permit-fees.page",
+            "sources": ["https://www.miamidade.gov/global/economy/building/building-permit-fees.page"],
+            "quality_warnings": [],
+        }
+        apply_path = server.build_apply_path(result, job_type, "Miami", "FL")
+        citations = server.build_claim_citations(result)
+        by_field = {c["field"]: c for c in citations}
+
+        assert result["apply_url"] == "https://www.miamidade.gov/Apps/RER/EPSPortal"
+        assert result["field_confidence"]["apply_url"] == "needs_verification"
+        assert result["field_confidence"]["portal_url"] == "needs_verification"
+        assert by_field["apply_url"]["confidence"] == "needs_verification"
+        assert apply_path["support_level"] == "needs verification"
+        assert any("exact permit selection is proven" in w for w in result["quality_warnings"])
 
 
 def test_frontend_state_overlay_runtime_filters_unsafe_urls_and_malformed_arrays(tmp_path):

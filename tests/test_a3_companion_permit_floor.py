@@ -63,6 +63,76 @@ def test_los_angeles_office_ti_returns_floor():
     assert "mechanical" in _families(out)
 
 
+def test_office_ti_companion_notes_do_not_leak_restaurant_or_medical_specialties():
+    r = _base_result("commercial_office_ti", ["Building Permit"])
+    out = engine.enforce_ti_min_permits_floor(
+        r,
+        "office tenant improvement with restroom, HVAC diffuser relocation, fire alarm, lighting, and data cabling",
+        "Boston",
+        "MA",
+    )
+    customer_text = " ".join(
+        " ".join(str(p.get(k, "")) for k in ("permit_type", "portal_selection", "notes"))
+        for p in out.get("permits_required", [])
+    ).lower()
+
+    assert "plumbing" in _families(out)
+    assert "fire" in _families(out)
+    assert "hood" not in customer_text
+    assert "grease" not in customer_text
+    assert "dental" not in customer_text
+    assert "medical equipment" not in customer_text
+
+
+def test_office_ti_break_room_or_hood_words_do_not_trigger_restaurant_specialty_notes():
+    companions = engine._commercial_ti_companion_permits(
+        "commercial_office_ti",
+        "office tenant improvement with break room kitchen sink, restroom, vacuum cleanup closet, fire alarm, and hood at copy alcove",
+    )
+    customer_text = " ".join(
+        " ".join(str(p.get(k, "")) for k in ("permit_type", "portal_selection", "notes"))
+        for p in companions
+    ).lower()
+
+    assert any(engine._permit_family(p) == "plumbing" for p in companions)
+    assert any(engine._permit_family(p) == "fire" for p in companions)
+    assert "warewashing" not in customer_text
+    assert "grease" not in customer_text
+    assert "hood suppression" not in customer_text
+    assert "dental" not in customer_text
+    assert "medical equipment" not in customer_text
+    assert "medical-gas" not in customer_text
+
+
+def test_restaurant_ti_companion_notes_include_restaurant_specific_scope():
+    companions = engine._commercial_ti_companion_permits(
+        "commercial_restaurant",
+        "restaurant tenant improvement with type I hood and grease interceptor",
+    )
+    customer_text = " ".join(
+        " ".join(str(p.get(k, "")) for k in ("permit_type", "portal_selection", "notes"))
+        for p in companions
+    ).lower()
+
+    assert "grease interceptor" in customer_text
+    assert "hood suppression" in customer_text
+
+
+def test_medical_clinic_ti_companion_notes_include_clinic_specific_scope():
+    companions = engine._commercial_ti_companion_permits(
+        "commercial_medical_clinic_ti",
+        "medical clinic tenant improvement with exam sinks, oxygen, and vacuum",
+    )
+    customer_text = " ".join(
+        " ".join(str(p.get(k, "")) for k in ("permit_type", "portal_selection", "notes"))
+        for p in companions
+    ).lower()
+
+    assert "exam sinks" in customer_text
+    assert "medical gas/vacuum" in customer_text
+    assert "medical-gas hazard" in customer_text
+
+
 def test_dallas_retail_ti_returns_floor_including_sign_permit():
     r = _base_result("commercial_retail_ti", [
         "Building Permit — Commercial Tenant Improvement / Interior Alteration",

@@ -5501,9 +5501,19 @@ def _commercial_ti_companion_permits(primary_scope: str, job_type: str) -> list[
         _scope_permit("Electrical Permit — Commercial Tenant Improvement", "Electrical Permit - Commercial Interior Alteration", "Commercial lighting, panels, branch circuits, equipment, emergency lighting, and controls commonly require electrical review."),
     ]
     if primary_scope in {"commercial_restaurant", "commercial_office_ti", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["sink", "restroom", "bathroom", "plumbing", "grease", "interceptor", "kitchen", "fixture"]):
-        companions.append(_scope_permit("Plumbing Permit — Commercial Tenant Improvement", "Plumbing Permit - Commercial Interior Alteration", "Commercial fixtures, restrooms, sinks, grease/dental/medical equipment, or DWV changes commonly require plumbing review."))
+        plumbing_note = "Commercial fixtures, restrooms, sinks, or DWV changes commonly require plumbing review."
+        if primary_scope == "commercial_restaurant":
+            plumbing_note = "Restaurant fixtures, sinks, warewashing, grease interceptor/trap, or DWV changes commonly require plumbing review."
+        elif primary_scope == "commercial_medical_clinic_ti":
+            plumbing_note = "Clinic fixtures, exam sinks, dental/medical equipment, medical gas/vacuum, or DWV changes commonly require plumbing review."
+        companions.append(_scope_permit("Plumbing Permit — Commercial Tenant Improvement", "Plumbing Permit - Commercial Interior Alteration", plumbing_note))
     if primary_scope in {"commercial_restaurant", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["fire alarm", "sprinkler", "hood", "suppression", "ansul", "fire suppression"]):
-        companions.append(_scope_permit("Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement", "Fire Alarm / Fire Sprinkler Permit - Commercial", "Commercial TI frequently affects fire alarm, sprinkler, hood suppression, egress, emergency lighting, or life-safety review."))
+        fire_note = "Commercial TI frequently affects fire alarm, sprinkler, egress, emergency lighting, or life-safety review."
+        if primary_scope == "commercial_restaurant":
+            fire_note = "Restaurant TI can affect fire alarm, sprinkler, hood suppression, egress, emergency lighting, or life-safety review."
+        elif primary_scope == "commercial_medical_clinic_ti":
+            fire_note = "Medical clinic TI can affect fire alarm, sprinkler, egress, emergency lighting, medical-gas hazard coordination, or life-safety review."
+        companions.append(_scope_permit("Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement", "Fire Alarm / Fire Sprinkler Permit - Commercial", fire_note))
     if primary_scope == "commercial_retail_ti" or _scope_has_any(job, ["sign", "signage", "storefront"]):
         companions.append(_scope_permit("Sign Permit — Commercial Storefront / Wall Sign", "Sign Permit - Commercial", "Retail/storefront changes commonly require separate sign review if signage is included."))
     return companions

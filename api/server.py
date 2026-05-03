@@ -544,6 +544,10 @@ MIAMI_DADE_ONLINE_SERVICES_SNIPPET = (
     "Building Online Services lists the Permit Submission Portal for building permit-related services: "
     "submit and check the status of permit applications."
 )
+MIAMI_DADE_PORTAL_CAUTION = (
+    "Miami-Dade EPS is an official permit portal, but PermitAssist has not yet verified the exact "
+    "permit selection path for this scope; confirm the portal choice with the AHJ before filing."
+)
 
 FIELD_EVIDENCE_FIELDS = (
     "permit_type",
@@ -819,8 +823,8 @@ def _apply_miami_dade_verified_portal_override(result: dict, city: str, state: s
         "source_title": "Miami-Dade County Building Online Services — Permit Submission Portal",
         "quoted_snippet": MIAMI_DADE_ONLINE_SERVICES_SNIPPET,
         "source_type": "official_ahj",
-        "supports_field": True,
-        "confidence_signal": "high",
+        "supports_field": False,
+        "confidence_signal": "needs_verification",
         "last_verified": utc_now().date().isoformat(),
     })
     for weak_field in ("fee_range", "approval_timeline", "inspections"):
@@ -836,8 +840,8 @@ def _apply_miami_dade_verified_portal_override(result: dict, city: str, state: s
 
     field_confidence = dict(result.get("field_confidence") or {})
     field_confidence.update({
-        "apply_url": "high",
-        "portal_url": "high",
+        "apply_url": "needs_verification",
+        "portal_url": "needs_verification",
         "fee_range": "needs_verification",
         "fees": "needs_verification",
         "approval_timeline": "needs_verification",
@@ -849,8 +853,9 @@ def _apply_miami_dade_verified_portal_override(result: dict, city: str, state: s
     warnings = list(result.get("quality_warnings") or [])
     warning = (
         "Miami-Dade fee/info page was not treated as the verified application path; "
-        "PermitAssist points to the official EPS Permit Submission Portal and leaves fees, timelines, "
-        "and inspection details for AHJ verification."
+        "PermitAssist points to the official EPS Permit Submission Portal as a starting point, "
+        "but keeps apply-path confidence at needs verification until the exact permit selection is proven. "
+        + MIAMI_DADE_PORTAL_CAUTION
     )
     if warning not in warnings:
         warnings.append(warning)

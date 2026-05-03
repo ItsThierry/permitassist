@@ -179,8 +179,8 @@ def test_miami_dade_gold_backfills_apply_url_field_evidence_only(tmp_path, monke
 
     assert result["apply_url"] == "https://www.miamidade.gov/Apps/RER/EPSPortal"
     assert result["field_evidence"]["apply_url"][0]["source_type"] == "official_ahj"
-    assert result["field_evidence"]["apply_url"][0]["supports_field"] is True
-    assert by_field["apply_url"]["confidence"] == "high"
+    assert result["field_evidence"]["apply_url"][0]["supports_field"] is False
+    assert by_field["apply_url"]["confidence"] == "needs_verification"
     assert by_field["fee_range"]["confidence"] == "needs_verification"
     assert by_field["approval_timeline"]["confidence"] == "needs_verification"
     assert by_field["inspections"]["confidence"] == "needs_verification"
