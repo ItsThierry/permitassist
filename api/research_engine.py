@@ -5651,7 +5651,7 @@ def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str) 
     """Append deterministic state expert notes (currently California)."""
     if not isinstance(result, dict):
         return result
-    notes = get_state_expert_notes(state, city, job_type)
+    notes = get_state_expert_notes(state, city, job_type, result.get("_primary_scope"))
     if not notes:
         if "expert_notes" not in result:
             result["expert_notes"] = []

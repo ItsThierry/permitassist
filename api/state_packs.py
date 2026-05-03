@@ -9,6 +9,11 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+try:  # package import in tests/app
+    from .evidence_eligibility import filter_state_expert_notes
+except ImportError:  # direct script import
+    from evidence_eligibility import filter_state_expert_notes
+
 CALIFORNIA_VHFHSZ_URL = (
     "https://osfm.fire.ca.gov/divisions/community-wildfire-preparedness-and-mitigation/"
     "wildland-hazards-building-codes/fire-hazard-severity-zones-maps/"
@@ -4628,7 +4633,7 @@ STATE_PACKS = {
 }
 
 
-def get_state_expert_notes(state: str, city: str = "", job_description: str = "") -> list[dict]:
+def get_state_expert_notes(state: str, city: str = "", job_description: str = "", primary_scope: str | None = None) -> list[dict]:
     """Return expert notes for a state/city/job combination.
 
     The result is a new list of dicts so callers can safely mutate it.
@@ -4682,4 +4687,10 @@ def get_state_expert_notes(state: str, city: str = "", job_description: str = ""
             }
         )
 
-    return notes
+    return filter_state_expert_notes(
+        notes,
+        state=state_upper,
+        city=city,
+        job_description=job_description,
+        primary_scope=primary_scope,
+    )
