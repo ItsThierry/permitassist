@@ -2463,15 +2463,61 @@ def make_result_hash(result: dict) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+def _as_text_list(value) -> list:
+    if not value:
+        return []
+    if isinstance(value, list):
+        items = value
+    else:
+        items = [value]
+    normalized = []
+    for item in items:
+        if not item:
+            continue
+        if isinstance(item, dict):
+            label = item.get("label") or item.get("title") or item.get("name") or item.get("description") or item.get("permit_type")
+            if label:
+                normalized.append(str(label))
+            continue
+        normalized.append(str(item))
+    return normalized
+
+
+def _inspection_label_and_timing(inspection) -> tuple[str, str]:
+    if isinstance(inspection, dict):
+        label = inspection.get("stage") or inspection.get("title") or inspection.get("name") or "Inspection step"
+        timing = inspection.get("timing") or inspection.get("description") or ""
+        return str(label), str(timing)
+    return str(inspection or "Inspection step"), ""
+
+
 def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     permits = result.get("permits_required") or []
-    permit_name = result.get("permit_name") or (permits[0].get("permit_type") if permits else "Permit") or "Permit"
+    if not isinstance(permits, list):
+        permits = [permits]
+    first_permit = permits[0] if permits else None
+    if isinstance(first_permit, dict):
+        first_permit_name = first_permit.get("permit_type") or first_permit.get("name")
+    elif first_permit:
+        first_permit_name = str(first_permit)
+    else:
+        first_permit_name = ""
+    permit_name = result.get("permit_name") or first_permit_name or "Permit"
     fee = result.get("fee_range") or result.get("fee") or "Confirm fee with the building department"
     timeline_obj = result.get("approval_timeline") or {}
-    timeline = timeline_obj.get("simple") or timeline_obj.get("complex") or "Varies by jurisdiction"
-    docs = list(dict.fromkeys((result.get("what_to_bring") or []) + (result.get("requirements") or []) + (result.get("documents_needed") or [])))
+    if isinstance(timeline_obj, dict):
+        timeline = timeline_obj.get("simple") or timeline_obj.get("complex") or "Varies by jurisdiction"
+    else:
+        timeline = str(timeline_obj) or "Varies by jurisdiction"
+    docs = list(dict.fromkeys(
+        _as_text_list(result.get("what_to_bring"))
+        + _as_text_list(result.get("requirements"))
+        + _as_text_list(result.get("documents_needed"))
+    ))
     inspections = result.get("inspections") or []
-    special_notes = list(dict.fromkeys((result.get("pro_tips") or [])[:2] + (result.get("common_mistakes") or [])[:2]))
+    if not isinstance(inspections, list):
+        inspections = [inspections]
+    special_notes = list(dict.fromkeys(_as_text_list(result.get("pro_tips"))[:2] + _as_text_list(result.get("common_mistakes"))[:2]))
     items = [
         {"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True},
         {"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True},
@@ -2481,8 +2527,7 @@ def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", s
     if docs:
         items.append({"label": f"Required documents: {', '.join(docs[:6])}", "category": "documents", "required": True})
     for inspection in inspections[:6]:
-        label = inspection.get("stage") or inspection.get("title") or inspection.get("name") or "Inspection step"
-        timing = inspection.get("timing") or inspection.get("description") or ""
+        label, timing = _inspection_label_and_timing(inspection)
         items.append({"label": f"Schedule inspection: {label}{' — ' + timing if timing else ''}", "category": "inspection", "required": False})
     for note in special_notes[:4]:
         items.append({"label": note, "category": "special", "required": False})
