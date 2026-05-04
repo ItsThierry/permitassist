@@ -144,6 +144,40 @@ def test_clear_suppression_equipment_terms_still_trigger_hood_suppression_adder(
         assert "hood-fire-suppression adder" in guarded["fee_range"]
 
 
+def test_office_fee_floor_respects_explicit_negated_restaurant_equipment_terms():
+    negated_office_cases = [
+        "Boston MA office tenant improvement with demising partitions, break room kitchenette, ceiling grid, lighting controls, HVAC diffuser relocation, data cabling, accessibility, fire alarm coordination, no Type I hood, no fryer, no griddle, no ANSUL, no wet chemical suppression, and no grease interceptor",
+        "Boston MA office TI with break room kitchenette, fire alarm coordination, accessibility, without Type I hood, without fryer, excluding griddle, not adding ANSUL, no wet chemical suppression, and without grease interceptor",
+    ]
+    for job in negated_office_cases:
+        guarded = apply_fee_realism_guardrail(
+            {"fee_range": "$500 permit fee", "hidden_triggers": []},
+            job,
+            "Boston",
+            "MA",
+            "commercial_office_ti",
+        )
+        assert guarded["_fee_adjusted"] is True
+        adders = {item["key"] for item in guarded["_fee_floor_components"]["trigger_adders"]}
+        assert "hood_fire_suppression" not in adders
+        assert "grease_interceptor" not in adders
+        assert "hood-fire-suppression adder" not in guarded["fee_range"]
+        assert "grease-interceptor adder" not in guarded["fee_range"]
+
+
+def test_fee_floor_handles_mixed_positive_hood_and_negated_grease_scope():
+    guarded = apply_fee_realism_guardrail(
+        {"fee_range": "$500 permit fee", "hidden_triggers": []},
+        "Boston MA restaurant tenant improvement with Type I hood, commercial cooking line, fryer, ANSUL wet chemical suppression, accessibility, health department review, and no grease interceptor",
+        "Boston",
+        "MA",
+        "commercial_restaurant",
+    )
+    adders = {item["key"] for item in guarded["_fee_floor_components"]["trigger_adders"]}
+    assert "hood_fire_suppression" in adders
+    assert "grease_interceptor" not in adders
+
+
 def test_restaurant_fee_floor_still_adds_hood_suppression_for_type_i_commercial_cooking_scope():
     result = {
         "fee_range": "$500 permit fee",
@@ -161,6 +195,19 @@ def test_restaurant_fee_floor_still_adds_hood_suppression_for_type_i_commercial_
     assert "hood_fire_suppression" in adders
     assert "grease_interceptor" in adders
     assert "hood-fire-suppression adder" in guarded["fee_range"]
+
+
+def test_restaurant_fee_floor_still_adds_hood_suppression_for_commercial_cooking_equipment_without_type_i_phrase():
+    guarded = apply_fee_realism_guardrail(
+        {"fee_range": "$500 permit fee", "hidden_triggers": []},
+        "Boston MA restaurant tenant improvement with commercial cooking line, fryer, griddle, ANSUL wet chemical suppression, grease interceptor, accessibility, and health department review",
+        "Boston",
+        "MA",
+        "commercial_restaurant",
+    )
+    adders = {item["key"] for item in guarded["_fee_floor_components"]["trigger_adders"]}
+    assert "hood_fire_suppression" in adders
+    assert "grease_interceptor" in adders
 
 
 def test_retail_medical_and_residential_do_not_include_office_triggers():
