@@ -34,6 +34,7 @@ from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result, get_cache_hit_rate
+from evidence_pack_runtime import apply_evidence_pack_fail_closed, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -615,30 +616,98 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
 
     commercial = _is_commercial_scope(job_type, result)
     permit_type = _primary_permit_text(result) or "Permit type needs AHJ verification"
-    steps = [
-        f"Open the {platform} start URL.",
-        "Create or sign into the contractor/applicant account if required.",
-        f"Look for the closest permit category to: {permit_type}.",
-        "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission.",
-        "Stop before final submit, payment, signature, or legal attestation until the AHJ details are verified.",
-    ]
+    if url:
+        steps = [
+            f"Open the {platform} start URL.",
+            "Create or sign into the contractor/applicant account if required.",
+            f"Look for the closest permit category to: {permit_type}.",
+            "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission.",
+            "Stop before final submit, payment, signature, or legal attestation until the AHJ details are verified.",
+        ]
+        support_level = "verified path"
+        verification_note = "PermitAssist guides the application pathway; verify exact portal choice with the AHJ before filing."
+        login_required = "likely" if platform != "PDF / paper form" else "not_applicable_or_unknown"
+    else:
+        steps = [
+            "No verified online filing path is available from current field evidence; contact the AHJ or verify the correct portal before filing.",
+            f"Ask the AHJ which permit category best matches: {permit_type}.",
+            "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission.",
+            "Stop before final submit, payment, signature, or legal attestation until the AHJ details are verified.",
+        ]
+        support_level = "not available"
+        verification_note = "No verified online filing path is available from current sources; verify the exact filing path with the AHJ."
+        login_required = "unknown"
     if commercial:
         steps.insert(3, "For commercial TI, check whether separate building, MEP, fire/life-safety, accessibility, health, or change-of-occupancy reviews are required.")
     apply_path = {
-        "support_level": "verified path" if url else "partial path",
+        "support_level": support_level,
         "platform": platform,
         "portal_url": url,
-        "login_required": "likely" if platform != "PDF / paper form" else "not_applicable_or_unknown",
+        "login_required": login_required,
         "permit_category": "Commercial Building / Tenant Improvement" if commercial else "Residential / Trade Permit",
         "permit_type": permit_type,
         "portal_selection_path": steps[:3],
         "likely_documents": ["scope of work", "plans/drawings if required", "contractor license", "valuation", "owner authorization"],
         "steps": steps,
         "stop_before": "final submit, payment, signature, or legal attestation",
-        "verification_note": "PermitAssist guides the application pathway; verify exact portal choice with the AHJ before filing.",
+        "verification_note": verification_note,
     }
     result["apply_path"] = apply_path
     return apply_path
+
+
+def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False) -> dict:
+    """Shared final response safety pipeline for all permit lookup endpoints."""
+    evidence_pack = get_local_evidence_pack()
+    evidence_enabled = evidence_pack is not None
+
+    # Validate fresh URLs; cached rows are assumed to have gone through this once.
+    if not is_cached:
+        result = sanitize_result_urls(result)
+
+    # Legacy fallback may use broad sources[0]. Keep it only when the local
+    # evidence pack is disabled. With evidence enabled, unsupported fields must
+    # fail closed instead of borrowing a generic source URL.
+    if not evidence_enabled and not result.get('apply_url'):
+        sources = result.get('sources') or []
+        gov_urls = [s for s in sources if isinstance(s, str) and '.gov' in s and not s.lower().endswith('.pdf')]
+        portal_urls = [s for s in sources if isinstance(s, str) and any(p in s.lower() for p in ['accela', 'permit', 'portal', 'civic', 'govern']) and not s.lower().endswith('.pdf')]
+        other_urls = [s for s in sources if isinstance(s, str) and s.startswith('http') and not s.lower().endswith('.pdf')]
+        fallback_url = (gov_urls or portal_urls or other_urls or [None])[0]
+        if fallback_url:
+            result['apply_url'] = fallback_url
+            result['_url_warning'] = None
+            result.pop('_apply_url_locality_warning', None)
+
+    result = strip_pdf_from_result(result)
+    if not result.get('apply_google_maps'):
+        result['apply_google_maps'] = build_google_maps_url(
+            city, state,
+            address=result.get('apply_address', ''),
+            office=result.get('applying_office', '')
+        )
+    if not result.get('apply_phone'):
+        result['apply_phone'] = result.get('apply_google_maps', '')
+
+    result = enrich_result_response(result, job_type, city, state)
+    result = apply_permitiq_quality_gate(result, job_type, city, state)
+
+    if evidence_enabled:
+        result = apply_evidence_pack_fail_closed(result, job_type, city, state, utc_now().date().isoformat())
+        # Evidence-pack apply_url values are loaded after the generic engine URL
+        # pass, so sanitize/strip once more before apply_path renders them.
+        result = sanitize_result_urls(result)
+        result = strip_pdf_from_result(result)
+        # Evidence pack mode bypasses permit_cache reads and writes by design;
+        # make that visible and testable so stale non-evidence rows cannot leak
+        # into local trials.
+        meta = result.setdefault('_evidence_pack', {})
+        meta['cache_bypassed'] = True
+    else:
+        build_claim_citations(result)
+
+    build_apply_path(result, job_type, city, state)
+    return result
 
 
 def record_beta_event(event: str, payload: dict | None = None, email: str = "") -> None:
@@ -4270,12 +4339,14 @@ class Handler(BaseHTTPRequestHandler):
                     "sample_demo": is_sample_demo,
                     "benchmark": is_benchmark,
                 }, user_email or "")
-                _use_cache = not is_benchmark
+                evidence_enabled = get_local_evidence_pack() is not None
+                _use_cache = (not is_benchmark) and (not evidence_enabled)
                 result = research_permit(
                     job_type, city, state, zip_code,
                     job_category=job_category,
                     use_cache=_use_cache,
                     force_model=force_model,
+                    suppress_cache_write=evidence_enabled,
                 )
                 is_cached = result.get("_cached", False)
 
@@ -4288,39 +4359,7 @@ class Handler(BaseHTTPRequestHandler):
                 elif unlimited:
                     result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
-                # Validate fresh URLs, then apply shared response safety nets for both fresh and cached results
-                if not is_cached:
-                    result = sanitize_result_urls(result)
-
-                # Fallback: if apply_url is still null, use best URL from sources[]
-                if not result.get('apply_url'):
-                    sources = result.get('sources') or []
-                    gov_urls = [s for s in sources if isinstance(s, str) and '.gov' in s and not s.lower().endswith('.pdf')]
-                    portal_urls = [s for s in sources if isinstance(s, str) and any(p in s.lower() for p in ['accela', 'permit', 'portal', 'civic', 'govern']) and not s.lower().endswith('.pdf')]
-                    other_urls = [s for s in sources if isinstance(s, str) and s.startswith('http') and not s.lower().endswith('.pdf')]
-                    fallback_url = (gov_urls or portal_urls or other_urls or [None])[0]
-                    if fallback_url:
-                        result['apply_url'] = fallback_url
-                        result['_url_warning'] = None
-                        result.pop('_apply_url_locality_warning', None)
-
-                # Strip PDF from apply_url → apply_pdf (server-side safety net)
-                result = strip_pdf_from_result(result)
-                # Ensure apply_google_maps always set (prefer pinned address)
-                if not result.get('apply_google_maps'):
-                    result['apply_google_maps'] = build_google_maps_url(
-                        city, state,
-                        address=result.get('apply_address', ''),
-                        office=result.get('applying_office', '')
-                    )
-                # Ensure apply_phone is never completely empty
-                if not result.get('apply_phone'):
-                    result['apply_phone'] = result.get('apply_google_maps', '')
-
-                result = enrich_result_response(result, job_type, city, state)
-                result = apply_permitiq_quality_gate(result, job_type, city, state)
-                build_apply_path(result, job_type, city, state)
-                build_claim_citations(result)
+                result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached)
 
                 # Record stats and beta telemetry
                 record_lookup_stat(job_type, city, state, is_cached)
@@ -4368,8 +4407,14 @@ class Handler(BaseHTTPRequestHandler):
                     zip_code = item.get("zip", "") or item.get("zip_code", "")
                     job_value = item.get("job_value")
                     try:
-                        result = research_permit(job_type, city, state, zip_code, job_value=job_value)
-                        return {
+                        evidence_enabled = get_local_evidence_pack() is not None
+                        result = research_permit(job_type, city, state, zip_code, job_value=job_value, use_cache=not evidence_enabled, suppress_cache_write=evidence_enabled)
+                        if evidence_enabled:
+                            result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False))
+                            response = dict(result)
+                            response.update({"job_type": job_type, "city": city, "state": state, "error": None})
+                            return response
+                        response = {
                             "job_type": job_type,
                             "city": city,
                             "state": state,
@@ -4385,6 +4430,7 @@ class Handler(BaseHTTPRequestHandler):
                             "rejection_patterns": result.get("rejection_patterns", []),
                             "error": None,
                         }
+                        return response
                     except Exception as e:
                         return {"job_type": job_type, "city": city, "state": state, "error": str(e)}
 
@@ -4679,7 +4725,10 @@ class Handler(BaseHTTPRequestHandler):
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
-                result = research_permit(job_type, city, state, zip_code, job_category=job_category)
+                evidence_enabled = get_local_evidence_pack() is not None
+                result = research_permit(job_type, city, state, zip_code, job_category=job_category, use_cache=not evidence_enabled, suppress_cache_write=evidence_enabled)
+                if evidence_enabled:
+                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False))
                 self.send_json(200, result)
             except Exception as e:
                 print(f"[api-v1-permit] Error: {e}")

@@ -7428,7 +7428,7 @@ def validate_and_sanitize_permit_result(result: dict, job_type: str, city: str, 
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
-def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None) -> dict:
+def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False) -> dict:
     """
     Research permit requirements for a job + location.
     v3: Better advice depth, small city fallback, PDF stripping, Google Maps fallback.
@@ -7446,7 +7446,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             """Re-run the lookup without cache and save fresh result."""
             try:
                 print(f"[cache] Background refresh started for key {k[:8]}…")
-                fresh = research_permit(job_type, city, state, zip_code, use_cache=False, job_category=job_category, job_value=job_value)
+                fresh = research_permit(job_type, city, state, zip_code, use_cache=False, job_category=job_category, job_value=job_value, suppress_cache_write=suppress_cache_write)
                 if fresh and not fresh.get("error"):
                     save_cache(k, job_type, job_category, city, state, zip_code, fresh)
                     print(f"[cache] Background refresh complete for {city}, {state} / {job_type}")
@@ -8426,7 +8426,8 @@ Return ONLY the JSON object."""
     validate_and_sanitize_permit_result(result, job_type, city, state)
     apply_rulebook_depth(result, job_type, city, state)
 
-    save_cache(key, job_type, job_category, city, state, zip_code, result)
+    if not suppress_cache_write:
+        save_cache(key, job_type, job_category, city, state, zip_code, result)
     return result
 
 
