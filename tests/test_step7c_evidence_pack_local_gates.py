@@ -120,17 +120,17 @@ def _write_pack(path: Path) -> Path:
     return path
 
 
-def _enable_pack(monkeypatch, pack_path: Path, expected_fingerprint: str | None = None):
+def _enable_pack(monkeypatch, pack_path: Path, expected_fingerprint: str | None = None, mode: str = "dallas_step7h_preview"):
     data = json.loads(pack_path.read_text(encoding="utf-8"))
     fingerprint = expected_fingerprint or (data.get("metadata") or {}).get("fingerprint_sha256") or ("f" * 64)
     monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_ENABLED", "true")
-    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_MODE", "dallas_step7h_preview")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_MODE", mode)
     monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_EXPECTED_FINGERPRINT", fingerprint)
     monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PATH", str(pack_path))
 
 
 def test_step7m_dallas_only_staging_pack_is_supported_by_runtime_contract(monkeypatch, tmp_path):
-    pack_path = Path(__file__).resolve().parents[1] / "artifacts" / "step7h_dallas_audit" / "permitassist-step7h-dallas-only-staging-evidence-pack-20260505.json"
+    pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7h" / "permitassist-step7h-dallas-only-staging-evidence-pack-20260505.json"
     assert pack_path.exists()
     _enable_pack(monkeypatch, pack_path)
     server = _import_server(tmp_path, monkeypatch)
@@ -150,6 +150,72 @@ def test_step7m_dallas_only_staging_pack_is_supported_by_runtime_contract(monkey
     assert meta["request_vertical"] == "office_ti"
     assert set(meta["matched_fields"]) == {"apply_url", "approval_timeline", "companion_reviews_triggers", "permit_type"}
     assert set(meta["failed_closed_fields"]) == {"fee_range", "inspections"}
+
+
+def test_step7u_production_preview_pack_requires_dedicated_mode(monkeypatch, tmp_path):
+    pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+    assert pack_path.exists()
+
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(
+        _base_engine_result(),
+        "medical clinic tenant improvement with exam rooms and accessibility review",
+        "Dallas",
+        "TX",
+        explicit_vertical="medical_clinic_ti",
+    )
+
+    meta = result["_evidence_pack"]
+    assert meta["contract_status"] == "valid"
+    assert meta["evidence_pack_version"] == "step7u_dallas_only_production_preview_v1"
+    assert meta["fingerprint_valid"] is True
+    assert meta["request_vertical"] == "medical_clinic_ti"
+    assert set(meta["matched_fields"]) == {"apply_url", "approval_timeline", "companion_reviews_triggers", "permit_type"}
+    assert set(meta["failed_closed_fields"]) == {"fee_range", "inspections"}
+
+
+def test_step7u_production_preview_pack_fails_closed_in_staging_mode(monkeypatch, tmp_path):
+    pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7h_preview")
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Dallas", "TX", explicit_vertical="office_ti")
+
+    meta = result["_evidence_pack"]
+    assert meta["contract_status"] == "invalid_version"
+    assert meta["matched_fields"] == []
+    assert result["claim_citations"] == []
+
+
+def test_step7h_staging_pack_fails_closed_in_production_preview_mode(monkeypatch, tmp_path):
+    pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7h" / "permitassist-step7h-dallas-only-staging-evidence-pack-20260505.json"
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Dallas", "TX", explicit_vertical="office_ti")
+
+    meta = result["_evidence_pack"]
+    assert meta["contract_status"] == "invalid_version"
+    assert meta["matched_fields"] == []
+    assert result["claim_citations"] == []
+
+
+def test_step7u_production_preview_pack_requires_production_wiring_flag(monkeypatch, tmp_path):
+    source_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+    pack_path = tmp_path / "step7u-without-production-wiring.json"
+    data = json.loads(source_path.read_text(encoding="utf-8"))
+    data["metadata"]["production_wiring_allowed"] = False
+    pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Dallas", "TX", explicit_vertical="office_ti")
+
+    meta = result["_evidence_pack"]
+    assert meta["contract_status"] == "invalid_production_wiring"
+    assert meta["matched_fields"] == []
 
 
 

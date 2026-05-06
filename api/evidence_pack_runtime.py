@@ -34,8 +34,22 @@ SUPPORTED_EVIDENCE_PACK_VERSIONS = (
     "step7b_offline_v1",
     "step7b_offline_v1_test",
     "step7h_dallas_only_staging_v1",
+    "step7u_dallas_only_production_preview_v1",
 )
-ALLOWED_EVIDENCE_PACK_MODES = {"dallas_step7h_preview"}
+ALLOWED_EVIDENCE_PACK_MODES = {
+    "dallas_step7h_preview",
+    "dallas_step7u_production_preview",
+}
+PRODUCTION_WIRING_ALLOWED_BY_VERSION = {
+    "step7b_offline_v1": False,
+    "step7b_offline_v1_test": False,
+    "step7h_dallas_only_staging_v1": False,
+    "step7u_dallas_only_production_preview_v1": True,
+}
+EVIDENCE_PACK_VERSION_BY_MODE = {
+    "dallas_step7h_preview": "step7h_dallas_only_staging_v1",
+    "dallas_step7u_production_preview": "step7u_dallas_only_production_preview_v1",
+}
 VALID_CONTRACT_STATUSES = {
     "valid",
     "disabled",
@@ -223,14 +237,20 @@ def _record_is_fresh(record: dict[str, Any], now: datetime | None = None) -> boo
     return all(cutoff > now for cutoff in cutoffs)
 
 
-def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprint: str) -> tuple[str, str, str, tuple[str, ...], bool, bool]:
-    """Validate metadata and map failures to the Step 7P fail-closed enum."""
+def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprint: str, mode: str) -> tuple[str, str, str, tuple[str, ...], bool, bool]:
+    """Validate metadata and map failures to the Step 7P/7U fail-closed enum."""
     warnings: list[str] = []
     status = "valid"
     version = str(metadata.get("evidence_pack_version") or "").strip()
     if version not in SUPPORTED_EVIDENCE_PACK_VERSIONS:
         warnings.append("unsupported_evidence_pack_version")
         status = "invalid_version"
+    expected_version = EVIDENCE_PACK_VERSION_BY_MODE.get(mode)
+    mode_locked_versions = set(EVIDENCE_PACK_VERSION_BY_MODE.values())
+    if expected_version and version in mode_locked_versions and version != expected_version:
+        warnings.append("evidence_pack_version_not_allowed_for_mode")
+        if status == "valid":
+            status = "invalid_version"
     fingerprint = str(metadata.get("fingerprint_sha256") or "").strip()
     fingerprint_shape_valid = bool(re.fullmatch(r"[0-9a-fA-F]{64}", fingerprint))
     expected_valid = bool(re.fullmatch(r"[0-9a-fA-F]{64}", expected_fingerprint or ""))
@@ -240,8 +260,10 @@ def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprin
         if status == "valid":
             status = "invalid_fingerprint"
     production_wiring_allowed = bool(metadata.get("production_wiring_allowed"))
-    if production_wiring_allowed:
-        warnings.append("production_wiring_allowed_must_remain_false_for_staging_pack")
+    expected_production_wiring = PRODUCTION_WIRING_ALLOWED_BY_VERSION.get(version, False)
+    if production_wiring_allowed != expected_production_wiring:
+        warning = "production_wiring_required_for_production_preview_pack" if expected_production_wiring else "production_wiring_allowed_must_remain_false_for_staging_pack"
+        warnings.append(warning)
         if status == "valid":
             status = "invalid_production_wiring"
     return version or "unknown", fingerprint, status, tuple(sorted(set(warnings))), production_wiring_allowed, fingerprint_valid
@@ -255,6 +277,7 @@ def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fin
     version, fingerprint, contract_status, contract_warnings, production_wiring_allowed, fingerprint_valid = _validate_metadata_contract(
         metadata,
         expected_fingerprint=expected_fingerprint,
+        mode=mode,
     )
     records = []
     source_records = data.get("records") or [] if contract_status == "valid" else []
