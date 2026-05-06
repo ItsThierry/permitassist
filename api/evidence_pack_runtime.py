@@ -247,7 +247,8 @@ def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprin
         status = "invalid_version"
     expected_version = EVIDENCE_PACK_VERSION_BY_MODE.get(mode)
     mode_locked_versions = set(EVIDENCE_PACK_VERSION_BY_MODE.values())
-    if expected_version and version in mode_locked_versions and version != expected_version:
+    strict_mode = mode == "dallas_step7u_production_preview"
+    if expected_version and version != expected_version and (strict_mode or version in mode_locked_versions):
         warnings.append("evidence_pack_version_not_allowed_for_mode")
         if status == "valid":
             status = "invalid_version"

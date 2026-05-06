@@ -202,6 +202,24 @@ def test_step7h_staging_pack_fails_closed_in_production_preview_mode(monkeypatch
     assert result["claim_citations"] == []
 
 
+def test_step7u_production_preview_rejects_supported_but_wrong_pack_version(monkeypatch, tmp_path):
+    source_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+    pack_path = tmp_path / "step7u-with-step7b-version.json"
+    data = json.loads(source_path.read_text(encoding="utf-8"))
+    data["metadata"]["evidence_pack_version"] = "step7b_offline_v1"
+    data["metadata"]["production_wiring_allowed"] = False
+    pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Dallas", "TX", explicit_vertical="office_ti")
+
+    meta = result["_evidence_pack"]
+    assert meta["contract_status"] == "invalid_version"
+    assert meta["matched_fields"] == []
+    assert result["claim_citations"] == []
+
+
 def test_step7u_production_preview_pack_requires_production_wiring_flag(monkeypatch, tmp_path):
     source_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
     pack_path = tmp_path / "step7u-without-production-wiring.json"
