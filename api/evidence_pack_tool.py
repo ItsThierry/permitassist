@@ -271,24 +271,27 @@ def _row_evidence_items(row: dict[str, Any]) -> list[dict[str, Any]]:
     evidence = row.get("evidence") or []
     if isinstance(evidence, list) and evidence:
         return [item for item in evidence if isinstance(item, dict)]
+
+    nested_source = row.get("source") if isinstance(row.get("source"), dict) else {}
     legacy_quote = row.get("exact_official_quote") or row.get("exact_quote") or row.get("quoted_snippet")
-    legacy_url = row.get("source_url") or row.get("source_final_url")
-    if legacy_quote or legacy_url:
+    legacy_snippets = row.get("exact_snippets") or row.get("additional_exact_snippets") or nested_source.get("exact_snippets") or []
+    legacy_url = row.get("source_url") or row.get("source_final_url") or nested_source.get("source_url") or nested_source.get("source_final_url") or nested_source.get("url")
+    if legacy_quote or legacy_url or legacy_snippets:
         return [
             {
-                "source_id": row.get("source_id") or "legacy_flat_row_source",
+                "source_id": row.get("source_id") or nested_source.get("source_id") or "legacy_flat_row_source",
                 "source_url": legacy_url or "",
-                "source_final_url": row.get("source_final_url") or legacy_url or "",
-                "source_host": row.get("source_host") or "",
-                "source_title": row.get("source_title") or row.get("browser_title") or "",
-                "source_type": row.get("source_type") or "unknown",
+                "source_final_url": row.get("source_final_url") or nested_source.get("source_final_url") or legacy_url or "",
+                "source_host": row.get("source_host") or nested_source.get("source_host") or "",
+                "source_title": row.get("source_title") or row.get("browser_title") or nested_source.get("source_title") or nested_source.get("browser_title") or "",
+                "source_type": row.get("source_type") or nested_source.get("source_type") or "unknown",
                 "exact_quote": legacy_quote or "",
-                "exact_snippets": row.get("exact_snippets") or [],
-                "quote_found_current_run": row.get("quote_found_current_run", row.get("quote_found", True if legacy_quote or row.get("exact_snippets") else False)),
-                "normalized_source_text_sha256": row.get("normalized_source_text_sha256") or row.get("normalized_rendered_text_sha256") or row.get("source_text_sha256") or "",
-                "normalized_source_text_length": row.get("normalized_source_text_length") or row.get("normalized_rendered_text_length"),
-                "validation_method": row.get("validation_method") or row.get("verification_method") or "legacy flat Step 6A row adapted by Step 7B offline tool",
-                "fetch_status_code": row.get("fetch_status_code"),
+                "exact_snippets": legacy_snippets,
+                "quote_found_current_run": row.get("quote_found_current_run", row.get("quote_found", True if legacy_quote or legacy_snippets else False)),
+                "normalized_source_text_sha256": row.get("normalized_source_text_sha256") or row.get("normalized_rendered_text_sha256") or row.get("source_text_sha256") or nested_source.get("normalized_source_text_sha256") or nested_source.get("normalized_text_sha256") or nested_source.get("content_sha256") or "",
+                "normalized_source_text_length": row.get("normalized_source_text_length") or row.get("normalized_rendered_text_length") or nested_source.get("normalized_source_text_length") or nested_source.get("normalized_text_length"),
+                "validation_method": row.get("validation_method") or row.get("verification_method") or nested_source.get("validation_method") or nested_source.get("fetched_via") or "legacy flat Step 6A row adapted by Step 7B offline tool",
+                "fetch_status_code": row.get("fetch_status_code") or nested_source.get("fetch_status_code") or nested_source.get("status_code") or ("validated_current_run" if nested_source.get("normalized_text_sha256") and nested_source.get("normalized_text_length") else None),
             }
         ]
     return []

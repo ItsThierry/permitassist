@@ -456,3 +456,44 @@ def test_legacy_flat_row_exact_snippets_and_browser_rendered_metadata_are_adapte
     assert item["normalized_source_text_sha256"] == "f" * 64
     assert item["normalized_source_text_length"] == 2757
     assert item["fetch_status_code"] == "validated_current_run"
+
+def test_nested_source_object_legacy_row_is_adapted(tmp_path):
+    payload = {
+        "title": "nested source fixture",
+        "batch_id": "nested-source-batch",
+        "created_utc": "2026-05-05T12:00:00Z",
+        "status": "PASS_ACCEPTED_AFTER_INDEPENDENT_REVIEW",
+        "accepted_upgrades": [
+            {
+                "state": "MA",
+                "ahj_name": "City of Waltham",
+                "vertical": "medical_clinic_ti",
+                "field": "inspections",
+                "proposed_status": "partial",
+                "claim_value": "Inspection trigger evidence.",
+                "source_scope_limit": "State code inspection trigger only; does not verify local sequence, fees, timelines, apply URL, permit type, or companion reviews.",
+                "checked_at_utc": "2026-05-05T12:01:00Z",
+                "exact_official_quote": "Nested official quote.",
+                "source": {
+                    "source_id": "nested_source",
+                    "source_url": "https://example.gov/nested-source",
+                    "source_title": "Nested source title",
+                    "source_type": "official_state",
+                    "normalized_text_sha256": "1" * 64,
+                    "normalized_text_length": 1234,
+                    "fetched_via": "fixture fetch",
+                },
+            }
+        ],
+    }
+    artifact_path = _write_json(tmp_path / "permitassist-road-to-perfection-step6a-batch84-evidence-upgrades-2026-05-05.json", payload)
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    item = record["field_evidence"][0]
+    assert record["ingestion_ready"] is True
+    assert item["source_id"] == "nested_source"
+    assert item["source_title"] == "Nested source title"
+    assert item["normalized_source_text_sha256"] == "1" * 64
+    assert item["normalized_source_text_length"] == 1234
+    assert item["fetch_status_code"] == "validated_current_run"
