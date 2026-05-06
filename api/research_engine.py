@@ -2740,6 +2740,32 @@ def detect_primary_scope(job_type: str) -> str:
     if _looks_like_commercial_trade_only_scope(job_lc):
         return 'commercial'
 
+    office_signal = any(t in job_lc for t in (
+        'office tenant improvement', 'office ti', 'office buildout',
+        'commercial office tenant improvement', 'commercial office ti',
+        'commercial office', 'office suite', 'professional office',
+        'law office', 'corporate office', 'tenant office',
+    ))
+    medical_signal = re.search(r'\basc\b', job_lc) or any(t in job_lc for t in (
+        'medical clinic', 'medical office tenant', 'dental clinic', 'dental office tenant',
+        'health clinic', 'clinic tenant improvement', 'clinic ti', 'exam room',
+        'exam rooms', 'med gas', 'medical gas', 'nitrous oxide', 'x-ray', 'x ray',
+        'radiology', 'sterilization room', 'surgical center', 'ambulatory surgical center',
+        'operating room', 'operating rooms', 'pacu', 'pre-op', 'pre op',
+        'recovery bay', 'recovery bays', 'outpatient surgery',
+    ))
+    negated_restaurant_signal = bool(
+        re.search(
+            r'\b(?:no|without)\s+(?:restaurant|food service|commercial kitchen|type\s*i\s*hood|hood|fryer|griddle|ansul|grease interceptor)(?:\s+needed)?\b',
+            job_lc,
+        )
+        or re.search(r'\b(?:non\s*[- ]?restaurant|not\s+a\s+restaurant)\b', job_lc)
+    )
+    if medical_signal:
+        return 'commercial_medical_clinic_ti'
+    if office_signal and negated_restaurant_signal:
+        return 'commercial_office_ti'
+
     # Commercial restaurant — strongest signal
     if any(t in job_lc for t in (
         'restaurant', 'commercial kitchen', 'food service', ' cafe', 'fast-casual',
@@ -2747,15 +2773,6 @@ def detect_primary_scope(job_type: str) -> str:
         'ansul', 'walk-in cooler', 'walk-in freezer', 'kitchen build-out',
     )):
         return 'commercial_restaurant'
-    if re.search(r'\basc\b', job_lc) or any(t in job_lc for t in (
-        'medical clinic', 'medical office tenant', 'dental clinic', 'dental office tenant',
-        'health clinic', 'clinic tenant improvement', 'clinic ti', 'exam room',
-        'exam rooms', 'med gas', 'medical gas', 'nitrous oxide', 'x-ray', 'x ray',
-        'radiology', 'sterilization room', 'surgical center', 'ambulatory surgical center',
-        'operating room', 'operating rooms', 'pacu', 'pre-op', 'pre op',
-        'recovery bay', 'recovery bays', 'outpatient surgery',
-    )):
-        return 'commercial_medical_clinic_ti'
     if any(t in job_lc for t in (
         'office tenant improvement', 'office ti', 'office buildout',
         'co-working', 'coworking', 'professional office',

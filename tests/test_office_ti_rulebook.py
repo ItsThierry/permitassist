@@ -46,6 +46,63 @@ def test_office_scope_stays_office_not_retail_or_medical():
     assert engine.detect_primary_scope("law office buildout with conference rooms, lighting and HVAC balancing") == "commercial_office_ti"
 
 
+def test_office_ti_negated_restaurant_terms_stay_office():
+    assert engine.detect_primary_scope(
+        "Dallas TX office tenant improvement: demising walls, conference rooms, ceiling grid, lighting, "
+        "HVAC diffuser relocation, data cabling, card reader access control, sprinkler head relocation, "
+        "no commercial kitchen, no Type I hood, no grease interceptor."
+    ) == "commercial_office_ti"
+    assert engine.detect_primary_scope(
+        "commercial office tenant improvement without commercial kitchen, without Type I hood, "
+        "without grease interceptor; demising walls, conference rooms, lighting, HVAC diffuser relocation"
+    ) == "commercial_office_ti"
+    assert engine.detect_primary_scope(
+        "commercial office tenant improvement, non-restaurant office suite, no restaurant, no food service, "
+        "no commercial kitchen, no Type I hood, no fryer, no ANSUL, no grease interceptor; demising walls, "
+        "conference rooms, lighting, HVAC diffuser relocation, data cabling, card reader access control, "
+        "sprinkler head relocation"
+    ) == "commercial_office_ti"
+
+
+def test_medical_office_negated_restaurant_terms_stay_medical():
+    assert engine.detect_primary_scope(
+        "medical office tenant improvement with exam rooms, hand sinks, med gas, no commercial kitchen, no Type I hood"
+    ) == "commercial_medical_clinic_ti"
+
+
+def test_restaurant_ti_positive_terms_still_classify_restaurant():
+    assert engine.detect_primary_scope(
+        "Dallas TX restaurant tenant improvement with commercial kitchen, Type I hood, ANSUL, grease interceptor, "
+        "walk-in cooler, food service, and ADA restroom upgrades"
+    ) == "commercial_restaurant"
+
+
+def test_office_ti_negations_do_not_emit_restaurant_secondary_companions():
+    out = engine.classify_scope_required_permits(
+        "commercial office tenant improvement, non-restaurant office suite, no restaurant, no food service, "
+        "no commercial kitchen, no Type I hood, no fryer, no ANSUL, no grease interceptor; demising walls, "
+        "conference rooms, lighting, HVAC diffuser relocation, data cabling, card reader access control, "
+        "sprinkler head relocation"
+    )
+    assert out["scope_classification"] == "commercial_office_ti"
+    companion_text = " | ".join(c.get("permit_type", "") for c in out["companion_permits"]).lower()
+    assert "health department" not in companion_text
+    assert "food establishment" not in companion_text
+    assert "grease interceptor" not in companion_text
+    assert "fog" not in companion_text
+
+
+def test_restaurant_ti_positive_terms_keep_restaurant_secondary_companions():
+    out = engine.classify_scope_required_permits(
+        "Dallas TX restaurant tenant improvement with commercial kitchen, Type I hood, ANSUL, grease interceptor, "
+        "walk-in cooler, food service, and ADA restroom upgrades"
+    )
+    assert out["scope_classification"] == "commercial_restaurant"
+    companion_text = " | ".join(c.get("permit_type", "") for c in out["companion_permits"]).lower()
+    assert "health department" in companion_text or "food establishment" in companion_text
+    assert "grease interceptor" in companion_text or "fog" in companion_text
+
+
 def test_office_ti_fires_office_specific_triggers():
     got = ids("office tenant improvement with demising partitions, new ceiling grid, lighting, HVAC zoning, low voltage data cabling, ADA restroom, sprinkler relocation and fire alarm")
     assert "office_demising_partition_life_safety" in got
