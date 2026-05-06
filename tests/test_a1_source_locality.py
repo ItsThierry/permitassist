@@ -229,4 +229,3 @@ def test_sanitize_free_text_urls_strips_official_but_wrong_state_urls():
     sanitize_free_text_urls(result, "Dallas", "TX")
     assert "lebanon.in.gov" not in result["fee_range"]
     assert "ldh.la.gov" not in result["confidence_reason"]
-
