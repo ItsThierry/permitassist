@@ -176,6 +176,148 @@ def test_step7u_production_preview_pack_requires_dedicated_mode(monkeypatch, tmp
     assert set(meta["failed_closed_fields"]) == {"fee_range", "inspections"}
 
 
+def test_step7u_production_preview_response_surfaces_contractor_safe_fields(monkeypatch, tmp_path):
+    pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(
+        _base_engine_result(),
+        "medical clinic tenant improvement with exam rooms and accessibility review",
+        "Dallas",
+        "TX",
+        explicit_vertical="medical_clinic_ti",
+    )
+
+    assert result["permit_type"] == "Commercial Building Permit"
+    assert result["permit_required"] is True
+    assert result["warnings"] == result["quality_warnings"]
+    assert any("fee range" in warning.lower() for warning in result["warnings"])
+    assert any("statutory" in warning.lower() for warning in result["warnings"])
+    assert len(result["approval_timeline"]) <= 300
+    assert result["approval_timeline"].startswith("Dallas local queue time still needs AHJ/portal confirmation")
+    assert "45th day" in result["approval_timeline"]
+    assert "_approval_timeline_evidence_detail" not in result
+
+
+def test_step7u_coffee_shop_preview_maps_to_restaurant_evidence(monkeypatch, tmp_path):
+    pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(
+        _base_engine_result(),
+        "coffee shop tenant improvement with limited warming equipment, espresso bar plumbing, no fryer, possible health review, Dallas TX",
+        "Dallas",
+        "TX",
+    )
+
+    meta = result["_evidence_pack"]
+    assert meta["request_vertical"] == "restaurant_ti"
+    assert "apply_url" in meta["matched_fields"]
+    assert result["apply_url"] == "https://aca-prod.accela.com/DALLASTX/Default.aspx"
+    assert result["permit_type"] == "Commercial Building Permit"
+    assert result["warnings"]
+
+
+def test_step7u_office_negated_restaurant_cues_stay_office_and_warnings_merge(monkeypatch, tmp_path):
+    pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+    server = _import_server(tmp_path, monkeypatch)
+
+    for job_type in [
+        "office TI without commercial kitchen, no hood, no fryer, no restaurant expansion",
+        "non-restaurant office tenant improvement with conference rooms and no commercial kitchen needed",
+        "professional office TI, not a restaurant, without fryer or griddle",
+    ]:
+        base = _base_engine_result()
+        base["warnings"] = ["Existing upstream warning should survive."]
+        result = server.finalize_permit_lookup_result(base, job_type, "Dallas", "TX")
+        assert result["_evidence_pack"]["request_vertical"] == "office_ti"
+        assert result["permit_type"] == "Commercial Building Permit"
+        assert result["warnings"][0] == "Existing upstream warning should survive."
+        assert any("fee range" in warning.lower() for warning in result["warnings"])
+
+
+def test_step7u_doctors_office_preview_maps_to_medical_evidence(monkeypatch, tmp_path):
+    pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(
+        _base_engine_result(),
+        "doctor's office TI with two exam rooms and accessibility upgrades",
+        "Dallas",
+        "TX",
+    )
+
+    assert result["_evidence_pack"]["request_vertical"] == "medical_clinic_ti"
+    assert result["permit_type"] == "Commercial Building Permit"
+
+
+def test_step7u_preview_http_matrix_surfaces_contractor_fields_and_keeps_scope_gated(tmp_path, monkeypatch):
+    pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo")
+    server = _import_server(tmp_path, monkeypatch)
+
+    def fake_research(*_args, **_kwargs):
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+    server.is_paid_user = lambda email: True
+    token = server.create_session_token("paid@example.com")
+    cases = [
+        ("restaurant", "restaurant tenant improvement with Type I hood and grease interceptor"),
+        ("restaurant", "coffee shop tenant improvement with espresso bar plumbing and limited warming equipment"),
+        ("restaurant", "second generation restaurant remodel with hood replacement and ANSUL"),
+        ("medical", "medical clinic tenant improvement with exam rooms and hand sinks"),
+        ("medical", "dental clinic TI with x-ray equipment and sterilization room"),
+        ("medical", "physical therapy clinic TI with accessible route upgrades"),
+        ("office", "office tenant improvement with demising partitions and lighting controls"),
+        ("office", "corporate office TI with conference rooms and sprinkler head relocation"),
+        ("office", "tech office TI with server room, plenum cabling, and card readers"),
+    ]
+
+    with _LiveServer(server.Handler) as live:
+        public_status, public_body = _post_json_response(
+            f"{live.base}/api/permit",
+            {"job_type": cases[0][1], "city": "Dallas", "state": "TX", "job_category": "commercial"},
+            {"X-Session-Token": token},
+        )
+        assert public_status == 200
+        assert "_evidence_pack" not in public_body
+        assert "_approval_timeline_evidence_detail" not in public_body
+
+        for _vertical, job_type in cases:
+            status, body = _post_json_response(
+                f"{live.base}/api/permit",
+                {"job_type": job_type, "city": "Dallas", "state": "TX", "job_category": "commercial"},
+                {"X-Session-Token": token, "X-Sample-Demo": "1"},
+            )
+            assert status == 200
+            assert body["_evidence_pack"]["enabled"] is True
+            assert body["_evidence_pack"]["cache_bypassed"] is True
+            assert body["apply_url"] == "https://aca-prod.accela.com/DALLASTX/Default.aspx"
+            assert body["permit_type"] == "Commercial Building Permit"
+            assert body["permit_required"] is True
+            assert body["warnings"]
+            assert len(body["approval_timeline"]) <= 300
+            assert "_approval_timeline_evidence_detail" not in body
+            assert body["fee_range"] is None
+            assert body["inspections"] is None
+
+        batch_status, batch_body = _post_json_response(
+            f"{live.base}/api/batch-permit",
+            {"lookups": [{"job_type": cases[0][1], "city": "Dallas", "state": "TX", "job_category": "commercial"}]},
+            {"X-Sample-Demo": "1"},
+        )
+        assert batch_status == 200
+        assert "_evidence_pack" not in json.dumps(batch_body)
+        assert "_approval_timeline_evidence_detail" not in json.dumps(batch_body)
+
+
 def test_step7u_production_preview_pack_fails_closed_in_staging_mode(monkeypatch, tmp_path):
     pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
     _enable_pack(monkeypatch, pack_path, mode="dallas_step7h_preview")
