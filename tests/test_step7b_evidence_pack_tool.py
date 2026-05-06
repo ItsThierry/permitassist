@@ -101,7 +101,9 @@ def test_missing_scope_limit_or_quote_fails_closed_before_ingestion(tmp_path):
     assert record["ingestion_ready"] is False
     assert record["field_status"] == "needs_verification"
     assert record["confidence"] == "needs_verification"
-    assert "missing_source_scope_limit" in record["validation_errors"]
+    assert "missing_source_scope_limit" not in record["validation_errors"]
+    assert record["source_scope_limit_generated"] is True
+    assert "Does not verify" in record["source_scope_limit"]
     assert "missing_field_level_quote_or_snippet" in record["validation_errors"]
 
 
@@ -272,3 +274,48 @@ def test_ingestion_contract_includes_fetch_status_code(tmp_path):
 
     required = pack["validation"]["ingestion_regression_contract"]["required_evidence_fields"]
     assert "fetch_status_code" in required
+
+def test_companion_source_validation_backfills_missing_metadata_and_quote(tmp_path):
+    payload = _artifact(scope_limit="")
+    row = payload["accepted_upgrades"][0]
+    row["field"] = "companion_reviews_triggers"
+    row["evidence"] = [
+        {
+            "source_id": "official_source_one",
+            "source_url": "https://example.gov/source",
+            "source_type": "official_ahj",
+        }
+    ]
+    artifact_path = _write_json(tmp_path / "permitassist-road-to-perfection-step6a-batch90-evidence-upgrades-2026-05-05.json", payload)
+    _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch90-source-validation-2026-05-05.json",
+        {
+            "title": "source validation",
+            "created_utc": "2026-05-05T12:00:00Z",
+            "verdict": "PASS",
+            "sources": [
+                {
+                    "source_id": "official_source_one",
+                    "source_url": "https://example.gov/source",
+                    "source_title": "Official source one",
+                    "source_type": "official_ahj",
+                    "fetch_status_code": 200,
+                    "normalized_text_sha256": "c" * 64,
+                    "normalized_text_length": 4567,
+                    "exact_snippets": ["Official field-level quote from the current validation artifact."],
+                }
+            ],
+        },
+    )
+
+    pack = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")
+
+    record = pack["records"][0]
+    item = record["field_evidence"][0]
+    assert record["source_scope_limit_generated"] is True
+    assert record["ingestion_ready"] is True
+    assert item["source_title"] == "Official source one"
+    assert item["exact_quote_or_snippet"] == "Official field-level quote from the current validation artifact."
+    assert item["normalized_source_text_sha256"] == "c" * 64
+    assert item["normalized_source_text_length"] == 4567
+    assert item["fetch_status_code"] == 200

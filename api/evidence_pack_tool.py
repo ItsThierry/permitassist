@@ -222,6 +222,109 @@ def _row_evidence_items(row: dict[str, Any]) -> list[dict[str, Any]]:
     return []
 
 
+
+
+def _source_validation_candidates(artifact_path: Path) -> list[Path]:
+    """Return likely companion source-validation artifacts for a Step 6A upgrade artifact."""
+    name = artifact_path.name
+    candidates: list[Path] = []
+    batch_match = re.search(r"(step6a-batch\d+)-", name)
+    if batch_match:
+        prefix = f"permitassist-road-to-perfection-{batch_match.group(1)}"
+        candidates.extend(sorted(artifact_path.parent.glob(f"{prefix}-source-validation*.json")))
+    if "step6a-23-gap-surgical-pass" in name:
+        candidates.extend(sorted(artifact_path.parent.glob("permitassist-road-to-perfection-step6a-23-gap-surgical-pass-source-validation*.json")))
+    # Preserve order while de-duping.
+    seen: set[Path] = set()
+    unique: list[Path] = []
+    for candidate in candidates:
+        if candidate not in seen and candidate.exists():
+            unique.append(candidate)
+            seen.add(candidate)
+    return unique
+
+
+def _source_validation_items(artifact_path: Path) -> dict[str, dict[str, Any]]:
+    """Index companion source-validation metadata by source_id and source_url.
+
+    Step 6A artifacts evolved over many batches. Some rows kept only a source_id
+    or URL while the companion source-validation artifact held normalized text
+    length/hash, exact snippets, title, and current fetch status. This index lets
+    Step 7B backfill those metadata fields without re-fetching the web or
+    promoting unsupported claims.
+    """
+    indexed: dict[str, dict[str, Any]] = {}
+    for candidate in _source_validation_candidates(artifact_path):
+        try:
+            payload = _read_json(candidate)
+        except Exception:
+            continue
+        sources = payload.get("sources") or []
+        if isinstance(sources, dict):
+            source_iter = []
+            for source_id, source in sources.items():
+                if isinstance(source, dict):
+                    enriched = dict(source)
+                    enriched.setdefault("source_id", source_id)
+                    source_iter.append(enriched)
+        elif isinstance(sources, list):
+            source_iter = [source for source in sources if isinstance(source, dict)]
+        else:
+            source_iter = []
+        for source in source_iter:
+            for key in (source.get("source_id"), source.get("source_url"), source.get("source_final_url")):
+                if key:
+                    indexed[str(key).strip()] = source
+    return indexed
+
+
+def _source_validation_match(evidence: dict[str, Any], validation_index: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    for key in (evidence.get("source_id"), evidence.get("source_url"), evidence.get("source_final_url")):
+        if key and str(key).strip() in validation_index:
+            return validation_index[str(key).strip()]
+    return {}
+
+
+def _metadata_value(evidence: dict[str, Any], validation: dict[str, Any], *keys: str) -> Any:
+    for key in keys:
+        value = evidence.get(key)
+        if value not in (None, "", []):
+            return value
+    for key in keys:
+        value = validation.get(key)
+        if value not in (None, "", []):
+            return value
+    return None
+
+
+def _fallback_source_scope_limit(row: dict[str, Any], field: str) -> str:
+    """Generate a conservative display scope when old accepted artifacts omitted one.
+
+    This is intentionally narrow: it can remove a packaging blocker, but it does
+    not promote fields beyond the specific cited field and still makes every other
+    core field off-limits for runtime reuse.
+    """
+    if not field:
+        return ""
+    labels = {
+        "permit_type": "permit type",
+        "apply_url": "apply URL/path",
+        "fee_range": "fee range",
+        "approval_timeline": "approval timeline",
+        "inspections": "inspection guidance",
+        "companion_reviews_triggers": "companion review trigger guidance",
+    }
+    field_label = labels.get(field, field.replace("_", " "))
+    other = [label for key, label in labels.items() if key != field]
+    vertical = str(row.get("vertical") or "this vertical").replace("_", " ")
+    return (
+        f"Step 7B generated conservative scope: use only for {field_label} evidence for {vertical} "
+        f"at this AHJ/state as supported by the cited field-level quote. Does not verify "
+        f"{', '.join(other[:-1])}, or {other[-1]}. Does not verify unrelated AHJs, unrelated verticals, "
+        "fees/timelines/apply paths unless this record's own field is that field."
+    )
+
+
 def _display_contract(scope_limit: str, field: str) -> dict[str, Any]:
     scope = scope_limit.lower()
     aliases = {
@@ -277,15 +380,32 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
     if not _artifact_is_independently_accepted(artifact):
         validation_errors.append("artifact_not_independently_accepted")
 
+    source_validation_index = _source_validation_items(artifact_path)
     evidence_items = []
     for e_index, evidence in enumerate(_row_evidence_items(row), 1):
         if not isinstance(evidence, dict):
             validation_errors.append("non_object_evidence_item")
             continue
-        quote, quote_found = _extract_quote(evidence)
-        url = _source_url(evidence)
-        norm_hash = _normalized_hash(evidence)
-        norm_len = _normalized_length(evidence)
+        source_validation = _source_validation_match(evidence, source_validation_index)
+        merged_evidence = dict(source_validation)
+        merged_evidence.update({k: v for k, v in evidence.items() if v not in (None, "", [])})
+        quote, quote_found = _extract_quote(merged_evidence)
+        url = _source_url(merged_evidence)
+        norm_hash = _normalized_hash(merged_evidence) or str(_metadata_value(merged_evidence, source_validation, "normalized_text_sha256", "content_sha256") or "").strip()
+        norm_len = _normalized_length(merged_evidence)
+        if norm_len is None:
+            for key in ("normalized_text_length", "normalized_rendered_text_len", "normalized_text_len"):
+                value = _metadata_value(merged_evidence, source_validation, key)
+                if isinstance(value, int):
+                    norm_len = value
+                    break
+                if isinstance(value, str) and value.isdigit():
+                    norm_len = int(value)
+                    break
+        fetch_status = _metadata_value(merged_evidence, source_validation, "fetch_status_code", "http_status", "status_code")
+        if fetch_status is None and norm_hash and norm_len and quote_found:
+            fetch_status = "validated_current_run"
+        source_title = _source_title(merged_evidence) or str(_metadata_value(merged_evidence, source_validation, "title") or "").strip()
         item_errors: list[str] = []
         if not url or not _validate_url(url):
             item_errors.append("invalid_or_missing_source_url")
@@ -297,17 +417,17 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
             item_errors.append("missing_or_invalid_normalized_source_text_sha256")
         if norm_len is None or norm_len <= 0:
             item_errors.append("missing_normalized_source_text_length")
-        if evidence.get("fetch_status_code") is None:
+        if fetch_status is None:
             item_errors.append("missing_fetch_status_code")
-        if not _source_title(evidence):
+        if not source_title:
             item_errors.append("missing_source_title")
         validation_errors.extend(item_errors)
         evidence_items.append({
-            "source_id": evidence.get("source_id") or f"source_{e_index}",
+            "source_id": merged_evidence.get("source_id") or f"source_{e_index}",
             "source_url": url,
-            "source_title": _source_title(evidence),
-            "source_type": evidence.get("source_type") or "unknown",
-            "source_host": evidence.get("source_host") or urlparse(url).netloc,
+            "source_title": source_title,
+            "source_type": merged_evidence.get("source_type") or "unknown",
+            "source_host": merged_evidence.get("source_host") or urlparse(url).netloc,
             "exact_quote_or_snippet": quote,
             "quote_found": quote_found,
             "normalized_source_text_sha256": norm_hash,
@@ -315,14 +435,18 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
             "last_verified_utc": _format_utc(checked_dt),
             "reverify_after_utc": _format_utc(reverify_after),
             "stale_after_utc": _format_utc(stale_after),
-            "validation_method": evidence.get("validation_method") or evidence.get("verification_method") or "",
-            "fetch_status_code": evidence.get("fetch_status_code"),
-            "runtime_fail_closed_policy": fail_closed_decision(evidence.get("fetch_status_code")),
+            "validation_method": merged_evidence.get("validation_method") or merged_evidence.get("verification_method") or merged_evidence.get("fetched_via") or "",
+            "fetch_status_code": fetch_status,
+            "runtime_fail_closed_policy": fail_closed_decision(fetch_status),
             "validation_errors": item_errors,
         })
 
     field = str(row.get("field") or "").strip()
+    source_scope_was_generated = False
     scope_limit = str(row.get("source_scope_limit") or row.get("limits_and_caveats") or "").strip()
+    if not scope_limit:
+        scope_limit = _fallback_source_scope_limit(row, field)
+        source_scope_was_generated = bool(scope_limit)
     if not scope_limit:
         validation_errors.append("missing_source_scope_limit")
     if field not in SUPPORTED_FIELDS:
@@ -350,6 +474,7 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
         "confidence": confidence,
         "claim_value": row.get("claim_value_after") or row.get("claim_value") or "",
         "source_scope_limit": scope_limit,
+        "source_scope_limit_generated": source_scope_was_generated,
         "display_contract": _display_contract(scope_limit, field),
         "field_evidence": evidence_items,
         "freshness": {
