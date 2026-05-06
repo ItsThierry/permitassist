@@ -18,6 +18,7 @@ from api.evidence_pack_tool import (  # noqa: E402
     DEFAULT_PROJECT_BRIEFS_DIR,
     build_evidence_pack,
     discover_step6a_artifacts,
+    evidence_pack_tool_readiness,
     write_evidence_pack_outputs,
 )
 
@@ -27,8 +28,23 @@ def main() -> int:
     parser.add_argument("--project-briefs-dir", default=str(DEFAULT_PROJECT_BRIEFS_DIR))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
     parser.add_argument("--stem", default=None)
+    parser.add_argument("--validate-existing-pack", default=None, help="Read-only readiness validation for an existing evidence-pack JSON")
+    parser.add_argument("--report-path", default=None, help="Optional existing Markdown report path for --validate-existing-pack")
     parser.add_argument("artifacts", nargs="*", help="Optional explicit Step 6A evidence-upgrade JSON files")
     args = parser.parse_args()
+
+    if args.validate_existing_pack:
+        readiness = evidence_pack_tool_readiness(args.validate_existing_pack, report_path=args.report_path)
+        print(f"Readiness verdict: {readiness['verdict']}")
+        print(f"Readiness score: {readiness['readiness_score']}")
+        print(f"Records: {readiness.get('record_count', 0)}")
+        print(f"Safe for env activation: {str(readiness['safe_for_env_activation']).lower()}")
+        if readiness["blockers"]:
+            print("Blockers: " + ", ".join(readiness["blockers"]))
+        print("Stages:")
+        for stage, status in readiness["stages"].items():
+            print(f"- {stage}: {status}")
+        return 0 if readiness["verdict"] != "FAIL_CLOSED_NOT_READY" else 1
 
     paths = [Path(p) for p in args.artifacts] if args.artifacts else discover_step6a_artifacts(args.project_briefs_dir)
     if not paths:

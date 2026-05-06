@@ -759,6 +759,163 @@ def render_markdown_report(pack: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def raw_file_sha256(path: str | Path) -> str:
+    """Return the SHA-256 of the exact bytes written to disk."""
+    h = hashlib.sha256()
+    with Path(path).open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _read_sha256_sidecar(path: Path) -> str:
+    sidecar = path.with_suffix(path.suffix + ".sha256")
+    if not sidecar.exists():
+        return ""
+    text = sidecar.read_text(encoding="utf-8").strip()
+    # Accept either a bare hash or sha256sum-style "hash  filename".
+    return text.split()[0].strip() if text else ""
+
+
+def _sha256_shape(value: str) -> bool:
+    return bool(re.fullmatch(r"[0-9a-fA-F]{64}", str(value or "").strip()))
+
+
+def _pack_records(pack: dict[str, Any]) -> list[dict[str, Any]]:
+    records = pack.get("records") or []
+    return [record for record in records if isinstance(record, dict)] if isinstance(records, list) else []
+
+
+def evidence_pack_tool_readiness(pack_path: str | Path, *, report_path: str | Path | None = None) -> dict[str, Any]:
+    """Evaluate the offline tool's complete scaffold→preview readiness path.
+
+    This is intentionally read-only: it does not set env vars, activate evidence
+    pack mode, deploy, or call external services. It answers whether the artifact
+    path is packaged and safe to use as a reviewed fail-closed preview candidate.
+    """
+    path = Path(pack_path)
+    blockers: list[str] = []
+    stages = {
+        "scaffold": "fail",
+        "validate": "fail",
+        "score": "fail",
+        "report": "fail",
+        "promote_or_fail_closed": "fail",
+        "package_fingerprint": "fail",
+        "preview_contract": "fail",
+    }
+
+    try:
+        pack = _read_json(path)
+    except Exception:
+        return {
+            "verdict": "FAIL_CLOSED_NOT_READY",
+            "readiness_score": 0,
+            "stages": stages,
+            "blockers": ["pack_json_unreadable"],
+            "safe_for_env_activation": False,
+            "evidence_pack_vars_required_before_activation": [],
+        }
+
+    metadata = pack.get("metadata") if isinstance(pack.get("metadata"), dict) else {}
+    records = _pack_records(pack)
+    validation = pack.get("validation") if isinstance(pack.get("validation"), dict) else {}
+
+    if pack.get("artifact_inputs") or metadata.get("source_pack_path") or records:
+        stages["scaffold"] = "pass"
+    else:
+        blockers.append("no_scaffold_or_records")
+
+    blocked_records = [record for record in records if record.get("ingestion_ready") is not True or record.get("validation_errors")]
+    if records and not blocked_records:
+        stages["validate"] = "pass"
+    else:
+        blockers.append("records_not_ingestion_ready")
+
+    ready_count = len(records) - len(blocked_records)
+    score = round((ready_count / len(records)) * 100) if records else 0
+    if score == 100:
+        stages["score"] = "pass"
+    else:
+        blockers.append("readiness_score_below_100")
+
+    report_ok = False
+    if report_path:
+        report_file = Path(report_path)
+        report_ok = report_file.exists() and report_file.is_file() and bool(report_file.read_text(encoding="utf-8").strip())
+    else:
+        try:
+            report_ok = bool(render_markdown_report(pack).strip())
+        except Exception:
+            # Production-preview packs may intentionally omit the broad Step 7B
+            # validation/report sections. A non-empty metadata+record contract is
+            # still reportable by the CLI readiness summary without mutating files.
+            report_ok = bool(metadata and records)
+    if report_ok:
+        stages["report"] = "pass"
+    else:
+        blockers.append("report_missing_or_unrenderable")
+
+    production_wiring_allowed = bool(metadata.get("production_wiring_allowed"))
+    version = str(metadata.get("evidence_pack_version") or "")
+    if production_wiring_allowed:
+        if version == "step7u_dallas_only_production_preview_v1":
+            stages["promote_or_fail_closed"] = "pass"
+        else:
+            blockers.append("production_wiring_allowed_on_unapproved_version")
+    else:
+        # Offline Step 7B/7H artifacts are complete only if they fail closed by
+        # refusing env activation until a later explicit production-preview pack.
+        stages["promote_or_fail_closed"] = "pass"
+
+    metadata_fingerprint = str(metadata.get("fingerprint_sha256") or "").strip()
+    raw_sha = raw_file_sha256(path) if path.exists() else ""
+    sidecar_sha = _read_sha256_sidecar(path)
+    if _sha256_shape(metadata_fingerprint) and sidecar_sha and sidecar_sha.lower() == raw_sha.lower():
+        stages["package_fingerprint"] = "pass"
+    else:
+        if not _sha256_shape(metadata_fingerprint):
+            blockers.append("metadata_fingerprint_missing_or_invalid")
+        if not sidecar_sha:
+            blockers.append("raw_sha256_sidecar_missing")
+        elif sidecar_sha.lower() != raw_sha.lower():
+            blockers.append("raw_sha256_sidecar_mismatch")
+
+    if production_wiring_allowed:
+        scope = str(metadata.get("scope") or "").lower()
+        if "dallas" in scope and "preview" in scope and version == "step7u_dallas_only_production_preview_v1":
+            stages["preview_contract"] = "pass"
+        else:
+            blockers.append("preview_contract_scope_or_version_invalid")
+    else:
+        stages["preview_contract"] = "pass"
+
+    verdict = "FULLY_READY_OFFLINE_FAIL_CLOSED" if all(value == "pass" for value in stages.values()) and not blockers else "FAIL_CLOSED_NOT_READY"
+    safe_for_env_activation = verdict == "FULLY_READY_OFFLINE_FAIL_CLOSED" and production_wiring_allowed
+    required_env = []
+    if safe_for_env_activation:
+        required_env = [
+            "PERMITASSIST_EVIDENCE_PACK_ENABLED",
+            "PERMITASSIST_EVIDENCE_PACK_MODE",
+            "PERMITASSIST_EVIDENCE_PACK_PATH",
+            "PERMITASSIST_EVIDENCE_PACK_EXPECTED_FINGERPRINT",
+            "PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY",
+        ]
+    return {
+        "verdict": verdict,
+        "readiness_score": score,
+        "stages": stages,
+        "blockers": sorted(set(blockers)),
+        "record_count": len(records),
+        "metadata_fingerprint": metadata_fingerprint,
+        "raw_sha256": raw_sha,
+        "raw_sha256_sidecar": sidecar_sha,
+        "safe_for_env_activation": safe_for_env_activation,
+        "evidence_pack_vars_required_before_activation": required_env,
+        "validation_verdict": validation.get("verdict", "") if isinstance(validation, dict) else "",
+    }
+
+
 def write_evidence_pack_outputs(pack: dict[str, Any], output_dir: str | Path = DEFAULT_OUTPUT_DIR, stem: str | None = None) -> tuple[Path, Path]:
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -767,4 +924,5 @@ def write_evidence_pack_outputs(pack: dict[str, Any], output_dir: str | Path = D
     md_path = out / f"{output_stem}.md"
     json_path.write_text(json.dumps(pack, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
     md_path.write_text(render_markdown_report(pack), encoding="utf-8")
+    json_path.with_suffix(json_path.suffix + ".sha256").write_text(raw_file_sha256(json_path) + "\n", encoding="utf-8")
     return json_path, md_path
