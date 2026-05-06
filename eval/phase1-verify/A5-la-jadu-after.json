@@ -1,0 +1,619 @@
+{
+  "job_summary": "Convert an existing 400 sf attached residential garage into a JADU with kitchenette, bathroom, and separate entrance in Los Angeles. This triggers a Building Permit for the garage conversion/change of use, plus companion trade permits for plumbing and electrical work, and possibly mechanical if any new HVAC/venting is added. Because this is Los Angeles, expect Title 24 energy documentation and, if the project touches the public right-of-way or street improvements, separate Bureau of Engineering review.",
+  "total_cost_estimate": "$45,000 - $110,000",
+  "location": "Los Angeles, CA",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit \u2014 ADU Conversion / Residential Alteration",
+      "portal_selection": "Building - Accessory Dwelling Unit (ADU)",
+      "required": true,
+      "notes": "Master building permit for occupancy conversion, life-safety, framing, fire separation, and egress."
+    },
+    {
+      "permit_type": "Electrical Permit \u2014 ADU Circuits / Service Load",
+      "portal_selection": "Electrical - ADU / Residential Alteration",
+      "required": true,
+      "notes": "Required for new circuits, smoke/CO alarms, load calculations, subpanel, or service changes."
+    },
+    {
+      "permit_type": "Plumbing Permit \u2014 ADU Kitchen/Bath/Laundry",
+      "portal_selection": "Plumbing - ADU Fixtures / DWV",
+      "required": true,
+      "notes": "Required for kitchen, bath, laundry, water supply, sewer, and DWV work."
+    },
+    {
+      "permit_type": "Mechanical Permit \u2014 ADU HVAC / Ventilation",
+      "portal_selection": "Mechanical - ADU HVAC / Ventilation",
+      "required": true,
+      "notes": "Required for HVAC, bath/kitchen exhaust, ventilation, combustion air, or ducts."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit \u2014 ADU Conversion / Residential Alteration",
+      "included_because": "ADU conversion changes occupancy/use and needs a master building permit.",
+      "scope_trigger": "ADU/conversion scope"
+    },
+    {
+      "permit_type": "Electrical Permit \u2014 ADU Circuits / Service Load",
+      "included_because": "ADUs require dedicated electrical scope for circuits, alarms, load calculations, and possible subpanel/service work.",
+      "scope_trigger": "ADU electrical systems"
+    },
+    {
+      "permit_type": "Plumbing Permit \u2014 ADU Kitchen/Bath/Laundry",
+      "included_because": "ADUs normally add or legalize kitchen/bath/laundry plumbing and DWV work.",
+      "scope_trigger": "ADU plumbing fixtures"
+    },
+    {
+      "permit_type": "Mechanical Permit \u2014 ADU HVAC / Ventilation",
+      "included_because": "ADUs need conditioned-space HVAC/ventilation review under mechanical code and Title 24 in California.",
+      "scope_trigger": "ADU mechanical/ventilation systems"
+    }
+  ],
+  "applying_office": "LA Department of Building and Safety (LADBS)",
+  "apply_url": "https://www.ladbs.org/services/apply-for-a-permit",
+  "apply_pdf": null,
+  "apply_phone": "(213) 482-0000",
+  "apply_address": "201 N. Figueroa Street, Los Angeles, CA 90012",
+  "apply_google_maps": "https://www.google.com/maps?q=201+N.+Figueroa+Street,+Los+Angeles,+CA+90012",
+  "fee_range": "Fee Estimate: **$12,000-$12,000+** (structured floor \u2014 see breakdown). Components: ~$8,000 base permit + plan review (Los Angeles, CA residential ADU floor) \u00d7 1.5\u00d7 jurisdiction multiplier. **Verify against current fee schedule before quoting.**",
+  "approval_timeline": {
+    "simple": "1-3 business days for over-the-counter residential trade permits; building intake for a JADU conversion can sometimes be started online the same day",
+    "complex": "1-3 weeks for residential plan review; longer if zoning, fire, or Bureau of Engineering review is triggered"
+  },
+  "inspections": [
+    {
+      "stage": "Building Rough Framing / Demo",
+      "description": "Inspector verifies: garage slab and framing changes, new wall framing, fire separation from the main dwelling, ceiling/wall insulation, weatherproofing at the new entrance, and any required egress opening dimensions.",
+      "timing": "After framing is complete but before insulation and drywall are covered"
+    },
+    {
+      "stage": "Plumbing Rough-In",
+      "description": "Inspector checks: drain/waste/vent routing, trap arm lengths, vent termination, water line sizing, shower/tub and lavatory rough-in, kitchen sink rough-in, and any gas piping if a gas appliance is added.",
+      "timing": "Before walls are closed"
+    },
+    {
+      "stage": "Electrical Rough-In",
+      "description": "Inspector verifies: new branch circuits, box fill, cable support, GFCI/AFCI protection where required, bathroom receptacle placement, smoke/CO alarm wiring, and panel capacity if a load calculation or service change was done.",
+      "timing": "Before insulation and drywall"
+    },
+    {
+      "stage": "Insulation / Energy",
+      "description": "Inspector checks: insulation R-values, air sealing, fenestration details, and Title 24 energy compliance documents including the required CF1R at permit application and field verification of installed measures.",
+      "timing": "Before drywall is installed"
+    },
+    {
+      "stage": "Final Building / MEP",
+      "description": "Inspector verifies: finished room dimensions, safe stair/door thresholds if any, smoke and CO alarms, fixture operation, GFCI/AFCI function, proper ventilation, address/occupancy labeling if required, and that the separate entrance and life-safety items are complete.",
+      "timing": "After all work is complete and utilities are on"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the LADBS online permit/inspection portal at https://www.ladbs.org/services/apply-for-a-permit or by calling (213) 482-0000. Use the permit number and request the specific inspection type. LADBS commonly allows next-business-day or 24-hour advance scheduling for standard residential work; book early because same-day slots are not guaranteed. Have the permit card, approved plans, and job address ready.",
+  "license_required": "Licensed California contractors pull the permits on the homeowner's behalf \u2014 the contractor's CSLB license number must appear on the application. For this scope, the typical licenses are B (general building) for the conversion, C-36 for plumbing, and C-10 for electrical. In Los Angeles City, the contractor also needs a current LA City Business Tax Registration Certificate to submit permits.",
+  "city_contractor_registration": "Los Angeles City requires a current City Business Tax Registration Certificate for contractors in addition to the appropriate CSLB license. Verify the BTRC is active before submitting; an expired certificate can block permit issuance at the counter or in the portal.",
+  "what_to_bring": [
+    "Completed LADBS permit application and project address",
+    "CSLB license number and expiration date for the contractor pulling the permit",
+    "LA City Business Tax Registration Certificate number",
+    "Title 24 energy documents, including CF1R for the JADU conversion",
+    "Floor plan showing existing garage layout and proposed JADU layout with kitchenette, bathroom, and separate entrance",
+    "Fixture and equipment cut sheets for any new plumbing fixtures, lighting, fans, or appliances"
+  ],
+  "common_mistakes": [
+    "Submitting the JADU as a simple remodel instead of a change-of-use building permit \u2014 LADBS will kick it back when they see the garage conversion and separate entrance",
+    "Forgetting the required Title 24 CF1R energy form at application \u2014 Los Angeles will not treat this as a minor trade-only job",
+    "Not verifying the contractor's LA City Business Tax Registration Certificate before filing \u2014 an expired BTRC can stop the permit at intake",
+    "Starting demolition before the permit is issued and posted \u2014 LADBS can issue a stop-work order and require corrections",
+    "Missing separate plumbing and electrical permits for the kitchenette and bathroom fixtures"
+  ],
+  "pro_tips": [
+    "For Los Angeles JADU work, submit the building plans with the CF1R energy documentation together so plan check does not stall on Title 24 corrections",
+    "If the garage conversion is near the street or involves curb, sidewalk, or driveway changes, check with the LA Bureau of Engineering early \u2014 that review is separate from LADBS",
+    "Use a contractor with a current LA City BTRC and CSLB license in hand before opening the portal; that avoids the most common intake rejection",
+    "If you are not moving walls or changing the roof, keep the scope tight so the plan review stays in the residential track instead of getting pushed into a slower correction cycle"
+  ],
+  "code_citation": {
+    "section": "CRC R105.1",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish or change the occupancy of a building or structure..."
+  },
+  "companion_permits": [],
+  "zoning_hoa_flag": "This is a residential JADU conversion, so zoning is a major issue. Los Angeles may still review setbacks, fire separation, parking replacement rules, and lot-specific constraints. If the property is in a hillside or wildfire hazard area, additional fire-resistive requirements may apply. HOA rules can also restrict exterior changes such as a new separate entrance, but HOA approval does not replace the city permit.",
+  "sources": [
+    "https://www.ladbs.org",
+    "https://www.ladbs.org/services/apply-for-a-permit",
+    "https://www.cslb.ca.gov",
+    "https://planning.lacity.gov/staffrpt/mnd/Pub_100517/ENV-2016-3609.pdf",
+    "https://dbs.lacity.gov/our-organization/locations-offices",
+    "https://ldh.la.gov/assets/oph/Center-EH/engineering/Plumbing/Part_XIV_LA_State_Plumbing_Code.pdf",
+    "https://planning.lacity.gov/pdiscaseinfo/document/MjE0MDQw0/46e6f77e-051c-4e11-ad6d-6ce8558211cd/pdd"
+  ],
+  "confidence": "medium",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "_fee_unverified": true,
+  "maps_url": "https://www.google.com/maps?q=201+N.+Figueroa+Street,+Los+Angeles,+CA+90012",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_field_sources": {
+    "apply_url": "city_kb",
+    "apply_phone": "city_kb",
+    "apply_address": "city_kb",
+    "fee_range": "machine_extracted",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "applying_office": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": true,
+  "missing_fields": [
+    "fee_range"
+  ],
+  "confidence_reason": "City-specific match supported by live web research. Needs review for: fee_range",
+  "_meta": {
+    "generated_at": "2026-04-28T20:59:00.301818",
+    "response_ms": 14090,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 6,
+    "city_match_level": "city",
+    "job_type": "Garage conversion of existing 400 sf attached garage to a JADU (junior accessory dwelling unit) with kitchenette, bathroom, separate entrance.",
+    "city": "Los Angeles",
+    "state": "CA",
+    "zip_code": "90042",
+    "job_category": "residential",
+    "auto_verified": false,
+    "missing_fields": [
+      "fee_range"
+    ]
+  },
+  "fee_source": {
+    "url": "https://planning.lacity.gov/staffrpt/mnd/Pub_100517/ENV-2016-3609.pdf",
+    "title": "[PDF] 200 N. Spring Street, Room 750 \u2022 Los Angeles, CA 90012 Environme",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://dbs.lacity.gov/our-organization/locations-offices",
+    "title": "Locations & Offices - LADBS",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://ldh.la.gov/assets/oph/Center-EH/engineering/Plumbing/Part_XIV_LA_State_Plumbing_Code.pdf",
+    "title": "[PDF] Title 51 PUBLIC HEALTH\u2015SANITARY CODE Part XIV. Plumbing ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://ldh.la.gov/assets/oph/Center-EH/engineering/Plumbing/Part_XIV_LA_State_Plumbing_Code.pdf",
+    "title": "[PDF] Title 51 PUBLIC HEALTH\u2015SANITARY CODE Part XIV. Plumbing ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://planning.lacity.gov/pdiscaseinfo/document/MjE0MDQw0/46e6f77e-051c-4e11-ad6d-6ce8558211cd/pdd",
+    "title": "[PDF] DEPARTMENT OF - Los Angeles City Planning",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 100,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "residential_adu",
+  "checklist": [
+    "Verify your contractor license is current and valid in CA",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost \u2014 required on most permit applications",
+    "ESS clearances per NFPA 855 (\u22653 ft from openings, doors, windows; verify state/AHJ override)",
+    "Battery commissioning report from manufacturer (required for inspection sign-off)",
+    "ESS hazardous-voltage labeling per UL 9540 / 9540A on each enclosure",
+    "AC disconnect labeling 'Warning: Dual Power Source' per NEC 705.10 at the main service",
+    "AC disconnect within sight of the inverter (NEC 690.13 / 705.20)",
+    "Working clearance at ESS enclosure: 30 in wide \u00d7 36 in depth \u00d7 6.5 ft height (NEC 110.26)",
+    "ESS marking at the main service identifying battery feed-in source per NEC 706.10",
+    "Smoke + CO alarms in every sleeping room AND each level (interconnected if hardwired)",
+    "Egress window in every sleeping room: 5.7 sq ft net (5.0 if grade), 24 in min height, 20 in min width, sill \u226444 in",
+    "Fire-rated assembly between dwelling units (1-hour wall + 1-hour ceiling typical)",
+    "Independent or accessory-metered electrical service (varies by state \u2014 confirm with utility)",
+    "Energy code compliance for the new conditioned space (Title 24 in CA; IECC adopted version elsewhere)",
+    "Confirm the required license is active and matches the application: Licensed California contractors pull the permits on the homeowner's behalf \u2014 the contractor's CSLB license number must appear on the application. For this scope, the typical licenses are B (general building) for the conversion, C-36 for plumbing, and C-10 for electrical. In Los Angeles City, the contractor also needs a current LA City Business Tax Registration Certificate to submit permits.",
+    "Bring 2 copies of all documents to LA Department of Building and Safety (LADBS)"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Missing CSLB license AND LA City Business Tax Registration Certificate",
+      "frequency": "very_common",
+      "fix": "Both required \u2014 get BTRC at finance.lacity.org before permit application"
+    },
+    {
+      "pattern": "Missing CF1R energy compliance form for HVAC replacements",
+      "frequency": "common",
+      "fix": "Generate CF1R through a certified HERS rater before applying"
+    },
+    {
+      "pattern": "Bureau of Engineering approval missing for projects near public streets",
+      "frequency": "common",
+      "fix": "Submit to Bureau of Engineering separately from Building & Safety"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "job_value": 80000,
+  "fee_calculator": {
+    "fee": null,
+    "formula": null,
+    "confidence": "none",
+    "note": "Exact fee formula not available for Los Angeles, CA. Use fee range as estimate."
+  },
+  "expert_notes": [
+    {
+      "title": "California ADU 60-day ministerial shot clock",
+      "note": "California state law (AB 881 / Govt Code 65852.2) requires the city to approve or deny ADU permits within 60 days of a complete application. If they exceed this, you have grounds to escalate.",
+      "applies_to": "ADU jobs",
+      "source": "California Government Code 65852.2(b)(1)"
+    },
+    {
+      "title": "California ADU impact-fee exemption under 750 sq ft",
+      "note": "Impact fees waived for ADUs under 750 sq ft per California Government Code 65852.2(f)(3).",
+      "applies_to": "ADU jobs under 750 sq ft",
+      "source": "California Government Code 65852.2(f)(3)"
+    },
+    {
+      "title": "Title 24 / CF1R energy compliance",
+      "note": "Title 24 energy compliance and CF1R documentation are required for new construction and alterations that change conditioned space. Solar mandate may apply for new detached ADUs depending on scope.",
+      "applies_to": "New construction, ADUs, and conditioned-space alterations",
+      "source": "California Energy Code / Title 24"
+    },
+    {
+      "title": "Cal Fire VHFHSZ check",
+      "note": "Check whether the parcel is in a Cal Fire Very High Fire Hazard Severity Zone (VHFHSZ). Pasadena, Malibu, Santa Barbara, and parts of Los Angeles County can trigger additional fire-resistive material and defensible-space requirements.",
+      "applies_to": "Wildfire-prone California jurisdictions",
+      "source": "https://osfm.fire.ca.gov/divisions/community-wildfire-preparedness-and-mitigation/wildland-hazards-building-codes/fire-hazard-severity-zones-maps/"
+    },
+    {
+      "title": "CSLB licensing \u2014 $500 unlicensed-work threshold",
+      "note": "California Contractors State License Board (CSLB) requires a license for any single project with combined labor + materials at $500 or more. Unlicensed contracting above that threshold is a misdemeanor (B&P \u00a77028). Verify license + classification (e.g. B General Building, C-10 Electrical, C-36 Plumbing, C-20 HVAC) on the CSLB lookup before quoting; expired or suspended licenses void the contract and block lien rights.",
+      "applies_to": "All paid construction work in California \u2265 $500",
+      "source": "https://www.cslb.ca.gov/Consumers/HireAContractor/CheckTheLicenseFirst.aspx"
+    },
+    {
+      "title": "SB 9 lot split + 2-unit ministerial path",
+      "note": "SB 9 (Govt Code \u00a765852.21 / \u00a766411.7) lets owners of single-family-zoned parcels split a lot into two and/or build a duplex per resulting parcel under ministerial review (no public hearing, no CEQA). Combined with ADU/JADU rules this can yield up to 4 units on a former SFR lot. Owner must sign a 3-year owner-occupancy affidavit on lot splits. Cities can impose objective design standards but cannot deny qualifying SB 9 projects.",
+      "applies_to": "Single-family-zoned residential infill and duplex conversions",
+      "source": "https://www.hcd.ca.gov/policy-and-research/accessory-dwelling-units"
+    },
+    {
+      "title": "California Building Standards Code triennial cycle (2025 \u2192 2026 enforcement)",
+      "note": "California adopts a new Title 24 / CBSC edition every three years. The 2025 California Building/Residential/Plumbing/Electrical/Mechanical/Energy/Green Building Standards Codes were published Jul 1, 2025 and become enforceable Jan 1, 2026 statewide. Permit applications submitted before Jan 1, 2026 may still be reviewed under the 2022 code at the AHJ's discretion \u2014 confirm which code edition applies before submitting drawings.",
+      "applies_to": "Permit applications crossing the 2026-01-01 code-change boundary",
+      "source": "https://www.dgs.ca.gov/BSC"
+    },
+    {
+      "title": "CALGreen mandatory + EV-ready / solar-ready requirements",
+      "note": "CALGreen (Title 24 Part 11) sets statewide green-building minimums: low-VOC finishes, water-use reduction (\u22641.28 gpf toilets, \u22641.8 gpm kitchen faucets), EV-ready raceway in new SFR garages, and solar-ready zone for new low-rise residential. Tier 1/Tier 2 voluntary measures may be locally mandated (e.g., San Francisco, Santa Monica). Plan check rejection is common when the EV raceway or solar-ready zone is omitted from new SFR/ADU drawings.",
+      "applies_to": "New construction and major remodels statewide",
+      "source": "https://www.dgs.ca.gov/BSC/CALGreen"
+    },
+    {
+      "title": "California municipal utility coordination",
+      "note": "Local utility is Los Angeles Department of Water and Power (LADWP) \u2014 service/interconnection coordination goes through the city utility, not SoCal Edison/PG&E.",
+      "applies_to": "Electrical service, solar, battery, EV, and utility-interconnection work",
+      "source": "California municipal utility rules"
+    },
+    {
+      "title": "Local VHFHSZ risk flag",
+      "note": "Los Angeles may include Very High Fire Hazard Severity Zone parcels. Verify the address on the Cal Fire VHFHSZ map before quoting exterior materials or ADU/solar scope.",
+      "applies_to": "Address-specific wildfire overlay check",
+      "source": "https://osfm.fire.ca.gov/divisions/community-wildfire-preparedness-and-mitigation/wildland-hazards-building-codes/fire-hazard-severity-zones-maps/"
+    }
+  ],
+  "hidden_triggers": [
+    {
+      "id": "adu_fire_separation_openings_between_units",
+      "severity": "high",
+      "title": "ADU conversion can trigger dwelling-unit fire separation and opening-protection review",
+      "why_it_matters": "Garage conversions, attached ADUs, and internal conversions often need rated separations, protected penetrations, door ratings, and exterior-wall opening checks that are not captured by a generic ADU checklist.",
+      "fired_by": [
+        "\\battached adu\\b",
+        "\\bgarage conversion\\b",
+        "\\bconvert garage\\b",
+        "\\binternal adu\\b",
+        "\\bshared wall\\b",
+        "\\bfire separation\\b"
+      ],
+      "likely_required_actions": [
+        "Show rated wall/ceiling assemblies",
+        "Protect penetrations and ducts",
+        "Check exterior wall fire separation distance and openings"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Fire reviewer if locally required"
+      ],
+      "citations": [
+        "IRC \u00a7R302.3",
+        "IRC \u00a7R302.1",
+        "CRC local ADU amendments [verify before merging]"
+      ],
+      "primary_scope": "residential_adu"
+    },
+    {
+      "id": "adu_bathroom_legalization_as_built_permit_history",
+      "severity": "high",
+      "title": "Bathroom legalization requires permit-history search and as-built strategy",
+      "why_it_matters": "Unpermitted bathrooms or converted spaces are rarely a simple bathroom permit. The reviewer may require as-built plans, opening walls, correction of plumbing/venting, and legalization/penalty fees.",
+      "fired_by": [
+        "\\blegalize\\b",
+        "\\bunpermitted\\b",
+        "\\bas[-\\s]?built\\b",
+        "\\bbathroom legalization\\b",
+        "\\bgarage conversion\\b",
+        "\\bexisting bathroom\\b"
+      ],
+      "likely_required_actions": [
+        "Pull permit history before filing",
+        "Prepare as-built plans and code-compliance narrative",
+        "Warn owner about investigation/penalty fees and destructive verification"
+      ],
+      "companion_permits": [
+        "Legalization / code-enforcement clearance, if applicable"
+      ],
+      "agencies": [
+        "AHJ Building Dept",
+        "Code Enforcement"
+      ],
+      "citations": [
+        "Local legalization / investigation fee schedule [verify before merging]",
+        "IRC/CRC Chapters 25-31 plumbing provisions [verify scope before merging]"
+      ],
+      "primary_scope": "residential_adu"
+    },
+    {
+      "id": "adu_legalization_co_codeenforcement",
+      "severity": "high",
+      "confidence": "high",
+      "title": "Legalization Triggers Code Enforcement Review",
+      "why_it_matters": "Legalization permits are routed through code enforcement. Unpermitted work must be brought to current code, and a CO will be re-issued. Expect inspection of every system.",
+      "fired_by": [
+        "\\blegalization\\b",
+        "\\blegalize\\b",
+        "\\bunpermitted\\b",
+        "\\bexisting converted\\b",
+        "\\bafter[-\\s]?the[-\\s]?fact\\b",
+        "\\bas[-\\s]?built\\b"
+      ],
+      "likely_required_actions": [
+        "Pull permit history before filing",
+        "Prepare as-built plans and current-code correction narrative",
+        "Coordinate code-enforcement clearance and final CO/occupancy documentation"
+      ],
+      "companion_permits": [
+        "Code enforcement clearance",
+        "Certificate of Occupancy re-issue"
+      ],
+      "agencies": [
+        "Code Enforcement",
+        "AHJ Building Dept"
+      ],
+      "citations": [
+        "Local legalization / investigation fee rules [verify before merging]"
+      ],
+      "primary_scope": "residential_adu"
+    },
+    {
+      "id": "adu_smoke_co_alarms_addressing",
+      "severity": "medium",
+      "title": "ADU work can force smoke/CO alarm upgrades and address/unit-number coordination",
+      "why_it_matters": "Final inspection and utility setup often depend on whole-dwelling alarms and clear unit identification, even when the ADU scope looks limited.",
+      "fired_by": [
+        "\\badu\\b",
+        "\\bgarage conversion\\b",
+        "\\bjunior adu\\b",
+        "\\bjadu\\b",
+        "\\bnew bedroom\\b"
+      ],
+      "likely_required_actions": [
+        "Show smoke and CO alarm locations",
+        "Confirm hardwired/interconnected requirements for new work",
+        "Request unit address/subaddress if local process requires it"
+      ],
+      "companion_permits": [
+        "Address assignment / unit numbering request, if required"
+      ],
+      "agencies": [
+        "AHJ Building Dept",
+        "Addressing/Planning office"
+      ],
+      "citations": [
+        "IRC \u00a7R314",
+        "IRC \u00a7R315",
+        "Local addressing standard [verify before merging]"
+      ],
+      "primary_scope": "residential_adu"
+    },
+    {
+      "id": "adu_existing_garage_structural_and_energy_upgrade",
+      "severity": "medium",
+      "title": "Garage conversion ADU can trigger slab, insulation, egress, and energy corrections",
+      "why_it_matters": "Existing garages often lack required slab moisture protection, insulation, habitable ceiling height, emergency escape/rescue openings, and conditioned-space energy compliance.",
+      "fired_by": [
+        "\\bgarage conversion\\b",
+        "\\bconvert garage\\b",
+        "\\bcarport conversion\\b",
+        "\\bhabitable garage\\b"
+      ],
+      "likely_required_actions": [
+        "Verify slab/foundation suitability",
+        "Add insulation/energy compliance forms",
+        "Show emergency escape/rescue opening if sleeping room is created"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Energy reviewer"
+      ],
+      "citations": [
+        "IRC \u00a7R305",
+        "IRC \u00a7R310",
+        "IECC residential provisions [verify adopted edition before merging]"
+      ],
+      "primary_scope": "residential_adu"
+    },
+    {
+      "id": "residential_hvac_a2l_refrigerant_2025_transition",
+      "severity": "medium",
+      "title": "New HVAC equipment must use A2L refrigerant per 2025 EPA AIM Act phasedown",
+      "why_it_matters": "After January 1, 2025, EPA 40 CFR Part 84 prohibits manufacture/import of most R-410A residential split systems. New installs use A2L refrigerants (R-454B, R-32) requiring updated leak detection, electrical disconnects, and brazing/installer certification.",
+      "fired_by": [
+        "\\bhvac\\b",
+        "\\bcondenser\\b",
+        "\\bfurnace\\b",
+        "\\bheat pump\\b",
+        "\\bsplit system\\b",
+        "\\bmini[-\\s]?split\\b",
+        "\\br[-\\s]?410a\\b",
+        "\\br[-\\s]?454b\\b",
+        "\\br[-\\s]?32\\b",
+        "\\ba2l\\b",
+        "\\brefrigerant\\b"
+      ],
+      "likely_required_actions": [
+        "Confirm new equipment is A2L-compatible (R-454B or R-32)",
+        "Verify installer is EPA Section 608 certified for A2L handling",
+        "Show service disconnect and refrigerant detection where required by listing"
+      ],
+      "companion_permits": [
+        "Mechanical permit",
+        "Electrical permit if disconnect changes"
+      ],
+      "agencies": [
+        "AHJ Mechanical Dept",
+        "EPA"
+      ],
+      "citations": [
+        "40 CFR Part 84 (AIM Act technology transitions)",
+        "ASHRAE 15-2022",
+        "UL 60335-2-40",
+        "IMC \u00a71106 [verify adopted edition before merging]"
+      ],
+      "primary_scope": "residential_single_trade"
+    },
+    {
+      "id": "adu_parking_replacement",
+      "severity": "medium",
+      "confidence": "high",
+      "title": "Parking Replacement May Be Required",
+      "why_it_matters": "Removing a covered parking space for ADU may require replacement (uncovered OK in CA). Verify city-specific waiver eligibility before submittal.",
+      "fired_by": [
+        "\\bgarage conversion\\b",
+        "\\bconvert garage\\b",
+        "\\bcarport conversion\\b",
+        "\\b(remove|removing|removed|demolish|demo)\\b.*\\b(parking|garage|carport|covered space)\\b"
+      ],
+      "likely_required_actions": [
+        "Document existing parking spaces removed by the ADU",
+        "Check state and city ADU parking waiver eligibility",
+        "Show replacement parking location if local rules require it"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Planning/Zoning",
+        "AHJ Building Dept"
+      ],
+      "citations": [
+        "Cal. Gov. Code \u00a765852.2 parking provisions [verify current recodification before merging]",
+        "Local ADU parking ordinance [verify before merging]"
+      ],
+      "primary_scope": "residential_adu"
+    },
+    {
+      "id": "adu_tree_protection",
+      "severity": "medium",
+      "confidence": "high",
+      "title": "Protected Tree / Tree-Removal Permit",
+      "why_it_matters": "Many CA cities require a separate tree permit and arborist report. Removing protected oaks/sycamores without permit is a common stop-work violation.",
+      "fired_by": [
+        "\\b(adu|dadu|jadu|accessory dwelling)\\b",
+        "\\b(oak|sycamore|protected tree|heritage tree|significant tree|tree removal|arborist)\\b"
+      ],
+      "likely_required_actions": [
+        "Identify protected trees and tree-protection zones on the site plan",
+        "Order arborist report if work is near protected trees",
+        "File tree-removal/pruning permit before grading or foundation work"
+      ],
+      "companion_permits": [
+        "Tree removal / protected tree permit"
+      ],
+      "agencies": [
+        "Urban Forestry / Planning",
+        "AHJ Building Dept"
+      ],
+      "citations": [
+        "Local protected-tree ordinance [verify before merging]"
+      ],
+      "primary_scope": "residential_adu"
+    },
+    {
+      "id": "adu_sewer_capacity",
+      "severity": "medium",
+      "confidence": "high",
+      "title": "Sewer Capacity / Utility Upgrade Likely",
+      "why_it_matters": "Most ADUs require a sewer capacity letter or service upsize. Failure to confirm BEFORE submittal causes plan-check holds.",
+      "fired_by": [
+        "\\b(adu|dadu|jadu|accessory dwelling|junior adu)\\b",
+        "\\b(detached|attached)\\s+adu\\b",
+        "\\bgarage conversion\\b.*\\b(jadu|adu)\\b"
+      ],
+      "likely_required_actions": [
+        "Confirm existing sewer lateral size and available capacity",
+        "Ask sanitation / utility provider about ADU capacity-letter process",
+        "Carry possible service upsize or sewer connection cost in budget"
+      ],
+      "companion_permits": [
+        "Sewer Connection Permit",
+        "Sanitation Capacity Letter"
+      ],
+      "agencies": [
+        "AHJ sanitation department",
+        "Water/sewer utility",
+        "AHJ Building Dept"
+      ],
+      "citations": [
+        "AHJ sanitation department capacity-letter requirement"
+      ],
+      "ask_user_if_missing": [
+        "What is the existing sewer line size?",
+        "Has the utility provider confirmed capacity for an additional ADU?"
+      ],
+      "citations_needed": [
+        "AHJ sanitation department capacity-letter requirement"
+      ],
+      "primary_scope": "residential_adu"
+    }
+  ],
+  "_fee_floor_components": {
+    "scope": "residential_adu",
+    "scope_note": "building + MEP + accessibility + plan check",
+    "sqft": 400,
+    "base_floor": 8000,
+    "jurisdiction_multiplier": 1.5,
+    "jurisdiction_label": "Los Angeles, CA",
+    "jurisdiction_rationale": "LADBS + BOE/LAFD/Planning overlays; high cost-of-government metro [verify current LADBS fee estimator]",
+    "trigger_adders": [],
+    "structured_low": 12000,
+    "structured_high": 12000,
+    "llm_fee_high_end": null
+  },
+  "_fee_adjusted": true,
+  "_fee_floor_check": "llm_below_floor_adjusted"
+}

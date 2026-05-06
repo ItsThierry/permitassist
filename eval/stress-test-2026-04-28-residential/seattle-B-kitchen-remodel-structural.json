@@ -1,0 +1,308 @@
+{
+  "job_summary": "Residential kitchen remodel in Seattle, WA 98103 that includes removal of an interior load-bearing wall, installation of a new structural beam, new cabinets, plumbing relocation, and electrical updates. This triggers a Building Permit for the structural alteration, plus separate Plumbing and Electrical permits for the relocated fixtures and updated wiring. Because the wall is load-bearing, this is not a simple cosmetic remodel.",
+  "total_cost_estimate": "$28,000 - $65,000",
+  "location": "Seattle, WA",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Interior Alteration / Structural Wall Removal (Residential)",
+      "portal_selection": "Building Permit - Residential Alteration",
+      "required": true,
+      "notes": "Required because the scope includes removal of a load-bearing wall and installation of a new structural beam. Seattle treats this as a structural alteration, not a cosmetic kitchen remodel."
+    },
+    {
+      "permit_type": "Plumbing Permit — Kitchen Fixture Relocation (Residential)",
+      "portal_selection": "Plumbing Permit - Residential Fixture Relocation",
+      "required": true,
+      "notes": "Required because plumbing is being relocated for the kitchen remodel. In Seattle, plumbing permits are handled through the plumbing authority process, not the building permit."
+    },
+    {
+      "permit_type": "Electrical Permit — Kitchen Circuit / Rewire Updates (Residential)",
+      "portal_selection": "Electrical Permit - Residential Alteration",
+      "required": true,
+      "notes": "Required because the job includes electrical updates in the kitchen. Any new circuits, outlet moves, lighting changes, or appliance circuit changes need an electrical permit."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Interior Alteration / Structural Wall Removal (Residential)",
+      "included_because": "The job includes removal of an interior load-bearing wall and installation of a new structural beam, which changes the structural load path and requires building review.",
+      "scope_trigger": "Load-bearing wall removal and new beam installation"
+    },
+    {
+      "permit_type": "Plumbing Permit — Kitchen Fixture Relocation (Residential)",
+      "included_because": "The scope explicitly includes plumbing relocation, which triggers plumbing permit review for any moved sink, dishwasher, or supply/drain lines.",
+      "scope_trigger": "Plumbing relocation in kitchen remodel"
+    },
+    {
+      "permit_type": "Electrical Permit — Kitchen Circuit / Rewire Updates (Residential)",
+      "included_because": "The scope includes electrical updates, which triggers an electrical permit for any new or modified circuits, receptacles, lighting, or appliance wiring.",
+      "scope_trigger": "Electrical updates in kitchen remodel"
+    }
+  ],
+  "applying_office": "Seattle Department of Construction & Inspections (SDCI)",
+  "apply_url": "https://cosaccela.seattle.gov",
+  "apply_pdf": null,
+  "apply_phone": "(206) 684-8600",
+  "apply_address": "700 5th Ave, Suite 2000, Seattle, WA 98104",
+  "apply_google_maps": "https://www.google.com/maps?q=700+5th+Ave,+Suite+2000,+Seattle,+WA+98104",
+  "fee_range": "Fee Estimate: $924+ building permit for an $8,000 valuation project, plus separate electrical and plumbing permit fees; typical total for this scope is often $1,200 - $2,500 in permit fees alone depending on valuation and trade scope — verify in https://clerk.seattle.gov/search/results?s3=&s4=&s5=&s1=&s2=&S6=&Sect4=AND&l=200&Sect2=THESON&Sect3=PLURON&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2F%7Epublic%2Fcbor1.htm&r=33&f=G&s7=%22BUILDING-CODES%22%5BINDX%5D before quoting",
+  "approval_timeline": {
+    "simple": "1-5 business days for straightforward over-the-counter review if the submittal is complete and no structural corrections are needed",
+    "complex": "2-4 weeks for residential plan review; longer if beam sizing, structural calculations, or energy/code corrections are required"
+  },
+  "inspections": [
+    {
+      "stage": "Building Framing / Structural Rough-In",
+      "description": "Inspector verifies: load-bearing wall removal matches approved plans, beam size and bearing points are correct, posts/footings are properly supported, any required engineering details are followed, and framing connections are installed per plan.",
+      "timing": "After demo and beam framing are complete, before insulation, drywall, or concealment"
+    },
+    {
+      "stage": "Plumbing Rough-In",
+      "description": "Inspector checks: relocated supply and drain lines, proper trap and vent configuration, pipe support, shutoff valve access, and that any new sink/dishwasher connections are installed to code before walls are closed.",
+      "timing": "Before drywall or cabinet enclosure"
+    },
+    {
+      "stage": "Electrical Rough-In",
+      "description": "Inspector verifies: new or relocated receptacles, dedicated appliance circuits, GFCI/AFCI protection where required, box fill, cable support, grounding/bonding, and any lighting or switch wiring before concealment.",
+      "timing": "Before insulation and drywall"
+    },
+    {
+      "stage": "Final Building / Trade Inspection",
+      "description": "Inspector checks: beam and wall replacement are complete, cabinets do not interfere with required clearances, plumbing fixtures operate without leaks, electrical devices are installed and labeled correctly, and all work matches the approved permit set.",
+      "timing": "After cabinets, trim, fixtures, and finish work are complete"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the Seattle Services Portal at https://cosaccela.seattle.gov. Use the permit/record number in the portal to request each inspection. Seattle SDCI phone: (206) 684-8600. Plan on at least 24 hours advance notice for inspection scheduling; book earlier if you need multiple trade inspections on the same day. If the permit record is not visible in your portal account, use the 'My Records' tab or search by address/record number.",
+  "license_required": "Licensed contractor pulls the permit on the homeowner's behalf for the trade work. For the electrical permit, a WA L&I EL01A/EL02A electrical contractor or master electrician must be the permit holder. For plumbing, a WA L&I licensed plumber pulls the permit. The building permit for the structural alteration is typically pulled by the general contractor or homeowner if owner-builder rules are met, but the structural scope still requires permit approval.",
+  "city_contractor_registration": null,
+  "what_to_bring": [
+    "Completed permit application in the Seattle Services Portal",
+    "Scaled floor plan showing existing and proposed kitchen layout",
+    "Structural beam details and any engineer-stamped calculations if required",
+    "Plumbing fixture relocation plan showing sink, dishwasher, and drain/supply changes",
+    "Electrical plan showing new outlets, appliance circuits, lighting, and any panel load impacts",
+    "Contractor license information and contact details for each trade permit holder"
+  ],
+  "common_mistakes": [
+    "Treating a load-bearing wall removal like a cosmetic kitchen remodel — Seattle will require structural review and a building permit",
+    "Submitting only a trade permit and forgetting the building permit for the beam and wall removal",
+    "Not providing structural calculations or beam sizing details when the wall is load-bearing",
+    "Starting demo before the permit is issued and posted — Seattle can issue a stop-work order",
+    "Missing separate electrical and plumbing permits for relocated kitchen systems",
+    "Submitting permit work without checking whether the project also triggers a Master Use Permit or other land-use review in Seattle"
+  ],
+  "pro_tips": [
+    "Have the beam size, post locations, and any engineer letter ready before you open the portal — incomplete structural submittals are what slow Seattle down the most",
+    "Seattle is strict on seismic detailing, so make sure the beam, posts, and connections are shown with proper hold-down and bearing details",
+    "If the kitchen layout changes appliance locations, do the electrical load calc before submittal so you do not get bounced for panel capacity issues",
+    "Check whether your project also needs a Master Use Permit before you submit the building permit — Seattle flags this on some remodels and it can stall the job",
+    "Seattle inspectors are sensitive to work-hour complaints; keep noisy demo within local hours to avoid neighbor complaints and enforcement delays"
+  ],
+  "code_citation": {
+    "section": "IRC R105.1",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish or change the occupancy of a building or structure..."
+  },
+  "companion_permits": [],
+  "zoning_hoa_flag": "Seattle can require additional review if the remodel affects exterior openings, historic district properties, or if the project also triggers a Master Use Permit. HOA rules do not replace city permit requirements, but they can delay construction if the property is in a governed community.",
+  "sources": [
+    "https://www.seattle.gov/sdci",
+    "https://cosaccela.seattle.gov",
+    "https://lni.wa.gov/licensing-permits",
+    "https://clerk.seattle.gov/search/results?s3=&s4=&s5=&s1=&s2=&S6=&Sect4=AND&l=200&Sect2=THESON&Sect3=PLURON&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2F%7Epublic%2Fcbor1.htm&r=33&f=G&s7=%22BUILDING-CODES%22%5BINDX%5D",
+    "https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "https://www.seattle.gov/a/156593",
+    "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM."
+  ],
+  "confidence": "high",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "maps_url": "https://www.google.com/maps?q=700+5th+Ave,+Suite+2000,+Seattle,+WA+98104",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_field_sources": {
+    "apply_url": "city_kb",
+    "apply_phone": "city_kb",
+    "apply_address": "city_kb",
+    "fee_range": "machine_extracted",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "applying_office": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": false,
+  "missing_fields": [],
+  "confidence_reason": "City-specific match supported by live web research",
+  "_meta": {
+    "generated_at": "2026-04-28T21:01:34.106848",
+    "response_ms": 14096,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 4,
+    "city_match_level": "city",
+    "job_type": "Kitchen remodel including removal of an interior load-bearing wall between kitchen and dining room, with new structural beam, plus new cabinets, plumbing relocation, electrical updates.",
+    "city": "Seattle",
+    "state": "WA",
+    "zip_code": "98103",
+    "job_category": "residential",
+    "auto_verified": false,
+    "missing_fields": []
+  },
+  "fee_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&s4=&s5=&s1=&s2=&S6=&Sect4=AND&l=200&Sect2=THESON&Sect3=PLURON&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2F%7Epublic%2Fcbor1.htm&r=33&f=G&s7=%22BUILDING-CODES%22%5BINDX%5D",
+    "title": "Seattle City Council Bills and Ordinances",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "title": "Contact Us - Phone Numbers - SDCI | seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://www.seattle.gov/a/156593",
+    "title": "[PDF] Tenant Improvement Program Health and Safety Project List",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM.",
+    "title": "Ordinance 122528 - Online Information Resources - Seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM.",
+    "title": "Ordinance 122528 - Online Information Resources - Seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 100,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "residential",
+  "checklist": [
+    "Verify your contractor license is current and valid in WA",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Panel schedule showing existing and proposed circuits",
+    "Wire gauge and breaker size for each new circuit",
+    "Electrical diagram or one-line drawing (required for panel upgrades)",
+    "Utility disconnect location marked on plans",
+    "Confirm the required license is active and matches the application: Licensed contractor pulls the permit on the homeowner's behalf for the trade work. For the electrical permit, a WA L&I EL01A/EL02A electrical contractor or master electrician must be the permit holder. For plumbing, a WA L&I licensed plumber pulls the permit. The building permit for the structural alteration is typically pulled by the general contractor or homeowner if owner-builder rules are met, but the structural scope still requires permit approval.",
+    "Bring 2 copies of all documents to Seattle Department of Construction & Inspections (SDCI)"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Noise ordinance violation during construction",
+      "frequency": "common",
+      "fix": "Work hours: 7am-10pm weekdays, 9am-10pm weekends — strictly enforced"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "job_value": 75000,
+  "fee_calculator": {
+    "fee": 1062.5,
+    "formula": "$200 base + $11.50/thousand of job value",
+    "confidence": "high",
+    "note": "Verify current fee schedule — rates may have changed"
+  },
+  "expert_notes": [
+    {
+      "title": "Washington State Building Code 2021 edition effective March 15, 2024",
+      "note": "After multiple delays, the 2021 Washington State Building Code (IBC, IRC, IMC, UPC, IFC, and WSEC-R) became enforceable statewide on March 15, 2024, replacing the 2018 edition. Confirm with the AHJ which edition applies to your application — vested permits submitted before that date may still be reviewed under 2018, but new submittals must comply with 2021 amendments. Drawings still referencing 2018 sections are a common plan-check rejection.",
+      "applies_to": "All residential and commercial permit applications statewide",
+      "source": "https://sbcc.wa.gov/news/revised-effective-date-2021-codes-march-15-2024"
+    },
+    {
+      "title": "2024 Code adoption cycle delayed — May 2027 effective date expected",
+      "note": "The State Building Code Council (SBCC) has slipped the 2024 IBC/IRC/IECC adoption cycle. Current staff estimate is final adoption by June 2026 with codes going into effect roughly May 2027 — about a 6-month slip from the prior schedule. Plan multi-year projects under 2021 code with an eye to the 2027 transition; permits vested before the new effective date generally remain under 2021.",
+      "applies_to": "Long-lead residential projects crossing the 2027 code-change boundary",
+      "source": "https://www.linkedin.com/posts/p-hanks_recap-from-todays-wa-state-building-code-activity-7376025613402329088-SuRN"
+    },
+    {
+      "title": "Washington State Energy Code Residential (WSEC-R) 2021 — based on 2021 IECC with state amendments",
+      "note": "The 2021 WSEC-R has been in effect since March 15, 2024 and applies to all one- and two-family dwellings and townhouses up to three stories. WSEC-R adopts the 2021 IECC with significant Washington amendments — notably the credit-based energy-efficiency point system in R406 (additional credits required over the 2018 edition) and high-efficiency HVAC/water-heating mandates. Submit an R406 credit worksheet with every new SFR/ADU permit; missing credits is the single most common WSEC-R rejection.",
+      "applies_to": "New SFR, ADU, townhouse, and additions creating conditioned space",
+      "source": "https://up.codes/viewer/washington/wa-energy-code-residential-provisions-2021"
+    },
+    {
+      "title": "L&I contractor registration required — no statewide \"general contractor license\"",
+      "note": "Washington does NOT have a CSLB-style state contractor license. Instead, the Department of Labor & Industries (L&I) requires every construction contractor to register with L&I, post a continuous bond ($12,000 general / $6,000 specialty), and carry liability insurance. Verify the contractor on the L&I \"Verify a Contractor\" lookup before signing — unregistered contracting forfeits lien rights and is grounds for civil penalties under RCW 18.27.",
+      "applies_to": "All paid construction work statewide",
+      "source": "https://lni.wa.gov/licensing-permits/contractors/register-as-a-contractor/"
+    },
+    {
+      "title": "Electricians and plumbers licensed separately by L&I — not by L&I contractor registration alone",
+      "note": "L&I licenses electricians and plumbers as a separate program from contractor registration. Electrical work requires a 01 General or 02 Residential electrical contractor license plus certified electrician (e.g., 06A residential specialty, 07 journey-level), and plumbing requires a plumbing contractor license plus a certified plumber. A general contractor registration alone does NOT permit a firm to pull electrical or plumbing permits — that work must be subbed to a separately licensed electrical/plumbing contractor.",
+      "applies_to": "Any project with electrical or plumbing scope",
+      "source": "https://www.lni.wa.gov/licensing-permits/"
+    },
+    {
+      "title": "HVAC has no dedicated state license — relies on contractor registration + 06A/06B for line-voltage work",
+      "note": "Washington does not issue a stand-alone HVAC license. HVAC firms register as L&I specialty contractors; any line-voltage electrical work on the install (e.g., disconnects, condenser whips, furnace hookups) requires a 06A (HVAC/Refrigeration) or 06B specialty electrician under the L&I electrical program. Low-voltage thermostat wiring may fall under the 06 specialty as well — confirm scope before sending an unlicensed tech to do final electrical connections.",
+      "applies_to": "HVAC change-outs, new installs, and heat-pump conversions",
+      "source": "https://www.lumberfi.com/wiki/washington-hvac-license-requirements"
+    },
+    {
+      "title": "Separate L&I electrical permit + state electrical inspection (parallel filing)",
+      "note": "Most jurisdictions in Washington do NOT issue electrical permits — those are pulled directly from L&I by the licensed electrical contractor (or the homeowner doing their own work on a single-family residence they own and occupy). The L&I state electrical inspector — not the city building inspector — performs the rough-in and final electrical inspections. Budget a separate L&I permit fee and a separate inspection schedule on top of the building permit; cities like Seattle and Spokane that issue their own electrical permits are the exception, not the rule.",
+      "applies_to": "Electrical scope on residential projects outside Seattle/Spokane and a few other delegated cities",
+      "source": "https://www.lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/"
+    },
+    {
+      "title": "Critical Areas Ordinance (CAO) — every city/county must regulate wetlands, streams, and geo-hazards",
+      "note": "The state Growth Management Act requires every Washington city and county to adopt a Critical Areas Ordinance protecting wetlands, fish and wildlife habitat, frequently flooded areas, geologically hazardous areas (landslide, seismic, erosion), and critical aquifer recharge areas. If any portion of the parcel — including required buffers (often 50–300 ft from a wetland or stream) — falls in a critical area, expect a critical-area study, mitigation plan, and possibly a reasonable-use exception before the building permit can issue. Always pull the parcel-level CAO map before quoting; a missed wetland buffer can add 3–6 months and a wetland biologist to the project.",
+      "applies_to": "Any parcel touching a wetland, stream, steep slope, or designated geo-hazard",
+      "source": "https://kingcounty.gov/en/dept/local-services/certificates-permits-licenses/permits/permits-inspections-codes-buildings-land-use/permit-forms-application-materials/land-use/critical-areas"
+    },
+    {
+      "title": "Shoreline Management Act — separate Substantial Development / Conditional Use / Variance permit",
+      "note": "Construction within 200 feet of an ordinary high-water mark on a shoreline of the state (most marine waters, lakes ≥20 acres, and streams with mean annual flow ≥20 cfs) triggers the Shoreline Management Act. Work over $9,047 (the 2024 statutory threshold, indexed every 5 years) generally requires a Shoreline Substantial Development Permit issued by the local government and reviewed by Department of Ecology — Ecology's review adds 21 days minimum, and shoreline permits do not become effective until 14 days after Ecology's filing date. File this in PARALLEL with the building permit, not after.",
+      "applies_to": "Residential work within 200 ft of a shoreline of the state",
+      "source": "https://apps.ecology.wa.gov/publications/documents/1706029.pdf"
+    },
+    {
+      "title": "Statewide DNR Wildfire Hazard Map — defensible space and WUI building requirements",
+      "note": "The Department of Natural Resources maintains a statewide map categorizing wildfire hazard as low, moderate, high, or very high. Parcels in high/very-high zones (much of eastern Washington and parts of the Cascade foothills) trigger IWUIC-derived ignition-resistant construction (Class A roof, ember-resistant vents, 5 ft non-combustible zone) and defensible-space inspections from the local fire marshal. Pull the DNR map for the parcel before specifying siding, eaves, or decking — substituting non-rated materials in a high-hazard zone is a common rejection.",
+      "applies_to": "New construction and major remodels in DNR-mapped high/very-high wildfire hazard zones",
+      "source": "https://dnr.wa.gov/wildfire-resources/wildfire-prevention/wildfire-hazard-and-risk-mapping"
+    },
+    {
+      "title": "RCW 43.42.080 coordinated permit timelines — not a hard shot clock",
+      "note": "Unlike California's 60-day ADU clock, Washington has no statewide ministerial shot clock for residential permits. RCW 43.42.080 lets the Office of Regulatory Innovation and Assistance (ORIA) coordinate timelines across participating state agencies, but timelines \"shall not be shorter than those otherwise required\" by other law. Local LDC-060(H) infill provisions target 60 days (no public hearing) or 80 days (with hearing), but these are goals, not guarantees — BIAW data puts the statewide average residential permit at ~6.5 months. Set client expectations accordingly and track vesting carefully.",
+      "applies_to": "All residential permit applications — managing client timeline expectations",
+      "source": "https://app.leg.wa.gov/rcw/default.aspx?cite=43.42.080"
+    },
+    {
+      "title": "Permit vesting reform — minimum 2-year vesting for projects ≤50 units (2026 legislation)",
+      "note": "Washington's vested-rights doctrine attaches to a complete building-permit application — the project is reviewed under the code in effect on the application date, even if codes change later. 2026 legislation moving through the Senate would lock that vesting for a minimum of 2 years on projects of 50 or fewer residential units. Practically: file a complete application before a known code change (e.g., the 2024 cycle effective ~May 2027) to lock in 2021 code, but track the bill's final form before relying on the 2-year floor.",
+      "applies_to": "Residential infill and small-multifamily timing decisions around code-change boundaries",
+      "source": "https://wacities.org/advocacy/News/advocacy-news/2026/03/06/bill-proposes-reforms-to-project-permit-vesting---permit-shot-clocks"
+    },
+    {
+      "title": "RCW 64.06.020 Form 17 seller disclosure — improvements without permits must be disclosed",
+      "note": "Almost all residential resales in Washington require the seller to deliver a completed Form 17 Seller Disclosure Statement under RCW 64.06.020. The form specifically asks whether additions, conversions, or remodels were done with required permits and final inspections. Unpermitted ADU conversions, finished basements, or garage conversions surface here — and disclosed-but-unpermitted work is a frequent trigger for retroactive permit applications, which the AHJ will review under CURRENT code, not the code in effect when the work was originally done.",
+      "applies_to": "Resale prep and retroactive permit work on previously unpermitted improvements",
+      "source": "https://app.leg.wa.gov/rcw/default.aspx?cite=64.06.020"
+    },
+    {
+      "title": "Flood Hazard Overlay District — separate floodplain development permit on top of building permit",
+      "note": "Parcels in a FEMA Special Flood Hazard Area (Zone A, AE, VE) fall under the local Flood Hazard Overlay District and require a separate floodplain development permit in addition to the building permit. Lowest-floor elevation (typically 1–2 ft above BFE depending on jurisdiction), flood vents on enclosed areas below BFE, and a post-construction Elevation Certificate sealed by a licensed surveyor are all standard requirements. File the floodplain permit and order the EC up front — discovering the parcel is in an SFHA at framing inspection is a project-killer.",
+      "applies_to": "Any residential work in a FEMA-mapped Special Flood Hazard Area",
+      "source": "https://experience.arcgis.com/experience/5978c68aeb2f495db07ddab1c3aa1048/page/Flood-Hazard-Overlay-District"
+    }
+  ],
+  "hidden_triggers": [],
+  "_fee_floor_check": "residential_no_override"
+}

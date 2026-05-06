@@ -32,6 +32,11 @@ except ImportError:  # server.py imports research_engine as a top-level module
     from state_packs import get_state_expert_notes
 
 try:
+    from .state_schema import compact_state_schema_context
+except ImportError:  # server.py imports research_engine as a top-level module
+    from state_schema import compact_state_schema_context
+
+try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 except Exception:
@@ -89,8 +94,8 @@ SERPER_API_KEY = os.environ.get("SERPER_API_KEY", "")
 # rather than silently using a key checked into git history (was a security gap
 # fixed 2026-04-26).
 BRAVE_SEARCH_API_KEY = os.environ.get("BRAVE_SEARCH_API_KEY", "")
-ACCELA_APP_ID = os.environ.get("ACCELA_APP_ID", "639125015399507099")
-ACCELA_APP_SECRET = os.environ.get("ACCELA_APP_SECRET", "a516edb01cab4261baf14a478ee3c9ac")
+ACCELA_APP_ID = os.environ.get("ACCELA_APP_ID")
+ACCELA_APP_SECRET = os.environ.get("ACCELA_APP_SECRET")
 
 # Cache TTL ceiling (days). Permit rules and fees update quarterly in many
 # cities; 30 days was too long. Combined with ETag polling (added 2026-04-26)
@@ -385,17 +390,9 @@ def normalize_sources(*groups) -> list[str]:
 
 
 # ─── Cross-jurisdiction source-locality filter ──────────────────────────────
-# 2026-04-28: post-process result["sources"] to drop URLs that aren't relevant
-# to the queried AHJ. Eval suite caught these cross-jurisdiction leaks across
-# the 10-scenario re-grade run:
-#   - Phoenix queries: nyc.gov/onenyc URL (wrong state)
-#   - Denver queries: saratoga.ca.us, dublin.ca.gov, opendata.utah.gov (wrong state)
-#   - LA city queries: pw.lacounty.gov (LA County, not City of LA)
-#   - Pasadena queries: southpasadenaca.gov (different city in same county)
-# These survive the EXCLUDED filter because they're real .gov sites — they're
-# just wrong jurisdictions. The fix: keep only sources whose hostname/path
-# contains the queried city, state, state-code, OR is in a curated always-keep
-# allowlist (NFPA, IAPMO, ICC, federal building/energy domains).
+# A1 (2026-04-28): hard-block source URLs that do not belong to the active AHJ
+# tree. This is stricter than classify_source_url(): a real .gov can still be
+# the wrong .gov (lebanon.in.gov on a Dallas query, ldh.la.gov on LA City, etc.).
 
 _US_STATE_NAMES = {
     "AL": "alabama", "AK": "alaska", "AZ": "arizona", "AR": "arkansas",
@@ -413,138 +410,364 @@ _US_STATE_NAMES = {
     "WI": "wisconsin", "WY": "wyoming", "DC": "districtofcolumbia",
 }
 
-# Always-keep regardless of locality — code-reference + federal building authorities.
-# These are valid citations for any US AHJ.
-_LOCALITY_ALLOWLIST_DOMAINS = frozenset({
-    "nfpa.org", "iapmo.org", "icc-es.org", "iccsafe.org", "ashrae.org",
-    "ada.gov", "access-board.gov", "energystar.gov", "energy.gov",
-    "epa.gov", "hud.gov", "fema.gov", "osha.gov",
-    "law.cornell.edu", "ecfr.gov", "regulations.gov",
-    "cslb.ca.gov", "tdlr.texas.gov", "roc.az.gov",  # state license boards — info only, blocked from apply_url separately
-    "myfloridalicense.com", "dbpr.myfloridalicense.com",
-    "lni.wa.gov", "ccb.oregon.gov",
+_UNIVERSAL_LOCALITY_DOMAINS = frozenset({
+    "ada.gov", "access-board.gov", "energy.gov", "energystar.gov", "fema.gov", "epa.gov",
+    "icc-safe.org", "iccsafe.org", "icc-es.org", "nfpa.org", "iapmo.org", "ashrae.org",
 })
 
-# City-specific exclusions: when the query city is X, these domains are
-# almost-always wrong AHJ. Curated list — each entry is verified.
+_PLATFORM_VENDOR_DOMAINS = frozenset({
+    "accela.com",
+    "aca-prod.accela.com",
+    "publicstuff.com",
+    "citizenserve.com",
+    "etrakit.com",
+    "etrakit.net",
+    "mygovernmentonline.org",
+    "mygovonline.com",
+    "opengov.com",
+    "viewpointcloud.com",
+    "tylertech.com",
+    "tylerhost.net",
+    "civicaccess.com",
+})
+_PLATFORM_VENDOR_DOMAINS_BY_SPECIFICITY = tuple(sorted(_PLATFORM_VENDOR_DOMAINS, key=lambda d: (-len(d), d)))
+
+_AHJ_DOMAIN_ALLOWLIST: dict[tuple[str, str], set[str]] = {
+    ("phoenix", "az"): {"phoenix.gov", "az.gov", "azdeq.gov", "azroc.gov", "roc.az.gov"},
+    ("las vegas", "nv"): {"clarkcountynv.gov", "lasvegasnevada.gov", "nv.gov", "nvcontractorsboard.com"},
+    ("clark county", "nv"): {"clarkcountynv.gov", "nv.gov", "nvcontractorsboard.com"},
+    ("seattle", "wa"): {"seattle.gov", "kingcounty.gov", "wa.gov", "lni.wa.gov", "ecology.wa.gov"},
+    ("los angeles", "ca"): {"lacity.org", "ladbs.org", "ca.gov", "cslb.ca.gov"},
+    ("dallas", "tx"): {"dallascityhall.com", "dallascounty.org", "tx.gov", "tdlr.texas.gov", "texas.gov", "txdmv.gov"},
+    # 2026-05-01 stress100 manual verification: City of Fredericksburg, TX uses fbgtx.org
+    # as its official municipal domain; OpenClaw scorer correctly kept it flagged until verified.
+    ("fredericksburg", "tx"): {"fbgtx.org"},
+}
+
+# Explicit wrong-AHJ regressions from cda4106/four-city review. Keep these ahead
+# of generic state-domain rules (e.g. pw.lacounty.gov is a CA .gov, but not LA City).
 _CITY_LOCALITY_EXCLUSIONS = {
-    # Only exclude domains that are CLEARLY wrong-AHJ. Keep county domains
-    # that legitimately provide companion permit info (health, environmental,
-    # public works) — those help, they don't hurt.
-    ("los angeles", "ca"): ("pw.lacounty.gov", "dpw.lacounty.gov"),
-    # Note: maricopa.gov is KEPT for Phoenix queries — Maricopa County
-    # Environmental Services issues the food-establishment health permit
-    # which is a legitimate companion permit for restaurant TIs.
+    ("los angeles", "ca"): {"pw.lacounty.gov", "dpw.lacounty.gov", "lacounty.gov", "ldh.la.gov"},
+    ("dallas", "tx"): {"lebanon.in.gov", "govinfo.gov"},
 }
 
 
 def _city_match_tokens(city: str, state: str) -> set[str]:
-    """Build a set of lowercase tokens that should appear in a valid AHJ source URL."""
     tokens: set[str] = set()
-    if not city:
+    c = (city or "").lower().strip()
+    if not c:
         return tokens
-    c = city.lower().strip()
-    tokens.add(c)
-    tokens.add(c.replace(" ", ""))           # "losangeles"
-    tokens.add(c.replace(" ", "_"))          # "los_angeles"
-    tokens.add(c.replace(" ", "-"))          # "los-angeles"
-    # Common short forms
-    if c in ("los angeles", "los_angeles"):
-        tokens.update({"la", "lacity", "ladbs", "ladbsservices2", "ladwp", "boe"})
-    elif c == "new york":
-        tokens.update({"nyc", "newyork", "nycgov"})
-    elif c == "san francisco":
-        tokens.update({"sf", "sfgov", "sfdbi"})
-    elif c == "phoenix":
-        tokens.update({"phx", "shapephx"})
-    elif c == "chicago":
-        tokens.update({"chi"})
-    elif c == "washington" and state.upper() == "DC":
-        tokens.update({"dcra"})
+    tokens.update({c, c.replace(" ", ""), c.replace(" ", "_"), c.replace(" ", "-")})
+    aliases = {
+        ("los angeles", "CA"): {"lacity", "ladbs", "ladwp"},
+        ("new york", "NY"): {"nyc", "newyork", "nycgov"},
+        ("san francisco", "CA"): {"sfgov", "sfdbi"},
+        ("phoenix", "AZ"): {"phoenix", "shapephx"},
+    }
+    tokens.update(aliases.get((c, (state or "").upper().strip()), set()))
     return tokens
 
 
 def _state_match_tokens(state: str) -> set[str]:
-    """State name + 2-letter code (lowercased) for locality match."""
-    tokens: set[str] = set()
-    if not state:
-        return tokens
-    s = state.upper().strip()
-    if s in _US_STATE_NAMES:
-        tokens.add(s.lower())                # "az"
-        full = _US_STATE_NAMES[s]
-        tokens.add(full)                     # "arizona"
-        tokens.add(full.replace(" ", ""))   # already no-space
-        # also accept "az.gov" / "az.us" style suffixes via _domain_endswith_state
-    return tokens
+    s = (state or "").upper().strip()
+    if not s or s not in _US_STATE_NAMES:
+        return set()
+    return {s.lower(), _US_STATE_NAMES[s], _US_STATE_NAMES[s].replace(" ", "")}
 
 
-def filter_sources_by_locality(sources: list[str], city: str, state: str) -> list[str]:
-    """Drop sources whose hostname/path doesn't match the queried AHJ.
+def _host_matches_any(host: str, domains: set[str] | frozenset[str] | tuple[str, ...]) -> bool:
+    return any(host == d or host.endswith("." + d) for d in domains if d)
 
-    Algorithm:
-      1. Build token set from (city + city aliases) ∪ (state + state code).
-      2. For each source URL:
-         - KEEP if hostname is in _LOCALITY_ALLOWLIST_DOMAINS (code refs + federal)
-         - KEEP if hostname or path contains any city/state token
-         - REJECT otherwise
-      3. Apply per-city exclusions (e.g. lacounty.gov for City of LA queries).
 
-    Conservative — when in doubt, KEEP. Only rejects sources with zero locality
-    signal AND not in the allowlist.
+def _verified_city_domains(city: str, state: str) -> set[str]:
+    """Best-effort domains from knowledge/verified_cities.db for all verified cities."""
+    out: set[str] = set()
+    try:
+        db_path = os.path.join(KNOWLEDGE_DIR, "verified_cities.db")
+        if not os.path.exists(db_path):
+            return out
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT portal_url, fee_schedule_url, application_url FROM verified_cities WHERE lower(city)=? AND upper(state)=? LIMIT 1",
+            ((city or "").lower().strip(), (state or "").upper().strip()),
+        ).fetchone()
+        conn.close()
+        if not row:
+            return out
+        for key in ("portal_url", "fee_schedule_url", "application_url"):
+            domain = _normalized_source_domain(row[key] or "")
+            if domain:
+                out.add(domain)
+    except Exception:
+        return out
+    return out
+
+
+def locality_allowed_domains(city: str, state: str) -> set[str]:
+    city_key = (city or "").lower().strip()
+    state_key = (state or "").lower().strip()
+    domains = set(_AHJ_DOMAIN_ALLOWLIST.get((city_key, state_key), set()))
+    domains |= _verified_city_domains(city, state)
+    # Shared SaaS permit portals must not become blanket AHJ proof from the DB/allowlist.
+    # They are evaluated by the stricter vendor-token branch below.
+    domains = {d for d in domains if not _host_matches_any(d, _PLATFORM_VENDOR_DOMAINS)}
+    # Do not blanket-allow every municipal subdomain under a state ccTLD-like host
+    # (for example `*.or.gov`) because that can turn SouthBend into Bend.
+    # City/state-token fallback below handles unseeded official hosts safely.
+    return domains
+
+
+def _text_has_locality_token(text: str, city: str, state: str = "") -> bool:
+    """Exact-ish city/AHJ token match; avoids Bend matching SouthBend."""
+    if not text:
+        return False
+    normalized = text.lower()
+    for token in _city_match_tokens(city, state):
+        token = (token or "").lower().strip()
+        if len(token) < 3:
+            continue
+        parts = [p for p in re.split(r"[^a-z0-9]+", token) if p]
+        if len(parts) > 1:
+            pattern = r"(?<![a-z0-9])" + r"[^a-z0-9]+".join(re.escape(p) for p in parts) + r"(?![a-z0-9])"
+            if re.search(pattern, normalized):
+                return True
+        else:
+            pattern = r"(?<![a-z0-9])" + re.escape(token) + r"(?![a-z0-9])"
+            for match in re.finditer(pattern, normalized):
+                prior = normalized[:match.start()]
+                prev_word = re.search(r"([a-z0-9]+)[^a-z0-9]+$", prior)
+                if prev_word and prev_word.group(1) in {"north", "south", "east", "west", "northeast", "northwest", "southeast", "southwest"}:
+                    continue
+                return True
+    return False
+
+
+def _vendor_locality_text(domain: str, url: str) -> str:
+    """URL account text for shared permit SaaS portals.
+
+    Includes tenant subdomain labels plus path/query, while not treating the shared
+    vendor suffix itself as locality proof.
     """
+    parsed = urlparse(url)
+    host_prefixes: list[str] = []
+    for vendor in _PLATFORM_VENDOR_DOMAINS_BY_SPECIFICITY:
+        if _domain_matches(domain, vendor):
+            if domain != vendor and domain.endswith("." + vendor):
+                prefix = domain[: -(len(vendor) + 1)]
+                host_prefixes.append(prefix.replace(".", " ").replace("-", " ").replace("_", " "))
+            break
+    return " ".join(host_prefixes + [parsed.path or "", parsed.query or ""])
+
+
+def is_url_allowed_for_locality(url: str, city: str, state: str, result: dict | None = None) -> bool:
+    domain = _normalized_source_domain(url)
+    if not domain:
+        return False
+    city_key = (city or "").lower().strip()
+    state_key = (state or "").lower().strip()
+    if _host_matches_any(domain, _CITY_LOCALITY_EXCLUSIONS.get((city_key, state_key), set())):
+        return False
+    if _host_matches_any(domain, _UNIVERSAL_LOCALITY_DOMAINS):
+        return True
+    allowed = locality_allowed_domains(city, state)
+    if _host_matches_any(domain, allowed):
+        return True
+    if _host_matches_any(domain, _PLATFORM_VENDOR_DOMAINS):
+        # Vendor portals are legitimate permit infrastructure, but the shared
+        # vendor host alone does not prove jurisdiction. Require the URL account
+        # text itself (tenant subdomain, path, or query) to carry the queried AHJ
+        # token with token boundaries. Do not let applying_office/portal prose
+        # corroborate a wrong portal URL.
+        return _text_has_locality_token(_vendor_locality_text(domain, url), city, state)
+    if classify_source_url(url) == SOURCE_CLASS_EXCLUDED:
+        return False
+    # Conservative fallback for non-seeded cities: official host/path with city token AND same-state TLD.
+    parsed = urlparse(url)
+    full = f"{domain} {(parsed.path or '').lower()}"
+    if _text_has_locality_token(full, city, state):
+        if state_key and (domain.endswith(f".{state_key}.gov") or domain.endswith(f".{state_key}.us")):
+            return True
+        if domain.endswith((".gov", ".us")) and any(tok in full for tok in _state_match_tokens(state) if len(tok) >= 3):
+            return True
+    return False
+
+
+def filter_sources_by_locality(sources: list[str], city: str, state: str, result: dict | None = None) -> list[str]:
     if not isinstance(sources, list) or not sources:
         return sources or []
-
-    city_tokens = _city_match_tokens(city, state)
-    state_tokens = _state_match_tokens(state)
-    state_code = state.lower().strip() if state else ""
-    all_tokens = city_tokens | state_tokens
-
-    excluded = _CITY_LOCALITY_EXCLUSIONS.get((city.lower().strip(), state_code), ()) if city and state else ()
-
     kept: list[str] = []
-    try:
-        from urllib.parse import urlparse as _urlparse
-    except Exception:
-        return sources
-
     for src in sources:
         if not isinstance(src, str) or not src.startswith("http"):
-            kept.append(src)
             continue
-        try:
-            parsed = _urlparse(src)
-            host = (parsed.hostname or "").lower()
-            path = (parsed.path or "").lower()
-            full = (host + " " + path).lower()
-        except Exception:
+        if is_url_allowed_for_locality(src, city, state, result=result):
             kept.append(src)
-            continue
-
-        # 1) Always-keep code-reference + federal authorities
-        if any(host == d or host.endswith("." + d) for d in _LOCALITY_ALLOWLIST_DOMAINS):
-            kept.append(src)
-            continue
-
-        # 2) Per-city exclusions (e.g., lacounty.gov on City of LA queries)
-        if any(host == ex or host.endswith("." + ex) for ex in excluded):
-            continue  # drop
-
-        # 3) Locality match
-        if any(tok and tok in full for tok in all_tokens if len(tok) >= 2):
-            kept.append(src)
-            continue
-
-        # 4) State-tld match (e.g., *.az.gov on AZ queries)
-        if state_code and (host.endswith("." + state_code + ".gov") or host.endswith("." + state_code + ".us")):
-            kept.append(src)
-            continue
-
-        # 5) Default: drop
-        # (don't print every drop — too verbose; could log to telemetry later)
-
     return kept
+
+
+def _locality_placeholder(result: dict, city: str) -> str:
+    ahj = result.get("applying_office") or (f"{city} building department" if city else "the building department")
+    phone = result.get("building_dept_phone") or result.get("phone") or result.get("office_phone") or ""
+    return f"[verify with {ahj}{(' ' + phone) if phone else ''}]"
+
+
+def _strip_nonlocal_urls_from_text(text: str, city: str, state: str, result: dict, block: bool = False) -> str:
+    if not isinstance(text, str) or not text:
+        return text
+    placeholder = _locality_placeholder(result, city)
+    def _replace(match):
+        raw = match.group(0)
+        url = raw.rstrip('.,;:!?')
+        suffix = raw[len(url):]
+        if is_url_allowed_for_locality(url, city, state, result=result):
+            return raw
+        return ("" if block else placeholder) + suffix
+    return _URL_REGEX.sub(_replace, text)
+
+
+def apply_source_locality_hard_block(result: dict, city: str, state: str) -> dict:
+    """Apply A1 locality filtering to citations, apply URL, *_source URL fields, and prose."""
+    if not isinstance(result, dict):
+        return result
+    dropped: list[dict] = []
+
+    pre_sources = list(result.get("sources") or []) if isinstance(result.get("sources"), list) else []
+    result["sources"] = filter_sources_by_locality(pre_sources, city, state, result=result)
+    for src in pre_sources:
+        if src not in result["sources"]:
+            dropped.append({"field": "sources", "url": src})
+
+    apply_url = result.get("apply_url")
+    if isinstance(apply_url, str) and apply_url.startswith("http"):
+        if not is_url_allowed_for_locality(apply_url, city, state, result=result):
+            dropped.append({"field": "apply_url", "url": apply_url})
+            result["apply_url"] = None
+            result["_apply_url_locality_warning"] = (
+                f"The online application URL did not match {city}, {state}; "
+                "verify the portal directly with the local building department."
+            )
+        else:
+            result.pop("_apply_url_locality_warning", None)
+
+    for key, value in list(result.items()):
+        if key.endswith("_source") and isinstance(value, str) and value.startswith("http"):
+            if not is_url_allowed_for_locality(value, city, state, result=result):
+                dropped.append({"field": key, "url": value})
+                result[key] = None
+
+    text_policy = {
+        "fee_range": False,
+        "confidence_reason": True,
+        "permit_summary": False,
+        "pro_tip": False,
+        "watch_out": False,
+        "job_summary": False,
+    }
+    for field, block in text_policy.items():
+        if isinstance(result.get(field), str):
+            cleaned = _strip_nonlocal_urls_from_text(result[field], city, state, result, block=block)
+            if cleaned != result[field]:
+                result[field] = re.sub(r"\s+", " ", cleaned).strip()
+                dropped.append({"field": field, "url": "free_text"})
+
+    for field in ("pro_tips", "common_mistakes", "what_to_bring", "requirements", "documents_needed"):
+        if isinstance(result.get(field), list):
+            result[field] = [
+                _strip_nonlocal_urls_from_text(item, city, state, result, block=False) if isinstance(item, str) else item
+                for item in result[field]
+            ]
+
+    if dropped:
+        result["_sources_locality_dropped"] = (result.get("_sources_locality_dropped") or []) + dropped[:10]
+    return result
+
+
+def apply_residential_stress_quality_floor(result: dict, job_type: str, city: str = "", state: str = "") -> dict:
+    """Fill thin-but-safe residential stress outputs with contractor-grade structure.
+
+    This is deliberately generic and deterministic: it does not invent local fees,
+    sources, or AHJ-specific rules. It only prevents fresh small-city residential
+    outputs from failing structural checks because they omitted a complex timeline
+    or returned a one-item inspection list for common scopes.
+    """
+    if not isinstance(result, dict):
+        return result
+    no_permit_verdicts = {"NO", "NOT REQUIRED", "NONE", "EXEMPT", "NOT NEEDED"}
+    if str(result.get("permit_verdict") or "").upper().strip() in no_permit_verdicts:
+        return result
+    job_lc = (job_type or "").lower()
+    if any(t in job_lc for t in ("commercial", "tenant improvement", " ti", "office", "restaurant", "retail", "clinic", "medical")):
+        return result
+    primary_scope_raw = result.get("_primary_scope")
+    primary_scope = primary_scope_raw if isinstance(primary_scope_raw, str) and primary_scope_raw else detect_primary_scope(job_type or "")
+    primary_scope = str(primary_scope or "")
+    if primary_scope in _COMMERCIAL_PRIMARY_SCOPES:
+        return result
+    result["_primary_scope"] = primary_scope
+
+    job_lc = (job_type or "").lower()
+    if any(t in job_lc for t in ("pool", "spa", "hot tub", "swimming")):
+        scope = "pool"
+        timeline = {"simple": "2-4 weeks", "complex": "4-8+ weeks if structural, barrier, grading, utility, or HOA/zoning review is required"}
+        inspections = [
+            "Pool steel/bonding inspection before gunite or shell placement.",
+            "Underground plumbing pressure test and electrical trench/bonding inspection before cover.",
+            "Barrier/alarms/fencing final plus pool equipment electrical/mechanical final.",
+        ]
+        docs = ["Site plan with pool/spa location, setbacks, equipment pad, fencing/barrier details, and drainage/grading notes."]
+    elif any(t in job_lc for t in ("roof", "reroof", "re-roof", "tear-off", "tear off", "shingle")):
+        scope = "roof"
+        timeline = {"simple": "same day to 1 week", "complex": "1-3+ weeks if structural repairs, historic/design review, HOA, or wildfire/wind exposure rules apply"}
+        inspections = [
+            "Tear-off/decking inspection if sheathing or structural deck repairs are required.",
+            "Dry-in/underlayment inspection where the AHJ requires it before covering.",
+            "Roof final inspection for flashing, ventilation, product approval, and debris cleanup.",
+        ]
+        docs = ["Roof scope/spec sheet showing material, underlayment, flashing, ventilation, roof pitch, and whether decking will be replaced."]
+    elif any(t in job_lc for t in ("addition", "add bedroom", "add bathroom", "room addition", "home addition")):
+        scope = "addition"
+        timeline = {"simple": "3-6 weeks", "complex": "6-12+ weeks if structural engineering, zoning setbacks, utility upgrades, or plan-review corrections are required"}
+        inspections = [
+            "Foundation/footing inspection before concrete placement.",
+            "Framing/shear/hold-down inspection before insulation or drywall.",
+            "If the scope includes electrical, plumbing, or mechanical work, rough inspections are typically required before cover.",
+            "Insulation/energy inspection and final building inspection before occupancy/use.",
+        ]
+        docs = ["Scaled plans with site plan/setbacks, structural details, energy compliance, floor plan, elevations, and MEP scope notes."]
+    else:
+        return result
+
+    tl = result.get("approval_timeline")
+    if not isinstance(tl, dict):
+        result["approval_timeline"] = dict(timeline)
+    else:
+        tl.setdefault("simple", timeline["simple"])
+        tl.setdefault("complex", timeline["complex"])
+        result["approval_timeline"] = tl
+
+    existing = result.get("inspections") if isinstance(result.get("inspections"), list) else []
+    seen = {str(x).strip().lower() for x in existing}
+    for item in inspections:
+        if item.lower() not in seen:
+            existing.append(item)
+            seen.add(item.lower())
+    result["inspections"] = existing
+
+    docs_list = result.get("what_to_bring") if isinstance(result.get("what_to_bring"), list) else []
+    doc_seen = {str(x).strip().lower() for x in docs_list}
+    for item in docs:
+        if item.lower() not in doc_seen:
+            docs_list.append(item)
+            doc_seen.add(item.lower())
+    result["what_to_bring"] = docs_list
+    notes = result.get("_quality_floor_notes")
+    if not isinstance(notes, list):
+        notes = []
+    note = f"residential_{scope}_stress_quality_floor"
+    if note not in notes:
+        notes.append(note)
+    result["_quality_floor_notes"] = notes
+    return result
 
 
 def compute_missing_fields(result: dict) -> list[str]:
@@ -1443,6 +1666,23 @@ CHECKLIST_SCOPE = {
             "Glass + glazing: safety glazing per IBC 2406 in any pane within 24 in of doors or 60 in of floor",
         ],
     },
+    "commercial_medical_clinic_ti": {
+        "tokens": [
+            "medical clinic", "medical office tenant", "clinic tenant improvement", "clinic ti",
+            "dental clinic", "dental office tenant", "health clinic", "exam room", "exam rooms",
+            "treatment room", "procedure room", "medical gas", "med gas", "x-ray", "radiology",
+        ],
+        "items": [
+            "Commercial clinic TI building permit: identify B / ambulatory-care / outpatient occupancy basis, suite size, occupant load, egress, rated corridors, and certificate-of-occupancy conditions before submittal.",
+            "Exam-room plumbing: show hand sinks, accessible restroom fixture count, backflow protection, indirect waste, sterilization-room fixtures, and dental/medical equipment utility connections.",
+            "Medical gas / nitrous / oxygen: submit NFPA 99-style outlet schedule, alarms, zone valves, source equipment, pressure test, and verifier documentation when gas systems are in scope.",
+            "Clinic HVAC / infection-control: provide room-by-room ventilation schedule, exhaust, pressure relationships, filtration, and construction infection-control notes where procedure/sterilization/lab spaces exist.",
+            "ADA path-of-travel: verify accessible route, reception/check-in counter, exam-room door/turning clearances, toilet rooms, parking/passenger loading, signage, and 20% disproportionality cap documentation.",
+            "X-ray / radiology: obtain shielding design or state radiation-control registration where equipment is installed; coordinate lead-lined assemblies, warning lights/signage, and electrical requirements.",
+            "Fire/life-safety: coordinate fire alarm notification appliances, sprinkler head layout, emergency lighting/exit signs, suite separation, and storage/oxygen hazards with Fire Prevention.",
+            "Health-care licensing / local health review: confirm whether the clinic type needs state or local health-care licensing approval separate from the building permit before opening.",
+        ],
+    },
     "commercial_retail_ti": {
         "tokens": [
             "retail tenant improvement", "retail ti", "retail buildout", "store buildout",
@@ -1603,7 +1843,7 @@ def _load_verified_cities_rows() -> None:
         with sqlite3.connect(db_path) as conn:
             conn.row_factory = sqlite3.Row
             rows = conn.execute(
-                "SELECT city, state, portal_url, building_dept_phone, "
+                "SELECT city, state, portal_url, application_url, building_dept_phone, "
                 "building_dept_address, entity_type FROM verified_cities"
             ).fetchall()
             for r in rows:
@@ -1617,6 +1857,7 @@ def _load_verified_cities_rows() -> None:
                     "city": r["city"],
                     "state": r["state"],
                     "portal_url": r["portal_url"] or "",
+                    "application_url": r["application_url"] or "",
                     "phone": r["building_dept_phone"] or "",
                     "address": r["building_dept_address"] or "",
                     "entity_type": r["entity_type"] or "city",
@@ -1636,6 +1877,133 @@ def _get_verified_city_row(city: str, state: str) -> dict | None:
         return None
     _load_verified_cities_rows()
     return _VERIFIED_CITIES_ROWS.get((city.strip().lower(), state.strip().upper()))
+
+
+
+# B4 (2026-04-28): rulebook depth is deliberately separate from the existing
+# confidence score. Confidence describes output completeness/source quality;
+# rulebook_depth tells the user how deep our jurisdiction-specific rulebook is
+# for this city + scope. This is the integrity layer for 5,260 verified AHJs:
+# only the GTM cities below have stress-tested deep rulebooks today.
+DEEP_RULEBOOK_CITIES = frozenset({
+    ("phoenix", "AZ"),
+    ("las vegas", "NV"),
+    ("clark county", "NV"),
+    ("seattle", "WA"),
+    ("los angeles", "CA"),
+    ("dallas", "TX"),
+})
+
+TESTED_RULEBOOK_SCOPES = frozenset({
+    "restaurant_ti", "office_ti", "retail_ti",
+    "detached_adu", "jadu", "hillside_adu", "garage_conversion",
+    "kitchen_remodel", "panel_upgrade", "water_heater", "hvac_changeout",
+    "reroof", "foundation", "window_replacement", "deck", "patio_cover",
+})
+
+COMMON_RULEBOOK_SCOPES = frozenset({
+    "restaurant_ti", "office_ti", "retail_ti",
+    "detached_adu", "jadu", "hillside_adu", "garage_conversion", "adu",
+    "kitchen_remodel", "panel_upgrade", "water_heater", "hvac_changeout",
+    "reroof", "window_replacement", "deck", "patio_cover", "simple_trade",
+})
+
+RULEBOOK_STRESS_TEST_VERIFIED_AT = "2026-04-28"
+RULEBOOK_ENGINE_COMMIT_VERIFIED_AT = "2026-04-29"
+
+
+def _display_scope_label(scope: str) -> str:
+    return (scope or "scope").replace("_", " ")
+
+
+def classify_rulebook_scope(job_type: str) -> str:
+    """Map free-text job_type into B4's rulebook-depth scope enum."""
+    job = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
+    if not job:
+        return "unknown"
+    if any(t in job for t in ("tribal", "reservation", "sovereign land", "federal enclave")):
+        return "edge_case"
+    if any(t in job for t in ("restaurant", "commercial kitchen", "food service", "type i hood", "grease interceptor")):
+        return "restaurant_ti"
+    if any(t in job for t in ("office ti", "office tenant improvement", "office buildout")):
+        return "office_ti"
+    if any(t in job for t in ("retail ti", "retail tenant improvement", "retail buildout", "store buildout", "boutique")):
+        return "retail_ti"
+    if any(t in job for t in ("hillside adu", "hillside accessory dwelling")):
+        return "hillside_adu"
+    if any(t in job for t in ("jadu", "junior accessory")):
+        return "jadu"
+    if any(t in job for t in ("garage conversion", "convert garage")):
+        return "garage_conversion"
+    if any(t in job for t in ("dadu", "detached adu", "detached accessory dwelling")):
+        return "detached_adu"
+    if "adu" in job or "accessory dwelling" in job:
+        return "adu"
+    if "kitchen remodel" in job or "kitchen renovation" in job:
+        return "kitchen_remodel"
+    if any(t in job for t in ("water heater", "tankless")):
+        return "water_heater"
+    if any(t in job for t in ("hvac", "furnace", "heat pump", "condenser", "air conditioner", "a/c", "ac changeout")):
+        return "hvac_changeout"
+    if any(t in job for t in ("reroof", "re-roof", "roof replacement", "roofing")):
+        return "reroof"
+    if "foundation" in job:
+        return "foundation"
+    if any(t in job for t in ("window replacement", "replace windows", "windows")):
+        return "window_replacement"
+    if "panel upgrade" in job or "service upgrade" in job:
+        return "panel_upgrade"
+    if "patio cover" in job or "pergola" in job:
+        return "patio_cover"
+    if "deck" in job:
+        return "deck"
+    if any(t in job for t in ("electrical", "plumbing", "mechanical", "trade permit")):
+        return "simple_trade"
+    return "unknown"
+
+
+def apply_rulebook_depth(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Add B4 rulebook_depth metadata to a permit result without touching confidence."""
+    if not isinstance(result, dict):
+        return result
+    city_name = (city or result.get("location", "").split(",")[0] or "").strip()
+    state_code = (state or "").strip().upper()
+    scope = classify_rulebook_scope(job_type)
+    city_key = (city_name.lower(), state_code)
+    ahj = result.get("applying_office") or f"{city_name} building department" or "the AHJ"
+
+    if city_key in DEEP_RULEBOOK_CITIES:
+        if scope in TESTED_RULEBOOK_SCOPES:
+            depth = "DEEP"
+            reason = "GTM-test: Top 5 GTM city + tested scope: depth-graded by 4-city Opus review and 30-scenario stress test on 2026-04-28"
+            disclaimer = f"Confidence: HIGH — verified rulebook depth for {city_name} on {_display_scope_label(scope)}"
+        else:
+            depth = "STATE_DEFAULT" if scope == "edge_case" else "MEDIUM"
+            reason = "fallback: GTM city, but scope is outside the 2026-04-28 tested rulebook matrix"
+            disclaimer = "Confidence: MEDIUM — verified jurisdiction + state code, scope-specific rulebook is general" if depth == "MEDIUM" else f"Confidence: BASELINE — verified jurisdiction, but scope-specific rulebook is generic; verify with {ahj}"
+    else:
+        vrow = _get_verified_city_row(city_name, state_code)
+        has_apply_url = bool(vrow and (vrow.get("portal_url") or vrow.get("application_url")))
+        has_state_amendment = state_code in STATE_AMENDMENT_CITATIONS
+        if has_apply_url and has_state_amendment and scope in COMMON_RULEBOOK_SCOPES:
+            depth = "MEDIUM"
+            reason = f"state-amendment: verified_cities.db has jurisdiction apply URL and {state_code} has A7 state amendments; scope uses general rulebook"
+            disclaimer = "Confidence: MEDIUM — verified jurisdiction + state code, scope-specific rulebook is general"
+        else:
+            depth = "STATE_DEFAULT"
+            reason = "fallback: minimal verified jurisdiction data or uncommon/edge-case scope; using generic state/default rulebook"
+            disclaimer = f"Confidence: BASELINE — verified jurisdiction, but scope-specific rulebook is generic; verify with {ahj}"
+
+    result["rulebook_depth"] = depth
+    result["_rulebook_depth_reason"] = reason
+    result["_rulebook_depth_disclaimer"] = disclaimer
+    if depth == "DEEP":
+        result["_last_verified_at"] = RULEBOOK_STRESS_TEST_VERIFIED_AT if scope in TESTED_RULEBOOK_SCOPES else RULEBOOK_ENGINE_COMMIT_VERIFIED_AT
+    elif depth == "MEDIUM":
+        result["_last_verified_at"] = RULEBOOK_ENGINE_COMMIT_VERIFIED_AT
+    else:
+        result.pop("_last_verified_at", None)
+    return result
 
 def _load_knowledge():
     global _TRADES_KB, _STATES_KB, _CITIES_KB
@@ -2315,6 +2683,45 @@ def get_rejection_patterns(city: str, state: str, job_type: str) -> list[dict]:
         return []
 
 
+def _looks_like_commercial_trade_only_scope(job_type: str) -> bool:
+    """Detect commercial-location single-trade work that should not become TI.
+
+    A phrase like "RTU replacement at strip mall" has commercial/retail words,
+    but the project is a trade-only swap unless it also says TI/buildout/change
+    of use/interior alteration. Keep those out of named TI scopes so the Batch 1
+    guardrail does not replace a correct mechanical primary with building/TI.
+    """
+    job = (job_type or "").lower()
+    if not job:
+        return False
+    ti_markers = (
+        "tenant improvement", " t.i.", " ti ", " ti,", " ti.", " ti-", "buildout", "build-out",
+        "interior alteration", "interior remodel", "change of use", "change of occupancy",
+        "occupancy change", "convert", "converting", "demising", "partition", "partitions",
+        "new restaurant", "new clinic", "new office", "new retail",
+    )
+    if any(t in job for t in ti_markers):
+        return False
+    commercial_location_markers = (
+        "commercial", "strip mall", "mall", "grocery store", "restaurant", "office",
+        "professional office", "retail", "store", "tenant space", "suite", "warehouse",
+    )
+    trade_markers = (
+        "rtu", "rooftop unit", "hvac", "condenser", "compressor", "furnace", "mini split",
+        "walk-in cooler", "walk in cooler", "walk-in freezer", "walk in freezer",
+        "panel", "electrical", "plumbing", "water heater", "hood", "exhaust fan",
+    )
+    swap_markers = (
+        "replace", "replacement", "changeout", "change-out", "swap", "like-for-like",
+        "like for like", "repair", "service", "install", "installation", "add", "upgrade",
+    )
+    return (
+        any(t in job for t in commercial_location_markers)
+        and any(t in job for t in trade_markers)
+        and any(t in job for t in swap_markers)
+    )
+
+
 def detect_primary_scope(job_type: str) -> str:
     """Identify the primary occupancy/project class for a permit query.
 
@@ -2330,6 +2737,8 @@ def detect_primary_scope(job_type: str) -> str:
       multifamily | commercial (generic) | residential_adu | residential (default)
     """
     job_lc = (job_type or "").lower()
+    if _looks_like_commercial_trade_only_scope(job_lc):
+        return 'commercial'
 
     # Commercial restaurant — strongest signal
     if any(t in job_lc for t in (
@@ -2338,10 +2747,19 @@ def detect_primary_scope(job_type: str) -> str:
         'ansul', 'walk-in cooler', 'walk-in freezer', 'kitchen build-out',
     )):
         return 'commercial_restaurant'
+    if re.search(r'\basc\b', job_lc) or any(t in job_lc for t in (
+        'medical clinic', 'medical office tenant', 'dental clinic', 'dental office tenant',
+        'health clinic', 'clinic tenant improvement', 'clinic ti', 'exam room',
+        'exam rooms', 'med gas', 'medical gas', 'nitrous oxide', 'x-ray', 'x ray',
+        'radiology', 'sterilization room', 'surgical center', 'ambulatory surgical center',
+        'operating room', 'operating rooms', 'pacu', 'pre-op', 'pre op',
+        'recovery bay', 'recovery bays', 'outpatient surgery',
+    )):
+        return 'commercial_medical_clinic_ti'
     if any(t in job_lc for t in (
         'office tenant improvement', 'office ti', 'office buildout',
         'co-working', 'coworking', 'professional office',
-        'medical office tenant', 'dental office tenant', 'law office',
+        'law office',
     )):
         return 'commercial_office_ti'
     if any(t in job_lc for t in (
@@ -2385,8 +2803,262 @@ _RESIDENTIAL_TRADE_SCOPES = frozenset({
 
 _COMMERCIAL_PRIMARY_SCOPES = frozenset({
     'commercial_restaurant', 'commercial_office_ti', 'commercial_retail_ti',
-    'multifamily', 'commercial',
+    'commercial_medical_clinic_ti', 'multifamily', 'commercial',
 })
+
+
+# A4 (2026-04-28): downstream cleanup for solar/ESS advisory residue leaking
+# into non-solar residential scopes after permit + content assembly. Keep this
+# conservative and late in the pipeline: it must not alter trigger detection,
+# and it intentionally leaves commercial output alone.
+_A4_SOLAR_ESS_SCOPE_RE = re.compile(r"(?<![a-z0-9])(?:solar|pv|photovoltaic|battery|batteries|ess|bess|energy\s+storage|panel_with_storage)(?![a-z0-9])", re.I)
+_A4_SOLAR_ESS_TEXT_RE = re.compile(
+    r"\b(?:"
+    r"ESS|Energy\s+Storage\s+System|energy\s+storage|solar|PV|photovoltaic|"
+    r"battery|batteries|Powerwall|LiFePO4|lithium|NFPA\s*855|NEC\s*706|"
+    r"IRC\s*324\.10|inverter|microinverter|string\s+inverter|ESS\s+NEC|"
+    r"ESS\s+NFPA|BESS"
+    r")\b",
+    re.I,
+)
+
+
+def _a4_solar_ess_in_scope(result: dict, job_type: str) -> bool:
+    """Return True only when solar/PV/battery/ESS is actually in scope."""
+    parts = [job_type or "", str((result or {}).get("_primary_scope") or "")]
+    if any(_A4_SOLAR_ESS_SCOPE_RE.search(p) for p in parts):
+        return True
+    for trig in (result or {}).get("hidden_triggers") or []:
+        trig_id = ""
+        if isinstance(trig, dict):
+            trig_id = str(trig.get("id") or trig.get("trigger_id") or "")
+        else:
+            trig_id = str(trig or "")
+        if _A4_SOLAR_ESS_SCOPE_RE.search(trig_id):
+            return True
+    return False
+
+
+def _a4_strip_solar_ess_sentences(text: str) -> str:
+    """Remove only sentences/clauses containing solar/ESS keywords."""
+    if not isinstance(text, str) or not _A4_SOLAR_ESS_TEXT_RE.search(text):
+        return text
+    pieces = re.split(r"(?<=[.!?])\s+|\n+", text)
+    kept = [p.strip() for p in pieces if p.strip() and not _A4_SOLAR_ESS_TEXT_RE.search(p)]
+    if kept:
+        return " ".join(kept)
+    clauses = re.split(r"\s*(?:;|\s+—\s+|\s+-\s+)\s*", text)
+    kept = [c.strip() for c in clauses if c.strip() and not _A4_SOLAR_ESS_TEXT_RE.search(c)]
+    return "; ".join(kept).strip()
+
+
+def purge_solar_ess_residue(result: dict, job_type: str) -> dict:
+    """Suppress ESS/solar/battery advisory residue for non-solar residential scopes."""
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope in _COMMERCIAL_PRIMARY_SCOPES:
+        return result
+    if _a4_solar_ess_in_scope(result, job_type):
+        return result
+
+    removed = 0
+
+    def clean_string(value: str) -> str:
+        nonlocal removed
+        cleaned = _a4_strip_solar_ess_sentences(value)
+        if cleaned != value:
+            removed += 1
+        return cleaned
+
+    def clean_list(values, drop_keyword_dicts: bool = False):
+        nonlocal removed
+        if not isinstance(values, list):
+            return values
+        out = []
+        for item in values:
+            if isinstance(item, str):
+                if _A4_SOLAR_ESS_TEXT_RE.search(item):
+                    removed += 1
+                    continue
+                out.append(item)
+            elif isinstance(item, dict):
+                if drop_keyword_dicts and _A4_SOLAR_ESS_TEXT_RE.search(str(item)):
+                    removed += 1
+                    continue
+                out.append(clean_dict(item))
+            else:
+                out.append(item)
+        return out
+
+    def clean_dict(obj: dict) -> dict:
+        cleaned = dict(obj)
+        for key, value in list(cleaned.items()):
+            if isinstance(value, str) and key in {"notes", "note", "description", "applies_to", "title"}:
+                cleaned[key] = clean_string(value)
+            elif isinstance(value, list) and key in {"notes", "fail_points", "common_mistakes", "pro_tips", "watch_out"}:
+                cleaned[key] = clean_list(value)
+        return cleaned
+
+    for key in ("job_summary", "zoning_hoa_flag", "confidence_reason", "disclaimer"):
+        if isinstance(result.get(key), str):
+            result[key] = clean_string(result[key])
+    for key in ("pro_tips", "common_mistakes", "watch_out", "what_to_bring", "requirements", "checklist"):
+        if key in result:
+            result[key] = clean_list(result.get(key))
+    if "expert_notes" in result:
+        result["expert_notes"] = clean_list(result.get("expert_notes"), drop_keyword_dicts=True)
+    for key in ("inspections", "permits_required"):
+        if isinstance(result.get(key), list):
+            result[key] = [clean_dict(item) if isinstance(item, dict) else item for item in result[key]]
+    for key in ("sources", "state_expert_notes"):
+        if isinstance(result.get(key), list):
+            result[key] = clean_list(result[key], drop_keyword_dicts=True)
+    for key in ("fee_source", "ahj_contact_source", "code_section_source", "required_documents_source", "inspection_process_source"):
+        if isinstance(result.get(key), dict) and _A4_SOLAR_ESS_TEXT_RE.search(str(result[key])):
+            result[key] = {}
+            removed += 1
+
+    if removed:
+        result["_a4_residue_removed"] = removed
+    return result
+
+
+# A7 (2026-04-28): model-code citations are useful, but contractors in the
+# launch cities also expect the controlling state/local amendment regime to sit
+# next to the IBC/IMC/IPC/NEC citation. This layer only augments code_citation;
+# it intentionally does not touch tier_b/apply_state_expert_pack.
+STATE_AMENDMENT_CITATIONS = {
+    "CA": [
+        {"code": "California Building Code (CBC)", "section_pattern": "CBC Chapter <X>", "applies_to": ["all"], "version": "2022 with 2025 supplement"},
+        {"code": "California Mechanical Code (CMC)", "applies_to": ["mechanical"], "version": "2022"},
+        {"code": "California Plumbing Code (CPC)", "applies_to": ["plumbing"], "version": "2022"},
+        {"code": "California Electrical Code (CEC)", "applies_to": ["electrical"], "version": "2022"},
+        {"code": "California Energy Code Title 24 Part 6", "applies_to": ["energy", "all"], "version": "2022"},
+        {"code": "California Fire Code (CFC)", "applies_to": ["fire", "all_commercial"], "version": "2022"},
+        {"code": "CALGreen Title 24 Part 11", "applies_to": ["all"], "version": "2022"},
+    ],
+    "WA": [
+        {"code": "Washington State Energy Code Commercial (WSEC-C)", "applies_to": ["energy", "all_commercial"], "version": "2021"},
+        {"code": "Washington State Energy Code Residential (WSEC-R)", "applies_to": ["energy", "all_residential"], "version": "2021"},
+        {"code": "Seattle Building Code (SBC) Chapter <X> amendments", "applies_to": ["all"], "scope": "Seattle only"},
+    ],
+    "AZ": [
+        {"code": "Arizona Roofing Standards (ARS)", "applies_to": ["roofing"]},
+        {"code": "Phoenix Building Construction Code (PBCC) — IBC 2018 + Phoenix amendments", "applies_to": ["all"], "scope": "Phoenix only"},
+    ],
+    "NV": [
+        {"code": "Clark County Building Code — IBC 2018 + Clark amendments", "applies_to": ["all"], "scope": "Clark County / unincorporated Las Vegas"},
+        {"code": "City of Las Vegas Municipal Code Title 15", "applies_to": ["all"], "scope": "incorporated Las Vegas only"},
+    ],
+    "TX": [
+        {"code": "Texas Accessibility Standards (TAS)", "applies_to": ["accessibility", "all_commercial"], "version": "2012 with 2025 erratta"},
+        {"code": "Texas Plumbing License Law (TSBPE)", "applies_to": ["plumbing"]},
+        {"code": "Texas State Board of Plumbing Examiners", "applies_to": ["plumbing"]},
+        {"code": "TDLR — Texas Department of Licensing and Regulation (Air Conditioning and Refrigeration)", "applies_to": ["mechanical"]},
+        {"code": "Dallas Building Code Chapter — local amendments", "applies_to": ["all"], "scope": "Dallas only"},
+    ],
+}
+
+
+def _code_citation_items(code_citation):
+    if isinstance(code_citation, list):
+        return [c for c in code_citation if c]
+    if isinstance(code_citation, dict):
+        return [code_citation]
+    if isinstance(code_citation, str) and len(code_citation) > 3:
+        return [{"section": code_citation, "text": ""}]
+    return []
+
+
+def _state_amendment_trade_tags(result: dict, job_type: str) -> set[str]:
+    haystack_parts = [job_type or "", result.get("_primary_scope") or ""]
+    for key in ("code_citation", "permits_required", "companion_permits", "inspections", "what_to_bring", "common_mistakes", "pro_tips"):
+        haystack_parts.append(str(result.get(key, "")))
+    text = " ".join(haystack_parts).lower()
+    tags = set()
+    tag_terms = {
+        "mechanical": ("mechanical", "hvac", "rtu", "furnace", "heat pump", "imc", "air conditioning", "tdlr"),
+        "plumbing": ("plumbing", "fixture", "grease interceptor", "ipc", "water heater", "dwv", "tsbpe"),
+        "electrical": ("electrical", "panel", "wiring", "circuit", "nec", "service upgrade", "lighting"),
+        "fire": ("fire", "sprinkler", "alarm", "ansul", "hood suppression", "ifc", "cfc"),
+        "accessibility": ("accessib", " ada", "tas", "disabled", "barrier"),
+        "energy": ("energy", "title 24", "wsec", "calgreen", "envelope", "insulation"),
+        "roofing": ("roof", "reroof", "re-roof", "roofing"),
+    }
+    for tag, terms in tag_terms.items():
+        if any(term in text for term in terms):
+            tags.add(tag)
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    tags.add("all_commercial" if primary_scope in _COMMERCIAL_PRIMARY_SCOPES else "all_residential")
+    tags.add("all")
+    return tags
+
+
+def _format_amendment_code(amendment: dict, existing_items: list[dict]) -> str:
+    code = amendment.get("code", "")
+    pattern = amendment.get("section_pattern")
+    if pattern and "<X>" in pattern:
+        for item in existing_items:
+            section = str(item.get("section") or item.get("code") or "")
+            m = re.search(r"\b(?:IBC|IRC|IEBC)\s*(?:§+\s*)?(\d+)", section, re.I)
+            if m:
+                chapter = m.group(1)[:2] if len(m.group(1)) >= 4 else m.group(1)[:1]
+                return f"{code} {pattern.replace('<X>', chapter).replace('CBC ', '')}"
+    return code.replace("Chapter <X>", "Chapter INCOMPLETE — verify AHJ-specific chapter")
+
+
+def apply_state_amendment_citations(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Append A7 state/local amendment citations to result['code_citation']."""
+    state_code = (state or "").strip().upper()
+    amendments = STATE_AMENDMENT_CITATIONS.get(state_code)
+    if not amendments:
+        return result
+
+    city_lc = (city or "").lower()
+    tags = _state_amendment_trade_tags(result, job_type)
+    existing_items = _code_citation_items(result.get("code_citation"))
+    out = list(existing_items)
+    seen = {str(i.get("code") or i.get("section") or "").lower() for i in out if isinstance(i, dict)}
+
+    for amendment in amendments:
+        scope = amendment.get("scope", "")
+        if "Seattle only" in scope and "seattle" not in city_lc:
+            continue
+        if "Phoenix only" in scope and "phoenix" not in city_lc:
+            continue
+        if "Dallas only" in scope and "dallas" not in city_lc:
+            continue
+        if "Clark County" in scope and not any(t in city_lc for t in ("las vegas", "clark")):
+            continue
+        if "incorporated Las Vegas" in scope and "las vegas" not in city_lc:
+            continue
+
+        applies_to = amendment.get("applies_to", [])
+        matched_scope = next((a for a in applies_to if a in tags), None)
+        if not matched_scope:
+            continue
+
+        code = _format_amendment_code(amendment, existing_items)
+        if code.lower() in seen:
+            continue
+        entry = {
+            "code": code,
+            "type": "state_amendment",
+            "state": state_code,
+            "applies_to_scope": matched_scope,
+        }
+        if amendment.get("version"):
+            entry["version"] = amendment["version"]
+        if amendment.get("scope"):
+            entry["scope"] = amendment["scope"]
+        out.append(entry)
+        seen.add(code.lower())
+
+    if out:
+        result["code_citation"] = out
+    return result
 
 
 def generate_permit_checklist(job_type: str, city: str, state: str, result: dict) -> list[str]:
@@ -3843,6 +4515,17 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
     def add_logic(permit_type: str, because: str, trigger: str) -> None:
         logic.append({"permit_type": permit_type, "included_because": because, "scope_trigger": trigger})
 
+    primary_scope = detect_primary_scope(job)
+    if _is_commercial_ti_scope(primary_scope, job):
+        permits, commercial_logic = _commercial_ti_required_permit_set(primary_scope, job)
+        logic.extend(commercial_logic)
+        return {
+            "scope_classification": primary_scope,
+            "permits_required": permits,
+            "permits_required_logic": logic,
+            "companion_permits": _commercial_ti_secondary_companions(primary_scope),
+        }
+
     # Solar first so "roof solar" scopes don't collapse into a reroof permit.
     if has_solar:
         # Mount-type detection: prevents the "ground-mount job labeled as Roof-Mounted
@@ -3983,6 +4666,172 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
     return None
 
 
+
+_RESIDENTIAL_PRIMARY_SCOPE_ALIASES = {"residential", "residential_adu", "residential_detached_adu", "residential_jadu", "residential_hillside_adu", "residential_garage_conversion", "residential_kitchen_remodel", "residential_addition", "residential_water_heater", "residential_hvac_changeout", "residential_panel_upgrade", "residential_reroof", "residential_window_replacement", "residential_foundation", "residential_deck"}
+
+
+def infer_residential_scope(job_type: str, primary_scope: str = "") -> str:
+    """A9: infer specific residential scope for permit-name normalization only."""
+    scope = (primary_scope or "").strip().lower().replace("-", "_").replace(" ", "_")
+    if scope in _RESIDENTIAL_PRIMARY_SCOPE_ALIASES and scope not in ("residential", "residential_adu"):
+        return scope
+    job = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
+    if not job:
+        return scope or "residential"
+
+    is_adu = _scope_has_any(job, ["adu", "accessory dwelling", "detached accessory dwelling", "dadu", "granny flat", "in-law suite", "in law suite", "secondary dwelling", "secondary unit"])
+    if is_adu and _scope_has_any(job, ["hillside", "slope", "steep", "grading", "geotech", "geology"]):
+        return "residential_hillside_adu"
+    if _scope_has_any(job, ["jadu", "junior accessory dwelling", "junior adu"]):
+        return "residential_jadu"
+    if is_adu and _scope_has_any(job, ["garage conversion", "convert garage", "garage into", "attached garage"]):
+        return "residential_garage_conversion"
+    if is_adu and _scope_has_any(job, ["detached", "new build", "new construction", "dadu", "backyard cottage", "standalone", "stand-alone"]):
+        return "residential_detached_adu"
+    if is_adu:
+        return "residential_detached_adu"
+    if _scope_has_any(job, ["kitchen remodel", "kitchen renovation"]):
+        return "residential_kitchen_remodel"
+    if _scope_has_any(job, ["addition", "add bedroom", "add bathroom", "room addition", "sf addition", "sq ft addition", "square foot addition"]):
+        return "residential_addition"
+    if "water heater" in job:
+        return "residential_water_heater"
+    if _scope_has_any(job, ["hvac", "condenser", "air conditioner", "air conditioning", "a/c", "heat pump", "furnace", "mini split", "mini-split", "changeout", "change out"]):
+        return "residential_hvac_changeout"
+    if _scope_has_any(job, ["panel upgrade", "service upgrade", "200 amp", "200amp", "400 amp", "400amp", "electrical panel"]):
+        return "residential_panel_upgrade"
+    if _scope_has_any(job, ["reroof", "re-roof", "roof tear", "tear-off", "tear off", "shingle roof", "replace roof"]):
+        return "residential_reroof"
+    if _scope_has_any(job, ["window replacement", "replace window", "windows", "window/door", "door replacement"]):
+        return "residential_window_replacement"
+    if _scope_has_any(job, ["foundation", "pier and beam", "pier-and-beam", "slab repair", "structural foundation"]):
+        return "residential_foundation"
+    if _scope_has_any(job, ["deck", "patio cover", "balcony"]):
+        return "residential_deck"
+    return scope or "residential"
+
+
+def _extract_square_footage(job_type: str) -> str:
+    text = job_type or ""
+    match = re.search(r"(\d[\d,]*)\s*(?:sq\.?\s*ft|sf|square\s*feet|square\s*foot)", text, re.I)
+    return match.group(1).replace(",", "") if match else ""
+
+
+def _residential_specific_permit_name(scope: str, job_type: str, city: str, state: str) -> str | None:
+    city_l = (city or "").strip().lower()
+    state_u = (state or "").strip().upper()
+    sf = _extract_square_footage(job_type)
+    if scope == "residential_detached_adu":
+        if city_l == "seattle" and state_u == "WA":
+            return "DADU Building Permit"
+        return "Detached ADU Building Permit"
+    if scope == "residential_jadu":
+        return "JADU Conversion Permit"
+    if scope == "residential_hillside_adu":
+        if city_l in ("los angeles", "la") and state_u == "CA":
+            return "Hillside ADU Residential Building Permit (LADBS)"
+        return "Hillside ADU Residential Building Permit"
+    if scope == "residential_garage_conversion":
+        return "Garage Conversion Building Permit + Change of Occupancy (per scope)"
+    if scope == "residential_kitchen_remodel":
+        return "Residential Alteration — Kitchen Remodel"
+    if scope == "residential_addition":
+        return f"Residential Building Permit — Addition ({sf} sf)" if sf else "Residential Building Permit — Addition"
+    if scope == "residential_water_heater":
+        return "Plumbing Permit — Water Heater Replacement"
+    if scope == "residential_hvac_changeout":
+        return "Mechanical Permit — HVAC Equipment Replacement"
+    if scope == "residential_panel_upgrade":
+        return "Electrical Permit — Service Upgrade (200A)" if re.search(r"200\s*amp|200a", job_type or "", re.I) else "Electrical Permit — Service Upgrade"
+    if scope == "residential_reroof":
+        return "Roofing Permit — Reroof"
+    if scope == "residential_window_replacement":
+        if city_l in ("los angeles", "la") and state_u == "CA":
+            return "Express Permit — Window/Door Replacement"
+        return "Building Permit — Window/Door Replacement"
+    if scope == "residential_foundation":
+        return "Building Permit — Foundation Repair (Pier and Beam)" if re.search(r"pier", job_type or "", re.I) else "Building Permit — Foundation Repair"
+    if scope == "residential_deck":
+        return f"Building Permit — Deck ({sf} sf)" if sf else "Building Permit — Deck"
+    return None
+
+
+def _is_already_specific_residential_name(name: str, scope: str) -> bool:
+    text = (name or "").lower()
+    if scope == "residential_hillside_adu":
+        return "hillside" in text and "adu" in text
+    wanted = {
+        "residential_detached_adu": ("detached adu", "dadu", "accessory dwelling"),
+        "residential_jadu": ("jadu", "junior accessory"),
+        "residential_garage_conversion": ("garage conversion", "change of occupancy"),
+        "residential_kitchen_remodel": ("kitchen",),
+        "residential_addition": ("addition",),
+        "residential_water_heater": ("water heater",),
+        "residential_hvac_changeout": ("hvac", "equipment", "changeout", "replacement"),
+        "residential_panel_upgrade": ("service upgrade", "panel upgrade", "200a"),
+        "residential_reroof": ("reroof", "re-roof", "roofing"),
+        "residential_window_replacement": ("window", "door"),
+        "residential_foundation": ("foundation", "structural"),
+        "residential_deck": ("deck",),
+    }.get(scope, ())
+    return bool(wanted and any(w in text for w in wanted))
+
+
+def apply_residential_permit_name_specificity(result: dict, job_type: str, city: str, state: str) -> dict:
+    """A9: replace vague residential permit labels with scope-specific names.
+
+    Runs after permit assembly. It never adds permits and never touches commercial
+    scopes, preserving A3 office/retail TI behavior and simple-trade one-permit
+    residential outputs.
+    """
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope in _COMMERCIAL_PRIMARY_SCOPES:
+        return result
+
+    scope = infer_residential_scope(job_type, primary_scope)
+    specific = _residential_specific_permit_name(scope, job_type or "", city, state)
+    permits = result.get("permits_required")
+    if not specific or not isinstance(permits, list) or not permits:
+        return result
+
+    generic_names = {"residential alteration", "adu conversion", "building permit", "garage conversion", "hillside", "plumbing", "mechanical", "electrical"}
+    renamed = []
+    for idx, permit in enumerate(permits):
+        if not isinstance(permit, dict):
+            continue
+        name = str(permit.get("permit_type") or permit.get("name") or "").strip()
+        family = _permit_family(permit)
+        is_primary_slot = idx == 0 or (scope in ("residential_water_heater",) and family == "plumbing") or (scope in ("residential_hvac_changeout",) and family == "mechanical") or (scope in ("residential_panel_upgrade",) and family == "electrical") or (scope not in ("residential_water_heater", "residential_hvac_changeout", "residential_panel_upgrade") and family in ("building", ""))
+        if not is_primary_slot:
+            # Secondary trade permit names get their own specificity from their family/scope below.
+            if scope == "residential_kitchen_remodel" and family == "electrical" and not _is_already_specific_residential_name(name, "residential_panel_upgrade"):
+                if re.search(r"panel|service|200\s*amp|200a", job_type or "", re.I):
+                    permit["permit_type"] = _residential_specific_permit_name("residential_panel_upgrade", job_type or "", city, state)
+                    renamed.append({"index": idx, "from": name, "to": permit["permit_type"]})
+            continue
+        if _is_already_specific_residential_name(name, scope):
+            continue
+        if name.lower() in generic_names or len(name) < 28 or any(g in name.lower() for g in generic_names):
+            permit["permit_type"] = specific
+            if not permit.get("portal_selection") or str(permit.get("portal_selection", "")).strip().lower() in generic_names:
+                permit["portal_selection"] = specific
+            renamed.append({"index": idx, "from": name, "to": specific})
+            continue
+
+    if renamed:
+        result["_a9_residential_permit_names"] = {"scope": scope, "renamed": renamed}
+        logic = result.get("permits_required_logic")
+        if isinstance(logic, list):
+            for item in logic:
+                if isinstance(item, dict):
+                    for change in renamed:
+                        if item.get("permit_type") == change["from"]:
+                            item["permit_type"] = change["to"]
+    return result
+
 def _derive_permit_logic(result: dict) -> list[dict]:
     logic = []
     for permit in result.get("permits_required") or []:
@@ -4010,6 +4859,682 @@ def apply_scope_aware_permit_classification(result: dict, job_type: str) -> dict
     return result
 
 
+
+
+def _permit_family(permit: dict) -> str:
+    """Best-effort family classifier for required permit de-duping."""
+    if not isinstance(permit, dict):
+        return ""
+    text = " ".join(str(permit.get(k) or "") for k in ("permit_type", "portal_selection", "notes")).lower()
+    if any(t in text for t in ("fire alarm", "sprinkler", "fire sprinkler", "fire suppression")):
+        return "fire"
+    if "sign" in text or "signage" in text:
+        return "sign"
+    if "plumb" in text or "fixture" in text or "restroom" in text or "sewer" in text:
+        return "plumbing"
+    if "mechanical" in text or "hvac" in text or "duct" in text or "ventilation" in text or "rtu" in text:
+        return "mechanical"
+    if "electrical" in text or "lighting" in text or "branch circuit" in text or "panel" in text:
+        return "electrical"
+    if "building" in text or "tenant improvement" in text or "alteration" in text or "interior" in text:
+        return "building"
+    return ""
+
+
+def _ahj_companion_permit_name(family: str, primary_scope: str, city: str, state: str, verified: bool) -> tuple[str, str]:
+    """Return AHJ-safe permit labels.
+
+    verified_cities.db currently verifies AHJ existence/contact/portal, not a
+    per-family permit-name catalog. When the AHJ row exists, use conservative
+    portal-style commercial labels; otherwise use plain generic family names.
+    Both avoid fabricated city-specific titles.
+    """
+    if primary_scope == "commercial_medical_clinic_ti":
+        scope_label = "Commercial Medical Clinic TI"
+    elif primary_scope == "commercial_office_ti":
+        scope_label = "Commercial Office TI"
+    elif primary_scope == "commercial_restaurant":
+        scope_label = "Commercial Restaurant TI"
+    elif primary_scope == "commercial":
+        scope_label = "Commercial Tenant Improvement"
+    else:
+        scope_label = "Commercial Retail TI"
+    generic = {
+        "building": (f"Building Permit — Tenant Improvement ({scope_label})", "Building - Tenant Improvement / Alteration"),
+        "mechanical": ("Mechanical Permit", "Mechanical Permit"),
+        "plumbing": ("Plumbing Permit", "Plumbing Permit"),
+        "electrical": ("Electrical Permit", "Electrical Permit"),
+        "sign": ("Sign Permit", "Sign Permit"),
+        "fire": ("Fire Alarm / Fire Sprinkler Permit", "Fire Alarm / Fire Sprinkler Permit"),
+    }
+    verified_names = {
+        "building": (f"Building Permit — Tenant Improvement / Commercial Alteration ({scope_label})", "Commercial Building Permit - Tenant Improvement"),
+        "mechanical": ("Mechanical Permit — Commercial Tenant Improvement", "Mechanical Permit - Commercial Interior Alteration"),
+        "plumbing": ("Plumbing Permit — Commercial Tenant Improvement", "Plumbing Permit - Commercial Interior Alteration"),
+        "electrical": ("Electrical Permit — Commercial Tenant Improvement", "Electrical Permit - Commercial Interior Alteration"),
+        "sign": ("Sign Permit — Commercial Storefront / Wall Sign", "Sign Permit - Commercial"),
+        "fire": ("Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement", "Fire Alarm / Fire Sprinkler Permit - Commercial"),
+    }
+    return (verified_names if verified else generic).get(family, generic[family])
+
+
+# A6 (2026-04-28): deterministic retail TI rulebook enrichment. Complements
+# hidden-trigger detection with retail-specific content so retail TI no longer
+# gets thin office/restaurant leftovers.
+def apply_retail_ti_rulebook(result: dict, job_type: str, city: str, state: str) -> dict:
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope != "commercial_retail_ti":
+        return result
+
+    def ensure_list(key: str) -> list:
+        if not isinstance(result.get(key), list):
+            result[key] = []
+        return result[key]
+
+    def add_unique(key: str, items: list[str]) -> None:
+        arr = ensure_list(key)
+        seen = {str(x).strip().lower() for x in arr if isinstance(x, str)}
+        for item in items:
+            if item.lower() not in seen:
+                arr.append(item)
+                seen.add(item.lower())
+
+    city_state = f"{city}, {state}".strip(", ")
+    add_unique("pro_tips", [
+        "Coordinate the sign permit with the landlord's master sign program before ordering storefront signage.",
+        "Confirm retail parking ratio and accessible parking/path-of-travel scope before lease execution or final layout.",
+        "If the tenant sells food, groceries, coffee, alcohol, or cannabis, start health/licensing/zoning review in parallel with the building TI.",
+        "Package storefront elevations, glazing specs, awning details, and sign locations together so facade/design review does not lag the TI.",
+    ])
+    add_unique("watch_out", [
+        "Many cities require a Master Sign Program or landlord sign criteria approval before individual retail sign permits.",
+        "Parking, loading, and zoning variances commonly surface on change-of-use retail TIs and can block the certificate of occupancy.",
+        "Tenant leases often restrict facade, storefront, awning, penetrations, and signage even when code allows them — get landlord signoff early.",
+        "Illuminated signage may need both a sign permit and an electrical sign permit/inspection.",
+    ])
+    add_unique("common_mistakes", [
+        "Skipping storefront/facade design review when windows, awnings, signs, or exterior finishes change.",
+        "Underestimating ADA path-of-travel upgrades for a primary-function retail alteration and missing the 20% cost allocation.",
+        "Missing storefront glazing and lighting/HVAC energy-code documentation (COMcheck/IECC, Title 24, WSEC-C, or local equivalent).",
+        "Submitting retail fixture plans without occupant-load, egress, aisle-width, and exit-sign/emergency-lighting coordination.",
+    ])
+    add_unique("inspections", [
+        "Building rough/final — verify sales-floor layout, accessible route, exits, doors/hardware, and certificate-of-occupancy conditions.",
+        "Storefront/facade final — verify glazing safety labels, awning attachment, exterior finishes, and approved elevations.",
+        "Sign final / electrical sign inspection — verify sign location, mounting, illumination disconnect, and landlord/master-sign-program compliance.",
+        "Fire alarm / sprinkler acceptance test if devices, ceilings, racking, demising walls, or coverage areas changed.",
+        "Energy compliance verification — confirm lighting controls, lighting power density, HVAC controls, economizer/ventilation, and storefront glazing documentation.",
+    ])
+
+    # Surface companion permits from A6 triggers as first-class companions.
+    companions = ensure_list("companion_permits")
+    existing_companions = {str(c.get("permit_type") if isinstance(c, dict) else c).strip().lower() for c in companions}
+    for trig in result.get("hidden_triggers") or []:
+        if not isinstance(trig, dict) or not str(trig.get("id", "")).startswith("retail_"):
+            continue
+        for permit in trig.get("companion_permits") or []:
+            key = str(permit).strip().lower()
+            if key and key not in existing_companions:
+                companions.append({
+                    "permit_type": permit,
+                    "reason": trig.get("why_it_matters") or f"Retail TI rulebook trigger {trig.get('id')}",
+                    "certainty": "likely" if trig.get("severity") == "medium" else "almost_certain",
+                })
+                existing_companions.add(key)
+
+    # Make sure critical retail companions can appear even when a thin prompt
+    # only says "retail TI" and hidden trigger companion text is sparse.
+    baseline = [
+        ("Sign Permit", "Retail tenant changes usually include new wall/window/monument signage; most AHJs review signs separately."),
+        ("Electrical Sign Permit if illuminated", "Illuminated retail signage generally requires electrical review/inspection under NEC Article 600."),
+    ]
+    for permit, reason in baseline:
+        key = permit.lower()
+        if key not in existing_companions:
+            companions.append({"permit_type": permit, "reason": reason, "certainty": "almost_certain"})
+            existing_companions.add(key)
+
+    return result
+
+
+# Launch blocker #8 (2026-04-30): deterministic office TI enrichment.
+# Keeps ordinary office buildouts contractor-grade instead of thin generic commercial TI.
+def apply_office_ti_rulebook(result: dict, job_type: str, city: str, state: str) -> dict:
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope != "commercial_office_ti":
+        return result
+
+    def ensure_list(key: str) -> list:
+        if not isinstance(result.get(key), list):
+            result[key] = []
+        return result[key]
+
+    def add_unique(key: str, items: list[str]) -> None:
+        arr = ensure_list(key)
+        seen = {str(x).strip().lower() for x in arr if isinstance(x, str)}
+        for item in items:
+            if item.lower() not in seen:
+                arr.append(item)
+                seen.add(item.lower())
+
+    add_unique("pro_tips", [
+        "Treat office TI as a building/MEP/fire/accessibility coordination job: demising partitions, ceiling/lighting, HVAC zoning, low-voltage/data, ADA path-of-travel, and fire alarm/sprinkler drawings can each drive separate reviews.",
+        "Get existing reflected ceiling, sprinkler, fire alarm, HVAC diffuser/return, and low-voltage pathways before pricing — moving walls without these backgrounds creates change orders.",
+        "Confirm landlord/building engineer requirements early for after-hours work, fire-life-safety shutdowns, low-voltage pathways, air-balance reports, and certificate-of-occupancy signoff.",
+    ])
+    add_unique("watch_out", [
+        "Generic office TI answers often miss low-voltage/data permits, fire alarm/sprinkler deferred submittals, and HVAC balancing; those can delay tenant move-in even when the building permit is issued.",
+        "New demising walls or conference rooms can break existing egress, strobe visibility, sprinkler spacing, return-air paths, and ventilation assumptions.",
+        "ADA path-of-travel and restroom work can be required even when the office remodel feels mostly cosmetic; document the 20% disproportionality analysis if applicable.",
+    ])
+    add_unique("common_mistakes", [
+        "Submitting partition plans without reflected ceiling, sprinkler, alarm/strobe, diffuser/return, and emergency-lighting coordination.",
+        "Forgetting commercial energy-code forms for lighting controls, occupancy sensors, daylight zones, HVAC controls, or envelope/glazing changes.",
+        "Leaving low-voltage/data/security/access-control out of the permit set or ignoring plenum-rated cable, firestopping, and controlled-door egress release requirements.",
+        "Assuming existing restrooms and reception counters are acceptable without verifying accessible route, door clearances, hardware, signage, and path-of-travel obligations.",
+    ])
+    add_unique("inspections", [
+        "Building rough/final — verify demising partitions, rated assemblies, firestopping, doors/hardware, egress, accessibility, and CO/suite conditions.",
+        "Electrical rough/final — verify lighting layout, controls, emergency lighting, exit signs, panels, receptacles, and equipment schedules.",
+        "Mechanical rough/final or air-balance verification — confirm HVAC zoning, ventilation, diffuser/return layout, thermostat locations, transfer air, and TAB report if required.",
+        "Low-voltage / data / access-control inspection if required — verify cable routing, plenum ratings, firestopping, card-reader egress releases, and fire-alarm interface.",
+        "Fire alarm / sprinkler acceptance test if partitions, ceilings, notification appliances, duct detectors, or sprinkler heads changed.",
+        "Energy compliance final — verify lighting power density, controls, commissioning/checklists, and any COMcheck/Title 24/WSEC documentation.",
+    ])
+
+    companions = ensure_list("companion_permits")
+    existing_companions = {str(c.get("permit_type") if isinstance(c, dict) else c).strip().lower() for c in companions}
+    for trig in result.get("hidden_triggers") or []:
+        if not isinstance(trig, dict) or not str(trig.get("id", "")).startswith("office_"):
+            continue
+        for permit in trig.get("companion_permits") or []:
+            key = str(permit).strip().lower()
+            if key and key not in existing_companions:
+                companions.append({
+                    "permit_type": permit,
+                    "reason": trig.get("why_it_matters") or f"Office TI rulebook trigger {trig.get('id')}",
+                    "certainty": "likely" if trig.get("severity") == "medium" else "almost_certain",
+                })
+                existing_companions.add(key)
+
+    baseline = [
+        ("Low-voltage / data cabling permit if cabling, access control, AV, or security systems are installed", "Office TIs commonly include telecom/data/access-control work that may be permitted separately or inspected by electrical/fire reviewers."),
+        ("Fire alarm / fire sprinkler permit if devices or heads change", "Office partitions, ceiling grids, storage, and conference rooms commonly affect alarm notification and sprinkler coverage."),
+    ]
+    for permit, reason in baseline:
+        key = permit.lower()
+        if key not in existing_companions:
+            companions.append({"permit_type": permit, "reason": reason, "certainty": "likely"})
+            existing_companions.add(key)
+
+    return result
+
+
+def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
+    return any(term in text for term in terms)
+
+
+def _contains_positive_any(text: str, terms: tuple[str, ...], negations: tuple[str, ...] = ()) -> bool:
+    """Return true when a term appears without an obvious adjacent negation phrase."""
+    for term in terms:
+        start = 0
+        while True:
+            idx = text.find(term, start)
+            if idx < 0:
+                break
+            prefix = text[max(0, idx - 48): idx]
+            # Suppress local phrases like "no surgery", "without surgery or operating room",
+            # but do not let unrelated earlier words like "no exterior signage, operating room"
+            # hide a real healthcare signal.
+            if negations and re.search(r"(?:no|without|not|never|excludes?|does not include|doesn't include|none of)\s+(?:\w+[\s/-]+){0,2}$", prefix):
+                start = idx + len(term)
+                continue
+            return True
+    return False
+
+
+def classify_healthcare_occupancy(job_type: str) -> dict:
+    """Phase 2 healthcare occupancy triage for B vs I-2 / ambulatory-care review.
+
+    This is intentionally a risk/verification layer, not a definitive code
+    ruling. Ordinary outpatient medical/dental clinic TIs usually start from a
+    Business Group B basis. Surgical center / ASC / anesthesia / PACU /
+    incapable-of-self-preservation signals are promoted to a high-risk review
+    path so the customer does not price it like a normal office/clinic TI.
+    """
+    text = f" {(job_type or '').lower()} "
+    outpatient_terms = (
+        "medical clinic", "dental clinic", "health clinic", "medical office",
+        "exam room", "exam rooms", "check-in", "check in", "x-ray", "x ray",
+        "radiology", "treatment room", "clinic ti",
+    )
+    surgical_terms = (
+        "ambulatory surgical center", "surgical center", " asc ", "outpatient surgery",
+        "operating room", "operating rooms", "procedure room",
+        "procedure rooms", "pre-op", "pre op", "post-op", "post op", "pacu",
+        "recovery bay", "recovery bays", "recovery room", "sterile processing",
+        "surgery", "surgical suite",
+    )
+    anesthesia_terms = (
+        "anesthesia", "moderate sedation", "deep sedation", "general anesthesia",
+        "sedation", "anesthetic", "anesthesiology",
+    )
+    self_preservation_terms = (
+        "incapable of self-preservation", "incapable of self preservation",
+        "not capable of self-preservation", "not capable of self preservation",
+        "non-ambulatory", "patients under anesthesia", "patient under anesthesia",
+    )
+    overnight_terms = ("overnight", "24 hour", "24-hour", "inpatient", "patient beds", "licensed beds")
+    negations = ("no ", "without ", "not ")
+
+    has_outpatient = _contains_any(text, outpatient_terms)
+    has_surgical = _contains_positive_any(text, surgical_terms, negations)
+    has_anesthesia = _contains_positive_any(text, anesthesia_terms, negations)
+    # Also use local negation handling here; "not incapable of self-preservation"
+    # should not create a false high-risk result.
+    has_self_preservation = _contains_positive_any(text, self_preservation_terms, negations)
+    has_overnight = _contains_positive_any(text, overnight_terms, negations)
+    high_risk = has_surgical or has_anesthesia or has_self_preservation or has_overnight
+    applies = has_outpatient or high_risk
+
+    base = {
+        "applies": applies,
+        "occupancy_question": "B vs I-2 / ambulatory-care facility review",
+        "citations": [
+            "IBC Chapter 3 — occupancy classification [verify adopted edition]",
+            "IBC Group B outpatient clinic basis [verify AHJ interpretation]",
+            "IBC Group I-2 / ambulatory-care facility provisions [verify thresholds]",
+            "IBC §422 Ambulatory Care Facilities [verify applicability]",
+            "IEBC change-of-occupancy provisions [verify adopted edition]",
+        ],
+    }
+    if not applies:
+        return {
+            **base,
+            "classification": "not_healthcare_occupancy_scope",
+            "risk_level": "none",
+            "requires_i2_review": False,
+            "summary": "No healthcare occupancy signals detected; do not apply medical clinic/ASC occupancy guidance to this scope.",
+            "reasons": [],
+            "verify_before_quote": [],
+            "companion_permits": [],
+        }
+    if high_risk:
+        return {
+            **base,
+            "classification": "possible_i2_ambulatory_care_review",
+            "risk_level": "high",
+            "requires_i2_review": True,
+            "summary": "Possible I-2 / ambulatory-care facility review — not a normal office/clinic TI. Verify B vs I-2, IBC 422, fire/life-safety, licensing, and infection-control path before quoting or promising opening dates.",
+            "reasons": [
+                reason for reason, present in (
+                    ("Surgical center / ASC / procedure-room signal present", has_surgical),
+                    ("Sedation/anesthesia signal present", has_anesthesia),
+                    ("Patient self-preservation concern present", has_self_preservation),
+                    ("Overnight/inpatient-care signal present", has_overnight),
+                ) if present
+            ],
+            "verify_before_quote": [
+                "Confirm whether the AHJ classifies this as Business Group B, I-2, or ambulatory-care facility under adopted IBC/IEBC.",
+                "Ask for procedure/anesthesia/sedation level, recovery/PACU layout, patient self-preservation assumptions, and licensed bed/overnight status.",
+                "Coordinate architect, MEP/fire protection, medical-gas verifier, infection-control/licensing reviewer, and fire marshal before permit intake.",
+            ],
+            "companion_permits": [
+                {"permit_type": "Surgical center / ASC occupancy classification review", "reason": "Procedure/anesthesia/recovery scope can move the project out of ordinary Business Group B clinic assumptions.", "certainty": "likely"},
+                {"permit_type": "Health-care licensing / infection-control review", "reason": "ASC/surgical programs often need licensing or health review separate from the building permit.", "certainty": "likely"},
+            ],
+        }
+    return {
+        **base,
+        "classification": "likely_business_group_b",
+        "risk_level": "medium",
+        "requires_i2_review": False,
+        "summary": "Likely outpatient Business Group B clinic basis, but verify B vs I-2/ambulatory-care status with the AHJ if any procedure, sedation, recovery, or self-preservation issue exists.",
+        "reasons": ["Outpatient clinic/exam-room signal present"],
+        "verify_before_quote": [
+            "Confirm no surgery/ASC program, anesthesia/sedation, PACU/recovery bays, inpatient/overnight care, or patient self-preservation issue is in scope.",
+            "Show occupancy basis, occupant load, suite separation, egress, accessibility, and certificate-of-occupancy path on the permit set.",
+            "If sedation/procedure scope appears later, reclassify for possible I-2/IBC 422 review before pricing.",
+        ],
+        "companion_permits": [],
+    }
+
+
+# Launch blocker #7 (2026-04-30): deterministic medical clinic TI enrichment.
+# Keeps clinic/dental outpatient buildouts from being treated like ordinary office TI.
+def apply_medical_clinic_ti_rulebook(result: dict, job_type: str, city: str, state: str) -> dict:
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope != "commercial_medical_clinic_ti":
+        return result
+
+    def ensure_list(key: str) -> list:
+        if not isinstance(result.get(key), list):
+            result[key] = []
+        return result[key]
+
+    def add_unique(key: str, items: list[str]) -> None:
+        arr = ensure_list(key)
+        seen = {str(x).strip().lower() for x in arr if isinstance(x, str)}
+        for item in items:
+            if item.lower() not in seen:
+                arr.append(item)
+                seen.add(item.lower())
+
+    add_unique("pro_tips", [
+        "Treat medical clinic TI as a specialty commercial buildout, not a plain office: confirm exam-room plumbing, medical gas, infection-control/HVAC, accessibility, fire/life-safety, and health-care licensing paths before pricing.",
+        "Ask the owner early whether the clinic includes x-ray/radiology, oxygen/nitrous/medical gas, sterilization, lab work, procedure rooms, or state-licensed health-care services — each can add separate reviews.",
+        "Coordinate architect/MEP, medical-gas verifier, equipment vendor, and health/licensing reviewer before submitting so room names, fixture schedules, ventilation, and equipment utility loads match.",
+    ])
+    add_unique("watch_out", [
+        "A clinic with exam rooms, treatment rooms, medical gas, or x-ray can be rejected if submitted as generic office TI with only building/electrical scope.",
+        "Health-care licensing or state/local health review may control opening even after the building permit is final; verify this path before promising an opening date.",
+        "Medical gas and x-ray shielding often need specialty documentation and third-party verification; missing it can block final inspection or equipment operation.",
+    ])
+    add_unique("common_mistakes", [
+        "Forgetting exam-room sinks, fixture counts, backflow/indirect waste, or accessible restroom upgrades in the plumbing scope.",
+        "Leaving medical gas, nitrous/oxygen, alarms, zone valves, and verifier paperwork out of the permit package.",
+        "Using ordinary office HVAC assumptions instead of confirming ventilation, exhaust, pressure relationships, filtration, and infection-control needs for procedure/sterilization/lab rooms.",
+        "Missing ADA path-of-travel documentation for reception, exam rooms, restrooms, route, parking/passenger loading, and check-in counters.",
+    ])
+    add_unique("inspections", [
+        "Building rough/final — verify clinic layout, occupancy basis, egress, corridors, accessibility, fire-rated assemblies, and certificate-of-occupancy conditions.",
+        "Plumbing rough/final — verify exam-room hand sinks, accessible restrooms, backflow protection, indirect waste, dental/medical equipment connections, and fixture counts.",
+        "Mechanical balance / infection-control verification — confirm ventilation, exhaust, pressure relationships, filtration, and room-use assumptions where clinic functions require them.",
+        "Medical gas pressure test / verifier final if oxygen, nitrous, vacuum, alarms, zone valves, or gas outlets are installed or modified.",
+        "Fire alarm / sprinkler / life-safety final — verify notification appliance coverage, sprinkler head layout, emergency lighting, exit signs, and any oxygen/medical-gas hazard coordination.",
+        "Radiology/x-ray shielding or state radiation registration verification if radiation-producing equipment is installed.",
+    ])
+
+    occupancy = classify_healthcare_occupancy(job_type or "")
+    result["occupancy_analysis"] = occupancy
+    apply_state_schema_context(result, job_type, city, state)
+    if occupancy.get("requires_i2_review"):
+        result["needs_review"] = True
+        add_unique("watch_out", [occupancy["summary"]])
+        add_unique("common_mistakes", [
+            "Pricing an ASC/surgical/procedure buildout as ordinary Business Group B office/clinic TI before the AHJ resolves B vs I-2 / ambulatory-care classification.",
+        ])
+        add_unique("what_to_bring", occupancy.get("verify_before_quote") or [])
+        add_unique("inspections", [
+            "Occupancy/life-safety pre-final — verify B vs I-2 / ambulatory-care classification, IBC 422 conditions, egress, fire alarm/sprinkler coverage, medical gas, and licensing signoffs before opening.",
+        ])
+    else:
+        add_unique("pro_tips", [occupancy["summary"]])
+        add_unique("what_to_bring", occupancy.get("verify_before_quote") or [])
+
+    citations = result.get("code_citation")
+    if not isinstance(citations, list):
+        citations = _code_citation_items(citations)
+    seen_citations = {str(c.get("code") or c.get("section") or c).strip().lower() for c in citations if c}
+    for citation in occupancy.get("citations") or []:
+        key = str(citation).lower()
+        if key not in seen_citations:
+            citations.append({"code": citation, "type": "occupancy_analysis", "scope": primary_scope})
+            seen_citations.add(key)
+    if citations:
+        result["code_citation"] = citations
+
+    companions = ensure_list("companion_permits")
+    existing_companions = {str(c.get("permit_type") if isinstance(c, dict) else c).strip().lower() for c in companions}
+    for trig in result.get("hidden_triggers") or []:
+        if not isinstance(trig, dict) or not str(trig.get("id", "")).startswith("medical_clinic_"):
+            continue
+        for permit in trig.get("companion_permits") or []:
+            key = str(permit).strip().lower()
+            if key and key not in existing_companions:
+                companions.append({
+                    "permit_type": permit,
+                    "reason": trig.get("why_it_matters") or f"Medical clinic TI rulebook trigger {trig.get('id')}",
+                    "certainty": "likely" if trig.get("severity") == "medium" else "almost_certain",
+                })
+                existing_companions.add(key)
+
+    baseline = [
+        ("Health-care licensing / local health review", "Clinic opening may require state or local health-care approval separate from the building permit; verify by clinic type."),
+        ("Fire alarm / fire sprinkler permit if devices or heads change", "Clinic layouts commonly affect notification coverage, sprinkler spacing, emergency lighting, and egress."),
+    ]
+    for permit, reason in baseline:
+        key = permit.lower()
+        if key not in existing_companions:
+            companions.append({"permit_type": permit, "reason": reason, "certainty": "likely"})
+            existing_companions.add(key)
+
+    for companion in occupancy.get("companion_permits") or []:
+        if not isinstance(companion, dict):
+            continue
+        key = str(companion.get("permit_type") or "").strip().lower()
+        if key and key not in existing_companions:
+            companions.append(companion)
+            existing_companions.add(key)
+
+    return result
+
+
+def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: str) -> dict:
+    """A3: ensure office/retail TI required permits include core MEP families.
+
+    Runs after model/scope assembly and before final render/cache. Restaurant,
+    residential, and simple-trade scopes are intentionally untouched.
+    """
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result.setdefault("_primary_scope", primary_scope)
+    if primary_scope not in ("commercial_office_ti", "commercial_retail_ti", "commercial_medical_clinic_ti"):
+        return result
+    permits = result.get("permits_required")
+    if not isinstance(permits, list):
+        permits = []
+        result["permits_required"] = permits
+
+    job = (job_type or "").lower()
+    required = ["building", "mechanical", "electrical"]
+    if primary_scope == "commercial_office_ti":
+        required.append("plumbing")
+    else:
+        if any(t in job for t in ("restroom", "bathroom", "toilet", "lavatory", "sink", "kitchen", "plumbing")):
+            required.append("plumbing")
+        if primary_scope == "commercial_retail_ti" or any(t in job for t in ("sign", "signage", "storefront")):
+            required.append("sign")
+    if any(t in job for t in ("change of occupancy", "change of use", "sprinkler", "fire alarm", "relocate sprinkler", "sprinkler relocation", ">50% sprinkler", "more than 50% sprinkler")):
+        required.append("fire")
+
+    existing = {_permit_family(p) for p in permits if isinstance(p, dict)}
+    verified_row = _get_verified_city_row(city, state)
+    verified = bool(verified_row)
+    added = []
+    for family in required:
+        if family in existing:
+            continue
+        permit_type, portal = _ahj_companion_permit_name(family, primary_scope, city, state, verified)
+        notes = f"Added by A3 TI permit-floor guardrail: {family} review is a core companion permit family for {primary_scope.replace('_', ' ')} scope. Verify exact AHJ portal label before submittal."
+        permits.append(_scope_permit(permit_type, portal, notes))
+        existing.add(family)
+        added.append(family)
+
+    if added:
+        result["_a3_min_permits"] = {"scope": primary_scope, "floor": 4, "added_families": added, "verified_city_row": verified}
+        logic = result.get("permits_required_logic") if isinstance(result.get("permits_required_logic"), list) else []
+        for p in permits[-len(added):]:
+            logic.append({"permit_type": p.get("permit_type"), "included_because": p.get("notes"), "scope_trigger": "A3 commercial TI min_permits floor"})
+        result["permits_required_logic"] = logic
+        result["permit_verdict"] = "YES"
+    return result
+
+
+def _is_commercial_ti_scope(primary_scope: str, job_type: str) -> bool:
+    if primary_scope in {"commercial_restaurant", "commercial_office_ti", "commercial_retail_ti", "commercial_medical_clinic_ti"}:
+        return True
+    if primary_scope != "commercial":
+        return False
+    job = (job_type or "").lower()
+    return _scope_has_any(job, [
+        "tenant improvement", " ti", "t.i.", "interior alteration", "interior remodel",
+        "buildout", "build-out", "change of use", "change of occupancy", "occupancy change",
+        "fit out", "fit-out",
+    ])
+
+
+def _commercial_ti_building_permit(primary_scope: str) -> dict:
+    building_name = {
+        "commercial_restaurant": "Building Permit — Tenant Improvement / Restaurant Interior Alteration",
+        "commercial_office_ti": "Building Permit — Tenant Improvement / Office Interior Alteration",
+        "commercial_retail_ti": "Building Permit — Tenant Improvement / Retail Interior Alteration",
+        "commercial_medical_clinic_ti": "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration",
+        "commercial": "Building Permit — Commercial Interior Alteration / Change of Use",
+    }.get(primary_scope, "Building Permit — Commercial Interior Alteration / Change of Use")
+    return _scope_permit(
+        building_name,
+        "Commercial Building Permit - Tenant Improvement / Interior Alteration",
+        "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. Verify exact AHJ portal label before submittal.",
+    )
+
+
+def _commercial_ti_companion_permits(primary_scope: str, job_type: str) -> list[dict]:
+    job = (job_type or "").lower()
+    companions = [
+        _scope_permit("Mechanical Permit — Commercial Tenant Improvement", "Mechanical Permit - Commercial Interior Alteration", "Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope commonly requires mechanical review."),
+        _scope_permit("Electrical Permit — Commercial Tenant Improvement", "Electrical Permit - Commercial Interior Alteration", "Commercial lighting, panels, branch circuits, equipment, emergency lighting, and controls commonly require electrical review."),
+    ]
+    if primary_scope in {"commercial_restaurant", "commercial_office_ti", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["sink", "restroom", "bathroom", "plumbing", "grease", "interceptor", "kitchen", "fixture"]):
+        companions.append(_scope_permit("Plumbing Permit — Commercial Tenant Improvement", "Plumbing Permit - Commercial Interior Alteration", "Commercial fixtures, restrooms, sinks, grease/dental/medical equipment, or DWV changes commonly require plumbing review."))
+    if primary_scope in {"commercial_restaurant", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["fire alarm", "sprinkler", "hood", "suppression", "ansul", "fire suppression"]):
+        companions.append(_scope_permit("Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement", "Fire Alarm / Fire Sprinkler Permit - Commercial", "Commercial TI frequently affects fire alarm, sprinkler, hood suppression, egress, emergency lighting, or life-safety review."))
+    if primary_scope == "commercial_retail_ti" or _scope_has_any(job, ["sign", "signage", "storefront"]):
+        companions.append(_scope_permit("Sign Permit — Commercial Storefront / Wall Sign", "Sign Permit - Commercial", "Retail/storefront changes commonly require separate sign review if signage is included."))
+    return companions
+
+
+def _commercial_ti_required_permit_set(primary_scope: str, job_type: str) -> tuple[list[dict], list[dict]]:
+    permits = [_commercial_ti_building_permit(primary_scope)]
+    logic = [{
+        "permit_type": permits[0]["permit_type"],
+        "included_because": "Commercial TI/change-of-use scopes must lead with a building/interior-alteration permit; trade permits are companion permits unless the job is only a trade changeout.",
+        "scope_trigger": f"detected primary scope {primary_scope}",
+    }]
+    for permit in _commercial_ti_companion_permits(primary_scope, job_type):
+        permits.append(permit)
+        logic.append({
+            "permit_type": permit.get("permit_type"),
+            "included_because": permit.get("notes"),
+            "scope_trigger": f"commercial TI {_permit_family(permit)} companion family",
+        })
+    return permits, logic
+
+
+def _commercial_ti_secondary_companions(primary_scope: str) -> list[dict]:
+    companions: list[dict] = []
+    if primary_scope == "commercial_restaurant":
+        companions.extend([
+            {"permit_type": "Health Department / Food Establishment Review", "reason": "Restaurant buildouts commonly require health review before opening.", "certainty": "almost_certain"},
+            {"permit_type": "Grease Interceptor / FOG Approval", "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.", "certainty": "likely"},
+        ])
+    elif primary_scope == "commercial_medical_clinic_ti":
+        companions.extend([
+            {"permit_type": "Health-care licensing / local health review", "reason": "Clinic opening may require licensing or health-care approval separate from building permit final.", "certainty": "likely"},
+            {"permit_type": "Medical gas / x-ray specialty review if included", "reason": "Medical gas, nitrous/oxygen/vacuum, or radiology equipment can require specialty documentation and verification.", "certainty": "conditional"},
+        ])
+    elif primary_scope == "commercial_office_ti":
+        companions.append({"permit_type": "Low-voltage / data cabling permit if cabling, access control, AV, or security systems are installed", "reason": "Office TIs commonly include telecom/data/access-control work that may be permitted separately or inspected by electrical/fire reviewers.", "certainty": "likely"})
+    companions.append({"permit_type": "Accessibility / ADA path-of-travel verification", "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.", "certainty": "likely"})
+    return companions
+
+
+def _is_residential_or_trade_only_primary(permit: dict) -> bool:
+    if not isinstance(permit, dict):
+        return True
+    text = " ".join(str(permit.get(k, "")) for k in ("permit_type", "portal_selection", "notes", "description")).lower()
+    if "residential" in text:
+        return True
+    if any(bad in text for bad in ("hvac changeout", "hvac system replacement", "changeout / replacement")):
+        return True
+    return _permit_family(permit) != "building"
+
+
+def enforce_commercial_primary_permit_guardrail(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Ensure commercial TI scopes never ship a residential/trade primary card.
+
+    The model/narrative can understand commercial TI while stale structured JSON still
+    puts residential HVAC first. This reconciles the structured card against the
+    detected scope and repairs to a commercial building/TI primary, while marking the
+    result needs_review so a contractor sees verification caution instead of fake certainty.
+    """
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    result["_primary_scope"] = primary_scope
+    if not _is_commercial_ti_scope(primary_scope, job_type or ""):
+        return result
+
+    permits = result.get("permits_required")
+    if not isinstance(permits, list):
+        permits = []
+    permits = [p for p in permits if isinstance(p, dict)]
+    primary = permits[0] if permits else {}
+    repaired = _is_residential_or_trade_only_primary(primary)
+
+    building_primary = _commercial_ti_building_permit(primary_scope)
+    ordered: list[dict] = []
+    if repaired:
+        ordered.append(building_primary)
+    else:
+        # Keep a valid AHJ-specific building/TI primary, but normalize any accidental residential wording.
+        primary_text = " ".join(str(primary.get(k, "")) for k in ("permit_type", "portal_selection", "notes")).lower()
+        if "residential" in primary_text:
+            primary = building_primary
+            repaired = True
+        ordered.append(primary)
+
+    existing_families = {_permit_family(ordered[0])}
+    for p in _commercial_ti_companion_permits(primary_scope, job_type):
+        fam = _permit_family(p)
+        if fam not in existing_families:
+            ordered.append(p)
+            existing_families.add(fam)
+    for p in permits[1:]:
+        text = " ".join(str(p.get(k, "")) for k in ("permit_type", "portal_selection", "notes", "description")).lower()
+        if "residential" in text or "hvac changeout" in text or "hvac system replacement" in text:
+            continue
+        fam = _permit_family(p)
+        if fam and fam not in existing_families:
+            ordered.append(p)
+            existing_families.add(fam)
+
+    already_marked = isinstance(result.get("_commercial_primary_permit_guardrail"), dict)
+    result["permits_required"] = ordered
+    result["permit_verdict"] = "YES"
+    result["needs_review"] = bool(result.get("needs_review")) or repaired
+    logic = result.get("permits_required_logic") if isinstance(result.get("permits_required_logic"), list) else []
+    if not already_marked:
+        logic.append({
+            "permit_type": ordered[0].get("permit_type"),
+            "included_because": "Commercial TI/change-of-use scopes must lead with a commercial building/interior alteration permit; residential/trade-only primary cards are blocked.",
+            "scope_trigger": "Batch 1 commercial primary-permit guardrail",
+        })
+    result["permits_required_logic"] = logic
+    result["_commercial_primary_permit_guardrail"] = {
+        "scope": primary_scope,
+        "repaired": repaired,
+        "city": city,
+        "state": state,
+    }
+    if repaired and not already_marked:
+        result["confidence"] = downgrade_confidence(str(result.get("confidence") or "medium").lower(), 1)
+        reason = (result.get("confidence_reason") or "").strip()
+        append = "Structured primary permit was reconciled to commercial TI; verify exact AHJ portal label before quoting or starting work."
+        result["confidence_reason"] = f"{reason} {append}".strip()
+    return result
+
+
 def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str) -> dict:
     """Append deterministic state expert notes (currently California)."""
     if not isinstance(result, dict):
@@ -4027,6 +5552,81 @@ def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str) 
             existing.append(note)
             seen.add(title)
     result["expert_notes"] = existing
+    return result
+
+
+def apply_state_schema_context(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Attach Phase 3 state schema context without claiming populated rules.
+
+    Phase 3 is only the architecture/citation-hook layer for CA/TX/FL/MA. It
+    must not fabricate state-specific conclusions or add placeholder items to
+    code_citation. Customer-visible citation lists should contain real cited
+    code/rule sources only; schema-only hooks live under state_schema_context.
+    """
+    if not isinstance(result, dict):
+        return result
+    primary_scope = result.get("_primary_scope") or detect_primary_scope(job_type or "")
+    vertical_by_scope = {
+        "commercial_medical_clinic_ti": "medical_clinic_ti",
+        # Restaurant scopes are historically normalized as commercial_restaurant
+        # in the production pipeline; keep the newer *_ti alias for direct tests.
+        "commercial_restaurant": "restaurant_ti",
+        "commercial_restaurant_ti": "restaurant_ti",
+        "commercial_office_ti": "office_ti",
+    }
+    vertical = vertical_by_scope.get(primary_scope)
+    if not vertical:
+        return result
+
+    context = compact_state_schema_context(state, vertical, job_type)
+    if not context:
+        return result
+
+    result["state_schema_context"] = context
+
+    # Phase 4 populated state slices may add contractor-visible guidance, but
+    # keep official source URLs under state_schema_context until renderers have a
+    # dedicated citation surface for state-overlay sources.
+    triggered_rules = context.get("triggered_rules") if isinstance(context, dict) else []
+    if isinstance(triggered_rules, list) and triggered_rules:
+        def ensure_list(key: str) -> list:
+            if not isinstance(result.get(key), list):
+                result[key] = []
+            return result[key]
+
+        def add_unique(key: str, items: list[str]) -> None:
+            arr = ensure_list(key)
+            seen = {str(x).strip().lower() for x in arr if isinstance(x, str)}
+            for item in items:
+                text = str(item or "").strip()
+                if text and text.lower() not in seen:
+                    arr.append(text)
+                    seen.add(text.lower())
+
+        companion_permits = ensure_list("companion_permits")
+        existing_companions = {
+            str(c.get("permit_type") if isinstance(c, dict) else c).strip().lower()
+            for c in companion_permits
+        }
+        for rule in triggered_rules:
+            if not isinstance(rule, dict):
+                continue
+            state_name = str(context.get("state_name") or context.get("state") or "State").strip()
+            confidence = str(rule.get("confidence") or "medium").strip()
+            source_title = str(rule.get("source_title") or f"official {state_name} source").strip()
+            summary = str(rule.get("summary") or "").strip().rstrip(".")
+            tips = [f"{state_name} state overlay ({confidence} confidence): {summary}. Source: {source_title}."]
+            guidance = [str(item or "").strip() for item in (rule.get("contractor_guidance") or [])]
+            tips.extend(item for item in guidance if item)
+            add_unique("pro_tips", tips)
+            add_unique("watch_out", rule.get("watch_out") or [])
+            for companion in rule.get("companion_permits") or []:
+                if not isinstance(companion, dict):
+                    continue
+                key = str(companion.get("permit_type") or "").strip().lower()
+                if key and key not in existing_companions:
+                    companion_permits.append(companion)
+                    existing_companions.add(key)
     return result
 
 
@@ -5269,6 +6869,15 @@ CRITICAL RULES:
    - Solar PV → Building/Structural Solar permit + Electrical Solar permit; battery is included in the electrical/ESS permit. Utility interconnection/PTO is separate coordination, not a third city permit unless the AHJ treats it as one.
    For borderline items, use companion_permits with "May be required if: [specific trigger]" rather than listing them as required.
 
+14. COMMERCIAL vs RESIDENTIAL PERMIT NAMING — CRITICAL FOR COMMERCIAL ACCURACY:
+   If the job_description contains commercial markers (restaurant, tenant improvement / TI, change of occupancy, A-2 / B / M / I / F occupancy, commercial kitchen, food service, multifamily, 5-over-1, mixed-use, warehouse, industrial, office TI, retail TI, ≥3-story, occupancy classification change, public assembly, hotel, school, hospital), permit names MUST NOT contain residential framing.
+   - DO NOT output "Residential Re-Roof" / "Residential Roofing" / "Residential Deck" / "Residential Furnace" / "Residential System" / "(Residential)" suffix on a commercial scope.
+   - For roofing on a commercial building: use "Roofing Permit — Commercial Re-Roof" or "Roofing Permit — Built-Up / Modified-Bitumen / TPO" (match the system).
+   - For HVAC on a commercial building: use "Mechanical Permit — Commercial RTU / VAV / Make-Up Air Unit" (match the equipment).
+   - For B → A-2 / B → M / B → I / use-change scopes: lead permit_name with "Building Permit — Interior Alteration / Change of Use (B → A-2)" or the specific occupancy pair, NOT a trade-specific residential template.
+   - For multifamily / 5-over-1 / podium / mixed-use: use "Building Permit — Multifamily Construction" or "Building Permit — Multifamily Alteration".
+   The few-shot examples in CRITICAL RULE 2 above are RESIDENTIAL EXAMPLES. They illustrate the format, not the framing. When the job is commercial, replace "Residential" with the appropriate commercial qualifier or drop the residential qualifier entirely.
+
 Return ONLY a JSON object with these exact fields:
 {
   "job_summary": "clear description of what the job involves and what permits it triggers",
@@ -5514,6 +7123,55 @@ _COMMERCIAL_TOKENS = re.compile(
     re.IGNORECASE,
 )
 
+# 2026-04-28: residential-marker patterns. Opus 4.7 commercial review caught
+# the Milwaukee 411 E Wisconsin Ave 85-seat restaurant TI (B → A-2) returning
+# "Roofing – Residential Re-Roof" as exact_permit_name. Cause: the prompt
+# few-shot examples (lines ~5208-5218) are residential-biased — when any
+# trade keyword fires on a commercial scope (rooftop RTU, exterior wall
+# penetration, deck demo, mechanical work) the LLM grabs the residential
+# few-shot pattern. The validator below is the safety net on top of the
+# prompt rule we added on the same day. Strip + flag + downgrade confidence.
+_RESIDENTIAL_MARKER_PATTERNS = [
+    re.compile(r'\s*\(\s*Residential\s*\)', re.IGNORECASE),
+    re.compile(r'\s*[—–-]\s*Residential\s+Re-?Roof\b', re.IGNORECASE),
+    re.compile(r'\s*[—–-]\s*Residential\s+Roofing\b', re.IGNORECASE),
+    re.compile(r'\s*[—–-]\s*Residential\s+Deck\b', re.IGNORECASE),
+    re.compile(r'\s*[—–-]\s*Residential\s+(System|Unit|Furnace|Service)\b', re.IGNORECASE),
+    re.compile(r'\s*[—–-]\s*Residential\b(?!\s+\w)', re.IGNORECASE),
+    re.compile(r'\bResidential\s+Re-?Roof\b', re.IGNORECASE),
+    re.compile(r'\bResidential\s+Roofing\b', re.IGNORECASE),
+    re.compile(r'\bResidential\s+Deck\b', re.IGNORECASE),
+    re.compile(r'\bResidential\s+(System|Unit|Furnace|Service)\b', re.IGNORECASE),
+    # Trailing "Residential" / "Residential System" at end of string —
+    # "Mechanical - HVAC Replacement Residential" → "Mechanical - HVAC Replacement"
+    re.compile(r'\s+Residential\s*$', re.IGNORECASE),
+    re.compile(r'\s+Residential\s+(System|Unit)\s*$', re.IGNORECASE),
+    # Single-family detached / SFR markers
+    re.compile(r'\bsingle-?family\s+detached\b', re.IGNORECASE),
+    re.compile(r'\bSFR\b'),
+]
+
+# Primary-scope → fallback permit name when the residential-marker strip
+# leaves too short a stub to ship.
+_COMMERCIAL_FALLBACK_PERMIT_NAMES = {
+    'commercial_restaurant': 'Building Permit — Tenant Improvement (Commercial Restaurant)',
+    'commercial_office_ti':  'Building Permit — Tenant Improvement (Commercial Office)',
+    'commercial_retail_ti':  'Building Permit — Tenant Improvement (Commercial Retail)',
+    'multifamily':           'Building Permit — Multifamily Tenant Improvement',
+    'commercial':            'Building Permit — Commercial Alteration',
+}
+
+
+def _strip_residential_markers(name: str) -> tuple:
+    """Strip residential markers from a permit name. Returns (cleaned, changed)."""
+    if not isinstance(name, str) or not name:
+        return name, False
+    cleaned = name
+    for pat in _RESIDENTIAL_MARKER_PATTERNS:
+        cleaned = pat.sub('', cleaned)
+    cleaned = re.sub(r'\s{2,}', ' ', cleaned).strip(' -—–')
+    return cleaned, cleaned != name
+
 
 def _has_placeholder(value) -> bool:
     if not isinstance(value, str):
@@ -5537,6 +7195,27 @@ def _has_placeholder(value) -> bool:
 # This sanitizer runs after the engine builds free-text fields and strips any
 # URL whose host classifies as EXCLUDED, replacing with the AHJ name.
 _URL_REGEX = re.compile(r'https?://[^\s)\]\}>"\'`]+', re.IGNORECASE)
+
+# Exact domains/host patterns observed as hallucinated fee-source leaks in the
+# 2026-04-28 four-city review. Some (notably pw.lacounty.gov and ojp.gov) can
+# classify as OFFICIAL by broad .gov rules, but they are still wrong for
+# contractor-facing permit-fee prose in these scenarios.
+_FREE_TEXT_FEE_URL_DENYLIST = (
+    "pw.lacounty.gov",
+    "ojp.gov",
+    "archive.org",
+    "kauffman.org",
+)
+
+
+def _is_denied_free_text_fee_url(url: str) -> bool:
+    try:
+        host = (urlparse(url).netloc or "").lower()
+    except Exception:
+        return True
+    if host.startswith("www."):
+        host = host[4:]
+    return any(host == denied or host.endswith(f".{denied}") for denied in _FREE_TEXT_FEE_URL_DENYLIST)
 
 
 def _strip_excluded_urls_from_text(text: str, ahj_name: str = "the building department") -> str:
@@ -5565,8 +7244,10 @@ def _strip_excluded_urls_from_text(text: str, ahj_name: str = "the building depa
             # Free-text URLs must be OFFICIAL (.gov / .us / .mil / municipal /
             # vetted AHJ allowlist). SUPPLEMENTARY and EXCLUDED both get
             # stripped — supplementary research sources don't belong in
-            # "verify in <URL>" contractor-facing text.
-            if cls != SOURCE_CLASS_OFFICIAL:
+            # "verify in <URL>" contractor-facing text. The explicit denylist
+            # catches official-looking but wrong-jurisdiction/archive hosts from
+            # the four-city review (e.g., pw.lacounty.gov for City of LA fees).
+            if cls != SOURCE_CLASS_OFFICIAL or _is_denied_free_text_fee_url(url):
                 return f"[verify with {ahj_name}]"
         except Exception:
             return f"[verify with {ahj_name}]"
@@ -5599,10 +7280,17 @@ def sanitize_free_text_urls(result: dict, city: str, state: str) -> dict:
         # SUPPLEMENTARY (.org research / archive sources) and EXCLUDED both
         # get stripped because both lead to "wait, why am I verifying my
         # Phoenix permit fee at kauffman.org?" credibility hits.
-        bad = [u.rstrip('.,;:!?') for u in urls if classify_source_url(u.rstrip('.,;:!?')) != SOURCE_CLASS_OFFICIAL]
+        bad = [
+            u.rstrip('.,;:!?')
+            for u in urls
+            if classify_source_url(u.rstrip('.,;:!?')) != SOURCE_CLASS_OFFICIAL
+            or _is_denied_free_text_fee_url(u.rstrip('.,;:!?'))
+            or not is_url_allowed_for_locality(u.rstrip('.,;:!?'), city, state, result=result)
+        ]
         if not bad:
             continue
         cleaned = _strip_excluded_urls_from_text(original, ahj_name=ahj)
+        cleaned = _strip_nonlocal_urls_from_text(cleaned, city, state, result, block=(fld == "confidence_reason"))
         if cleaned != original:
             result[fld] = cleaned
             strips.append({"field": fld, "removed": bad[:3]})
@@ -5642,6 +7330,16 @@ def validate_and_sanitize_permit_result(result: dict, job_type: str, city: str, 
 
     # 3. Scope/checklist mismatch — commercial query, residential-only checklist
     is_commercial = bool(_COMMERCIAL_TOKENS.search(job_type or ""))
+    # Cross-reference with primary scope detection — catches commercial signals
+    # the regex misses (e.g. "85-person seating", "B-occupancy", "A-2 occupancy
+    # change") that detect_primary_scope picks up via stronger lexicon.
+    primary_scope_for_validation = 'residential'
+    try:
+        primary_scope_for_validation = detect_primary_scope(job_type or "")
+        if not is_commercial:
+            is_commercial = primary_scope_for_validation in _COMMERCIAL_PRIMARY_SCOPES
+    except Exception:
+        pass
     if is_commercial:
         checklist_blob = []
         for fld in ('inspect_checklist', 'common_mistakes', 'pro_tips', 'requirements', 'documents_needed'):
@@ -5661,6 +7359,57 @@ def validate_and_sanitize_permit_result(result: dict, job_type: str, city: str, 
                 "detail": f"residential_token_hits={residential_hits} commercial_token_hits={commercial_hits}",
             })
 
+    # 4. Residential permit name on commercial scope — repair + flag.
+    #    Catches the LLM-hallucinated "Roofing — Residential Re-Roof",
+    #    "Building Permit - Residential Deck", "(Residential)" suffix, etc.
+    #    on commercial queries. Surfaced by the Milwaukee 411 E Wisconsin
+    #    restaurant TI review (2026-04-28): single-screenshot kills commercial
+    #    credibility. Defense in depth on top of the prompt rule — strips the
+    #    residential framing and falls back to a scope-aware neutral name when
+    #    the strip leaves an empty / too-short stub.
+    if is_commercial:
+        fallback_name = _COMMERCIAL_FALLBACK_PERMIT_NAMES.get(
+            primary_scope_for_validation,
+            _COMMERCIAL_FALLBACK_PERMIT_NAMES['commercial'],
+        )
+
+        def _repair_permit_field(container: dict, key: str, label: str) -> None:
+            v = container.get(key)
+            if not isinstance(v, str) or not v:
+                return
+            cleaned, changed = _strip_residential_markers(v)
+            # If after strip the stub is too short to ship (< 6 chars or just
+            # "Permit" / "Building Permit"), fall back to the scope-default.
+            stub_too_short = len(cleaned) < 6 or cleaned.strip().lower() in {
+                "permit", "building permit", "building permit -", "building permit —",
+            }
+            if changed:
+                final_value = fallback_name if stub_too_short else cleaned
+                issues.append({
+                    "field": label,
+                    "kind": "residential_permit_name_on_commercial_scope",
+                    "value": v,
+                    "repaired_to": final_value,
+                })
+                container[key] = final_value
+
+        _repair_permit_field(result, 'permit_name', 'permit_name')
+        _repair_permit_field(result, 'permit_type', 'permit_type')
+
+        permits_list = result.get('permits_required') or []
+        if isinstance(permits_list, list):
+            for idx, p in enumerate(permits_list):
+                if isinstance(p, dict):
+                    _repair_permit_field(p, 'permit_type', f'permits_required[{idx}].permit_type')
+                    _repair_permit_field(p, 'portal_selection', f'permits_required[{idx}].portal_selection')
+
+        companions = result.get('companion_permits') or []
+        if isinstance(companions, list):
+            for idx, p in enumerate(companions):
+                if isinstance(p, dict):
+                    _repair_permit_field(p, 'permit_type', f'companion_permits[{idx}].permit_type')
+                    _repair_permit_field(p, 'name', f'companion_permits[{idx}].name')
+
     if issues:
         result['_validation_issues'] = issues
         result['needs_review'] = True
@@ -5679,7 +7428,7 @@ def validate_and_sanitize_permit_result(result: dict, job_type: str, city: str, 
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
-def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None) -> dict:
+def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False) -> dict:
     """
     Research permit requirements for a job + location.
     v3: Better advice depth, small city fallback, PDF stripping, Google Maps fallback.
@@ -5697,7 +7446,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             """Re-run the lookup without cache and save fresh result."""
             try:
                 print(f"[cache] Background refresh started for key {k[:8]}…")
-                fresh = research_permit(job_type, city, state, zip_code, use_cache=False, job_category=job_category, job_value=job_value)
+                fresh = research_permit(job_type, city, state, zip_code, use_cache=False, job_category=job_category, job_value=job_value, suppress_cache_write=suppress_cache_write)
                 if fresh and not fresh.get("error"):
                     save_cache(k, job_type, job_category, city, state, zip_code, fresh)
                     print(f"[cache] Background refresh complete for {city}, {state} / {job_type}")
@@ -5745,10 +7494,16 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             elif 'fee_calculator' not in cached:
                 cached['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
             apply_scope_aware_permit_classification(cached, job_type)
+            apply_office_ti_rulebook(cached, job_type, city, state)
+            apply_medical_clinic_ti_rulebook(cached, job_type, city, state)
+            enforce_ti_min_permits_floor(cached, job_type, city, state)
+            enforce_commercial_primary_permit_guardrail(cached, job_type, city, state)
+            validate_and_sanitize_permit_result(cached, job_type, city, state)
             apply_state_expert_pack(cached, city, state, job_type)
             hedge_companion_permits(cached, job_type)
             enrich_result_with_serper_sources(cached, job_type, city, state)
             apply_fee_verify_caveat(cached)
+            apply_rulebook_depth(cached, job_type, city, state)
             return cached
 
     # ── Check auto-verified data first ──
@@ -6213,6 +7968,8 @@ Return ONLY the JSON object."""
     elif not cc:
         result["code_citation"] = None
 
+    result = apply_state_amendment_citations(result, job_type, city, state)
+
     # Ensure list fields are present and well-formed
     if not isinstance(result.get("permits_required"), list):
         result["permits_required"] = []
@@ -6374,14 +8131,12 @@ Return ONLY the JSON object."""
     # allowlist (NFPA, IAPMO, ICC, ada.gov, energy.gov, etc.) and anything with
     # a city/state/state-code locality match. Telemetry on `_sources_locality_dropped`.
     try:
-        _pre_filter = list(result["sources"])
-        result["sources"] = filter_sources_by_locality(result["sources"], city, state)
-        _dropped = [s for s in _pre_filter if s not in result["sources"]]
-        if _dropped:
-            result["_sources_locality_dropped"] = _dropped[:5]
+        apply_source_locality_hard_block(result, city, state)
     except Exception as _e:
         # Defensive — never let the filter break the engine
         print(f"[locality_filter] failed: {_e}")
+
+    apply_residential_stress_quality_floor(result, job_type, city, state)
 
     if _verified_entry and _verified_entry.get("verified_at"):
         result["last_verified_at"] = _verified_entry.get("verified_at")
@@ -6600,7 +8355,10 @@ Return ONLY the JSON object."""
         result['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
 
     apply_scope_aware_permit_classification(result, job_type)
+    enforce_ti_min_permits_floor(result, job_type, city, state)
+    apply_residential_permit_name_specificity(result, job_type, city, state)
     apply_state_expert_pack(result, city, state, job_type)
+    apply_state_schema_context(result, job_type, city, state)
 
     # 2026-04-28: Hidden Trigger Detector V1. Deterministic detection of
     # permit blockers the user didn't ask about (hood→fire suppression,
@@ -6617,9 +8375,17 @@ Return ONLY the JSON object."""
             job_type=job_type, city=city, state=state,
             primary_scope=primary_scope_for_triggers, result=result,
         )
+        apply_retail_ti_rulebook(result, job_type, city, state)
+        apply_office_ti_rulebook(result, job_type, city, state)
+        apply_medical_clinic_ti_rulebook(result, job_type, city, state)
     except Exception as e:
         print(f"[hidden_triggers] Failed: {e}")
         result["hidden_triggers"] = []
+
+    # Final commercial structured-card reconciliation. This stays outside the
+    # hidden-trigger try/except so a detector failure cannot let a residential
+    # HVAC/changeout card leak as the primary permit for commercial TI.
+    enforce_commercial_primary_permit_guardrail(result, job_type, city, state)
 
     # 2026-04-28: Fee Realism Guardrail V1. Closes the systematic 3-10x under-
     # quote bug Opus 4.7 grading caught across all 4 cities of restaurant TI
@@ -6649,13 +8415,19 @@ Return ONLY the JSON object."""
     # archive.org/dailycolonist1978 (Vegas), pw.lacounty.gov (LA city query).
     sanitize_free_text_urls(result, city, state)
 
+    # A4: purge ESS/solar/battery advisory residue from non-solar residential
+    # scopes after permit/content assembly and before render/cache.
+    purge_solar_ess_residue(result, job_type)
+
     # 2026-04-28: Final hard gate — catch placeholder leaks and scope mismatch
     # before the result reaches the contractor. Mutates result in place; if
     # issues are found, redacts the bad fields, downgrades confidence to
     # "low", and sets needs_review=True so the UI surfaces the warning.
     validate_and_sanitize_permit_result(result, job_type, city, state)
+    apply_rulebook_depth(result, job_type, city, state)
 
-    save_cache(key, job_type, job_category, city, state, zip_code, result)
+    if not suppress_cache_write:
+        save_cache(key, job_type, job_category, city, state, zip_code, result)
     return result
 
 

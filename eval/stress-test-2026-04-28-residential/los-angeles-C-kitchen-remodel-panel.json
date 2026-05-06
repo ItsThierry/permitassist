@@ -1,0 +1,331 @@
+{
+  "job_summary": "Residential kitchen remodel in Los Angeles, CA 90042 with new cabinets and countertops, plus relocation of plumbing and electrical fixtures, and a 200A main service panel upgrade. This triggers a Building Permit for the kitchen remodel/interior alteration, an Electrical Permit for the panel upgrade and circuit relocation, and a Plumbing Permit for fixture/pipe relocation. Because the panel is being upgraded to 200A, expect utility coordination for meter pull/reconnect.",
+  "total_cost_estimate": "$18,000 - $45,000",
+  "location": "Los Angeles, CA",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Interior Remodel / Kitchen Alteration (Residential)",
+      "portal_selection": "Building Permit - Interior Remodel",
+      "required": true,
+      "notes": "Required for the kitchen remodel scope because cabinets/countertops plus layout changes to plumbing/electrical fixtures typically fall under interior alteration work. If walls are moved, openings enlarged, or structural/framing is altered, plan review may be required."
+    },
+    {
+      "permit_type": "Electrical Permit — Service Upgrade 200 Amp (Residential)",
+      "portal_selection": "Electrical Permit - Service Upgrade",
+      "required": true,
+      "notes": "Required for the 200A main service panel upgrade and any associated service equipment changes, feeder replacement, grounding/bonding updates, and circuit rework."
+    },
+    {
+      "permit_type": "Plumbing Permit — Kitchen Fixture Relocation (Residential)",
+      "portal_selection": "Plumbing Permit - Fixture Relocation",
+      "required": true,
+      "notes": "Required because the scope includes plumbing relocation in the kitchen, such as sink, dishwasher, ice maker, or drain/water line changes."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Interior Remodel / Kitchen Alteration (Residential)",
+      "included_because": "The stated scope is a residential kitchen remodel with new cabinets and countertops plus relocation of building systems. LADBS treats interior remodel work that changes layout or affects walls/finishes as building permit work.",
+      "scope_trigger": "Kitchen remodel / interior alteration"
+    },
+    {
+      "permit_type": "Electrical Permit — Service Upgrade 200 Amp (Residential)",
+      "included_because": "A 200A main service panel upgrade always requires an electrical permit because it changes service equipment, grounding/bonding, and often the utility disconnect/reconnect sequence.",
+      "scope_trigger": "200A main service panel upgrade"
+    },
+    {
+      "permit_type": "Plumbing Permit — Kitchen Fixture Relocation (Residential)",
+      "included_because": "Relocating plumbing in a kitchen means the drain/water piping layout is being modified, which triggers a plumbing permit.",
+      "scope_trigger": "Plumbing relocation in kitchen"
+    }
+  ],
+  "applying_office": "Los Angeles Department of Building and Safety (LADBS)",
+  "apply_url": "https://www.ladbs.org/services/apply-for-a-permit",
+  "apply_pdf": null,
+  "apply_phone": "(213) 482-0000",
+  "apply_address": "201 N. Figueroa Street, Los Angeles, CA 90012",
+  "apply_google_maps": "https://www.google.com/maps?q=201+N.+Figueroa+Street,+Los+Angeles,+CA+90012",
+  "fee_range": "Fee Estimate: $55 minimum per permit item for electrical/plumbing/building trade permits; expect roughly $55-$150 for the electrical panel/service portion, $60-$150 for the plumbing relocation portion, and $150-$500+ for the building/interior remodel portion depending on valuation and plan check. A full kitchen remodel with 200A service upgrade commonly lands around $300-$900 in permit fees at LADBS before any plan-check or special review fees. — verify in https://planning.lacity.gov/staffrpt/mnd/Pub_100517/ENV-2016-3609.pdf before quoting",
+  "approval_timeline": {
+    "simple": "1-3 business days for standard residential trade permits through the online portal or OTC counter if no plan review is triggered",
+    "complex": "1-3 weeks for residential plan review; longer if structural changes, energy corrections, or Bureau of Engineering review are needed"
+  },
+  "inspections": [
+    {
+      "stage": "Electrical Rough-In / Service Upgrade",
+      "description": "Inspector checks: new 200A panel installation, breaker labeling, grounding electrode system, bonding jumpers, conductor sizing, working clearances, GFCI/AFCI protection where required, and that any new kitchen circuits are routed correctly before walls are closed.",
+      "timing": "Before drywall patching and before the utility reconnects service"
+    },
+    {
+      "stage": "Plumbing Rough-In",
+      "description": "Inspector verifies: relocated water and drain lines, proper trap and vent configuration, pipe support, slope on drain lines, shutoff valve access, and leak-free joints before cabinets or wall finishes are installed.",
+      "timing": "Before cabinets are permanently set and before walls/ceilings are closed"
+    },
+    {
+      "stage": "Building / Framing or Interior Alteration Inspection",
+      "description": "Inspector checks: any wall removals or framing changes, cabinet anchorage where required, countertop support if applicable, fireblocking, and that the remodel matches the approved scope and plans.",
+      "timing": "After rough-in work and before final finishes are completed"
+    },
+    {
+      "stage": "Final Inspection",
+      "description": "Inspector verifies: finished cabinet/countertop installation, receptacle and switch placement, GFCI protection at kitchen countertop outlets, panel directory, plumbing fixture operation, no exposed wiring or leaks, and that all work matches the permit scope.",
+      "timing": "After all work is complete and appliances/fixtures are installed"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the LADBS online permit/inspection system at https://www.ladbs.org/services/apply-for-a-permit or by calling (213) 482-0000. Standard residential inspections are typically scheduled with at least 24 hours advance notice; book early for panel upgrades because utility coordination can delay the final inspection. Have the permit number ready when scheduling.",
+  "license_required": "Licensed contractors pull the permits on the homeowner's behalf: a C-10 electrical contractor must pull the electrical/service upgrade permit, and a C-36 plumbing contractor must pull the plumbing permit. The building/interior remodel permit is typically pulled by the general contractor or owner-builder if allowed, but the contractor's CSLB license number and LADBS registration details must be on the application. The permit is still required.",
+  "city_contractor_registration": "Los Angeles City requires a CSLB license and an active Los Angeles City Business Tax Registration Certificate (BTRC) for contractors submitting permits. Verify the BTRC is current before applying; an expired registration can block the permit at the counter or in the portal.",
+  "what_to_bring": [
+    "Completed LADBS permit application with the exact job scope and property address",
+    "CSLB license number(s) for the C-10 electrician, C-36 plumber, and general contractor or owner-builder information",
+    "Los Angeles City Business Tax Registration Certificate (BTRC) for the contractor submitting the permit",
+    "Panel cut sheet / equipment specs for the new 200A service equipment and any new breakers",
+    "Kitchen layout sketch or plan showing relocated plumbing fixtures, outlets, and any wall changes",
+    "Title 24 energy compliance documents, including CF1R if required for the electrical/service-related scope or any HVAC-related tie-in"
+  ],
+  "common_mistakes": [
+    "Submitting the permit without an active Los Angeles City Business Tax Registration Certificate — LADBS can reject the application even if the CSLB license is valid",
+    "Forgetting that a 200A service upgrade needs utility coordination for meter pull/reconnect — the job stalls if the utility appointment is not scheduled",
+    "Using the wrong permit scope and trying to cover plumbing relocation under the building permit only — LADBS expects a separate plumbing permit for pipe/fixture moves",
+    "Missing Title 24 documentation when the electrical/service work affects energy compliance or when any HVAC-related work is added later",
+    "Starting demolition before the permit is issued and posted — LADBS can issue a stop-work order and require re-inspection"
+  ],
+  "pro_tips": [
+    "For Los Angeles service upgrades, call the utility early and line up the meter pull before you schedule the final inspection — that is usually the bottleneck",
+    "Bring the panel cut sheet and breaker schedule to the counter or upload them with the application; it speeds up review on 200A upgrades",
+    "If the kitchen remodel is staying within the existing footprint and no walls are moving, keep the building scope tight so you can often stay in OTC processing instead of full plan review",
+    "Have the contractor's LADBS registration and BTRC ready before opening the portal — missing registration is one of the fastest ways to get stuck",
+    "If the property is in a hillside or wildfire interface area, check whether additional fire-resistance or access requirements apply before ordering finishes"
+  ],
+  "code_citation": {
+    "section": "LAMC / CRC / CEC permit authority; IRC R105.1; NEC 230.70; CPC 301.1",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish, or change the occupancy of a building or structure, or to erect, install, enlarge, alter, repair, remove, convert or replace any electrical, gas, mechanical or plumbing system, shall first make application to the building official and obtain the required permit."
+  },
+  "companion_permits": [
+    {
+      "permit_type": "Utility Coordination — Meter Pull / Service Reconnect",
+      "reason": "May be required if: Service equipment replacement or utility-side disconnect/reconnect is part of the panel upgrade.",
+      "required_if": "Service equipment replacement or utility-side disconnect/reconnect is part of the panel upgrade",
+      "certainty": "likely",
+      "requirement_label": "May be required based on scope"
+    }
+  ],
+  "zoning_hoa_flag": "For a residential kitchen remodel, HOA rules usually do not block interior work, but exterior changes, dumpster placement, or work hours may be restricted by the HOA. If the property is in a historic overlay or hillside area in Los Angeles, additional review can apply. This job does not typically trigger solar or roofing zoning issues.",
+  "sources": [
+    "https://www.ladbs.org",
+    "https://www.ladbs.org/services/apply-for-a-permit",
+    "https://www.cslb.ca.gov",
+    "https://planning.lacity.gov/staffrpt/mnd/Pub_100517/ENV-2016-3609.pdf",
+    "https://dbs.lacity.gov/our-organization/locations-offices",
+    "https://ldh.la.gov/assets/oph/Center-EH/engineering/Plumbing/Part_XIV_LA_State_Plumbing_Code.pdf",
+    "https://planning.lacity.gov/pdiscaseinfo/document/MjE0MDQw0/46e6f77e-051c-4e11-ad6d-6ce8558211cd/pdd"
+  ],
+  "confidence": "high",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "maps_url": "https://www.google.com/maps?q=201+N.+Figueroa+Street,+Los+Angeles,+CA+90012",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_field_sources": {
+    "apply_url": "city_kb",
+    "apply_phone": "city_kb",
+    "apply_address": "city_kb",
+    "fee_range": "machine_extracted",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "applying_office": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": false,
+  "missing_fields": [],
+  "confidence_reason": "City-specific match supported by live web research",
+  "_meta": {
+    "generated_at": "2026-04-28T20:59:16.757075",
+    "response_ms": 15424,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 6,
+    "city_match_level": "city",
+    "job_type": "Kitchen remodel including new cabinets, countertops, electrical and plumbing relocation, plus 200A main service panel upgrade.",
+    "city": "Los Angeles",
+    "state": "CA",
+    "zip_code": "90042",
+    "job_category": "residential",
+    "auto_verified": false,
+    "missing_fields": []
+  },
+  "fee_source": {
+    "url": "https://planning.lacity.gov/staffrpt/mnd/Pub_100517/ENV-2016-3609.pdf",
+    "title": "[PDF] 200 N. Spring Street, Room 750 • Los Angeles, CA 90012 Environme",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://dbs.lacity.gov/our-organization/locations-offices",
+    "title": "Locations & Offices - LADBS",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://ldh.la.gov/assets/oph/Center-EH/engineering/Plumbing/Part_XIV_LA_State_Plumbing_Code.pdf",
+    "title": "[PDF] Title 51 PUBLIC HEALTH―SANITARY CODE Part XIV. Plumbing ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://ldh.la.gov/assets/oph/Center-EH/engineering/Plumbing/Part_XIV_LA_State_Plumbing_Code.pdf",
+    "title": "[PDF] Title 51 PUBLIC HEALTH―SANITARY CODE Part XIV. Plumbing ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://planning.lacity.gov/pdiscaseinfo/document/MjE0MDQw0/46e6f77e-051c-4e11-ad6d-6ce8558211cd/pdd",
+    "title": "[PDF] DEPARTMENT OF - Los Angeles City Planning",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 100,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "residential",
+  "checklist": [
+    "Verify your contractor license is current and valid in CA",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Panel schedule showing existing and proposed circuits",
+    "Wire gauge and breaker size for each new circuit",
+    "Electrical diagram or one-line drawing (required for panel upgrades)",
+    "Utility disconnect location marked on plans",
+    "Working space at panel: 30 in wide × 36 in depth × 6.5 ft height (NEC 110.26)",
+    "Neutral-ground bond at service only (not at subpanels) per NEC 250.142",
+    "AFCI protection on all 120V branch circuits per NEC 210.12 (current code cycle)",
+    "Equipment grounding conductor sized to NEC 250.122 table",
+    "Service-entrance labeling: amperage rating, AIC rating, and short-circuit current per NEC 110.16/110.24",
+    "Confirm the required license is active and matches the application: Licensed contractors pull the permits on the homeowner's behalf: a C-10 electrical contractor must pull the electrical/service upgrade permit, and a C-36 plumbing contractor must pull the plumbing permit. The building/interior remodel permit is typically pulled by the general contractor or owner-builder if allowed, but the contractor's CSLB license number and LADBS registration details must be on the application. The permit is still required.",
+    "Bring 2 copies of all documents to Los Angeles Department of Building and Safety (LADBS)"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Missing CSLB license AND LA City Business Tax Registration Certificate",
+      "frequency": "very_common",
+      "fix": "Both required — get BTRC at finance.lacity.org before permit application"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "job_value": 50000,
+  "fee_calculator": {
+    "fee": null,
+    "formula": null,
+    "confidence": "none",
+    "note": "Exact fee formula not available for Los Angeles, CA. Use fee range as estimate."
+  },
+  "expert_notes": [
+    {
+      "title": "California ADU 60-day ministerial shot clock",
+      "note": "California state law (AB 881 / Govt Code 65852.2) requires the city to approve or deny ADU permits within 60 days of a complete application. If they exceed this, you have grounds to escalate.",
+      "applies_to": "ADU jobs",
+      "source": "California Government Code 65852.2(b)(1)"
+    },
+    {
+      "title": "California ADU impact-fee exemption under 750 sq ft",
+      "note": "Impact fees waived for ADUs under 750 sq ft per California Government Code 65852.2(f)(3).",
+      "applies_to": "ADU jobs under 750 sq ft",
+      "source": "California Government Code 65852.2(f)(3)"
+    },
+    {
+      "title": "Title 24 / CF1R energy compliance",
+      "note": "Title 24 energy compliance and CF1R documentation are required for new construction and alterations that change conditioned space. Solar mandate may apply for new detached ADUs depending on scope.",
+      "applies_to": "New construction, ADUs, and conditioned-space alterations",
+      "source": "California Energy Code / Title 24"
+    },
+    {
+      "title": "Cal Fire VHFHSZ check",
+      "note": "Check whether the parcel is in a Cal Fire Very High Fire Hazard Severity Zone (VHFHSZ). Pasadena, Malibu, Santa Barbara, and parts of Los Angeles County can trigger additional fire-resistive material and defensible-space requirements.",
+      "applies_to": "Wildfire-prone California jurisdictions",
+      "source": "https://osfm.fire.ca.gov/divisions/community-wildfire-preparedness-and-mitigation/wildland-hazards-building-codes/fire-hazard-severity-zones-maps/"
+    },
+    {
+      "title": "CSLB licensing — $500 unlicensed-work threshold",
+      "note": "California Contractors State License Board (CSLB) requires a license for any single project with combined labor + materials at $500 or more. Unlicensed contracting above that threshold is a misdemeanor (B&P §7028). Verify license + classification (e.g. B General Building, C-10 Electrical, C-36 Plumbing, C-20 HVAC) on the CSLB lookup before quoting; expired or suspended licenses void the contract and block lien rights.",
+      "applies_to": "All paid construction work in California ≥ $500",
+      "source": "https://www.cslb.ca.gov/Consumers/HireAContractor/CheckTheLicenseFirst.aspx"
+    },
+    {
+      "title": "SB 9 lot split + 2-unit ministerial path",
+      "note": "SB 9 (Govt Code §65852.21 / §66411.7) lets owners of single-family-zoned parcels split a lot into two and/or build a duplex per resulting parcel under ministerial review (no public hearing, no CEQA). Combined with ADU/JADU rules this can yield up to 4 units on a former SFR lot. Owner must sign a 3-year owner-occupancy affidavit on lot splits. Cities can impose objective design standards but cannot deny qualifying SB 9 projects.",
+      "applies_to": "Single-family-zoned residential infill and duplex conversions",
+      "source": "https://www.hcd.ca.gov/policy-and-research/accessory-dwelling-units"
+    },
+    {
+      "title": "California Building Standards Code triennial cycle (2025 → 2026 enforcement)",
+      "note": "California adopts a new Title 24 / CBSC edition every three years. The 2025 California Building/Residential/Plumbing/Electrical/Mechanical/Energy/Green Building Standards Codes were published Jul 1, 2025 and become enforceable Jan 1, 2026 statewide. Permit applications submitted before Jan 1, 2026 may still be reviewed under the 2022 code at the AHJ's discretion — confirm which code edition applies before submitting drawings.",
+      "applies_to": "Permit applications crossing the 2026-01-01 code-change boundary",
+      "source": "https://www.dgs.ca.gov/BSC"
+    },
+    {
+      "title": "CALGreen mandatory + EV-ready / solar-ready requirements",
+      "note": "CALGreen (Title 24 Part 11) sets statewide green-building minimums: low-VOC finishes, water-use reduction (≤1.28 gpf toilets, ≤1.8 gpm kitchen faucets), EV-ready raceway in new SFR garages, and solar-ready zone for new low-rise residential. Tier 1/Tier 2 voluntary measures may be locally mandated (e.g., San Francisco, Santa Monica). Plan check rejection is common when the EV raceway or solar-ready zone is omitted from new SFR/ADU drawings.",
+      "applies_to": "New construction and major remodels statewide",
+      "source": "https://www.dgs.ca.gov/BSC/CALGreen"
+    },
+    {
+      "title": "California municipal utility coordination",
+      "note": "Local utility is Los Angeles Department of Water and Power (LADWP) — service/interconnection coordination goes through the city utility, not SoCal Edison/PG&E.",
+      "applies_to": "Electrical service, solar, battery, EV, and utility-interconnection work",
+      "source": "California municipal utility rules"
+    },
+    {
+      "title": "Local VHFHSZ risk flag",
+      "note": "Los Angeles may include Very High Fire Hazard Severity Zone parcels. Verify the address on the Cal Fire VHFHSZ map before quoting exterior materials or ADU/solar scope.",
+      "applies_to": "Address-specific wildfire overlay check",
+      "source": "https://osfm.fire.ca.gov/divisions/community-wildfire-preparedness-and-mitigation/wildland-hazards-building-codes/fire-hazard-severity-zones-maps/"
+    }
+  ],
+  "hidden_triggers": [
+    {
+      "id": "residential_panel_upgrade_load_calc_utility_grounding",
+      "severity": "medium",
+      "title": "Panel/service upgrade requires load calculation, utility coordination, and grounding-electrode update",
+      "why_it_matters": "A panel swap can become a service upgrade, meter/main change, utility disconnect/reconnect, and grounding/bonding correction once loads or service rating change.",
+      "fired_by": [
+        "\\bpanel upgrade\\b",
+        "\\bservice upgrade\\b",
+        "\\b200\\s*amp\\b",
+        "\\b400\\s*amp\\b",
+        "\\bmeter main\\b",
+        "\\bmain panel\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare dwelling load calculation",
+        "Coordinate utility service disconnect/reconnect",
+        "Update grounding electrode and bonding details"
+      ],
+      "companion_permits": [
+        "Electrical service permit",
+        "Utility service order"
+      ],
+      "agencies": [
+        "AHJ Electrical Dept",
+        "Electric utility"
+      ],
+      "citations": [
+        "NEC Article 220",
+        "NEC Article 230",
+        "NEC §250.50",
+        "NEC §250.52"
+      ],
+      "primary_scope": "residential_single_trade"
+    }
+  ],
+  "_fee_floor_check": "residential_no_override"
+}

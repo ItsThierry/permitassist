@@ -1522,7 +1522,7 @@
 
       <!-- What's Included Feature Grid -->
       <div style="margin:28px 0 8px;padding:24px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:540px;margin-inline:auto">
-        <h2 style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--brand);text-align:center;margin-bottom:16px">Everything included with Pro</h2>
+        <h2 style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--brand);text-align:center;margin-bottom:16px">Everything included with Solo</h2>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div style="display:flex;align-items:flex-start;gap:10px">
             <span style="font-size:20px">📂</span>
@@ -1636,7 +1636,7 @@
 <div class="upgrade-modal" id="upgrade-modal" aria-hidden="true" onclick="handleUpgradeOverlayClick(event)">
   <div class="upgrade-modal-card" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title">
     <button class="upgrade-modal-close" type="button" aria-label="Close upgrade modal" onclick="closeUpgrade()">×</button>
-    <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Pro</div>
+    <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Solo</div>
     <div class="upgrade-modal-accent"></div>
     <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
 
@@ -1654,7 +1654,7 @@
     </ul>
 
     <ul class="upgrade-feature-list" id="upgrade-features-team" hidden>
-      <li><span class="upgrade-feature-check">✓</span><span>Everything in Pro</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Everything in Solo</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Up to 3 team seats</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Shared job board</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>48hr city requests</span></li>
@@ -1780,6 +1780,13 @@ const JOB_TYPES_ALL = [
   'Bathroom remodel','Window replacement','Door replacement','Retaining wall construction',
   'Commercial tenant improvement','Foundation repair','Load bearing wall removal',
 ];
+
+const RESIDENTIAL_ONLY_JOB_TYPE_RE = /\b(tankless|Solar PV system)\b/i;
+function getAutocompleteJobTypes() {
+  return jobCategory === 'commercial'
+    ? JOB_TYPES_ALL.filter(j => !RESIDENTIAL_ONLY_JOB_TYPE_RE.test(j))
+    : JOB_TYPES_ALL;
+}
 
 function setJobCategory(c) {
   jobCategory = c;
@@ -2011,6 +2018,14 @@ const COMMERCIAL_FAIL_POINTS = {
     'Exterior signage permit not pulled separately from the building TI',
     'Means of egress: <2 exits provided when occupant load > 49 OR floor area > 3,000 sf (IBC 1006)',
   ],
+  commercial_medical_clinic_ti: [
+    'B vs I-2 occupancy question not resolved for procedure/anesthesia scope (IBC 304 / 308, IBC 422)',
+    'Exam/procedure-room hand sinks, accessible restroom clearances, and fixture counts not verified before rough-in',
+    'Mechanical ventilation / pressure relationship schedule missing for treatment, sterilization, lab, or procedure rooms (ASHRAE 170 / IMC 403)',
+    'Medical gas, oxygen, nitrous, vacuum, or nurse-call rough-in not coordinated with certified installer/verifier (NFPA 99)',
+    'Fire alarm, sprinkler coverage, emergency lighting, and egress updates not coordinated with the new clinic layout',
+    'Health-care licensing / infection-control / radiation shielding submittals not confirmed where the program triggers them',
+  ],
   multifamily: [
     'Fire-rated wall assembly between dwelling units not continuous through ceiling / floor (IBC 706)',
     'Type B accessible-unit ratio not provided per IBC 1107.6.2',
@@ -2063,7 +2078,7 @@ function generateCustomerPermitExplanation() {
   const state = window._lastLookupState || '';
   const fee = result.fee_range || result.fee || result.cost || 'Call the city to confirm the exact fee';
   const location = [city, state].filter(Boolean).join(', ') || 'your jurisdiction';
-  const isCommercial = primaryScope.startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial';
+  const isCommercial = isCommercialPrimaryScope(primaryScope);
   // 2026-04-28: tier the justifier by occupancy. Earlier this was residential-
   // only and shipped "homeowner's insurance" / "selling your home" language to
   // commercial restaurant + office + retail TI responses (4/4 commercial Opus
@@ -2183,7 +2198,7 @@ function saveEmail(email){const normalized=normalizeEmailForAds(email);localStor
 function hashString(input){let h=2166136261;for(let i=0;i<input.length;i++){h^=input.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
 function getCanvasFingerprint(){try{const canvas=document.createElement('canvas');const ctx=canvas.getContext('2d');if(!ctx)return 'nocanvas';ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(125,1,62,20);ctx.fillStyle='#069';ctx.fillText('PermitAssist fingerprint',2,15);ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText(navigator.userAgent,4,35);return hashString(canvas.toDataURL())}catch{return 'canvas-error'}}
 function getClientFingerprint(){let fp=localStorage.getItem('pa_client_fingerprint');if(fp)return fp;const tz=(Intl.DateTimeFormat().resolvedOptions().timeZone)||'na';const parts=[navigator.userAgent||'',`${screen.width||0}x${screen.height||0}x${screen.colorDepth||0}`,tz,navigator.language||'',getCanvasFingerprint()];fp=hashString(parts.join('|'));localStorage.setItem('pa_client_fingerprint',fp);return fp}
-function syncLookupCounterFromResponse(res,data){const used=Number(res.headers.get('X-Free-Lookups-Used'));const remaining=Number(res.headers.get('X-Free-Lookups-Remaining'));if(Number.isFinite(used)&&used>=0){_serverFreeLookupsUsed=used;updateCounterBarFromServer(used,Number.isFinite(remaining)&&remaining>=0?remaining:Math.max(0,FREE_LIMIT-used),'free')}else if(data&&typeof data.remaining_lookups==='number'&&data.remaining_lookups>=0){const serverUsed=Math.max(0,FREE_LIMIT-data.remaining_lookups);_serverFreeLookupsUsed=serverUsed;updateCounterBarFromServer(serverUsed,data.remaining_lookups,'free')}else if(data&&data.remaining_lookups===-1){updateCounterBarFromServer(0,-1,'solo')}}
+function syncLookupCounterFromResponse(res,data){const used=Number(res.headers.get('X-Free-Lookups-Used'));const remaining=Number(res.headers.get('X-Free-Lookups-Remaining'));if(Number.isFinite(remaining)&&remaining<0){updateCounterBarFromServer(0,-1,'solo')}else if(data&&data.remaining_lookups===-1){updateCounterBarFromServer(0,-1,'solo')}else if(Number.isFinite(used)&&used>=0){_serverFreeLookupsUsed=used;updateCounterBarFromServer(used,Number.isFinite(remaining)&&remaining>=0?remaining:Math.max(0,FREE_LIMIT-used),'free')}else if(data&&typeof data.remaining_lookups==='number'&&data.remaining_lookups>=0){const serverUsed=Math.max(0,FREE_LIMIT-data.remaining_lookups);_serverFreeLookupsUsed=serverUsed;updateCounterBarFromServer(serverUsed,data.remaining_lookups,'free')}}
 
 // ── Session token helpers (Task 1) ─────────────────────────────────────────
 function getSessionToken(){return localStorage.getItem(SESSION_KEY)||''}
@@ -2275,16 +2290,22 @@ async function refreshAccountBadge(){
 
 function updateCounterBarFromServer(used, remaining, plan){
   if(!document.getElementById('counter-bar'))return;
-  if(plan==='solo'||plan==='team'){
+  const normalizedUsed = Number.isFinite(Number(used)) ? Math.max(0, Number(used)) : 0;
+  const normalizedRemaining = Number.isFinite(Number(remaining)) ? Number(remaining) : Math.max(0, FREE_LIMIT - normalizedUsed);
+  if(plan==='solo'||plan==='team'||normalizedRemaining<0){
+    _serverFreeLookupsUsed = 0;
+    _userIsPaid = true;
     document.getElementById('counter-bar').style.display='none';return;
   }
+  _serverFreeLookupsUsed = normalizedUsed;
+  _userIsPaid = false;
   const bar=document.getElementById('counter-bar'),text=document.getElementById('counter-text');
   if(!bar)return;
-  const total=FREE_LIMIT,pct=Math.round(used/total*100);
-  text.textContent=remaining===0?'3 free lookups — no reset. Upgrade for unlimited':`${used} of ${total} free lookups used, no reset`;
+  const total=FREE_LIMIT,pct=Math.max(0,Math.min(100,Math.round(normalizedUsed/total*100)));
+  text.textContent=normalizedRemaining===0?'3 free lookups — no reset. Upgrade for unlimited':`${Math.min(normalizedUsed,total)} of ${total} free lookups used, no reset`;
   const fill=bar.querySelector('.counter-progress-fill');
   if(fill)requestAnimationFrame(()=>fill.style.width=pct+'%');
-  bar.style.borderColor=remaining===0?'rgba(239,68,68,0.4)':'';
+  bar.style.borderColor=normalizedRemaining===0?'rgba(239,68,68,0.4)':'';
   bar.style.display='block';
 }
 
@@ -2705,6 +2726,54 @@ function getPermitDisplayName(d) {
     : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
 }
 
+// Known historic / HPC districts. Keyed by `${city}|${state}` (state is the
+// two-letter code). Each district lists keywords that, when present in the
+// user-typed address text, signal the property is likely under HPC review.
+// This is a guidance hint, not a determination — the banner instructs the
+// user to confirm with the local landmarks commission. Expand as we ship.
+const HPC_DISTRICTS = {
+  'Milwaukee|WI': [
+    { name: 'Yankee Hill Historic District', keywords: ['yankee hill', 'n marshall', 'n cass', 'n franklin'], commission: 'Milwaukee Historic Preservation Commission', url: 'https://city.milwaukee.gov/HPC' },
+    { name: 'Brewers Hill Historic District', keywords: ['brewers hill', 'n hubbard', 'e brown'], commission: 'Milwaukee Historic Preservation Commission', url: 'https://city.milwaukee.gov/HPC' },
+    { name: 'Concordia Historic District', keywords: ['concordia', 'w state', 'w wells', 'n 31st'], commission: 'Milwaukee Historic Preservation Commission', url: 'https://city.milwaukee.gov/HPC' },
+  ],
+  'Chicago|IL': [
+    { name: 'Prairie Avenue Historic District', keywords: ['prairie ave', 'prairie avenue'], commission: 'Chicago Commission on Chicago Landmarks', url: 'https://www.chicago.gov/city/en/depts/dcd/supp_info/landmarks_in_chicago.html' },
+    { name: 'Old Town Triangle', keywords: ['old town', 'n wells'], commission: 'Chicago Commission on Chicago Landmarks', url: 'https://www.chicago.gov/city/en/depts/dcd/supp_info/landmarks_in_chicago.html' },
+  ],
+  'Boston|MA': [
+    { name: 'Beacon Hill Historic District', keywords: ['beacon hill', 'pinckney', 'mt vernon', 'mount vernon', 'chestnut'], commission: 'Beacon Hill Architectural Commission', url: 'https://www.boston.gov/landmarks-and-historic-districts' },
+    { name: 'Back Bay Historic District', keywords: ['back bay', 'commonwealth ave', 'marlborough', 'newbury'], commission: 'Back Bay Architectural Commission', url: 'https://www.boston.gov/landmarks-and-historic-districts' },
+  ],
+  'New Orleans|LA': [
+    { name: 'Vieux Carré (French Quarter)', keywords: ['french quarter', 'vieux carre', 'royal st', 'bourbon', 'chartres'], commission: 'Vieux Carré Commission', url: 'https://nola.gov/vcc/' },
+    { name: 'Garden District', keywords: ['garden district', 'prytania', 'magazine'], commission: 'Historic District Landmarks Commission', url: 'https://nola.gov/hdlc/' },
+  ],
+  'Alexandria|VA': [
+    { name: 'Old & Historic Alexandria District', keywords: ['old town', 'king st', 'cameron', 'duke st', 'prince st'], commission: 'Alexandria Board of Architectural Review', url: 'https://www.alexandriava.gov/Planning' },
+  ],
+  'Charleston|SC': [
+    { name: 'Charleston Old & Historic District', keywords: ['meeting st', 'church st', 'tradd', 'broad st', 'east bay'], commission: 'Charleston Board of Architectural Review', url: 'https://www.charleston-sc.gov/179/Board-of-Architectural-Review' },
+  ],
+  'Savannah|GA': [
+    { name: 'Savannah Historic District', keywords: ['bull st', 'oglethorpe', 'broughton', 'liberty st', 'bay st'], commission: 'Savannah Historic District Board of Review', url: 'https://www.savannahga.gov/' },
+  ],
+};
+
+function getHpcHint(city, state, address) {
+  if (!address || !city || !state) return null;
+  const key = `${city}|${(state || '').toUpperCase()}`;
+  const districts = HPC_DISTRICTS[key];
+  if (!districts) return null;
+  const a = address.toLowerCase();
+  for (const d of districts) {
+    if (d.keywords.some(k => a.includes(k))) {
+      return d;
+    }
+  }
+  return null;
+}
+
 function getJurisdictionDisplay(d, city, state, jobAddress) {
   const levelRaw = d.data_source || d._meta?.city_match_level || '';
   const level = ['city_database', 'city'].includes(levelRaw) ? 'city'
@@ -2750,10 +2819,125 @@ function getNextSteps(d, job, city, state) {
   if (d.approval_timeline?.simple || d.approval_timeline?.complex) {
     steps.push(`Plan around the approval timeline: ${d.approval_timeline.simple || d.approval_timeline.complex}.`);
   }
-  if ((d.inspections || []).length) {
+  if (normalizeInspectionItems(d.inspections || []).length) {
     steps.push('Post the permit on site and schedule inspections in the right order.');
   }
   return steps.slice(0, 4);
+}
+
+function buildEvidencePackCaveats(evidencePack, options = {}) {
+  evidencePack = evidencePack || {};
+  if (!evidencePack.enabled) return [];
+
+  const includeFailedClosedNone = options.includeFailedClosedNone === true;
+  const caveats = [];
+  const evidenceFailedFields = Array.isArray(evidencePack.failed_closed_fields) ? evidencePack.failed_closed_fields.filter(Boolean) : [];
+  const evidenceMatchedFields = Array.isArray(evidencePack.matched_fields) ? evidencePack.matched_fields.filter(Boolean) : [];
+
+  if (evidenceFailedFields.length) {
+    caveats.push(`Failed-closed evidence fields: ${evidenceFailedFields.slice(0, 6).join(', ')}. These fields were not shown as verified because no fresh matching evidence was loaded. Do not quote or file from those fields until AHJ-confirmed.`);
+  } else if (includeFailedClosedNone) {
+    caveats.push('Failed closed: none flagged by the local pack.');
+  }
+  if (evidenceFailedFields.includes('fee_range')) {
+    caveats.push('Fee range is not verified in this evidence pack. Confirm fees with the AHJ before quoting.');
+  }
+  if (evidenceFailedFields.includes('inspections')) {
+    caveats.push('Inspections are not verified in this evidence pack. Confirm required inspections and booking steps with the AHJ before scheduling work.');
+  }
+  if (evidenceMatchedFields.includes('approval_timeline')) {
+    caveats.push('Timeline: statutory/AHJ outer deadline only — not a local queue or plan-review estimate. Confirm local review timing before promising dates.');
+  }
+  if (evidenceMatchedFields.includes('companion_reviews_triggers')) {
+    caveats.push('Companion reviews are limited to the cited evidence scope. This is not a complete local health, fire, accessibility, MEP, hood, grease, or food-service trigger list.');
+  }
+  if (evidenceMatchedFields.includes('apply_url')) {
+    caveats.push('Apply portal is a verified start portal only. Exact portal subcategory and filing path still need AHJ/portal verification before filing.');
+  }
+
+  return [...new Set(caveats)];
+}
+
+function buildUncertaintyWarnings(d) {
+  d = d || {};
+  const warnings = [];
+  const confidence = String(d.confidence || '').toLowerCase();
+  const dataSourceRaw = String(d.data_source || d._meta?.city_match_level || '').toLowerCase();
+  const missingFields = Array.isArray(d.missing_fields) ? d.missing_fields.filter(Boolean) : [];
+  const validationIssues = Array.isArray(d._validation_issues) ? d._validation_issues : [];
+  const qualityWarnings = Array.isArray(d.quality_warnings) ? d.quality_warnings.filter(Boolean) : [];
+  const evidencePack = d._evidence_pack || {};
+  const hasOfficialSources = Array.isArray(d.sources) && d.sources.some(src => {
+    const url = typeof src === 'string' ? src : (src && src.url) || '';
+    return /\.gov|\.us|accela\.com|ladbs\.org|seattle\.gov|phoenix\.gov|nyc\.gov|sfgov\.org/i.test(url);
+  });
+
+  if (d.needs_review) {
+    warnings.push('Engine flagged this answer for human review. Verify each field with the AHJ before relying on it.');
+  }
+  if (confidence === 'low' || !confidence) {
+    warnings.push('Low or missing confidence. Do not quote or start work from this result until the building department confirms it.');
+  }
+  if (d.county_fallback === true || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
+    warnings.push('County-level fallback used. City-specific permit names, fees, and inspections may differ.');
+  }
+  if (!dataSourceRaw || ['general', 'state', 'state_rules', 'model_training'].includes(dataSourceRaw)) {
+    warnings.push('No city-level official-source match is confirmed for this lookup.');
+  }
+  if (missingFields.length) {
+    warnings.push(`Missing fields: ${missingFields.slice(0, 6).join(', ')}.`);
+  }
+  buildEvidencePackCaveats(evidencePack).forEach(caveat => warnings.push(caveat));
+  qualityWarnings.slice(0, 5).forEach(w => warnings.push(String(w)));
+  validationIssues.slice(0, 4).forEach(issue => {
+    const field = issue && (issue.field || issue.kind || issue.name);
+    const message = issue && (issue.message || issue.reason || issue.detail);
+    warnings.push([field, message].filter(Boolean).join(': ') || 'Validation issue needs review.');
+  });
+  if (d._fee_unverified || /call|confirm|varies|estimate/i.test(String(d.fee_range || d.fee || ''))) {
+    warnings.push('Fee is not firm. Confirm with the permit office before quoting the customer.');
+  }
+  if (!hasOfficialSources && dataSourceRaw !== 'city_database' && dataSourceRaw !== 'city') {
+    warnings.push('No official source link is attached to this result. Treat it as a verification checklist, not final authority.');
+  }
+
+  return [...new Set(warnings)].slice(0, 14);
+}
+
+function normalizeLicenseRequirementCopy(value) {
+  return String(value || '')
+    .replace(/([A-Za-z]+)-Licensed\s+([A-Za-z\s]+?)\(s\)/g, '$1-licensed $2s')
+    .replace(/\blicensed\s+(plumber|electrician|contractor|hvac\s+tech(?:nician)?|roofer)\(s\)/gi, (m, trade) =>
+      `licensed ${trade}s`)
+    .replace(/(^|[^-])\blicensed\s+(plumber|electrician|contractor|hvac\s+tech(?:nician)?|roofer)\b(?!\s*(?:\(|s\b))/gi, (m, prefix, trade) =>
+      `${prefix}Licensed ${trade.charAt(0).toUpperCase()+trade.slice(1)} (they pull the permit for you — permit is still required)`)
+    .replace(/must\s+be\s+pulled\s+by\s+a\s+licensed/gi, 'Permit is pulled by a licensed')
+    .replace(/no\s+permit\s+if\s+licensed/gi, 'Licensed contractor pulls the permit — work still requires a permit');
+}
+
+function isCommercialPrimaryScope(primaryScope) {
+  return String(primaryScope || '').startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial' || primaryScope === 'change_of_occupancy';
+}
+
+function normalizeInspectionItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items.map(item => {
+    if (typeof item === 'string') {
+      const title = item.trim();
+      if (!title || /^inspection\s*\d*$/i.test(title)) return null;
+      return { title, description: '' };
+    }
+    if (item && typeof item === 'object') {
+      const title = String(item.stage || item.title || item.name || '').trim();
+      const description = String(item.description || item.notes || item.detail || '').trim();
+      const timing = String(item.timing || '').trim();
+      // Hide fixed-slot placeholders like {stage:'Inspection'}, {stage:'Inspection 7'}, or empty dicts.
+      if (!title && !description && !timing) return null;
+      if (/^inspection\s*\d*$/i.test(title) && !description && !timing) return null;
+      return { ...item, title: title || description, description, timing };
+    }
+    return null;
+  }).filter(Boolean);
 }
 
 function renderResults(d, job, city, state) {
@@ -2763,7 +2947,7 @@ function renderResults(d, job, city, state) {
   window._lastLookupState = state || '';
   const verdict = verdictState(d);
   const permits = d.permits_required || [];
-  const insps = d.inspections || [];
+  const insps = normalizeInspectionItems(d.inspections || []);
   const tips = d.pro_tips || [];
   const mistakes = d.common_mistakes || [];
   const checklist = d.what_to_bring || d.checklist || [];
@@ -2778,11 +2962,7 @@ function renderResults(d, job, city, state) {
   const applyPdf = d.apply_pdf || '';
   const countyNote = d.county_fallback_note || '';
   const licenseRaw = d.license_required || '';
-  const licenseDisplay = licenseRaw
-    .replace(/licensed\s+(plumber|electrician|contractor|hvac\s+tech(?:nician)?|roofer)/gi, (m, trade) =>
-      `Licensed ${trade.charAt(0).toUpperCase()+trade.slice(1)} (they pull the permit for you — permit is still required)`)
-    .replace(/must\s+be\s+pulled\s+by\s+a\s+licensed/gi, 'Permit is pulled by a licensed')
-    .replace(/no\s+permit\s+if\s+licensed/gi, 'Licensed contractor pulls the permit — work still requires a permit');
+  const licenseDisplay = normalizeLicenseRequirementCopy(licenseRaw);
 
   let html = '';
 
@@ -2805,6 +2985,28 @@ function renderResults(d, job, city, state) {
   // County fallback notice
   if (countyNote) {
     html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
+  }
+
+  html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
+
+  const uncertaintyWarnings = buildUncertaintyWarnings(d);
+  if (uncertaintyWarnings.length) {
+    html += `<div class="uncertainty-warning-card" style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:0 10px 20px rgba(220,38,38,0.08)">
+      <div style="font-size:13px;font-weight:900;color:#991b1b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⚠️ Verify before relying on this result</div>
+      <div style="font-size:14px;color:#7f1d1d;line-height:1.55;margin-bottom:10px;font-weight:650">This result has uncertainty that can affect bid price, permit intake, or final inspection. Confirm these items with the AHJ before quoting or starting work.</div>
+      <ul class="bullet-list" style="margin-top:8px;color:#7f1d1d">${uncertaintyWarnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  const evidencePack = d._evidence_pack || {};
+  const evidenceCaveats = buildEvidencePackCaveats(evidencePack, { includeFailedClosedNone: true });
+  if (evidencePack.enabled) {
+    html += `<div class="evidence-exposure-card" style="background:#fff7ed;border:2px solid #ea580c;border-radius:12px;padding:16px 18px;margin-bottom:14px;color:#7c2d12">
+      <div style="font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Evidence-pack exposure limits</div>
+      <ul class="bullet-list" style="margin-top:8px;line-height:1.55">
+        ${evidenceCaveats.map(caveat => `<li>${esc(caveat)}</li>`).join('')}
+      </ul>
+    </div>`;
   }
 
   // Homeowner mode — special "Did they pull the permit?" section
@@ -2868,6 +3070,14 @@ function renderResults(d, job, city, state) {
   }
   const heroUpdatedRaw = d.last_verified_at || d._meta?.generated_at || '';
   const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown';
+  const rulebookDepth = String(d.rulebook_depth || '').toUpperCase();
+  const lastVerifiedRaw = d._last_verified_at || (rulebookDepth === 'DEEP' ? '2026-04-28' : (rulebookDepth === 'MEDIUM' ? '2026-04-29' : ''));
+  const lastVerifiedLabel = /^\d{4}-\d{2}-\d{2}$/.test(String(lastVerifiedRaw))
+    ? String(lastVerifiedRaw)
+    : (lastVerifiedRaw ? new Date(lastVerifiedRaw).toISOString().slice(0, 10) : '');
+  const lastVerifiedBadge = lastVerifiedLabel && rulebookDepth !== 'STATE_DEFAULT'
+    ? `<span class="badge ${rulebookDepth === 'DEEP' ? 'badge-green' : 'badge-blue'}">Last verified ${esc(lastVerifiedLabel)}</span>`
+    : '';
   const confidenceReason = d.confidence_reason || '';
   const jurisdiction = getJurisdictionDisplay(d, city, state, jobAddress);
   const nextSteps = getNextSteps(d, job, city, state);
@@ -2920,7 +3130,7 @@ function renderResults(d, job, city, state) {
   
   html += `<div class="result-hero">
     <div class="result-job">${esc(job)}</div>
-    <div class="result-loc">📍 ${esc(city || 'Unknown city')}, ${esc(state || '')}</div>
+    <div class="result-loc">📍 ${esc(city || 'Unknown city')}, ${esc(state || '')} ${lastVerifiedBadge}</div>
     <div class="result-badges">
       <span class="badge ${verdict==='yes'?'badge-green':verdict==='no'?'badge-red':'badge-yellow'}">${verdict === 'yes' ? '✅ PERMIT REQUIRED' : verdict === 'no' ? '❌ NO PERMIT' : '⚠️ MAYBE'}</span>
       ${fee && !d._fee_unverified ? `<span class="badge badge-blue" style="white-space:normal;max-width:100%">💰 ${esc(fee)}</span>` : ''}
@@ -3096,7 +3306,10 @@ function renderResults(d, job, city, state) {
   }
 
   if (verdict !== 'no') {
-    html += `<div class="card permit-explainer-card"><div class="section-label">📋 Customer Permit Justifier</div><div style="font-size:14px;color:var(--text2);line-height:1.6">Need to explain the permit to the homeowner fast? Open this and copy it into a text, email, or quote.</div><div class="permit-explainer-actions"><button class="action-btn" onclick="toggleCustomerExplanation()">📋 Get Customer Explanation</button><button class="action-btn" onclick="copyCustomerExplanation()">📋 Copy to Clipboard</button></div><div class="permit-explainer-copy" id="customer-explanation-box" style="display:none"></div></div>`;
+    const justifierIntro = isCommercialPrimaryScope(d?._primary_scope)
+      ? 'Need to explain the permit to the tenant, landlord, or owner fast? Open this and copy it into a text, email, or quote.'
+      : 'Need to explain the permit to the homeowner fast? Open this and copy it into a text, email, or quote.';
+    html += `<div class="card permit-explainer-card"><div class="section-label">📋 Customer Permit Justifier</div><div style="font-size:14px;color:var(--text2);line-height:1.6">${esc(justifierIntro)}</div><div class="permit-explainer-actions"><button class="action-btn" onclick="toggleCustomerExplanation()">📋 Get Customer Explanation</button><button class="action-btn" onclick="copyCustomerExplanation()">📋 Copy to Clipboard</button></div><div class="permit-explainer-copy" id="customer-explanation-box" style="display:none"></div></div>`;
   }
 
   // City contractor registration alert
@@ -3356,8 +3569,10 @@ function renderResultAsReport(d, job, city, state) {
   const tl = d.approval_timeline || {};
   const reqs = (Array.isArray(d.requirements) && d.requirements.length) ? d.requirements
              : (Array.isArray(d.documents_needed) ? d.documents_needed : []);
-  const inspections = Array.isArray(d.inspect_checklist) ? d.inspect_checklist
-                    : (Array.isArray(d.inspections) ? d.inspections : []);
+  const inspections = normalizeInspectionItems(Array.isArray(d.inspect_checklist) ? d.inspect_checklist
+                    : (Array.isArray(d.inspections) ? d.inspections : []))
+                    .map(ins => ins.title || ins.stage || ins.description || ins.notes || '')
+                    .filter(Boolean);
   const failureRisks = Array.isArray(d.common_mistakes) ? d.common_mistakes : [];
   const sources = Array.isArray(d.sources) ? d.sources.filter(Boolean) : [];
   const validationIssues = Array.isArray(d._validation_issues) ? d._validation_issues : [];
@@ -3370,6 +3585,7 @@ function renderResultAsReport(d, job, city, state) {
   const confidenceReason = d.confidence_reason || '';
   const needsReview = !!d.needs_review;
   const hiddenTriggers = Array.isArray(d.hidden_triggers) ? d.hidden_triggers : [];
+  const reportUncertaintyWarnings = buildUncertaintyWarnings(d);
 
   // Field renderer helper — returns "<value>" or _missing marker
   const _v = (s) => {
@@ -3406,6 +3622,16 @@ function renderResultAsReport(d, job, city, state) {
     html += `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400e;margin-top:8px">⚠️ <strong>Engine flagged this answer for review</strong> — verify each field with the AHJ before relying on it.</div>`;
   }
   html += `</div>`;
+
+  html += `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.5">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
+
+  if (reportUncertaintyWarnings.length) {
+    html += `<div style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:14px 18px;margin-bottom:14px;color:#7f1d1d">
+      <div style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#991b1b;margin-bottom:6px">⚠️ Report needs verification</div>
+      <div style="font-size:13px;line-height:1.5;margin-bottom:8px;font-weight:650">This warning is intentionally shown in report/print view so uncertainty is not hidden when the result is copied, shared, or saved as PDF.</div>
+      <ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.55">${reportUncertaintyWarnings.map(w => `<li>${_esc(w)}</li>`).join('')}</ul>
+    </div>`;
+  }
 
   // Hidden triggers — render BEFORE field 1 (per spec)
   if (hiddenTriggers.length > 0) {
@@ -3452,7 +3678,8 @@ function renderResultAsReport(d, job, city, state) {
   html += row(6, 'Portal / link', portalLink);
   // 7. Who may apply
   let whoMay = '';
-  if (license) whoMay += _esc(license);
+  const licenseDisplayForReport = normalizeLicenseRequirementCopy(license);
+  if (licenseDisplayForReport) whoMay += _esc(licenseDisplayForReport);
   if (cityReg) whoMay += (whoMay ? ' · ' : '') + 'City contractor registration: ' + _esc(cityReg);
   html += row(7, 'Who may apply', whoMay || _missing);
   // 8. Required documents
@@ -3484,7 +3711,9 @@ function renderResultAsReport(d, job, city, state) {
   html += row(15, 'Failure risks (top 5)', _list(failureRisks, 5));
   // 16. Missing / uncertain items
   let missingBlock = '';
-  const missingRollup = [...missingFields, ...validationIssues.map(v => v.field || v.kind || '')].filter(Boolean);
+  const reportEvidencePack = d._evidence_pack || {};
+  const reportEvidenceFailedFields = Array.isArray(reportEvidencePack.failed_closed_fields) ? reportEvidencePack.failed_closed_fields : [];
+  const missingRollup = [...missingFields, ...validationIssues.map(v => v.field || v.kind || ''), ...reportEvidenceFailedFields.map(field => `failed closed: ${field}`)].filter(Boolean);
   if (missingRollup.length === 0) {
     missingBlock = '✅ None flagged';
   } else {
@@ -3508,11 +3737,21 @@ function renderResultAsReport(d, job, city, state) {
 
   html += `</div>`;
 
-  // Footer with copy/print actions
-  html += `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:12px">`;
+  // Footer with copy/share/print actions. Keep these in report view so a user
+  // who switches to the contractor-grade report can still copy, share, email,
+  // flag, and save as PDF without returning to standard view.
+  html += `<div class="action-row action-row-3 no-print" style="margin-top:12px">`;
   html += `<button class="action-btn" onclick="renderStandardView()">📄 Standard view</button>`;
-  html += `<button class="action-btn" onclick="window.print()">🖨️ Print / Save PDF</button>`;
+  html += `<button class="action-btn" onclick="copyResult()">📋 Copy</button>`;
+  html += `<button class="action-btn" onclick="shareResult()">🔗 Share</button>`;
   html += `</div>`;
+  html += `<div class="action-row action-row-3 no-print">`;
+  html += `<button class="action-btn" onclick="emailToForeman()">📤 Email to Foreman</button>`;
+  html += `<button class="action-btn" onclick="window.print()">🖨️ Print / Save PDF</button>`;
+  html += `<button class="action-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button>`;
+  html += `</div>`;
+  html += `<div id="copy-feedback" class="copy-feedback no-print">✅ Copied to clipboard!</div>`;
+  html += `<span class="flag-feedback-inline no-print" id="flag-feedback-inline">Thanks for flagging. We'll review this within 30 days.</span>`;
 
   return html;
 }
@@ -3602,7 +3841,9 @@ async function shareResult() {
     showShareModal(r.url);
   } catch (e) {
     console.error('Share error:', e);
-    showCopy('✅ Link copied (app URL)');
+    const fallbackUrl = window.location.href;
+    await navigator.clipboard.writeText(fallbackUrl).catch(() => {});
+    showCopy('✅ App link copied — share the report from this page.');
   } finally {
     if (btn) { btn.innerHTML = origText; btn.disabled = false; }
   }
@@ -3636,11 +3877,18 @@ function copyResult() {
   const timeline = d.approval_timeline?.simple || d.approval_timeline?.complex || 'Varies';
   const office = d.applying_office || '';
   const phone = d.apply_phone || '';
+  const uncertaintyWarnings = buildUncertaintyWarnings(d);
   let t = `PERMIT SUMMARY — ${job} in ${city}, ${state}\n`;
   t += `Permit needed: ${permitName}\n`;
   t += `Fee: ${fee}\n`;
   t += `Timeline: ${timeline}\n`;
   if (office || phone) t += `Apply at: ${office}${office && phone ? ' — ' : ''}${phone}\n`;
+  t += `\nPERMITASSIST GUIDANCE ONLY: Verify exact permit type with the AHJ before quoting or starting work.\n`;
+  if (uncertaintyWarnings.length) {
+    t += `\nVERIFY BEFORE RELYING:\n`;
+    t += `Uncertainty / verification warnings:\n`;
+    t += uncertaintyWarnings.map(w => `- ${w}`).join('\n') + '\n';
+  }
   t += `Generated by PermitAssist (permitassist.io)`;
   navigator.clipboard.writeText(t).then(() => showCopy('✅ Copied!')).catch(() => alert(t));
 }
@@ -3922,24 +4170,6 @@ function emailToForeman() {
   if (!currentResult) return;
   const { job, city, state, data } = currentResult;
 
-  const doSend = email => {
-    const btn = document.getElementById('email-foreman-send-btn');
-    if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
-    fetch('/api/email-report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, job, city, state, data })
-    })
-      .then(r => r.json()).then(r => {
-        document.getElementById('email-foreman-modal')?.remove();
-        showCopy(r.sent ? `✅ Report sent to ${email}` : '⚠️ Could not send — try Share Report instead.');
-      })
-      .catch(() => {
-        document.getElementById('email-foreman-modal')?.remove();
-        showCopy('⚠️ Could not send — try Share Report instead.');
-      });
-  };
-
   document.getElementById('email-foreman-modal')?.remove();
   const m = document.createElement('div');
   m.id = 'email-foreman-modal';
@@ -3951,22 +4181,40 @@ function emailToForeman() {
       <input id="email-foreman-input" type="email" placeholder="foreman@company.com" autocomplete="email"
         style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#f8fafc;font-size:15px;margin-bottom:12px;outline:none"/>
       <button id="email-foreman-send-btn"
-        style="width:100%;background:#1a56db;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:10px"
-        onclick="(function(){
-          const inp=document.getElementById('email-foreman-input'),val=inp?inp.value.trim():'';
-          if(!val||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val)){inp.style.border='1px solid #ef4444';inp.focus();return;}
-          inp.style.border='';
-          const btn=document.getElementById('email-foreman-send-btn');
-          if(btn){btn.textContent='Sending\u2026';btn.disabled=true;}
-          fetch('/api/email-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:val,job:'${esc(job)}',city:'${esc(city)}',state:'${esc(state)}',data:window._lastLookupResult||{}})})
-            .then(r=>r.json()).then(r=>{document.getElementById('email-foreman-modal')?.remove();showCopy(r.sent?'\u2705 Report sent to '+val:'\u26a0\ufe0f Could not send \u2014 try Share Report instead.');})
-            .catch(()=>{document.getElementById('email-foreman-modal')?.remove();showCopy('\u26a0\ufe0f Could not send \u2014 try Share Report instead.');});
-        })()"
-      >Send to Foreman</button>
-      <button onclick="document.getElementById('email-foreman-modal').remove()" style="width:100%;background:none;border:1px solid #334155;border-radius:10px;color:#64748b;font-size:14px;padding:11px;cursor:pointer">Cancel</button>
+        style="width:100%;background:#1a56db;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:10px">Send to Foreman</button>
+      <button id="email-foreman-cancel-btn" style="width:100%;background:none;border:1px solid #334155;border-radius:10px;color:#64748b;font-size:14px;padding:11px;cursor:pointer">Cancel</button>
     </div>`;
   document.body.appendChild(m);
-  setTimeout(() => document.getElementById('email-foreman-input')?.focus(), 100);
+  const input = document.getElementById('email-foreman-input');
+  const sendBtn = document.getElementById('email-foreman-send-btn');
+  const cancelBtn = document.getElementById('email-foreman-cancel-btn');
+  const send = () => {
+    const email = (input?.value || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (input) { input.style.border = '1px solid #ef4444'; input.focus(); }
+      return;
+    }
+    if (input) input.style.border = '';
+    if (sendBtn) { sendBtn.textContent = 'Sending…'; sendBtn.disabled = true; }
+    fetch('/api/email-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, job, city, state, data: { ...data, inspections: normalizeInspectionItems(data.inspections || []) } })
+    })
+      .then(r => r.json())
+      .then(r => {
+        document.getElementById('email-foreman-modal')?.remove();
+        showCopy(r.sent ? `✅ Report sent to ${email}` : '⚠️ Could not send — try Share Report instead.');
+      })
+      .catch(() => {
+        document.getElementById('email-foreman-modal')?.remove();
+        showCopy('⚠️ Could not send — try Share Report instead.');
+      });
+  };
+  if (sendBtn) sendBtn.addEventListener('click', send);
+  if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); send(); } });
+  if (cancelBtn) cancelBtn.addEventListener('click', () => document.getElementById('email-foreman-modal')?.remove());
+  setTimeout(() => input?.focus(), 100);
 }
 
 function copyForQuote() {
@@ -3993,14 +4241,14 @@ function downloadReport() {
   const fee = d.fee_range || '';
   const tl = d.approval_timeline || {};
   const tlText = tl.simple || tl.complex || '';
-  const licenseNote = d.license_required || '';
+  const licenseNote = normalizeLicenseRequirementCopy(d.license_required || '');
   const cityRegNote = (d.city_contractor_registration && d.city_contractor_registration !== 'null') ? d.city_contractor_registration : '';
   const companions = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
   const permits = (d.permits_required || []);
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])];
   const tips = (d.pro_tips || []).slice(0, 4);
   const mistakes = (d.common_mistakes || []).slice(0, 4);
-  const inspections = (d.inspections || []).slice(0, 6);
+  const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
   const sources = (d.sources || []).slice(0, 5);
   const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
@@ -4126,13 +4374,13 @@ function printResult() {
   const fee = d.fee_range || '';
   const tl = d.approval_timeline || {};
   const tlText = tl.simple || tl.complex || '';
-  const licenseNote = d.license_required || '';
+  const licenseNote = normalizeLicenseRequirementCopy(d.license_required || '');
   const companions = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
   const permits = (d.permits_required || []);
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])];  
   const tips = (d.pro_tips || []).slice(0, 4);
   const mistakes = (d.common_mistakes || []).slice(0, 4);
-  const inspections = (d.inspections || []).slice(0, 6);
+  const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
   const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
@@ -4322,7 +4570,7 @@ async function doLookup() {
   try {
     const res = await fetch('/api/permit', {
       method: 'POST', headers: getAuthHeaders(),
-      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, job_category: jobCategory })
+      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, address, job_category: jobCategory })
     });
     stopProgress();
     const data = await res.json();
@@ -4471,7 +4719,8 @@ async function doLookupWithOffline() {
     if (parsed.job_type && parsed.city && parsed.state) {
       const cached = await getFromIDB(parsed.job_type, parsed.city, parsed.state);
       if (cached) {
-        currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, data: cached.data, ts: cached.ts };
+        const offlineAddress = document.getElementById('address')?.value.trim() || '';
+        currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, address: offlineAddress, data: cached.data, ts: cached.ts };
         document.getElementById('search-form').style.display = 'none';
         document.getElementById('results').style.display = 'block';
         document.getElementById('offline-result-notice').classList.add('show');
@@ -4588,7 +4837,7 @@ function initAutocomplete() {
   textarea.addEventListener('input', () => {
     const val = textarea.value.trim().toLowerCase();
     if (val.length < 3) { dropdown.style.display = 'none'; return; }
-    const matches = JOB_TYPES_ALL.filter(j => j.toLowerCase().includes(val)).slice(0, 7);
+    const matches = getAutocompleteJobTypes().filter(j => j.toLowerCase().includes(val)).slice(0, 7);
     if (!matches.length) { dropdown.style.display = 'none'; return; }
     dropdown.innerHTML = matches.map(m =>
       `<div class="autocomplete-item" data-val="${esc(m)}">${esc(m)}</div>`

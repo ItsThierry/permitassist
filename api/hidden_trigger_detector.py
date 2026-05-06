@@ -199,6 +199,243 @@ HIDDEN_TRIGGER_REGISTRY = [
         "citations": ["IMC §506.3", "NFPA 96 Chapter 7 [verify edition before merging]"],
         "primary_scope": "commercial_restaurant",
     },
+    {
+        "id": "restaurant_food_establishment_health_review_general",
+        "severity": "high",
+        "title": "Restaurant work needs local health-department food-establishment plan review",
+        "why_it_matters": "Health-department review usually runs in parallel with the building permit and approves finish schedule, hand sinks, three-compartment sink, warewashing, refrigeration, and food-flow. Missing it can hold the certificate of occupancy even when building review is finished.",
+        "fired_by": [r"\brestaurant\b", r"\bfood establishment\b", r"\bcommercial kitchen\b", r"\bprep kitchen\b", r"\bcafe\b", r"\btavern\b", r"\bbar\b.*\b(food|kitchen|grill)\b", r"\bdishwasher\b", r"\bwalk[-\s]?in cooler\b"],
+        "likely_required_actions": ["Submit food-establishment plans and equipment schedule to local health department", "Show finish schedule, hand sinks, mop sink, three-compartment / warewashing, refrigeration", "Coordinate health inspection before final CO"],
+        "companion_permits": ["Health-department food-establishment plan review"],
+        "agencies": ["Local / county health department", "AHJ Building Dept"],
+        "citations": ["FDA Food Code as adopted by local health authority [verify edition before merging]"],
+        "primary_scope": "commercial_restaurant",
+    },
+    {
+        "id": "wi_class_b_tavern_liquor_license",
+        "severity": "medium",
+        "title": "Wisconsin Class B Tavern liquor license requires municipal council approval and runs parallel to building permit",
+        "why_it_matters": "Wisconsin alcohol licensing is municipal: a Class B Tavern (intoxicating liquor for on-premises consumption) is approved by the city/village/town council, often subject to license-quota caps and 30-day public notice. Opening dates slip when the building permit is ready but the council hearing has not happened.",
+        "fired_by": [r"\balcohol\b", r"\bliquor\b", r"\bbar service\b", r"\bbeer and wine\b", r"\bclass[-\s]?b\b", r"\btavern\b", r"\bcocktail\b"],
+        "regions": ["wi"],
+        "likely_required_actions": ["File Class B Tavern application with the local municipal clerk early", "Confirm the municipality has an available license under the population quota", "Build council-hearing date and 30-day notice into the schedule"],
+        "companion_permits": ["Municipal Class B Tavern license"],
+        "agencies": ["Municipal clerk / common council", "Wisconsin Department of Revenue Alcohol Beverage Bureau"],
+        "citations": ["Wis. Stat. §125.51", "Wis. Stat. §125.04 [verify before merging]"],
+        "primary_scope": "commercial_restaurant",
+    },
+
+    # ------------------------------------------------------------------
+    # Commercial retail TI triggers (A6)
+    # ------------------------------------------------------------------
+    {
+        "id": "retail_storefront_facade_alteration",
+        "severity": "high",
+        "title": "Storefront/facade changes usually need separate facade or design review",
+        "why_it_matters": "Retail storefront, awning, window, and facade work is often reviewed separately from the interior TI; Specific Plan/form-based-code areas may add design review.",
+        "fired_by": [r"\bfacade\b", r"\bfaçade\b", r"\bstorefront\b", r"\bawning\b", r"\bwindow(s)?\b", r"\bglazing\b", r"\bfrontage\b"],
+        "likely_required_actions": ["Confirm facade/design-review path before TI submittal", "Show storefront elevations, materials, glazing, and awning attachment", "Coordinate sign locations with facade drawings"],
+        "companion_permits": ["Facade Alteration Permit", "Sign Permit"],
+        "agencies": ["AHJ Building Dept", "Planning / Design Review", "Sign reviewer"],
+        "citations": ["IBC §105.1", "IBC §2406", "Local sign/facade design standards [verify before merging]"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_signage_permit",
+        "severity": "high",
+        "title": "Retail tenant changes almost always need a separate sign permit",
+        "why_it_matters": "Signage is commonly a separate permit and missing it is one of the fastest ways a retail opening slips, especially when the sign is illuminated or tied to a master sign program.",
+        "fired_by": [r"\bretail\b", r"\bstore\b", r"\bshop\b", r"\bboutique\b", r"\bshowroom\b", r"\bmall tenant\b", r"\bstrip mall\b", r"\bsign(age)?\b", r"\btenant improvement\b", r"\bti\b"],
+        "likely_required_actions": ["Submit wall/window/monument sign drawings separately if required", "Confirm landlord master sign program", "Add electrical sign permit if illuminated"],
+        "companion_permits": ["Sign Permit", "Electrical Sign Permit if illuminated"],
+        "agencies": ["AHJ Sign/Zoning reviewer", "Electrical reviewer"],
+        "citations": ["Local sign code [verify district and master sign program]", "NEC Article 600"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_ada_path_of_travel_20pct",
+        "severity": "high",
+        "title": "Retail TI valuation can trigger ADA path-of-travel upgrades",
+        "why_it_matters": "Alterations to a retail primary-function area can require accessible upgrades to the entrance, route, restrooms, parking, counters, and signage up to the 20% disproportionality cap.",
+        "fired_by": [r"\bretail\b", r"\btenant improvement\b", r"\bti\b", r"\bbuildout\b", r"\brenovation\b", r"\bremodel\b", r"\bfront counter\b", r"\bcash wrap\b", r"\brestroom\b", r"\$\s?\d"],
+        "likely_required_actions": ["Prepare ADA path-of-travel cost allocation", "Show accessible route from site arrival to sales floor/counter/restrooms", "Verify accessible parking and entrance hardware"],
+        "companion_permits": [],
+        "agencies": ["AHJ Building Dept", "Accessibility reviewer"],
+        "citations": ["2010 ADA Standards §202.4", "28 CFR §36.403", "IBC Chapter 11", "CBC 11B-202.4 / TAS where adopted"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_egress_occupant_load_recalc",
+        "severity": "medium",
+        "title": "Retail layout or merchandise changes require occupant-load and egress recalculation",
+        "why_it_matters": "Mercantile occupant load varies by sales, stock, queueing, and display configuration; changes can affect exit count, door swing, panic hardware, travel distance, and exit signage.",
+        "fired_by": [r"\blayout\b", r"\bpartition\b", r"\bsales floor\b", r"\bmerchandise\b", r"\bshowroom\b", r"\bstock(room)?\b", r"\boccupant load\b", r"\begress\b", r"\baisles?\b"],
+        "likely_required_actions": ["Add occupant-load table by sales/stock/support area", "Show exit access travel distance and aisle widths", "Coordinate exit signs/emergency lighting"],
+        "companion_permits": [],
+        "agencies": ["AHJ Building Dept", "Fire Prevention"],
+        "citations": ["IBC §1004", "IBC §1005", "IBC §1006", "IBC §1017"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_fire_alarm_sprinkler_modifications",
+        "severity": "medium",
+        "title": "Ceiling/demising changes can trigger fire alarm and sprinkler modification permits",
+        "why_it_matters": "Retail ceiling clouds, demising walls, racking, and lighting grids often require sprinkler head relocation, alarm/strobe coverage changes, or separate fire shop drawings.",
+        "fired_by": [r"\bceiling\b", r"\bdemising\b", r"\bsprinkler\b", r"\bfire alarm\b", r"\bstrobe\b", r"\bracking\b", r"\bshelving\b", r"\brelocat(e|ing) sprinkler\b"],
+        "likely_required_actions": ["Confirm deferred vs separate fire submittals", "Show sprinkler/alarm devices affected by ceiling or wall changes", "Schedule fire final/acceptance testing"],
+        "companion_permits": ["Fire Alarm Permit", "Fire Sprinkler Modification Permit"],
+        "agencies": ["Fire Prevention", "AHJ Building Dept"],
+        "citations": ["IFC §901.2", "IFC §907.1.1", "NFPA 13", "NFPA 72"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_energy_code_lighting_hvac",
+        "severity": "medium",
+        "title": "Retail lighting/HVAC work triggers commercial energy-code compliance",
+        "why_it_matters": "New lighting, controls, HVAC, envelope, or storefront glazing can require COMcheck/IECC forms, WSEC-C, or CA Title 24 Part 6 documentation.",
+        "fired_by": [r"\blighting\b", r"\blight fixtures?\b", r"\bhvac\b", r"\bduct\b", r"\bthermostat\b", r"\bcontrols?\b", r"\bstorefront\b", r"\bglazing\b", r"\bti\b", r"\btenant improvement\b"],
+        "likely_required_actions": ["Prepare COMcheck/IECC or state energy forms", "Show lighting power density and control zones", "Coordinate HVAC economizer/ventilation and storefront glazing performance"],
+        "companion_permits": ["Electrical Permit", "Mechanical Permit"],
+        "agencies": ["Energy reviewer", "AHJ Electrical/Mechanical Dept"],
+        "citations": ["IECC §C405", "IECC §C403", "WSEC-C / CA Title 24 Part 6 / local amendments where adopted"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_row_encroachment_outdoor_display",
+        "severity": "medium",
+        "title": "Sidewalk display, sandwich boards, or outdoor retail use can need ROW/encroachment approval",
+        "why_it_matters": "Outdoor merchandise, sandwich-board signs, and sidewalk activation can be controlled by transportation/public-works rules outside the building permit.",
+        "fired_by": [r"\bsidewalk display\b", r"\boutdoor display\b", r"\bsandwich[-\s]?board\b", r"\ba[-\s]?frame sign\b", r"\boutdoor seating\b", r"\bencroachment\b", r"\bright[-\s]?of[-\s]?way\b", r"\bROW\b"],
+        "likely_required_actions": ["Check public-right-of-way permit process", "Maintain accessible sidewalk clear width", "Coordinate insurance/indemnity if required"],
+        "companion_permits": ["Public Right-of-Way Permit", "Encroachment Permit"],
+        "agencies": ["Public Works / Transportation", "AHJ Planning/Zoning"],
+        "citations": ["Local encroachment ordinance [verify before merging]", "2010 ADA Standards §403"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_health_food_handling",
+        "severity": "high",
+        "title": "Food retail can need health-department food establishment approval",
+        "why_it_matters": "Grocery, convenience, cafe, bakery, beverage, and prepared-food retail often need health plan review before building final/CO.",
+        "fired_by": [r"\bgrocery\b", r"\bconvenience store\b", r"\bcafe\b", r"\bcoffee\b", r"\bbakery\b", r"\bfood handling\b", r"\bprepared food\b", r"\bwalk[-\s]?in cooler\b", r"\bthree[-\s]?compartment\b", r"\b3[-\s]?compartment\b"],
+        "likely_required_actions": ["Submit health plan review early", "Show hand sinks, mop sink, food-contact finishes, refrigeration, and warewashing", "Coordinate health inspection before final CO"],
+        "companion_permits": ["Health Department Food Establishment Permit"],
+        "agencies": ["Local / county health department", "AHJ Building Dept"],
+        "citations": ["FDA Food Code as adopted locally [verify edition]", "Local health department plan-review rules"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_change_of_use_or_occupancy",
+        "severity": "high",
+        "title": "Non-retail-to-retail or special retail changes can require change-of-use / new CO approval",
+        "why_it_matters": "Warehouse/office/industrial-to-retail conversions and high-risk retail types can change occupancy, parking, accessibility, fire protection, and certificate-of-occupancy requirements.",
+        "fired_by": [r"\bwarehouse\s+(to|into)\s+retail\b", r"\boffice\s+(to|into)\s+retail\b", r"\bindustrial\s+(to|into)\s+retail\b", r"\bchange of (use|occupancy)\b", r"\bnew certificate of occupancy\b", r"\bnew co\b", r"\bformer warehouse\b", r"\bformer office\b"],
+        "likely_required_actions": ["Identify existing/proposed occupancy groups", "Confirm zoning/parking and CO process", "Coordinate fire/life-safety and accessibility impacts"],
+        "companion_permits": ["Change of Use Permit", "Certificate of Occupancy"],
+        "agencies": ["AHJ Building Dept", "Planning/Zoning", "Fire Prevention"],
+        "citations": ["IBC Chapter 3", "IEBC change-of-occupancy provisions [verify adopted edition]", "Local CO ordinance"],
+        "primary_scope": "commercial_retail_ti",
+    },
+    {
+        "id": "retail_cannabis_alcohol_special_use",
+        "severity": "high",
+        "title": "Cannabis or alcohol retail needs special-use / state licensing parallel path",
+        "why_it_matters": "Cannabis and alcohol approvals are separate from the building TI and can control zoning clearance, security plans, hearings, inspections, and opening date.",
+        "fired_by": [r"\bcannabis\b", r"\bdispensary\b", r"\bmarijuana\b", r"\balcohol\b", r"\bliquor\b", r"\bbeer and wine\b", r"\bwine shop\b", r"\bottle shop\b"],
+        "likely_required_actions": ["Start special-use/zoning clearance and state license in parallel", "Keep floor/security plan consistent across licensing and permit sets", "Confirm separation-distance and operating-condition rules"],
+        "companion_permits": ["Special Use Permit", "State cannabis/alcohol license"],
+        "agencies": ["Planning/Zoning", "State licensing agency", "AHJ Building Dept"],
+        "citations": ["Local special-use ordinance [verify]", "State cannabis/alcohol licensing rules [verify]"],
+        "primary_scope": "commercial_retail_ti",
+    },
+
+    # ------------------------------------------------------------------
+    # Commercial office TI triggers (launch blocker #8)
+    # ------------------------------------------------------------------
+    {
+        "id": "office_demising_partition_life_safety",
+        "severity": "high",
+        "title": "Demising partitions can trigger rated-wall, egress, and life-safety review",
+        "why_it_matters": "Office demising walls, new suites, conference rooms, and tenant separations can affect occupancy load, exit access, corridor ratings, door swing/hardware, smoke/firestopping, and certificate-of-occupancy conditions.",
+        "fired_by": [r"\bdemising\b", r"\btenant separation\b", r"\brated wall\b", r"\bfire[-\s]?rated\b", r"\bpartition(s)?\b", r"\bconference rooms?\b", r"\bnew suite\b", r"\boffice tenant improvement\b"],
+        "likely_required_actions": ["Show existing/proposed occupancy basis and occupant-load table", "Call out rated assemblies, firestopping, door hardware, and exit access travel distance", "Coordinate certificate-of-occupancy or suite-addressing conditions if the tenant suite changes"],
+        "companion_permits": [],
+        "agencies": ["AHJ Building Dept", "Fire Prevention"],
+        "citations": ["IBC Ch. 3", "IBC Ch. 7", "IBC Ch. 10", "IEBC change-of-occupancy provisions [verify local adoption]"],
+        "primary_scope": "commercial_office_ti",
+    },
+    {
+        "id": "office_ceiling_lighting_energy_code",
+        "severity": "medium",
+        "title": "Ceiling and lighting changes require commercial energy-code and emergency-lighting coordination",
+        "why_it_matters": "Office ceiling grids, lighting layouts, controls, sensors, and daylight zones commonly need IECC/COMcheck/Title 24/WSEC documentation plus emergency-lighting and exit-sign coordination.",
+        "fired_by": [r"\bceiling\b", r"\bceiling grid\b", r"\blighting\b", r"\blight fixtures?\b", r"\boccupancy sensors?\b", r"\bcontrols?\b", r"\bdaylight(ing)?\b", r"\bemergency lighting\b", r"\bexit signs?\b"],
+        "likely_required_actions": ["Prepare commercial energy-code lighting compliance", "Show lighting controls/sensor zones and emergency egress lighting", "Coordinate ceiling changes with sprinkler and alarm/strobe coverage"],
+        "companion_permits": ["Electrical Permit", "Energy code compliance forms"],
+        "agencies": ["Energy reviewer", "AHJ Electrical Dept", "Fire Prevention"],
+        "citations": ["IECC §C405", "ASHRAE 90.1 / CA Title 24 / WSEC-C where adopted", "IBC §1008"],
+        "primary_scope": "commercial_office_ti",
+    },
+    {
+        "id": "office_hvac_zoning_ventilation_balance",
+        "severity": "medium",
+        "title": "Office layout changes can require HVAC zoning, ventilation, and balancing review",
+        "why_it_matters": "Private offices, conference rooms, open-office areas, and new partitions can make existing HVAC zones noncompliant or uncomfortable. Reviewers may ask for ventilation calculations, diffuser/return coordination, controls, and balance reports.",
+        "fired_by": [r"\bhvac\b", r"\bmechanical\b", r"\bduct\b", r"\bdiffuser\b", r"\breturn air\b", r"\bzoning\b", r"\bthermostat\b", r"\bbalance\b", r"\bventilation\b", r"\bconference rooms?\b"],
+        "likely_required_actions": ["Update ventilation calculations by room/use", "Show supply/return layout, transfer air path, controls, and thermostat zones", "Provide air-balance report or TAB requirement if the AHJ/building owner requires it"],
+        "companion_permits": ["Mechanical Permit", "Air balance / TAB report if required"],
+        "agencies": ["AHJ Mechanical Dept", "Energy reviewer", "Building owner/engineer"],
+        "citations": ["IMC §403", "IECC §C403", "ASHRAE 62.1 [verify local adoption]"],
+        "primary_scope": "commercial_office_ti",
+    },
+    {
+        "id": "office_low_voltage_data_security",
+        "severity": "medium",
+        "title": "Data, security, access-control, and AV cabling can require low-voltage permit coordination",
+        "why_it_matters": "Office TIs often include data rooms, telecom cabling, card readers, cameras, access control, and conference-room AV. Some AHJs require low-voltage permits, plenum-rated cabling details, firestopping, and fire-alarm interface coordination.",
+        "fired_by": [r"\blow[-\s]?voltage\b", r"\bdata cabl(e|ing)\b", r"\btelecom\b", r"\bserver room\b", r"\bit closet\b", r"\baccess control\b", r"\bcard readers?\b", r"\bsecurity cameras?\b", r"\bav\b", r"\bconference room av\b"],
+        "likely_required_actions": ["Confirm whether low-voltage permit is required", "Show cable type/path, plenum ratings, sleeves, and firestopping", "Coordinate access-control egress releases and fire-alarm interface if doors are controlled"],
+        "companion_permits": ["Low-voltage / data cabling permit", "Access-control permit if controlled doors are installed"],
+        "agencies": ["AHJ Electrical Dept", "Fire Prevention", "Building owner/IT reviewer"],
+        "citations": ["NEC Ch. 7 / Art. 725/760/770/800", "IBC §1010 egress door hardware", "NFPA 72 interface requirements [verify]"],
+        "primary_scope": "commercial_office_ti",
+    },
+    {
+        "id": "office_ada_path_of_travel_restrooms",
+        "severity": "high",
+        "title": "Office alterations can trigger ADA path-of-travel and restroom upgrades",
+        "why_it_matters": "Office TIs alter primary-function areas. Reception, conference rooms, work areas, restrooms, doors, drinking fountains, parking, and path-of-travel items may need documented ADA compliance or 20% disproportionality analysis.",
+        "fired_by": [r"\bada\b", r"\baccessible\b", r"\bpath[-\s]?of[-\s]?travel\b", r"\brestroom\b", r"\btoilet room\b", r"\breception\b", r"\bconference rooms?\b", r"\boffice tenant improvement\b", r"\$\s?\d"],
+        "likely_required_actions": ["Prepare ADA path-of-travel scope and cost allocation", "Verify accessible route, doors, restrooms, reception/check-in counters, signage, and parking", "Document technical infeasibility or disproportionality instead of ignoring barriers"],
+        "companion_permits": [],
+        "agencies": ["AHJ Building Dept", "Accessibility reviewer"],
+        "citations": ["2010 ADA Standards §202.4", "28 CFR §36.403", "IBC Ch. 11"],
+        "primary_scope": "commercial_office_ti",
+    },
+    {
+        "id": "office_fire_alarm_sprinkler_coordination",
+        "severity": "medium",
+        "title": "Office wall/ceiling changes can require fire alarm and sprinkler shop drawings",
+        "why_it_matters": "Adding offices, ceilings, conference rooms, storage, or demising walls can affect sprinkler head spacing, alarm/strobe audibility/visibility, duct detectors, and monitoring acceptance tests.",
+        "fired_by": [r"\bsprinkler\b", r"\bfire alarm\b", r"\bstrobe\b", r"\bnotification\b", r"\bduct detector\b", r"\bceiling\b", r"\bdemising\b", r"\bpartition(s)?\b", r"\brelocat(e|ing) sprinkler\b"],
+        "likely_required_actions": ["Confirm separate/deferred fire alarm and sprinkler permits", "Show affected device/head layout and coverage after walls/ceilings move", "Schedule fire final or acceptance testing before occupancy"],
+        "companion_permits": ["Fire Alarm Permit", "Fire Sprinkler Modification Permit"],
+        "agencies": ["Fire Prevention", "AHJ Building Dept"],
+        "citations": ["IFC §901", "IFC §907", "NFPA 13", "NFPA 72"],
+        "primary_scope": "commercial_office_ti",
+    },
+    {
+        "id": "office_change_of_use_or_co",
+        "severity": "medium",
+        "title": "Some office buildouts need change-of-use or certificate-of-occupancy review",
+        "why_it_matters": "Converting retail, warehouse, industrial, assembly, or medical space into office can affect occupancy classification, parking, toilet fixture counts, accessibility, life safety, and CO issuance.",
+        "fired_by": [r"\b(retail|warehouse|industrial|medical)\s+(to|into)\s+office\b", r"\bchange of (use|occupancy)\b", r"\bnew certificate of occupancy\b", r"\bnew co\b", r"\bformer (retail|warehouse|industrial|medical)\b"],
+        "likely_required_actions": ["Identify existing/proposed occupancy groups", "Confirm zoning/parking and CO process", "Coordinate life-safety and accessibility impacts before permit intake"],
+        "companion_permits": ["Change of Use Permit", "Certificate of Occupancy"],
+        "agencies": ["AHJ Building Dept", "Planning/Zoning", "Fire Prevention"],
+        "citations": ["IBC Ch. 3", "IEBC change-of-occupancy provisions [verify adopted edition]", "Local CO ordinance"],
+        "primary_scope": "commercial_office_ti",
+    },
 
     # ------------------------------------------------------------------
     # LA Hillside ADU + residential ADU triggers (9)
@@ -311,6 +548,206 @@ HIDDEN_TRIGGER_REGISTRY = [
         "citations": ["IPC Chapter 7", "Local sewer/septic ordinance [verify before merging]"],
         "primary_scope": "residential_adu",
     },
+    {
+        "id": "adu_sewer_capacity",
+        "severity": "medium",
+        "confidence": "high",
+        "title": "Sewer Capacity / Utility Upgrade Likely",
+        "why_it_matters": "Most ADUs require a sewer capacity letter or service upsize. Failure to confirm BEFORE submittal causes plan-check holds.",
+        "fired_by": [r"\b(adu|dadu|jadu|accessory dwelling|junior adu)\b", r"\b(detached|attached)\s+adu\b", r"\bgarage conversion\b.*\b(jadu|adu)\b"],
+        "likely_required_actions": ["Confirm existing sewer lateral size and available capacity", "Ask sanitation / utility provider about ADU capacity-letter process", "Carry possible service upsize or sewer connection cost in budget"],
+        "companion_permits": ["Sewer Connection Permit", "Sanitation Capacity Letter"],
+        "agencies": ["AHJ sanitation department", "Water/sewer utility", "AHJ Building Dept"],
+        "citations": ["AHJ sanitation department capacity-letter requirement"],
+        "ask_user_if_missing": ["What is the existing sewer line size?", "Has the utility provider confirmed capacity for an additional ADU?"],
+        "citations_needed": ["AHJ sanitation department capacity-letter requirement"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_school_impact_fees",
+        "severity": "medium",
+        "confidence": "medium",
+        "title": "School Fees Often Applicable",
+        "why_it_matters": "ADUs over 750 sf trigger school fees in CA. Other states vary widely. Budget +$2-15/sf depending on district.",
+        "fired_by": [r"\b(adu|dadu|accessory dwelling)\b.*\b(7[6-9][0-9]|[89][0-9]{2}|1[0-9]{3,})\s*(sf|sq\.?\s*ft|square feet)\b"],
+        "regions": ["ca"],
+        "likely_required_actions": ["Confirm conditioned ADU floor area", "Ask school district or AHJ fee counter about per-square-foot school fees", "Budget school fees before submittal if over 750 sf"],
+        "companion_permits": [],
+        "agencies": ["Local school district", "AHJ Building Dept"],
+        "citations": ["Cal. Gov. Code §65852.2(f)(3) [verify current recodification before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_traffic_park_water_impact_fees",
+        "severity": "medium",
+        "confidence": "medium",
+        "title": "Traffic / Park / Water-Sewer Connection Impact Fees",
+        "why_it_matters": "Many cities charge traffic, park, and water/sewer connection fees on top of building permit. Often $3K–$15K total.",
+        "fired_by": [r"\b(detached adu|dadu|new adu|new accessory dwelling)\b", r"\b(adu|dadu)\b.*\b(new utility|new sewer|new water|new connection|separate meter)\b"],
+        "not_regions": ["tx"],
+        "likely_required_actions": ["Ask fee counter for traffic, park, water, and sewer impact-fee estimate", "Confirm whether fees are reduced/waived for ADUs", "Include utility connection charges in the owner budget"],
+        "companion_permits": ["Utility connection permit", "Impact fee assessment"],
+        "agencies": ["AHJ Building Dept", "Water/sewer utility", "Planning / impact fee counter"],
+        "citations": ["Local ADU impact-fee schedule [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_parking_replacement",
+        "severity": "medium",
+        "confidence": "high",
+        "title": "Parking Replacement May Be Required",
+        "why_it_matters": "Removing a covered parking space for ADU may require replacement (uncovered OK in CA). Verify city-specific waiver eligibility before submittal.",
+        "fired_by": [r"\bgarage conversion\b", r"\bconvert garage\b", r"\bcarport conversion\b", r"\b(remove|removing|removed|demolish|demo)\b.*\b(parking|garage|carport|covered space)\b"],
+        "likely_required_actions": ["Document existing parking spaces removed by the ADU", "Check state and city ADU parking waiver eligibility", "Show replacement parking location if local rules require it"],
+        "companion_permits": [],
+        "agencies": ["AHJ Planning/Zoning", "AHJ Building Dept"],
+        "citations": ["Cal. Gov. Code §65852.2 parking provisions [verify current recodification before merging]", "Local ADU parking ordinance [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_tree_protection",
+        "severity": "medium",
+        "confidence": "high",
+        "title": "Protected Tree / Tree-Removal Permit",
+        "why_it_matters": "Many CA cities require a separate tree permit and arborist report. Removing protected oaks/sycamores without permit is a common stop-work violation.",
+        "fired_by": [r"\b(adu|dadu|jadu|accessory dwelling)\b", r"\b(oak|sycamore|protected tree|heritage tree|significant tree|tree removal|arborist)\b"],
+        "regions": ["adu_protected_tree_city", "explicit_protected_tree_context"],
+        "likely_required_actions": ["Identify protected trees and tree-protection zones on the site plan", "Order arborist report if work is near protected trees", "File tree-removal/pruning permit before grading or foundation work"],
+        "companion_permits": ["Tree removal / protected tree permit"],
+        "agencies": ["Urban Forestry / Planning", "AHJ Building Dept"],
+        "citations": ["Local protected-tree ordinance [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_geotech_haul_route",
+        "severity": "high",
+        "confidence": "high",
+        "title": "Geotech Soils Report + Haul Route Plan Required",
+        "why_it_matters": "Hillside ADUs require Caltrans/city-approved haul route + soils report. Without these, plan check stalls 4–8 weeks.",
+        "fired_by": [r"\bhillside\b", r"\bsteep slope\b", r"\bgrading\b.*\b([5-9][0-9]|[1-9][0-9]{2,})\s*(cy|cubic yards?)\b", r"\bhaul route\b", r"\bsoils report\b", r"\bgeotech"],
+        "likely_required_actions": ["Order geotechnical / soils report", "Quantify cut/fill and export on the grading plan", "Prepare haul route permit or plan if export exceeds local threshold"],
+        "companion_permits": ["Haul Route Permit", "Grading Permit"],
+        "agencies": ["AHJ Building/Grading Dept", "Public Works / Transportation"],
+        "citations": ["Local hillside/grading ordinance [verify before merging]", "IBC Chapter 18"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_legalization_co_codeenforcement",
+        "severity": "high",
+        "confidence": "high",
+        "title": "Legalization Triggers Code Enforcement Review",
+        "why_it_matters": "Legalization permits are routed through code enforcement. Unpermitted work must be brought to current code, and a CO will be re-issued. Expect inspection of every system.",
+        "fired_by": [r"\blegalization\b", r"\blegalize\b", r"\bunpermitted\b", r"\bexisting converted\b", r"\bafter[-\s]?the[-\s]?fact\b", r"\bas[-\s]?built\b"],
+        "likely_required_actions": ["Pull permit history before filing", "Prepare as-built plans and current-code correction narrative", "Coordinate code-enforcement clearance and final CO/occupancy documentation"],
+        "companion_permits": ["Code enforcement clearance", "Certificate of Occupancy re-issue"],
+        "agencies": ["Code Enforcement", "AHJ Building Dept"],
+        "citations": ["Local legalization / investigation fee rules [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_vhfhsz_wui_compliance",
+        "severity": "high",
+        "confidence": "high",
+        "title": "VHFHSZ / WUI Class A Roofing + Eaves + Vents",
+        "why_it_matters": "ADUs in WUI/VHFHSZ require Class A roofing, ember-resistant vents, eaves protection per CRC R337 / CBC Chapter 7A. Critical in LA Hillside, San Diego, Riverside, much of Bay Area.",
+        "fired_by": [r"\b(wui|wildland|very high fire|vhfhsz|fire hazard severity)\b", r"\bhillside\b"],
+        "regions": ["ca"],
+        "likely_required_actions": ["Confirm WUI/VHFHSZ parcel status", "Specify Class A roof assembly and ember-resistant vents", "Show exterior wall, eave, deck, glazing, and vegetation/fire-zone notes"],
+        "companion_permits": [],
+        "agencies": ["AHJ Building Dept", "Fire Dept"],
+        "citations": ["CRC §R337", "CBC Chapter 7A", "Local VHFHSZ map [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+    {
+        "id": "adu_hud_far_setback",
+        "severity": "medium",
+        "confidence": "medium",
+        "title": "Detached ADU Setback / Lot Coverage / FAR Limits",
+        "why_it_matters": "CA state-mandated minimums (4-ft side/rear, 0 ft for conversion) but city-specific overlays may add. FAR cap and lot coverage often constrain detached ADUs.",
+        "fired_by": [r"\b(detached adu|dadu|new accessory dwelling)\b", r"\b(adu|accessory dwelling)\b.*\b(property line|setback|lot coverage|far|footprint)\b"],
+        "likely_required_actions": ["Confirm side/rear setback from proposed ADU footprint", "Check lot coverage/FAR and overlay constraints", "Show conversion vs new detached footprint clearly on site plan"],
+        "companion_permits": [],
+        "agencies": ["AHJ Planning/Zoning", "AHJ Building Dept"],
+        "citations": ["Cal. Gov. Code ADU setback provisions [verify current recodification before merging]", "Local zoning ordinance [verify before merging]"],
+        "primary_scope": "residential_adu",
+    },
+
+
+    # ------------------------------------------------------------------
+    # Medical clinic / dental clinic TI triggers (6)
+    # ------------------------------------------------------------------
+    {
+        "id": "medical_clinic_exam_room_plumbing",
+        "severity": "high",
+        "title": "Exam rooms and treatment rooms usually trigger plumbing / hand-sink review",
+        "why_it_matters": "Clinic layouts commonly need hand-washing sinks, accessible restrooms, fixture-count confirmation, backflow protection, and medical/dental equipment waste coordination. Missing plumbing scope can stall health/licensing or final inspections.",
+        "fired_by": [r"\bexam rooms?\b", r"\btreatment rooms?\b", r"\bprocedure rooms?\b", r"\bhand sinks?\b", r"\blavator(y|ies)\b", r"\bdental chair\b", r"\bsterilization room\b", r"\bmedical clinic\b", r"\bdental clinic\b"],
+        "likely_required_actions": ["Show exam-room sink locations and fixture schedule", "Confirm plumbing fixture counts and accessible restroom clearances", "Coordinate backflow/indirect waste for medical or dental equipment"],
+        "companion_permits": ["Plumbing permit / medical fixture review"],
+        "agencies": ["AHJ Building/Plumbing Dept", "Health-care licensing or local health reviewer"],
+        "citations": ["IPC §403", "IPC §608", "IBC Chapter 11", "FGI Guidelines / local health-care licensing standards [verify applicability]"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+    {
+        "id": "medical_clinic_medical_gas_review",
+        "severity": "high",
+        "title": "Medical gas / nitrous / oxygen systems require specialty review and certified installer coordination",
+        "why_it_matters": "Medical gas is not ordinary plumbing. Piping, alarms, valves, source equipment, installer qualifications, pressure tests, and verification reports are often separate submittals and can block opening if missed.",
+        "fired_by": [r"\bmed(?:ical)? gas\b", r"\boxygen\b", r"\bnitrous oxide\b", r"\bvacc?uum\b", r"\bnurse call\b", r"\bzone valve\b", r"\bNFPA\s*99\b"],
+        "likely_required_actions": ["Identify gas types and outlets by room", "Use certified medical-gas installer/verifier where required", "Submit pressure-test, alarm, valve, and verification documentation before final"],
+        "companion_permits": ["Medical gas permit / specialty plumbing permit"],
+        "agencies": ["AHJ Plumbing/Mechanical Dept", "Fire Prevention", "Health-care licensing reviewer"],
+        "citations": ["NFPA 99", "ASSE 6010/6020/6030 [verify local adoption]"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+    {
+        "id": "medical_clinic_infection_control_pressure_relationships",
+        "severity": "high",
+        "title": "Clinic HVAC can require ventilation, pressure relationship, and infection-control documentation",
+        "why_it_matters": "Exam, procedure, sterilization, lab, and treatment areas can have ventilation and pressure requirements beyond a normal office TI. Reviewers may ask for air changes, exhaust, filtration, and infection-control details.",
+        "fired_by": [r"\bprocedure room\b", r"\btreatment room\b", r"\bsterilization\b", r"\blab\b", r"\bnegative pressure\b", r"\bpositive pressure\b", r"\binfection control\b", r"\bmedical clinic\b", r"\bdental clinic\b"],
+        "likely_required_actions": ["Add ventilation schedule by room type", "Show pressure relationships/exhaust where required", "Coordinate infection-control notes with construction phasing and final testing"],
+        "companion_permits": ["Mechanical permit / clinic ventilation review"],
+        "agencies": ["AHJ Mechanical Dept", "Health-care licensing or infection-control reviewer"],
+        "citations": ["IMC §403", "ASHRAE 170 / FGI Guidelines [verify applicability]"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+    {
+        "id": "medical_clinic_accessibility_path_of_travel",
+        "severity": "high",
+        "title": "Clinic alterations need ADA path-of-travel plus accessible exam/restroom details",
+        "why_it_matters": "Medical and dental clinics are public accommodations. Altered reception, exam rooms, toilet rooms, corridors, doors, counters, and parking can trigger ADA path-of-travel upgrades and accessible medical-service access details.",
+        "fired_by": [r"\bmedical clinic\b", r"\bdental clinic\b", r"\bexam rooms?\b", r"\baccessible\b", r"\bada\b", r"\bpath[-\s]?of[-\s]?travel\b", r"\brestroom\b", r"\breception\b"],
+        "likely_required_actions": ["Prepare ADA path-of-travel cost allocation", "Verify exam-room doors, turning spaces, accessible route, counters, and toilet-room clearances", "Confirm accessible parking/passenger-loading route if site work is affected"],
+        "companion_permits": [],
+        "agencies": ["AHJ Building Dept", "Accessibility reviewer"],
+        "citations": ["2010 ADA Standards §202.4", "28 CFR §36.403", "IBC Chapter 11"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+    {
+        "id": "medical_clinic_xray_or_radiology_shielding",
+        "severity": "high",
+        "title": "X-ray / radiology rooms can require shielding plan and state radiation registration",
+        "why_it_matters": "X-ray, dental panoramic, CT, or radiology equipment may need physicist shielding calculations, lead-lined assemblies, warning lights/signage, electrical coordination, and state radiation-device registration before use.",
+        "fired_by": [r"\bx[-\s]?ray\b", r"\bradiology\b", r"\bct scanner\b", r"\bdental pano\b", r"\bpanoramic x[-\s]?ray\b", r"\blead shielding\b", r"\bshielding plan\b"],
+        "likely_required_actions": ["Order shielding design from qualified physicist where required", "Show lead-lined walls/doors/view windows and electrical equipment requirements", "Register radiation-producing equipment with the state before operation"],
+        "companion_permits": ["Radiation-device registration / shielding review"],
+        "agencies": ["State radiation-control program", "AHJ Building/Electrical Dept"],
+        "citations": ["State radiation-control rules [verify state-specific program]", "NCRP shielding guidance [verify design basis]"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
+    {
+        "id": "medical_clinic_fire_life_safety_and_alarm",
+        "severity": "medium",
+        "title": "Clinic layout changes can require fire alarm, sprinkler, egress, and emergency-lighting coordination",
+        "why_it_matters": "New exam rooms, corridors, treatment rooms, waiting areas, storage, oxygen/medical gas, or suite separations can affect egress, occupant load, fire alarm notification, sprinkler coverage, and emergency lighting.",
+        "fired_by": [r"\bmedical clinic\b", r"\bdental clinic\b", r"\bfire alarm\b", r"\bsprinkler\b", r"\begress\b", r"\bemergency lighting\b", r"\bwaiting room\b", r"\bmedical gas\b"],
+        "likely_required_actions": ["Recalculate occupant load and egress paths", "Coordinate fire alarm notification and sprinkler coverage with room layout", "Add emergency-lighting/exit-sign updates where paths change"],
+        "companion_permits": ["Fire alarm permit", "Fire sprinkler permit if devices/heads change"],
+        "agencies": ["Fire Prevention", "AHJ Building Dept"],
+        "citations": ["IBC Ch. 10", "IBC §907", "NFPA 13", "NFPA 72"],
+        "primary_scope": "commercial_medical_clinic_ti",
+    },
 
     # ------------------------------------------------------------------
     # Generic commercial TI triggers (8)
@@ -411,6 +848,43 @@ HIDDEN_TRIGGER_REGISTRY = [
         "citations": ["IBC §1008", "IBC §1013", "NFPA 101 [where adopted]"],
         "primary_scope": "commercial_ti",
     },
+    {
+        "id": "commercial_hvac_a2l_refrigerant_2025_transition",
+        "severity": "medium",
+        "title": "Commercial HVAC replacement must use A2L refrigerant per 2025 EPA AIM Act phasedown",
+        "why_it_matters": "Manufacture/import of new R-410A rooftop units and split systems was largely cut off January 1, 2025 under EPA 40 CFR Part 84. Commercial replacements ship with A2L refrigerants (R-454B, R-32) that change clearance, leak detection, electrical disconnect, and EMS interlock requirements.",
+        "fired_by": [r"\bhvac\b", r"\brtu\b", r"\brooftop unit\b", r"\bcondenser\b", r"\bvrf\b", r"\bvrv\b", r"\br[-\s]?410a\b", r"\br[-\s]?454b\b", r"\br[-\s]?32\b", r"\ba2l\b", r"\brefrigerant\b"],
+        "likely_required_actions": ["Confirm new equipment is A2L-compatible (R-454B / R-32)", "Add refrigerant detection / EMS shutoff per ASHRAE 15 and listing", "Verify installer EPA Section 608 + manufacturer A2L training"],
+        "companion_permits": ["Mechanical permit", "Electrical permit if disconnect / EMS changes"],
+        "agencies": ["AHJ Mechanical Dept", "EPA"],
+        "citations": ["40 CFR Part 84 (AIM Act technology transitions)", "ASHRAE 15-2022", "UL 60335-2-40", "IMC §1106 [verify adopted edition before merging]"],
+        "primary_scope": "commercial_ti",
+    },
+    {
+        "id": "commercial_change_of_occupancy_b_to_a2_or_m_sprinkler_general",
+        "severity": "high",
+        "title": "Change of occupancy (B/S to A-2/M) can trigger sprinkler retrofit and IEBC review",
+        "why_it_matters": "Converting an office, warehouse, or retail tenant to assembly or mercantile crosses occupancy classifications. The new occupant load can cross IBC 903.2 sprinkler thresholds and require an IEBC change-of-occupancy analysis even when the construction work looks small.",
+        "fired_by": [
+            r"\bchange of (use|occupancy)\b",
+            r"\b(b|s|s[-\s]?1|s[-\s]?2|m)\s*(to|-)\s*(a[-\s]?2|a[-\s]?3|a|m)\b",
+            r"\b(office|warehouse|retail|storage)\s+(to|into|converted to|conversion to)\s+(restaurant|tavern|bar|assembly|gym|theater|mercantile|retail)\b",
+            r"\bwarehouse\s+into\b",
+            r"\bs[-\s]?1\s+warehouse\b",
+            r"\biebc\b",
+            r"\bchange[-\s]?of[-\s]?use\b",
+        ],
+        "likely_required_actions": [
+            "Run IEBC change-of-occupancy analysis (Chapter 10)",
+            "Recompute occupant load and check IBC 903.2 sprinkler thresholds",
+            "Update accessible route and restroom/fixture counts to the higher occupancy",
+            "Coordinate fire-alarm and egress lighting for the proposed occupancy",
+        ],
+        "companion_permits": ["Fire sprinkler permit if retrofit/relocation triggered", "Fire alarm permit if devices/coverage change"],
+        "agencies": ["AHJ Building Dept", "Fire Prevention"],
+        "citations": ["IEBC Chapter 10 [verify adopted edition before merging]", "IBC §903.2", "IBC §1004", "IBC §2902"],
+        "primary_scope": "commercial_ti",
+    },
 
     # ------------------------------------------------------------------
     # Residential single-trade triggers. These are skipped when primary is commercial. (6)
@@ -452,15 +926,28 @@ HIDDEN_TRIGGER_REGISTRY = [
         "primary_scope": "residential_single_trade",
     },
     {
-        "id": "residential_water_heater_pan_tp_seismic",
+        "id": "residential_water_heater_pan_tp",
         "severity": "medium",
-        "title": "Water heater replacement can trigger pan, T&P discharge, expansion, and seismic strapping details",
-        "why_it_matters": "A simple swap often fails inspection when discharge piping, pan drain, combustion air, expansion control, or seismic restraint is missing.",
-        "fired_by": [r"\bwater heater\b", r"\btankless\b", r"\bhybrid water heater\b", r"\bheat pump water heater\b", r"\bt&p\b", r"\bseismic strap\b"],
-        "likely_required_actions": ["Show T&P discharge termination", "Add drain pan where leakage damage is possible", "Verify combustion air/venting or electrical circuit", "Add seismic restraint where locally required"],
+        "title": "Water heater replacement requires pan, T&P discharge, expansion, and combustion-air details",
+        "why_it_matters": "A simple swap often fails inspection when discharge piping, pan drain, combustion air, or expansion control is missing.",
+        "fired_by": [r"\bwater heater\b", r"\btankless\b", r"\bhybrid water heater\b", r"\bheat pump water heater\b", r"\bt&p\b"],
+        "likely_required_actions": ["Show T&P discharge termination", "Add drain pan where leakage damage is possible", "Verify combustion air/venting or electrical circuit", "Confirm expansion control on closed systems"],
         "companion_permits": ["Plumbing/mechanical/electrical trade permit as locally required"],
         "agencies": ["AHJ Plumbing/Mechanical Dept"],
-        "citations": ["IPC §504.6", "IPC §504.7", "IRC §P2801.6", "State seismic strapping amendments [verify before merging]"],
+        "citations": ["IPC §504.6", "IPC §504.7", "IRC §P2801.6"],
+        "primary_scope": "residential_single_trade",
+    },
+    {
+        "id": "residential_water_heater_seismic_strap",
+        "severity": "medium",
+        "title": "Water heater seismic strapping required in seismic-zone amendments",
+        "why_it_matters": "California, Alaska, and other state seismic amendments require water heater anchoring at the upper and lower thirds. Inspectors fail finals over missing or improper straps.",
+        "fired_by": [r"\bwater heater\b", r"\btankless\b", r"\bhybrid water heater\b", r"\bheat pump water heater\b", r"\bseismic strap\b"],
+        "regions": ["seismic_strap_required"],
+        "likely_required_actions": ["Strap water heater at upper and lower thirds", "Use approved seismic strap or listed restraint per local amendment", "Verify gas flex connector and earthquake gas shutoff if locally required"],
+        "companion_permits": [],
+        "agencies": ["AHJ Plumbing/Mechanical Dept"],
+        "citations": ["CPC §507.2 [California seismic amendment]", "IRC §P2801.6", "Local seismic strap ordinance [verify before merging]"],
         "primary_scope": "residential_single_trade",
     },
     {
@@ -485,6 +972,43 @@ HIDDEN_TRIGGER_REGISTRY = [
         "companion_permits": ["Electrical permit", "Utility notification if required"],
         "agencies": ["AHJ Electrical Dept", "Electric utility if service impact"],
         "citations": ["NEC Article 625", "NEC §220.57 [verify edition before merging]"],
+        "primary_scope": "residential_single_trade",
+    },
+    {
+        "id": "residential_hvac_a2l_refrigerant_2025_transition",
+        "severity": "medium",
+        "title": "New HVAC equipment must use A2L refrigerant per 2025 EPA AIM Act phasedown",
+        "why_it_matters": "After January 1, 2025, EPA 40 CFR Part 84 prohibits manufacture/import of most R-410A residential split systems. New installs use A2L refrigerants (R-454B, R-32) requiring updated leak detection, electrical disconnects, and brazing/installer certification.",
+        "fired_by": [r"\bhvac\b", r"\bcondenser\b", r"\bfurnace\b", r"\bheat pump\b", r"\bsplit system\b", r"\bmini[-\s]?split\b", r"\br[-\s]?410a\b", r"\br[-\s]?454b\b", r"\br[-\s]?32\b", r"\ba2l\b", r"\brefrigerant\b"],
+        "likely_required_actions": ["Confirm new equipment is A2L-compatible (R-454B or R-32)", "Verify installer is EPA Section 608 certified for A2L handling", "Show service disconnect and refrigerant detection where required by listing"],
+        "companion_permits": ["Mechanical permit", "Electrical permit if disconnect changes"],
+        "agencies": ["AHJ Mechanical Dept", "EPA"],
+        "citations": ["40 CFR Part 84 (AIM Act technology transitions)", "ASHRAE 15-2022", "UL 60335-2-40", "IMC §1106 [verify adopted edition before merging]"],
+        "primary_scope": "residential_single_trade",
+    },
+    {
+        "id": "residential_heat_pump_ira_25c_rebates",
+        "severity": "low",
+        "title": "Heat pump / HPWH / solar / EV qualifies for IRA 25C federal credit and state utility rebates",
+        "why_it_matters": "Customers leave thousands of dollars on the table when contractors do not surface the federal 25C tax credit (up to $2,000/yr for HP HVAC and HPWH) and state/utility rebates that are time-bound and stack on top of permit costs.",
+        "fired_by": [r"\bheat pump\b", r"\bhpwh\b", r"\bheat pump water heater\b", r"\bhybrid water heater\b", r"\bhp hvac\b", r"\bmini[-\s]?split\b", r"\bsolar\b", r"\bphotovoltaic\b", r"\bpv\b", r"\bev charger\b", r"\bevse\b"],
+        "likely_required_actions": ["Tell customer about IRC §25C credit (HPWH/HP HVAC up to $2,000)", "Check state energy office and electric utility rebate database (e.g., Focus on Energy in WI, TECH Clean California, Mass Save)", "Verify equipment AHRI/CEE tier required for the rebate before quoting"],
+        "companion_permits": [],
+        "agencies": ["IRS / Treasury", "State energy office", "Electric/gas utility"],
+        "citations": ["26 U.S.C. §25C (Energy Efficient Home Improvement Credit)", "Inflation Reduction Act §13301", "DOE Home Energy Rebate program guidance [verify current state allocation before quoting]"],
+        "primary_scope": "residential_single_trade",
+    },
+    {
+        "id": "fl_hvhz_noa_impact_rated_envelope",
+        "severity": "high",
+        "title": "Miami-Dade / Broward HVHZ work requires NOA-listed impact-rated products",
+        "why_it_matters": "In the Florida HVHZ (Miami-Dade and Broward counties), windows, doors, garage doors, skylights, and roof systems must carry an active Miami-Dade Notice of Acceptance (NOA) or Florida Product Approval. Inspectors will fail final without the NOA number on the permit set.",
+        "fired_by": [r"\bwindow\b", r"\bdoor\b", r"\bgarage door\b", r"\bskylight\b", r"\broof\b", r"\breroof\b", r"\bre-?roof\b", r"\bshingle\b", r"\btile roof\b", r"\bhurricane\b", r"\bimpact\b", r"\bhvhz\b", r"\bnoa\b"],
+        "regions": ["fl_coastal_hvhz"],
+        "likely_required_actions": ["Specify products by Miami-Dade NOA number (or active Florida Product Approval) on the permit set", "Show secondary water resistance / underlayment per FBC 1518 [verify edition]", "Provide hurricane strap / clip schedule and uplift calc consistent with the NOA"],
+        "companion_permits": ["Roofing permit", "Window/door permit"],
+        "agencies": ["Miami-Dade Building Code Compliance", "AHJ Building Dept"],
+        "citations": ["Florida Building Code (FBC) Chapter 16 HVHZ", "Miami-Dade NOA program", "FBC §1518 [verify current edition before merging]"],
         "primary_scope": "residential_single_trade",
     },
 
@@ -572,6 +1096,7 @@ COMMERCIAL_SCOPES = {
     "commercial",
     "commercial_ti",
     "commercial_office_ti",
+    "commercial_medical_clinic_ti",
     "commercial_retail_ti",
     "commercial_restaurant",
     "commercial_restaurant_ti",
@@ -581,10 +1106,14 @@ COMMERCIAL_SCOPES = {
 
 ADU_SCOPES = {
     "residential_adu",
+    "residential_jadu",
+    "residential_garage_conversion",
+    "residential_hillside_adu",
     "adu",
     "accessory_dwelling_unit",
     "junior_adu",
     "jadu",
+    "dadu",
     "garage_conversion_adu",
 }
 
@@ -607,9 +1136,66 @@ TRIGGER_JURISDICTION_PREFIXES = {
     "la_": {"state": "ca", "city_any": {"los angeles", "la"}},
 }
 
+# Named regions for the explicit `regions` / `not_regions` schema keys. Use
+# these on triggers that need geographic gating but do not follow the
+# city-prefix ID convention (seismic strap, HVHZ NOA, named historic districts,
+# etc.). All present constraints inside a region must match (AND semantics).
+NAMED_REGIONS = {
+    "seismic_strap_required": {
+        # States with statewide water-heater seismic strapping amendments. Other
+        # states (e.g. NV, OR, WA) have partial or local rules; expand here when
+        # a verified citation justifies it.
+        "states": {"ca", "ak"},
+    },
+    "fl_coastal_hvhz": {
+        # High Velocity Hurricane Zone — Miami-Dade and Broward counties (FBC).
+        "states": {"fl"},
+        "city_any": {
+            "miami", "miami beach", "miami gardens", "north miami", "north miami beach",
+            "coral gables", "doral", "hialeah", "homestead", "key biscayne", "aventura",
+            "sunny isles beach", "cutler bay", "palmetto bay", "pinecrest", "kendall",
+            "fort lauderdale", "hollywood", "pompano beach", "pembroke pines", "davie",
+            "plantation", "sunrise", "coral springs", "deerfield beach", "weston",
+        },
+    },
+    "named_historic_district": {
+        # Triggers gated to this region only fire when the job context names a
+        # historic district / HPC review. Geography is text-driven, not
+        # state-driven, so any state passes when text matches.
+        "text_any_pattern": [
+            r"\bhistoric district\b",
+            r"\bhistoric preservation\b",
+            r"\bhpc\b",
+            r"\bcertificate of appropriateness\b",
+            r"\bnational register\b",
+            r"\blandmark commission\b",
+        ],
+    },
+    "adu_protected_tree_city": {
+        "city_any": {
+            "los angeles", "oakland", "berkeley", "sacramento",
+            "san francisco", "san diego", "seattle",
+        },
+    },
+    "explicit_protected_tree_context": {
+        "text_any_pattern": [
+            r"\bprotected tree\b",
+            r"\bheritage tree\b",
+            r"\bsignificant tree\b",
+            r"\boak\b",
+            r"\bsycamore\b",
+            r"\barborist\b",
+        ],
+    },
+}
+
 # Strip these helper keys if future registries add them. Current registry uses
 # only the public schema, but keeping this makes the detector safe to extend.
 PRIVATE_TRIGGER_KEYS = {"_notes", "_jurisdiction", "_scope_aliases"}
+
+# Schema keys that exist on the trigger dict but should not be returned to the
+# caller because they are internal gating metadata.
+INTERNAL_TRIGGER_KEYS = {"regions", "not_regions"}
 
 
 def _normalize(value: Any) -> str:
@@ -674,11 +1260,26 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
             or ("restaurant" in text and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
         )
 
+    if trigger_scope_norm == _normalize("commercial_retail_ti"):
+        return (
+            primary_scope_norm == _normalize("commercial_retail_ti")
+            or ("retail" in text and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
+        )
+
+    if trigger_scope_norm == _normalize("commercial_medical_clinic_ti"):
+        clinic_terms = ("medical clinic", "medical office", "dental clinic", "health clinic", "exam room", "med gas", "medical gas", "x ray", "x-ray", "radiology")
+        return (
+            primary_scope_norm == _normalize("commercial_medical_clinic_ti")
+            or (any(term in text for term in clinic_terms) and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
+        )
+
     if trigger_scope_norm == _normalize("commercial_ti"):
         return _is_commercial_scope(primary_scope_norm)
 
     if trigger_scope_norm == _normalize("residential_adu"):
-        return primary_scope_norm in {_normalize(s) for s in ADU_SCOPES} or bool(re.search(r"\b(adu|jadu|accessory dwelling|garage conversion)\b", text))
+        if _is_commercial_scope(primary_scope_norm):
+            return False
+        return primary_scope_norm in {_normalize(s) for s in ADU_SCOPES} or bool(re.search(r"\b(adu|dadu|jadu|accessory dwelling|garage conversion)\b", text))
 
     if trigger_scope_norm == _normalize("residential_single_trade"):
         # Explicit requirement: skip residential single-trade triggers when the
@@ -687,6 +1288,16 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
         return not _is_commercial_scope(primary_scope_norm)
 
     if trigger_scope_norm == "multifamily":
+        # Multifamily is a competing template family, not a generic add-on for
+        # every commercial project that mentions residential context. A medical
+        # clinic / office / restaurant TI in a mixed-use building can mention
+        # apartments, R-2, sprinklers, or dwelling units in surrounding-building
+        # context without becoming a multifamily project. Only allow the
+        # multifamily trigger pool when the shared primary classifier routed the
+        # job to multifamily. This prevents Type B unit-count / NFPA 13R apartment
+        # triggers from leaking into single-tenant commercial healthcare TI.
+        if _is_commercial_scope(primary_scope_norm) and primary_scope_norm not in {_normalize(s) for s in MULTIFAMILY_SCOPES}:
+            return False
         return primary_scope_norm in {_normalize(s) for s in MULTIFAMILY_SCOPES} or bool(re.search(r"\b(multifamily|multi[-\s]?family|apartment|apartments|r[-\s]?2)\b", text))
 
     return False
@@ -729,8 +1340,66 @@ def _trigger_matches(trigger: dict, text: str) -> bool:
     return any(_pattern_matches(pattern, text) for pattern in trigger.get("fired_by", []))
 
 
+def _region_token_applies(token: str, city: str, state: str, text: str) -> bool:
+    """Resolve a `regions` / `not_regions` token against (city, state, text).
+
+    Tokens may be a 2-letter state code (e.g. "ca") or a named region defined
+    in NAMED_REGIONS. Inside a named region, every present constraint
+    (`states`, `city_any`, `text_any_pattern`) must pass.
+    """
+    token_norm = _normalize(token).replace(" ", "_")
+    if not token_norm:
+        return False
+
+    state_norm = _normalize(state)
+    city_norm = _normalize(city)
+
+    # Bare state code shortcut.
+    if len(token_norm) == 2 and token_norm.isalpha():
+        return state_norm == token_norm
+
+    region = NAMED_REGIONS.get(token_norm)
+    if not region:
+        return False
+
+    states = region.get("states")
+    if states and state_norm not in {_normalize(s) for s in states}:
+        return False
+
+    city_any = region.get("city_any")
+    if city_any:
+        cities = {_normalize(c) for c in city_any}
+        # Allow either an exact city-arg match or the name appearing in job text
+        # (helps when caller passes a county or alt spelling).
+        if city_norm not in cities and not any(c in text for c in cities):
+            return False
+
+    text_patterns = region.get("text_any_pattern")
+    if text_patterns and not any(_pattern_matches(p, text) for p in text_patterns):
+        return False
+
+    return True
+
+
+def _region_applies(trigger: dict, city: str, state: str, text: str) -> bool:
+    """Return False iff this trigger's `regions`/`not_regions` exclude this job."""
+    regions = trigger.get("regions")
+    if regions and not any(_region_token_applies(t, city, state, text) for t in regions):
+        return False
+
+    not_regions = trigger.get("not_regions")
+    if not_regions and any(_region_token_applies(t, city, state, text) for t in not_regions):
+        return False
+
+    return True
+
+
 def _public_trigger(trigger: dict) -> dict:
-    clean = {k: copy.deepcopy(v) for k, v in trigger.items() if k not in PRIVATE_TRIGGER_KEYS}
+    clean = {
+        k: copy.deepcopy(v)
+        for k, v in trigger.items()
+        if k not in PRIVATE_TRIGGER_KEYS and k not in INTERNAL_TRIGGER_KEYS
+    }
     # Make sure all expected public fields exist, even if a future appended
     # trigger omitted an optional list.
     clean.setdefault("likely_required_actions", [])
@@ -747,8 +1416,8 @@ def detect_hidden_triggers(job_type: str, city: str, state: str, primary_scope: 
     Deterministic V1 rules:
     - Match only lowercased user job text plus selected structured base-result
       occupancy/scope fields. No LLM calls, no network calls.
-    - A trigger must pass scope gating, jurisdiction gating, and at least one
-      `fired_by` regex/token match.
+    - A trigger must pass scope gating, jurisdiction gating, region gating
+      (`regions` / `not_regions`), and at least one `fired_by` regex/token match.
     - Residential single-trade triggers are suppressed for commercial primary
       scopes.
     - Returned dicts are copies, so callers can safely mutate/sanitize them.
@@ -767,6 +1436,8 @@ def detect_hidden_triggers(job_type: str, city: str, state: str, primary_scope: 
         if not _scope_applies(trigger.get("primary_scope", ""), primary_scope, text):
             continue
         if not _jurisdiction_applies(trigger_id, city, state, text):
+            continue
+        if not _region_applies(trigger, city, state, text):
             continue
         if not _trigger_matches(trigger, text):
             continue

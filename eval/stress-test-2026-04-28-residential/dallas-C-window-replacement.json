@@ -1,0 +1,267 @@
+{
+  "job_summary": "Replace 12 existing residential windows like-for-like in Dallas, TX with no structural changes, no header changes, and no opening enlargement. This is typically a Building Permit for window replacement because Dallas inspects energy-code compliance and glazing labels even when the openings stay the same. No separate electrical, plumbing, or mechanical permit is triggered by the stated scope.",
+  "total_cost_estimate": "$4,200 - $9,500",
+  "location": "Dallas, TX",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Residential Window Replacement",
+      "portal_selection": "Building Permit - Window Replacement",
+      "required": true,
+      "notes": "Required for like-for-like window replacement in Dallas residential work so the city can verify glazing, energy compliance, and that no structural opening changes were made."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Residential Window Replacement",
+      "included_because": "The scope is replacement of 12 existing windows. Even without structural changes, Dallas generally requires a building permit for window replacement to verify IRC N1102 energy compliance and IRC R308 glazing requirements.",
+      "scope_trigger": "Replacing existing windows in a residential dwelling"
+    }
+  ],
+  "applying_office": "Dallas Development Services Department",
+  "apply_url": "https://developdallas.dallascityhall.com/PermitDallas/",
+  "apply_pdf": null,
+  "apply_phone": "(214) 948-4480",
+  "apply_address": "320 E. Jefferson Blvd., Room 118, Dallas, TX 75203",
+  "apply_google_maps": "https://www.google.com/maps?q=320+E.+Jefferson+Blvd.,+Room+118,+Dallas,+TX+75203",
+  "fee_range": "Fee Estimate: Fee not confirmed — call the Dallas Development Services Department or check their online fee schedule before applying. — verify in https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf before quoting",
+  "approval_timeline": {
+    "simple": "Most residential window replacement permits are same-day or OTC through the PermitDallas portal if no structural changes are shown.",
+    "complex": "1-3 weeks if plan review is triggered by any opening change, egress issue, or other code concern."
+  },
+  "inspections": [
+    {
+      "stage": "Final Building Inspection",
+      "description": "Inspector verifies the installed windows match the approved scope, glazing labels are present, U-factor and SHGC meet Dallas energy requirements, windows are properly flashed and sealed, no opening enlargement or header changes occurred, and any bedroom egress windows still meet minimum clear opening requirements.",
+      "timing": "After all windows are installed, trimmed out, sealed, and accessible for inspection"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the Dallas PermitDallas / contractor portal at https://developdallas.dallascityhall.com/PermitDallas/ or through the Dallas Development Services inspection request system. Minimum advance notice is typically next-business-day scheduling for residential work; call (214) 948-4480 if the portal will not accept the request. Have the permit number ready and request a final building inspection.",
+  "license_required": "Licensed general contractor or window contractor pulls the permit on the homeowner's behalf, and the contractor's license/registration information must be on the application. Homeowners may be allowed to pull their own permit in some cases, but Dallas contractor registration must still be current if a contractor is submitting the job.",
+  "city_contractor_registration": "Dallas requires contractor registration with the city each year. Verify the registration is current before submitting the permit application; an expired registration can block the permit even if the state license is valid.",
+  "what_to_bring": [
+    "Completed Dallas permit application in the PermitDallas portal",
+    "Contractor city registration number and state license information",
+    "Window schedule showing quantity, sizes, manufacturer, model, U-factor, and SHGC",
+    "Product data sheets and glazing labels for the replacement windows",
+    "Property address and permit valuation for all 12 windows",
+    "Homeowner authorization if the contractor is filing on the owner's behalf"
+  ],
+  "common_mistakes": [
+    "Submitting the permit with an undervalued project amount — Dallas uses a valuation system and can flag low valuations for audit or penalty fees",
+    "Letting city contractor registration lapse before filing — Dallas can reject the application silently if the annual registration is expired",
+    "Installing windows without keeping the energy label and product data sheet for inspection — the inspector checks U-factor and SHGC",
+    "Replacing a bedroom egress window with a unit that does not meet minimum clear opening requirements",
+    "Assuming like-for-like replacement is always exempt — Dallas still commonly requires a building permit for window replacement"
+  ],
+  "pro_tips": [
+    "Pull the permit with the full 12-window valuation up front; Dallas watches for under-valuation and it can slow approval.",
+    "Keep the NFRC label and manufacturer cut sheet for each window on site until final inspection passes.",
+    "If any window is in a bedroom, verify egress dimensions before ordering so you do not get stuck with a failed final.",
+    "Check your Dallas contractor registration renewal date before starting any permit application — registration lapses are one of the most avoidable rejection reasons."
+  ],
+  "code_citation": {
+    "section": "IRC R105.1 and IRC N1102 / R308",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish or change the occupancy of a building or structure shall first make application for a permit. Energy and glazing requirements apply to replacement windows."
+  },
+  "companion_permits": [],
+  "zoning_hoa_flag": "For residential window replacement in Dallas, HOA rules or historic district overlays can still restrict exterior appearance, muntin pattern, frame color, or material. If the home is in a historic district or conservation district, check for design review before ordering windows.",
+  "sources": [
+    "https://www.tdlr.texas.gov",
+    "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "https://aca-prod.accela.com/dallastx/default.aspx",
+    "https://www.govinfo.gov/content/pkg/CZIC-hc62-i52-1985/html/CZIC-hc62-i52-1985.htm"
+  ],
+  "confidence": "medium",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "_fee_unverified": true,
+  "maps_url": "https://www.google.com/maps?q=320+E.+Jefferson+Blvd.,+Room+118,+Dallas,+TX+75203",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_field_sources": {
+    "apply_url": "city_kb",
+    "apply_phone": "city_kb",
+    "apply_address": "city_kb",
+    "fee_range": "machine_extracted",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "applying_office": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": true,
+  "missing_fields": [
+    "fee_range"
+  ],
+  "confidence_reason": "City-specific match supported by live web research. Needs review for: fee_range",
+  "_meta": {
+    "generated_at": "2026-04-28T21:02:31.641104",
+    "response_ms": 10043,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 6,
+    "city_match_level": "city",
+    "job_type": "Window replacement — replace 12 existing windows like-for-like, no structural changes, no header changes, no opening enlargement.",
+    "city": "Dallas",
+    "state": "TX",
+    "zip_code": "75214",
+    "job_category": "residential",
+    "auto_verified": false,
+    "missing_fields": [
+      "fee_range"
+    ]
+  },
+  "fee_source": {
+    "url": "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "title": "[PDF] List of Post-Construction BMP Appendices - City of Lebanon, Indiana",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://aca-prod.accela.com/dallastx/default.aspx",
+    "title": "Message Bar - Accela Citizen Access",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "title": "[PDF] List of Post-Construction BMP Appendices - City of Lebanon, Indiana",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://www.govinfo.gov/content/pkg/CZIC-hc62-i52-1985/html/CZIC-hc62-i52-1985.htm",
+    "title": "Post disaster response and mitigation of future losses proceedings ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://lebanon.in.gov/wp-content/uploads/2020/08/2014-Lebanon-Standards-Appendix-D.pdf",
+    "title": "[PDF] List of Post-Construction BMP Appendices - City of Lebanon, Indiana",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 90,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "residential",
+  "checklist": [
+    "Verify your contractor license is current and valid in TX",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Confirm the required license is active and matches the application: Licensed general contractor or window contractor pulls the permit on the homeowner's behalf, and the contractor's license/registration information must be on the application. Homeowners may be allowed to pull their own permit in some cases, but Dallas contractor registration must still be current if a contractor is submitting the job.",
+    "Bring 2 copies of all documents to Dallas Development Services Department"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Expired annual city contractor registration",
+      "frequency": "very_common",
+      "fix": "Renew at dallas.gov/dsd annually — expiration causes silent rejection"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "job_value": 8500,
+  "fee_calculator": {
+    "fee": null,
+    "formula": null,
+    "confidence": "none",
+    "note": "Exact fee formula not available for Dallas, TX. Use fee range as estimate."
+  },
+  "expert_notes": [
+    {
+      "title": "No statewide general-contractor license for residential work",
+      "note": "Texas does not require general contractors, home-improvement specialists, or handyman services to hold a state license — licensing is handled by trade-specific boards (TDLR for electrical/HVAC, TSBPE for plumbing) and by individual cities/counties. Confirm the AHJ's local registration requirements (most large cities require contractor registration even though the state does not), and never assume a sister-state GC license carries over. Trade subs still must hold the specific TDLR/TSBPE license below.",
+      "applies_to": "All residential GC and remodel work in Texas",
+      "source": "https://www.procore.com/library/texas-contractors-license"
+    },
+    {
+      "title": "TDLR Air Conditioning & Refrigeration Contractor license required for HVAC",
+      "note": "Any HVAC contractor performing work in Texas must hold a TDLR Air Conditioning and Refrigeration Contractor license — application fee is $115 and the license must list the proper environment (Class A unlimited tonnage vs Class B ≤25 tons cooling / ≤1.5M Btu heating) and endorsement (cooling, heating, or commercial refrigeration). Verify the contractor's TDLR license number and class match the scope before pulling a mechanical permit; mismatched class is a common rejection reason.",
+      "applies_to": "All HVAC installation, replacement, and alteration work",
+      "source": "https://www.tdlr.texas.gov/acr/contractor-apply.htm"
+    },
+    {
+      "title": "TSBPE plumbing license required before bidding or working",
+      "note": "The Texas State Board of Plumbing Examiners requires a Journeyman or Master plumber license prior to bidding or completing any plumbing work — there is no de minimis dollar threshold like California's $500 rule. Licenses renew annually and require six hours of CPE per the Plumbing License Law; apprentices may only work under direct supervision. Confirm the responsible Master Plumber's license is active on the TSBPE lookup before submitting plumbing plans, since an expired license blocks permit issuance.",
+      "applies_to": "All plumbing work statewide",
+      "source": "https://tsbpe.texas.gov/license-types/"
+    },
+    {
+      "title": "TDLR is the umbrella regulator for most building trades",
+      "note": "TDLR licenses and regulates 39 industries including electricians, HVAC contractors, elevator/escalator, boilers, and industrialized housing — but plumbing sits with TSBPE, not TDLR. When a job involves multiple trades, expect parallel licensing checks at two separate state agencies plus the local AHJ's contractor-registration desk. Pull the TDLR license-search and TSBPE license-search results into the permit packet to pre-empt plan-check holds.",
+      "applies_to": "Multi-trade residential and light-commercial projects",
+      "source": "https://www.tdlr.texas.gov/"
+    },
+    {
+      "title": "2021 IRC/IBC/IMC/IFGC effective for industrialized housing as of July 1, 2024",
+      "note": "The Texas Commission of Licensing and Regulation adopted the 2021 editions of the IRC, IBC, IMC, IFGC, and related codes for industrialized housing and buildings on May 21, 2024, with an effective date of July 1, 2024. Modular and IHB projects built or shipped after that date must conform; site-built projects follow the AHJ's locally-adopted edition (often still 2015 or 2018 IRC in smaller jurisdictions). Always confirm the local edition before drafting — Texas has no uniform statewide site-built code.",
+      "applies_to": "Industrialized housing, modular, and IHB-stamped projects",
+      "source": "https://www.tdlr.texas.gov/news/2024/06/17/industrialized-housing-and-buildings-adoption-of-new-code-editions/"
+    },
+    {
+      "title": "SB 783 (eff. Sept 1, 2025) — energy code update path via SECO",
+      "note": "Texas SB 783 took effect September 1, 2025 and directs the State Energy Conservation Office (SECO) to evaluate and adopt updated IECC editions for residential and commercial construction, with amendment authority. The last statutorily-adopted residential energy code was the 2015 IECC, so any project at the 2025-2026 boundary should confirm whether the AHJ has moved to the 2021 or 2024 IECC under SECO's updated rulemaking. Build energy-compliance documentation against the AHJ's currently-enforced edition, not the state's default.",
+      "applies_to": "New residential and commercial construction energy compliance",
+      "source": "https://legiscan.com/TX/text/SB783/id/3057306/Texas-2025-SB783-Introduced.html"
+    },
+    {
+      "title": "HB 3167 platting shot clock — 30 days for municipal action",
+      "note": "Under HB 3167 (Local Govt Code Chapter 212), municipalities must approve, approve with conditions, or disapprove a plat or plan within 30 days of filing — silence is deemed approval. Disapproval must be in writing with specific reasons tied to ordinance or statute, and the applicant has the right to a 15-day cure-and-resubmit. Use this clock as leverage when a city stalls a subdivision or replat needed for ADU or infill projects.",
+      "applies_to": "Subdivision plats, replats, and site plans subject to municipal review",
+      "source": "https://www.tml.org/DocumentCenter/View/4166/Platting-Shot-Clock-Process-11-2023-PDF"
+    },
+    {
+      "title": "Development-review shot clock for permit applications",
+      "note": "Recent Texas legislation extends shot-clock concepts beyond platting to broader development reviews, capping the time municipalities can take to act on permit-related submittals before approval is presumed or fee refunds are triggered. This narrows the window for cities to demand iterative resubmittals and gives applicants statutory grounds to escalate stalled residential permits. Document the application's complete-submittal date in writing so the clock is provable if escalation is needed.",
+      "applies_to": "Municipal residential permit and development-review timelines",
+      "source": "https://www.freese.com/blog/new-texas-legislation-sets-shot-clock-for-development-reviews/"
+    },
+    {
+      "title": "TDI Windstorm (WPI-8) certification required in First Tier coastal counties",
+      "note": "The Texas Department of Insurance Windstorm Inspection Program applies to designated catastrophe areas — the 14 First Tier coastal counties (Aransas, Brazoria, Calhoun, Cameron, Chambers, Galveston, Jefferson, Kenedy, Kleberg, Matagorda, Nueces, Refugio, San Patricio, Willacy) plus parts of Harris east of SH 146. New construction, additions, and re-roofs in these areas need a WPI-8 / WPI-8-C certificate of compliance issued by an appointed engineer or TDI inspector to be eligible for TWIA windstorm coverage. This is a SEPARATE filing from the building permit and must be scheduled in phases (foundation, framing, roof) — missing an inspection phase voids the certificate.",
+      "applies_to": "New construction, additions, and re-roofs in First Tier coastal counties",
+      "source": "https://www.tdi.texas.gov/wind/generalquestio.html"
+    },
+    {
+      "title": "TWIA insurability hinges on windstorm certification",
+      "note": "To bind a Texas Windstorm Insurance Association policy on a coastal property, the structure must be certified as meeting the windstorm-resistant building-code requirements for its tier — without a current WPI-8 (or post-2020 equivalent), the property is uninsurable through TWIA and most private carriers will follow suit. Schedule the engineer-of-record windstorm inspection BEFORE drywall closes the framing, since a missed framing inspection cannot be reconstructed after the fact and the homeowner loses coverage at closing.",
+      "applies_to": "Coastal Texas residential construction needing windstorm insurance",
+      "source": "https://www.twia.org/windstorm-certification/"
+    },
+    {
+      "title": "Floodplain permit required separate from building permit",
+      "note": "Texas participates in the NFIP through county and municipal floodplain administrators — any development (including fill, grading, accessory structures, and substantial improvements) within a SFHA Zone A/AE/VE requires a floodplain development permit in addition to the building permit, and substantial-improvement work (>50% market value) triggers full base-flood-elevation compliance for the entire structure. In Harris County and other large counties, the floodplain office is a separate desk from permitting; confirm the determination letter and elevation certificate are in the packet before submittal.",
+      "applies_to": "Any work within a FEMA SFHA or local floodplain overlay",
+      "source": "https://oce.harriscountytx.gov/Services/Permits/Floodplain-Management"
+    },
+    {
+      "title": "Municipally-owned utilities and electric co-ops opted out of retail choice",
+      "note": "Per PUC rule, municipally-owned electric utilities and electric cooperatives have had the right since January 1, 2002 to opt out of competitive retail choice — most have. For new service or solar interconnection in muni/co-op territory (e.g., Austin Energy, CPS Energy, Pedernales EC, Sam Houston EC), follow the utility's own interconnection and net-metering tariff, not ERCOT/PUC retail rules. This is a parallel filing to the electrical permit and often has its own application, fee, and inspection schedule.",
+      "applies_to": "New service, solar PV, and battery interconnection in muni/co-op territory",
+      "source": "https://www.puc.texas.gov/consumer-help/faq/muni/Default.aspx"
+    },
+    {
+      "title": "Co-op permit-number prerequisite for new electric service",
+      "note": "Many Texas electric cooperatives — including Sam Houston EC and Heart of Texas EC — will not energize new construction until the contractor provides the local AHJ's permit number and a completed New Construction Application. Submit the co-op's service application in parallel with the building permit (not after final inspection) because meter-set lead times in rural co-op territory routinely run 4-8 weeks and can stall CO issuance.",
+      "applies_to": "New residential service in electric-cooperative territory",
+      "source": "https://www.samhouston.net/member-services/permit-requirements/"
+    },
+    {
+      "title": "ERCOT Chapter 25 rules govern PV/battery interconnection in competitive territory",
+      "note": "In ERCOT competitive-retail areas (Oncor, CenterPoint, AEP TX, TNMP), distributed-generation interconnection follows PUC Substantive Rules Chapter 25 — the homeowner's TDU (not the REP) processes the interconnection agreement, and the project requires a signed IA before the meter is set to bidirectional. File the IA application as soon as the system design is final; TDU review can run 4-6 weeks and is independent of the city's electrical permit.",
+      "applies_to": "Solar PV and battery interconnection in ERCOT competitive territory",
+      "source": "https://www.puc.texas.gov/agency/rulesnlaws/subrules/electric/Default.aspx"
+    }
+  ],
+  "hidden_triggers": [],
+  "_fee_floor_check": "residential_no_override"
+}

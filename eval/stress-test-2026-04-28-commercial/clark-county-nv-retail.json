@@ -1,0 +1,422 @@
+{
+  "job_summary": "2,000 sf commercial retail tenant improvement in Las Vegas/Clark County: sales floor buildout, storefront signage, facade improvements, accessible entrance and ADA path of travel upgrades, plus electrical and lighting. This triggers a commercial building/tenant improvement permit, an electrical permit for new/modified lighting and circuits, and likely separate sign permit(s) for storefront signage. Because the scope includes accessibility upgrades and facade/entry work, plan review is expected rather than simple OTC trade permits.",
+  "total_cost_estimate": "$180,000 - $450,000",
+  "location": "Las Vegas / Clark County, NV",
+  "data_source": "web_search",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Commercial Tenant Improvement",
+      "portal_selection": "Commercial Tenant Improvement",
+      "required": true,
+      "notes": "Required for the 2,000 sf retail buildout, accessible entrance work, ADA path of travel upgrades, and facade improvements. Clark County treats tenant improvements as a commercial building permit with plan review."
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Interior Lighting and Circuits",
+      "portal_selection": "Electrical - Commercial Tenant Improvement",
+      "required": true,
+      "notes": "Required for new or modified lighting, switching, receptacles, and any new branch circuits serving the retail TI."
+    },
+    {
+      "permit_type": "Sign Permit — Commercial Wall Sign / Storefront Signage",
+      "portal_selection": "Sign - Commercial Wall Sign",
+      "required": true,
+      "notes": "Required for storefront signage. If the sign is illuminated, electrical sign work may also be reviewed under the electrical permit."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Commercial Tenant Improvement",
+      "included_because": "The scope is a commercial retail tenant improvement with interior buildout, accessible entrance work, ADA path of travel upgrades, and facade changes, all of which require building plan review in Clark County.",
+      "scope_trigger": "Commercial TI, facade improvements, accessible entrance, ADA path of travel upgrades"
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Interior Lighting and Circuits",
+      "included_because": "The job explicitly includes electrical and lighting work, which triggers an electrical permit for new/modified circuits, fixtures, controls, and any panel or feeder changes.",
+      "scope_trigger": "Electrical and lighting scope in job description"
+    },
+    {
+      "permit_type": "Sign Permit — Commercial Wall Sign / Storefront Signage",
+      "included_because": "Storefront signage is a separate regulated scope in Clark County and typically needs its own sign permit, especially if illuminated or attached to the facade.",
+      "scope_trigger": "Storefront signage"
+    }
+  ],
+  "applying_office": "Clark County Department of Building & Fire Prevention",
+  "apply_url": "https://aca-prod.accela.com/CLARKCO",
+  "apply_pdf": "https://www.clarkcountynv.gov/adobe/assets/urn:aaid:aem:7607d6a6-3b83-4650-b68a-bab3536fe3c5/original/as/bpg023.pdf",
+  "apply_phone": "(702) 455-3000",
+  "apply_address": "4701 W. Russell Rd., Las Vegas, NV 89118",
+  "apply_google_maps": "https://www.google.com/maps?q=4701+W.+Russell+Rd.,+Las+Vegas,+NV+89118,+Las+Vegas+/+Clark+County,+NV",
+  "fee_range": "Fee Estimate: **$5,500-$9,000+** (structured floor — see breakdown). Components: ~$4,000 base permit + plan review (Las Vegas / Clark County, NV commercial retail TI floor) × 1.0× jurisdiction multiplier + $3,000 ada-path-of-travel adder. **Verify against current fee schedule before quoting.**",
+  "approval_timeline": {
+    "simple": "Over-the-counter only for very limited trade-only items; this scope is not OTC. Expect intake and plan review.",
+    "complex": "10-20 business days for first review on a straightforward commercial TI; longer if ADA path of travel, facade, or sign details need corrections"
+  },
+  "inspections": [
+    {
+      "stage": "Building Rough-In / Framing",
+      "description": "Inspector checks framing changes, fireblocking, rated assemblies, accessibility clearances at the entrance, door hardware, slope and width of accessible route, and that any penetrations through exterior walls are properly flashed and sealed.",
+      "timing": "After framing and before insulation, drywall, or finish closure"
+    },
+    {
+      "stage": "Electrical Rough-In",
+      "description": "Inspector verifies branch-circuit wiring, box fill, conductor sizing, grounding/bonding, fixture rough-in locations, emergency/egress lighting wiring if included, and that any new circuits are properly protected.",
+      "timing": "Before insulation or ceiling closure"
+    },
+    {
+      "stage": "Final Building",
+      "description": "Inspector checks finished accessible entrance, door clearances, ADA path of travel, signage mounting, facade finish, life-safety items, and that all approved plans were followed.",
+      "timing": "After all finishes, signage, and punch-list items are complete"
+    },
+    {
+      "stage": "Final Electrical",
+      "description": "Inspector verifies all lighting operates, switches and controls are labeled, required emergency/exit lighting works, receptacles are installed correctly, and all covers, plates, and fixtures are complete.",
+      "timing": "After trim-out and before occupancy"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through Clark County Accela/online services at https://aca-prod.accela.com/CLARKCO. For inspection requests and permit help, call (702) 455-3000. Plan on at least 24 hours advance notice for standard inspections; book earlier if you need coordinated building and electrical finals. Verify the inspection cutoff time when you submit because same-day requests are not guaranteed.",
+  "license_required": "Nevada-licensed commercial contractor pulls the permit — the contractor's license number must appear on the application. For this scope, the general contractor typically pulls the building permit, and a Nevada-licensed electrical contractor pulls the electrical permit if the electrical work is separate. The permit is still required.",
+  "city_contractor_registration": "Clark County requires contractor registration/qualification for permit issuance in many cases. Verify the contractor's current Clark County registration status before submitting; an expired or lapsed registration can block the application. Renewal is typically annual, and the county may require proof of state license, insurance, and business registration.",
+  "what_to_bring": [
+    "Completed commercial TI permit application and contractor license information",
+    "Two or more plan sets showing floor plan, life-safety/egress, accessibility route, and facade/sign details",
+    "Electrical plans and fixture schedule for new lighting and circuits",
+    "ADA path of travel details, door hardware, ramp/threshold dimensions, and accessible entrance elevations",
+    "Tenant lease authorization or owner authorization letter",
+    "Sign drawings with dimensions, mounting method, illumination details, and any electrical sign specs"
+  ],
+  "common_mistakes": [
+    "Submitting the TI without separate sign details — storefront signage often gets held up even when the interior buildout is ready",
+    "Ignoring ADA path of travel upgrades — accessible entrance work can trigger additional corrections if slopes, landings, or door clearances are off",
+    "Assuming facade work is just cosmetic — exterior wall penetrations, new openings, or altered entry conditions can trigger structural and energy-code review",
+    "Submitting permit application without verifying current contractor registration status — an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting.",
+    "Starting electrical rough-in before the building permit is approved and posted — inspectors can fail the job and require rework or stop-work"
+  ],
+  "pro_tips": [
+    "Check your Clark County contractor registration renewal date before starting any permit application — registration lapses are the #1 avoidable rejection reason.",
+    "Bundle the building TI and electrical scope into coordinated plan sheets so plan review does not bounce the job back for mismatched fixture counts or circuiting.",
+    "If the storefront sign is illuminated, submit the sign cut sheet and electrical load info with the first package so you do not get a second review cycle.",
+    "For ADA upgrades, show the full path from public way to tenant entry on the plan set; that is where reviewers usually focus first.",
+    "Use the county's Accela portal for intake and keep the stamped plan set on site; inspectors in commercial TI work will ask for the approved sheets."
+  ],
+  "code_citation": {
+    "section": "IBC 105.1",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish or change the occupancy of a building or structure..."
+  },
+  "companion_permits": [
+    {
+      "permit_type": "Sign Permit — Illuminated Storefront Sign",
+      "reason": "May be required if: Illuminated sign, electrical sign connection, or sign mounted to the facade.",
+      "required_if": "Illuminated sign, electrical sign connection, or sign mounted to the facade",
+      "certainty": "likely",
+      "requirement_label": "May be required based on scope"
+    },
+    {
+      "permit_type": "Right-of-Way / Encroachment Permit",
+      "reason": "May be required if: Work in sidewalk, curb ramp, public frontage, or other county/city right-of-way.",
+      "required_if": "Work in sidewalk, curb ramp, public frontage, or other county/city right-of-way",
+      "certainty": "possible",
+      "requirement_label": "May be required based on scope"
+    }
+  ],
+  "zoning_hoa_flag": "Commercial retail signage and facade changes may be subject to zoning, sign code, and any overlay district rules. If the site is in a master-planned center, shopping center, or special overlay area, landlord approval and sign criteria can control size, illumination, and placement. ADA path of travel work may also be reviewed against site accessibility requirements.",
+  "sources": [
+    "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/plan_submittal/building-phased-design",
+    "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/plan_submittal/additional-requirements",
+    "https://www.clarkcountynv.gov/adobe/assets/urn:aaid:aem:7607d6a6-3b83-4650-b68a-bab3536fe3c5/original/as/bpg023.pdf",
+    "https://www.lasvegasnevada.gov/Business/Permits-Licenses/Building-Permits",
+    "https://files.lasvegasnevada.gov/planning/Food-Service-Establishments.pdf",
+    "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/service-groups-contact-lists",
+    "https://files.lasvegasnevada.gov/building-safety/2025/25-0086-Proposed_Code_AMENDMENTS.pdf"
+  ],
+  "confidence": "low",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "_fee_unverified": true,
+  "maps_url": "https://www.google.com/maps?q=4701+W.+Russell+Rd.,+Las+Vegas,+NV+89118,+Las+Vegas+/+Clark+County,+NV",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_sources_locality_dropped": [
+    "https://aca-prod.accela.com/CLARKCO"
+  ],
+  "_field_sources": {
+    "permits_required": "web_search",
+    "fee_range": "web_search",
+    "approval_timeline": "web_search",
+    "apply_url": "web_search",
+    "apply_phone": "web_search",
+    "apply_address": "web_search",
+    "applying_office": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": true,
+  "missing_fields": [
+    "fee_range"
+  ],
+  "confidence_reason": "Live web research found partial local guidance. Needs review for: fee_range",
+  "_meta": {
+    "generated_at": "2026-04-28T21:00:40.653524",
+    "response_ms": 16777,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 9,
+    "city_match_level": "state",
+    "job_type": "2,000 sf commercial retail tenant improvement: sales floor buildout, storefront signage, facade improvements, accessible entrance and ADA path of travel upgrades, electrical and lighting",
+    "city": "Las Vegas / Clark County",
+    "state": "NV",
+    "zip_code": "89118",
+    "job_category": "commercial",
+    "auto_verified": false,
+    "missing_fields": [
+      "fee_range"
+    ]
+  },
+  "fee_source": {
+    "url": "https://files.lasvegasnevada.gov/planning/Food-Service-Establishments.pdf",
+    "title": "[PDF] FOOD SERVICE ESTABLISHMENT GUIDELINE - City of Las Vegas",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/service-groups-contact-lists",
+    "title": "Service Groups Contact Lists - Welcome to Clark County, NV",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://files.lasvegasnevada.gov/building-safety/2025/25-0086-Proposed_Code_AMENDMENTS.pdf",
+    "title": "[PDF] Amends LVMC Chapter 16 related to buildings and construction ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://files.lasvegasnevada.gov/building-safety/2025/25-0086-Proposed_Code_AMENDMENTS.pdf",
+    "title": "[PDF] Amends LVMC Chapter 16 related to buildings and construction ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://files.lasvegasnevada.gov/building-safety/2025/25-0086-Proposed_Code_AMENDMENTS.pdf",
+    "title": "[PDF] Amends LVMC Chapter 16 related to buildings and construction ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "ai_researched",
+  "permit_ready_score": 100,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "commercial_retail_ti",
+  "checklist": [
+    "Verify your contractor license is current and valid in NV",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Identify altered primary-function area: if scope alters an area where major activity occurs, an accessible path of travel to the altered area is required unless technically infeasible / disproportionate (2010 ADA §202.4; 28 CFR §36.403(a))",
+    "20% disproportionality cap: ADA path-of-travel work exceeding 20% of alteration cost is disproportionate at the federal level, but lower-cost items must still be prioritized (28 CFR §36.403(f)(1))",
+    "Accessible exterior route: site arrival points + accessible parking/passenger loading + curb ramps + walking surfaces + ramps/landings + slope/cross-slope + door clearances to altered area (2010 ADA §§206.2.1, 206.4, 403, 404, 405, 406)",
+    "Restroom path + restroom upgrades: if restrooms serve the altered area, accessible route + door + turning space + lavatory + water closet + grab bars + clearances + signage (2010 ADA §§213, 603-606, 609, 703)",
+    "Parking + passenger loading: recalculate accessible-stall count + van space + access aisle + signage for affected parking serving the altered area (2010 ADA §§208, 502, 503; 28 CFR §36.403(e)(1))",
+    "Drinking fountains, phones, and signage along the path: tactile/visual signs, room ID, directional, fountain units, public phones if any (2010 ADA §§211, 216, 602, 703, 704)",
+    "Doors, thresholds, and hardware on the route: clear width + maneuvering clearance + opening force + thresholds + lever/operable hardware + protruding objects (2010 ADA §§303, 307, 309, 404)",
+    "Occupancy load calc per IBC 1004 (mercantile = 60 sf gross/occupant for sales floor; 300 sf for stockroom)",
+    "Egress capacity sized to occupant load: 0.2 in/occupant for stairs, 0.15 in/occupant for level egress per IBC 1005",
+    "Accessible route from accessible entrance to all customer-accessible areas per ADA §206",
+    "ADA fixture counts per IBC Table 2902.1 (mercantile uses lower ratios — verify current edition)",
+    "Exterior signage permit (often a SEPARATE permit from the building TI — confirm with city sign code)",
+    "Fire alarm strobe coverage per NFPA 72 §18.5 (visible from any point, candela-rated to room area)",
+    "Sprinkler hydraulic recalc required if shelving / racking exceeds 12 ft (NFPA 13 §3.3.4 storage occupancy)",
+    "Storefront glazing: safety glazing per IBC 2406 for any pane within 24 in of door or 60 in of floor",
+    "Demising wall fire-rated per IBC 706.3 + STC ≥40 between tenants if not factory-built",
+    "Means of egress: ≥2 exits if occupant load >49 OR floor area >3,000 sf in M occupancy per IBC 1006",
+    "Public restroom availability per IBC 2902.3 (required for retail >150 occupants OR >300 ft from public restroom)",
+    "Energy code lighting + envelope per IECC C405 / C402 if HVAC or exterior wall is touched",
+    "Health department clearance if any food/beverage prep beyond pre-packaged sales",
+    "Confirm the required license is active and matches the application: Nevada-licensed commercial contractor pulls the permit — the contractor's license number must appear on the application. For this scope, the general contractor typically pulls the building permit, and a Nevada-licensed electrical contractor pulls the electrical permit if the electrical work is separate. The permit is still required.",
+    "Bring 2 copies of all documents to Clark County Department of Building & Fire Prevention"
+  ],
+  "rejection_patterns": [],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "fee_calculator": {
+    "fee": null,
+    "formula": null,
+    "confidence": "none",
+    "note": "Provide job_value to calculate an exact fee where formulas are available."
+  },
+  "expert_notes": [
+    {
+      "title": "NSCB license classifications — A, B, and 42 C-subclasses",
+      "note": "The Nevada State Contractors Board issues licenses under three classes: Class A (General Engineering), Class B (General Building), and Classification C with 42 distinct subcontracting fields (e.g., C-2 Electrical, C-1 Plumbing, C-21 HVAC/Refrigeration). Per NRS 624.215, a contractor may only bid or contract within their licensed classification AND under their monetary limit — exceeding either voids contract enforceability and lien rights. Always print the license number and monetary limit on bids and contracts before submitting to the AHJ.",
+      "applies_to": "All paid construction work in Nevada requiring a contractor license",
+      "source": "https://www.nvcontractorsboard.com/licensing/license-classifications/"
+    },
+    {
+      "title": "NSCB Licensure by Endorsement — 4-year same-QI rule",
+      "note": "Out-of-state contractors can shortcut Nevada licensing via the Endorsement path, but only if they (1) hold an active license in the endorsing state with the SAME qualified individual for the past four years and (2) have not been investigated for misconduct. Switching the qualifying individual within those four years disqualifies the application and forces the full Nevada exam path. Confirm QI continuity in the endorsing state's records before filing the endorsement application.",
+      "applies_to": "Out-of-state contractors seeking to operate in Nevada",
+      "source": "https://www.nvcontractorsboard.com/licensing/licensure-by-endorsement/"
+    },
+    {
+      "title": "Statewide energy code — 2024 IECC adopted with March 12, 2025 revisions (NAC 701)",
+      "note": "The Governor's Office of Energy adopted the 2024 IECC as published effective August 18, 2024, then issued revisions on March 12, 2025 under NAC 701. Local jurisdictions adopt on their own schedules, so confirm which edition (and revision date) the AHJ is enforcing on the application date — drawings produced under the unrevised 2024 IECC may need envelope or mechanical updates before plan check accepts them.",
+      "applies_to": "All new construction and additions subject to Nevada energy code review",
+      "source": "https://www.energy.nv.gov/notices2/nac-701-building-energy-codes/"
+    },
+    {
+      "title": "Washoe County code transition — July 1, 2025 effective with Jan 1, 2026 cutoff",
+      "note": "In Washoe County (Reno/Sparks/unincorporated), the new code editions took effect July 1, 2025 with a transition window allowing in-flight projects to remain under the prior cycle through January 1, 2026. Submittals dated on or after Jan 1, 2026 must comply fully with the new editions; partial submissions made before the cutoff should be tracked carefully because the AHJ can require resubmission under the newer code if the application goes stale.",
+      "applies_to": "Permit applications in Washoe County crossing the 2026-01-01 cutoff",
+      "source": "https://snarsca.com/blog/iecc-adoption-and-its-affects-on-las-vegas-contractors/"
+    },
+    {
+      "title": "Southern Nevada Energy Conservation Code 2024 — effective January 11, 2026",
+      "note": "Clark County and the Southern Nevada code-coordinated jurisdictions adopted the S. NV Energy Conservation Code 2024 (built on the 2024 IECC) effective January 11, 2026. The Southern Nevada Amendments are published separately from the IECC base text and modify mechanical, envelope, and rating-index sections — verify drawings reference the Southern Nevada amended sections, not the unamended IECC, for any Clark County project.",
+      "applies_to": "Permits in Clark County and coordinated Southern Nevada jurisdictions",
+      "source": "https://up.codes/viewer/clark-nevada/s-nv-energy-conservation-code-2024"
+    },
+    {
+      "title": "Southern Nevada HERS® Index (ERI) compliance path — Section 406 amendment",
+      "note": "All Southern Nevada code jurisdictions amended Section 406 to accept a HERS Index / Energy Rating Index option as an alternative compliance path to prescriptive or performance methods. This is significant for builders who can't easily meet prescriptive envelope U-values — a third-party HERS rater can certify ERI compliance instead. Confirm the rater is RESNET-certified and that the AHJ accepts the ERI target in effect at the application date.",
+      "applies_to": "Residential energy compliance in Clark County and Southern Nevada jurisdictions",
+      "source": "https://www.resnet.us/articles/southern-nv-code-jurisdictions-accept-a-hers-index-option-to-energy-code/"
+    },
+    {
+      "title": "No unified statewide residential building code — local AHJ controls",
+      "note": "Nevada has statewide baseline codes enforced by the State Fire Marshal, but residential building permits for 1- and 2-family homes are handled entirely by local city and county building departments. This means there is no single state-issued residential permit; you must identify the correct AHJ (incorporated city OR unincorporated county) for each parcel and follow that jurisdiction's adopted code edition and amendments — they often differ between Clark, Washoe, and rural counties.",
+      "applies_to": "All residential permit scoping in Nevada",
+      "source": "https://permitsguide.com/nevada"
+    },
+    {
+      "title": "City-or-county jurisdiction split under NRS Chapter 278",
+      "note": "Under NRS 278 (Planning and Zoning), a parcel falls under the jurisdiction of the incorporated city OR the surrounding county, not both — overlap is rare and limited to specific extraterritorial agreements. Pull the parcel's APN from the county assessor and confirm whether it sits inside city limits before filing; submitting to the wrong AHJ is a common cause of weeks of delay because the receiving jurisdiction cannot transfer the application — it must be refiled.",
+      "applies_to": "Determining the correct permitting AHJ for any Nevada parcel",
+      "source": "https://www.leg.state.nv.us/nrs/nrs-278.html"
+    },
+    {
+      "title": "State Public Works Division iWorQ portal — state-owned projects only",
+      "note": "Construction on state-owned land or state buildings is permitted through the State Public Works Division (SPWD) via the iWorQ portal, NOT through local city/county building departments. SPWD reviews against the codes adopted for state facilities, which can lag local adoption. Private residential and commercial work never goes through SPWD; routing a private project to iWorQ will be rejected and you'll lose the filing window.",
+      "applies_to": "Construction on State of Nevada-owned property and state facilities",
+      "source": "https://publicworks.nv.gov/uploadedFiles/publicworksnvgov/content/Services/Permitting_Code_Enforcement/Permitting%20%20Code%20Enforcement%20Process.pdf"
+    },
+    {
+      "title": "Floodplain management — NFIP coordination via Nevada Division of Water Resources",
+      "note": "Nevada Division of Water Resources runs the state's floodplain management program in coordination with FEMA's National Flood Insurance Program; local jurisdictions adopt floodplain ordinances to remain NFIP-eligible. Before designing in or near a SFHA (Zone A/AE/AO/X-shaded), confirm the adopted base flood elevation, finished-floor freeboard requirement, and whether a CLOMR/LOMR will be required — many Nevada AHJs require finished floor at BFE+1 ft or higher and reject drawings without an elevation certificate at final.",
+      "applies_to": "Construction within FEMA Special Flood Hazard Areas in Nevada",
+      "source": "https://water.nv.gov/index.php/programs/floodplain-management"
+    },
+    {
+      "title": "Water rights and federal-lands coordination — State Engineer per NRS 328",
+      "note": "Per NRS 328.120, the State Engineer (within the Division of Water Resources) provides technical advice on water rights, reclamation, flood control, and watershed protection — and water rights are required separately from the building permit for new wells, surface diversions, or changes of use. On parcels adjacent to or crossing BLM/federal land, the project may also need a federal right-of-way or special-use authorization that runs in parallel with the local building permit and often takes longer than the construction permit itself.",
+      "applies_to": "Projects requiring water rights or touching federal lands in Nevada",
+      "source": "https://www.leg.state.nv.us/nrs/NRS-328.html"
+    },
+    {
+      "title": "Clark County plan-review timing tiers — 7-day commercial path requires <$100k valuation",
+      "note": "Clark County operates tiered plan-review timelines: the Commercial 7-Day expedited path requires prior Zoning approval AND a project valuation under $100,000; everything else falls into Residential Minor, Standard Plan, or full Commercial review with longer queues. Inflate the valuation to be safe and you knock yourself out of the 7-day track — itemize labor and materials honestly to stay eligible, and have the Zoning sign-off in hand before submitting to plan review.",
+      "applies_to": "Clark County commercial and residential plan submittals",
+      "source": "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/plan_review/plan-review-timelines"
+    },
+    {
+      "title": "Northern Nevada amendments to the 2024 IECC — Elko County and rural N. NV",
+      "note": "Northern/rural counties (Elko County and the Northern Nevada code-coordinated jurisdictions) adopted their own amendments to the 2024 IECC for residential energy efficiency. These amendments diverge from the Southern Nevada amendment package, so envelope assemblies, mechanical efficiencies, and duct-leakage targets that pass Clark County plan check may fail in Elko or vice versa. Pull the local amendment PDF for the specific AHJ and check it against the drawings before submission.",
+      "applies_to": "Residential energy compliance in Elko County and Northern Nevada jurisdictions",
+      "source": "https://www.elkocountynv.gov/calendar_app/departments/Building%20&%20Safety/2024%20Elko%20County%20Amendments.pdf?t=202601291912310"
+    },
+    {
+      "title": "Architect/residential-designer notification under NRS 278.589",
+      "note": "NRS 278.589 requires the city or county building official to notify the State Board of Architecture, Interior Design and Residential Design when certain plan submittals are made — this is the mechanism by which the Board polices unlicensed practice of architecture/residential design on Nevada permits. Plans submitted by an unlicensed designer for projects that exceed the residential-designer scope can trigger a Board complaint and stall the permit; confirm the designer's NSBAIDRD credentials and stamp authority before submission.",
+      "applies_to": "Permit submittals using stamped or designer-prepared drawings in Nevada",
+      "source": "https://www.leg.state.nv.us/nrs/nrs-278.html"
+    }
+  ],
+  "hidden_triggers": [
+    {
+      "id": "commercial_ti_accessible_route_existing_building_alteration",
+      "severity": "medium",
+      "title": "Commercial alteration can require accessible-route/path-of-travel upgrades",
+      "why_it_matters": "Even when the requested work is not 'an ADA project,' altered primary-function areas can require accessible route, restroom, drinking fountain, parking, and entrance upgrades within the disproportionality cap.",
+      "fired_by": [
+        "\\btenant improvement\\b",
+        "\\bti\\b",
+        "\\bprimary function\\b",
+        "\\baccessible route\\b",
+        "\\bpath of travel\\b",
+        "\\bfront counter\\b",
+        "\\breception\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare path-of-travel analysis",
+        "Budget required accessible upgrades",
+        "Document 20% disproportionality cap if used"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR §36.403",
+        "2010 ADA Standards §202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_lighting_iecc_controls",
+      "severity": "medium",
+      "title": "Lighting changes trigger IECC lighting-power and automatic-control checks",
+      "why_it_matters": "Replacing or reconfiguring lighting can require COMcheck/energy forms, lighting power density compliance, occupancy sensors, daylight controls, and automatic shutoff details.",
+      "fired_by": [
+        "\\blighting\\b",
+        "\\blight fixtures\\b",
+        "\\bled retrofit\\b",
+        "\\btrack lighting\\b",
+        "\\boccupancy sensors?\\b",
+        "\\bdaylight controls?\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare lighting compliance / COMcheck if required",
+        "Show control zones and automatic shutoff",
+        "Coordinate emergency egress lighting"
+      ],
+      "companion_permits": [
+        "Electrical permit, if separated locally"
+      ],
+      "agencies": [
+        "AHJ Electrical/Energy reviewer"
+      ],
+      "citations": [
+        "IECC §C405",
+        "ASHRAE 90.1 [where adopted]"
+      ],
+      "primary_scope": "commercial_ti"
+    }
+  ],
+  "_fee_floor_components": {
+    "scope": "commercial_retail_ti",
+    "scope_note": "plan review + permit + storefront + sign",
+    "sqft": 2000,
+    "base_floor": 4000,
+    "jurisdiction_multiplier": 1.0,
+    "jurisdiction_label": "Las Vegas / Clark County, NV",
+    "jurisdiction_rationale": "default 1.0×; jurisdiction multiplier not calibrated [verify]",
+    "trigger_adders": [
+      {
+        "key": "ada_path_of_travel",
+        "add_min": 1500,
+        "add_max": 5000,
+        "rationale": "20% rule alterations"
+      }
+    ],
+    "structured_low": 5500,
+    "structured_high": 9000,
+    "llm_fee_high_end": null
+  },
+  "_fee_adjusted": true,
+  "_fee_floor_check": "llm_below_floor_adjusted"
+}

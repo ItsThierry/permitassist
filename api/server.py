@@ -14,15 +14,19 @@ import sys, os
 # Ensure the api/ directory is on the path regardless of working directory
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import base64
 import json
 import os
 import csv
 import hmac
 import hashlib
+import html
 import ipaddress
+import re
 import sqlite3
 import string
 import requests
+import socket
 import threading
 import time
 import uuid
@@ -31,6 +35,7 @@ from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result, get_cache_hit_rate
+from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -92,6 +97,23 @@ APP_BASE_URL           = os.environ.get("APP_BASE_URL", "https://permitassist.io
 ADMIN_TOKEN            = os.environ.get("PERMITASSIST_ADMIN_TOKEN", "")
 REMINDER_LOOKAHEAD_DAYS = 30
 REMINDER_CHECK_SECONDS  = 3600
+POSTHOG_PUBLIC_KEY     = os.environ.get("POSTHOG_PUBLIC_KEY", "")
+POSTHOG_HOST           = os.environ.get("POSTHOG_HOST", "https://us.i.posthog.com").rstrip("/")
+SENTRY_DSN             = os.environ.get("SENTRY_DSN", "")
+SENTRY_ENVIRONMENT     = os.environ.get("SENTRY_ENVIRONMENT", os.environ.get("RAILWAY_ENVIRONMENT_NAME", "production"))
+
+if SENTRY_DSN:
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            environment=SENTRY_ENVIRONMENT,
+            traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.05")),
+            send_default_pii=False,
+        )
+        print("[sentry] backend enabled")
+    except Exception as e:
+        print(f"[sentry] backend disabled: {e}")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -394,6 +416,405 @@ def enrich_result_response(result: dict, job_type: str, city: str, state: str) -
 
     return result
 
+
+# ── PermitIQ trust layer helpers ─────────────────────────────────────────────
+_COMMERCIAL_SCOPE_TOKENS = (
+    "tenant improvement", " ti", "commercial", "restaurant", "clinic",
+    "dental", "medical", "office", "retail", "change of use",
+    "change of occupancy", "buildout", "build-out", "tenant finish",
+    "storefront", "demising", "exam room", "type i hood",
+)
+_RESIDENTIAL_PRIMARY_TOKENS = (
+    "residential", "single-family", "single family", "dwelling",
+    "water heater", "hvac", "furnace", "roof", "reroof", "minor trade",
+)
+_COMMERCIAL_PRIMARY_TOKENS = (
+    "commercial", "tenant improvement", "interior alteration", "building permit",
+    "change of occupancy", "change of use", "alteration", "buildout", "build-out",
+)
+
+
+def _is_commercial_scope(job_type: str, result: dict | None = None) -> bool:
+    text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
+    return any(token in text for token in _COMMERCIAL_SCOPE_TOKENS)
+
+
+def _primary_permit_text(result: dict) -> str:
+    permits = result.get("permits_required") or []
+    if permits and isinstance(permits[0], dict):
+        p = permits[0]
+        return str(p.get("permit_type") or p.get("name") or p.get("title") or "")
+    return ""
+
+
+def _safe_external_url(url: str) -> str:
+    """Return http(s) URLs only; block javascript:, data:, and relative HTML href tricks."""
+    url = str(url or "").strip()
+    if not url:
+        return ""
+    parsed = urlparse(url)
+    if parsed.scheme.lower() not in ("http", "https") or not parsed.netloc:
+        return ""
+    return url
+
+
+def _render_safe_link(url: str, label: str | None = None) -> str:
+    safe = _safe_external_url(url)
+    if not safe:
+        return ""
+    text = html.escape(label or safe)
+    href = html.escape(safe, quote=True)
+    return f"<a target='_blank' rel='noopener noreferrer' href='{href}'>{text}</a>"
+
+
+def _source_dicts(result: dict) -> list[dict]:
+    out = []
+    for item in result.get("sources") or []:
+        if isinstance(item, str):
+            url = _safe_external_url(item)
+            if url:
+                out.append({"url": url, "title": "Official source", "snippet": ""})
+        elif isinstance(item, dict):
+            url = _safe_external_url(item.get("url") or item.get("link") or "")
+            if url:
+                out.append({
+                    "url": url,
+                    "title": str(item.get("title") or item.get("name") or "Official source"),
+                    "snippet": str(item.get("snippet") or item.get("quote") or item.get("text") or ""),
+                })
+    return out
+
+
+def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Final safety gate before a PermitIQ result is shown to users.
+
+    This is deliberately conservative: repair obvious commercial-primary leaks
+    and expose uncertainty instead of letting a polished but mismatched report
+    reach a contractor.
+    """
+    warnings = list(result.get("quality_warnings") or [])
+    primary = _primary_permit_text(result)
+    primary_l = primary.lower()
+    commercial = _is_commercial_scope(job_type, result)
+    sources = _source_dicts(result)
+
+    if commercial:
+        has_commercial_primary = any(token in primary_l for token in _COMMERCIAL_PRIMARY_TOKENS)
+        has_residential_leak = any(token in primary_l for token in _RESIDENTIAL_PRIMARY_TOKENS) and not has_commercial_primary
+        if has_residential_leak or not primary:
+            fixed_primary = "Building Permit — Commercial Tenant Improvement / Interior Alteration"
+            if "restaurant" in (job_type or "").lower():
+                fixed_primary = "Building Permit — Tenant Improvement / Restaurant Interior Alteration"
+            elif any(t in (job_type or "").lower() for t in ("medical", "clinic", "dental", "exam room")):
+                fixed_primary = "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration"
+            elif "office" in (job_type or "").lower():
+                fixed_primary = "Building Permit — Tenant Improvement / Office Interior Alteration"
+            elif "retail" in (job_type or "").lower():
+                fixed_primary = "Building Permit — Commercial Interior Alteration / Tenant Improvement"
+            permits = result.get("permits_required") or []
+            if permits and isinstance(permits[0], dict):
+                permits[0]["permit_type"] = fixed_primary
+                permits[0]["required"] = True
+                permits[0]["notes"] = (permits[0].get("notes") or "Commercial scope safety gate repaired the primary permit; verify exact AHJ naming before quoting.")
+            else:
+                result["permits_required"] = [{"permit_type": fixed_primary, "required": True, "notes": "Commercial scope safety gate inserted likely primary permit; verify exact AHJ naming before quoting."}]
+            result["_primary_scope"] = result.get("_primary_scope") or "commercial"
+            warnings.append("Commercial scope detected; primary permit was repaired or forced away from residential/trade-only leakage. Verify exact AHJ permit name before quoting.")
+
+        elif not has_commercial_primary:
+            warnings.append("Commercial scope detected, but the primary permit name is AHJ-specific or not in the commercial allow-list; verify exact AHJ naming before quoting.")
+
+        companion_text = " ".join(str(x) for x in (result.get("companion_permits") or result.get("permits_required") or [])).lower()
+        required_companions = ["electrical", "mechanical", "plumbing"]
+        if "restaurant" in (job_type or "").lower():
+            required_companions += ["fire", "health", "grease", "hood"]
+        if any(t in (job_type or "").lower() for t in ("medical", "clinic", "dental")):
+            required_companions += ["fire", "accessibility", "medical gas"]
+        missing = [token for token in required_companions if token not in companion_text]
+        if missing:
+            warnings.append("Commercial scope may require companion reviews/permits not fully proven here: " + ", ".join(missing[:5]) + ".")
+
+    if str(result.get("confidence") or "").lower() == "high" and not sources:
+        result["confidence"] = "medium"
+        warnings.append("Confidence downgraded because no source URLs were attached to the result.")
+
+    if warnings:
+        deduped = []
+        for w in warnings:
+            if w and w not in deduped:
+                deduped.append(w)
+        result["quality_warnings"] = deduped
+        result["needs_review"] = True
+    return result
+
+
+def build_claim_citations(result: dict) -> list[dict]:
+    """Attach field-level provenance without inventing quotes.
+
+    If retrieved snippets are unavailable, the claim is labeled needs_verification
+    rather than pretending a quote exists.
+    """
+    sources = _source_dicts(result)
+    first = sources[0] if sources else {}
+    checked = utc_now().date().isoformat()
+
+    def confidence_for(field: str) -> str:
+        if not sources:
+            return "needs_verification"
+        if first.get("snippet"):
+            return str(result.get("confidence") or "medium").lower()
+        return "needs_verification"
+
+    fields = [
+        ("permit_type", _primary_permit_text(result), "Likely primary permit type"),
+        ("apply_url", result.get("apply_url"), "Where to start the application"),
+        ("fee_range", result.get("fee_range"), "Estimated fee range"),
+        ("approval_timeline", result.get("approval_timeline"), "Estimated approval timeline"),
+        ("inspections", result.get("inspections") or result.get("inspect_checklist"), "Likely inspections"),
+    ]
+    citations = []
+    for idx, (field, value, label) in enumerate(fields, 1):
+        if value in (None, "", [], {}):
+            continue
+        snippet = first.get("snippet", "")
+        citations.append({
+            "id": f"C{idx}",
+            "field": field,
+            "claim": label,
+            "value": str(value) if not isinstance(value, str) else value,
+            # Keep the source URL attached even when no quoted snippet exists so
+            # users can verify the claim themselves. Missing snippets still force
+            # needs_verification; we just do not pretend the URL proves the field.
+            "source_url": first.get("url", ""),
+            "source_title": first.get("title", ""),
+            "quoted_snippet": snippet,
+            "checked_at": checked,
+            "confidence": confidence_for(field),
+        })
+    result["claim_citations"] = citations
+    if any(c["confidence"] == "needs_verification" for c in citations):
+        result.setdefault("quality_warnings", [])
+        warning = "Some report claims do not yet have quoted source snippets; verify with the AHJ before relying on them."
+        if warning not in result["quality_warnings"]:
+            result["quality_warnings"].append(warning)
+    return citations
+
+
+def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict:
+    url = result.get("apply_url") or ""
+    lower = url.lower()
+    platform = "unknown"
+    if "accela" in lower or "citizenaccess" in lower:
+        platform = "Accela / Citizen Access"
+    elif "tyler" in lower or "energov" in lower:
+        platform = "Tyler / EnerGov"
+    elif "opengov" in lower:
+        platform = "OpenGov"
+    elif url.lower().endswith(".pdf"):
+        platform = "PDF / paper form"
+    elif url:
+        platform = "city portal / AHJ website"
+
+    commercial = _is_commercial_scope(job_type, result)
+    permit_type = _primary_permit_text(result) or "Permit type needs AHJ verification"
+    if url:
+        steps = [
+            f"Open the {platform} start URL.",
+            "Create or sign into the contractor/applicant account if required.",
+            f"Look for the closest permit category to: {permit_type}.",
+            "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission.",
+            "Stop before final submit, payment, signature, or legal attestation until the AHJ details are verified.",
+        ]
+        support_level = "verified path"
+        evidence_meta = result.get("_evidence_pack") or {}
+        evidence_matched = set(evidence_meta.get("matched_fields") or [])
+        if evidence_meta.get("enabled") and "apply_url" in evidence_matched:
+            verification_note = f"{city or 'AHJ'} start portal is verified only as the application entry point; exact portal subcategory and filing path still require AHJ/portal verification before filing."
+        else:
+            verification_note = "PermitAssist guides the application pathway; verify exact portal choice with the AHJ before filing."
+        login_required = "likely" if platform != "PDF / paper form" else "not_applicable_or_unknown"
+    else:
+        steps = [
+            "No verified online filing path is available from current field evidence; contact the AHJ or verify the correct portal before filing.",
+            f"Ask the AHJ which permit category best matches: {permit_type}.",
+            "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission.",
+            "Stop before final submit, payment, signature, or legal attestation until the AHJ details are verified.",
+        ]
+        support_level = "not available"
+        verification_note = "No verified online filing path is available from current sources; verify the exact filing path with the AHJ."
+        login_required = "unknown"
+    if commercial:
+        steps.insert(3, "For commercial TI, check whether separate building, MEP, fire/life-safety, accessibility, health, or change-of-occupancy reviews are required.")
+    apply_path = {
+        "support_level": support_level,
+        "platform": platform,
+        "portal_url": url,
+        "login_required": login_required,
+        "permit_category": "Commercial Building / Tenant Improvement" if commercial else "Residential / Trade Permit",
+        "permit_type": permit_type,
+        "portal_selection_path": steps[:3],
+        "likely_documents": ["scope of work", "plans/drawings if required", "contractor license", "valuation", "owner authorization"],
+        "steps": steps,
+        "stop_before": "final submit, payment, signature, or legal attestation",
+        "verification_note": verification_note,
+    }
+    result["apply_path"] = apply_path
+    return apply_path
+
+
+def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None) -> dict:
+    """Shared final response safety pipeline for all permit lookup endpoints."""
+    evidence_pack = get_local_evidence_pack()
+    evidence_enabled = evidence_pack is not None
+    unexpected_evidence_cache = evidence_enabled and (is_cached or bool(result.get("_cached")))
+
+    # Validate fresh URLs; cached rows are assumed to have gone through this once.
+    if not is_cached:
+        result = sanitize_result_urls(result)
+
+    # Legacy fallback may use broad sources[0]. Keep it only when the local
+    # evidence pack is disabled. With evidence enabled, unsupported fields must
+    # fail closed instead of borrowing a generic source URL.
+    if not evidence_enabled and not result.get('apply_url'):
+        sources = result.get('sources') or []
+        gov_urls = [s for s in sources if isinstance(s, str) and '.gov' in s and not s.lower().endswith('.pdf')]
+        portal_urls = [s for s in sources if isinstance(s, str) and any(p in s.lower() for p in ['accela', 'permit', 'portal', 'civic', 'govern']) and not s.lower().endswith('.pdf')]
+        other_urls = [s for s in sources if isinstance(s, str) and s.startswith('http') and not s.lower().endswith('.pdf')]
+        fallback_url = (gov_urls or portal_urls or other_urls or [None])[0]
+        if fallback_url:
+            result['apply_url'] = fallback_url
+            result['_url_warning'] = None
+            result.pop('_apply_url_locality_warning', None)
+
+    result = strip_pdf_from_result(result)
+    if not result.get('apply_google_maps'):
+        result['apply_google_maps'] = build_google_maps_url(
+            city, state,
+            address=result.get('apply_address', ''),
+            office=result.get('applying_office', '')
+        )
+    if not result.get('apply_phone'):
+        result['apply_phone'] = result.get('apply_google_maps', '')
+
+    result = enrich_result_response(result, job_type, city, state)
+    result = apply_permitiq_quality_gate(result, job_type, city, state)
+
+    if evidence_enabled:
+        forced_status = "invalid_contract" if unexpected_evidence_cache else None
+        result = apply_evidence_pack_fail_closed(result, job_type, city, state, utc_now().date().isoformat(), explicit_vertical=explicit_vertical, force_contract_status=forced_status)
+        evidence_meta = result.get("_evidence_pack") or {}
+        evidence_failed = set(evidence_meta.get("failed_closed_fields") or [])
+        evidence_matched = set(evidence_meta.get("matched_fields") or [])
+        warnings = result.setdefault("quality_warnings", [])
+        if "inspections" in evidence_failed:
+            result["inspection_booking"] = None
+            warning = "Inspection booking steps are not shown because local evidence-pack inspections failed closed; verify required inspections and booking with the AHJ."
+            if warning not in warnings:
+                warnings.append(warning)
+        if "fee_range" in evidence_failed:
+            warning = f"{city or 'AHJ'} fee range is not verified in this evidence pack; confirm fees before quoting."
+            if warning not in warnings:
+                warnings.append(warning)
+        if "approval_timeline" in evidence_matched:
+            warning = f"Approval timeline is statutory/AHJ outer-deadline evidence only, not a {city or 'local'} queue estimate."
+            if warning not in warnings:
+                warnings.append(warning)
+        if "apply_url" in evidence_matched:
+            warning = "Apply URL verifies the portal start page only; exact portal subcategory/filing path still needs AHJ or portal verification before filing."
+            if warning not in warnings:
+                warnings.append(warning)
+        if "companion_reviews_triggers" in evidence_matched:
+            warning = "Companion-review evidence is scope-limited; it is not a complete local health, fire, accessibility, MEP, hood, grease, or food-service trigger list."
+            if warning not in warnings:
+                warnings.append(warning)
+        # Evidence-pack apply_url values are loaded after the generic engine URL
+        # pass, so sanitize/strip once more before apply_path renders them.
+        result = sanitize_result_urls(result)
+        result = strip_pdf_from_result(result)
+        # Evidence pack mode bypasses permit_cache reads and writes by design;
+        # make that visible and testable so stale non-evidence rows cannot leak
+        # into local trials.
+        meta = result.setdefault('_evidence_pack', {})
+        meta['cache_bypassed'] = True
+    else:
+        build_claim_citations(result)
+
+    build_apply_path(result, job_type, city, state)
+    return result
+
+
+def record_beta_event(event: str, payload: dict | None = None, email: str = "") -> None:
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        payload_json = json.dumps(payload or {}, sort_keys=True)
+        if len(payload_json) > 8000:
+            payload_json = json.dumps({"truncated": True, "prefix": payload_json[:7800]}, sort_keys=True)
+        conn.execute(
+            "INSERT INTO beta_events (event,email,payload_json,created_at) VALUES (?,?,?,?)",
+            (str(event)[:80], (email or "").lower().strip(), payload_json, utc_now().isoformat()),
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[beta-events] record error: {e}")
+
+
+def save_beta_feedback(email: str, job_type: str, city: str, state: str, useful: str, knew_next_step: str, missing: str, ahj_confirmed: str, use_again: str) -> dict:
+    feedback_id = str(uuid.uuid4())
+    now = utc_now().isoformat()
+    conn = sqlite3.connect(CACHE_DB)
+    conn.execute(
+        """
+        INSERT INTO beta_feedback (id,email,job_type,city,state,useful,knew_next_step,missing,ahj_confirmed,use_again,created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        """,
+        (feedback_id, (email or "").lower().strip(), job_type[:500], city[:120], state[:20], useful[:40], knew_next_step[:40], missing[:2000], ahj_confirmed[:40], use_again[:40], now),
+    )
+    conn.commit()
+    conn.close()
+    record_beta_event("beta_feedback_submitted", {"city": city, "state": state, "useful": useful, "use_again": use_again}, email)
+    return {"id": feedback_id, "received": True}
+
+
+def render_white_label_report_html(data: dict) -> str:
+    result = data.get("result") or {}
+    contractor = html.escape(str(data.get("contractor_name") or "Contractor"))
+    client = html.escape(str(data.get("client_name") or "Client / Property"))
+    job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
+    location = html.escape(", ".join(x for x in [str(data.get("city") or ""), str(data.get("state") or "")] if x))
+    citations = result.get("claim_citations") or build_claim_citations(result)
+    permits = result.get("permits_required") or []
+    permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or "<li>Permit type needs AHJ verification.</li>"
+    safe_apply_url = _safe_external_url(result.get('apply_url') or '')
+    footnotes = "".join(
+        f"<li><strong>{html.escape(c.get('id',''))}</strong> {html.escape(c.get('claim',''))}: "
+        f"{html.escape(c.get('quoted_snippet') or 'No quoted snippet available yet — verify with AHJ.')} "
+        f"<br>{_render_safe_link(c.get('source_url','')) or 'No safe source URL attached'} "
+        f"<em>Checked {html.escape(c.get('checked_at',''))}; confidence {html.escape(c.get('confidence',''))}</em></li>"
+        for c in citations
+    ) or "<li>No citations attached yet; verify with AHJ.</li>"
+    warnings_list = list(result.get("quality_warnings") or [])
+    evidence_meta = result.get("_evidence_pack") or {}
+    evidence_failed = [str(field) for field in (evidence_meta.get("failed_closed_fields") or []) if field]
+    evidence_matched = [str(field) for field in (evidence_meta.get("matched_fields") or []) if field]
+    if evidence_meta.get("enabled") and evidence_failed:
+        warnings_list.append("Local evidence pack failed closed for: " + ", ".join(evidence_failed) + ". Do not quote or file from those fields until AHJ-confirmed.")
+    if evidence_meta.get("enabled") and "approval_timeline" in evidence_matched:
+        warnings_list.append("Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate.")
+    if evidence_meta.get("enabled") and "companion_reviews_triggers" in evidence_matched:
+        warnings_list.append("Companion-review evidence is scope-limited; it is not a complete local health, fire, accessibility, MEP, hood, grease, or food-service trigger list.")
+    warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in dict.fromkeys(warnings_list))
+    return f"""<!doctype html>
+<html><head><meta charset='utf-8'><title>Permit research report</title>
+<style>body{{font-family:Arial,sans-serif;max-width:820px;margin:32px auto;color:#172033;line-height:1.45}}.brand{{border-bottom:3px solid #0f766e;padding-bottom:12px;margin-bottom:24px}}.muted{{color:#64748b}}.card{{border:1px solid #dbe3ea;border-radius:12px;padding:16px;margin:16px 0}}@media print{{button{{display:none}}body{{margin:0.5in}}}}</style></head>
+<body><button onclick='window.print()'>Print / Save PDF</button><div class='brand'><h1>{contractor}</h1><div class='muted'>Permit research prepared for {client}</div></div>
+<h2>{job}</h2><p><strong>Location:</strong> {location}</p>
+<div class='card'><h3>Likely permits</h3><ul>{permit_items}</ul></div>
+<div class='card'><h3>How to apply</h3><p>{html.escape(str((result.get('apply_path') or {}).get('verification_note') or 'Verify exact filing path with the AHJ.'))}</p><p><strong>Start URL:</strong> {_render_safe_link(safe_apply_url) or 'Not found'}</p></div>
+{f"<div class='card'><h3>Warnings</h3><ul>{warnings}</ul></div>" if warnings else ""}
+<div class='card'><h3>Source footnotes</h3><ol>{footnotes}</ol></div>
+<p class='muted'>PermitAssist is guidance only. Verify exact permit type with the AHJ before quoting or starting work.</p></body></html>"""
+
 # ── Telegram notifications ────────────────────────────────────────────────────
 def notify_telegram(message: str):
     """Fire-and-forget Telegram message. Non-blocking."""
@@ -454,6 +875,51 @@ def init_db():
             state       TEXT,
             issue       TEXT,
             submitted_at TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS beta_events (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            event        TEXT NOT NULL,
+            email        TEXT,
+            payload_json TEXT,
+            created_at   TEXT NOT NULL
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS beta_feedback (
+            id             TEXT PRIMARY KEY,
+            email          TEXT,
+            job_type       TEXT,
+            city           TEXT,
+            state          TEXT,
+            useful         TEXT,
+            knew_next_step TEXT,
+            missing        TEXT,
+            ahj_confirmed  TEXT,
+            use_again      TEXT,
+            created_at     TEXT NOT NULL
+        )
+    """)
+    # Feedback can be submitted before the first permit lookup on a fresh
+    # volume. Initialize the engine cache table here too so flagging a result
+    # never 500s just because research_engine.init_cache() has not run yet.
+    # Keep this DDL in sync with api.research_engine.init_cache().
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS permit_cache (
+            cache_key       TEXT PRIMARY KEY,
+            job_type        TEXT,
+            job_category    TEXT,
+            city            TEXT,
+            state           TEXT,
+            zip_code        TEXT,
+            result_json     TEXT,
+            created_at      TEXT,
+            hits            INTEGER DEFAULT 0,
+            source_url      TEXT,
+            etag            TEXT,
+            last_modified   TEXT,
+            last_checked_at TEXT
         )
     """)
     conn.execute("""
@@ -677,6 +1143,8 @@ def init_db():
         "api_keys",
         "webhook_integrations",
         "saved_jurisdictions",
+        "beta_events",
+        "beta_feedback",
     }
     missing_tables = sorted(expected_tables - preexisting_tables)
     if missing_tables:
@@ -690,10 +1158,25 @@ def init_db():
 
 # ── Auth / Session helpers ─────────────────────────────────────────────────
 
+def _session_signature(raw: str) -> str:
+    """Return URL-safe HMAC signature for a session token.
+
+    Use base64url instead of hex so API response redaction for full SHA-256
+    hashes cannot corrupt newly issued session tokens.
+    """
+    digest = hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).digest()
+    return base64.urlsafe_b64encode(digest).decode().rstrip("=")
+
+
+def _legacy_session_signature(raw: str) -> str:
+    """Return the old hex HMAC signature for backwards-compatible validation."""
+    return hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
+
+
 def create_session_token(email: str) -> str:
     """Create a signed 30-day session token and store in DB."""
     raw = secrets.token_urlsafe(32)
-    sig = hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
+    sig = _session_signature(raw)
     token = f"{raw}.{sig}"
     now = utc_now()
     exp = now + timedelta(days=30)
@@ -724,8 +1207,9 @@ def validate_session_token(token: str) -> str | None:
         return None
     try:
         raw, sig = token.rsplit(".", 1)
-        expected = hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(sig, expected):
+        expected = _session_signature(raw)
+        legacy_expected = _legacy_session_signature(raw)
+        if not (hmac.compare_digest(sig, expected) or hmac.compare_digest(sig, legacy_expected)):
             return None
         conn = sqlite3.connect(CACHE_DB)
         row = conn.execute(
@@ -1436,8 +1920,8 @@ def upsert_permit_issued_reminder(email: str, job_id: str, job_name: str, city: 
 def verify_stripe_signature(payload: bytes, sig_header: str, secret: str) -> bool:
     """Verify Stripe webhook signature using HMAC-SHA256."""
     if not secret:
-        print("[stripe-webhook] No STRIPE_WEBHOOK_SECRET — skipping signature check")
-        return True
+        print("[stripe-webhook] STRIPE_WEBHOOK_SECRET missing — rejecting webhook")
+        return False
     try:
         parts: dict[str, list] = {}
         for item in sig_header.split(","):
@@ -1761,21 +2245,113 @@ def validate_api_key(auth_header: str) -> tuple[str | None, str | None]:
         return (None, None)
 
 
+def _is_unsafe_webhook_ip(ip_value: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(ip_value)
+    except ValueError:
+        return True
+    return any([
+        ip.is_loopback,
+        ip.is_private,
+        ip.is_link_local,
+        ip.is_multicast,
+        ip.is_reserved,
+        ip.is_unspecified,
+    ])
+
+
+def validate_webhook_callback_url(callback_url: str) -> str:
+    """Return a normalized customer webhook URL or raise ValueError.
+
+    Customer webhook delivery is outbound server-side traffic, so reject common SSRF
+    targets: non-HTTPS schemes, credentials in URLs, localhost/private IPs, and
+    hostnames resolving to localhost/private/link-local/reserved addresses.
+    """
+    url = str(callback_url or "").strip()
+    if not url:
+        raise ValueError("Valid HTTPS callback_url required")
+
+    parsed = urlparse(url)
+    if parsed.scheme.lower() != "https" or not parsed.netloc:
+        raise ValueError("Webhook callback_url must use HTTPS")
+    if parsed.username or parsed.password:
+        raise ValueError("Webhook callback_url cannot include credentials")
+    if not parsed.hostname:
+        raise ValueError("Webhook callback_url must include a host")
+
+    host = parsed.hostname.rstrip(".").lower()
+    if host in {"localhost", "localhost.localdomain"} or host.endswith(".localhost"):
+        raise ValueError("Webhook callback_url host is not allowed")
+
+    port = parsed.port or 443
+    try:
+        literal_ip = ipaddress.ip_address(host)
+        if _is_unsafe_webhook_ip(str(literal_ip)):
+            raise ValueError("Webhook callback_url host is not allowed")
+    except ValueError as exc:
+        if "not allowed" in str(exc):
+            raise
+        try:
+            addresses = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+        except socket.gaierror as dns_error:
+            raise ValueError("Webhook callback_url host could not be resolved") from dns_error
+        if not addresses:
+            raise ValueError("Webhook callback_url host could not be resolved")
+        for address in addresses:
+            resolved_ip = address[4][0]
+            if _is_unsafe_webhook_ip(resolved_ip):
+                raise ValueError("Webhook callback_url host resolves to a private or unsafe address")
+
+    return url
+
+
+def canonical_customer_webhook_body(body: dict) -> str:
+    return json.dumps(body, sort_keys=True, separators=(",", ":"))
+
+
+def build_customer_webhook_signature_headers(integration_key: str, body: dict) -> dict:
+    timestamp = str(int(time.time()))
+    event_id = f"evt_{uuid.uuid4().hex}"
+    body_json = canonical_customer_webhook_body(body)
+    signed_payload = f"{timestamp}.{body_json}"
+    signature = hmac.new(str(integration_key or "").encode("utf-8"), signed_payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    return {
+        "Content-Type": "application/json",
+        "X-PermitAssist-Webhook-Id": event_id,
+        "X-PermitAssist-Webhook-Timestamp": timestamp,
+        "X-PermitAssist-Webhook-Signature": f"sha256={signature}",
+    }
+
+
+def verify_customer_webhook_signature(integration_key: str, body_json: str, timestamp: str, signature_header: str) -> bool:
+    if not integration_key or not body_json or not timestamp or not signature_header:
+        return False
+    expected = hmac.new(
+        str(integration_key).encode("utf-8"),
+        f"{timestamp}.{body_json}".encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    provided = signature_header.split("sha256=", 1)[-1] if signature_header.startswith("sha256=") else signature_header
+    return hmac.compare_digest(expected, provided)
+
+
 def create_webhook_integration(email: str, name: str, callback_url: str, field_mapping: dict | None = None) -> dict:
     integration_key = f"wh_{secrets.token_urlsafe(18)}"
     now = utc_now().isoformat()
-    clean_mapping = field_mapping or {
+    clean_callback_url = validate_webhook_callback_url(callback_url)
+    default_mapping = {
         "job_type": "job_type",
         "city": "city",
         "state": "state",
-        "callback_url": "callback_url",
         "zip_code": "zip_code",
     }
+    clean_mapping = dict(field_mapping) if isinstance(field_mapping, dict) else default_mapping
+    clean_mapping.pop("callback_url", None)
     conn = sqlite3.connect(CACHE_DB)
     cur = conn.cursor()
     cur.execute(
         "INSERT INTO webhook_integrations (email, integration_key, name, callback_url, field_mapping, created_at, last_triggered_at, trigger_count) VALUES (?,?,?,?,?,?,?,0)",
-        (email.lower().strip(), integration_key, (name or "Webhook").strip()[:80], callback_url.strip(), json.dumps(clean_mapping), now, None)
+        (email.lower().strip(), integration_key, (name or "Webhook").strip()[:80], clean_callback_url, json.dumps(clean_mapping), now, None)
     )
     conn.commit()
     integration_id = cur.lastrowid
@@ -1784,7 +2360,7 @@ def create_webhook_integration(email: str, name: str, callback_url: str, field_m
         "id": integration_id,
         "name": (name or "Webhook").strip()[:80],
         "integration_key": integration_key,
-        "callback_url": callback_url.strip(),
+        "callback_url": clean_callback_url,
         "field_mapping": clean_mapping,
         "created_at": now,
         "last_triggered_at": None,
@@ -1854,9 +2430,9 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
             city = resolve_webhook_field(payload, mapping, "city")
             state = resolve_webhook_field(payload, mapping, "state")
             zip_code = resolve_webhook_field(payload, mapping, "zip_code")
-            callback_url = str(payload.get("callback_url") or integration.get("callback_url") or "").strip()
-            if not (job_type and city and state and callback_url):
-                raise ValueError("Webhook requires job_type, city, state, and callback_url")
+            callback_url = validate_webhook_callback_url(integration.get("callback_url") or "")
+            if not (job_type and city and state):
+                raise ValueError("Webhook requires job_type, city, and state")
             result = research_permit(job_type, city, state, zip_code)
             body = {
                 "ok": True,
@@ -1866,14 +2442,20 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
                 "integration": integration.get("name") or "Webhook",
                 "result": result,
             }
-            requests.post(callback_url, json=body, timeout=20)
+            body_json = canonical_customer_webhook_body(body)
+            headers = build_customer_webhook_signature_headers(integration.get("integration_key") or "", body)
+            requests.post(callback_url, data=body_json, headers=headers, timeout=20, allow_redirects=False)
             mark_webhook_triggered(integration["integration_key"])
         except Exception as e:
             print(f"[webhook] Delivery error: {e}")
-            callback_url = str(payload.get("callback_url") or integration.get("callback_url") or "").strip()
+            callback_url = str(integration.get("callback_url") or "").strip()
             if callback_url:
                 try:
-                    requests.post(callback_url, json={"ok": False, "error": str(e)}, timeout=20)
+                    callback_url = validate_webhook_callback_url(callback_url)
+                    body = {"ok": False, "error": str(e)}
+                    body_json = canonical_customer_webhook_body(body)
+                    headers = build_customer_webhook_signature_headers(integration.get("integration_key") or "", body)
+                    requests.post(callback_url, data=body_json, headers=headers, timeout=20, allow_redirects=False)
                 except Exception:
                     pass
     threading.Thread(target=_worker, daemon=True).start()
@@ -2349,6 +2931,15 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
     result = research_permit(normalized_job, normalized_city, normalized_state)
     current_hash = _city_watch_payload_hash(result)
     changed = bool(last_hash and last_hash != current_hash)
+    digest = {
+        "job_type": normalized_job,
+        "city": normalized_city,
+        "state": normalized_state,
+        "required_permits": [p.get('permit_type', 'Permit') for p in (result.get("permits_required") or []) if isinstance(p, dict)][:8],
+        "fee_range": result.get('fee_range') or result.get('fee') or 'Check with city',
+        "apply_url": result.get('apply_url') or '',
+        "checked_at": utc_now().isoformat(),
+    }
     now = utc_now().isoformat()
     if changed:
         requirements = result.get("what_to_bring") or result.get("requirements") or result.get("documents_needed") or []
@@ -2380,7 +2971,7 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
         conn.execute("UPDATE city_watch SET last_hash=? WHERE id=?", [current_hash, watch_id])
     conn.commit()
     conn.close()
-    return {"watched": True, "changed": changed, "last_hash": current_hash}
+    return {"watched": True, "changed": changed, "last_hash": current_hash, "digest": digest}
 
 
 def build_fix_plan_text(fix_result: dict) -> str:
@@ -2514,6 +3105,255 @@ def get_rejection_fix_plan(job_id: str, rejection_text: str, city: str, state: s
     return build_fix_plan_text(get_rejection_fix_result(job_id, rejection_text, city, state, job_type))
 
 
+# ── Cities page SSR (Fix 10) ──────────────────────────────────────────────────
+# Render frontend/cities.html with real city counts injected so crawlers and
+# pre-JS visitors see "5,260 Total / 5,000 Cities / 260 Counties / 50 States"
+# instead of the "Loading verified cities..." placeholder. Falls back to
+# stable hardcoded numbers if the SQLite read fails — never the legacy 263
+# fallback. The /api/verified-cities JSON path is unchanged and is what
+# powers the interactive grid once JS hydrates.
+
+_CITIES_PAGE_CACHE: dict = {"ts": 0.0, "html": None}
+_CITIES_PAGE_CACHE_TTL_SECS = 300  # 5 min — cheap to recompute, no need to be tighter
+
+_CITIES_PAGE_HARDCODED_FALLBACK = {
+    # 2026-04-28 snapshot of knowledge/verified_cities.db. Used only if SQLite
+    # is unreachable so we never fall back to the legacy 263-city number.
+    "total": 5260, "city": 3195, "county": 2065, "state": 50,
+}
+
+
+def _read_verified_cities_counts() -> dict:
+    """Return {total, city, county, state} from knowledge/data verified_cities.db.
+
+    Returns the hardcoded fallback when the DB is unreachable so we never
+    serve the 263-row legacy number.
+    """
+    try:
+        import sqlite3 as _sql
+        _knowledge_db = os.path.join(os.path.dirname(__file__), "..", "knowledge", "verified_cities.db")
+        _data_db = os.path.join(os.path.dirname(__file__), "..", "data", "verified_cities.db")
+        _db_path = _knowledge_db if os.path.exists(_knowledge_db) else _data_db
+        if not os.path.exists(_db_path):
+            return dict(_CITIES_PAGE_HARDCODED_FALLBACK)
+        with _sql.connect(_db_path) as _conn:
+            row = _conn.execute(
+                """SELECT
+                       COUNT(*) AS total,
+                       SUM(CASE WHEN COALESCE(entity_type,'city')='city' THEN 1 ELSE 0 END) AS city,
+                       SUM(CASE WHEN entity_type='county' THEN 1 ELSE 0 END) AS county,
+                       COUNT(DISTINCT state) AS state
+                   FROM verified_cities"""
+            ).fetchone()
+        total = int(row[0] or 0)
+        # Defend against an empty / partially-populated table by falling back
+        # rather than serving a bad number.
+        if total < 1000:
+            return dict(_CITIES_PAGE_HARDCODED_FALLBACK)
+        return {
+            "total": total,
+            "city": int(row[1] or 0),
+            "county": int(row[2] or 0),
+            "state": int(row[3] or 0),
+        }
+    except Exception as _err:
+        print(f"[cities-ssr] count read failed, using hardcoded fallback: {_err}")
+        return dict(_CITIES_PAGE_HARDCODED_FALLBACK)
+
+
+def _format_count(n: int) -> str:
+    return f"{n:,}"
+
+
+def render_cities_page_ssr(html_path: str) -> bytes:
+    """Read cities.html and inject real counts into the hero stats placeholders.
+
+    Uses a 5-minute in-process cache so repeat hits don't touch SQLite. Crawlers
+    that don't run JS now see real numbers instead of em-dashes; the JS still
+    overwrites these once /api/verified-cities returns.
+    """
+    import time as _time
+    now = _time.time()
+    cached = _CITIES_PAGE_CACHE.get("html")
+    if cached and (now - _CITIES_PAGE_CACHE.get("ts", 0.0)) < _CITIES_PAGE_CACHE_TTL_SECS:
+        return cached
+
+    with open(html_path, "rb") as _f:
+        html = _f.read().decode("utf-8")
+
+    counts = _read_verified_cities_counts()
+    replacements = {
+        '<span id="total-count">—</span>': f'<span id="total-count">{_format_count(counts["total"])}</span>',
+        '<span id="city-count">—</span>':  f'<span id="city-count">{_format_count(counts["city"])}</span>',
+        '<span id="county-count">—</span>': f'<span id="county-count">{_format_count(counts["county"])}</span>',
+        '<span id="state-count">—</span>': f'<span id="state-count">{_format_count(counts["state"])}</span>',
+    }
+    for old, new in replacements.items():
+        html = html.replace(old, new)
+
+    # Replace the loading div with a noscript-friendly summary so non-JS
+    # crawlers see real content instead of "Loading verified cities...".
+    noscript_summary = (
+        f'<div class="loading">Loading verified cities…</div>'
+        f'<noscript><div style="padding:24px 0;color:var(--text2);font-size:14px;line-height:1.7">'
+        f'PermitAssist verifies permit requirements across <strong>{_format_count(counts["total"])}'
+        f'</strong> US jurisdictions — '
+        f'{_format_count(counts["city"])} cities and {_format_count(counts["county"])} counties '
+        f'covering all {_format_count(counts["state"])} states. '
+        f'Enable JavaScript to browse the full searchable list, or visit '
+        f'<a href="/">PermitAssist</a> to look up a permit directly.'
+        f'</div></noscript>'
+    )
+    html = html.replace(
+        '<div class="loading">Loading verified cities...</div>',
+        noscript_summary,
+    )
+
+    body = html.encode("utf-8")
+    _CITIES_PAGE_CACHE["ts"] = now
+    _CITIES_PAGE_CACHE["html"] = body
+    return body
+
+
+_CITY_SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*-[a-z]{2}$")
+
+
+_CITY_LANDING_TRADES = [
+    ("HVAC", "hvac"),
+    ("Electrical", "electrical"),
+    ("Roofing", "roofing"),
+    ("Plumbing", "plumbing"),
+    ("Mini-split", "mini-split"),
+    ("EV charger", "ev-charger"),
+    ("Generator", "generator"),
+    ("Deck", "deck"),
+    ("Solar", "solar"),
+]
+
+
+def city_slug_to_display(slug: str) -> tuple[str, str] | None:
+    """Convert `houston-tx` to (`Houston`, `TX`) for legacy /city/* pages."""
+    slug = (slug or "").strip().lower().strip("/")
+    if not _CITY_SLUG_RE.match(slug):
+        return None
+    city_part, state = slug.rsplit("-", 1)
+    city_name = " ".join(part.capitalize() for part in city_part.split("-") if part)
+    return city_name, state.upper()
+
+
+def render_city_landing_page(slug: str) -> bytes | None:
+    """Render a lightweight legacy /city/{city-state} page instead of 404ing.
+
+    The canonical pSEO URLs are /permits/{trade}/{city-state}; this page keeps
+    old/external /city/* links useful and funnels users to the active permit
+    pages and the main lookup tool.
+    """
+    display = city_slug_to_display(slug)
+    if not display:
+        return None
+    city_name, state = display
+    title = f"Permit requirements in {city_name}, {state}"
+    escaped_title = html.escape(title)
+    escaped_city = html.escape(city_name)
+    escaped_state = html.escape(state)
+    links = "".join(
+        f'<a class="card" href="/permits/{trade_slug}/{html.escape(slug)}">'
+        f'<strong>{html.escape(label)} permits</strong><span>{html.escape(label)} permit requirements in {escaped_city}, {escaped_state}</span></a>'
+        for label, trade_slug in _CITY_LANDING_TRADES
+    )
+    body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{escaped_title} — PermitAssist</title>
+  <meta name="description" content="Find building, trade, and contractor permit requirements for {escaped_city}, {escaped_state}." />
+  <link rel="canonical" href="https://permitassist.io/city/{html.escape(slug)}" />
+  <style>
+    body{{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#0f2044;color:#fff}}
+    .wrap{{max-width:960px;margin:0 auto;padding:32px 20px 56px}}
+    .nav{{display:flex;justify-content:space-between;align-items:center;margin-bottom:56px}}
+    .brand{{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:800}}
+    .brand img{{width:32px;height:32px;border-radius:8px}}
+    .btn{{display:inline-block;background:#1a56db;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:800}}
+    .hero{{margin-bottom:32px}}
+    h1{{font-size:clamp(32px,5vw,54px);line-height:1.05;margin:0 0 14px}}
+    p{{color:rgba(255,255,255,.78);font-size:18px;line-height:1.65;max-width:760px}}
+    .grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:26px}}
+    .card{{display:block;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:18px;color:#fff;text-decoration:none}}
+    .card:hover{{background:rgba(255,255,255,.13)}}
+    .card strong{{display:block;font-size:17px;margin-bottom:6px}}
+    .card span{{display:block;color:rgba(255,255,255,.68);font-size:14px;line-height:1.45}}
+    .note{{margin-top:28px;font-size:14px;color:rgba(255,255,255,.62)}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <nav class="nav"><a class="brand" href="/"><img src="/logo.png" alt="" />PermitAssist</a><a class="btn" href="/">Run a free lookup</a></nav>
+    <section class="hero">
+      <h1>{escaped_title}</h1>
+      <p>Choose a common permit type below, or run a live PermitAssist lookup for your exact scope. Always verify final requirements with the local AHJ before quoting or starting work.</p>
+    </section>
+    <section class="grid" aria-label="Permit pages for {escaped_city}, {escaped_state}">{links}</section>
+    <p class="note">Legacy city URL preserved for users and crawlers. Canonical detailed pages live under /permits/{{permit-type}}/{html.escape(slug)}.</p>
+  </main>
+</body>
+</html>"""
+    return body.encode("utf-8")
+
+
+def observability_head_snippet() -> str:
+    """Return optional browser observability scripts. Empty when env vars are absent."""
+    snippets: list[str] = []
+    if SENTRY_DSN:
+        snippets.append(
+            "<script src=\"https://browser.sentry-cdn.com/8.55.0/bundle.tracing.min.js\" "
+            "crossorigin=\"anonymous\"></script>\n"
+            "<script>\n"
+            "window.Sentry && Sentry.init({\n"
+            f"  dsn: {json.dumps(SENTRY_DSN)},\n"
+            f"  environment: {json.dumps(SENTRY_ENVIRONMENT)},\n"
+            "  tracesSampleRate: 0.05,\n"
+            "  sendDefaultPii: false\n"
+            "});\n"
+            "</script>"
+        )
+    if POSTHOG_PUBLIC_KEY:
+        snippets.append(
+            "<script>\n"
+            "!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(\".\");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement(\"script\")).type=\"text/javascript\",p.crossOrigin=\"anonymous\",p.async=!0,p.src=s.api_host.replace(\".i.posthog.com\",\"-assets.i.posthog.com\")+\"/static/array.js\",(r=t.getElementsByTagName(\"script\")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a=\"posthog\",u.people=u.people||[],u.toString=function(t){var e=\"posthog\";return\"posthog\"!==a&&(e+=\".\"+a),t||(e+=\" (stub)\"),e},u.people.toString=function(){return u.toString(1)+\".people (stub)\"},o=\"capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags reloadFeatureFlags getFeatureFlag getFeatureFlagPayload group\".split(\" \"),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);\n"
+            f"posthog.init({json.dumps(POSTHOG_PUBLIC_KEY)}, {{api_host: {json.dumps(POSTHOG_HOST)}, person_profiles: 'identified_only'}});\n"
+            "</script>"
+        )
+    return "\n".join(snippets)
+
+
+_SENSITIVE_OUTPUT_RE = re.compile(
+    r"(?i)(/home/[^/\s\"'<>]+/[^\s\"'<>]+|/app/[^\s\"'<>]+|PERMITASSIST_[A-Z0-9_]+|RAILWAY_[A-Z0-9_]+|sk-[A-Za-z0-9_-]{16,}|whsec_[A-Za-z0-9_-]{16,}|[A-Fa-f0-9]{64})"
+)
+
+
+def redact_public_output(value):
+    """Redact filesystem/env/Railway/token-like strings from API JSON."""
+    if isinstance(value, dict):
+        redacted = {}
+        for key, item in value.items():
+            if key in {"path", "fingerprint_sha256", "evidence_pack_fingerprint"}:
+                redacted[key] = "[REDACTED]"
+            else:
+                redacted[key] = redact_public_output(item)
+        return redacted
+    if isinstance(value, list):
+        return [redact_public_output(item) for item in value]
+    if isinstance(value, str):
+        return _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", value)
+    return value
+
+
+def _evidence_pack_indexing_guard_enabled() -> bool:
+    return evidence_pack_enabled()
+
+
 # ── Request handler ───────────────────────────────────────────────────────────
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
@@ -2532,12 +3372,16 @@ class Handler(BaseHTTPRequestHandler):
         return _normalize_ip(self.client_address[0])
 
     def send_json(self, status: int, data: dict, extra_headers: dict | None = None):
+        data = redact_public_output(data)
         body = json.dumps(data, indent=2).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Expose-Headers", "X-Free-Lookups-Used, X-Free-Lookups-Remaining")
+        if _evidence_pack_indexing_guard_enabled():
+            self.send_header("X-Robots-Tag", "noindex, nofollow")
+            self.send_header("Cache-Control", "no-store")
         for key, value in (extra_headers or {}).items():
             self.send_header(key, value)
         self.end_headers()
@@ -2547,9 +3391,19 @@ class Handler(BaseHTTPRequestHandler):
         try:
             with open(path, "rb") as f:
                 body = f.read()
+            if "text/html" in content_type:
+                snippet = observability_head_snippet()
+                if snippet:
+                    html = body.decode("utf-8", errors="ignore")
+                    marker = "</head>"
+                    if marker in html:
+                        html = html.replace(marker, snippet + "\n" + marker, 1)
+                        body = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
+            if _evidence_pack_indexing_guard_enabled() and ("text/html" in content_type or "xml" in content_type or "text/plain" in content_type):
+                self.send_header("X-Robots-Tag", "noindex, nofollow")
             # Prevent browser caching for HTML — always serve fresh version
             if "text/html" in content_type:
                 self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -2762,8 +3616,36 @@ class Handler(BaseHTTPRequestHandler):
         }
         if path in ("/", "/index.html"):
             self.send_file(os.path.join(FRONTEND_DIR, "index.html"), "text/html; charset=utf-8")
+        elif path == "/logo.png":
+            self.send_file(os.path.join(FRONTEND_DIR, "icons", "logo.png"), "image/png")
+        elif path.startswith("/city/"):
+            slug = path[len("/city/"):].strip("/").lower()
+            body = render_city_landing_page(slug)
+            if body is None:
+                self.send_response(404)
+                self.end_headers()
+            else:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "public, max-age=300")
+                self.end_headers()
+                self.wfile.write(body)
         elif path in ("/cities", "/cities.html", "/cities/"):
-            self.send_file(os.path.join(FRONTEND_DIR, "cities.html"), "text/html; charset=utf-8")
+            _cities_path = os.path.join(FRONTEND_DIR, "cities.html")
+            try:
+                _body = render_cities_page_ssr(_cities_path)
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(_body)))
+                # Crawlers benefit from short caching; humans get fresh data anyway
+                # because the JS overwrites the injected numbers post-hydration.
+                self.send_header("Cache-Control", "public, max-age=300")
+                self.end_headers()
+                self.wfile.write(_body)
+            except Exception as _ssr_err:
+                print(f"[cities-ssr] render failed, serving raw HTML: {_ssr_err}")
+                self.send_file(_cities_path, "text/html; charset=utf-8")
 
         # ── Trade-specific landing pages ──────────────────────────────────────
         elif path in ("/roofing", "/roofing/"):
@@ -2804,7 +3686,7 @@ class Handler(BaseHTTPRequestHandler):
             mode = params.get("hub.mode", [""])[0]
             token = params.get("hub.verify_token", [""])[0]
             challenge = params.get("hub.challenge", [""])[0]
-            FB_VERIFY_TOKEN = os.environ.get("FB_WEBHOOK_VERIFY_TOKEN", "permitassist_webhook_2026")
+            FB_VERIFY_TOKEN = os.environ.get("FB_WEBHOOK_VERIFY_TOKEN")
             if mode == "subscribe" and token == FB_VERIFY_TOKEN:
                 self.send_response(200)
                 self.send_header("Content-Type", "text/plain")
@@ -3154,11 +4036,31 @@ class Handler(BaseHTTPRequestHandler):
 
         # ── SEO: sitemap.xml ──────────────────────────────────────────────
         elif path == "/sitemap.xml":
+            if _evidence_pack_indexing_guard_enabled():
+                body = b'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>\n'
+                self.send_response(200)
+                self.send_header("Content-Type", "application/xml")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("X-Robots-Tag", "noindex, nofollow")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(body)
+                return
             sitemap_path = os.path.join(SEO_DIR, "sitemap.xml")
             self.send_file(sitemap_path, "application/xml")
 
         # ── SEO: robots.txt ───────────────────────────────────────────────
         elif path == "/robots.txt":
+            if _evidence_pack_indexing_guard_enabled():
+                body = b"User-agent: *\nDisallow: /\n"
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("X-Robots-Tag", "noindex, nofollow")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(body)
+                return
             robots_path = os.path.join(SEO_DIR, "robots.txt")
             self.send_file(robots_path, "text/plain")
 
@@ -3278,11 +4180,24 @@ class Handler(BaseHTTPRequestHandler):
                 from urllib.parse import parse_qs as _pqs
                 params = _pqs(urlparse(self.path).query)
                 email = params.get("email", [""])[0].strip().lower()
+                plan = params.get("plan", ["free"])[0].strip().lower() or "free"
                 if not email:
                     self.send_json(400, {"error": "email param required"})
                     return True
+                if plan not in ("free", "solo", "team"):
+                    self.send_json(400, {"error": "plan must be free, solo, or team"})
+                    return True
                 token = create_session_token(email)
-                self.send_json(200, {"token": token, "email": email})
+                if plan != "free":
+                    now = utc_now().isoformat()
+                    conn = sqlite3.connect(CACHE_DB)
+                    conn.execute(
+                        "UPDATE users SET plan=?, last_login=? WHERE email=?",
+                        (plan, now, email),
+                    )
+                    conn.commit()
+                    conn.close()
+                self.send_json(200, {"token": token, "email": email, "plan": plan, "paid": plan != "free"})
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
             return True
@@ -3392,23 +4307,6 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(200, {"status": "ok"})  # Always 200 to Facebook
             return
 
-        # ── Debug endpoint — echo headers and body info ───────────────────
-        if path == "/api/debug-headers":
-            info = {
-                "headers": dict(self.headers),
-                "content_length": self.headers.get("Content-Length"),
-                "transfer_encoding": self.headers.get("Transfer-Encoding"),
-            }
-            # Try reading body
-            try:
-                cl = int(self.headers.get("Content-Length", 0))
-                body = self.rfile.read(cl) if cl > 0 else b""
-                info["body_read_via_content_length"] = body.decode("utf-8", errors="replace")
-            except Exception as e:
-                info["body_read_error"] = str(e)
-            self.send_json(200, info)
-            return
-
         # ── Saved jurisdictions ────────────────────────────────────────────
         if path == "/api/jurisdictions/save":
             try:
@@ -3473,6 +4371,7 @@ class Handler(BaseHTTPRequestHandler):
                 state        = data.get("state", "").strip()
                 zip_code     = data.get("zip_code", "").strip()
                 job_category = data.get("job_category", "residential").strip() or "residential"
+                explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
 
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
@@ -3505,7 +4404,7 @@ class Handler(BaseHTTPRequestHandler):
                 paid = is_paid_user(user_email) if user_email else False
                 unlimited = is_sample_demo or paid or is_unlimited_lookup_ip(ip) or is_benchmark
                 used_before = 0 if unlimited else get_effective_free_usage(ip, fingerprint)
-                response_headers = build_free_lookup_headers(used_before)
+                response_headers = {} if unlimited else build_free_lookup_headers(used_before)
 
                 if not is_sample_demo and not is_benchmark:
                     limited, retry_after = check_rate_limit(ip)
@@ -3543,12 +4442,23 @@ class Handler(BaseHTTPRequestHandler):
 
                 # Benchmark requests bypass the cache so we measure fresh
                 # pipeline behavior, not pre-cached results.
-                _use_cache = not is_benchmark
+                record_beta_event("lookup_started", {
+                    "city": city,
+                    "state": state,
+                    "job_category": job_category,
+                    "commercial_scope": _is_commercial_scope(job_type),
+                    "paid": paid,
+                    "sample_demo": is_sample_demo,
+                    "benchmark": is_benchmark,
+                }, user_email or "")
+                evidence_enabled = get_local_evidence_pack() is not None
+                _use_cache = (not is_benchmark) and (not evidence_enabled)
                 result = research_permit(
                     job_type, city, state, zip_code,
                     job_category=job_category,
                     use_cache=_use_cache,
                     force_model=force_model,
+                    suppress_cache_write=evidence_enabled,
                 )
                 is_cached = result.get("_cached", False)
 
@@ -3561,38 +4471,21 @@ class Handler(BaseHTTPRequestHandler):
                 elif unlimited:
                     result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
-                # Validate fresh URLs, then apply shared response safety nets for both fresh and cached results
-                if not is_cached:
-                    result = sanitize_result_urls(result)
+                result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical)
 
-                # Fallback: if apply_url is still null, use best URL from sources[]
-                if not result.get('apply_url'):
-                    sources = result.get('sources') or []
-                    gov_urls = [s for s in sources if isinstance(s, str) and '.gov' in s and not s.lower().endswith('.pdf')]
-                    portal_urls = [s for s in sources if isinstance(s, str) and any(p in s.lower() for p in ['accela', 'permit', 'portal', 'civic', 'govern']) and not s.lower().endswith('.pdf')]
-                    other_urls = [s for s in sources if isinstance(s, str) and s.startswith('http') and not s.lower().endswith('.pdf')]
-                    fallback_url = (gov_urls or portal_urls or other_urls or [None])[0]
-                    if fallback_url:
-                        result['apply_url'] = fallback_url
-                        result['_url_warning'] = None
-
-                # Strip PDF from apply_url → apply_pdf (server-side safety net)
-                result = strip_pdf_from_result(result)
-                # Ensure apply_google_maps always set (prefer pinned address)
-                if not result.get('apply_google_maps'):
-                    result['apply_google_maps'] = build_google_maps_url(
-                        city, state,
-                        address=result.get('apply_address', ''),
-                        office=result.get('applying_office', '')
-                    )
-                # Ensure apply_phone is never completely empty
-                if not result.get('apply_phone'):
-                    result['apply_phone'] = result.get('apply_google_maps', '')
-
-                result = enrich_result_response(result, job_type, city, state)
-
-                # Record stats
+                # Record stats and beta telemetry
                 record_lookup_stat(job_type, city, state, is_cached)
+                record_beta_event("lookup_completed", {
+                    "city": city,
+                    "state": state,
+                    "job_category": job_category,
+                    "commercial_scope": _is_commercial_scope(job_type, result),
+                    "confidence": result.get("confidence"),
+                    "needs_review": result.get("needs_review", False),
+                    "cached": is_cached,
+                    "paid": paid,
+                    "free_limit_remaining": result.get("remaining_lookups"),
+                }, user_email or "")
 
                 # No Telegram on lookups — only notify on paying customers
 
@@ -3600,6 +4493,10 @@ class Handler(BaseHTTPRequestHandler):
 
             except Exception as e:
                 print(f"[permit] Error: {e}")
+                try:
+                    record_beta_event("lookup_failed", {"error_type": type(e).__name__, "path": "/api/permit"})
+                except Exception:
+                    pass
                 import traceback; traceback.print_exc()
                 self.send_json(500, {"error": "Lookup failed — please try again"})
 
@@ -3621,9 +4518,16 @@ class Handler(BaseHTTPRequestHandler):
                     state = item.get("state", "")
                     zip_code = item.get("zip", "") or item.get("zip_code", "")
                     job_value = item.get("job_value")
+                    explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
                     try:
-                        result = research_permit(job_type, city, state, zip_code, job_value=job_value)
-                        return {
+                        evidence_enabled = get_local_evidence_pack() is not None
+                        result = research_permit(job_type, city, state, zip_code, job_value=job_value, use_cache=not evidence_enabled, suppress_cache_write=evidence_enabled)
+                        if evidence_enabled:
+                            result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical)
+                            response = dict(result)
+                            response.update({"job_type": job_type, "city": city, "state": state, "error": None})
+                            return response
+                        response = {
                             "job_type": job_type,
                             "city": city,
                             "state": state,
@@ -3639,6 +4543,7 @@ class Handler(BaseHTTPRequestHandler):
                             "rejection_patterns": result.get("rejection_patterns", []),
                             "error": None,
                         }
+                        return response
                     except Exception as e:
                         return {"job_type": job_type, "city": city, "state": state, "error": str(e)}
 
@@ -3661,6 +4566,65 @@ class Handler(BaseHTTPRequestHandler):
                     }
                 })
             except Exception as e:
+                self.send_json(500, {"error": str(e)})
+
+        # ── Beta telemetry / feedback / white-label report ─────────────────
+        elif path == "/api/beta-event":
+            try:
+                data = self.read_json_body()
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else ""
+                if not user_email:
+                    self.send_json(401, {"error": "login_required"})
+                    return
+                event = (data.get("event") or "client_event").strip()[:80]
+                payload = data.get("payload") if isinstance(data.get("payload"), dict) else data
+                record_beta_event(event, payload, user_email)
+                self.send_json(200, {"recorded": True})
+            except Exception as e:
+                print(f"[beta-event] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/beta-feedback":
+            try:
+                data = self.read_json_body()
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else ""
+                if not user_email:
+                    self.send_json(401, {"error": "login_required"})
+                    return
+                saved = save_beta_feedback(
+                    user_email,
+                    data.get("job_type", ""),
+                    data.get("city", ""),
+                    data.get("state", ""),
+                    data.get("useful", ""),
+                    data.get("knew_next_step", ""),
+                    data.get("missing", ""),
+                    data.get("ahj_confirmed", ""),
+                    data.get("use_again", ""),
+                )
+                self.send_json(200, saved)
+            except Exception as e:
+                print(f"[beta-feedback] Error: {e}")
+                self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/white-label-report":
+            try:
+                data = self.read_json_body()
+                session_token = self.headers.get("X-Session-Token", "")
+                user_email = validate_session_token(session_token) if session_token else ""
+                if not user_email:
+                    self.send_json(401, {"error": "login_required"})
+                    return
+                html_doc = _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", render_white_label_report_html(redact_public_output(data)))
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(html_doc.encode("utf-8"))
+            except Exception as e:
+                print(f"[white-label-report] Error: {e}")
                 self.send_json(500, {"error": str(e)})
 
         # ── Feedback ──────────────────────────────────────────────────────
@@ -3698,9 +4662,9 @@ class Handler(BaseHTTPRequestHandler):
 
                 notify_telegram(
                     f"⚠️ <b>Feedback — Possible Wrong Info</b>\n"
-                    f"Job: {job_type}\n"
-                    f"Location: {city}, {state}\n"
-                    f"Issue: {issue or '(no detail provided)'}"
+                    f"Job: {html.escape(job_type)}\n"
+                    f"Location: {html.escape(city)}, {html.escape(state)}\n"
+                    f"Issue: {html.escape(issue or '(no detail provided)')}"
                 )
 
                 print(f"[feedback] Flagged and cache cleared: {job_type} in {city}, {state}")
@@ -3827,9 +4791,10 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(403, {"error": "Paid plan required"})
                     return
                 data = self.read_json_body()
-                callback_url = str(data.get("callback_url", "")).strip()
-                if not callback_url.startswith("http"):
-                    self.send_json(400, {"error": "Valid callback_url required"})
+                try:
+                    callback_url = validate_webhook_callback_url(str(data.get("callback_url", "")).strip())
+                except ValueError as exc:
+                    self.send_json(400, {"error": str(exc)})
                     return
                 field_mapping = data.get("field_mapping") or {}
                 if isinstance(field_mapping, str):
@@ -3851,7 +4816,7 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 data = self.read_json_body()
                 run_webhook_lookup_async(integration, data)
-                self.send_json(202, {"accepted": True, "integration": integration.get("name") or "Webhook", "callback_url": data.get("callback_url") or integration.get("callback_url")})
+                self.send_json(202, {"accepted": True, "integration": integration.get("name") or "Webhook", "callback_url": integration.get("callback_url")})
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
@@ -3870,10 +4835,14 @@ class Handler(BaseHTTPRequestHandler):
                 state = data.get("state", "").strip()
                 zip_code = data.get("zip_code", "").strip()
                 job_category = data.get("job_category", "residential").strip() or "residential"
+                explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
-                result = research_permit(job_type, city, state, zip_code, job_category=job_category)
+                evidence_enabled = get_local_evidence_pack() is not None
+                result = research_permit(job_type, city, state, zip_code, job_category=job_category, use_cache=not evidence_enabled, suppress_cache_write=evidence_enabled)
+                if evidence_enabled:
+                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical)
                 self.send_json(200, result)
             except Exception as e:
                 print(f"[api-v1-permit] Error: {e}")
@@ -4221,8 +5190,8 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/process-onboarding-emails":
             try:
                 admin_token = self.headers.get("X-Admin-Token", "")
-                if ADMIN_TOKEN and admin_token != ADMIN_TOKEN:
-                    self.send_json(401, {"error": "Invalid admin token"})
+                if not ADMIN_TOKEN or not hmac.compare_digest(admin_token, ADMIN_TOKEN):
+                    self.send_json(401, {"error": "Admin token required"})
                     return
                 sent = process_onboarding_emails()
                 self.send_json(200, {"sent": sent, "status": "ok"})
@@ -4233,8 +5202,8 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/check-permit-reminders":
             try:
                 admin_token = self.headers.get("X-Admin-Token", "")
-                if ADMIN_TOKEN and admin_token != ADMIN_TOKEN:
-                    self.send_json(401, {"error": "Invalid admin token"})
+                if not ADMIN_TOKEN or not hmac.compare_digest(admin_token, ADMIN_TOKEN):
+                    self.send_json(401, {"error": "Admin token required"})
                     return
                 sent = process_permit_issued_reminders()
                 self.send_json(200, {"sent": sent, "status": "ok"})
@@ -4542,7 +5511,7 @@ if __name__ == "__main__":
 
 # ── Messenger Bot Helper ──────────────────────────────────────────────────────
 
-MESSENGER_PAGE_TOKEN = os.environ.get("FB_PAGE_TOKEN", "EAASqNZBDxbWcBRWNr7TqKGrVrweoAeZBmIsIvAHveRvDVH2AIQrWnobiQgBJhcb2lanZB8MemR8OWUfA5hwe35WjPlJrYxmrf67vpe65zv4u3kWKWlwu8XTLnSdZB3QdgCovdCr5zZCTRanfkwu1AvxZA11OHdtPN3dhPrelQj4aXYN0q2R9Q61i88OgjyQwhy46ezVlf4DgZDZD")
+MESSENGER_PAGE_TOKEN = os.environ.get("FB_PAGE_TOKEN")
 
 TRADE_LINKS = {
     "roof": ("roofing", "https://permitassist.io/roofing"),

@@ -1,0 +1,281 @@
+{
+  "job_summary": "Residential attached patio cover, 200 square feet, post-and-beam wood construction with lattice/solid roof framing, no electrical work. In Clark County/Las Vegas jurisdiction this triggers a Building Permit for the patio cover only. No separate electrical permit is triggered because the scope says no electrical.",
+  "total_cost_estimate": "$4,500 - $10,500",
+  "location": "Las Vegas, NV",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Residential Patio Cover",
+      "portal_selection": "Residential Patio Cover",
+      "required": true,
+      "notes": "Required for an attached 200 sf patio cover at a single-family residence. Clark County treats this as a building permit with plan review because it is attached to the house and includes posts/beams/roof framing."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Residential Patio Cover",
+      "included_because": "The job is an attached exterior structure over 200 sf, which is new construction and not ordinary repair. Attached patio covers require building permit review for footing, ledger/attachment, post sizing, beam sizing, and roof framing.",
+      "scope_trigger": "Attached 200 sf patio cover with post-and-beam framing"
+    }
+  ],
+  "applying_office": "Clark County Building Department / Southern Nevada Building Officials",
+  "apply_url": "https://www.clarkcountynv.gov/business/building/permits",
+  "apply_pdf": null,
+  "apply_phone": "Search Google Maps: Las Vegas NV building permit office",
+  "apply_address": "500 S Grand Central Pkwy, Las Vegas, NV 89155",
+  "apply_google_maps": "https://www.google.com/maps?q=500+S+Grand+Central+Pkwy,+Las+Vegas,+NV+89155",
+  "fee_range": "Fee Estimate: $60 issuance fee plus valuation-based building permit fee; for a 200 sf attached patio cover expect roughly $150 - $450 total permit cost depending on declared valuation and plan review — verify in https://www.lasvegasnevada.gov/Business/Permits-Licenses/Building-Permits/Permit-Fee-Estimator before quoting",
+  "approval_timeline": {
+    "simple": "Same day to 3 business days if over-the-counter review is accepted and plans are complete",
+    "complex": "1 to 2 weeks if plan review is required or if structural details need correction"
+  },
+  "inspections": [
+    {
+      "stage": "Footing / Post Base Inspection",
+      "description": "Inspector checks footing depth and size, soil bearing, post base anchorage, uplift resistance, and that posts are set plumb before concrete is covered.",
+      "timing": "Before pouring concrete or backfilling footings"
+    },
+    {
+      "stage": "Framing / Structural Inspection",
+      "description": "Inspector verifies ledger attachment to the house, beam and rafter sizing, connector hardware, lateral bracing, fastener schedule, and that the patio cover is built per approved plans.",
+      "timing": "After framing is complete but before any finish materials or concealment"
+    },
+    {
+      "stage": "Final Building Inspection",
+      "description": "Inspector checks completed structure, attachment to the dwelling, guard/clearance issues if any, roof/lattice installation, and that the work matches the approved permit set.",
+      "timing": "After all construction is complete"
+    }
+  ],
+  "inspection_booking": "Schedule inspections online through the Clark County building permit portal. Las Vegas-area inspections are typically booked with 2-3 day lead time, so do not wait until the day before you need the next phase. If you cannot book online, use the county building department contact listed on the permit portal and request the next available residential building inspection. Plan on at least 24 hours advance notice; 48 hours is safer for structural work.",
+  "license_required": "Licensed Nevada contractor pulls the permit on the homeowner's behalf — the contractor's license number must appear on the application. For owner-builder work, verify whether Clark County will allow the homeowner to pull the residential patio cover permit for this address before submitting.",
+  "city_contractor_registration": null,
+  "what_to_bring": [
+    "Completed residential patio cover permit application",
+    "Site plan showing the house, rear yard, property lines, and exact patio cover dimensions",
+    "Structural drawings or manufacturer details for posts, beams, rafters, connectors, and ledger attachment",
+    "Contractor license number and business information, or owner-builder information if allowed",
+    "Property address and parcel/APN information",
+    "Any HOA approval if the subdivision requires exterior architectural review"
+  ],
+  "common_mistakes": [
+    "Submitting the job as a generic building repair instead of a patio cover addition — Clark County will kick it back because this is new attached construction",
+    "Missing footing and ledger details on the plan set — inspectors will not approve a patio cover without load path and attachment information",
+    "Assuming no permit is needed because it is only 200 sf — attached patio covers still require a building permit in Clark County",
+    "Starting post holes or setting ledger boards before the permit is issued and posted — can trigger a stop-work order",
+    "Forgetting to verify whether the property is in City of Las Vegas or Clark County jurisdiction — strip and many surrounding areas are Clark County, not city permits"
+  ],
+  "pro_tips": [
+    "Bring a clean site plan with setbacks already marked; patio cover reviews go faster when the reviewer can see rear-yard clearance and property lines immediately",
+    "If the cover is attached to the house, include ledger flashing and connector callouts on the first submittal — missing attachment details are the most common delay",
+    "Check your Clark County contractor registration and license status before opening the portal; an expired registration can block the application even when the state license is current",
+    "Because this is a hot-desert jurisdiction, make sure the design accounts for sun exposure and uplift; inspectors pay close attention to structural attachment and bracing on patio covers"
+  ],
+  "code_citation": {
+    "section": "IRC R105.1",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish or change the occupancy of a building or structure..."
+  },
+  "companion_permits": [
+    {
+      "permit_type": "Electrical Permit",
+      "reason": "May be required if: new wiring, disconnect replacement, breaker/panel modification, or a new circuit is included.",
+      "certainty": "likely",
+      "required_if": "new wiring, disconnect replacement, breaker/panel modification, or a new circuit is included",
+      "requirement_label": "May be required based on scope"
+    }
+  ],
+  "zoning_hoa_flag": "Possible HOA and setback issues. Attached patio covers can be limited by rear-yard setbacks, easements, and subdivision architectural rules. If the property is in a planned community, HOA approval may be required before or after permit issuance. Verify whether the parcel is in Clark County or City of Las Vegas jurisdiction before applying.",
+  "sources": [
+    "https://www.clarkcountynv.gov/business/building",
+    "https://www.clarkcountynv.gov/business/building/permits",
+    "https://www.lasvegasnevada.gov/Business/Permits-Licenses/Building-Permits/Permit-Fee-Estimator",
+    "https://www.lasvegasnevada.gov/Business/Planning-Zoning/Building-Safety",
+    "https://files.lasvegasnevada.gov/planning/Title-19-Permissible-Uses.pdf"
+  ],
+  "confidence": "medium",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "maps_url": "https://www.google.com/maps?q=500+S+Grand+Central+Pkwy,+Las+Vegas,+NV+89155",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_field_sources": {
+    "apply_url": "city_kb",
+    "fee_range": "machine_extracted",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "apply_phone": "web_search",
+    "apply_address": "web_search",
+    "applying_office": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": false,
+  "missing_fields": [],
+  "confidence_reason": "City-specific match supported by live web research",
+  "_meta": {
+    "generated_at": "2026-04-28T21:00:46.323949",
+    "response_ms": 11125,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 6,
+    "city_match_level": "city",
+    "job_type": "Patio cover 200 sf attached to rear of house, lattice/solid wood post-and-beam, no electrical.",
+    "city": "Las Vegas",
+    "state": "NV",
+    "zip_code": "89118",
+    "job_category": "residential",
+    "auto_verified": false,
+    "missing_fields": []
+  },
+  "fee_source": {
+    "url": "https://www.lasvegasnevada.gov/Business/Permits-Licenses/Building-Permits/Permit-Fee-Estimator",
+    "title": "Permit Fee Estimator",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://www.lasvegasnevada.gov/Business/Planning-Zoning/Building-Safety",
+    "title": "Building & Safety - City of Las Vegas",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://files.lasvegasnevada.gov/planning/Title-19-Permissible-Uses.pdf",
+    "title": "[PDF] table of contents - chapter 19.04 permissible uses - City of Las Vegas",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://files.lasvegasnevada.gov/planning/Title-19-Permissible-Uses.pdf",
+    "title": "[PDF] table of contents - chapter 19.04 permissible uses - City of Las Vegas",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://files.lasvegasnevada.gov/planning/Title-19-Permissible-Uses.pdf",
+    "title": "[PDF] table of contents - chapter 19.04 permissible uses - City of Las Vegas",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 80,
+  "permit_ready_label": "Mostly ready — verify fees",
+  "permit_ready_missing": [
+    "permit office phone not found — call to verify"
+  ],
+  "_primary_scope": "residential",
+  "checklist": [
+    "Verify your contractor license is current and valid in NV",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Panel schedule showing existing and proposed circuits",
+    "Wire gauge and breaker size for each new circuit",
+    "Electrical diagram or one-line drawing (required for panel upgrades)",
+    "Utility disconnect location marked on plans",
+    "Confirm the required license is active and matches the application: Licensed Nevada contractor pulls the permit on the homeowner's behalf — the contractor's license number must appear on the application. For owner-builder work, verify whether Clark County will allow the homeowner to pull the residential patio cover permit for this address before submitting.",
+    "Bring 2 copies of all documents to Clark County Building Department / Southern Nevada Building Officials"
+  ],
+  "rejection_patterns": [],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "job_value": 6000,
+  "fee_calculator": {
+    "fee": 73.0,
+    "formula": "$40 base + $5.50/thousand of job value",
+    "confidence": "high",
+    "note": "Verify current fee schedule — rates may have changed"
+  },
+  "expert_notes": [
+    {
+      "title": "NSCB license classifications — A, B, and 42 C-subclasses",
+      "note": "The Nevada State Contractors Board issues licenses under three classes: Class A (General Engineering), Class B (General Building), and Classification C with 42 distinct subcontracting fields (e.g., C-2 Electrical, C-1 Plumbing, C-21 HVAC/Refrigeration). Per NRS 624.215, a contractor may only bid or contract within their licensed classification AND under their monetary limit — exceeding either voids contract enforceability and lien rights. Always print the license number and monetary limit on bids and contracts before submitting to the AHJ.",
+      "applies_to": "All paid construction work in Nevada requiring a contractor license",
+      "source": "https://www.nvcontractorsboard.com/licensing/license-classifications/"
+    },
+    {
+      "title": "NSCB Licensure by Endorsement — 4-year same-QI rule",
+      "note": "Out-of-state contractors can shortcut Nevada licensing via the Endorsement path, but only if they (1) hold an active license in the endorsing state with the SAME qualified individual for the past four years and (2) have not been investigated for misconduct. Switching the qualifying individual within those four years disqualifies the application and forces the full Nevada exam path. Confirm QI continuity in the endorsing state's records before filing the endorsement application.",
+      "applies_to": "Out-of-state contractors seeking to operate in Nevada",
+      "source": "https://www.nvcontractorsboard.com/licensing/licensure-by-endorsement/"
+    },
+    {
+      "title": "Statewide energy code — 2024 IECC adopted with March 12, 2025 revisions (NAC 701)",
+      "note": "The Governor's Office of Energy adopted the 2024 IECC as published effective August 18, 2024, then issued revisions on March 12, 2025 under NAC 701. Local jurisdictions adopt on their own schedules, so confirm which edition (and revision date) the AHJ is enforcing on the application date — drawings produced under the unrevised 2024 IECC may need envelope or mechanical updates before plan check accepts them.",
+      "applies_to": "All new construction and additions subject to Nevada energy code review",
+      "source": "https://www.energy.nv.gov/notices2/nac-701-building-energy-codes/"
+    },
+    {
+      "title": "Washoe County code transition — July 1, 2025 effective with Jan 1, 2026 cutoff",
+      "note": "In Washoe County (Reno/Sparks/unincorporated), the new code editions took effect July 1, 2025 with a transition window allowing in-flight projects to remain under the prior cycle through January 1, 2026. Submittals dated on or after Jan 1, 2026 must comply fully with the new editions; partial submissions made before the cutoff should be tracked carefully because the AHJ can require resubmission under the newer code if the application goes stale.",
+      "applies_to": "Permit applications in Washoe County crossing the 2026-01-01 cutoff",
+      "source": "https://snarsca.com/blog/iecc-adoption-and-its-affects-on-las-vegas-contractors/"
+    },
+    {
+      "title": "Southern Nevada Energy Conservation Code 2024 — effective January 11, 2026",
+      "note": "Clark County and the Southern Nevada code-coordinated jurisdictions adopted the S. NV Energy Conservation Code 2024 (built on the 2024 IECC) effective January 11, 2026. The Southern Nevada Amendments are published separately from the IECC base text and modify mechanical, envelope, and rating-index sections — verify drawings reference the Southern Nevada amended sections, not the unamended IECC, for any Clark County project.",
+      "applies_to": "Permits in Clark County and coordinated Southern Nevada jurisdictions",
+      "source": "https://up.codes/viewer/clark-nevada/s-nv-energy-conservation-code-2024"
+    },
+    {
+      "title": "Southern Nevada HERS® Index (ERI) compliance path — Section 406 amendment",
+      "note": "All Southern Nevada code jurisdictions amended Section 406 to accept a HERS Index / Energy Rating Index option as an alternative compliance path to prescriptive or performance methods. This is significant for builders who can't easily meet prescriptive envelope U-values — a third-party HERS rater can certify ERI compliance instead. Confirm the rater is RESNET-certified and that the AHJ accepts the ERI target in effect at the application date.",
+      "applies_to": "Residential energy compliance in Clark County and Southern Nevada jurisdictions",
+      "source": "https://www.resnet.us/articles/southern-nv-code-jurisdictions-accept-a-hers-index-option-to-energy-code/"
+    },
+    {
+      "title": "No unified statewide residential building code — local AHJ controls",
+      "note": "Nevada has statewide baseline codes enforced by the State Fire Marshal, but residential building permits for 1- and 2-family homes are handled entirely by local city and county building departments. This means there is no single state-issued residential permit; you must identify the correct AHJ (incorporated city OR unincorporated county) for each parcel and follow that jurisdiction's adopted code edition and amendments — they often differ between Clark, Washoe, and rural counties.",
+      "applies_to": "All residential permit scoping in Nevada",
+      "source": "https://permitsguide.com/nevada"
+    },
+    {
+      "title": "City-or-county jurisdiction split under NRS Chapter 278",
+      "note": "Under NRS 278 (Planning and Zoning), a parcel falls under the jurisdiction of the incorporated city OR the surrounding county, not both — overlap is rare and limited to specific extraterritorial agreements. Pull the parcel's APN from the county assessor and confirm whether it sits inside city limits before filing; submitting to the wrong AHJ is a common cause of weeks of delay because the receiving jurisdiction cannot transfer the application — it must be refiled.",
+      "applies_to": "Determining the correct permitting AHJ for any Nevada parcel",
+      "source": "https://www.leg.state.nv.us/nrs/nrs-278.html"
+    },
+    {
+      "title": "State Public Works Division iWorQ portal — state-owned projects only",
+      "note": "Construction on state-owned land or state buildings is permitted through the State Public Works Division (SPWD) via the iWorQ portal, NOT through local city/county building departments. SPWD reviews against the codes adopted for state facilities, which can lag local adoption. Private residential and commercial work never goes through SPWD; routing a private project to iWorQ will be rejected and you'll lose the filing window.",
+      "applies_to": "Construction on State of Nevada-owned property and state facilities",
+      "source": "https://publicworks.nv.gov/uploadedFiles/publicworksnvgov/content/Services/Permitting_Code_Enforcement/Permitting%20%20Code%20Enforcement%20Process.pdf"
+    },
+    {
+      "title": "Floodplain management — NFIP coordination via Nevada Division of Water Resources",
+      "note": "Nevada Division of Water Resources runs the state's floodplain management program in coordination with FEMA's National Flood Insurance Program; local jurisdictions adopt floodplain ordinances to remain NFIP-eligible. Before designing in or near a SFHA (Zone A/AE/AO/X-shaded), confirm the adopted base flood elevation, finished-floor freeboard requirement, and whether a CLOMR/LOMR will be required — many Nevada AHJs require finished floor at BFE+1 ft or higher and reject drawings without an elevation certificate at final.",
+      "applies_to": "Construction within FEMA Special Flood Hazard Areas in Nevada",
+      "source": "https://water.nv.gov/index.php/programs/floodplain-management"
+    },
+    {
+      "title": "Water rights and federal-lands coordination — State Engineer per NRS 328",
+      "note": "Per NRS 328.120, the State Engineer (within the Division of Water Resources) provides technical advice on water rights, reclamation, flood control, and watershed protection — and water rights are required separately from the building permit for new wells, surface diversions, or changes of use. On parcels adjacent to or crossing BLM/federal land, the project may also need a federal right-of-way or special-use authorization that runs in parallel with the local building permit and often takes longer than the construction permit itself.",
+      "applies_to": "Projects requiring water rights or touching federal lands in Nevada",
+      "source": "https://www.leg.state.nv.us/nrs/NRS-328.html"
+    },
+    {
+      "title": "Clark County plan-review timing tiers — 7-day commercial path requires <$100k valuation",
+      "note": "Clark County operates tiered plan-review timelines: the Commercial 7-Day expedited path requires prior Zoning approval AND a project valuation under $100,000; everything else falls into Residential Minor, Standard Plan, or full Commercial review with longer queues. Inflate the valuation to be safe and you knock yourself out of the 7-day track — itemize labor and materials honestly to stay eligible, and have the Zoning sign-off in hand before submitting to plan review.",
+      "applies_to": "Clark County commercial and residential plan submittals",
+      "source": "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/plan_review/plan-review-timelines"
+    },
+    {
+      "title": "Northern Nevada amendments to the 2024 IECC — Elko County and rural N. NV",
+      "note": "Northern/rural counties (Elko County and the Northern Nevada code-coordinated jurisdictions) adopted their own amendments to the 2024 IECC for residential energy efficiency. These amendments diverge from the Southern Nevada amendment package, so envelope assemblies, mechanical efficiencies, and duct-leakage targets that pass Clark County plan check may fail in Elko or vice versa. Pull the local amendment PDF for the specific AHJ and check it against the drawings before submission.",
+      "applies_to": "Residential energy compliance in Elko County and Northern Nevada jurisdictions",
+      "source": "https://www.elkocountynv.gov/calendar_app/departments/Building%20&%20Safety/2024%20Elko%20County%20Amendments.pdf?t=202601291912310"
+    },
+    {
+      "title": "Architect/residential-designer notification under NRS 278.589",
+      "note": "NRS 278.589 requires the city or county building official to notify the State Board of Architecture, Interior Design and Residential Design when certain plan submittals are made — this is the mechanism by which the Board polices unlicensed practice of architecture/residential design on Nevada permits. Plans submitted by an unlicensed designer for projects that exceed the residential-designer scope can trigger a Board complaint and stall the permit; confirm the designer's NSBAIDRD credentials and stamp authority before submission.",
+      "applies_to": "Permit submittals using stamped or designer-prepared drawings in Nevada",
+      "source": "https://www.leg.state.nv.us/nrs/nrs-278.html"
+    }
+  ],
+  "hidden_triggers": [],
+  "_fee_floor_check": "residential_no_override"
+}

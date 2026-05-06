@@ -1,9 +1,10 @@
 {
   "_meta": {
-    "version": "v1.0.0",
+    "version": "v1.1.0",
     "created": "2026-04-28",
     "purpose": "Locked test scenarios for PermitAssist engine quality evaluation. Run via scripts/run_eval.py to grade live prod responses against deterministic rubrics. Each case scores 0-100 based on rubric checks; aggregate is the engine's score.",
-    "notes": "Cases mirror the 4-city Opus 4.7 review baselines (LA Hillside ADU, Phoenix restaurant TI, Vegas restaurant TI, Seattle restaurant TI) plus the 10-scenario Opus 4.7 grading sweep. Cache-bust suffix appended to job_type at runtime."
+    "notes": "Cases mirror the 4-city Opus 4.7 review baselines (LA Hillside ADU, Phoenix restaurant TI, Vegas restaurant TI, Seattle restaurant TI) plus the 10-scenario Opus 4.7 grading sweep. Cache-bust suffix appended to job_type at runtime. Expanded for commercial vertical launch readiness: restaurant TI, medical/dental clinic TI, office TI, retail/change-of-use, and residential controls.",
+    "updated": "2026-05-01"
   },
   "cases": [
     {
@@ -18,12 +19,41 @@
         "must_apply_url_not_match": "(cslb\\.ca\\.gov|tdlr\\.|dbpr\\.|pw\\.lacounty\\.gov|kauffman|archive\\.org)",
         "must_primary_scope": "residential_adu",
         "permits_min": 4,
-        "must_sources_match_any": ["ladbs.org", "lacity.gov", "dbs.lacity.gov"],
-        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "huduser.gov", "dublin.ca.gov", "cstx.gov", "pw.lacounty.gov"],
-        "must_checklist_contain_any": ["egress window", "smoke + co", "title 24", "fire-rated", "title-24", "smoke and co"],
-        "must_checklist_not_contain": ["joist hanger", "ledger flash", "frost line", "ahri cert", "duct mastic"],
+        "must_sources_match_any": [
+          "ladbs.org",
+          "lacity.gov",
+          "dbs.lacity.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov",
+          "dublin.ca.gov",
+          "cstx.gov",
+          "pw.lacounty.gov"
+        ],
+        "must_checklist_contain_any": [
+          "egress window",
+          "smoke + co",
+          "title 24",
+          "fire-rated",
+          "title-24",
+          "smoke and co"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "ledger flash",
+          "frost line",
+          "ahri cert",
+          "duct mastic"
+        ],
         "must_hidden_triggers_min": 4,
-        "must_hidden_trigger_ids_any": ["la_hillside_adu_slope_grading_soils_geology", "la_hillside_adu_protected_tree_arborist", "adu_bathroom_legalization_as_built_permit_history"],
+        "must_hidden_trigger_ids_any": [
+          "la_hillside_adu_slope_grading_soils_geology",
+          "la_hillside_adu_protected_tree_arborist",
+          "adu_bathroom_legalization_as_built_permit_history"
+        ],
         "must_fee_min": 12000,
         "must_fee_max": 60000,
         "must_validation_no_placeholder": true
@@ -41,12 +71,39 @@
         "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|nyc\\.gov)",
         "must_primary_scope": "commercial_restaurant",
         "permits_min": 4,
-        "must_sources_match_any": ["phoenix.gov", "accela.com/PHOENIX", "roc.az.gov"],
-        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "huduser.gov", "nyc.gov", "ncjrs.gov"],
-        "must_checklist_contain_any": ["nfpa 96", "type i hood", "ansul", "grease interceptor", "ipc 1003"],
-        "must_checklist_not_contain": ["joist hanger", "ledger flash", "frost line", "guardrail balust", "deck footing"],
+        "must_sources_match_any": [
+          "phoenix.gov",
+          "accela.com/PHOENIX",
+          "roc.az.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov",
+          "nyc.gov",
+          "ncjrs.gov"
+        ],
+        "must_checklist_contain_any": [
+          "nfpa 96",
+          "type i hood",
+          "ansul",
+          "grease interceptor",
+          "ipc 1003"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "ledger flash",
+          "frost line",
+          "guardrail balust",
+          "deck footing"
+        ],
         "must_hidden_triggers_min": 6,
-        "must_hidden_trigger_ids_any": ["phoenix_restaurant_hood_fire_suppression", "phoenix_restaurant_b_to_a2_sprinkler_change_of_occupancy", "maricopa_restaurant_food_establishment_plan_review"],
+        "must_hidden_trigger_ids_any": [
+          "phoenix_restaurant_hood_fire_suppression",
+          "phoenix_restaurant_b_to_a2_sprinkler_change_of_occupancy",
+          "maricopa_restaurant_food_establishment_plan_review"
+        ],
         "must_fee_min": 15000,
         "must_fee_max": 200000,
         "must_fee_adjusted": true,
@@ -65,11 +122,31 @@
         "must_apply_url_not_match": "(cslb\\.ca\\.gov|tdlr\\.|dbpr\\.|kauffman|archive\\.org|southpasadena)",
         "must_primary_scope": "residential",
         "permits_min": 1,
-        "must_sources_match_any": ["pasadena", "cslb.ca.gov", "energy.ca.gov"],
-        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "huduser.gov", "southpasadenaca.gov"],
-        "must_checklist_contain_any": ["rapid shutdown", "nec 690", "nec 705", "nec 706", "ufc"],
+        "must_sources_match_any": [
+          "pasadena",
+          "cslb.ca.gov",
+          "energy.ca.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov",
+          "southpasadenaca.gov"
+        ],
+        "must_checklist_contain_any": [
+          "rapid shutdown",
+          "nec 690",
+          "nec 705",
+          "nec 706",
+          "ufc"
+        ],
         "must_hidden_triggers_min": 2,
-        "must_hidden_trigger_ids_any": ["solar_pv_rapid_shutdown_pto_interconnection", "ess_battery_nfpa_855", "panel_upgrade_service_load_calc_utility_coordination"],
+        "must_hidden_trigger_ids_any": [
+          "solar_pv_rapid_shutdown_pto_interconnection",
+          "ess_battery_nfpa_855",
+          "panel_upgrade_service_load_calc_utility_coordination"
+        ],
         "must_fee_max": 100000,
         "must_validation_no_placeholder": true
       }
@@ -86,9 +163,20 @@
         "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org)",
         "must_primary_scope": "residential",
         "permits_min": 1,
-        "must_sources_match_any": ["austintexas.gov", "tdlr.texas.gov"],
-        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org"],
-        "must_checklist_not_contain": ["joist hanger", "ledger flash", "frost line"],
+        "must_sources_match_any": [
+          "austintexas.gov",
+          "tdlr.texas.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "ledger flash",
+          "frost line"
+        ],
         "must_fee_max": 5000,
         "must_validation_no_placeholder": true
       }
@@ -105,10 +193,32 @@
         "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org)",
         "must_primary_scope": "commercial_office_ti",
         "permits_min": 3,
-        "must_sources_match_any": ["chicago.gov", "cityofchicago.org"],
-        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "saratoga.ca.us", "dublin.ca.gov"],
-        "must_checklist_contain_any": ["ada", "demising", "iecc c405", "ibc 706", "fire-rated", "demising wall"],
-        "must_checklist_not_contain": ["joist hanger", "type i hood", "grease interceptor", "frost line", "ansul"],
+        "must_sources_match_any": [
+          "chicago.gov",
+          "cityofchicago.org"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "saratoga.ca.us",
+          "dublin.ca.gov"
+        ],
+        "must_checklist_contain_any": [
+          "ada",
+          "demising",
+          "iecc c405",
+          "ibc 706",
+          "fire-rated",
+          "demising wall"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "type i hood",
+          "grease interceptor",
+          "frost line",
+          "ansul"
+        ],
         "must_hidden_triggers_min": 3,
         "must_fee_min": 5000,
         "must_fee_max": 100000,
@@ -128,10 +238,35 @@
         "must_apply_url_not_match": "(saratoga\\.ca\\.us|dublin\\.ca\\.gov|cstx\\.gov|opendata\\.utah)",
         "must_primary_scope": "multifamily",
         "permits_min": 3,
-        "must_sources_match_any": ["denvergov.org", "denver", "colorado.gov"],
-        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "saratoga.ca.us", "dublin.ca.gov", "cstx.gov", "opendata.utah.gov", "coloradocoalition.org"],
-        "must_checklist_contain_any": ["nfpa 13r", "type b accessible", "ibc 706", "type iiia", "podium", "ibc 1107"],
-        "must_checklist_not_contain": ["type i hood", "grease interceptor", "joist hanger", "frost line"],
+        "must_sources_match_any": [
+          "denvergov.org",
+          "denver",
+          "colorado.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "saratoga.ca.us",
+          "dublin.ca.gov",
+          "cstx.gov",
+          "opendata.utah.gov",
+          "coloradocoalition.org"
+        ],
+        "must_checklist_contain_any": [
+          "nfpa 13r",
+          "type b accessible",
+          "ibc 706",
+          "type iiia",
+          "podium",
+          "ibc 1107"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "frost line"
+        ],
         "must_hidden_triggers_min": 3,
         "must_fee_min": 25000,
         "must_fee_max": 1000000,
@@ -151,10 +286,31 @@
         "must_apply_url_not_match": "(tdlr\\.texas\\.gov|cslb\\.|kauffman)",
         "must_primary_scope": "commercial_retail_ti",
         "permits_min": 3,
-        "must_sources_match_any": ["houstontx.gov", "houstonpermittingcenter", "houston"],
-        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "tdlr.texas.gov"],
-        "must_checklist_contain_any": ["ibc 2406", "safety glazing", "ibc 706", "demising", "accessible", "ibc 1004"],
-        "must_checklist_not_contain": ["type i hood", "grease interceptor", "joist hanger", "frost line"],
+        "must_sources_match_any": [
+          "houstontx.gov",
+          "houstonpermittingcenter",
+          "houston"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "tdlr.texas.gov"
+        ],
+        "must_checklist_contain_any": [
+          "ibc 2406",
+          "safety glazing",
+          "ibc 706",
+          "demising",
+          "accessible",
+          "ibc 1004"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "frost line"
+        ],
         "must_hidden_triggers_min": 2,
         "must_fee_min": 4000,
         "must_fee_max": 60000,
@@ -174,10 +330,28 @@
         "must_apply_url_not_match": "(cslb\\.|tdlr\\.|kauffman|archive\\.org)",
         "must_primary_scope": "residential",
         "permits_min": 1,
-        "must_sources_match_any": ["miami", "miamidade.gov", "myfloridalicense.com"],
-        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org"],
-        "must_checklist_contain_any": ["hvhz", "noa", "secondary water", "hurricane", "drip edge", "wind"],
-        "must_checklist_not_contain": ["type i hood", "grease interceptor"],
+        "must_sources_match_any": [
+          "miami",
+          "miamidade.gov",
+          "myfloridalicense.com"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org"
+        ],
+        "must_checklist_contain_any": [
+          "hvhz",
+          "noa",
+          "secondary water",
+          "hurricane",
+          "drip edge",
+          "wind"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor"
+        ],
         "must_fee_max": 5000,
         "must_validation_no_placeholder": true
       }
@@ -194,10 +368,27 @@
         "must_apply_url_not_match": "(cslb\\.|tdlr\\.|kauffman|archive\\.org)",
         "must_primary_scope": "residential_adu",
         "permits_min": 3,
-        "must_sources_match_any": ["seattle.gov", "sdci"],
-        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "developer.accela.com"],
-        "must_checklist_contain_any": ["egress", "smoke", "fire-rated", "wsec", "title 24"],
-        "must_checklist_not_contain": ["type i hood", "grease interceptor"],
+        "must_sources_match_any": [
+          "seattle.gov",
+          "sdci"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "developer.accela.com"
+        ],
+        "must_checklist_contain_any": [
+          "egress",
+          "smoke",
+          "fire-rated",
+          "wsec",
+          "title 24"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor"
+        ],
         "must_hidden_triggers_min": 1,
         "must_fee_min": 8000,
         "must_fee_max": 60000,
@@ -215,14 +406,1537 @@
         "must_apply_url_match": "(portland\\.gov|portlandoregon\\.gov|portlandmaps|bds)",
         "must_apply_url_not_match": "(cslb\\.|tdlr\\.|kauffman|archive\\.org)",
         "permits_min": 3,
-        "must_sources_match_any": ["portland", "oregon.gov"],
-        "must_sources_not_match_any": ["kauffman.org", "ojp.gov", "archive.org", "appeal_id="],
-        "must_checklist_contain_any": ["iebc", "change of occupancy", "ibc", "ada", "egress"],
-        "must_checklist_not_contain": ["joist hanger", "frost line"],
+        "must_sources_match_any": [
+          "portland",
+          "oregon.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "appeal_id="
+        ],
+        "must_checklist_contain_any": [
+          "iebc",
+          "change of occupancy",
+          "ibc",
+          "ada",
+          "egress"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "frost line"
+        ],
         "must_hidden_triggers_min": 1,
         "must_fee_min": 6000,
         "must_fee_max": 200000,
         "must_validation_no_placeholder": true
+      }
+    },
+    {
+      "id": "chicago_restaurant_ti",
+      "category": "commercial",
+      "scope": "commercial_restaurant",
+      "job_type": "2800 sqft restaurant tenant improvement with Type I hood, grease interceptor, new restrooms, fire alarm, and change of occupancy to assembly use",
+      "city": "Chicago",
+      "state": "IL",
+      "rubric": {
+        "must_apply_url_match": "(chicago\\.gov|cityofchicago|ipiweb)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_restaurant",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "chicago.gov",
+          "cityofchicago.org"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "type i hood",
+          "grease interceptor",
+          "health",
+          "fire",
+          "ada"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "frost line",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 5,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 12000,
+        "must_fee_max": 250000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "austin_restaurant_ti",
+      "category": "commercial",
+      "scope": "commercial_restaurant",
+      "job_type": "2400 sqft restaurant buildout with commercial kitchen hood, grease interceptor, patio seating, plumbing, electrical, and health department review",
+      "city": "Austin",
+      "state": "TX",
+      "rubric": {
+        "must_apply_url_match": "(austintexas\\.gov|abc\\.austintexas\\.gov|austin\\.gov)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_restaurant",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "austintexas.gov",
+          "austin.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "type i hood",
+          "grease interceptor",
+          "health",
+          "fire",
+          "ada"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "frost line",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 5,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 12000,
+        "must_fee_max": 250000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "denver_restaurant_ti",
+      "category": "commercial",
+      "scope": "commercial_restaurant",
+      "job_type": "3100 sqft restaurant tenant finish with Type I hood, ANSUL fire suppression, grease waste, ADA restroom changes, and liquor-service dining area",
+      "city": "Denver",
+      "state": "CO",
+      "rubric": {
+        "must_apply_url_match": "(denvergov\\.org|accela\\.com/denver|denver)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_restaurant",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "denvergov.org",
+          "denver"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "type i hood",
+          "grease interceptor",
+          "health",
+          "fire",
+          "ada"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "frost line",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 5,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 12000,
+        "must_fee_max": 250000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "seattle_restaurant_ti",
+      "category": "commercial",
+      "scope": "commercial_restaurant",
+      "job_type": "1800 sqft restaurant TI with commercial kitchen, hood suppression, grease interceptor, walk-in cooler electrical, and seating layout changes",
+      "city": "Seattle",
+      "state": "WA",
+      "rubric": {
+        "must_apply_url_match": "(seattle\\.gov|cosaccela\\.seattle|sdci)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_restaurant",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "seattle.gov",
+          "sdci"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "type i hood",
+          "grease interceptor",
+          "health",
+          "fire",
+          "ada"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "frost line",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 5,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 12000,
+        "must_fee_max": 250000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "los_angeles_restaurant_ti",
+      "category": "commercial",
+      "scope": "commercial_restaurant",
+      "job_type": "3500 sqft restaurant tenant improvement in existing retail shell with commercial hood, grease interceptor, health plan check, fire sprinkler modifications",
+      "city": "Los Angeles",
+      "state": "CA",
+      "rubric": {
+        "must_apply_url_match": "(ladbs|lacity|dbs\\.lacity)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_restaurant",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "ladbs.org",
+          "lacity.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "type i hood",
+          "grease interceptor",
+          "health",
+          "fire",
+          "ada"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "frost line",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 5,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 12000,
+        "must_fee_max": 250000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "phoenix_restaurant_ti_deep",
+      "category": "commercial",
+      "scope": "commercial_restaurant",
+      "job_type": "4200 sqft restaurant conversion from mercantile to A-2 with Type I hood, grease interceptor, fire alarm, patio, and ADA upgrades",
+      "city": "Phoenix",
+      "state": "AZ",
+      "rubric": {
+        "must_apply_url_match": "(phoenix\\.gov|accela\\.com/PHOENIX|shapephx)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_restaurant",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "phoenix.gov",
+          "accela.com/PHOENIX"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "type i hood",
+          "grease interceptor",
+          "health",
+          "fire",
+          "ada"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "frost line",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 5,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 12000,
+        "must_fee_max": 250000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "portland_restaurant_change_use",
+      "category": "commercial",
+      "scope": "commercial_restaurant",
+      "job_type": "convert 2200 sqft cafe into full-service restaurant with Type I hood, grease interceptor, change of occupancy, and restroom accessibility work",
+      "city": "Portland",
+      "state": "OR",
+      "rubric": {
+        "must_apply_url_match": "(portland\\.gov|portlandoregon\\.gov|portlandmaps|bds)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_restaurant",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "portland.gov",
+          "oregon.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "type i hood",
+          "grease interceptor",
+          "health",
+          "fire",
+          "ada"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "frost line",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 5,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 12000,
+        "must_fee_max": 250000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "atlanta_restaurant_ti",
+      "category": "commercial",
+      "scope": "commercial_restaurant",
+      "job_type": "restaurant tenant buildout with hood, suppression, grease trap, fire alarm modification, outdoor patio railing, and health department food-service review",
+      "city": "Atlanta",
+      "state": "GA",
+      "rubric": {
+        "must_apply_url_match": "(atlanta|atlantaga\\.gov|aca-prod\\.accela)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_restaurant",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "atlantaga.gov",
+          "atlanta"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "type i hood",
+          "grease interceptor",
+          "health",
+          "fire",
+          "ada"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "frost line",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 5,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 12000,
+        "must_fee_max": 250000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "philadelphia_restaurant_ti",
+      "category": "commercial",
+      "scope": "commercial_restaurant",
+      "job_type": "restaurant fit-out in first-floor commercial space with kitchen hood, grease interceptor, change in use, sprinkler heads, and signs",
+      "city": "Philadelphia",
+      "state": "PA",
+      "rubric": {
+        "must_apply_url_match": "(phila\\.gov|eclipse|atlas\\.phila)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_restaurant",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "phila.gov",
+          "philadelphia"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "type i hood",
+          "grease interceptor",
+          "health",
+          "fire",
+          "ada"
+        ],
+        "must_checklist_not_contain": [
+          "joist hanger",
+          "frost line",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 5,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 12000,
+        "must_fee_max": 250000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "cambridge_medical_clinic_ti",
+      "category": "commercial",
+      "scope": "commercial_medical_clinic_ti",
+      "job_type": "medical clinic tenant improvement with exam rooms, sinks, accessible reception, x-ray room shielding, medical gas, and fire alarm notification updates",
+      "city": "Cambridge",
+      "state": "MA",
+      "rubric": {
+        "must_apply_url_match": "(cambridgema\\.gov|cambridge|energov)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_medical_clinic_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "cambridgema.gov",
+          "cambridge"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "exam room",
+          "medical gas",
+          "x-ray",
+          "accessible",
+          "fire alarm",
+          "sink"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 4,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 9000,
+        "must_fee_max": 180000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "boston_dental_clinic_ti",
+      "category": "commercial",
+      "scope": "commercial_medical_clinic_ti",
+      "job_type": "dental clinic tenant improvement with operatories, nitrous oxide/oxygen lines, sterilization room, compressor/vacuum equipment, plumbing, and accessibility upgrades",
+      "city": "Boston",
+      "state": "MA",
+      "rubric": {
+        "must_apply_url_match": "(boston\\.gov|boston)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_medical_clinic_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "boston.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "exam room",
+          "medical gas",
+          "x-ray",
+          "accessible",
+          "fire alarm",
+          "sink"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 4,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 9000,
+        "must_fee_max": 180000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "san_diego_medical_office_ti",
+      "category": "commercial",
+      "scope": "commercial_medical_clinic_ti",
+      "job_type": "medical office tenant improvement with exam rooms, handwashing sinks, lab area, mechanical ventilation, accessible restroom, and fire-life-safety review",
+      "city": "San Diego",
+      "state": "CA",
+      "rubric": {
+        "must_apply_url_match": "(sandiego\\.gov|opendsd|sandiego)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_medical_clinic_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "sandiego.gov",
+          "sandiego"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "exam room",
+          "medical gas",
+          "x-ray",
+          "accessible",
+          "fire alarm",
+          "sink"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 4,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 9000,
+        "must_fee_max": 180000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "minneapolis_clinic_ti",
+      "category": "commercial",
+      "scope": "commercial_medical_clinic_ti",
+      "job_type": "outpatient clinic buildout in commercial suite with exam rooms, med gas storage closet, reception counter accessibility, plumbing and mechanical changes",
+      "city": "Minneapolis",
+      "state": "MN",
+      "rubric": {
+        "must_apply_url_match": "(minneapolismn\\.gov|minneapolis)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_medical_clinic_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "minneapolismn.gov",
+          "minneapolis"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "exam room",
+          "medical gas",
+          "x-ray",
+          "accessible",
+          "fire alarm",
+          "sink"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 4,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 9000,
+        "must_fee_max": 180000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "charlotte_medical_clinic_ti",
+      "category": "commercial",
+      "scope": "commercial_medical_clinic_ti",
+      "job_type": "medical clinic tenant upfit with exam rooms, sinks, electrical equipment, fire alarm strobes, accessibility path of travel, and possible health-care licensing review",
+      "city": "Charlotte",
+      "state": "NC",
+      "rubric": {
+        "must_apply_url_match": "(charlottenc\\.gov|mecknc\\.gov|mecklenburg)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_medical_clinic_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "charlottenc.gov",
+          "mecknc.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "exam room",
+          "medical gas",
+          "x-ray",
+          "accessible",
+          "fire alarm",
+          "sink"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 4,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 9000,
+        "must_fee_max": 180000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "austin_dental_clinic_ti",
+      "category": "commercial",
+      "scope": "commercial_medical_clinic_ti",
+      "job_type": "dental clinic tenant finish with operatories, nitrous lines, vacuum/compressor equipment, plumbing fixtures, accessibility upgrades, and radiation room",
+      "city": "Austin",
+      "state": "TX",
+      "rubric": {
+        "must_apply_url_match": "(austintexas\\.gov|abc\\.austintexas\\.gov|austin\\.gov)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_medical_clinic_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "austintexas.gov",
+          "austin.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "exam room",
+          "medical gas",
+          "x-ray",
+          "accessible",
+          "fire alarm",
+          "sink"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 4,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 9000,
+        "must_fee_max": 180000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "phoenix_medical_clinic_ti",
+      "category": "commercial",
+      "scope": "commercial_medical_clinic_ti",
+      "job_type": "urgent care clinic tenant improvement with exam rooms, x-ray shielding, medical gas, fire alarm, accessibility, and MEP work",
+      "city": "Phoenix",
+      "state": "AZ",
+      "rubric": {
+        "must_apply_url_match": "(phoenix\\.gov|accela\\.com/PHOENIX|shapephx)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_medical_clinic_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "phoenix.gov",
+          "accela.com/PHOENIX"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "exam room",
+          "medical gas",
+          "x-ray",
+          "accessible",
+          "fire alarm",
+          "sink"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 4,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 9000,
+        "must_fee_max": 180000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "denver_medical_clinic_ti",
+      "category": "commercial",
+      "scope": "commercial_medical_clinic_ti",
+      "job_type": "medical clinic tenant finish with exam rooms, sinks, accessible toilet rooms, ventilation, fire alarm notification appliances, and clinic equipment utilities",
+      "city": "Denver",
+      "state": "CO",
+      "rubric": {
+        "must_apply_url_match": "(denvergov\\.org|accela\\.com/denver|denver)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_medical_clinic_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "denvergov.org",
+          "denver"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "exam room",
+          "medical gas",
+          "x-ray",
+          "accessible",
+          "fire alarm",
+          "sink"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 4,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 9000,
+        "must_fee_max": 180000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "seattle_medical_clinic_ti",
+      "category": "commercial",
+      "scope": "commercial_medical_clinic_ti",
+      "job_type": "clinic tenant improvement with exam rooms, lab sink, ventilation changes, accessibility upgrades, fire alarm work, and medical equipment electrical loads",
+      "city": "Seattle",
+      "state": "WA",
+      "rubric": {
+        "must_apply_url_match": "(seattle\\.gov|cosaccela\\.seattle|sdci)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_medical_clinic_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "seattle.gov",
+          "sdci"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "exam room",
+          "medical gas",
+          "x-ray",
+          "accessible",
+          "fire alarm",
+          "sink"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 4,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 9000,
+        "must_fee_max": 180000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "miami_medical_clinic_ti",
+      "category": "commercial",
+      "scope": "commercial_medical_clinic_ti",
+      "job_type": "medical clinic buildout with exam rooms, ADA restroom, x-ray equipment, plumbing, mechanical ventilation, fire alarm, and state health-care review",
+      "city": "Miami",
+      "state": "FL",
+      "rubric": {
+        "must_apply_url_match": "(miamigov|miami\\.gov|miamidade)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_medical_clinic_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 4,
+        "must_sources_match_any": [
+          "miami",
+          "miamidade.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "exam room",
+          "medical gas",
+          "x-ray",
+          "accessible",
+          "fire alarm",
+          "sink"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "residential"
+        ],
+        "must_hidden_triggers_min": 4,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 9000,
+        "must_fee_max": 180000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "denver_office_ti_deep",
+      "category": "commercial",
+      "scope": "commercial_office_ti",
+      "job_type": "office tenant improvement with demising walls, conference rooms, lighting controls, data cabling, HVAC diffuser relocation, fire alarm strobes, and ADA restroom upgrades",
+      "city": "Denver",
+      "state": "CO",
+      "rubric": {
+        "must_apply_url_match": "(denvergov\\.org|accela\\.com/denver|denver)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_office_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "denvergov.org",
+          "denver"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "demising",
+          "lighting controls",
+          "data",
+          "sprinkler",
+          "accessibility",
+          "hvac"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "frost line"
+        ],
+        "must_hidden_triggers_min": 3,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 5000,
+        "must_fee_max": 120000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "houston_office_ti",
+      "category": "commercial",
+      "scope": "commercial_office_ti",
+      "job_type": "commercial office TI with new partitions, ceiling grid, lighting controls, low-voltage cabling, sprinkler head relocation, and accessible reception counter",
+      "city": "Houston",
+      "state": "TX",
+      "rubric": {
+        "must_apply_url_match": "(houstonpermittingcenter|houstontx\\.gov|harriscountytx)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_office_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "houstontx.gov",
+          "houstonpermittingcenter"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "demising",
+          "lighting controls",
+          "data",
+          "sprinkler",
+          "accessibility",
+          "hvac"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "frost line"
+        ],
+        "must_hidden_triggers_min": 3,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 5000,
+        "must_fee_max": 120000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "dallas_office_ti_deep",
+      "category": "commercial",
+      "scope": "commercial_office_ti",
+      "job_type": "office tenant finish with demising partition, data room, emergency lighting, HVAC zoning, fire alarm devices, and path of travel accessibility",
+      "city": "Dallas",
+      "state": "TX",
+      "rubric": {
+        "must_apply_url_match": "(dallascityhall|dallas\\.gov|developdallas)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_office_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "dallas.gov",
+          "dallascityhall"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "demising",
+          "lighting controls",
+          "data",
+          "sprinkler",
+          "accessibility",
+          "hvac"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "frost line"
+        ],
+        "must_hidden_triggers_min": 3,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 5000,
+        "must_fee_max": 120000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "los_angeles_office_ti_deep",
+      "category": "commercial",
+      "scope": "commercial_office_ti",
+      "job_type": "office tenant improvement with nonbearing partitions, lighting controls, ceiling work, low voltage cabling, mechanical distribution, and disabled-access upgrades",
+      "city": "Los Angeles",
+      "state": "CA",
+      "rubric": {
+        "must_apply_url_match": "(ladbs|lacity|dbs\\.lacity)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_office_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "ladbs.org",
+          "lacity.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "demising",
+          "lighting controls",
+          "data",
+          "sprinkler",
+          "accessibility",
+          "hvac"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "frost line"
+        ],
+        "must_hidden_triggers_min": 3,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 5000,
+        "must_fee_max": 120000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "seattle_office_ti_deep",
+      "category": "commercial",
+      "scope": "commercial_office_ti",
+      "job_type": "office TI with new private offices, conference room, lighting controls, data cabling, sprinkler head adjustments, and accessible route updates",
+      "city": "Seattle",
+      "state": "WA",
+      "rubric": {
+        "must_apply_url_match": "(seattle\\.gov|cosaccela\\.seattle|sdci)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_office_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "seattle.gov",
+          "sdci"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "demising",
+          "lighting controls",
+          "data",
+          "sprinkler",
+          "accessibility",
+          "hvac"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "frost line"
+        ],
+        "must_hidden_triggers_min": 3,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 5000,
+        "must_fee_max": 120000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "phoenix_office_ti_deep",
+      "category": "commercial",
+      "scope": "commercial_office_ti",
+      "job_type": "office tenant improvement with partitions, electrical outlets, lighting controls, HVAC balancing, fire alarm notification relocation, and accessible reception",
+      "city": "Phoenix",
+      "state": "AZ",
+      "rubric": {
+        "must_apply_url_match": "(phoenix\\.gov|accela\\.com/PHOENIX|shapephx)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_office_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "phoenix.gov",
+          "accela.com/PHOENIX"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "demising",
+          "lighting controls",
+          "data",
+          "sprinkler",
+          "accessibility",
+          "hvac"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "frost line"
+        ],
+        "must_hidden_triggers_min": 3,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 5000,
+        "must_fee_max": 120000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "portland_office_ti",
+      "category": "commercial",
+      "scope": "commercial_office_ti",
+      "job_type": "office tenant improvement in existing commercial building with demising wall, ceiling grid, lighting, HVAC diffuser moves, and accessibility upgrades",
+      "city": "Portland",
+      "state": "OR",
+      "rubric": {
+        "must_apply_url_match": "(portland\\.gov|portlandoregon\\.gov|portlandmaps|bds)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_office_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "portland.gov",
+          "oregon.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "demising",
+          "lighting controls",
+          "data",
+          "sprinkler",
+          "accessibility",
+          "hvac"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "frost line"
+        ],
+        "must_hidden_triggers_min": 3,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 5000,
+        "must_fee_max": 120000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "atlanta_office_ti",
+      "category": "commercial",
+      "scope": "commercial_office_ti",
+      "job_type": "office buildout with new partitions, electrical/data, lighting controls, sprinkler relocations, exit signs, and ADA restroom improvements",
+      "city": "Atlanta",
+      "state": "GA",
+      "rubric": {
+        "must_apply_url_match": "(atlanta|atlantaga\\.gov|aca-prod\\.accela)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_office_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "atlantaga.gov",
+          "atlanta"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "demising",
+          "lighting controls",
+          "data",
+          "sprinkler",
+          "accessibility",
+          "hvac"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger",
+          "frost line"
+        ],
+        "must_hidden_triggers_min": 3,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 5000,
+        "must_fee_max": 120000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "austin_retail_change_use",
+      "category": "commercial",
+      "scope": "commercial_retail_ti",
+      "job_type": "retail tenant improvement converting warehouse bay to retail showroom with new storefront, accessible restroom, sales floor lighting, and fire alarm",
+      "city": "Austin",
+      "state": "TX",
+      "rubric": {
+        "must_apply_url_match": "(austintexas\\.gov|abc\\.austintexas\\.gov|austin\\.gov)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_retail_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "austintexas.gov",
+          "austin.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "storefront",
+          "accessible",
+          "change of use",
+          "fire alarm",
+          "signage",
+          "demising"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger"
+        ],
+        "must_hidden_triggers_min": 2,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 4000,
+        "must_fee_max": 80000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "san_diego_retail_ti",
+      "category": "commercial",
+      "scope": "commercial_retail_ti",
+      "job_type": "retail tenant improvement with storefront glazing, demising wall, accessible checkout counter, lighting, signage, and fire sprinkler modifications",
+      "city": "San Diego",
+      "state": "CA",
+      "rubric": {
+        "must_apply_url_match": "(sandiego\\.gov|opendsd|sandiego)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_retail_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "sandiego.gov",
+          "sandiego"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "storefront",
+          "accessible",
+          "change of use",
+          "fire alarm",
+          "signage",
+          "demising"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger"
+        ],
+        "must_hidden_triggers_min": 2,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 4000,
+        "must_fee_max": 80000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "philadelphia_retail_change_use",
+      "category": "commercial",
+      "scope": "commercial_retail_ti",
+      "job_type": "change of use from storage to retail store with accessible entrance, restroom, electrical lighting, and certificate of occupancy update",
+      "city": "Philadelphia",
+      "state": "PA",
+      "rubric": {
+        "must_apply_url_match": "(phila\\.gov|eclipse|atlas\\.phila)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "commercial_retail_ti",
+        "must_primary_permit_match": "(commercial|tenant improvement|interior alteration|building permit|change of occupancy)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|dwelling|water heater only|hvac only)",
+        "permits_min": 3,
+        "must_sources_match_any": [
+          "phila.gov",
+          "philadelphia"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "storefront",
+          "accessible",
+          "change of use",
+          "fire alarm",
+          "signage",
+          "demising"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "grease interceptor",
+          "joist hanger"
+        ],
+        "must_hidden_triggers_min": 2,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_min": 4000,
+        "must_fee_max": 80000,
+        "must_fee_adjusted": true
+      }
+    },
+    {
+      "id": "denver_residential_water_heater",
+      "category": "residential",
+      "scope": "residential",
+      "job_type": "replace 50 gallon residential gas water heater in single-family house",
+      "city": "Denver",
+      "state": "CO",
+      "rubric": {
+        "must_apply_url_match": "(denvergov\\.org|denver)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "residential",
+        "must_primary_permit_match": "(plumbing|water heater|residential)",
+        "must_primary_permit_not_match": "(commercial|tenant improvement|interior alteration|change of occupancy|type i hood|grease interceptor|medical clinic|office ti|retail ti|restaurant ti)",
+        "permits_min": 1,
+        "must_sources_match_any": [
+          "denvergov.org",
+          "colorado.gov"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "water heater",
+          "plumbing",
+          "inspection"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "tenant improvement",
+          "grease interceptor"
+        ],
+        "must_hidden_triggers_min": 0,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_max": 5000
+      }
+    },
+    {
+      "id": "houston_residential_roof",
+      "category": "residential",
+      "scope": "residential",
+      "job_type": "residential asphalt shingle roof replacement on single-family home",
+      "city": "Houston",
+      "state": "TX",
+      "rubric": {
+        "must_apply_url_match": "(houstonpermittingcenter|houstontx\\.gov|harriscountytx)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "residential",
+        "must_primary_permit_match": "(roof|residential)",
+        "must_primary_permit_not_match": "(commercial|tenant improvement|interior alteration|change of occupancy|type i hood|grease interceptor|medical clinic|office ti|retail ti|restaurant ti)",
+        "permits_min": 1,
+        "must_sources_match_any": [
+          "houstontx.gov",
+          "houston"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "roof",
+          "shingle",
+          "inspection"
+        ],
+        "must_checklist_not_contain": [
+          "type i hood",
+          "tenant improvement",
+          "grease interceptor"
+        ],
+        "must_hidden_triggers_min": 0,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_max": 7000
+      }
+    },
+    {
+      "id": "seattle_residential_heat_pump",
+      "category": "residential",
+      "scope": "residential",
+      "job_type": "install residential ductless mini split heat pump in single-family home",
+      "city": "Seattle",
+      "state": "WA",
+      "rubric": {
+        "must_apply_url_match": "(seattle\\.gov|cosaccela\\.seattle|sdci)",
+        "must_apply_url_not_match": "(cslb\\.|tdlr\\.|dbpr\\.|kauffman|archive\\.org|huduser\\.gov|ojp\\.gov)",
+        "must_primary_scope": "residential",
+        "must_primary_permit_match": "(mechanical|heat pump|residential)",
+        "must_primary_permit_not_match": "(commercial|tenant improvement|interior alteration|change of occupancy|type i hood|grease interceptor|medical clinic|office ti|retail ti|restaurant ti)",
+        "permits_min": 1,
+        "must_sources_match_any": [
+          "seattle.gov",
+          "sdci"
+        ],
+        "must_sources_not_match_any": [
+          "kauffman.org",
+          "ojp.gov",
+          "archive.org",
+          "huduser.gov"
+        ],
+        "must_checklist_contain_any": [
+          "mechanical",
+          "heat pump",
+          "electrical"
+        ],
+        "must_checklist_not_contain": [
+          "tenant improvement",
+          "grease interceptor"
+        ],
+        "must_hidden_triggers_min": 0,
+        "must_confidence_not_high_without_sources": true,
+        "must_validation_no_placeholder": true,
+        "must_fee_max": 5000
+      }
+    },
+    {
+      "id": "san_jose_office_ti_low_voltage_access_control",
+      "job_type": "office tenant improvement with access control, low voltage cabling, new conference rooms, lighting controls, and sprinkler relocation",
+      "city": "San Jose",
+      "state": "CA",
+      "category": "commercial",
+      "scope": "commercial_office_ti",
+      "expected_verdict": "YES",
+      "rubric": {
+        "must_primary_scope": "commercial_office_ti",
+        "must_primary_permit_match": "(commercial|office|tenant improvement|building permit|alteration)",
+        "must_primary_permit_not_match": "(residential|single[- ]family|hvac only)",
+        "forbidden_primary_scope": "residential_hvac",
+        "must_mention": [
+          "tenant improvement",
+          "low voltage",
+          "access control",
+          "sprinkler",
+          "lighting"
+        ],
+        "must_not_mention": [
+          "single-family",
+          "homeowner"
+        ],
+        "must_confidence_not_high_without_sources": true,
+        "permits_min": 3,
+        "sources_min": 1
       }
     }
   ]

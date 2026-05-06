@@ -27,10 +27,10 @@ ROOT = Path(__file__).resolve().parents[1]
 DRAFT_DIR = ROOT / "api" / "state_packs" / "drafts"
 STATE_PACKS_PY = ROOT / "api" / "state_packs.py"
 TOP9 = ["TX", "FL", "NY", "IL", "GA", "AZ", "NC", "WA", "CO"]
-MAX_SERPER_CREDITS_PER_STATE = 10
-MAX_TOTAL_SERPER_CREDITS = 350
-MIN_RULES = 5
-MAX_RULES = 8
+MAX_SERPER_CREDITS_PER_STATE = 20
+MAX_TOTAL_SERPER_CREDITS = 1200
+MIN_RULES = 12
+MAX_RULES = 16
 CLAUDE_TIMEOUT_SECONDS = int(os.environ.get("STATE_PACK_CLAUDE_TIMEOUT", "420"))
 
 STATE_NAMES = {
@@ -67,14 +67,29 @@ STATE_NAMES = {
 }
 
 QUERY_TEMPLATES = [
+    # Core licensing + code regime
     "{name} state contractor license board HVAC electrical plumbing residential permit",
-    "{name} building code adoption residential code energy code amendments",
-    "{name} permit review timeline state law residential construction ADU",
+    "{name} building code adoption residential code energy code amendments effective date",
+    "{name} permit review timeline state law residential construction ADU shot clock",
     "{name} municipal versus county building department permit jurisdiction split",
     "{name} overlay permit risk flood hurricane wildfire wetland historic district",
     "{name} municipal utilities electric utility interconnection building permits",
     "{name} seller disclosure permit energy disclosure real estate law",
-    "{name} common contractor licensing permit mistakes state construction",
+    "{name} common contractor licensing permit mistakes state construction violations",
+    # Trade-specific scopes (added 2026-04-27 evening for "more expert" pass)
+    "{name} ADU accessory dwelling unit state law ministerial review setback",
+    "{name} EV charger Level 2 240V residential electrical permit code requirements",
+    "{name} solar PV battery storage interconnection net metering permit residential",
+    "{name} standby generator transfer switch home backup permit code installation",
+    "{name} water heater tankless gas line venting electrical permit residential",
+    # Gap-probing dimensions (3rd pass, 2026-04-27 — Opus VT review feedback)
+    "{name} solar utility net metering interconnection separate application form filing residential",
+    "{name} statewide residential building code adoption mandatory IRC 1-2 family dwelling jurisdiction",
+    "{name} environmental review threshold large project Act 250 SEPA NEPA equivalent residential exemption",
+    "{name} permit appeal ZBA zoning board variance hardship process residential",
+    "{name} contractor exam apprenticeship pathway journeyman master license residential trade",
+    "{name} Certificate of Public Good Section 248 net metering tier category residential solar threshold",
+    "{name} fire marshal state electrical inspector parallel review residential commercial separate filing",
 ]
 
 # State-specific search hints keep the 8-query budget high-signal.
@@ -478,12 +493,26 @@ Web research from Serper for {state} ({name}); cite only these URLs:
 Output ONLY valid JSON matching the California schema.
 Requirements:
 - Top-level keys must be exactly: name, expert_notes.
-- expert_notes must contain {MIN_RULES}-{MAX_RULES} rules.
+- expert_notes must contain {MIN_RULES}-{MAX_RULES} distinct rules — aim for the upper end (12-14) when source material supports it.
 - Each rule keys must be exactly: title, note, applies_to, source.
 - source must be one exact URL from the Serper results above.
-- Use real {name}-specific content only; no generic templates.
-- Prioritize contractor-facing permit gotchas: trade licensing, code adoption/amendments, permit timing/vesting, AHJ split, overlays, utility coordination, disclosure/notice requirements, and common mistakes.
-- Notes must be factual, concise, and grounded by the cited Serper title/snippet/URL.
+- Use real {name}-specific content only; no generic templates. Cite specific code sections, statute numbers, agency names, license codes, and effective dates whenever the sources mention them.
+- Cover diverse dimensions across the rule set — do NOT use multiple rules for the same topic. Aim to include rules from each of these categories when source material exists:
+  * State-level trade licensing (general contractor, electrical, plumbing, HVAC, mechanical) with thresholds and license codes
+  * Building/residential/energy code adoption cycle with effective dates
+  * Permit review timing / shot clocks / vesting
+  * AHJ split (state vs municipal vs county vs unincorporated)
+  * Environmental overlays (flood, wildfire, wetland, coastal, historic, watershed, critical area)
+  * Utility coordination (interconnection, municipal vs investor-owned, water rights)
+  * Disclosure / notice / consumer protection requirements
+  * Trade-specific gotchas relevant to {name}: ADUs, EV chargers, solar PV + battery, standby generators, water heaters
+  * Common contractor violations and rejection reasons
+- IMPORTANT — also include rules in these dimensions when source material supports them (these are commonly missing from generic AI output):
+  * NEGATIVE rules — things that DO NOT apply but contractors often worry about (e.g., "{name} has no statewide residential building code for 1-2 family homes" or "Act 250 / SEPA / state-level environmental review does NOT apply to residential ADUs under X acres" — only when factually correct per sources)
+  * TIER BREAKDOWNS — when a process has tiers/categories (e.g., Vermont CPG Category I vs full Section 248, California Title 24 simplified vs prescriptive), spell out the specific thresholds and which tier applies for typical residential work
+  * PARALLEL FILINGS — when a project requires SEPARATE filings beyond the building permit (utility net metering interconnection, state electrical inspector, fire marshal, public utilities commission), call out each separate filing with the exact agency name and form/process
+  * APPEAL PATHS — ZBA/variance/hardship process when a permit is denied
+- Notes must be factual, specific, and grounded by the cited Serper title/snippet/URL. Each "note" field should be 2-4 sentences with the WHY and the WHAT-TO-DO baked in (not just "X is required").
 - Do not mention Serper, Claude, California, or this prompt in the output.
 """.strip()
 
@@ -780,7 +809,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--review-mode", default="draft", choices=["draft"], help="Only draft mode is supported")
     parser.add_argument("--validate-only", action="store_true", help="Validate existing drafts without API calls")
     parser.add_argument("--workers", type=int, default=1, help="Parallel states to generate; default serializes Claude CLI calls")
-    parser.add_argument("--query-limit", type=int, default=8, help="Serper queries per state, max 10")
+    parser.add_argument("--query-limit", type=int, default=18, help="Serper queries per state, max 20")
     return parser.parse_args()
 
 

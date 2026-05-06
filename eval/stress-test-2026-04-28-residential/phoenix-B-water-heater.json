@@ -1,0 +1,331 @@
+{
+  "job_summary": "Residential water heater changeout in Phoenix, AZ: replace an existing 50-gallon gas tank water heater with a new tankless gas water heater in the same location. Phoenix treats this as a combined residential permit for the plumbing/gas work, and because it is a fuel-type conversion to tankless, the permit application should reflect the gas appliance change and any venting/combustion-air changes. No separate standalone mechanical permit is typically pulled for this scope in Phoenix's combined-permit system.",
+  "total_cost_estimate": "$4,500 - $8,500",
+  "location": "Phoenix, AZ",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Plumbing Permit — Water Heater Replacement",
+      "portal_selection": "Plumbing - Water Heater Replacement",
+      "required": true,
+      "notes": "Required for water heater replacement; companion electrical/gas permits are suppressed unless gas piping, venting conversion, or new circuit work is explicit."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Plumbing Permit — Water Heater Replacement",
+      "included_because": "Water heater swap is one trade permit when same location/capacity and no new gas/electrical scope is stated.",
+      "scope_trigger": "HVAC/water-heater replacement scope"
+    }
+  ],
+  "applying_office": "City of Phoenix Planning & Development Department (PDD)",
+  "apply_url": "https://aca-prod.accela.com/PHOENIX",
+  "apply_pdf": null,
+  "apply_phone": "(602) 262-7811",
+  "apply_address": "200 W. Washington Street, 2nd Floor, Phoenix, AZ 85003",
+  "apply_google_maps": "https://www.google.com/maps?q=200+W.+Washington+Street,+2nd+Floor,+Phoenix,+AZ+85003",
+  "fee_range": "Fee Estimate: Fee not confirmed — call the City of Phoenix Planning & Development Department (PDD) or check their online fee schedule before applying. — verify in https://www.phoenix.gov/administration/departments/pdd/tools-resources/fees.html before quoting",
+  "approval_timeline": {
+    "simple": "1-3 business days for typical residential trade work through the online portal; many water heater replacements are processed OTC or very quickly if no plan review is needed",
+    "complex": "Up to about 28 days if plan review is triggered by venting changes, gas line upsizing, or other scope that needs review"
+  },
+  "inspections": [
+    {
+      "stage": "Rough-In / Pre-Cover Inspection",
+      "description": "Inspector checks: gas piping sizing and shutoff valve location, vent termination and clearances, condensate drain routing for the tankless unit, T&P relief discharge piping, seismic strapping/anchorage where applicable, combustion air provisions, and that the unit matches the approved permit scope.",
+      "timing": "Before the unit is concealed, before wall repairs are closed, and before final trim-up if venting or gas piping was modified"
+    },
+    {
+      "stage": "Final Water Heater Inspection",
+      "description": "Inspector verifies: the tankless unit is installed per manufacturer instructions, gas connections are leak-free, venting is properly terminated, temperature/pressure relief discharge is correct, shutoff is accessible, required clearances are maintained, and the appliance operates safely.",
+      "timing": "After installation is complete and the unit is operational"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the Phoenix Accela portal: https://aca-prod.accela.com/PHOENIX. Phoenix requires a minimum 24-hour advance notice; same-day inspection requests are not accepted. Phone: (602) 262-7811. Use the permit number in the portal to request the inspection.",
+  "license_required": "ROC-licensed plumbing/gas contractor pulls the permit on the homeowner's behalf — the contractor's ROC license number must appear on the application. Phoenix also requires separate City Contractor Registration in addition to the Arizona ROC license before the permit will be accepted.",
+  "city_contractor_registration": "Phoenix requires a separate City Contractor Registration on top of the Arizona ROC license. Verify registration is current before submitting the permit application; an expired or lapsed city registration will block the application. Renewal timing is city-controlled and should be checked before each permit submission.",
+  "what_to_bring": [
+    "Contractor ROC license number and current expiration date",
+    "Phoenix City Contractor Registration information",
+    "Water heater make/model cut sheet for the new tankless gas unit",
+    "Gas input rating, venting type, and installation instructions from the manufacturer",
+    "Property address and permit scope details, including whether gas line or venting changes are included",
+    "Homeowner authorization if the contractor is filing on the owner's behalf"
+  ],
+  "common_mistakes": [
+    "Submitting the permit without current Phoenix City Contractor Registration — Phoenix will reject the application even if the ROC license is valid",
+    "Treating a tank-to-tankless conversion like a simple like-for-like swap — tankless units usually trigger venting and gas sizing checks",
+    "Using the wrong permit path in Accela and trying to pull separate plumbing and mechanical permits when Phoenix's combined permit system may cover the full scope",
+    "Installing the new tankless unit before the permit is issued and posted — inspectors can fail the job and require corrections",
+    "Ignoring condensate drain requirements on condensing tankless units — this is a common final inspection failure"
+  ],
+  "pro_tips": [
+    "Check your Phoenix contractor registration renewal date before starting the permit application — registration lapses are one of the most avoidable rejection reasons.",
+    "Bring the tankless manufacturer's installation manual and venting diagram to the job; Phoenix inspectors will often verify the unit is installed exactly to the listing.",
+    "If the home has a closed plumbing system, confirm whether an expansion tank is needed before you quote the job — it can save a return trip.",
+    "Use the Accela portal and request inspection at least 24 hours ahead; Phoenix will not accept same-day inspection requests.",
+    "If the tankless conversion requires a gas line upsizing, get that scope documented up front so the permit isn't delayed for a revision."
+  ],
+  "code_citation": {
+    "section": "IPC 106.1 / IRC P2801.1",
+    "text": "It shall be unlawful to construct, enlarge, alter, repair, move, remove or demolish a plumbing system or any part thereof without first obtaining a permit..."
+  },
+  "companion_permits": [],
+  "zoning_hoa_flag": "HOA rules may restrict exterior vent termination locations, visible side-yard equipment, or roof/wall penetrations for the new tankless vent. If the vent exits through a wall or roof in a historic district or HOA-controlled community, verify exterior appearance rules before cutting.",
+  "sources": [
+    "https://www.phoenix.gov/pdd",
+    "https://aca-prod.accela.com/PHOENIX",
+    "https://roc.az.gov",
+    "https://www.phoenix.gov/administration/departments/pdd/tools-resources/fees.html",
+    "https://www.phoenix.gov/residents/residential-building-permits.html",
+    "https://www.phoenix.gov/content/dam/phoenix/firesite/documents/solar%20permit%20process.pdf",
+    "https://www.phoenix.gov/administration/departments/pdd/residential-building/resident-plan-reviews/solarapp-photovoltaic.html",
+    "https://www.phoenix.gov/pddsite/Documents/TRT/dsd_trt_pdf_00292.pdf"
+  ],
+  "confidence": "medium",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "_fee_unverified": true,
+  "maps_url": "https://www.google.com/maps?q=200+W.+Washington+Street,+2nd+Floor,+Phoenix,+AZ+85003",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_field_sources": {
+    "apply_url": "city_kb",
+    "apply_phone": "city_kb",
+    "apply_address": "city_kb",
+    "fee_range": "machine_extracted",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "applying_office": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": true,
+  "missing_fields": [
+    "fee_range"
+  ],
+  "confidence_reason": "City-specific match supported by live web research. Needs review for: fee_range",
+  "_meta": {
+    "generated_at": "2026-04-28T20:59:47.378058",
+    "response_ms": 12162,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 4,
+    "city_match_level": "city",
+    "job_type": "Water heater changeout, replace 50 gallon gas tank water heater with new tankless gas water heater, same location.",
+    "city": "Phoenix",
+    "state": "AZ",
+    "zip_code": "85016",
+    "job_category": "residential",
+    "auto_verified": false,
+    "missing_fields": [
+      "fee_range"
+    ]
+  },
+  "fee_source": {
+    "url": "https://www.phoenix.gov/administration/departments/pdd/tools-resources/fees.html",
+    "title": "Fees, Valuations and Assurances | City of Phoenix",
+    "verified_at": "2026-04-27",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://www.phoenix.gov/residents/residential-building-permits.html",
+    "title": "Residential Buildings and Permits | City of Phoenix",
+    "verified_at": "2026-04-27",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://www.phoenix.gov/content/dam/phoenix/firesite/documents/solar%20permit%20process.pdf",
+    "title": "[PDF] Plan Review, Permit, Inspection Criteria for Energy Systems",
+    "verified_at": "2026-04-27",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://www.phoenix.gov/administration/departments/pdd/residential-building/resident-plan-reviews/solarapp-photovoltaic.html",
+    "title": "SolarAPP/Photovoltaic Projects | City of Phoenix",
+    "verified_at": "2026-04-27",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://www.phoenix.gov/pddsite/Documents/TRT/dsd_trt_pdf_00292.pdf",
+    "title": "[PDF] Solar Photovoltaic (PV) - City of Phoenix",
+    "verified_at": "2026-04-27",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 100,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "residential",
+  "checklist": [
+    "Verify your contractor license is current and valid in AZ",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "ESS clearances per NFPA 855 (≥3 ft from openings, doors, windows; verify state/AHJ override)",
+    "Battery commissioning report from manufacturer (required for inspection sign-off)",
+    "ESS hazardous-voltage labeling per UL 9540 / 9540A on each enclosure",
+    "AC disconnect labeling 'Warning: Dual Power Source' per NEC 705.10 at the main service",
+    "AC disconnect within sight of the inverter (NEC 690.13 / 705.20)",
+    "Working clearance at ESS enclosure: 30 in wide × 36 in depth × 6.5 ft height (NEC 110.26)",
+    "ESS marking at the main service identifying battery feed-in source per NEC 706.10",
+    "Gas line sized for tankless BTU/hr (typically 150,000–199,000 BTU vs ~40,000 for tank — verify pipe size)",
+    "Concentric vent or category III/IV vent per manufacturer; clearance to property lines",
+    "Condensate drain to approved location (some need neutralizer for condensing units)",
+    "Dedicated 120V outlet within 6 ft if electric ignition / control board",
+    "Isolation valves on hot AND cold for descaling (manufacturer requirement, AHJ commonly verifies)",
+    "T&P relief valve discharge piped to floor / drain pan per IPC 504",
+    "Drain pan with ≥1 in side height for water heaters above finished space",
+    "Garage installation: 18 in elevation OR FVIR-listed unit (IPC 504.6)",
+    "Seismic strapping (CA/OR/WA): two straps, upper third + lower third",
+    "Combustion air provisions or direct-vent unit — verify per IFGC 304",
+    "Confirm the required license is active and matches the application: ROC-licensed plumbing/gas contractor pulls the permit on the homeowner's behalf — the contractor's ROC license number must appear on the application. Phoenix also requires separate City Contractor Registration in addition to the Arizona ROC license before the permit will be accepted.",
+    "Bring 2 copies of all documents to City of Phoenix Planning & Development Department (PDD)"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Missing Phoenix City Contractor Registration (state ROC not sufficient)",
+      "frequency": "very_common",
+      "fix": "Register at phoenix.gov/pdd/contractor-registration before applying"
+    },
+    {
+      "pattern": "Same-day inspection requests (24-hour notice required)",
+      "frequency": "common",
+      "fix": "Schedule inspections minimum 24 hours in advance through city portal"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "job_value": 4500,
+  "fee_calculator": {
+    "fee": 42.1,
+    "formula": "$25 base + $3.80/thousand of job value",
+    "confidence": "high",
+    "note": "Verify current fee schedule — rates may have changed"
+  },
+  "expert_notes": [
+    {
+      "title": "Arizona Registrar of Contractors (ROC) — residential vs commercial vs dual licensing",
+      "note": "Arizona is unusual in that the ROC issues SEPARATE license classifications for residential, commercial, and dual (both) work — a contractor licensed only for commercial work cannot legally pull a residential permit and vice versa. Verify the license class matches the project type (e.g., B-General Residential Contractor, CR-class residential trade licenses, KB-General Commercial) before contracting; a mismatched class voids lien rights and exposes the contractor to ROC discipline. Check status at the ROC Customer Portal before signing.",
+      "applies_to": "All licensed construction work in Arizona",
+      "source": "https://roc.az.gov/license-classifications"
+    },
+    {
+      "title": "$1,000 unlicensed-work threshold (handyman exemption)",
+      "note": "Arizona requires an ROC license for any single project where the combined value of labor and materials exceeds $1,000, OR that requires a building permit regardless of value. Handyman work under $1,000 with no permit required is exempt, but bundling small jobs to stay under the cap is treated as unlicensed contracting. HVAC, electrical, and plumbing work above $1,000 specifically requires the matching trade classification (e.g., CR-39 Air Conditioning & Refrigeration, CR-11 Electrical, CR-37 Plumbing).",
+      "applies_to": "All paid construction work in Arizona ≥ $1,000 or requiring a permit",
+      "source": "https://www.servicetitan.com/licensing/hvac/arizona"
+    },
+    {
+      "title": "ARS § 9-835 / § 9-836 municipal permit shot clocks",
+      "note": "Arizona Revised Statutes 9-835 (administrative completeness) and 9-836 (substantive review) require every municipality to publish licensing time-frames and to complete review within them — typically 30 working days for administrative completeness review and a published substantive review window for residential building permits. Missed deadlines entitle the applicant to a refund of a percentage of fees and can be escalated. Always demand the AHJ's published time-frame document and track the clock from the date the application is deemed administratively complete.",
+      "applies_to": "All municipal building permit applications in Arizona",
+      "source": "https://www.flagstaff.az.gov/DocumentCenter/View/72956/Residential-Building-Permit-Plan-Review-Process-and-Timeframes?bidId="
+    },
+    {
+      "title": "New 15-day residential plan review requirement",
+      "note": "A new Arizona state law shortens the substantive review timeline for certain residential permits to 15 working days, accelerating the prior ARS 9-836 framework. AHJs are responding with expedited-review tracks, model-plan libraries, and staff capacity additions. For straightforward SFR/ADU applications using model plans or master-plan certifications, push for the 15-day track and flag any AHJ that quotes a longer turnaround as out of statutory compliance.",
+      "applies_to": "Residential building permits in incorporated Arizona municipalities",
+      "source": "https://citizenportal.ai/articles/6136120/state-law-shortens-review-timeline-committee-backs-model-plans-and-staff-capacity-building"
+    },
+    {
+      "title": "No statewide building code — 106 separate AHJs",
+      "note": "Arizona does NOT adopt a statewide building or residential code. Instead, all 15 counties and every incorporated municipality act as independent authorities having jurisdiction (AHJs), producing roughly 106 building-regulating jurisdictions statewide, each adopting their own edition of the IBC/IRC/IECC with local amendments. Always confirm the exact code edition and local amendments for the parcel's jurisdiction before drawing — Phoenix, Tucson, Mesa, and unincorporated Maricopa County can be on different code cycles simultaneously.",
+      "applies_to": "All Arizona construction — code edition varies by jurisdiction",
+      "source": "https://www.commonsenseinstituteus.org/arizona/research/housing-and-our-community/brief-a-review-of-arizona-building-permit-data"
+    },
+    {
+      "title": "Phoenix 2024 PBCC adoption",
+      "note": "On June 18, 2025, the Phoenix City Council adopted the 2024 Phoenix Building Construction Code (PBCC), which is based on the 2024 ICC family of codes including the 2024 IECC for energy. Projects in Phoenix submitted after the effective date must use the 2024 PBCC; projects in adjacent jurisdictions (Scottsdale, Tempe, Glendale, unincorporated Maricopa County) may still be on 2018 or 2021 cycles. Confirm the applicable PBCC edition with Phoenix PDD before plan-set finalization.",
+      "applies_to": "City of Phoenix permit applications",
+      "source": "https://www.phoenix.gov/administration/departments/pdd/tools-resources/codes-ordinance/building-code.html"
+    },
+    {
+      "title": "Tucson / Pima County 2024 code adoption effective Jan 1, 2026",
+      "note": "Tucson and Pima County jointly adopted updated building codes (2024 IBC/IRC/IECC family with local amendments) that took effect January 1, 2026, after a joint recommendation from the City Manager and Pima County administrators. Permits submitted on or after that date are reviewed under the new codes; applications in process before the cutoff may be grandfathered at the AHJ's discretion. Always confirm which edition applies on the specific submittal date.",
+      "applies_to": "City of Tucson and Pima County permit applications crossing 2026-01-01",
+      "source": "https://www.tucsonaz.gov/Departments/Planning-Development-Services/PDSD-News/Updated-Building-Codes-Adopted-Effective-January-1"
+    },
+    {
+      "title": "Active Management Area (AMA) 100-year Assured Water Supply",
+      "note": "Arizona law requires residential developers in designated groundwater Active Management Areas (Phoenix, Tucson, Pinal, Prescott, Santa Cruz) to obtain a Certificate of Assured Water Supply (CAWS) proving a 100-year water supply before plats can be approved or building permits issued for new subdivisions. ADWR has been under a moratorium on new groundwater-based CAWS in the Phoenix AMA since June 2023, and a 2026 court ruling further unsettled the rule — confirm CAWS status and whether the project sits inside an AMA before promising a build schedule.",
+      "applies_to": "New residential subdivisions inside designated AMAs",
+      "source": "https://jmc-eng.com/the-loophole-in-arizonas-water-rules-bypassing-the-certificate-of-assured-water-supply/"
+    },
+    {
+      "title": "ARS § 11-321 — county building permits and utility preemption",
+      "note": "ARS 11-321 governs county-issued building permits and explicitly preserves utility providers' separate authority to operate, meaning a county building permit does NOT authorize utility connection or interconnection on its own. The contractor must file a parallel utility application (service connection, meter set, or DG interconnection) with the serving utility — county permit issuance does not waive that step. Always run the county building permit and the utility filing in parallel to avoid a finished build that cannot be energized.",
+      "applies_to": "Construction in unincorporated Arizona counties",
+      "source": "https://www.azleg.gov/ars/11/00321.htm"
+    },
+    {
+      "title": "APS distributed-generation interconnection — separate filing from building permit",
+      "note": "Solar PV and battery systems in APS territory require a separate Interconnection Application filed with APS in addition to the AHJ building/electrical permit. APS may request a copy of the AHJ building permit before issuing Permission to Operate (PTO), and the system cannot legally export until PTO is granted. File the APS interconnection package as soon as the design is finalized — do not wait for the building permit, since the two reviews run in parallel and APS turnaround often controls the project's energization date.",
+      "applies_to": "Residential solar PV and battery storage in APS service territory",
+      "source": "https://www.aps.com/-/media/APS/APSCOM-PDFs/Residential/Service-Plans/Understanding-Solar/InterconnectReq.ashx"
+    },
+    {
+      "title": "HB 2301 / Mesa solar permit pre-interconnection requirement",
+      "note": "HB 2301 reshaped Arizona's solar permitting landscape effective 2026, and for Mesa Electric Utility customers specifically, the interconnection application must be received and accepted BEFORE the system is installed (not after as in most jurisdictions). Installing first and applying after is grounds for denial of interconnection. Verify the serving utility's sequencing rule (APS, SRP, TEP, Mesa, and municipal utilities each have their own) before scheduling installation.",
+      "applies_to": "Residential solar PV in Mesa Electric Utility territory",
+      "source": "https://www.solarpermitsolutions.com/blog/arizona-solar-permits-2026-requirements-fees-hb2301-guide"
+    },
+    {
+      "title": "Owner-builder affidavit required on every permit (ARS 11-1605)",
+      "note": "Per ARS 11-1605, every Arizona building permit requires written documentation of either an Arizona-licensed contractor pulling the permit OR an owner-builder classification signed by the property owner. Owner-builder permits restrict resale within one year (the owner must occupy and cannot have built for sale) and shift all liability to the owner. Counties (e.g., Maricopa) will not accept a permit application without this signed contractor/owner-builder declaration — prepare it before counter intake.",
+      "applies_to": "All Arizona building permit applications",
+      "source": "https://www.maricopa.gov/5241/FAQs"
+    },
+    {
+      "title": "Rezoning shot clock — separate from permit shot clock",
+      "note": "A new Arizona development 'shot clock' law imposes statutory time limits on rezoning decisions, distinct from the ARS 9-835/9-836 permit clocks. Local ordinances (e.g., Prescott Valley 13-14-070) implement parallel administrative-completeness and substantive-review windows for rezoning applications. If a project requires rezoning before permitting, treat it as TWO sequential clocks (rezoning, then permit) — and document each completeness determination in writing to preserve refund/escalation rights.",
+      "applies_to": "Projects requiring rezoning prior to building permit",
+      "source": "https://codelibrary.amlegal.com/codes/prescottvalleyaz/latest/prescottvalley_az/0-0-0-45446"
+    },
+    {
+      "title": "ROC license filing address and portal",
+      "note": "ROC license applications, renewals, and complaints are filed via the ROC Customer Portal online, or by mail to Registrar of Contractors, P.O. Box 6748, Phoenix, AZ 85005-6748, or in person at 1700 West Washington Street, Suite 105, Phoenix, AZ 85007-2812. Use the portal for fastest turnaround and to pull license ID cards on demand. Expired or suspended licenses block permit issuance at most AHJ counters — verify status the day of submittal.",
+      "applies_to": "Contractor license maintenance and verification",
+      "source": "https://roc.az.gov/"
+    }
+  ],
+  "hidden_triggers": [
+    {
+      "id": "residential_water_heater_pan_tp",
+      "severity": "medium",
+      "title": "Water heater replacement requires pan, T&P discharge, expansion, and combustion-air details",
+      "why_it_matters": "A simple swap often fails inspection when discharge piping, pan drain, combustion air, or expansion control is missing.",
+      "fired_by": [
+        "\\bwater heater\\b",
+        "\\btankless\\b",
+        "\\bhybrid water heater\\b",
+        "\\bheat pump water heater\\b",
+        "\\bt&p\\b"
+      ],
+      "likely_required_actions": [
+        "Show T&P discharge termination",
+        "Add drain pan where leakage damage is possible",
+        "Verify combustion air/venting or electrical circuit",
+        "Confirm expansion control on closed systems"
+      ],
+      "companion_permits": [
+        "Plumbing/mechanical/electrical trade permit as locally required"
+      ],
+      "agencies": [
+        "AHJ Plumbing/Mechanical Dept"
+      ],
+      "citations": [
+        "IPC §504.6",
+        "IPC §504.7",
+        "IRC §P2801.6"
+      ],
+      "primary_scope": "residential_single_trade"
+    }
+  ],
+  "_fee_floor_check": "residential_no_override"
+}

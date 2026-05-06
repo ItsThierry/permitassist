@@ -50,6 +50,11 @@ SCOPE_FEE_FLOORS: Dict[str, Dict[str, Any]] = {
         "min_floor": 5000,
         "note": "plan review + permit + sprinkler hydraulic recalc",
     },
+    "commercial_medical_clinic_ti": {
+        "per_sf": 3.25,
+        "min_floor": 9000,
+        "note": "commercial clinic TI + MEP + accessibility + fire/life-safety + health-care specialty reviews",
+    },
     "commercial_retail_ti": {
         "per_sf": 2.0,
         "min_floor": 4000,
@@ -321,6 +326,8 @@ def _normalize_scope(primary_scope: str, job_type: str) -> str:
         return "multifamily"
     if "restaurant" in text or "food service" in text or "commercial kitchen" in text:
         return "commercial_restaurant"
+    if any(token in text for token in ("medical clinic", "medical office", "dental clinic", "health clinic", "clinic tenant", "exam room", "med gas", "medical gas", "x ray", "x-ray", "radiology")):
+        return "commercial_medical_clinic_ti"
     if "office" in text and ("ti" in text or "tenant improvement" in text or "buildout" in text):
         return "commercial_office_ti"
     if ("retail" in text or "storefront" in text) and (

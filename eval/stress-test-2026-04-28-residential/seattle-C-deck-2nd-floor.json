@@ -1,0 +1,295 @@
+{
+  "job_summary": "New 240 sq ft attached second-floor residential deck on an existing single-family house in Seattle. This triggers a Building Permit for the deck structure, ledger attachment, guardrails, and footings. Because it is attached to the house and elevated above the first floor, Seattle will also review structural details closely; no separate electrical or plumbing permit is triggered by the stated scope.",
+  "total_cost_estimate": "$18,000 - $35,000",
+  "location": "Seattle, WA",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Residential Deck Addition",
+      "portal_selection": "Building Permit - Residential Deck",
+      "required": true,
+      "notes": "Required for a new attached deck over 200 sq ft and attached to the structure of the house. Seattle reviews deck framing, ledger attachment, footings, guardrails, and connection to the existing dwelling."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Residential Deck Addition",
+      "included_because": "The scope is a new 240 sq ft attached deck on an existing single-family home. Seattle/IRC deck rules require a building permit for attached decks and for decks over 200 sq ft.",
+      "scope_trigger": "New attached deck, 240 sq ft, second-floor elevation"
+    }
+  ],
+  "applying_office": "Seattle Department of Construction & Inspections (SDCI)",
+  "apply_url": "https://cosaccela.seattle.gov",
+  "apply_pdf": null,
+  "apply_phone": "(206) 684-8600",
+  "apply_address": "700 5th Ave, Suite 2000, Seattle, WA 98104",
+  "apply_google_maps": "https://www.google.com/maps?q=700+5th+Ave,+Suite+2000,+Seattle,+WA+98104",
+  "fee_range": "Fee Estimate: $924+ building permit fee for an $8,000 valuation project; expect roughly $1,200 - $2,500 in city permit fees for a 240 sq ft deck depending on declared valuation and plan review complexity — verify in https://clerk.seattle.gov/search/results?s3=&s4=&s5=&s1=&s2=&S6=&Sect4=AND&l=200&Sect2=THESON&Sect3=PLURON&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2F%7Epublic%2Fcbor1.htm&r=33&f=G&s7=%22BUILDING-CODES%22%5BINDX%5D before quoting",
+  "approval_timeline": {
+    "simple": "1-5 business days for intake/OTC-style processing if the submittal is complete, but most attached second-floor decks are not true over-the-counter approvals",
+    "complex": "2-4 weeks for residential plan review; longer if structural details, setbacks, or MUP/zoning review are triggered"
+  },
+  "inspections": [
+    {
+      "stage": "Footing / Post Hole Inspection",
+      "description": "Inspector checks footing hole depth below frost depth, soil bearing, hole diameter, rebar if required, post base hardware, and that concrete has not been poured before approval.",
+      "timing": "Before pouring concrete"
+    },
+    {
+      "stage": "Framing / Ledger Inspection",
+      "description": "Inspector verifies ledger board attachment to the house, proper flashing at the ledger, joist hangers, beam/post connections, fastener type and spacing, lateral load connections, and that framing matches approved plans.",
+      "timing": "After framing is complete but before decking boards and finishes are installed"
+    },
+    {
+      "stage": "Final Deck Inspection",
+      "description": "Inspector checks guardrail height and opening limits, stair geometry and handrails if stairs are included, deck board installation, structural stability, attachment to the house, and overall compliance with approved plans.",
+      "timing": "After all framing, decking, guards, and stairs are complete"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the Seattle Services Portal at https://cosaccela.seattle.gov. Use the permit/record number in My Records to request inspections. Seattle SDCI phone: (206) 684-8600. Plan on at least 24 hours advance notice; book earlier for footing inspections so you do not pour concrete before approval. Typical inspection requests are handled during normal business hours, Monday-Friday.",
+  "license_required": "Licensed general contractor or specialty contractor pulls the building permit on behalf of the homeowner. In Seattle, the contractor's license and registration information should be on the application; homeowners may be able to pull permits for owner-occupied single-family work, but a contractor is commonly used for an attached second-floor deck.",
+  "city_contractor_registration": "Seattle does not use a separate city contractor registration system like some other cities, but the contractor must be properly licensed/registered for the work and should verify current status before applying.",
+  "what_to_bring": [
+    "Completed Seattle Services Portal application with property address and owner information",
+    "Scaled deck plans showing dimensions, elevation, guardrail height, stair details, and attachment to the house",
+    "Footing and foundation details, including post sizes, beam sizes, and frost-depth footing information",
+    "Ledger attachment and flashing detail for the second-floor wall connection",
+    "Contractor license/registration information or homeowner authorization if a contractor is submitting",
+    "Site plan showing deck location, setbacks, and any easements or lot constraints"
+  ],
+  "common_mistakes": [
+    "Pouring footings before the footing inspection is approved — Seattle inspectors will fail the work and you may have to expose the footing again",
+    "Missing ledger flashing or using the wrong fastener schedule at the house connection — this is one of the most common deck failures",
+    "Submitting plans without guardrail, stair, and lateral load connection details — plan review will stall",
+    "Assuming a deck under 200 sq ft is exempt — this deck is 240 sq ft and attached, so it clearly needs a permit",
+    "Ignoring Seattle zoning or MUP review triggers — some projects need more than just the building permit",
+    "Using non-corrosion-resistant hardware in a wet climate — inspectors will look for approved galvanized or stainless hardware"
+  ],
+  "pro_tips": [
+    "Open the footing holes and call for inspection before any concrete is placed — this saves the most time and avoids a costly redo",
+    "Submit a complete deck detail sheet up front with ledger, beam, post, footing, and guardrail specs — missing structural details are the #1 reason Seattle deck permits get delayed",
+    "Use hot-dipped galvanized or stainless hardware and connectors; Seattle inspectors are strict on corrosion resistance",
+    "Check whether the project triggers a Seattle Master Use Permit or zoning review before you submit the building permit",
+    "If the deck is attached to a second-floor bedroom wall, make sure the plans show how the existing wall framing and rim joist can carry the load path"
+  ],
+  "code_citation": {
+    "section": "IRC R105.1 and IRC R507",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish or change the occupancy of a building or structure shall first make application... R507 Decks shall be constructed in accordance with this section."
+  },
+  "companion_permits": [
+    {
+      "permit_type": "Electrical Permit",
+      "reason": "May be required if: new wiring, disconnect replacement, breaker/panel modification, or a new circuit is included.",
+      "certainty": "likely",
+      "required_if": "new wiring, disconnect replacement, breaker/panel modification, or a new circuit is included",
+      "requirement_label": "May be required based on scope"
+    }
+  ],
+  "zoning_hoa_flag": "Seattle zoning review may apply if the deck encroaches into setbacks, exceeds height limits, or is in a shoreline, steep slope, or environmentally critical area. HOA rules can also restrict deck appearance, railing style, or placement, but HOA approval does not replace the city permit. Check for any Seattle Master Use Permit or design review trigger before starting.",
+  "sources": [
+    "https://www.seattle.gov/sdci",
+    "https://cosaccela.seattle.gov",
+    "https://clerk.seattle.gov/search/results?s3=&s4=&s5=&s1=&s2=&S6=&Sect4=AND&l=200&Sect2=THESON&Sect3=PLURON&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2F%7Epublic%2Fcbor1.htm&r=33&f=G&s7=%22BUILDING-CODES%22%5BINDX%5D",
+    "https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "https://www.seattle.gov/a/156593",
+    "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM."
+  ],
+  "confidence": "high",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "maps_url": "https://www.google.com/maps?q=700+5th+Ave,+Suite+2000,+Seattle,+WA+98104",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_field_sources": {
+    "apply_url": "city_kb",
+    "apply_phone": "city_kb",
+    "apply_address": "city_kb",
+    "fee_range": "machine_extracted",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "applying_office": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": false,
+  "missing_fields": [],
+  "confidence_reason": "City-specific match supported by live web research",
+  "_meta": {
+    "generated_at": "2026-04-28T21:01:47.534824",
+    "response_ms": 12389,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 4,
+    "city_match_level": "city",
+    "job_type": "New deck 240 sf attached to second-floor wall of existing single-family house, accessed from upstairs bedroom.",
+    "city": "Seattle",
+    "state": "WA",
+    "zip_code": "98103",
+    "job_category": "residential",
+    "auto_verified": false,
+    "missing_fields": []
+  },
+  "fee_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&s4=&s5=&s1=&s2=&S6=&Sect4=AND&l=200&Sect2=THESON&Sect3=PLURON&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2F%7Epublic%2Fcbor1.htm&r=33&f=G&s7=%22BUILDING-CODES%22%5BINDX%5D",
+    "title": "Seattle City Council Bills and Ordinances",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "title": "Contact Us - Phone Numbers - SDCI | seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://www.seattle.gov/a/156593",
+    "title": "[PDF] Tenant Improvement Program Health and Safety Project List",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM.",
+    "title": "Ordinance 122528 - Online Information Resources - Seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM.",
+    "title": "Ordinance 122528 - Online Information Resources - Seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 100,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "residential",
+  "checklist": [
+    "Verify your contractor license is current and valid in WA",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Structural drawings showing joist size, span, and beam details",
+    "Footing depth and diameter (frost line depth for WA)",
+    "Ledger attachment method to house",
+    "Guard rail height and baluster spacing specs",
+    "ESS clearances per NFPA 855 (≥3 ft from openings, doors, windows; verify state/AHJ override)",
+    "Battery commissioning report from manufacturer (required for inspection sign-off)",
+    "ESS hazardous-voltage labeling per UL 9540 / 9540A on each enclosure",
+    "AC disconnect labeling 'Warning: Dual Power Source' per NEC 705.10 at the main service",
+    "AC disconnect within sight of the inverter (NEC 690.13 / 705.20)",
+    "Working clearance at ESS enclosure: 30 in wide × 36 in depth × 6.5 ft height (NEC 110.26)",
+    "ESS marking at the main service identifying battery feed-in source per NEC 706.10",
+    "Confirm the required license is active and matches the application: Licensed general contractor or specialty contractor pulls the building permit on behalf of the homeowner. In Seattle, the contractor's license and registration information should be on the application; homeowners may be able to pull permits for owner-occupied single-family work, but a contractor is commonly used for an attached second-floor deck.",
+    "Bring 2 copies of all documents to Seattle Department of Construction & Inspections (SDCI)"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Missing Master Use Permit (MUP) in addition to building permit",
+      "frequency": "common",
+      "fix": "Check if project requires MUP at seattle.gov/sdci before applying"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "job_value": 18000,
+  "fee_calculator": {
+    "fee": 407.0,
+    "formula": "$200 base + $11.50/thousand of job value",
+    "confidence": "high",
+    "note": "Verify current fee schedule — rates may have changed"
+  },
+  "expert_notes": [
+    {
+      "title": "Washington State Building Code 2021 edition effective March 15, 2024",
+      "note": "After multiple delays, the 2021 Washington State Building Code (IBC, IRC, IMC, UPC, IFC, and WSEC-R) became enforceable statewide on March 15, 2024, replacing the 2018 edition. Confirm with the AHJ which edition applies to your application — vested permits submitted before that date may still be reviewed under 2018, but new submittals must comply with 2021 amendments. Drawings still referencing 2018 sections are a common plan-check rejection.",
+      "applies_to": "All residential and commercial permit applications statewide",
+      "source": "https://sbcc.wa.gov/news/revised-effective-date-2021-codes-march-15-2024"
+    },
+    {
+      "title": "2024 Code adoption cycle delayed — May 2027 effective date expected",
+      "note": "The State Building Code Council (SBCC) has slipped the 2024 IBC/IRC/IECC adoption cycle. Current staff estimate is final adoption by June 2026 with codes going into effect roughly May 2027 — about a 6-month slip from the prior schedule. Plan multi-year projects under 2021 code with an eye to the 2027 transition; permits vested before the new effective date generally remain under 2021.",
+      "applies_to": "Long-lead residential projects crossing the 2027 code-change boundary",
+      "source": "https://www.linkedin.com/posts/p-hanks_recap-from-todays-wa-state-building-code-activity-7376025613402329088-SuRN"
+    },
+    {
+      "title": "Washington State Energy Code Residential (WSEC-R) 2021 — based on 2021 IECC with state amendments",
+      "note": "The 2021 WSEC-R has been in effect since March 15, 2024 and applies to all one- and two-family dwellings and townhouses up to three stories. WSEC-R adopts the 2021 IECC with significant Washington amendments — notably the credit-based energy-efficiency point system in R406 (additional credits required over the 2018 edition) and high-efficiency HVAC/water-heating mandates. Submit an R406 credit worksheet with every new SFR/ADU permit; missing credits is the single most common WSEC-R rejection.",
+      "applies_to": "New SFR, ADU, townhouse, and additions creating conditioned space",
+      "source": "https://up.codes/viewer/washington/wa-energy-code-residential-provisions-2021"
+    },
+    {
+      "title": "L&I contractor registration required — no statewide \"general contractor license\"",
+      "note": "Washington does NOT have a CSLB-style state contractor license. Instead, the Department of Labor & Industries (L&I) requires every construction contractor to register with L&I, post a continuous bond ($12,000 general / $6,000 specialty), and carry liability insurance. Verify the contractor on the L&I \"Verify a Contractor\" lookup before signing — unregistered contracting forfeits lien rights and is grounds for civil penalties under RCW 18.27.",
+      "applies_to": "All paid construction work statewide",
+      "source": "https://lni.wa.gov/licensing-permits/contractors/register-as-a-contractor/"
+    },
+    {
+      "title": "Electricians and plumbers licensed separately by L&I — not by L&I contractor registration alone",
+      "note": "L&I licenses electricians and plumbers as a separate program from contractor registration. Electrical work requires a 01 General or 02 Residential electrical contractor license plus certified electrician (e.g., 06A residential specialty, 07 journey-level), and plumbing requires a plumbing contractor license plus a certified plumber. A general contractor registration alone does NOT permit a firm to pull electrical or plumbing permits — that work must be subbed to a separately licensed electrical/plumbing contractor.",
+      "applies_to": "Any project with electrical or plumbing scope",
+      "source": "https://www.lni.wa.gov/licensing-permits/"
+    },
+    {
+      "title": "HVAC has no dedicated state license — relies on contractor registration + 06A/06B for line-voltage work",
+      "note": "Washington does not issue a stand-alone HVAC license. HVAC firms register as L&I specialty contractors; any line-voltage electrical work on the install (e.g., disconnects, condenser whips, furnace hookups) requires a 06A (HVAC/Refrigeration) or 06B specialty electrician under the L&I electrical program. Low-voltage thermostat wiring may fall under the 06 specialty as well — confirm scope before sending an unlicensed tech to do final electrical connections.",
+      "applies_to": "HVAC change-outs, new installs, and heat-pump conversions",
+      "source": "https://www.lumberfi.com/wiki/washington-hvac-license-requirements"
+    },
+    {
+      "title": "Separate L&I electrical permit + state electrical inspection (parallel filing)",
+      "note": "Most jurisdictions in Washington do NOT issue electrical permits — those are pulled directly from L&I by the licensed electrical contractor (or the homeowner doing their own work on a single-family residence they own and occupy). The L&I state electrical inspector — not the city building inspector — performs the rough-in and final electrical inspections. Budget a separate L&I permit fee and a separate inspection schedule on top of the building permit; cities like Seattle and Spokane that issue their own electrical permits are the exception, not the rule.",
+      "applies_to": "Electrical scope on residential projects outside Seattle/Spokane and a few other delegated cities",
+      "source": "https://www.lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/"
+    },
+    {
+      "title": "Critical Areas Ordinance (CAO) — every city/county must regulate wetlands, streams, and geo-hazards",
+      "note": "The state Growth Management Act requires every Washington city and county to adopt a Critical Areas Ordinance protecting wetlands, fish and wildlife habitat, frequently flooded areas, geologically hazardous areas (landslide, seismic, erosion), and critical aquifer recharge areas. If any portion of the parcel — including required buffers (often 50–300 ft from a wetland or stream) — falls in a critical area, expect a critical-area study, mitigation plan, and possibly a reasonable-use exception before the building permit can issue. Always pull the parcel-level CAO map before quoting; a missed wetland buffer can add 3–6 months and a wetland biologist to the project.",
+      "applies_to": "Any parcel touching a wetland, stream, steep slope, or designated geo-hazard",
+      "source": "https://kingcounty.gov/en/dept/local-services/certificates-permits-licenses/permits/permits-inspections-codes-buildings-land-use/permit-forms-application-materials/land-use/critical-areas"
+    },
+    {
+      "title": "Shoreline Management Act — separate Substantial Development / Conditional Use / Variance permit",
+      "note": "Construction within 200 feet of an ordinary high-water mark on a shoreline of the state (most marine waters, lakes ≥20 acres, and streams with mean annual flow ≥20 cfs) triggers the Shoreline Management Act. Work over $9,047 (the 2024 statutory threshold, indexed every 5 years) generally requires a Shoreline Substantial Development Permit issued by the local government and reviewed by Department of Ecology — Ecology's review adds 21 days minimum, and shoreline permits do not become effective until 14 days after Ecology's filing date. File this in PARALLEL with the building permit, not after.",
+      "applies_to": "Residential work within 200 ft of a shoreline of the state",
+      "source": "https://apps.ecology.wa.gov/publications/documents/1706029.pdf"
+    },
+    {
+      "title": "Statewide DNR Wildfire Hazard Map — defensible space and WUI building requirements",
+      "note": "The Department of Natural Resources maintains a statewide map categorizing wildfire hazard as low, moderate, high, or very high. Parcels in high/very-high zones (much of eastern Washington and parts of the Cascade foothills) trigger IWUIC-derived ignition-resistant construction (Class A roof, ember-resistant vents, 5 ft non-combustible zone) and defensible-space inspections from the local fire marshal. Pull the DNR map for the parcel before specifying siding, eaves, or decking — substituting non-rated materials in a high-hazard zone is a common rejection.",
+      "applies_to": "New construction and major remodels in DNR-mapped high/very-high wildfire hazard zones",
+      "source": "https://dnr.wa.gov/wildfire-resources/wildfire-prevention/wildfire-hazard-and-risk-mapping"
+    },
+    {
+      "title": "RCW 43.42.080 coordinated permit timelines — not a hard shot clock",
+      "note": "Unlike California's 60-day ADU clock, Washington has no statewide ministerial shot clock for residential permits. RCW 43.42.080 lets the Office of Regulatory Innovation and Assistance (ORIA) coordinate timelines across participating state agencies, but timelines \"shall not be shorter than those otherwise required\" by other law. Local LDC-060(H) infill provisions target 60 days (no public hearing) or 80 days (with hearing), but these are goals, not guarantees — BIAW data puts the statewide average residential permit at ~6.5 months. Set client expectations accordingly and track vesting carefully.",
+      "applies_to": "All residential permit applications — managing client timeline expectations",
+      "source": "https://app.leg.wa.gov/rcw/default.aspx?cite=43.42.080"
+    },
+    {
+      "title": "Permit vesting reform — minimum 2-year vesting for projects ≤50 units (2026 legislation)",
+      "note": "Washington's vested-rights doctrine attaches to a complete building-permit application — the project is reviewed under the code in effect on the application date, even if codes change later. 2026 legislation moving through the Senate would lock that vesting for a minimum of 2 years on projects of 50 or fewer residential units. Practically: file a complete application before a known code change (e.g., the 2024 cycle effective ~May 2027) to lock in 2021 code, but track the bill's final form before relying on the 2-year floor.",
+      "applies_to": "Residential infill and small-multifamily timing decisions around code-change boundaries",
+      "source": "https://wacities.org/advocacy/News/advocacy-news/2026/03/06/bill-proposes-reforms-to-project-permit-vesting---permit-shot-clocks"
+    },
+    {
+      "title": "RCW 64.06.020 Form 17 seller disclosure — improvements without permits must be disclosed",
+      "note": "Almost all residential resales in Washington require the seller to deliver a completed Form 17 Seller Disclosure Statement under RCW 64.06.020. The form specifically asks whether additions, conversions, or remodels were done with required permits and final inspections. Unpermitted ADU conversions, finished basements, or garage conversions surface here — and disclosed-but-unpermitted work is a frequent trigger for retroactive permit applications, which the AHJ will review under CURRENT code, not the code in effect when the work was originally done.",
+      "applies_to": "Resale prep and retroactive permit work on previously unpermitted improvements",
+      "source": "https://app.leg.wa.gov/rcw/default.aspx?cite=64.06.020"
+    },
+    {
+      "title": "Flood Hazard Overlay District — separate floodplain development permit on top of building permit",
+      "note": "Parcels in a FEMA Special Flood Hazard Area (Zone A, AE, VE) fall under the local Flood Hazard Overlay District and require a separate floodplain development permit in addition to the building permit. Lowest-floor elevation (typically 1–2 ft above BFE depending on jurisdiction), flood vents on enclosed areas below BFE, and a post-construction Elevation Certificate sealed by a licensed surveyor are all standard requirements. File the floodplain permit and order the EC up front — discovering the parcel is in an SFHA at framing inspection is a project-killer.",
+      "applies_to": "Any residential work in a FEMA-mapped Special Flood Hazard Area",
+      "source": "https://experience.arcgis.com/experience/5978c68aeb2f495db07ddab1c3aa1048/page/Flood-Hazard-Overlay-District"
+    }
+  ],
+  "hidden_triggers": [],
+  "_fee_floor_check": "residential_no_override"
+}

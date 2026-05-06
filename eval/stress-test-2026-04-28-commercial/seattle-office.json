@@ -1,0 +1,507 @@
+{
+  "job_summary": "4,500 sf commercial office tenant improvement on the 3rd floor in Seattle: new demising partitions, office buildout, ceiling and lighting changes, sprinkler head relocation, electrical/data work, and accessible path of travel upgrades. This triggers a commercial building permit for the TI scope, plus separate electrical permit(s) for new/modified wiring and a fire sprinkler permit/approval for head relocation. Because the project includes accessible path of travel work, plan review will also check accessibility compliance and may require additional building code review. Seattle may also require a Master Use Permit (MUP) depending on the exact tenant use, exterior changes, or change-of-use triggers.",
+  "total_cost_estimate": "$180,000 - $450,000",
+  "location": "Seattle, WA",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Commercial Tenant Improvement",
+      "portal_selection": "Commercial Tenant Improvement",
+      "required": true,
+      "notes": "Required for the interior office buildout, new demising partitions, ceiling modifications, and accessible path of travel work. Seattle commercial TI projects are plan-reviewed and the building permit is the main permit for the scope."
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Interior Alteration",
+      "portal_selection": "Electrical - Commercial Alteration",
+      "required": true,
+      "notes": "Required for new/modified lighting, power, and data-related electrical work tied to the tenant improvement. In Seattle, electrical permits are separate from the building permit and are handled through the electrical permitting system."
+    },
+    {
+      "permit_type": "Fire Sprinkler Permit — Head Relocation / Modification",
+      "portal_selection": "Fire Sprinkler - Modification",
+      "required": true,
+      "notes": "Required for sprinkler head relocation. Fire protection work is typically reviewed separately from the building TI permit and must match the approved sprinkler contractor and fire alarm/sprinkler submittal requirements."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Commercial Tenant Improvement",
+      "included_because": "The scope includes new demising partitions, office buildout, ceiling changes, and accessible path of travel improvements in a commercial office tenant space, which are all building-code regulated interior alterations requiring plan review.",
+      "scope_trigger": "Commercial tenant improvement with interior partitions, finish work, and accessibility upgrades"
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Interior Alteration",
+      "included_because": "The job includes electrical and data work plus lighting changes, which triggers a separate electrical permit for new circuits, fixture changes, and any panel/circuit modifications.",
+      "scope_trigger": "Electrical/data and lighting changes in tenant improvement scope"
+    },
+    {
+      "permit_type": "Fire Sprinkler Permit — Head Relocation / Modification",
+      "included_because": "Sprinkler head relocation is fire protection work and cannot be covered by the building permit alone; it requires sprinkler system review and inspection.",
+      "scope_trigger": "Relocation of sprinkler heads"
+    }
+  ],
+  "applying_office": "Seattle Department of Construction & Inspections (SDCI)",
+  "apply_url": "https://cosaccela.seattle.gov",
+  "apply_pdf": null,
+  "apply_phone": "(206) 684-8600",
+  "apply_address": "700 5th Ave, Suite 2000, Seattle, WA 98104",
+  "apply_google_maps": "https://www.google.com/maps?q=700+5th+Ave,+Suite+2000,+Seattle,+WA+98104",
+  "fee_range": "Fee Estimate: **$19,000-$28,500+** (structured floor — see breakdown). Components: ~$11,000 base permit + plan review (Seattle, WA commercial office TI floor) × 1.3× jurisdiction multiplier + $2,000 demising-wall adder + $4,000 fire-sprinkler-modify adder + $3,000 ada-path-of-travel adder. **Verify against current fee schedule before quoting.**",
+  "approval_timeline": {
+    "simple": "1-5 business days for straightforward over-the-counter intake items; most commercial TI work still routes to plan review",
+    "complex": "4-12 weeks for commercial plan review, longer if accessibility, fire/life safety, or MUP review is triggered"
+  },
+  "inspections": [
+    {
+      "stage": "Building Rough-In / Framing",
+      "description": "Inspector verifies demising partitions are built per approved plans, rated assemblies are correct where required, penetrations are firestopped, ceiling framing is compliant, and accessible path of travel details match the approved drawings.",
+      "timing": "Before drywall, ceiling closure, or concealment of framing and penetrations"
+    },
+    {
+      "stage": "Electrical Rough-In",
+      "description": "Inspector checks new branch circuits, fixture rough-in, box fill, conductor sizing, grounding/bonding, support of cable and raceways, and that any new lighting controls and emergency/egress lighting provisions are installed per plan.",
+      "timing": "Before walls and ceilings are closed"
+    },
+    {
+      "stage": "Fire Sprinkler Rough-In / Hydrostatic or Modification Inspection",
+      "description": "Inspector verifies sprinkler head relocation matches the approved sprinkler layout, head spacing and obstructions are correct, piping is properly supported, and any required hydrostatic or flush test is completed if the system was opened.",
+      "timing": "Before ceiling closure and before the system is returned to service"
+    },
+    {
+      "stage": "Final Building / Accessibility",
+      "description": "Inspector verifies final partition layout, door clearances, accessible route, hardware, signage, restroom/path-of-travel upgrades if included, ceiling finish, and that all approved TI work matches the permit set.",
+      "timing": "After all work is complete and before occupancy"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the Seattle Services Portal at https://cosaccela.seattle.gov. Use the permit/record number in My Records to request inspections. Seattle SDCI phone: (206) 684-8600. Plan on at least 24 hours advance notice for inspection scheduling; commercial projects often need more lead time for coordinated building/electrical/fire inspections. Check the portal for available inspection types and status updates.",
+  "license_required": "Licensed commercial general contractor pulls the building permit on behalf of the tenant or owner; the contractor's license and registration information must appear on the application. Electrical work must be pulled by a WA L&I-licensed electrical contractor/electrician, and sprinkler work must be pulled by the properly licensed fire sprinkler contractor. The permit is still required even when licensed trades perform the work.",
+  "city_contractor_registration": "Seattle uses SDCI/Seattle Services Portal for permit processing, and contractors must have current city account/registration credentials as applicable to the permit type and trade. Verify the contractor account and any required Seattle business licensing before submitting; lapsed registration or account issues can block permit processing.",
+  "what_to_bring": [
+    "Completed commercial TI permit application and project record information",
+    "Full plan set showing demolition, new partitions, reflected ceiling plan, lighting plan, accessibility path of travel, and life-safety details",
+    "Electrical scope sheet with fixture schedule, circuiting, panel schedule impacts, and data/low-voltage coordination notes",
+    "Sprinkler modification drawings and contractor information for head relocation",
+    "Contractor license numbers and Seattle/WA business registration details",
+    "Tenant authorization letter or owner authorization for the work"
+  ],
+  "common_mistakes": [
+    "Submitting the TI as a simple interior remodel and omitting the fire sprinkler modification — sprinkler head relocation needs its own review/approval path",
+    "Forgetting that Seattle commercial building permits are plan-reviewed and can take weeks, not same-day OTC",
+    "Starting demolition before the permit is issued and posted — Seattle can issue stop-work orders",
+    "Missing accessibility path of travel details in the plan set — this can stall review late in the process",
+    "Submitting permit application without verifying current contractor registration status — an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting."
+  ],
+  "pro_tips": [
+    "Bundle the building TI, electrical, and sprinkler submittals so the plan reviewer sees the full life-safety picture at once; piecemeal submittals slow Seattle reviews down.",
+    "Seattle’s commercial reviews are thorough; a clean plan set with reflected ceiling, lighting, and accessibility sheets saves weeks of back-and-forth.",
+    "Check whether the project triggers a Master Use Permit (MUP) before you submit — Seattle sometimes requires MUP review in addition to the building permit.",
+    "Verify your Seattle contractor registration renewal date before starting any permit application — registration lapses are one of the most avoidable rejection reasons.",
+    "Coordinate inspection timing early with the sprinkler contractor and electrician so the final building inspection is not held up by a missing trade sign-off."
+  ],
+  "code_citation": {
+    "section": "Seattle Municipal Code / IBC 105.1 and 105.2; NEC 2023; IFC sprinkler modification provisions",
+    "text": "Any owner or authorized agent who intends to construct, enlarge, alter, repair, move, demolish, or change the occupancy of a building or structure shall first make application and obtain the required permit."
+  },
+  "companion_permits": [
+    {
+      "permit_type": "Master Use Permit (MUP)",
+      "reason": "May be required if: Land use review, change of use, exterior work, or other MUP-triggering conditions.",
+      "required_if": "Land use review, change of use, exterior work, or other MUP-triggering conditions",
+      "certainty": "possible",
+      "requirement_label": "May be required based on scope"
+    },
+    {
+      "permit_type": "Fire Alarm Permit — Modification",
+      "reason": "May be required if: Fire alarm devices, strobes, horns, pull stations, or panel programming are altered.",
+      "required_if": "Fire alarm devices, strobes, horns, pull stations, or panel programming are altered",
+      "certainty": "conditional",
+      "requirement_label": "May be required based on scope"
+    },
+    {
+      "permit_type": "Mechanical Permit — Commercial HVAC Alteration",
+      "reason": "May be required if: New or modified HVAC ductwork, diffusers, exhaust, or equipment changes.",
+      "required_if": "New or modified HVAC ductwork, diffusers, exhaust, or equipment changes",
+      "certainty": "possible",
+      "requirement_label": "May be required based on scope"
+    }
+  ],
+  "zoning_hoa_flag": "For a Seattle commercial office TI, HOA restrictions usually do not apply, but zoning and land-use review can still matter. Seattle may require a Master Use Permit (MUP) depending on the exact use, exterior alterations, signage, or change-of-use triggers. If the building is in a historic district or has landmark status, additional review may apply.",
+  "sources": [
+    "https://www.seattle.gov/sdci",
+    "https://cosaccela.seattle.gov",
+    "https://www.seattle.gov/sdci/permits",
+    "https://clerk.seattle.gov/search/results?s3=&s4=&s5=&s1=&s2=&S6=&Sect4=AND&l=200&Sect2=THESON&Sect3=PLURON&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2F%7Epublic%2Fcbor1.htm&r=33&f=G&s7=%22BUILDING-CODES%22%5BINDX%5D",
+    "https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "https://www.seattle.gov/a/156593",
+    "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM."
+  ],
+  "confidence": "high",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "maps_url": "https://www.google.com/maps?q=700+5th+Ave,+Suite+2000,+Seattle,+WA+98104",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "last_verified_at": "2026-04-12T17:52:41.868496",
+  "_field_sources": {
+    "apply_url": "auto_verified:https://www.permitflow.com/blog/seattle-wa-permitting",
+    "applying_office": "auto_verified:https://www.permitflow.com/blog/seattle-wa-permitting",
+    "apply_phone": "auto_verified:https://www.permitflow.com/blog/seattle-wa-permitting",
+    "apply_address": "auto_verified:https://www.permitflow.com/blog/seattle-wa-permitting",
+    "fee_range": "auto_verified:https://www.permitflow.com/blog/seattle-wa-permitting",
+    "permits_required": "web_search",
+    "approval_timeline": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": false,
+  "missing_fields": [],
+  "confidence_reason": "Verified city/trade data found from official sources",
+  "_meta": {
+    "generated_at": "2026-04-28T21:01:20.793949",
+    "response_ms": 16720,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 4,
+    "city_match_level": "city",
+    "job_type": "4,500 sf commercial office tenant improvement on 3rd floor: new demising partitions, office buildout, ceiling and lighting changes, sprinkler head relocation, electrical/data, accessible path of travel",
+    "city": "Seattle",
+    "state": "WA",
+    "zip_code": "98101",
+    "job_category": "commercial",
+    "auto_verified": true,
+    "missing_fields": []
+  },
+  "fee_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&s4=&s5=&s1=&s2=&S6=&Sect4=AND&l=200&Sect2=THESON&Sect3=PLURON&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2F%7Epublic%2Fcbor1.htm&r=33&f=G&s7=%22BUILDING-CODES%22%5BINDX%5D",
+    "title": "Seattle City Council Bills and Ordinances",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://www.seattle.gov/sdci/about-us/contact-us---send-us-a-question/contact-us---phone-numbers",
+    "title": "Contact Us - Phone Numbers - SDCI | seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://www.seattle.gov/a/156593",
+    "title": "[PDF] Tenant Improvement Program Health and Safety Project List",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM.",
+    "title": "Ordinance 122528 - Online Information Resources - Seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://clerk.seattle.gov/search/results?s3=&l=200&Sect1=IMAGE&Sect2=THESON&Sect3=PLURON&Sect4=AND&Sect5=CBORY&Sect6=HITOFF&d=ORDF&p=1&u=%2Fsearch%2Fordinances&r=20&f=G&s7=%22Urban+Development+and+Planning%22.COMM.",
+    "title": "Ordinance 122528 - Online Information Resources - Seattle.gov",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "verified",
+  "permit_ready_score": 100,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "commercial_office_ti",
+  "checklist": [
+    "Verify your contractor license is current and valid in WA",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Identify altered primary-function area: if scope alters an area where major activity occurs, an accessible path of travel to the altered area is required unless technically infeasible / disproportionate (2010 ADA §202.4; 28 CFR §36.403(a))",
+    "20% disproportionality cap: ADA path-of-travel work exceeding 20% of alteration cost is disproportionate at the federal level, but lower-cost items must still be prioritized (28 CFR §36.403(f)(1))",
+    "Accessible exterior route: site arrival points + accessible parking/passenger loading + curb ramps + walking surfaces + ramps/landings + slope/cross-slope + door clearances to altered area (2010 ADA §§206.2.1, 206.4, 403, 404, 405, 406)",
+    "Restroom path + restroom upgrades: if restrooms serve the altered area, accessible route + door + turning space + lavatory + water closet + grab bars + clearances + signage (2010 ADA §§213, 603-606, 609, 703)",
+    "Parking + passenger loading: recalculate accessible-stall count + van space + access aisle + signage for affected parking serving the altered area (2010 ADA §§208, 502, 503; 28 CFR §36.403(e)(1))",
+    "Drinking fountains, phones, and signage along the path: tactile/visual signs, room ID, directional, fountain units, public phones if any (2010 ADA §§211, 216, 602, 703, 704)",
+    "Doors, thresholds, and hardware on the route: clear width + maneuvering clearance + opening force + thresholds + lever/operable hardware + protruding objects (2010 ADA §§303, 307, 309, 404)",
+    "ADA fixture counts per IBC Table 2902.1 (1 toilet + 1 lavatory per 1–25 occupants per sex; verify current edition)",
+    "Demising wall fire-rated assembly between tenants per IBC 706.3 (1-hour typical; 2-hour for higher-occupancy adjacencies)",
+    "Accessible-parking ratio per IBC 1106 + 1106.4 (1 per 25 spaces; 1 of every 6 must be van-accessible)",
+    "Exit access travel distance ≤200 ft (sprinklered) / ≤75 ft (non-sprinklered) per IBC 1017",
+    "Sprinkler head additions or relocations: hydraulic recalc + permit + 5-year cert update per NFPA 13/25",
+    "Lighting power density per IECC C405 (e.g. ≤0.79 W/sf for open-plan office)",
+    "Mechanical zoning per IMC 403 with tenant-controlled VAV / ductless on each occupied space",
+    "Fire alarm initiating-device coordination with base building (smoke detectors at HVAC return per NFPA 72 §17.7)",
+    "Accessible route from accessible entrance to all tenant areas per ADA §206 — no thresholds >½ in unbeveled",
+    "Means of egress: 2 exits required if occupant load >49 OR travel distance exceeds limits per IBC 1006",
+    "Energy code envelope + windows + insulation comply with IECC C402 if exterior wall is touched",
+    "Asbestos / lead survey for buildings pre-1980 if disturbing partitions, ceilings, or flooring",
+    "Glass + glazing: safety glazing per IBC 2406 in any pane within 24 in of doors or 60 in of floor",
+    "Confirm the required license is active and matches the application: Licensed commercial general contractor pulls the building permit on behalf of the tenant or owner; the contractor's license and registration information must appear on the application. Electrical work must be pulled by a WA L&I-licensed electrical contractor/electrician, and sprinkler work must be pulled by the properly licensed fire sprinkler contractor. The permit is still required even when licensed trades perform the work.",
+    "Bring 2 copies of all documents to Seattle Department of Construction & Inspections (SDCI)"
+  ],
+  "rejection_patterns": [
+    {
+      "pattern": "Missing Master Use Permit (MUP) in addition to building permit",
+      "frequency": "common",
+      "fix": "Check if project requires MUP at seattle.gov/sdci before applying"
+    },
+    {
+      "pattern": "Noise ordinance violation during construction",
+      "frequency": "common",
+      "fix": "Work hours: 7am-10pm weekdays, 9am-10pm weekends — strictly enforced"
+    }
+  ],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "fee_calculator": {
+    "fee": null,
+    "formula": null,
+    "confidence": "none",
+    "note": "Provide job_value to calculate an exact fee where formulas are available."
+  },
+  "expert_notes": [
+    {
+      "title": "Washington State Building Code 2021 edition effective March 15, 2024",
+      "note": "After multiple delays, the 2021 Washington State Building Code (IBC, IRC, IMC, UPC, IFC, and WSEC-R) became enforceable statewide on March 15, 2024, replacing the 2018 edition. Confirm with the AHJ which edition applies to your application — vested permits submitted before that date may still be reviewed under 2018, but new submittals must comply with 2021 amendments. Drawings still referencing 2018 sections are a common plan-check rejection.",
+      "applies_to": "All residential and commercial permit applications statewide",
+      "source": "https://sbcc.wa.gov/news/revised-effective-date-2021-codes-march-15-2024"
+    },
+    {
+      "title": "2024 Code adoption cycle delayed — May 2027 effective date expected",
+      "note": "The State Building Code Council (SBCC) has slipped the 2024 IBC/IRC/IECC adoption cycle. Current staff estimate is final adoption by June 2026 with codes going into effect roughly May 2027 — about a 6-month slip from the prior schedule. Plan multi-year projects under 2021 code with an eye to the 2027 transition; permits vested before the new effective date generally remain under 2021.",
+      "applies_to": "Long-lead residential projects crossing the 2027 code-change boundary",
+      "source": "https://www.linkedin.com/posts/p-hanks_recap-from-todays-wa-state-building-code-activity-7376025613402329088-SuRN"
+    },
+    {
+      "title": "Washington State Energy Code Residential (WSEC-R) 2021 — based on 2021 IECC with state amendments",
+      "note": "The 2021 WSEC-R has been in effect since March 15, 2024 and applies to all one- and two-family dwellings and townhouses up to three stories. WSEC-R adopts the 2021 IECC with significant Washington amendments — notably the credit-based energy-efficiency point system in R406 (additional credits required over the 2018 edition) and high-efficiency HVAC/water-heating mandates. Submit an R406 credit worksheet with every new SFR/ADU permit; missing credits is the single most common WSEC-R rejection.",
+      "applies_to": "New SFR, ADU, townhouse, and additions creating conditioned space",
+      "source": "https://up.codes/viewer/washington/wa-energy-code-residential-provisions-2021"
+    },
+    {
+      "title": "L&I contractor registration required — no statewide \"general contractor license\"",
+      "note": "Washington does NOT have a CSLB-style state contractor license. Instead, the Department of Labor & Industries (L&I) requires every construction contractor to register with L&I, post a continuous bond ($12,000 general / $6,000 specialty), and carry liability insurance. Verify the contractor on the L&I \"Verify a Contractor\" lookup before signing — unregistered contracting forfeits lien rights and is grounds for civil penalties under RCW 18.27.",
+      "applies_to": "All paid construction work statewide",
+      "source": "https://lni.wa.gov/licensing-permits/contractors/register-as-a-contractor/"
+    },
+    {
+      "title": "Electricians and plumbers licensed separately by L&I — not by L&I contractor registration alone",
+      "note": "L&I licenses electricians and plumbers as a separate program from contractor registration. Electrical work requires a 01 General or 02 Residential electrical contractor license plus certified electrician (e.g., 06A residential specialty, 07 journey-level), and plumbing requires a plumbing contractor license plus a certified plumber. A general contractor registration alone does NOT permit a firm to pull electrical or plumbing permits — that work must be subbed to a separately licensed electrical/plumbing contractor.",
+      "applies_to": "Any project with electrical or plumbing scope",
+      "source": "https://www.lni.wa.gov/licensing-permits/"
+    },
+    {
+      "title": "HVAC has no dedicated state license — relies on contractor registration + 06A/06B for line-voltage work",
+      "note": "Washington does not issue a stand-alone HVAC license. HVAC firms register as L&I specialty contractors; any line-voltage electrical work on the install (e.g., disconnects, condenser whips, furnace hookups) requires a 06A (HVAC/Refrigeration) or 06B specialty electrician under the L&I electrical program. Low-voltage thermostat wiring may fall under the 06 specialty as well — confirm scope before sending an unlicensed tech to do final electrical connections.",
+      "applies_to": "HVAC change-outs, new installs, and heat-pump conversions",
+      "source": "https://www.lumberfi.com/wiki/washington-hvac-license-requirements"
+    },
+    {
+      "title": "Separate L&I electrical permit + state electrical inspection (parallel filing)",
+      "note": "Most jurisdictions in Washington do NOT issue electrical permits — those are pulled directly from L&I by the licensed electrical contractor (or the homeowner doing their own work on a single-family residence they own and occupy). The L&I state electrical inspector — not the city building inspector — performs the rough-in and final electrical inspections. Budget a separate L&I permit fee and a separate inspection schedule on top of the building permit; cities like Seattle and Spokane that issue their own electrical permits are the exception, not the rule.",
+      "applies_to": "Electrical scope on residential projects outside Seattle/Spokane and a few other delegated cities",
+      "source": "https://www.lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/"
+    },
+    {
+      "title": "Critical Areas Ordinance (CAO) — every city/county must regulate wetlands, streams, and geo-hazards",
+      "note": "The state Growth Management Act requires every Washington city and county to adopt a Critical Areas Ordinance protecting wetlands, fish and wildlife habitat, frequently flooded areas, geologically hazardous areas (landslide, seismic, erosion), and critical aquifer recharge areas. If any portion of the parcel — including required buffers (often 50–300 ft from a wetland or stream) — falls in a critical area, expect a critical-area study, mitigation plan, and possibly a reasonable-use exception before the building permit can issue. Always pull the parcel-level CAO map before quoting; a missed wetland buffer can add 3–6 months and a wetland biologist to the project.",
+      "applies_to": "Any parcel touching a wetland, stream, steep slope, or designated geo-hazard",
+      "source": "https://kingcounty.gov/en/dept/local-services/certificates-permits-licenses/permits/permits-inspections-codes-buildings-land-use/permit-forms-application-materials/land-use/critical-areas"
+    },
+    {
+      "title": "Shoreline Management Act — separate Substantial Development / Conditional Use / Variance permit",
+      "note": "Construction within 200 feet of an ordinary high-water mark on a shoreline of the state (most marine waters, lakes ≥20 acres, and streams with mean annual flow ≥20 cfs) triggers the Shoreline Management Act. Work over $9,047 (the 2024 statutory threshold, indexed every 5 years) generally requires a Shoreline Substantial Development Permit issued by the local government and reviewed by Department of Ecology — Ecology's review adds 21 days minimum, and shoreline permits do not become effective until 14 days after Ecology's filing date. File this in PARALLEL with the building permit, not after.",
+      "applies_to": "Residential work within 200 ft of a shoreline of the state",
+      "source": "https://apps.ecology.wa.gov/publications/documents/1706029.pdf"
+    },
+    {
+      "title": "Statewide DNR Wildfire Hazard Map — defensible space and WUI building requirements",
+      "note": "The Department of Natural Resources maintains a statewide map categorizing wildfire hazard as low, moderate, high, or very high. Parcels in high/very-high zones (much of eastern Washington and parts of the Cascade foothills) trigger IWUIC-derived ignition-resistant construction (Class A roof, ember-resistant vents, 5 ft non-combustible zone) and defensible-space inspections from the local fire marshal. Pull the DNR map for the parcel before specifying siding, eaves, or decking — substituting non-rated materials in a high-hazard zone is a common rejection.",
+      "applies_to": "New construction and major remodels in DNR-mapped high/very-high wildfire hazard zones",
+      "source": "https://dnr.wa.gov/wildfire-resources/wildfire-prevention/wildfire-hazard-and-risk-mapping"
+    },
+    {
+      "title": "RCW 43.42.080 coordinated permit timelines — not a hard shot clock",
+      "note": "Unlike California's 60-day ADU clock, Washington has no statewide ministerial shot clock for residential permits. RCW 43.42.080 lets the Office of Regulatory Innovation and Assistance (ORIA) coordinate timelines across participating state agencies, but timelines \"shall not be shorter than those otherwise required\" by other law. Local LDC-060(H) infill provisions target 60 days (no public hearing) or 80 days (with hearing), but these are goals, not guarantees — BIAW data puts the statewide average residential permit at ~6.5 months. Set client expectations accordingly and track vesting carefully.",
+      "applies_to": "All residential permit applications — managing client timeline expectations",
+      "source": "https://app.leg.wa.gov/rcw/default.aspx?cite=43.42.080"
+    },
+    {
+      "title": "Permit vesting reform — minimum 2-year vesting for projects ≤50 units (2026 legislation)",
+      "note": "Washington's vested-rights doctrine attaches to a complete building-permit application — the project is reviewed under the code in effect on the application date, even if codes change later. 2026 legislation moving through the Senate would lock that vesting for a minimum of 2 years on projects of 50 or fewer residential units. Practically: file a complete application before a known code change (e.g., the 2024 cycle effective ~May 2027) to lock in 2021 code, but track the bill's final form before relying on the 2-year floor.",
+      "applies_to": "Residential infill and small-multifamily timing decisions around code-change boundaries",
+      "source": "https://wacities.org/advocacy/News/advocacy-news/2026/03/06/bill-proposes-reforms-to-project-permit-vesting---permit-shot-clocks"
+    },
+    {
+      "title": "RCW 64.06.020 Form 17 seller disclosure — improvements without permits must be disclosed",
+      "note": "Almost all residential resales in Washington require the seller to deliver a completed Form 17 Seller Disclosure Statement under RCW 64.06.020. The form specifically asks whether additions, conversions, or remodels were done with required permits and final inspections. Unpermitted ADU conversions, finished basements, or garage conversions surface here — and disclosed-but-unpermitted work is a frequent trigger for retroactive permit applications, which the AHJ will review under CURRENT code, not the code in effect when the work was originally done.",
+      "applies_to": "Resale prep and retroactive permit work on previously unpermitted improvements",
+      "source": "https://app.leg.wa.gov/rcw/default.aspx?cite=64.06.020"
+    },
+    {
+      "title": "Flood Hazard Overlay District — separate floodplain development permit on top of building permit",
+      "note": "Parcels in a FEMA Special Flood Hazard Area (Zone A, AE, VE) fall under the local Flood Hazard Overlay District and require a separate floodplain development permit in addition to the building permit. Lowest-floor elevation (typically 1–2 ft above BFE depending on jurisdiction), flood vents on enclosed areas below BFE, and a post-construction Elevation Certificate sealed by a licensed surveyor are all standard requirements. File the floodplain permit and order the EC up front — discovering the parcel is in an SFHA at framing inspection is a project-killer.",
+      "applies_to": "Any residential work in a FEMA-mapped Special Flood Hazard Area",
+      "source": "https://experience.arcgis.com/experience/5978c68aeb2f495db07ddab1c3aa1048/page/Flood-Hazard-Overlay-District"
+    }
+  ],
+  "hidden_triggers": [
+    {
+      "id": "commercial_ti_demising_wall_fire_acoustic_separation",
+      "severity": "high",
+      "title": "Demising wall changes may require rated tenant separation and acoustic details",
+      "why_it_matters": "Moving a tenant separation can affect fire-resistance continuity, penetrations, structure, ceiling plenum, egress, and landlord acoustic criteria. It is commonly under-scoped as 'just a partition.'",
+      "fired_by": [
+        "\\bdemising wall\\b",
+        "\\btenant separation\\b",
+        "\\bsuite split\\b",
+        "\\bcombine suites\\b",
+        "\\bnew demising\\b"
+      ],
+      "likely_required_actions": [
+        "Identify required wall type/rating",
+        "Show continuity to deck and protected penetrations",
+        "Confirm landlord STC/acoustic requirement"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Landlord/owner reviewer"
+      ],
+      "citations": [
+        "IBC §708",
+        "IBC §706",
+        "STC ≥40 landlord/acoustic criterion [verify before merging]"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_sprinkler_relocation_hydraulic_recalc",
+      "severity": "high",
+      "title": "Sprinkler head relocation can require hydraulic recalculation and separate fire permit",
+      "why_it_matters": "Ceiling, wall, storage, or occupancy changes can invalidate sprinkler spacing/coverage. Fire reviewers may require hydraulic calculations and current inspection/certification records.",
+      "fired_by": [
+        "\\bsprinkler relocation\\b",
+        "\\bsprinkler head relocation\\b",
+        "\\brelocate sprinkler\\b",
+        "\\bmove sprinkler heads\\b",
+        "\\bnew ceiling\\b",
+        "\\bopen ceiling\\b",
+        "\\bstorage racks\\b"
+      ],
+      "likely_required_actions": [
+        "Have sprinkler contractor review layout",
+        "Submit shop drawings/hydraulic calc if required",
+        "Confirm 5-year inspection/certification status"
+      ],
+      "companion_permits": [
+        "Fire sprinkler permit"
+      ],
+      "agencies": [
+        "Fire Prevention",
+        "Licensed sprinkler contractor"
+      ],
+      "citations": [
+        "NFPA 13",
+        "NFPA 25",
+        "IFC §901.6"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_accessible_route_existing_building_alteration",
+      "severity": "medium",
+      "title": "Commercial alteration can require accessible-route/path-of-travel upgrades",
+      "why_it_matters": "Even when the requested work is not 'an ADA project,' altered primary-function areas can require accessible route, restroom, drinking fountain, parking, and entrance upgrades within the disproportionality cap.",
+      "fired_by": [
+        "\\btenant improvement\\b",
+        "\\bti\\b",
+        "\\bprimary function\\b",
+        "\\baccessible route\\b",
+        "\\bpath of travel\\b",
+        "\\bfront counter\\b",
+        "\\breception\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare path-of-travel analysis",
+        "Budget required accessible upgrades",
+        "Document 20% disproportionality cap if used"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR §36.403",
+        "2010 ADA Standards §202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_lighting_iecc_controls",
+      "severity": "medium",
+      "title": "Lighting changes trigger IECC lighting-power and automatic-control checks",
+      "why_it_matters": "Replacing or reconfiguring lighting can require COMcheck/energy forms, lighting power density compliance, occupancy sensors, daylight controls, and automatic shutoff details.",
+      "fired_by": [
+        "\\blighting\\b",
+        "\\blight fixtures\\b",
+        "\\bled retrofit\\b",
+        "\\btrack lighting\\b",
+        "\\boccupancy sensors?\\b",
+        "\\bdaylight controls?\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare lighting compliance / COMcheck if required",
+        "Show control zones and automatic shutoff",
+        "Coordinate emergency egress lighting"
+      ],
+      "companion_permits": [
+        "Electrical permit, if separated locally"
+      ],
+      "agencies": [
+        "AHJ Electrical/Energy reviewer"
+      ],
+      "citations": [
+        "IECC §C405",
+        "ASHRAE 90.1 [where adopted]"
+      ],
+      "primary_scope": "commercial_ti"
+    }
+  ],
+  "_fee_floor_components": {
+    "scope": "commercial_office_ti",
+    "scope_note": "plan review + permit + sprinkler hydraulic recalc",
+    "sqft": 4500,
+    "base_floor": 11000,
+    "jurisdiction_multiplier": 1.3,
+    "jurisdiction_label": "Seattle, WA",
+    "jurisdiction_rationale": "SDCI valuation-based scaling and separate trade/fire review common [verify current SDCI fee subtitle]",
+    "trigger_adders": [
+      {
+        "key": "demising_wall",
+        "add_min": 1000,
+        "add_max": 3000,
+        "rationale": "fire-rated assembly + STC field test"
+      },
+      {
+        "key": "fire_sprinkler_modify",
+        "add_min": 2000,
+        "add_max": 6000,
+        "rationale": "hydraulic recalc + permit"
+      },
+      {
+        "key": "ada_path_of_travel",
+        "add_min": 1500,
+        "add_max": 5000,
+        "rationale": "20% rule alterations"
+      }
+    ],
+    "structured_low": 19000,
+    "structured_high": 28500,
+    "llm_fee_high_end": 8000.0
+  },
+  "_fee_adjusted": true,
+  "_fee_floor_check": "llm_below_floor_adjusted"
+}

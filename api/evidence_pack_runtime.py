@@ -1,0 +1,507 @@
+"""Step 7 evidence-pack runtime helpers.
+
+Disabled by default. Preview/staging evidence-pack mode requires an explicit
+PERMITASSIST_EVIDENCE_PACK_ENABLED=true flag, a validated mode, an existing pack
+path, and an expected metadata fingerprint match. Any failed contract check
+returns a safe runtime object with zero records so API outputs can fail closed
+without leaking filesystem paths or env internals.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from functools import lru_cache
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+import re
+from typing import Any
+from urllib.parse import urlparse
+
+SUPPORTED_FIELDS = {
+    "permit_type",
+    "apply_url",
+    "fee_range",
+    "approval_timeline",
+    "inspections",
+    "companion_reviews_triggers",
+}
+
+RUNTIME_CONTRACT_SCHEMA = "permitassist.evidence_pack.runtime.v1"
+RUNTIME_CONTRACT_VERSION = "step7l_runtime_contract_v1"
+SUPPORTED_EVIDENCE_PACK_VERSIONS = (
+    "step7b_offline_v1",
+    "step7b_offline_v1_test",
+    "step7h_dallas_only_staging_v1",
+)
+ALLOWED_EVIDENCE_PACK_MODES = {"dallas_step7h_preview"}
+VALID_CONTRACT_STATUSES = {
+    "valid",
+    "disabled",
+    "invalid_path",
+    "invalid_version",
+    "invalid_fingerprint",
+    "invalid_production_wiring",
+    "stale",
+    "invalid_contract",
+}
+
+ALLOWED_REQUEST_VERTICALS = {
+    "restaurant_ti",
+    "medical_clinic_ti",
+    "office_ti",
+    "retail_ti",
+}
+
+
+@dataclass(frozen=True)
+class EvidencePackRuntime:
+    path: str
+    version: str
+    fingerprint: str
+    records: tuple[dict[str, Any], ...]
+    metadata_contract_valid: bool = True
+    contract_warnings: tuple[str, ...] = ()
+    production_wiring_allowed: bool = False
+    fingerprint_valid: bool = False
+    mode: str = ""
+    contract_status: str = "valid"
+    enabled: bool = True
+
+    @property
+    def active(self) -> bool:
+        return self.enabled and self.contract_status == "valid"
+
+
+def _norm(value: Any) -> str:
+    text = str(value or "").lower()
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return " ".join(text.split())
+
+
+def _env_truthy(name: str) -> bool:
+    return str(os.environ.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def evidence_pack_enabled() -> bool:
+    """Explicit kill switch: path alone must not activate pack mode."""
+    return _env_truthy("PERMITASSIST_EVIDENCE_PACK_ENABLED")
+
+
+def _invalid_runtime(status: str, *, mode: str = "", version: str = "unknown", fingerprint: str = "", warnings: tuple[str, ...] = ()) -> EvidencePackRuntime:
+    status = status if status in VALID_CONTRACT_STATUSES else "invalid_contract"
+    return EvidencePackRuntime(
+        path="",
+        version=version or "unknown",
+        fingerprint=fingerprint or "",
+        records=(),
+        metadata_contract_valid=False,
+        contract_warnings=tuple(sorted(set(warnings or (status,)))),
+        production_wiring_allowed=False,
+        fingerprint_valid=False,
+        mode=mode,
+        contract_status=status,
+        enabled=True,
+    )
+
+
+def _canonical_vertical(value: Any) -> str:
+    text = _norm(value)
+    aliases = {
+        "restaurant ti": "restaurant_ti",
+        "restaurant tenant improvement": "restaurant_ti",
+        "commercial restaurant": "restaurant_ti",
+        "commercial restaurant ti": "restaurant_ti",
+        "food service ti": "restaurant_ti",
+        "medical clinic ti": "medical_clinic_ti",
+        "medical clinic tenant improvement": "medical_clinic_ti",
+        "dental clinic ti": "medical_clinic_ti",
+        "dental ti": "medical_clinic_ti",
+        "healthcare ti": "medical_clinic_ti",
+        "health care ti": "medical_clinic_ti",
+        "office ti": "office_ti",
+        "office tenant improvement": "office_ti",
+        "commercial office": "office_ti",
+        "commercial office ti": "office_ti",
+        "retail ti": "retail_ti",
+        "retail tenant improvement": "retail_ti",
+        "ahj level": "ahj_level",
+    }
+    if text in aliases:
+        return aliases[text]
+    return text.replace(" ", "_")
+
+
+def canonical_request_vertical(value: Any) -> str | None:
+    """Return a supported request vertical, or None for unsafe/unknown input."""
+    vertical = _canonical_vertical(value)
+    if vertical in ALLOWED_REQUEST_VERTICALS:
+        return vertical
+    return None
+
+
+def _vertical_for_job(job_type: str, *, explicit_vertical: Any = None, result: dict[str, Any] | None = None) -> str:
+    for candidate in (
+        explicit_vertical,
+        (result or {}).get("evidence_vertical") if isinstance(result, dict) else None,
+        (result or {}).get("vertical") if isinstance(result, dict) else None,
+        (result or {}).get("active_vertical") if isinstance(result, dict) else None,
+        ((result or {}).get("state_schema_context") or {}).get("active_vertical") if isinstance((result or {}).get("state_schema_context"), dict) else None,
+        (result or {}).get("_primary_scope") if isinstance(result, dict) else None,
+    ):
+        vertical = canonical_request_vertical(candidate)
+        if vertical:
+            return vertical
+    text = _norm(job_type)
+    if "commercial kitchen" in text or "food service" in text or re.search(r"\b(restaurant|hood)\b", text):
+        return "restaurant_ti"
+    if re.search(r"\b(medical|clinic|dental|healthcare)\b", text) or "exam room" in text:
+        return "medical_clinic_ti"
+    if re.search(r"\boffice\b", text):
+        return "office_ti"
+    if re.search(r"\bretail\b", text):
+        return "retail_ti"
+    return "unknown"
+
+
+def _canonical_ahj_name(value: Any) -> str:
+    text = _norm(value)
+    ahj_units = "city and county|city|town|village|county|borough|parish|township|municipality"
+    text = re.sub(rf"^({ahj_units}) of ", "", text)
+    text = re.sub(rf" ({ahj_units})$", "", text)
+    return text
+
+
+def _ahj_matches(record_ahj: str, city: str) -> bool:
+    ahj = _canonical_ahj_name(record_ahj)
+    city_n = _canonical_ahj_name(city)
+    if not ahj or not city_n:
+        return False
+    return ahj == city_n
+
+
+def _parse_utc(value: Any) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _record_is_fresh(record: dict[str, Any], now: datetime | None = None) -> bool:
+    now = now or datetime.now(timezone.utc)
+    cutoffs: list[datetime] = []
+    for key in ("stale_after_utc", "reverify_after_utc"):
+        raw = record.get(key)
+        if str(raw or "").strip():
+            cutoff = _parse_utc(raw)
+            if cutoff is None:
+                return False
+            cutoffs.append(cutoff)
+    evidence = record.get("field_evidence")
+    if isinstance(evidence, list):
+        for item in evidence:
+            if not isinstance(item, dict):
+                continue
+            for key in ("stale_after_utc", "reverify_after_utc"):
+                raw = item.get(key)
+                if str(raw or "").strip():
+                    cutoff = _parse_utc(raw)
+                    if cutoff is None:
+                        return False
+                    cutoffs.append(cutoff)
+    if not cutoffs:
+        return False
+    return all(cutoff > now for cutoff in cutoffs)
+
+
+def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprint: str) -> tuple[str, str, str, tuple[str, ...], bool, bool]:
+    """Validate metadata and map failures to the Step 7P fail-closed enum."""
+    warnings: list[str] = []
+    status = "valid"
+    version = str(metadata.get("evidence_pack_version") or "").strip()
+    if version not in SUPPORTED_EVIDENCE_PACK_VERSIONS:
+        warnings.append("unsupported_evidence_pack_version")
+        status = "invalid_version"
+    fingerprint = str(metadata.get("fingerprint_sha256") or "").strip()
+    fingerprint_shape_valid = bool(re.fullmatch(r"[0-9a-fA-F]{64}", fingerprint))
+    expected_valid = bool(re.fullmatch(r"[0-9a-fA-F]{64}", expected_fingerprint or ""))
+    fingerprint_valid = fingerprint_shape_valid and expected_valid and fingerprint.lower() == expected_fingerprint.lower()
+    if not fingerprint_valid:
+        warnings.append("missing_invalid_or_mismatched_expected_fingerprint")
+        if status == "valid":
+            status = "invalid_fingerprint"
+    production_wiring_allowed = bool(metadata.get("production_wiring_allowed"))
+    if production_wiring_allowed:
+        warnings.append("production_wiring_allowed_must_remain_false_for_staging_pack")
+        if status == "valid":
+            status = "invalid_production_wiring"
+    return version or "unknown", fingerprint, status, tuple(sorted(set(warnings))), production_wiring_allowed, fingerprint_valid
+
+
+@lru_cache(maxsize=4)
+def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fingerprint: str) -> EvidencePackRuntime:
+    path = Path(path_text)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    metadata = data.get("metadata") if isinstance(data.get("metadata"), dict) else {}
+    version, fingerprint, contract_status, contract_warnings, production_wiring_allowed, fingerprint_valid = _validate_metadata_contract(
+        metadata,
+        expected_fingerprint=expected_fingerprint,
+    )
+    records = []
+    source_records = data.get("records") or [] if contract_status == "valid" else []
+    stale_candidate_count = 0
+    for record in source_records:
+        if not isinstance(record, dict):
+            continue
+        if record.get("ingestion_ready") is not True:
+            continue
+        field = str(record.get("field") or "")
+        if field not in SUPPORTED_FIELDS:
+            continue
+        if not _record_is_fresh(record):
+            stale_candidate_count += 1
+            continue
+        evidence = record.get("field_evidence")
+        if not isinstance(evidence, list) or not evidence or not isinstance(evidence[0], dict):
+            continue
+        first = evidence[0]
+        source_url = str(first.get("source_url") or "")
+        if urlparse(source_url).scheme not in {"http", "https"}:
+            continue
+        if not str(first.get("exact_quote_or_snippet") or "").strip():
+            continue
+        records.append(record)
+    if contract_status == "valid" and not records and stale_candidate_count:
+        contract_status = "stale"
+        contract_warnings = tuple(sorted(set(contract_warnings + ("no_current_fresh_ingestion_ready_records",))))
+    return EvidencePackRuntime(
+        "",
+        version,
+        fingerprint,
+        tuple(records) if contract_status == "valid" else (),
+        metadata_contract_valid=contract_status == "valid",
+        contract_warnings=contract_warnings,
+        production_wiring_allowed=production_wiring_allowed,
+        fingerprint_valid=fingerprint_valid and contract_status == "valid",
+        mode=mode,
+        contract_status=contract_status,
+        enabled=True,
+    )
+
+
+def get_local_evidence_pack() -> EvidencePackRuntime | None:
+    """Return runtime when explicitly enabled; path alone is ignored."""
+    if not evidence_pack_enabled():
+        return None
+    mode = os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip()
+    if mode not in ALLOWED_EVIDENCE_PACK_MODES:
+        return _invalid_runtime("invalid_contract", mode=mode, warnings=("invalid_evidence_pack_mode",))
+    expected = os.environ.get("PERMITASSIST_EVIDENCE_PACK_EXPECTED_FINGERPRINT", "").strip()
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", expected or ""):
+        return _invalid_runtime("invalid_fingerprint", mode=mode, warnings=("missing_or_invalid_expected_fingerprint",))
+    path_text = os.environ.get("PERMITASSIST_EVIDENCE_PACK_PATH", "").strip()
+    if not path_text:
+        return _invalid_runtime("invalid_path", mode=mode, warnings=("missing_evidence_pack_path",))
+    path = Path(path_text)
+    if not path.exists() or not path.is_file():
+        return _invalid_runtime("invalid_path", mode=mode, warnings=("evidence_pack_path_missing_or_not_file",))
+    try:
+        stat = path.stat()
+        return _load_pack(str(path), stat.st_mtime_ns, stat.st_size, mode, expected)
+    except Exception:
+        return _invalid_runtime("invalid_contract", mode=mode, warnings=("evidence_pack_load_error",))
+
+
+def _match_records_with_fresh_count(pack: EvidencePackRuntime | None, job_type: str, city: str, state: str, *, explicit_vertical: Any = None, result: dict[str, Any] | None = None) -> tuple[dict[str, dict[str, Any]], int]:
+    """Return one matching record per field plus current fresh record count."""
+    if not pack or not pack.active:
+        return {}, 0
+    state_n = str(state or "").upper().strip()
+    vertical = _vertical_for_job(job_type, explicit_vertical=explicit_vertical, result=result)
+    fresh_records = [record for record in pack.records if _record_is_fresh(record)]
+    matches: dict[str, dict[str, Any]] = {}
+    for allowed_verticals in ((vertical,), ("ahj_level",)):
+        if allowed_verticals == ("ahj_level",) and vertical == "unknown":
+            continue
+        for record in fresh_records:
+            if str(record.get("state") or "").upper().strip() != state_n:
+                continue
+            record_vertical = str(record.get("vertical") or "")
+            if record_vertical not in allowed_verticals:
+                continue
+            field = str(record.get("field") or "")
+            if record_vertical == "ahj_level" and field not in {"approval_timeline"}:
+                continue
+            if not _ahj_matches(str(record.get("ahj_name") or ""), city):
+                continue
+            matches.setdefault(field, record)
+    return matches, len(fresh_records)
+
+
+def match_records(pack: EvidencePackRuntime | None, job_type: str, city: str, state: str, *, explicit_vertical: Any = None, result: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
+    """Return one ingestion-ready matching record per field for the request."""
+    matches, _fresh_count = _match_records_with_fresh_count(
+        pack,
+        job_type,
+        city,
+        state,
+        explicit_vertical=explicit_vertical,
+        result=result,
+    )
+    return matches
+
+
+def _citation_from_record(field: str, record: dict[str, Any], checked_at: str) -> dict[str, Any]:
+    evidence = record.get("field_evidence") or []
+    first = evidence[0] if evidence and isinstance(evidence[0], dict) else {}
+    quote = str(first.get("exact_quote_or_snippet") or "")
+    value = str(record.get("claim_value") or "")
+    if field == "apply_url" and urlparse(value).scheme not in {"http", "https"}:
+        value = ""
+    return {
+        "field": field,
+        "claim": "Evidence-pack field evidence",
+        "value": value,
+        "source_url": str(first.get("source_url") or ""),
+        "source_title": str(first.get("source_title") or ""),
+        "quoted_snippet": quote,
+        "checked_at": checked_at,
+        "confidence": str(record.get("confidence") or "needs_verification").lower(),
+        "evidence_pack_record_id": record.get("record_id"),
+        "evidence_pack_fingerprint": record.get("record_fingerprint_sha256"),
+        "source_scope_limit": record.get("source_scope_limit") or "",
+    }
+
+
+def _suppress_pack_controlled_fields(result: dict[str, Any], failed_closed: list[str]) -> None:
+    if "permit_type" in failed_closed:
+        result["permits_required"] = []
+    if "apply_url" in failed_closed:
+        result["apply_url"] = None
+        result["inspection_booking"] = None
+        result["_url_warning"] = "Evidence pack is enabled, but no valid matching apply URL evidence is active. Failing closed; verify with the AHJ."
+    if "fee_range" in failed_closed:
+        result["fee_range"] = None
+    if "approval_timeline" in failed_closed:
+        result["approval_timeline"] = None
+    if "inspections" in failed_closed:
+        result["inspections"] = None
+    if "companion_reviews_triggers" in failed_closed:
+        result["companion_reviews_triggers"] = None
+    result["claim_citations"] = []
+
+
+def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]], failed_closed: list[str], fresh_count: int, request_vertical: str) -> dict[str, Any]:
+    return {
+        "enabled": True,
+        "contract_schema": RUNTIME_CONTRACT_SCHEMA,
+        "runtime_contract_version": RUNTIME_CONTRACT_VERSION,
+        "contract_status": pack.contract_status,
+        "mode": pack.mode,
+        "evidence_pack_version": pack.version,
+        "version": pack.version,
+        "fingerprint_valid": pack.fingerprint_valid,
+        "fingerprint_prefix": (pack.fingerprint or "")[:12] if pack.fingerprint_valid else "",
+        "matched_fields": sorted(matches),
+        "failed_closed_fields": failed_closed,
+        "request_vertical": request_vertical,
+        "cache_bypassed": True,
+    }
+
+
+def apply_evidence_pack_fail_closed(
+    result: dict[str, Any],
+    job_type: str,
+    city: str,
+    state: str,
+    checked_at: str,
+    *,
+    explicit_vertical: Any = None,
+    force_contract_status: str | None = None,
+) -> dict[str, Any]:
+    """Overlay pack evidence only when the runtime contract is valid.
+
+    Invalid/stale/disabled contract states suppress every pack-controlled field
+    and expose only safe diagnostics. No filesystem path, env var, Railway
+    internals, or full fingerprint is included in `_evidence_pack`.
+    """
+    pack = get_local_evidence_pack()
+    if not pack:
+        return result
+
+    if force_contract_status:
+        pack = EvidencePackRuntime(
+            path="",
+            version=pack.version,
+            fingerprint=pack.fingerprint,
+            records=(),
+            metadata_contract_valid=False,
+            contract_warnings=tuple(sorted(set(pack.contract_warnings + ("unexpected_cache_interaction",)))),
+            production_wiring_allowed=pack.production_wiring_allowed,
+            fingerprint_valid=False,
+            mode=pack.mode,
+            contract_status=force_contract_status if force_contract_status in VALID_CONTRACT_STATUSES else "invalid_contract",
+            enabled=True,
+        )
+
+    matches, current_fresh_records_loaded = _match_records_with_fresh_count(pack, job_type, city, state, explicit_vertical=explicit_vertical, result=result)
+    request_vertical = _vertical_for_job(job_type, explicit_vertical=explicit_vertical, result=result)
+    failed_closed = sorted(SUPPORTED_FIELDS - set(matches))
+
+    if pack.contract_status != "valid":
+        failed_closed = sorted(SUPPORTED_FIELDS)
+        _suppress_pack_controlled_fields(result, failed_closed)
+        result["needs_review"] = True
+        warnings = result.setdefault("quality_warnings", [])
+        warning = "Evidence pack contract is not valid; all pack-controlled fields were failed closed."
+        if warning not in warnings:
+            warnings.append(warning)
+        result["_evidence_pack"] = _safe_meta(pack, matches={}, failed_closed=failed_closed, fresh_count=0, request_vertical=request_vertical)
+        return result
+
+    citations = []
+    for field, record in matches.items():
+        value = record.get("claim_value")
+        if field == "permit_type":
+            permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+            if permits and isinstance(permits[0], dict):
+                permits[0]["permit_type"] = value
+            else:
+                result["permits_required"] = [{"permit_type": value, "required": True, "notes": "Evidence-pack record."}]
+        elif field == "inspections":
+            result["inspections"] = value
+        elif field == "companion_reviews_triggers":
+            result["companion_reviews_triggers"] = value
+            warnings = result.setdefault("quality_warnings", [])
+            scope_limit = record.get("source_scope_limit") or ""
+            if scope_limit and scope_limit not in warnings:
+                warnings.append(scope_limit)
+        else:
+            result[field] = value
+        citations.append(_citation_from_record(field, record, checked_at))
+        scope_limit = record.get("source_scope_limit") or ""
+        if scope_limit:
+            warnings = result.setdefault("quality_warnings", [])
+            if scope_limit not in warnings:
+                warnings.append(scope_limit)
+
+    _suppress_pack_controlled_fields(result, failed_closed)
+    if citations:
+        result["claim_citations"] = citations
+    result["_evidence_pack"] = _safe_meta(pack, matches=matches, failed_closed=failed_closed, fresh_count=current_fresh_records_loaded, request_vertical=request_vertical)
+    if failed_closed:
+        result["needs_review"] = True
+        warnings = result.setdefault("quality_warnings", [])
+        warning = "Evidence pack is enabled; fields without ingestion-ready matching evidence were failed closed."
+        if warning not in warnings:
+            warnings.append(warning)
+    return result

@@ -1,0 +1,709 @@
+{
+  "job_summary": "3,200 sf commercial restaurant tenant improvement in Clark County / Las Vegas area: change of occupancy from B to A-2, commercial kitchen hood, grease interceptor, ADA restroom and path-of-travel upgrades, sprinkler modifications, fire/life-safety review, and outdoor patio seating. This is a commercial TI that triggers a building permit for change of occupancy/interior alterations, plus separate mechanical, plumbing, electrical, and fire-related reviews/permits as applicable. Because this is a restaurant and occupancy change, expect full plan review rather than over-the-counter issuance.",
+  "total_cost_estimate": "$250,000 - $650,000",
+  "location": "Las Vegas / Clark County, NV",
+  "data_source": "web_search",
+  "permits_required": [
+    {
+      "permit_type": "Building Permit — Commercial Tenant Improvement / Change of Occupancy (B to A-2)",
+      "portal_selection": "Commercial Tenant Improvement",
+      "required": true,
+      "notes": "Required for the occupancy change, interior alterations, ADA path-of-travel work, patio seating scope, and coordinated life-safety review. This is the master permit for the TI."
+    },
+    {
+      "permit_type": "Mechanical Permit — Commercial Kitchen Hood / Exhaust System",
+      "portal_selection": "Commercial Hood and Exhaust",
+      "required": true,
+      "notes": "Required for the Type I hood, grease duct, exhaust fan, make-up air, and any associated fire suppression interface under the mechanical code."
+    },
+    {
+      "permit_type": "Plumbing Permit — Grease Interceptor / Commercial Waste Line Modifications",
+      "portal_selection": "Commercial Plumbing - Grease Interceptor",
+      "required": true,
+      "notes": "Required for the grease interceptor and any drain, waste, vent, or fixture piping changes tied to the restaurant buildout."
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Tenant Improvement",
+      "portal_selection": "Commercial Electrical - Tenant Improvement",
+      "required": true,
+      "notes": "Required for new/reworked lighting, receptacles, hood equipment power, emergency/egress lighting, exit signs, and any panel/circuit changes."
+    },
+    {
+      "permit_type": "Fire Permit — Sprinkler Modification / Fire Alarm Review",
+      "portal_selection": "Fire Sprinkler Modification",
+      "required": true,
+      "notes": "Required for sprinkler head relocations, hydraulic changes, fire alarm interface, hood suppression coordination, and life-safety review."
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Commercial Tenant Improvement / Change of Occupancy (B to A-2)",
+      "included_because": "The scope changes the use from Business to Assembly (restaurant), which triggers building code review for occupancy classification, egress, accessibility, and life-safety compliance.",
+      "scope_trigger": "Change of occupancy B to A-2, ADA restroom/path of travel upgrades, patio seating, interior TI"
+    },
+    {
+      "permit_type": "Mechanical Permit — Commercial Kitchen Hood / Exhaust System",
+      "included_because": "A Type I kitchen hood and exhaust system are mechanical work and require permit review for hood, duct, fan, make-up air, clearances, and code compliance.",
+      "scope_trigger": "Type I kitchen hood"
+    },
+    {
+      "permit_type": "Plumbing Permit — Grease Interceptor / Commercial Waste Line Modifications",
+      "included_because": "Restaurant grease interceptors and related drain modifications are plumbing scope and must be permitted.",
+      "scope_trigger": "Grease interceptor"
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Tenant Improvement",
+      "included_because": "Restaurant TI almost always includes new circuits, lighting, equipment power, and life-safety electrical work, all of which require electrical permit review.",
+      "scope_trigger": "Commercial tenant improvement with hood equipment, ADA upgrades, and life-safety systems"
+    },
+    {
+      "permit_type": "Fire Permit — Sprinkler Modification / Fire Alarm Review",
+      "included_because": "Sprinkler modifications and fire/life-safety review are separate fire protection scope and require fire department/building fire review.",
+      "scope_trigger": "Sprinkler modifications and fire/life-safety review"
+    }
+  ],
+  "applying_office": "Clark County Department of Building & Fire Prevention",
+  "apply_url": "https://aca-prod.accela.com/CLARKCO",
+  "apply_pdf": "https://www.clarkcountynv.gov/adobe/assets/urn:aaid:aem:7607d6a6-3b83-4650-b68a-bab3536fe3c5/original/as/bpg023.pdf",
+  "apply_phone": "(702) 455-3000",
+  "apply_address": "4701 W. Russell Rd., Las Vegas, NV 89118",
+  "apply_google_maps": "https://www.google.com/maps?q=4701+W.+Russell+Rd.,+Las+Vegas,+NV+89118,+Las+Vegas+/+Clark+County,+NV",
+  "fee_range": "Fee Estimate: **$22,500-$41,000+** (structured floor — see breakdown). Components: ~$13,000 base permit + plan review (Las Vegas / Clark County, NV commercial restaurant TI floor) × 1.0× jurisdiction multiplier + $3,500 change-of-occupancy adder + $5,500 hood-fire-suppression adder + $2,500 grease-interceptor adder + $4,000 fire-sprinkler-modify adder + $3,000 ada-path-of-travel adder. **Verify against current fee schedule before quoting.**",
+  "approval_timeline": {
+    "simple": "Not typically OTC for this scope; expect intake and routing to plan review. Minor corrections can sometimes be handled in 1-3 business days if submittal is complete.",
+    "complex": "2-6 weeks for coordinated commercial plan review; longer if fire, accessibility, sprinkler, hood, or occupancy-change corrections are required."
+  },
+  "inspections": [
+    {
+      "stage": "Building Rough-In / Framing",
+      "description": "Inspector checks tenant demising walls, rated assemblies, door swings, egress widths, accessible route clearances, restroom layout, and any structural changes tied to the occupancy change.",
+      "timing": "After framing and before concealment of walls/ceilings"
+    },
+    {
+      "stage": "Mechanical Hood Rough-In",
+      "description": "Inspector verifies Type I hood installation, grease duct routing, clearances to combustibles, exhaust fan mounting, make-up air provisions, and fire suppression coordination.",
+      "timing": "Before ceiling closure and before hood system is energized"
+    },
+    {
+      "stage": "Plumbing Rough-In",
+      "description": "Inspector checks grease interceptor location and sizing, drain slope, venting, fixture rough-ins, cleanouts, and any backflow or indirect waste details tied to the kitchen and restrooms.",
+      "timing": "Before slab patching or wall/ceiling concealment"
+    },
+    {
+      "stage": "Electrical Rough-In",
+      "description": "Inspector verifies branch circuit sizing, equipment disconnects, GFCI/AFCI where applicable, emergency lighting, exit signs, panel labeling, and equipment power for hood and kitchen loads.",
+      "timing": "Before insulation, drywall, or ceiling closure"
+    },
+    {
+      "stage": "Fire Sprinkler / Fire Alarm Rough-In",
+      "description": "Inspector or fire reviewer checks sprinkler head spacing, relocations, hydraulic impacts, alarm device placement, hood suppression interface, and final life-safety coordination.",
+      "timing": "Before concealment and before final occupancy approval"
+    },
+    {
+      "stage": "Final Building / Life-Safety",
+      "description": "Inspector verifies ADA restroom compliance, path of travel, door hardware, signage, exit access, patio seating layout, final finishes, and that all trade finals and fire approvals are complete.",
+      "timing": "After all trades pass and before opening to the public"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through the Clark County Accela portal: https://aca-prod.accela.com/CLARKCO. Use the permit record to request each trade inspection separately (building, mechanical, plumbing, electrical, fire/sprinkler). Clark County commonly requires at least 24 hours advance notice for inspection requests; book earlier for coordinated commercial finals. Phone: (702) 455-3000. Hours are typically Mon-Fri business hours; verify current cutoff times in the portal before requesting same-day service.",
+  "license_required": "Licensed Nevada contractor pulls the permit on the owner's behalf — the contractor's Nevada license number must appear on the application. For this scope, the general contractor typically pulls the building permit, and licensed mechanical, plumbing, electrical, and fire protection contractors pull their respective trade permits or are listed under the prime contractor as allowed by the jurisdiction. The permit is still required.",
+  "city_contractor_registration": "Clark County requires contractor registration/qualification for permit issuance in addition to state licensing for many commercial permits. Verify the contractor's current Clark County registration status and renewal before submitting; an expired or lapsed registration can block the application. Check registration status before opening the permit record.",
+  "what_to_bring": [
+    "Completed commercial TI permit application with contractor license number and Nevada business license information",
+    "Full plan set stamped/signed as required: architectural floor plan, life-safety/egress plan, accessibility details, reflected ceiling plan, and equipment layout",
+    "Mechanical sheets for Type I hood, exhaust fan, make-up air, and grease duct details",
+    "Plumbing sheets for grease interceptor sizing, fixture schedule, and drain/waste/vent routing",
+    "Fire protection drawings and calculations for sprinkler modifications and hood suppression coordination",
+    "Owner authorization letter, tenant lease exhibit, and any landlord approval for patio seating or exterior work"
+  ],
+  "common_mistakes": [
+    "Submitting the TI as a simple tenant improvement without clearly calling out the B to A-2 occupancy change — that can stall plan review because egress, occupant load, and accessibility must be reviewed together.",
+    "Forgetting that the Type I hood usually triggers separate mechanical and fire suppression coordination — the hood is not just a building permit item.",
+    "Missing grease interceptor sizing or showing it on the wrong sheet — plumbing review will kick it back fast.",
+    "Not coordinating sprinkler head relocations with the new hood and ceiling layout — fire review will hold final approval until the sprinkler contractor updates the drawings.",
+    "Starting demolition before the permit is issued and posted — Clark County can issue a stop-work order and require re-submittal corrections.",
+    "Submitting permit application without verifying current contractor registration status — an expired or lapsed city/county registration will block your application silently. Verify your registration is current BEFORE submitting."
+  ],
+  "pro_tips": [
+    "Submit the building, mechanical, plumbing, electrical, and fire sheets as one coordinated package so the plan checker can route them together; restaurant TI jobs get delayed when the hood, grease interceptor, and sprinkler plans are split up.",
+    "Put the hood cut sheet, grease interceptor cut sheet, and equipment schedule on the first submittal — those are the first things reviewers ask for on restaurant jobs.",
+    "If the patio seating is part of the occupancy load, show it on the life-safety plan from day one; otherwise the occupant load and exit width calculations will get bounced.",
+    "Check your Clark County contractor registration renewal date before starting any permit application — registration lapses are the #1 avoidable rejection reason.",
+    "Have the fire suppression contractor and sprinkler contractor coordinate early; the hood suppression system and sprinkler modifications often need field coordination before final inspection."
+  ],
+  "code_citation": {
+    "section": "IBC 2024 Section 1001.2 / 3408.1 and IFC 2024 Section 105.1",
+    "text": "A change of occupancy shall comply with the provisions of this code for the new occupancy classification, and permits are required for work regulated by the code."
+  },
+  "companion_permits": [
+    {
+      "permit_type": "Fire Suppression Permit — Kitchen Hood Extinguishing System",
+      "reason": "May be required if: Kitchen hood fire suppression is submitted as a separate fire protection scope.",
+      "required_if": "Kitchen hood fire suppression is submitted as a separate fire protection scope",
+      "certainty": "likely",
+      "requirement_label": "May be required based on scope"
+    }
+  ],
+  "zoning_hoa_flag": "Outdoor patio seating may trigger zoning/site plan review, parking/occupant load review, and outdoor dining conditions. If the property is in a commercial overlay, resort corridor, or special use district, patio seating can require separate approval. HOA issues are uncommon for commercial parcels but landlord and site-approval restrictions can still block exterior seating. Verify any patio encroachment, setback, and accessibility requirements before finalizing the layout.",
+  "sources": [
+    "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/plan_submittal/building-phased-design",
+    "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/plan_submittal/additional-requirements",
+    "https://www.clarkcountynv.gov/adobe/assets/urn:aaid:aem:7607d6a6-3b83-4650-b68a-bab3536fe3c5/original/as/bpg023.pdf",
+    "https://www.lasvegasnevada.gov/Business/Permits-Licenses/Building-Permits",
+    "https://files.lasvegasnevada.gov/planning/Food-Service-Establishments.pdf",
+    "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/service-groups-contact-lists",
+    "https://files.lasvegasnevada.gov/building-safety/2025/25-0086-Proposed_Code_AMENDMENTS.pdf"
+  ],
+  "confidence": "low",
+  "disclaimer": "Data sourced Apr 28, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "_fee_unverified": true,
+  "maps_url": "https://www.google.com/maps?q=4701+W.+Russell+Rd.,+Las+Vegas,+NV+89118,+Las+Vegas+/+Clark+County,+NV",
+  "permit_verdict": "YES",
+  "requirements": [],
+  "_sources_locality_dropped": [
+    "https://aca-prod.accela.com/CLARKCO"
+  ],
+  "_field_sources": {
+    "permits_required": "web_search",
+    "fee_range": "web_search",
+    "approval_timeline": "web_search",
+    "apply_url": "web_search",
+    "apply_phone": "web_search",
+    "apply_address": "web_search",
+    "applying_office": "web_search",
+    "common_mistakes": "web_search",
+    "pro_tips": "web_search",
+    "total_cost_estimate": "web_search"
+  },
+  "needs_review": true,
+  "missing_fields": [
+    "fee_range"
+  ],
+  "confidence_reason": "Live web research found partial local guidance. Needs review for: fee_range",
+  "_meta": {
+    "generated_at": "2026-04-28T21:00:00.813124",
+    "response_ms": 22163,
+    "cached": false,
+    "model": "gpt-5.4-mini",
+    "web_sources": 9,
+    "city_match_level": "state",
+    "job_type": "3,200 sf commercial restaurant tenant improvement: change of occupancy B to A-2 assembly, Type I kitchen hood, grease interceptor, ADA restroom and path of travel upgrades, sprinkler modifications, fire/life-safety review, outdoor patio seating",
+    "city": "Las Vegas / Clark County",
+    "state": "NV",
+    "zip_code": "89118",
+    "job_category": "commercial",
+    "auto_verified": false,
+    "missing_fields": [
+      "fee_range"
+    ]
+  },
+  "fee_source": {
+    "url": "https://files.lasvegasnevada.gov/planning/Food-Service-Establishments.pdf",
+    "title": "[PDF] FOOD SERVICE ESTABLISHMENT GUIDELINE - City of Las Vegas",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "ahj_contact_source": {
+    "url": "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/service-groups-contact-lists",
+    "title": "Service Groups Contact Lists - Welcome to Clark County, NV",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "code_section_source": {
+    "url": "https://files.lasvegasnevada.gov/building-safety/2025/25-0086-Proposed_Code_AMENDMENTS.pdf",
+    "title": "[PDF] Amends LVMC Chapter 16 related to buildings and construction ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "required_documents_source": {
+    "url": "https://files.lasvegasnevada.gov/building-safety/2025/25-0086-Proposed_Code_AMENDMENTS.pdf",
+    "title": "[PDF] Amends LVMC Chapter 16 related to buildings and construction ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "inspection_process_source": {
+    "url": "https://files.lasvegasnevada.gov/building-safety/2025/25-0086-Proposed_Code_AMENDMENTS.pdf",
+    "title": "[PDF] Amends LVMC Chapter 16 related to buildings and construction ...",
+    "verified_at": "2026-04-28",
+    "source_type": "official"
+  },
+  "serper_credits_used": 0,
+  "serper_cache_hits": 5,
+  "sources_status": "serper_verified",
+  "badge_state": "ai_researched",
+  "permit_ready_score": 100,
+  "permit_ready_label": "Ready to apply",
+  "permit_ready_missing": [],
+  "_primary_scope": "commercial_restaurant",
+  "checklist": [
+    "Verify your contractor license is current and valid in NV",
+    "Confirm your liability insurance is active (certificate may be required at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "Type I commercial exhaust hood listed/labeled per UL 710 with NFPA 96 compliance and AHJ-approved capture velocity per IMC 507",
+    "ANSUL R-102 (or equivalent UL 300) hood suppression: post-install discharge test certificate + every-6-month cleaning + annual inspection per NFPA 96 §11",
+    "ANSUL discharge auto-shutoffs all hood gas + electric fuel sources per IMC 507.7 — verify with AHJ during witness test",
+    "Grease interceptor sized per IPC 1003.3.4 by drainage fixture units (4-comp + mop typically 50+ GPM hydromechanical OR 750–1,500 gal exterior gravity); located ≤25 ft developed length from fixtures",
+    "Makeup air system balanced to ±10% of hood exhaust per IMC 506.3.4; tempered if > 35°F differential to prevent backdraft",
+    "Indirect waste with air gap on dishwasher, ice maker, prep sink, and steam kettle per IPC 802; commercial dishwasher backflow prevention (RPZ) per IPC 608.13.2",
+    "Dedicated mop sink with hose bib in janitor closet (IBC 902.3 / local health code) — required before health dept sign-off",
+    "ADA fixture counts per IBC Table 2902.1 + 60 in turning radius + lavatory pipe wrap insulation per ADA §606.5 + mirror reflective edge ≤40 in AFF per ADA §603.3",
+    "Local health department food establishment plan review + final inspection sign-off REQUIRED before Certificate of Occupancy (parallel filing — file early)",
+    "TABC / state liquor authority clearance if alcohol service — separate filing from building permit",
+    "Walk-in cooler envelope per IECC 403.10.1 (≥R-25 medium-temp panels, ≥R-32 freezer panels); door gasket seal verification at final",
+    "Existing sprinkler system reuse: hydraulic recalc for new layout + current 5-year cert per NFPA 25; new heads in cooking equipment area must be K-25+ per NFPA 13",
+    "Floor drains within 5 ft of kitchen equipment per IPC 411 with backwater valves where required",
+    "Fire alarm + emergency lighting per NFPA 72/101 with current battery capacity test on file",
+    "Change of occupancy memo (B/M → A-2): include occupant load + exits + restroom count + sprinkler/fire-alarm impacts per IEBC §1001.2/1001.3 + IBC §303.3 (Group A-2)",
+    "Maricopa County (or local equivalent) Environmental Services Department food-establishment plan review + final inspection sign-off REQUIRED before opening — coordinate with City CO schedule (MCESD: maricopa.gov)",
+    "Backflow prevention on EVERY food-service water connection: carbonated beverage (ASSE 1022 dual check), chemical dispenser at mop/service sinks, hose bibbs, dish-machine/ice/RO/espresso, pre-rinse — testable assemblies certified annually",
+    "Outdoor patio / sidewalk dining: verify city zoning (use permit may apply, e.g. Phoenix ZO §1207); include patio in occupant load + exiting + accessible route + sprinkler/awning review",
+    "Phoenix-specific (or equivalent local rule): contractor must be AZ ROC licensed AND associated with the Phoenix SHAPE PHX permit account before submittal (A.R.S. Title 32 Ch. 10) — frequently-missed pre-submittal blocker",
+    "Realistic fee warning: a 3,200 sq ft restaurant TI in Phoenix typically lands $8K–$25K+ across plan review + permit + fire + utility + health + zoning. Reject token min-fee outputs; calculate from the live fee schedule before quoting",
+    "Occupancy reclassification: identify existing approved occupancy + proposed group; require code-official approval + new/updated Certificate of Occupancy (IEBC §§1001.1, 1001.2, 1001.3; IBC Ch. 3)",
+    "Height/area limit recheck: compare new occupancy hazard category to existing construction type, allowable area, frontage/sprinkler increases, fire-wall strategy (IEBC §1011.5; IBC Ch. 5)",
+    "Fire-resistance + separation reassessment: re-verify fire barriers, horizontal assemblies, exterior wall ratings/openings, shaft enclosures, mixed-occupancy separations for the new hazard category (IEBC §§1011.1, 1011.5.3, 1011.6/7; IBC Ch. 7)",
+    "Fire protection re-run: sprinkler, fire alarm, hood suppression, and monitoring requirements at the new occupancy + IBC/IFC Ch. 9 thresholds (IEBC §§1004.1, 1011.2; IFC Ch. 9)",
+    "Means of egress recalculation: occupant load + number of exits + egress capacity + travel distance + common path + dead ends + door hardware updated to new occupancy (IEBC §§1005.1, 1011.4; IBC Ch. 10)",
+    "Accessibility / path-of-travel trigger: alterations to primary-function areas trigger ADA upgrades to altered area + serving amenities (2010 ADA §202.4 + 28 CFR §36.403)",
+    "Mechanical ventilation/exhaust recheck against the new occupancy: IMC ventilation, commercial-kitchen exhaust + makeup air, hazardous exhaust, energy compliance (IEBC §1008.1; IMC Ch. 4-6 + §507)",
+    "Plumbing demand + fixture-count recheck: water supply, sanitary load, fixture count, food-handling waste, grease/oil interceptors, chemical-waste approval (IEBC §§1009.1-1009.4; IPC Ch. 4 + 10)",
+    "Identify altered primary-function area: if scope alters an area where major activity occurs, an accessible path of travel to the altered area is required unless technically infeasible / disproportionate (2010 ADA §202.4; 28 CFR §36.403(a))",
+    "20% disproportionality cap: ADA path-of-travel work exceeding 20% of alteration cost is disproportionate at the federal level, but lower-cost items must still be prioritized (28 CFR §36.403(f)(1))",
+    "Accessible exterior route: site arrival points + accessible parking/passenger loading + curb ramps + walking surfaces + ramps/landings + slope/cross-slope + door clearances to altered area (2010 ADA §§206.2.1, 206.4, 403, 404, 405, 406)",
+    "Restroom path + restroom upgrades: if restrooms serve the altered area, accessible route + door + turning space + lavatory + water closet + grab bars + clearances + signage (2010 ADA §§213, 603-606, 609, 703)",
+    "Parking + passenger loading: recalculate accessible-stall count + van space + access aisle + signage for affected parking serving the altered area (2010 ADA §§208, 502, 503; 28 CFR §36.403(e)(1))",
+    "Drinking fountains, phones, and signage along the path: tactile/visual signs, room ID, directional, fountain units, public phones if any (2010 ADA §§211, 216, 602, 703, 704)",
+    "Doors, thresholds, and hardware on the route: clear width + maneuvering clearance + opening force + thresholds + lever/operable hardware + protruding objects (2010 ADA §§303, 307, 309, 404)",
+    "Confirm the required license is active and matches the application: Licensed Nevada contractor pulls the permit on the owner's behalf — the contractor's Nevada license number must appear on the application. For this scope, the general contractor typically pulls the building permit, and licensed mechanical, plumbing, electrical, and fire protection contractors pull their respective trade permits or are listed under the prime contractor as allowed by the jurisdiction. The permit is still required.",
+    "Bring 2 copies of all documents to Clark County Department of Building & Fire Prevention"
+  ],
+  "rejection_patterns": [],
+  "change_detected": false,
+  "change_summary": "",
+  "similar_city_reference": false,
+  "similar_city_note": "",
+  "fee_calculator": {
+    "fee": null,
+    "formula": null,
+    "confidence": "none",
+    "note": "Provide job_value to calculate an exact fee where formulas are available."
+  },
+  "expert_notes": [
+    {
+      "title": "NSCB license classifications — A, B, and 42 C-subclasses",
+      "note": "The Nevada State Contractors Board issues licenses under three classes: Class A (General Engineering), Class B (General Building), and Classification C with 42 distinct subcontracting fields (e.g., C-2 Electrical, C-1 Plumbing, C-21 HVAC/Refrigeration). Per NRS 624.215, a contractor may only bid or contract within their licensed classification AND under their monetary limit — exceeding either voids contract enforceability and lien rights. Always print the license number and monetary limit on bids and contracts before submitting to the AHJ.",
+      "applies_to": "All paid construction work in Nevada requiring a contractor license",
+      "source": "https://www.nvcontractorsboard.com/licensing/license-classifications/"
+    },
+    {
+      "title": "NSCB Licensure by Endorsement — 4-year same-QI rule",
+      "note": "Out-of-state contractors can shortcut Nevada licensing via the Endorsement path, but only if they (1) hold an active license in the endorsing state with the SAME qualified individual for the past four years and (2) have not been investigated for misconduct. Switching the qualifying individual within those four years disqualifies the application and forces the full Nevada exam path. Confirm QI continuity in the endorsing state's records before filing the endorsement application.",
+      "applies_to": "Out-of-state contractors seeking to operate in Nevada",
+      "source": "https://www.nvcontractorsboard.com/licensing/licensure-by-endorsement/"
+    },
+    {
+      "title": "Statewide energy code — 2024 IECC adopted with March 12, 2025 revisions (NAC 701)",
+      "note": "The Governor's Office of Energy adopted the 2024 IECC as published effective August 18, 2024, then issued revisions on March 12, 2025 under NAC 701. Local jurisdictions adopt on their own schedules, so confirm which edition (and revision date) the AHJ is enforcing on the application date — drawings produced under the unrevised 2024 IECC may need envelope or mechanical updates before plan check accepts them.",
+      "applies_to": "All new construction and additions subject to Nevada energy code review",
+      "source": "https://www.energy.nv.gov/notices2/nac-701-building-energy-codes/"
+    },
+    {
+      "title": "Washoe County code transition — July 1, 2025 effective with Jan 1, 2026 cutoff",
+      "note": "In Washoe County (Reno/Sparks/unincorporated), the new code editions took effect July 1, 2025 with a transition window allowing in-flight projects to remain under the prior cycle through January 1, 2026. Submittals dated on or after Jan 1, 2026 must comply fully with the new editions; partial submissions made before the cutoff should be tracked carefully because the AHJ can require resubmission under the newer code if the application goes stale.",
+      "applies_to": "Permit applications in Washoe County crossing the 2026-01-01 cutoff",
+      "source": "https://snarsca.com/blog/iecc-adoption-and-its-affects-on-las-vegas-contractors/"
+    },
+    {
+      "title": "Southern Nevada Energy Conservation Code 2024 — effective January 11, 2026",
+      "note": "Clark County and the Southern Nevada code-coordinated jurisdictions adopted the S. NV Energy Conservation Code 2024 (built on the 2024 IECC) effective January 11, 2026. The Southern Nevada Amendments are published separately from the IECC base text and modify mechanical, envelope, and rating-index sections — verify drawings reference the Southern Nevada amended sections, not the unamended IECC, for any Clark County project.",
+      "applies_to": "Permits in Clark County and coordinated Southern Nevada jurisdictions",
+      "source": "https://up.codes/viewer/clark-nevada/s-nv-energy-conservation-code-2024"
+    },
+    {
+      "title": "Southern Nevada HERS® Index (ERI) compliance path — Section 406 amendment",
+      "note": "All Southern Nevada code jurisdictions amended Section 406 to accept a HERS Index / Energy Rating Index option as an alternative compliance path to prescriptive or performance methods. This is significant for builders who can't easily meet prescriptive envelope U-values — a third-party HERS rater can certify ERI compliance instead. Confirm the rater is RESNET-certified and that the AHJ accepts the ERI target in effect at the application date.",
+      "applies_to": "Residential energy compliance in Clark County and Southern Nevada jurisdictions",
+      "source": "https://www.resnet.us/articles/southern-nv-code-jurisdictions-accept-a-hers-index-option-to-energy-code/"
+    },
+    {
+      "title": "No unified statewide residential building code — local AHJ controls",
+      "note": "Nevada has statewide baseline codes enforced by the State Fire Marshal, but residential building permits for 1- and 2-family homes are handled entirely by local city and county building departments. This means there is no single state-issued residential permit; you must identify the correct AHJ (incorporated city OR unincorporated county) for each parcel and follow that jurisdiction's adopted code edition and amendments — they often differ between Clark, Washoe, and rural counties.",
+      "applies_to": "All residential permit scoping in Nevada",
+      "source": "https://permitsguide.com/nevada"
+    },
+    {
+      "title": "City-or-county jurisdiction split under NRS Chapter 278",
+      "note": "Under NRS 278 (Planning and Zoning), a parcel falls under the jurisdiction of the incorporated city OR the surrounding county, not both — overlap is rare and limited to specific extraterritorial agreements. Pull the parcel's APN from the county assessor and confirm whether it sits inside city limits before filing; submitting to the wrong AHJ is a common cause of weeks of delay because the receiving jurisdiction cannot transfer the application — it must be refiled.",
+      "applies_to": "Determining the correct permitting AHJ for any Nevada parcel",
+      "source": "https://www.leg.state.nv.us/nrs/nrs-278.html"
+    },
+    {
+      "title": "State Public Works Division iWorQ portal — state-owned projects only",
+      "note": "Construction on state-owned land or state buildings is permitted through the State Public Works Division (SPWD) via the iWorQ portal, NOT through local city/county building departments. SPWD reviews against the codes adopted for state facilities, which can lag local adoption. Private residential and commercial work never goes through SPWD; routing a private project to iWorQ will be rejected and you'll lose the filing window.",
+      "applies_to": "Construction on State of Nevada-owned property and state facilities",
+      "source": "https://publicworks.nv.gov/uploadedFiles/publicworksnvgov/content/Services/Permitting_Code_Enforcement/Permitting%20%20Code%20Enforcement%20Process.pdf"
+    },
+    {
+      "title": "Floodplain management — NFIP coordination via Nevada Division of Water Resources",
+      "note": "Nevada Division of Water Resources runs the state's floodplain management program in coordination with FEMA's National Flood Insurance Program; local jurisdictions adopt floodplain ordinances to remain NFIP-eligible. Before designing in or near a SFHA (Zone A/AE/AO/X-shaded), confirm the adopted base flood elevation, finished-floor freeboard requirement, and whether a CLOMR/LOMR will be required — many Nevada AHJs require finished floor at BFE+1 ft or higher and reject drawings without an elevation certificate at final.",
+      "applies_to": "Construction within FEMA Special Flood Hazard Areas in Nevada",
+      "source": "https://water.nv.gov/index.php/programs/floodplain-management"
+    },
+    {
+      "title": "Water rights and federal-lands coordination — State Engineer per NRS 328",
+      "note": "Per NRS 328.120, the State Engineer (within the Division of Water Resources) provides technical advice on water rights, reclamation, flood control, and watershed protection — and water rights are required separately from the building permit for new wells, surface diversions, or changes of use. On parcels adjacent to or crossing BLM/federal land, the project may also need a federal right-of-way or special-use authorization that runs in parallel with the local building permit and often takes longer than the construction permit itself.",
+      "applies_to": "Projects requiring water rights or touching federal lands in Nevada",
+      "source": "https://www.leg.state.nv.us/nrs/NRS-328.html"
+    },
+    {
+      "title": "Clark County plan-review timing tiers — 7-day commercial path requires <$100k valuation",
+      "note": "Clark County operates tiered plan-review timelines: the Commercial 7-Day expedited path requires prior Zoning approval AND a project valuation under $100,000; everything else falls into Residential Minor, Standard Plan, or full Commercial review with longer queues. Inflate the valuation to be safe and you knock yourself out of the 7-day track — itemize labor and materials honestly to stay eligible, and have the Zoning sign-off in hand before submitting to plan review.",
+      "applies_to": "Clark County commercial and residential plan submittals",
+      "source": "https://www.clarkcountynv.gov/government/departments/building___fire_prevention/plan_review/plan-review-timelines"
+    },
+    {
+      "title": "Northern Nevada amendments to the 2024 IECC — Elko County and rural N. NV",
+      "note": "Northern/rural counties (Elko County and the Northern Nevada code-coordinated jurisdictions) adopted their own amendments to the 2024 IECC for residential energy efficiency. These amendments diverge from the Southern Nevada amendment package, so envelope assemblies, mechanical efficiencies, and duct-leakage targets that pass Clark County plan check may fail in Elko or vice versa. Pull the local amendment PDF for the specific AHJ and check it against the drawings before submission.",
+      "applies_to": "Residential energy compliance in Elko County and Northern Nevada jurisdictions",
+      "source": "https://www.elkocountynv.gov/calendar_app/departments/Building%20&%20Safety/2024%20Elko%20County%20Amendments.pdf?t=202601291912310"
+    },
+    {
+      "title": "Architect/residential-designer notification under NRS 278.589",
+      "note": "NRS 278.589 requires the city or county building official to notify the State Board of Architecture, Interior Design and Residential Design when certain plan submittals are made — this is the mechanism by which the Board polices unlicensed practice of architecture/residential design on Nevada permits. Plans submitted by an unlicensed designer for projects that exceed the residential-designer scope can trigger a Board complaint and stall the permit; confirm the designer's NSBAIDRD credentials and stamp authority before submission.",
+      "applies_to": "Permit submittals using stamped or designer-prepared drawings in Nevada",
+      "source": "https://www.leg.state.nv.us/nrs/nrs-278.html"
+    }
+  ],
+  "hidden_triggers": [
+    {
+      "id": "commercial_change_of_occupancy_b_to_a2_or_m_sprinkler_general",
+      "severity": "high",
+      "title": "Change of occupancy (B/S to A-2/M) can trigger sprinkler retrofit and IEBC review",
+      "why_it_matters": "Converting an office, warehouse, or retail tenant to assembly or mercantile crosses occupancy classifications. The new occupant load can cross IBC 903.2 sprinkler thresholds and require an IEBC change-of-occupancy analysis even when the construction work looks small.",
+      "fired_by": [
+        "\\bchange of (use|occupancy)\\b",
+        "\\b(b|s|s[-\\s]?1|s[-\\s]?2|m)\\s*(to|-)\\s*(a[-\\s]?2|a[-\\s]?3|a|m)\\b",
+        "\\b(office|warehouse|retail|storage)\\s+(to|into|converted to|conversion to)\\s+(restaurant|tavern|bar|assembly|gym|theater|mercantile|retail)\\b",
+        "\\bwarehouse\\s+into\\b",
+        "\\bs[-\\s]?1\\s+warehouse\\b",
+        "\\biebc\\b",
+        "\\bchange[-\\s]?of[-\\s]?use\\b"
+      ],
+      "likely_required_actions": [
+        "Run IEBC change-of-occupancy analysis (Chapter 10)",
+        "Recompute occupant load and check IBC 903.2 sprinkler thresholds",
+        "Update accessible route and restroom/fixture counts to the higher occupancy",
+        "Coordinate fire-alarm and egress lighting for the proposed occupancy"
+      ],
+      "companion_permits": [
+        "Fire sprinkler permit if retrofit/relocation triggered",
+        "Fire alarm permit if devices/coverage change"
+      ],
+      "agencies": [
+        "AHJ Building Dept",
+        "Fire Prevention"
+      ],
+      "citations": [
+        "IEBC Chapter 10 [verify adopted edition before merging]",
+        "IBC §903.2",
+        "IBC §1004",
+        "IBC §2902"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "restaurant_grease_interceptor_fog_review",
+      "severity": "high",
+      "title": "Grease interceptor / FOG review may be required for commercial food prep",
+      "why_it_matters": "FOG requirements are often enforced by sewer/environmental agencies outside the normal building-permit checklist. Missing sizing or location approval can force plumbing redesign.",
+      "fired_by": [
+        "\\bgrease interceptor\\b",
+        "\\bgrease trap\\b",
+        "\\bfog\\b",
+        "\\bcommercial kitchen\\b",
+        "\\b3[-\\s]?compartment sink\\b"
+      ],
+      "likely_required_actions": [
+        "Size interceptor from fixture/equipment schedule",
+        "Confirm location/access with sewer or environmental authority",
+        "Show sampling port/cleanout details if required"
+      ],
+      "companion_permits": [
+        "FOG / industrial waste / sewer approval, if required"
+      ],
+      "agencies": [
+        "Sewer authority",
+        "Environmental Services",
+        "AHJ Plumbing Dept"
+      ],
+      "citations": [
+        "IPC §1003.3.1",
+        "Local sewer-use ordinance [verify before merging]"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_occupant_load_and_egress_recalc",
+      "severity": "high",
+      "title": "Restaurant seating changes require occupant-load and egress recalculation",
+      "why_it_matters": "Adding dining, bar, queueing, or patio seats can change the required number of exits, door swing, panic hardware, travel distance, restroom counts, and fire-alarm assumptions.",
+      "fired_by": [
+        "\\bseating\\b",
+        "\\bdining\\b",
+        "\\bbar\\b",
+        "\\bpatio\\b",
+        "\\bbanquet\\b",
+        "\\boccupant load\\b",
+        "\\ba[-\\s]?2\\b",
+        "\\boffice\\s+(to|into)\\s+restaurant\\b"
+      ],
+      "likely_required_actions": [
+        "Add occupant-load table by room/area",
+        "Show common path, exit access travel distance, and exit count",
+        "Coordinate exit signage/emergency lighting"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Fire Prevention"
+      ],
+      "citations": [
+        "IBC §1004",
+        "IBC §1006",
+        "IBC §1017",
+        "IBC §1010"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_food_establishment_health_review_general",
+      "severity": "high",
+      "title": "Restaurant work needs local health-department food-establishment plan review",
+      "why_it_matters": "Health-department review usually runs in parallel with the building permit and approves finish schedule, hand sinks, three-compartment sink, warewashing, refrigeration, and food-flow. Missing it can hold the certificate of occupancy even when building review is finished.",
+      "fired_by": [
+        "\\brestaurant\\b",
+        "\\bfood establishment\\b",
+        "\\bcommercial kitchen\\b",
+        "\\bprep kitchen\\b",
+        "\\bcafe\\b",
+        "\\btavern\\b",
+        "\\bbar\\b.*\\b(food|kitchen|grill)\\b",
+        "\\bdishwasher\\b",
+        "\\bwalk[-\\s]?in cooler\\b"
+      ],
+      "likely_required_actions": [
+        "Submit food-establishment plans and equipment schedule to local health department",
+        "Show finish schedule, hand sinks, mop sink, three-compartment / warewashing, refrigeration",
+        "Coordinate health inspection before final CO"
+      ],
+      "companion_permits": [
+        "Health-department food-establishment plan review"
+      ],
+      "agencies": [
+        "Local / county health department",
+        "AHJ Building Dept"
+      ],
+      "citations": [
+        "FDA Food Code as adopted by local health authority [verify edition before merging]"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_restroom_ada_path_of_travel_20_percent",
+      "severity": "high",
+      "title": "Restroom alteration can trigger ADA path-of-travel upgrades",
+      "why_it_matters": "Altering a primary-function area or restroom can require upgrades to the accessible route, restrooms, drinking fountains, telephones, and parking up to the 20% disproportionality cap.",
+      "fired_by": [
+        "\\brestroom\\b",
+        "\\btoilet room\\b",
+        "\\bada bathroom\\b",
+        "\\bbathroom remodel\\b",
+        "\\baccessible restroom\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare ADA path-of-travel cost allocation",
+        "Show accessible route to altered area",
+        "Verify restroom clearances, accessories, lavatory, mirror, and door hardware"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR §36.403(f)",
+        "2010 ADA Standards §202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "commercial_ti_accessible_route_existing_building_alteration",
+      "severity": "medium",
+      "title": "Commercial alteration can require accessible-route/path-of-travel upgrades",
+      "why_it_matters": "Even when the requested work is not 'an ADA project,' altered primary-function areas can require accessible route, restroom, drinking fountain, parking, and entrance upgrades within the disproportionality cap.",
+      "fired_by": [
+        "\\btenant improvement\\b",
+        "\\bti\\b",
+        "\\bprimary function\\b",
+        "\\baccessible route\\b",
+        "\\bpath of travel\\b",
+        "\\bfront counter\\b",
+        "\\breception\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare path-of-travel analysis",
+        "Budget required accessible upgrades",
+        "Document 20% disproportionality cap if used"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building Dept",
+        "Accessibility reviewer"
+      ],
+      "citations": [
+        "28 CFR §36.403",
+        "2010 ADA Standards §202.4",
+        "IBC Chapter 11"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "commercial_ti_plumbing_fixture_count_change",
+      "severity": "medium",
+      "title": "Occupancy or occupant-load change can alter required restroom fixture counts",
+      "why_it_matters": "A retail/office/assembly change may look like tenant buildout but can require additional fixtures or accessible upgrades if occupant load or use category changes.",
+      "fired_by": [
+        "\\bchange of occupancy\\b",
+        "\\bchange of use\\b",
+        "\\boccupant load\\b",
+        "\\brestroom\\b",
+        "\\bassembly\\b",
+        "\\btraining room\\b",
+        "\\bshowroom\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare occupant-load and plumbing-fixture-count table",
+        "Check accessible fixture requirements",
+        "Coordinate any restroom expansion with path-of-travel obligations"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Building/Plumbing Dept"
+      ],
+      "citations": [
+        "IPC §403.1",
+        "IBC §2902",
+        "2010 ADA Standards §213"
+      ],
+      "primary_scope": "commercial_ti"
+    },
+    {
+      "id": "restaurant_fire_alarm_monitoring_modification",
+      "severity": "medium",
+      "title": "Restaurant occupancy or suppression work may require fire-alarm interface review",
+      "why_it_matters": "Suppression systems, duct detectors, occupant load, and sprinkler changes can all require alarm interlocks, monitoring updates, or a separate fire-alarm submittal.",
+      "fired_by": [
+        "\\bfire alarm\\b",
+        "\\bmonitoring\\b",
+        "\\bduct detector\\b",
+        "\\bansul\\b",
+        "\\bsprinkler\\b",
+        "\\ba[-\\s]?2\\b"
+      ],
+      "likely_required_actions": [
+        "Confirm whether alarm shop drawings are deferred or separate",
+        "Show suppression/alarm interface sequence",
+        "Update monitoring account and acceptance testing"
+      ],
+      "companion_permits": [
+        "Fire alarm permit, if devices/interface change"
+      ],
+      "agencies": [
+        "Fire Prevention",
+        "Alarm contractor"
+      ],
+      "citations": [
+        "IFC §907.1.1",
+        "NFPA 72"
+      ],
+      "primary_scope": "commercial_restaurant"
+    },
+    {
+      "id": "restaurant_plumbing_fixture_count_recalc",
+      "severity": "medium",
+      "title": "Restaurant seat count can change required plumbing fixtures",
+      "why_it_matters": "Dining, bar, patio, and assembly occupant loads can push the project over restroom fixture thresholds, affecting cost, space planning, and accessibility upgrades.",
+      "fired_by": [
+        "\\bseats?\\b",
+        "\\bdining\\b",
+        "\\bbar\\b",
+        "\\bpatio\\b",
+        "\\boccupant load\\b",
+        "\\brestroom\\b"
+      ],
+      "likely_required_actions": [
+        "Prepare occupant-load and fixture-count table",
+        "Verify male/female or all-gender fixture distribution rules",
+        "Coordinate accessible restroom clearances"
+      ],
+      "companion_permits": [],
+      "agencies": [
+        "AHJ Plumbing Dept",
+        "AHJ Building Dept"
+      ],
+      "citations": [
+        "IPC §403.1",
+        "IBC §2902"
+      ],
+      "primary_scope": "commercial_restaurant"
+    }
+  ],
+  "_fee_floor_components": {
+    "scope": "commercial_restaurant",
+    "scope_note": "plan review + permit + fire + utility + health",
+    "sqft": 3200,
+    "base_floor": 13000,
+    "jurisdiction_multiplier": 1.0,
+    "jurisdiction_label": "Las Vegas / Clark County, NV",
+    "jurisdiction_rationale": "default 1.0×; jurisdiction multiplier not calibrated [verify]",
+    "trigger_adders": [
+      {
+        "key": "change_of_occupancy",
+        "add_min": 2000,
+        "add_max": 5000,
+        "rationale": "IEBC §1001-1011 review + new CO"
+      },
+      {
+        "key": "hood_fire_suppression",
+        "add_min": 3000,
+        "add_max": 8000,
+        "rationale": "separate fire-prevention permit + acceptance test"
+      },
+      {
+        "key": "grease_interceptor",
+        "add_min": 1000,
+        "add_max": 4000,
+        "rationale": "sized + reviewed + utility coordination"
+      },
+      {
+        "key": "fire_sprinkler_modify",
+        "add_min": 2000,
+        "add_max": 6000,
+        "rationale": "hydraulic recalc + permit"
+      },
+      {
+        "key": "ada_path_of_travel",
+        "add_min": 1500,
+        "add_max": 5000,
+        "rationale": "20% rule alterations"
+      }
+    ],
+    "structured_low": 22500,
+    "structured_high": 41000,
+    "llm_fee_high_end": null
+  },
+  "_fee_adjusted": true,
+  "_fee_floor_check": "llm_below_floor_adjusted"
+}
