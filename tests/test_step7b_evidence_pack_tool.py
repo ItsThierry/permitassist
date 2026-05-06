@@ -85,7 +85,10 @@ def test_build_evidence_pack_preserves_field_level_evidence_and_scope_limit(tmp_
     assert item["last_verified_utc"] == "2026-05-05T12:01:00Z"
 
     assert pack["validation"]["verdict"] == "PASS_OFFLINE_READY"
-    assert pack["validation"]["ingestion_regression_contract"]["required_record_fields"]
+    required_record_fields = pack["validation"]["ingestion_regression_contract"]["required_record_fields"]
+    assert required_record_fields
+    assert "source_scope_limit_generated" in required_record_fields
+    assert record["source_scope_limit_generated"] is False
 
 
 def test_missing_scope_limit_or_quote_fails_closed_before_ingestion(tmp_path):
@@ -179,6 +182,83 @@ def test_companion_independent_review_with_blockers_still_fails_closed(tmp_path)
     assert record["ingestion_ready"] is False
     assert record["field_status"] == "needs_verification"
     assert "artifact_not_independently_accepted" in record["validation_errors"]
+
+
+def test_companion_independent_review_pass_with_blockers_status_fails_closed_even_without_blocker_list(tmp_path):
+    payload = _artifact()
+    payload["status"] = "primary_complete_pending_independent_review"
+    artifact_path = _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch83-evidence-upgrades-2026-05-05.json",
+        payload,
+    )
+    _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch83-independent-review-2026-05-05.json",
+        {"verdict": "PASS_WITH_BLOCKERS", "blockers": []},
+    )
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    assert record["ingestion_ready"] is False
+    assert "artifact_not_independently_accepted" in record["validation_errors"]
+
+
+def test_bypass_like_review_status_does_not_accidentally_pass_substring_match(tmp_path):
+    payload = _artifact()
+    payload["status"] = "primary_complete_pending_independent_review"
+    artifact_path = _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch82-evidence-upgrades-2026-05-05.json",
+        payload,
+    )
+    _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch82-independent-review-2026-05-05.json",
+        {"verdict": "BYPASS", "blockers": []},
+    )
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    assert record["ingestion_ready"] is False
+    assert "artifact_not_independently_accepted" in record["validation_errors"]
+
+
+def test_any_conflicting_companion_review_blocker_fails_closed(tmp_path):
+    payload = _artifact()
+    payload["status"] = "primary_complete_pending_independent_review"
+    artifact_path = _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch79-evidence-upgrades-2026-05-05.json",
+        payload,
+    )
+    _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch79-independent-review-2026-05-05.json",
+        {"verdict": "PASS", "blockers": []},
+    )
+    _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch79-later-independent-review-2026-05-05.json",
+        {"verdict": "PASS_WITH_BLOCKERS", "blockers": ["later blocker"]},
+    )
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    assert record["ingestion_ready"] is False
+    assert "artifact_not_independently_accepted" in record["validation_errors"]
+
+
+def test_explicit_accepted_false_review_does_not_pass_on_pass_verdict(tmp_path):
+    payload = _artifact()
+    payload["status"] = "primary_complete_pending_independent_review"
+    artifact_path = _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch78-evidence-upgrades-2026-05-05.json",
+        payload,
+    )
+    _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch78-independent-review-2026-05-05.json",
+        {"verdict": "PASS", "accepted": False, "blockers": []},
+    )
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    assert record["ingestion_ready"] is False
+    assert "artifact_not_independently_accepted" in record["validation_errors"]
+
 
 def test_missing_fetch_status_fails_closed():
     decision = fail_closed_decision(None)
@@ -359,6 +439,52 @@ def test_companion_source_validation_backfills_missing_metadata_and_quote(tmp_pa
     assert item["normalized_source_text_sha256"] == "c" * 64
     assert item["normalized_source_text_length"] == 4567
     assert item["fetch_status_code"] == 200
+    assert item["fetch_status_inferred"] is False
+
+
+def test_generated_scope_for_inspection_field_forbids_companion_review_reuse(tmp_path):
+    payload = _artifact(scope_limit="")
+    row = payload["accepted_upgrades"][0]
+    row["field"] = "inspections"
+    row["vertical"] = "office_ti"
+    artifact_path = _write_json(tmp_path / "permitassist-road-to-perfection-step6a-batch81-evidence-upgrades-2026-05-05.json", payload)
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    assert record["ingestion_ready"] is True
+    assert record["source_scope_limit_generated"] is True
+    assert "companion_reviews_triggers" in record["display_contract"]["must_not_use_for_fields"]
+    assert "inspections" not in record["display_contract"]["must_not_use_for_fields"]
+
+
+def test_generated_scope_for_companion_review_field_forbids_inspection_reuse(tmp_path):
+    payload = _artifact(scope_limit="")
+    artifact_path = _write_json(tmp_path / "permitassist-road-to-perfection-step6a-batch80-evidence-upgrades-2026-05-05.json", payload)
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    assert record["ingestion_ready"] is True
+    assert record["source_scope_limit_generated"] is True
+    assert "inspections" in record["display_contract"]["must_not_use_for_fields"]
+    assert "companion_reviews_triggers" not in record["display_contract"]["must_not_use_for_fields"]
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["permit_type", "apply_url", "fee_range", "approval_timeline", "inspections", "companion_reviews_triggers"],
+)
+def test_generated_scope_forbids_every_supported_field_except_current_field(tmp_path, field):
+    payload = _artifact(scope_limit="")
+    row = payload["accepted_upgrades"][0]
+    row["field"] = field
+    artifact_path = _write_json(tmp_path / f"permitassist-road-to-perfection-step6a-batch77-{field}-evidence-upgrades-2026-05-05.json", payload)
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    expected = {"permit_type", "apply_url", "fee_range", "approval_timeline", "inspections", "companion_reviews_triggers"} - {field}
+    assert record["source_scope_limit_generated"] is True
+    assert set(record["display_contract"]["must_not_use_for_fields"]) == expected
+
 
 def test_root_source_validation_shape_backfills_legacy_flat_row(tmp_path):
     payload = _artifact(scope_limit="Statewide trigger only; no local AHJ routing, fees, timelines, apply URL, permit type, or inspections verified.")
@@ -391,6 +517,7 @@ def test_root_source_validation_shape_backfills_legacy_flat_row(tmp_path):
     assert item["source_title"] == "Root source title"
     assert item["normalized_source_text_sha256"] == "d" * 64
     assert item["normalized_source_text_length"] == 9876
+    assert item["fetch_status_inferred"] is False
 
 
 def test_sources_checked_validation_shape_backfills_content_metadata(tmp_path):
@@ -456,6 +583,8 @@ def test_legacy_flat_row_exact_snippets_and_browser_rendered_metadata_are_adapte
     assert item["normalized_source_text_sha256"] == "f" * 64
     assert item["normalized_source_text_length"] == 2757
     assert item["fetch_status_code"] == "validated_current_run"
+    assert item["fetch_status_inferred"] is True
+
 
 def test_nested_source_object_legacy_row_is_adapted(tmp_path):
     payload = {
@@ -497,3 +626,4 @@ def test_nested_source_object_legacy_row_is_adapted(tmp_path):
     assert item["normalized_source_text_sha256"] == "1" * 64
     assert item["normalized_source_text_length"] == 1234
     assert item["fetch_status_code"] == "validated_current_run"
+    assert item["fetch_status_inferred"] is True

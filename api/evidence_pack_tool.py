@@ -226,7 +226,9 @@ def _review_accepts_artifact(review: dict[str, Any]) -> bool:
         return False
     if review.get("accepted") is True:
         return True
-    return "PASS" in status
+    if review.get("accepted") is False:
+        return False
+    return status in {"PASS", "PASS_ACCEPTED", "PASS_ACCEPTED_AFTER_INDEPENDENT_REVIEW"}
 
 
 def _independent_review_candidates(artifact_path: Path) -> list[Path]:
@@ -258,12 +260,17 @@ def _artifact_is_independently_accepted(artifact: dict[str, Any], artifact_path:
     if not artifact.get("accepted_upgrades"):
         return True
     if artifact_path is not None:
+        reviews: list[tuple[datetime, str, dict[str, Any]]] = []
         for review_path in _independent_review_candidates(artifact_path):
             try:
-                if _review_accepts_artifact(_read_json(review_path)):
-                    return True
+                review = _read_json(review_path)
             except Exception:
                 continue
+            created = _parse_utc(str(review.get("created_utc") or review.get("updated_utc") or "")) or datetime.min.replace(tzinfo=timezone.utc)
+            reviews.append((created, review_path.name, review))
+        if reviews:
+            latest_review = sorted(reviews, key=lambda item: (item[0], item[1]))[-1][2]
+            return _review_accepts_artifact(latest_review)
     return False
 
 
@@ -292,6 +299,7 @@ def _row_evidence_items(row: dict[str, Any]) -> list[dict[str, Any]]:
                 "normalized_source_text_length": row.get("normalized_source_text_length") or row.get("normalized_rendered_text_length") or nested_source.get("normalized_source_text_length") or nested_source.get("normalized_text_length"),
                 "validation_method": row.get("validation_method") or row.get("verification_method") or nested_source.get("validation_method") or nested_source.get("fetched_via") or "legacy flat Step 6A row adapted by Step 7B offline tool",
                 "fetch_status_code": row.get("fetch_status_code") or nested_source.get("fetch_status_code") or nested_source.get("status_code") or ("validated_current_run" if nested_source.get("normalized_text_sha256") and nested_source.get("normalized_text_length") else None),
+                "fetch_status_inferred": not bool(row.get("fetch_status_code") or nested_source.get("fetch_status_code") or nested_source.get("status_code")) and bool(nested_source.get("normalized_text_sha256") and nested_source.get("normalized_text_length")),
             }
         ]
     return []
@@ -416,8 +424,8 @@ def _display_contract(scope_limit: str, field: str) -> dict[str, Any]:
         "approval_timeline": ("approval_timeline", "approval timeline", "timelines", "timeline"),
         "apply_url": ("apply_url", "apply url", "apply URL".lower()),
         "permit_type": ("permit_type", "permit type"),
-        "inspections": ("inspections", "inspection sequence"),
-        "companion_reviews_triggers": ("companion reviews", "companion_reviews_triggers", "routing"),
+        "inspections": ("inspections", "inspection sequence", "inspection guidance"),
+        "companion_reviews_triggers": ("companion reviews", "companion_reviews_triggers", "companion review trigger guidance", "routing"),
     }
     forbidden: list[str] = []
     for candidate, terms in aliases.items():
@@ -487,8 +495,10 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
                     norm_len = int(value)
                     break
         fetch_status = _metadata_value(merged_evidence, source_validation, "fetch_status_code", "http_status", "status_code", "status")
+        fetch_status_inferred = bool(merged_evidence.get("fetch_status_inferred")) and str(fetch_status) == "validated_current_run"
         if fetch_status is None and norm_hash and norm_len and quote_found:
             fetch_status = "validated_current_run"
+            fetch_status_inferred = True
         source_title = _source_title(merged_evidence) or str(_metadata_value(merged_evidence, source_validation, "title") or "").strip()
         item_errors: list[str] = []
         if not url or not _validate_url(url):
@@ -521,6 +531,7 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
             "stale_after_utc": _format_utc(stale_after),
             "validation_method": merged_evidence.get("validation_method") or merged_evidence.get("verification_method") or merged_evidence.get("fetched_via") or "",
             "fetch_status_code": fetch_status,
+            "fetch_status_inferred": fetch_status_inferred,
             "runtime_fail_closed_policy": fail_closed_decision(fetch_status),
             "validation_errors": item_errors,
         })
@@ -622,7 +633,7 @@ def _validation_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
             "required_record_fields": [
                 "record_id", "state", "ahj_name", "vertical", "field", "field_status", "confidence",
                 "claim_value", "source_scope_limit", "display_contract", "field_evidence", "freshness",
-                "record_fingerprint_sha256",
+                "record_fingerprint_sha256", "source_scope_limit_generated",
             ],
             "required_evidence_fields": [
                 "source_url", "source_title", "exact_quote_or_snippet", "quote_found",
@@ -675,6 +686,8 @@ def build_evidence_pack(paths: Iterable[str | Path], generated_at_utc: str | Non
                 "No production import until claim citations consume field_evidence per field, not broad first-source snippets.",
                 "No production import until smart cache keys include evidence_pack_version/fingerprint.",
                 "No production import until /api/permit, /api/batch-permit, and /api/v1/permit parity is decided/tested.",
+                "No production import of records with source_scope_limit_generated=true until Step 7C explicitly gates or revalidates generated scope limits.",
+                "No production import of evidence items with fetch_status_inferred=true until Step 7C explicitly gates or revalidates synthesized fetch status.",
             ],
         },
         "artifact_inputs": artifact_summaries,
