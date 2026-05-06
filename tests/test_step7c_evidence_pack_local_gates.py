@@ -416,6 +416,94 @@ def test_permit_endpoint_bypasses_cache_when_local_pack_enabled(tmp_path, monkey
     assert body["apply_url"] is None
 
 
+def test_preview_only_permit_without_sample_header_stays_normal_no_cache_bypass(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    _enable_pack(monkeypatch, pack_path)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo")
+    server = _import_server(tmp_path, monkeypatch)
+    calls = []
+
+    def fake_research(*args, **kwargs):
+        calls.append(kwargs)
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json_response(
+            f"{live.base}/api/permit",
+            {"job_type": "office tenant improvement", "city": "Denver", "state": "CO", "job_category": "commercial"},
+        )
+
+    assert status == 200
+    assert calls and calls[0]["use_cache"] is True
+    assert calls[0]["suppress_cache_write"] is False
+    assert "_evidence_pack" not in body
+    assert body["apply_url"] == "https://denvergov.org/generic-permits"
+
+
+def test_preview_only_permit_sample_demo_header_allows_evidence_pack(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    _enable_pack(monkeypatch, pack_path)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo")
+    server = _import_server(tmp_path, monkeypatch)
+    calls = []
+
+    def fake_research(*args, **kwargs):
+        calls.append(kwargs)
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json_response(
+            f"{live.base}/api/permit",
+            {"job_type": "office tenant improvement", "city": "Denver", "state": "CO", "job_category": "commercial"},
+            {"X-Sample-Demo": "1"},
+        )
+
+    assert status == 200
+    assert calls and calls[0]["use_cache"] is False
+    assert calls[0]["suppress_cache_write"] is True
+    assert body["_evidence_pack"]["enabled"] is True
+    assert body["_evidence_pack"]["cache_bypassed"] is True
+    assert body["_evidence_pack"]["matched_fields"] == ["approval_timeline", "companion_reviews_triggers"]
+    assert "apply_url" in body["_evidence_pack"]["failed_closed_fields"]
+    assert body["apply_url"] is None
+
+
+def test_preview_only_paid_permit_without_sample_header_stays_normal(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    _enable_pack(monkeypatch, pack_path)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+    server = _import_server(tmp_path, monkeypatch)
+    calls = []
+
+    def fake_research(*args, **kwargs):
+        calls.append(kwargs)
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+    token = server.create_session_token("paid@example.com")
+    server.is_paid_user = lambda email: True
+
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json_response(
+            f"{live.base}/api/permit",
+            {"job_type": "office tenant improvement", "city": "Denver", "state": "CO", "job_category": "commercial"},
+            {"X-Session-Token": token},
+        )
+
+    assert status == 200
+    assert calls and calls[0]["use_cache"] is True
+    assert calls[0]["suppress_cache_write"] is False
+    assert "_evidence_pack" not in body
+    assert body["apply_url"] == "https://denvergov.org/generic-permits"
+    assert body["remaining_lookups"] == -1
+
+
 def test_enabled_local_pack_endpoint_parity_for_permit_batch_and_v1(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     _enable_pack(monkeypatch, pack_path)
@@ -461,6 +549,45 @@ def test_enabled_local_pack_endpoint_parity_for_permit_batch_and_v1(tmp_path, mo
         assert body["apply_path"]["support_level"] == "not available"
     assert all(call.get("use_cache") is False for call in calls)
     assert all(call.get("suppress_cache_write") is True for call in calls)
+
+
+def test_preview_only_batch_and_v1_remain_normal_without_evidence_pack(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    _enable_pack(monkeypatch, pack_path)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+    server = _import_server(tmp_path, monkeypatch)
+    calls = []
+
+    def fake_research(*args, **kwargs):
+        calls.append(kwargs)
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+    server.is_paid_user = lambda email: True
+    server.validate_api_key = lambda auth: ("paid@example.com", {"name": "test"})
+    request_body = {"job_type": "office tenant improvement", "city": "Denver", "state": "CO", "job_category": "commercial"}
+
+    with _LiveServer(server.Handler) as live:
+        batch_status, batch_body = _post_json_response(
+            f"{live.base}/api/batch-permit",
+            {"lookups": [request_body]},
+        )
+        v1_status, v1_body = _post_json_response(
+            f"{live.base}/api/v1/permit",
+            request_body,
+            {"Authorization": "Bearer test-key"},
+        )
+
+    batch_result = batch_body["results"][0]
+    assert batch_status == v1_status == 200
+    for body in (batch_result, v1_body):
+        assert body["apply_url"] == ""
+        assert body["fee_range"] == "$500-$1,000"
+        assert body["approval_timeline"] == "2-4 weeks"
+        assert "_evidence_pack" not in body
+    assert len(calls) == 2
+    assert all(call.get("use_cache") is True for call in calls)
+    assert all(call.get("suppress_cache_write") is False for call in calls)
 
 
 def test_enabled_pack_rejects_malformed_evidence_records(tmp_path, monkeypatch):

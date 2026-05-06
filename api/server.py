@@ -667,9 +667,23 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
     return apply_path
 
 
-def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None) -> dict:
+def _env_flag_enabled(name: str) -> bool:
+    return str(os.environ.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: bool = False) -> bool:
+    """Return whether this request may use the local evidence-pack overlay."""
+    if not evidence_pack_enabled():
+        return False
+    if not _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY"):
+        return True
+    preview_header = os.environ.get("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo").strip() or "X-Sample-Demo"
+    return path == "/api/permit" and is_sample_demo and headers.get(preview_header) == "1"
+
+
+def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
-    evidence_pack = get_local_evidence_pack()
+    evidence_pack = get_local_evidence_pack() if evidence_allowed is not False else None
     evidence_enabled = evidence_pack is not None
     unexpected_evidence_cache = evidence_enabled and (is_cached or bool(result.get("_cached")))
 
@@ -4456,14 +4470,14 @@ class Handler(BaseHTTPRequestHandler):
                     "sample_demo": is_sample_demo,
                     "benchmark": is_benchmark,
                 }, user_email or "")
-                evidence_enabled = get_local_evidence_pack() is not None
-                _use_cache = (not is_benchmark) and (not evidence_enabled)
+                evidence_allowed = evidence_pack_allowed_for_request(path, self.headers, is_sample_demo=is_sample_demo)
+                _use_cache = (not is_benchmark) and (not evidence_allowed)
                 result = research_permit(
                     job_type, city, state, zip_code,
                     job_category=job_category,
                     use_cache=_use_cache,
                     force_model=force_model,
-                    suppress_cache_write=evidence_enabled,
+                    suppress_cache_write=evidence_allowed,
                 )
                 is_cached = result.get("_cached", False)
 
@@ -4476,7 +4490,7 @@ class Handler(BaseHTTPRequestHandler):
                 elif unlimited:
                     result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
-                result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical)
+                result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
 
                 # Record stats and beta telemetry
                 record_lookup_stat(job_type, city, state, is_cached)
@@ -4525,10 +4539,10 @@ class Handler(BaseHTTPRequestHandler):
                     job_value = item.get("job_value")
                     explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
                     try:
-                        evidence_enabled = get_local_evidence_pack() is not None
-                        result = research_permit(job_type, city, state, zip_code, job_value=job_value, use_cache=not evidence_enabled, suppress_cache_write=evidence_enabled)
-                        if evidence_enabled:
-                            result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical)
+                        evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
+                        result = research_permit(job_type, city, state, zip_code, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
+                        if evidence_allowed:
+                            result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
                             response = dict(result)
                             response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                             return response
@@ -4844,10 +4858,10 @@ class Handler(BaseHTTPRequestHandler):
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
-                evidence_enabled = get_local_evidence_pack() is not None
-                result = research_permit(job_type, city, state, zip_code, job_category=job_category, use_cache=not evidence_enabled, suppress_cache_write=evidence_enabled)
-                if evidence_enabled:
-                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical)
+                evidence_allowed = evidence_pack_allowed_for_request(path, self.headers)
+                result = research_permit(job_type, city, state, zip_code, job_category=job_category, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
+                if evidence_allowed:
+                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
                 self.send_json(200, result)
             except Exception as e:
                 print(f"[api-v1-permit] Error: {e}")
