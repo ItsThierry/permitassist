@@ -1,0 +1,808 @@
+{
+  "metadata": {
+    "title": "PermitAssist Step 7U Dallas-only production-preview evidence pack",
+    "evidence_pack_version": "step7u_dallas_only_production_preview_v1",
+    "generated_at_utc": "2026-05-06T02:51:42Z",
+    "fingerprint_sha256": "2f46defd28b2a06c227735e4ef46f98575422923ca76e0cae3acb410f60aa7e1",
+    "production_wiring_allowed": true,
+    "scope": "Dallas TX only; restaurant_ti, medical_clinic_ti, office_ti; production-preview contract artifact only; not deployed and not active until separately reviewed/approved with production env wiring.",
+    "source_pack_path": "evidence_packs/dallas/step7h/permitassist-step7h-dallas-only-staging-evidence-pack-20260505.json",
+    "source_pack_fingerprint": "0c33feb7d6dcc436cf469cdfee78731b677c5eef09178bde421acaf303441616",
+    "source_pack_version": "step7h_dallas_only_staging_v1",
+    "source_pack_raw_sha256": "307f330cc7e1bd707bb31fcce70cc42f6b0472b364dcdf9b1c1593d7113ea618",
+    "known_failed_closed_fields": [
+      "fee_range",
+      "inspections"
+    ],
+    "production_preview_preconditions": [
+      "Production remains HOLD until Boban explicitly approves Railway production env wiring and deploy.",
+      "Production env vars must use PERMITASSIST_EVIDENCE_PACK_MODE=dallas_step7u_production_preview and this pack fingerprint only.",
+      "Staging Step 7H pack must remain production_wiring_allowed=false and must not be reused for production.",
+      "Run local gates, staging parity, production env presence check, and read-only Opus review immediately before any production promotion."
+    ]
+  },
+  "records": [
+    {
+      "ahj_name": "City of Dallas",
+      "claim_value": "Texas Local Government Code Sec. 214.904 verifies a statewide municipal building-permit outer action deadline: for municipal building permits to erect or improve a building/structure, the municipality must grant/deny the permit, provide written inability-to-act notice, or reach a written deadline agreement not later than the 45th day after application submission; if notice is provided, grant/deny is due not later than the 30th day after notice is received. This verifies the statutory municipal outer action timeline only, not the AHJ local queue estimate or completeness-screen timeline.",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": []
+      },
+      "field": "approval_timeline",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "Sec. 214.904. TIME FOR ISSUANCE OF MUNICIPAL BUILDING PERMIT. (a) This section applies only to a permit required by a municipality to erect or improve a building or other structure in the municipality or its extraterritorial jurisdiction.\n---\n(b) Not later than the 45th day after the date an application for a permit is submitted, the municipality must: (1) grant or deny the permit; (2) provide written notice to the applicant stating the reasons why the municipality has been unable to grant or deny the permit application; or (3) reach a written agreement with the applicant providing for a deadline for granting or denying the permit.\n---\n(c) For a permit application for which notice is provided under Subsection (b)(2), the municipality must grant or deny the permit not later than the 30th day after the date the notice is received.",
+          "fetch_status_code": "browser_rendered_200",
+          "last_verified_utc": "2026-05-05T05:11:19Z",
+          "normalized_source_text_length": 113587,
+          "normalized_source_text_sha256": "13dadf2d53c3ccd1631075192467dde0460df176ec4ce722bf91c7c9ef9be79a",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-04T05:11:19Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": "browser_rendered_200",
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "statutes.capitol.texas.gov",
+          "source_id": "texas_local_gov_code_214_904_municipal_building_permit_timeline",
+          "source_title": "Texas Local Government Code Sec. 214.904 — Time for Issuance of Municipal Building Permit",
+          "source_type": "official_state_statute_browser_rendered",
+          "source_url": "https://statutes.capitol.texas.gov/Docs/LG/htm/LG.214.htm#214.904",
+          "stale_after_utc": "2026-07-04T05:11:19Z",
+          "validation_errors": [],
+          "validation_method": "Browser-rendered official Texas Constitution and Statutes page; document.body.innerText whitespace-normalized; exact snippets checked as contiguous substrings using browser crypto hash; no raw page blob stored."
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-05T05:11:19Z",
+        "reverify_after_utc": "2026-06-04T05:11:19Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-04T05:11:19Z"
+      },
+      "ingestion_ready": true,
+      "old_status": "needs_verification",
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "415a118fbe46ca377c7b1a1fae69edd70003d7801d517baf740f5505c9081fef",
+      "record_id": "step6a-batch19-tx-dallas-ahj-level-approval-timeline",
+      "source_artifact": "permitassist-road-to-perfection-step6a-batch19-evidence-upgrades-2026-05-05.json",
+      "source_artifact_path": "/home/boban/.hermes/project-briefs/permitassist-road-to-perfection-step6a-batch19-evidence-upgrades-2026-05-05.json",
+      "source_batch_id": "step6a_batch19",
+      "source_scope_limit": "Applies only to municipalities and municipal/extraterritorial-jurisdiction building permits. It is not used for Harris County/county rows, fee ranges, inspections, apply URLs, permit types, or companion reviews.",
+      "state": "TX",
+      "validation_errors": [],
+      "vertical": "ahj_level"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "claim_value": "Texas TDLR Architectural Barriers FAQ verifies TAS compliance and registration/review submission trigger for projects with total estimated cost of $50,000 or more, which can apply to medical-clinic tenant improvements when the cost threshold is met.",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "apply_url",
+          "approval_timeline",
+          "fee_range",
+          "inspections",
+          "permit_type"
+        ]
+      },
+      "field": "companion_reviews_triggers",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "If your project's total estimated cost is less than $50,000.00, you are not required to submit the project to the Department for registration and review, however , the project is still required to comply with TAS .\n---\nProjects with costs of $50,000 or more are required to submit a full set of construction documents in accordance with Administrative Rule 68.50 .",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T06:48:00Z",
+          "normalized_source_text_length": 31747,
+          "normalized_source_text_sha256": "ce7df0bda98ae1a0eb186f991a89b4fe3ce43710d54553865bafc775dd74929d",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-04T06:48:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "www.tdlr.texas.gov",
+          "source_id": "texas_tdlr_architectural_barriers_cost_threshold_review",
+          "source_title": "Texas Architectural Barriers FAQ | TDLR",
+          "source_type": "official_state_agency",
+          "source_url": "https://www.tdlr.texas.gov/ab/abfaq.htm",
+          "stale_after_utc": "2026-07-04T06:48:00Z",
+          "validation_errors": [],
+          "validation_method": "requests with browser-like headers + BeautifulSoup visible text normalization; exact snippets checked as contiguous substrings; no raw page blob stored"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-05T06:48:00Z",
+        "reverify_after_utc": "2026-06-04T06:48:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-04T06:48:00Z"
+      },
+      "ingestion_ready": true,
+      "old_status": "partial",
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "400b234f1f1a8bc7be26929140bc1952fce476b31ebfd4b8bcbf35c1b25e720e",
+      "record_id": "step6a-batch26-tx-city-of-dallas-medical-clinic-ti-companion-reviews-triggers",
+      "source_artifact": "permitassist-road-to-perfection-step6a-batch26-evidence-upgrades-2026-05-05.json",
+      "source_artifact_path": "/home/boban/.hermes/project-briefs/permitassist-road-to-perfection-step6a-batch26-evidence-upgrades-2026-05-05.json",
+      "source_batch_id": "step6a_batch26",
+      "source_scope_limit": "Verifies only the Texas architectural-barriers/TAS companion trigger and cost threshold; does not verify medical licensing, radiation, medical gas, local health/fire, fees, timeline, apply URL, permit type, or inspections.",
+      "state": "TX",
+      "validation_errors": [],
+      "vertical": "medical_clinic_ti"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "claim_value": "Texas TDLR Architectural Barriers FAQ verifies statewide TAS compliance and registration/review submission trigger for projects with total estimated cost of $50,000 or more.",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "apply_url",
+          "approval_timeline",
+          "fee_range",
+          "inspections",
+          "permit_type"
+        ]
+      },
+      "field": "companion_reviews_triggers",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "If your project's total estimated cost is less than $50,000.00, you are not required to submit the project to the Department for registration and review, however , the project is still required to comply with TAS .\n---\nProjects with costs of $50,000 or more are required to submit a full set of construction documents in accordance with Administrative Rule 68.50 .",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T06:48:00Z",
+          "normalized_source_text_length": 31747,
+          "normalized_source_text_sha256": "ce7df0bda98ae1a0eb186f991a89b4fe3ce43710d54553865bafc775dd74929d",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-04T06:48:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "www.tdlr.texas.gov",
+          "source_id": "texas_tdlr_architectural_barriers_cost_threshold_review",
+          "source_title": "Texas Architectural Barriers FAQ | TDLR",
+          "source_type": "official_state_agency",
+          "source_url": "https://www.tdlr.texas.gov/ab/abfaq.htm",
+          "stale_after_utc": "2026-07-04T06:48:00Z",
+          "validation_errors": [],
+          "validation_method": "requests with browser-like headers + BeautifulSoup visible text normalization; exact snippets checked as contiguous substrings; no raw page blob stored"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-05T06:48:00Z",
+        "reverify_after_utc": "2026-06-04T06:48:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-04T06:48:00Z"
+      },
+      "ingestion_ready": true,
+      "old_status": "partial",
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "cb4cd834d207e428ccf3eb38808a084080a5b00c98418c6222901d3c4f94ed14",
+      "record_id": "step6a-batch23-tx-city-of-dallas-office-ti-companion-reviews-triggers",
+      "source_artifact": "permitassist-road-to-perfection-step6a-batch23-evidence-upgrades-2026-05-05.json",
+      "source_artifact_path": "/home/boban/.hermes/project-briefs/permitassist-road-to-perfection-step6a-batch23-evidence-upgrades-2026-05-05.json",
+      "source_batch_id": "step6a_batch23",
+      "source_scope_limit": "Verifies only the Texas architectural-barriers/TAS companion trigger and cost threshold; does not verify local fire/health/food/medical triggers, fees, timeline, apply URL, permit type, or inspections.",
+      "state": "TX",
+      "validation_errors": [],
+      "vertical": "office_ti"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "claim_value": "Texas TDLR Architectural Barriers FAQ verifies statewide TAS compliance and registration/review submission trigger for projects with total estimated cost of $50,000 or more.",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "apply_url",
+          "approval_timeline",
+          "fee_range",
+          "inspections",
+          "permit_type"
+        ]
+      },
+      "field": "companion_reviews_triggers",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "If your project's total estimated cost is less than $50,000.00, you are not required to submit the project to the Department for registration and review, however , the project is still required to comply with TAS .\n---\nProjects with costs of $50,000 or more are required to submit a full set of construction documents in accordance with Administrative Rule 68.50 .",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T06:48:00Z",
+          "normalized_source_text_length": 31747,
+          "normalized_source_text_sha256": "ce7df0bda98ae1a0eb186f991a89b4fe3ce43710d54553865bafc775dd74929d",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-04T06:48:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "www.tdlr.texas.gov",
+          "source_id": "texas_tdlr_architectural_barriers_cost_threshold_review",
+          "source_title": "Texas Architectural Barriers FAQ | TDLR",
+          "source_type": "official_state_agency",
+          "source_url": "https://www.tdlr.texas.gov/ab/abfaq.htm",
+          "stale_after_utc": "2026-07-04T06:48:00Z",
+          "validation_errors": [],
+          "validation_method": "requests with browser-like headers + BeautifulSoup visible text normalization; exact snippets checked as contiguous substrings; no raw page blob stored"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-05T06:48:00Z",
+        "reverify_after_utc": "2026-06-04T06:48:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-04T06:48:00Z"
+      },
+      "ingestion_ready": true,
+      "old_status": "partial",
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "9ca693a52618d86973f51f0e7e2bc7d697548849891d8b31f4c28fa962def6cd",
+      "record_id": "step6a-batch23-tx-city-of-dallas-restaurant-ti-companion-reviews-triggers",
+      "source_artifact": "permitassist-road-to-perfection-step6a-batch23-evidence-upgrades-2026-05-05.json",
+      "source_artifact_path": "/home/boban/.hermes/project-briefs/permitassist-road-to-perfection-step6a-batch23-evidence-upgrades-2026-05-05.json",
+      "source_batch_id": "step6a_batch23",
+      "source_scope_limit": "Verifies only the Texas architectural-barriers/TAS companion trigger and cost threshold; does not verify local fire/health/food/medical triggers, fees, timeline, apply URL, permit type, or inspections.",
+      "state": "TX",
+      "validation_errors": [],
+      "vertical": "restaurant_ti"
+    },
+    {
+      "ahj_name": "Dallas",
+      "claim_value": "Commercial Building Permit",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "approval_timeline",
+          "companion_reviews_triggers",
+          "fee_range",
+          "inspections"
+        ]
+      },
+      "field": "permit_type",
+      "field_evidence": [
+        {
+          "exact_quote": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "exact_quote_or_snippet": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 3309,
+          "normalized_source_text_sha256": "0ed5642b7350944b294caac273ac293c2b6d75cffa1b5d032ef6f5406f8c4e24",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_commercial_overview",
+          "source_title": "City of Dallas Commercial Permits",
+          "source_type": "official_ahj",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/commercial_overview.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-05T17:33:56Z",
+        "reverify_after_utc": "2026-06-04T17:33:56Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-04T17:33:56Z"
+      },
+      "ingestion_ready": true,
+      "old_status": "needs_verification",
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "a2d3502cce5d9567974d844be9a9659b3075c2843c8db60cc323aa081c17a5b4",
+      "record_id": "step7e-dallas-restaurant_ti-permit_type",
+      "source_artifact": "step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_artifact_path": "/home/boban/projects/permitassist-step7c-evidence-pack-local-gates-20260505T161429Z/artifacts/step7e_golden_coverage/step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_batch_id": "step7e_dallas_golden_minimum_fields",
+      "source_scope_limit": "Verifies Dallas commercial building permit requirement/name for commercial constructing, altering, or renovating work; does not verify fee_range, approval_timeline, inspections, companion_reviews_triggers, or a vertical-specific subcategory beyond commercial building permit.",
+      "state": "TX",
+      "validation_errors": [],
+      "vertical": "restaurant_ti"
+    },
+    {
+      "ahj_name": "Dallas",
+      "claim_value": "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "approval_timeline",
+          "companion_reviews_triggers",
+          "fee_range",
+          "inspections"
+        ]
+      },
+      "field": "apply_url",
+      "field_evidence": [
+        {
+          "exact_quote": "DallasNow is an online portal used by the City of Dallas for all of our permitting services.",
+          "exact_quote_or_snippet": "DallasNow is an online portal used by the City of Dallas for all of our permitting services.",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 3309,
+          "normalized_source_text_sha256": "0ed5642b7350944b294caac273ac293c2b6d75cffa1b5d032ef6f5406f8c4e24",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "DallasNow is an online portal used by the City of Dallas for all of our permitting services.",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_commercial_overview",
+          "source_title": "City of Dallas Commercial Permits",
+          "source_type": "official_ahj",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/commercial_overview.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        },
+        {
+          "exact_quote": "Click HERE or image below to access DallasNow .",
+          "exact_quote_or_snippet": "Click HERE or image below to access DallasNow .",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 3765,
+          "normalized_source_text_sha256": "62a836b2959d534da451f5ecc3f451110578d15bc7816985d64dc55b3112f3c5",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "Click HERE or image below to access DallasNow .",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "dallascityhall.com",
+          "source_id": "dallasnow_official_page",
+          "source_title": "City of Dallas DallasNow",
+          "source_type": "official_ahj",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/Pages/DallasNow.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        },
+        {
+          "exact_quote": "Welcome to DallasNow our new Citizen Portal DallasNow is a permitting system designed to simplify the process for users.",
+          "exact_quote_or_snippet": "Welcome to DallasNow our new Citizen Portal DallasNow is a permitting system designed to simplify the process for users.",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 929,
+          "normalized_source_text_sha256": "b84c1af7e84bf3952a38c9e10efa40d48cfaedfe2d8be8cd534e4040aa6645ed",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "Welcome to DallasNow our new Citizen Portal DallasNow is a permitting system designed to simplify the process for users.",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "aca-prod.accela.com",
+          "source_id": "dallasnow_accela_portal",
+          "source_title": "Accela Citizen Access — DallasNow",
+          "source_type": "trusted_portal",
+          "source_url": "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-05T17:33:56Z",
+        "reverify_after_utc": "2026-06-04T17:33:56Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-04T17:33:56Z"
+      },
+      "ingestion_ready": true,
+      "old_status": "needs_verification",
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "92c99244ea58856e0df46823e98ed08dd0549d49741d67e5af8017101772d17a",
+      "record_id": "step7e-dallas-restaurant_ti-apply_url",
+      "source_artifact": "step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_artifact_path": "/home/boban/projects/permitassist-step7c-evidence-pack-local-gates-20260505T161429Z/artifacts/step7e_golden_coverage/step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_batch_id": "step7e_dallas_golden_minimum_fields",
+      "source_scope_limit": "Verifies DallasNow/DALLASTX online permitting start portal only; does not verify exact portal subcategory selection, fee_range, approval_timeline, inspections, or companion_reviews_triggers.",
+      "state": "TX",
+      "validation_errors": [],
+      "vertical": "restaurant_ti"
+    },
+    {
+      "ahj_name": "Dallas",
+      "claim_value": "Commercial Building Permit",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "approval_timeline",
+          "companion_reviews_triggers",
+          "fee_range",
+          "inspections"
+        ]
+      },
+      "field": "permit_type",
+      "field_evidence": [
+        {
+          "exact_quote": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "exact_quote_or_snippet": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 3309,
+          "normalized_source_text_sha256": "0ed5642b7350944b294caac273ac293c2b6d75cffa1b5d032ef6f5406f8c4e24",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_commercial_overview",
+          "source_title": "City of Dallas Commercial Permits",
+          "source_type": "official_ahj",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/commercial_overview.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-05T17:33:56Z",
+        "reverify_after_utc": "2026-06-04T17:33:56Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-04T17:33:56Z"
+      },
+      "ingestion_ready": true,
+      "old_status": "needs_verification",
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "c7ee627d98437941669409a2b1d425b07ca91ffb329143570874cbe07a503f23",
+      "record_id": "step7e-dallas-medical_clinic_ti-permit_type",
+      "source_artifact": "step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_artifact_path": "/home/boban/projects/permitassist-step7c-evidence-pack-local-gates-20260505T161429Z/artifacts/step7e_golden_coverage/step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_batch_id": "step7e_dallas_golden_minimum_fields",
+      "source_scope_limit": "Verifies Dallas commercial building permit requirement/name for commercial constructing, altering, or renovating work; does not verify fee_range, approval_timeline, inspections, companion_reviews_triggers, or a vertical-specific subcategory beyond commercial building permit.",
+      "state": "TX",
+      "validation_errors": [],
+      "vertical": "medical_clinic_ti"
+    },
+    {
+      "ahj_name": "Dallas",
+      "claim_value": "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "approval_timeline",
+          "companion_reviews_triggers",
+          "fee_range",
+          "inspections"
+        ]
+      },
+      "field": "apply_url",
+      "field_evidence": [
+        {
+          "exact_quote": "DallasNow is an online portal used by the City of Dallas for all of our permitting services.",
+          "exact_quote_or_snippet": "DallasNow is an online portal used by the City of Dallas for all of our permitting services.",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 3309,
+          "normalized_source_text_sha256": "0ed5642b7350944b294caac273ac293c2b6d75cffa1b5d032ef6f5406f8c4e24",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "DallasNow is an online portal used by the City of Dallas for all of our permitting services.",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_commercial_overview",
+          "source_title": "City of Dallas Commercial Permits",
+          "source_type": "official_ahj",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/commercial_overview.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        },
+        {
+          "exact_quote": "Click HERE or image below to access DallasNow .",
+          "exact_quote_or_snippet": "Click HERE or image below to access DallasNow .",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 3765,
+          "normalized_source_text_sha256": "62a836b2959d534da451f5ecc3f451110578d15bc7816985d64dc55b3112f3c5",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "Click HERE or image below to access DallasNow .",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "dallascityhall.com",
+          "source_id": "dallasnow_official_page",
+          "source_title": "City of Dallas DallasNow",
+          "source_type": "official_ahj",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/Pages/DallasNow.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        },
+        {
+          "exact_quote": "Welcome to DallasNow our new Citizen Portal DallasNow is a permitting system designed to simplify the process for users.",
+          "exact_quote_or_snippet": "Welcome to DallasNow our new Citizen Portal DallasNow is a permitting system designed to simplify the process for users.",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 929,
+          "normalized_source_text_sha256": "b84c1af7e84bf3952a38c9e10efa40d48cfaedfe2d8be8cd534e4040aa6645ed",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "Welcome to DallasNow our new Citizen Portal DallasNow is a permitting system designed to simplify the process for users.",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "aca-prod.accela.com",
+          "source_id": "dallasnow_accela_portal",
+          "source_title": "Accela Citizen Access — DallasNow",
+          "source_type": "trusted_portal",
+          "source_url": "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-05T17:33:56Z",
+        "reverify_after_utc": "2026-06-04T17:33:56Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-04T17:33:56Z"
+      },
+      "ingestion_ready": true,
+      "old_status": "needs_verification",
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "2a5629d43f6db1a7351f85976591512c073a2a3c044eda6197d3129f7ee982ba",
+      "record_id": "step7e-dallas-medical_clinic_ti-apply_url",
+      "source_artifact": "step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_artifact_path": "/home/boban/projects/permitassist-step7c-evidence-pack-local-gates-20260505T161429Z/artifacts/step7e_golden_coverage/step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_batch_id": "step7e_dallas_golden_minimum_fields",
+      "source_scope_limit": "Verifies DallasNow/DALLASTX online permitting start portal only; does not verify exact portal subcategory selection, fee_range, approval_timeline, inspections, or companion_reviews_triggers.",
+      "state": "TX",
+      "validation_errors": [],
+      "vertical": "medical_clinic_ti"
+    },
+    {
+      "ahj_name": "Dallas",
+      "claim_value": "Commercial Building Permit",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "approval_timeline",
+          "companion_reviews_triggers",
+          "fee_range",
+          "inspections"
+        ]
+      },
+      "field": "permit_type",
+      "field_evidence": [
+        {
+          "exact_quote": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "exact_quote_or_snippet": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 3309,
+          "normalized_source_text_sha256": "0ed5642b7350944b294caac273ac293c2b6d75cffa1b5d032ef6f5406f8c4e24",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_commercial_overview",
+          "source_title": "City of Dallas Commercial Permits",
+          "source_type": "official_ahj",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/commercial_overview.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-05T17:33:56Z",
+        "reverify_after_utc": "2026-06-04T17:33:56Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-04T17:33:56Z"
+      },
+      "ingestion_ready": true,
+      "old_status": "needs_verification",
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "e0934a217cb5b9b6e96c2fd0ec0ab2393a896cffab3349727321531c02b0f523",
+      "record_id": "step7e-dallas-office_ti-permit_type",
+      "source_artifact": "step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_artifact_path": "/home/boban/projects/permitassist-step7c-evidence-pack-local-gates-20260505T161429Z/artifacts/step7e_golden_coverage/step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_batch_id": "step7e_dallas_golden_minimum_fields",
+      "source_scope_limit": "Verifies Dallas commercial building permit requirement/name for commercial constructing, altering, or renovating work; does not verify fee_range, approval_timeline, inspections, companion_reviews_triggers, or a vertical-specific subcategory beyond commercial building permit.",
+      "state": "TX",
+      "validation_errors": [],
+      "vertical": "office_ti"
+    },
+    {
+      "ahj_name": "Dallas",
+      "claim_value": "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "approval_timeline",
+          "companion_reviews_triggers",
+          "fee_range",
+          "inspections"
+        ]
+      },
+      "field": "apply_url",
+      "field_evidence": [
+        {
+          "exact_quote": "DallasNow is an online portal used by the City of Dallas for all of our permitting services.",
+          "exact_quote_or_snippet": "DallasNow is an online portal used by the City of Dallas for all of our permitting services.",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 3309,
+          "normalized_source_text_sha256": "0ed5642b7350944b294caac273ac293c2b6d75cffa1b5d032ef6f5406f8c4e24",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "DallasNow is an online portal used by the City of Dallas for all of our permitting services.",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_commercial_overview",
+          "source_title": "City of Dallas Commercial Permits",
+          "source_type": "official_ahj",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/commercial_overview.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        },
+        {
+          "exact_quote": "Click HERE or image below to access DallasNow .",
+          "exact_quote_or_snippet": "Click HERE or image below to access DallasNow .",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 3765,
+          "normalized_source_text_sha256": "62a836b2959d534da451f5ecc3f451110578d15bc7816985d64dc55b3112f3c5",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "Click HERE or image below to access DallasNow .",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "dallascityhall.com",
+          "source_id": "dallasnow_official_page",
+          "source_title": "City of Dallas DallasNow",
+          "source_type": "official_ahj",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/Pages/DallasNow.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        },
+        {
+          "exact_quote": "Welcome to DallasNow our new Citizen Portal DallasNow is a permitting system designed to simplify the process for users.",
+          "exact_quote_or_snippet": "Welcome to DallasNow our new Citizen Portal DallasNow is a permitting system designed to simplify the process for users.",
+          "fetch_status_code": 200,
+          "last_verified_utc": "2026-05-05T17:33:56Z",
+          "normalized_source_text_length": 929,
+          "normalized_source_text_sha256": "b84c1af7e84bf3952a38c9e10efa40d48cfaedfe2d8be8cd534e4040aa6645ed",
+          "quote_found": true,
+          "quote_found_current_run": true,
+          "quoted_snippet": "Welcome to DallasNow our new Citizen Portal DallasNow is a permitting system designed to simplify the process for users.",
+          "reverify_after_utc": "2026-06-04T17:33:56Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": 200,
+            "must_not_promote": true,
+            "production_import_note": "If future revalidation cannot confirm this exact quote/hash within freshness policy, fail closed to needs_verification.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "source_host": "aca-prod.accela.com",
+          "source_id": "dallasnow_accela_portal",
+          "source_title": "Accela Citizen Access — DallasNow",
+          "source_type": "trusted_portal",
+          "source_url": "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+          "stale_after_utc": "2026-07-04T17:33:56Z",
+          "validation_errors": [],
+          "validation_method": "current-run requests fetch + BeautifulSoup visible text + whitespace-normalized contiguous quote assertion"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-05T17:33:56Z",
+        "reverify_after_utc": "2026-06-04T17:33:56Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-04T17:33:56Z"
+      },
+      "ingestion_ready": true,
+      "old_status": "needs_verification",
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "35778f1a0a1c8351a72746c426d8b78da658b4e941303e0b41ad2fccf3bf9e11",
+      "record_id": "step7e-dallas-office_ti-apply_url",
+      "source_artifact": "step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_artifact_path": "/home/boban/projects/permitassist-step7c-evidence-pack-local-gates-20260505T161429Z/artifacts/step7e_golden_coverage/step7e_dallas_golden_evidence_artifact_20260505.json",
+      "source_batch_id": "step7e_dallas_golden_minimum_fields",
+      "source_scope_limit": "Verifies DallasNow/DALLASTX online permitting start portal only; does not verify exact portal subcategory selection, fee_range, approval_timeline, inspections, or companion_reviews_triggers.",
+      "state": "TX",
+      "validation_errors": [],
+      "vertical": "office_ti"
+    }
+  ]
+}
