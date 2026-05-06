@@ -142,7 +142,7 @@ def _extract_quote(evidence: dict[str, Any]) -> tuple[str, bool]:
     if quote:
         return quote, bool(True if quote_found is None else quote_found)
 
-    snippets = evidence.get("exact_snippets") or []
+    snippets = evidence.get("exact_snippets") or evidence.get("quotes") or []
     parts: list[str] = []
     found = False
     if isinstance(snippets, list):
@@ -170,6 +170,7 @@ def _normalized_length(evidence: dict[str, Any]) -> int | None:
         "source_content_length",
         "content_length",
         "browser_rendered_text_length",
+        "rendered_text_length",
     ):
         value = evidence.get(key)
         if isinstance(value, int):
@@ -187,6 +188,7 @@ def _normalized_hash(evidence: dict[str, Any]) -> str:
         or evidence.get("source_content_sha256")
         or evidence.get("content_sha256")
         or evidence.get("browser_rendered_text_sha256")
+        or evidence.get("rendered_text_sha256")
         or ""
     )
     return str(value).strip()
@@ -308,9 +310,9 @@ def _row_evidence_items(row: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _source_validation_candidates(artifact_path: Path) -> list[Path]:
-    """Return likely companion source-validation artifacts for a Step 6A upgrade artifact."""
+    """Return likely source metadata artifacts for a Step 6A upgrade artifact."""
     name = artifact_path.name
-    candidates: list[Path] = []
+    candidates: list[Path] = [artifact_path]
     batch_match = re.search(r"(step6a-batch\d+)-", name)
     if batch_match:
         prefix = f"permitassist-road-to-perfection-{batch_match.group(1)}"
@@ -342,7 +344,7 @@ def _source_validation_items(artifact_path: Path) -> dict[str, dict[str, Any]]:
             payload = _read_json(candidate)
         except Exception:
             continue
-        sources = payload.get("sources") or payload.get("sources_checked") or []
+        sources = payload.get("sources") or payload.get("sources_checked") or payload.get("source_records") or []
         if isinstance(sources, dict):
             source_iter = []
             for source_id, source in sources.items():
@@ -357,16 +359,27 @@ def _source_validation_items(artifact_path: Path) -> dict[str, dict[str, Any]]:
         else:
             source_iter = []
         for source in source_iter:
-            for key in (
-                source.get("source_id"),
-                source.get("source_url"),
-                source.get("source_final_url"),
-                source.get("final_url"),
-                source.get("url"),
-                source.get("linked_pdf_url"),
-            ):
-                if key:
-                    indexed[str(key).strip()] = source
+            keys = [
+                str(key).strip()
+                for key in (
+                    source.get("source_id"),
+                    source.get("source_url"),
+                    source.get("source_final_url"),
+                    source.get("final_url"),
+                    source.get("url"),
+                    source.get("linked_pdf_url"),
+                )
+                if key
+            ]
+            if not keys:
+                continue
+            merged_source: dict[str, Any] = {}
+            for index_key in keys:
+                if index_key in indexed:
+                    merged_source.update({k: v for k, v in indexed[index_key].items() if v not in (None, "", [])})
+            merged_source.update({k: v for k, v in source.items() if v not in (None, "", [])})
+            for index_key in keys:
+                indexed[index_key] = merged_source
     return indexed
 
 
@@ -483,10 +496,10 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
         merged_evidence.update({k: v for k, v in evidence.items() if v not in (None, "", [])})
         quote, quote_found = _extract_quote(merged_evidence)
         url = _source_url(merged_evidence)
-        norm_hash = _normalized_hash(merged_evidence) or str(_metadata_value(merged_evidence, source_validation, "normalized_text_sha256", "content_sha256") or "").strip()
+        norm_hash = _normalized_hash(merged_evidence) or str(_metadata_value(merged_evidence, source_validation, "normalized_text_sha256", "content_sha256", "rendered_text_sha256") or "").strip()
         norm_len = _normalized_length(merged_evidence)
         if norm_len is None:
-            for key in ("normalized_text_length", "normalized_rendered_text_len", "normalized_text_len"):
+            for key in ("normalized_text_length", "normalized_rendered_text_len", "normalized_text_len", "rendered_text_length"):
                 value = _metadata_value(merged_evidence, source_validation, key)
                 if isinstance(value, int):
                     norm_len = value

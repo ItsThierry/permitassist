@@ -627,3 +627,127 @@ def test_nested_source_object_legacy_row_is_adapted(tmp_path):
     assert item["normalized_source_text_length"] == 1234
     assert item["fetch_status_code"] == "validated_current_run"
     assert item["fetch_status_inferred"] is True
+
+
+def test_browser_rendered_source_validation_uses_rendered_hash_and_length(tmp_path):
+    payload = _artifact()
+    row = payload["accepted_upgrades"][0]
+    row.pop("evidence")
+    row["row_id"] = "step6a-batch4-fl-inspections-01"
+    row["state"] = "FL"
+    row["ahj_name"] = "City of Fort Lauderdale"
+    row["vertical"] = "restaurant_ti"
+    row["field"] = "inspections"
+    row["proposed_status"] = "partial"
+    row["exact_official_quote"] = "Construction or work for which a permit is required shall be subject to inspection."
+    row["source_url"] = "https://codes.iccsafe.org/content/FLBC2023P1/chapter-1-scope-and-administration#FLBC2023P1_Ch01_Sec110"
+    row["source_title"] = "Florida Building Code Section 110"
+    row["fetch_status_code"] = "browser_rendered_200"
+    artifact_path = _write_json(tmp_path / "permitassist-road-to-perfection-step6a-batch4-evidence-upgrades-2026-05-04.json", payload)
+    _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch4-source-validation-2026-05-04.json",
+        {
+            "source_url": row["source_url"],
+            "source_title": "Florida Building Code Section 110",
+            "rendered_text_sha256": "b" * 64,
+            "rendered_text_length": 115929,
+            "quote_found": True,
+            "exact_official_quote": row["exact_official_quote"],
+        },
+    )
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    item = record["field_evidence"][0]
+    assert record["ingestion_ready"] is True
+    assert item["normalized_source_text_sha256"] == "b" * 64
+    assert item["normalized_source_text_length"] == 115929
+    assert item["fetch_status_code"] == "browser_rendered_200"
+
+
+def test_source_records_shape_backfills_metadata_for_travis_companion_pages(tmp_path):
+    payload = _artifact()
+    row = payload["accepted_upgrades"][0]
+    row["evidence"] = [
+        {
+            "source_id": "travis_commercial_multi_family",
+            "source_url": "https://www.traviscountytx.gov/tnr/development-services/apply-for-a-permit/commercial-multi-family-development-permits",
+            "source_title": "Commercial & Multi-Family Development Permits | Travis County, Texas",
+            "fetch_status_code": 200,
+        }
+    ]
+    artifact_path = _write_json(tmp_path / "permitassist-road-to-perfection-step6a-batch6-evidence-upgrades-2026-05-04.json", payload)
+    _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch6-source-validation-2026-05-04.json",
+        {
+            "source_records": [
+                {
+                    "source_id": "travis_commercial_multi_family",
+                    "source_url": row["evidence"][0]["source_url"],
+                    "source_title": row["evidence"][0]["source_title"],
+                    "fetch_status_code": 200,
+                    "normalized_text_len": 4353,
+                    "normalized_text_sha256": "c" * 64,
+                    "quotes": [
+                        {
+                            "exact_quote": "Commercial Site Plan includes offices and medical centers.",
+                            "quote_check": "pass",
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    item = record["field_evidence"][0]
+    assert record["ingestion_ready"] is True
+    assert item["exact_quote_or_snippet"] == "Commercial Site Plan includes offices and medical centers."
+    assert item["normalized_source_text_sha256"] == "c" * 64
+    assert item["normalized_source_text_length"] == 4353
+
+
+def test_later_revalidation_null_metadata_does_not_overwrite_prior_hash_and_length(tmp_path):
+    payload = _artifact()
+    row = payload["accepted_upgrades"][0]
+    row["evidence"] = [{"source_id": "stable_source", "source_url": "https://example.gov/stable"}]
+    artifact_path = _write_json(tmp_path / "permitassist-road-to-perfection-step6a-batch7-evidence-upgrades-2026-05-04.json", payload)
+    _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch7-source-validation-2026-05-04.json",
+        {
+            "sources_checked": [
+                {
+                    "source_id": "stable_source",
+                    "source_url": "https://example.gov/stable",
+                    "source_title": "Stable source",
+                    "fetch_status_code": 200,
+                    "normalized_text_sha256": "d" * 64,
+                    "normalized_text_length": 2222,
+                    "exact_snippets": ["Stable snippet."],
+                }
+            ]
+        },
+    )
+    _write_json(
+        tmp_path / "permitassist-road-to-perfection-step6a-batch7-source-validation-step7b-revalidated-2026-05-06.json",
+        {
+            "sources_checked": [
+                {
+                    "source_id": "stable_source",
+                    "source_url": "https://example.gov/stable",
+                    "source_title": "Stable source",
+                    "fetch_status_code": 200,
+                    "normalized_text_sha256": "",
+                    "normalized_text_length": None,
+                }
+            ]
+        },
+    )
+
+    record = build_evidence_pack([artifact_path], generated_at_utc="2026-05-05T15:15:00Z")["records"][0]
+
+    item = record["field_evidence"][0]
+    assert record["ingestion_ready"] is True
+    assert item["normalized_source_text_sha256"] == "d" * 64
+    assert item["normalized_source_text_length"] == 2222
