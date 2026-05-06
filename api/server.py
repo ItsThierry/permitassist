@@ -759,6 +759,12 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         build_claim_citations(result)
 
     build_apply_path(result, job_type, city, state)
+    if result.get("quality_warnings"):
+        merged_warnings = []
+        for warning in list(result.get("warnings") or []) + list(result.get("quality_warnings") or []):
+            if warning and warning not in merged_warnings:
+                merged_warnings.append(warning)
+        result["warnings"] = merged_warnings
     return result
 
 

@@ -168,11 +168,25 @@ def _vertical_for_job(job_type: str, *, explicit_vertical: Any = None, result: d
         if vertical:
             return vertical
     text = _norm(job_type)
-    if "commercial kitchen" in text or "food service" in text or re.search(r"\b(restaurant|hood)\b", text):
-        return "restaurant_ti"
-    if re.search(r"\b(medical|clinic|dental|healthcare)\b", text) or "exam room" in text:
+    if re.search(r"\b(medical|clinic|dental|healthcare|urgent care|doctor office|doctor s office|patient room|exam room)\b", text):
         return "medical_clinic_ti"
-    if re.search(r"\boffice\b", text):
+    office_signal = bool(re.search(r"\b(office|law office|corporate office|professional office|tenant office)\b", text))
+    negated_restaurant_signal = bool(
+        re.search(
+            r"\b(?:no|without)\s+(?:type\s*i\s*hood|hood|fryer|griddle|ansul|grease interceptor|commercial kitchen|restaurant expansion)(?:\s+needed)?\b",
+            text,
+        )
+        or re.search(r"\b(?:non\s+restaurant|not\s+a\s+restaurant)\b", text)
+    )
+    if office_signal and negated_restaurant_signal:
+        return "office_ti"
+    if (
+        "commercial kitchen" in text
+        or "food service" in text
+        or re.search(r"\b(restaurant|hood|coffee shop|espresso bar|cafe|café|sandwich shop|quick serve)\b", text)
+    ):
+        return "restaurant_ti"
+    if office_signal:
         return "office_ti"
     if re.search(r"\bretail\b", text):
         return "retail_ti"
@@ -508,6 +522,24 @@ def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]],
     }
 
 
+def _customer_facing_timeline(value: Any, *, city: str, state: str, pack: EvidencePackRuntime) -> str:
+    """Return short contractor-facing timeline copy while preserving source detail separately."""
+    text = str(value or "").strip()
+    if (
+        pack.mode == "dallas_step7u_production_preview"
+        and _canonical_ahj_name(city) == "dallas"
+        and str(state or "").upper().strip() == "TX"
+        and "214.904" in text
+    ):
+        return (
+            "Dallas local queue time still needs AHJ/portal confirmation. "
+            "Texas law gives a municipal building-permit outer action deadline: "
+            "act by the 45th day after submission, or issue written inability-to-act/deadline notice; "
+            "if notice is issued, grant/deny is due within 30 days after notice is received."
+        )
+    return text
+
+
 def apply_evidence_pack_fail_closed(
     result: dict[str, Any],
     job_type: str,
@@ -561,7 +593,14 @@ def apply_evidence_pack_fail_closed(
     citations = []
     for field, record in matches.items():
         value = record.get("claim_value")
-        if field == "permit_type":
+        if field == "approval_timeline":
+            result["approval_timeline"] = _customer_facing_timeline(value, city=city, state=state, pack=pack)
+        elif field == "permit_type":
+            result["permit_type"] = value
+            # A verified permit_type record in the current Step 7 evidence-pack
+            # contract means this path is permit-required; future no-permit
+            # records should use a different field/status before changing this.
+            result["permit_required"] = True
             permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
             if permits and isinstance(permits[0], dict):
                 permits[0]["permit_type"] = value
