@@ -139,8 +139,47 @@ def test_admin_can_create_paid_test_session_for_smoke(tmp_path, monkeypatch):
         assert session["plan"] == "solo"
         assert session["paid"] is True
         assert session["token"]
+        assert len(session["token"].rsplit(".", 1)[1]) == 43
+        assert "[REDACTED]" not in session["token"]
         assert server.get_user("paid-smoke@example.com")["plan"] == "solo"
         assert server.get_user("team-smoke@example.com")["plan"] == "team"
+
+        account_req = urllib.request.Request(
+            f"{live.base}/api/account",
+            headers={"X-Session-Token": session["token"]},
+        )
+        with urllib.request.urlopen(account_req, timeout=5) as resp:
+            assert resp.status == 200
+            account = json.loads(resp.read().decode("utf-8"))
+        assert account["email"] == "paid-smoke@example.com"
+        assert account["plan"] == "solo"
+        assert account["paid"] is True
+
+        report_status, report_headers, report_html = _post_json_response(
+            f"{live.base}/api/white-label-report",
+            {
+                "contractor_name": "Admin Smoke Contractor",
+                "job_type": "commercial office TI",
+                "city": "Denver",
+                "state": "CO",
+                "result": {
+                    "apply_url": "https://denvergov.org/permits",
+                    "permits_required": [{"permit_type": "Building Permit — Tenant Improvement"}],
+                    "claim_citations": [{
+                        "id": "C1",
+                        "claim": "Permit type",
+                        "quoted_snippet": "Tenant finish permits are required.",
+                        "source_url": "https://denvergov.org/permits",
+                        "checked_at": "2026-05-06",
+                        "confidence": "high",
+                    }],
+                },
+            },
+            {"X-Session-Token": session["token"]},
+        )
+        assert report_status == 200
+        assert report_headers["Content-Type"].startswith("text/html")
+        assert "Admin Smoke Contractor" in report_html
 
         status, headers, body = _post_json_response(
             f"{live.base}/api/permit",

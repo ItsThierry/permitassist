@@ -14,6 +14,7 @@ import sys, os
 # Ensure the api/ directory is on the path regardless of working directory
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import base64
 import json
 import os
 import csv
@@ -1157,10 +1158,25 @@ def init_db():
 
 # ── Auth / Session helpers ─────────────────────────────────────────────────
 
+def _session_signature(raw: str) -> str:
+    """Return URL-safe HMAC signature for a session token.
+
+    Use base64url instead of hex so API response redaction for full SHA-256
+    hashes cannot corrupt newly issued session tokens.
+    """
+    digest = hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).digest()
+    return base64.urlsafe_b64encode(digest).decode().rstrip("=")
+
+
+def _legacy_session_signature(raw: str) -> str:
+    """Return the old hex HMAC signature for backwards-compatible validation."""
+    return hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
+
+
 def create_session_token(email: str) -> str:
     """Create a signed 30-day session token and store in DB."""
     raw = secrets.token_urlsafe(32)
-    sig = hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
+    sig = _session_signature(raw)
     token = f"{raw}.{sig}"
     now = utc_now()
     exp = now + timedelta(days=30)
@@ -1191,8 +1207,9 @@ def validate_session_token(token: str) -> str | None:
         return None
     try:
         raw, sig = token.rsplit(".", 1)
-        expected = hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(sig, expected):
+        expected = _session_signature(raw)
+        legacy_expected = _legacy_session_signature(raw)
+        if not (hmac.compare_digest(sig, expected) or hmac.compare_digest(sig, legacy_expected)):
             return None
         conn = sqlite3.connect(CACHE_DB)
         row = conn.execute(
