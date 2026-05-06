@@ -868,6 +868,279 @@ def test_permit_endpoint_whitelists_client_supplied_vertical(tmp_path, monkeypat
         assert response["_evidence_pack"]["request_vertical"] == "office_ti"
         assert response["_evidence_pack"]["matched_fields"] == ["approval_timeline", "companion_reviews_triggers"]
 
+def test_step7c_apply_path_support_label_uses_apply_url_field_confidence(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    data = json.loads(pack_path.read_text(encoding="utf-8"))
+    data["records"].append({
+        "record_id": "denver-office-apply-partial-ready",
+        "state": "CO",
+        "ahj_name": "City of Denver",
+        "vertical": "office_ti",
+        "field": "apply_url",
+        "claim_value": "https://aca-prod.accela.com/DENVER/partial-portal",
+        "field_status": "partial",
+        "confidence": "medium",
+        "ingestion_ready": True,
+        "record_fingerprint_sha256": "1" * 64,
+        "field_evidence": [{
+            "source_url": "https://aca-prod.accela.com/DENVER/partial-portal-source",
+            "source_title": "Denver Partial Portal Evidence",
+            "exact_quote_or_snippet": "The city lists an online permitting portal, but the exact filing category requires confirmation.",
+            "quote_found": True,
+            "last_verified_utc": "2026-05-05T12:00:00Z",
+            "stale_after_utc": "2027-05-05T12:00:00Z",
+            "reverify_after_utc": "2027-04-05T12:00:00Z",
+        }],
+    })
+    pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _enable_pack(monkeypatch, pack_path)
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
+
+    assert result["_evidence_pack"]["matched_field_confidence"]["apply_url"] == "medium"
+    assert result["apply_path"]["support_level"] == "partial evidence"
+    assert result["apply_path"]["support_level"] != "verified path"
+    assert "not high-confidence local evidence" in result["apply_path"]["verification_note"]
+
+
+def test_step7c_claim_citations_use_exact_field_evidence_item_not_first_record_source(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    data = json.loads(pack_path.read_text(encoding="utf-8"))
+    data["records"].append({
+        "record_id": "denver-office-permit-type-ready",
+        "state": "CO",
+        "ahj_name": "City of Denver",
+        "vertical": "office_ti",
+        "field": "permit_type",
+        "claim_value": "Commercial Tenant Finish Permit",
+        "field_status": "verified",
+        "confidence": "high",
+        "ingestion_ready": True,
+        "record_fingerprint_sha256": "2" * 64,
+        "field_evidence": [
+            {
+                "field": "fee_range",
+                "source_url": "https://denvergov.org/wrong-fee-source",
+                "source_title": "Wrong Fee Source",
+                "exact_quote_or_snippet": "This fee source must not support the permit type claim.",
+                "quote_found": True,
+                "last_verified_utc": "2026-05-05T12:00:00Z",
+                "stale_after_utc": "2027-05-05T12:00:00Z",
+                "reverify_after_utc": "2027-04-05T12:00:00Z",
+            },
+            {
+                "field": "permit_type",
+                "source_url": "https://denvergov.org/permit-type-source",
+                "source_title": "Denver Permit Type Source",
+                "exact_quote_or_snippet": "Commercial tenant finish work requires a commercial building permit.",
+                "quote_found": True,
+                "last_verified_utc": "2026-05-05T12:00:00Z",
+                "stale_after_utc": "2027-05-05T12:00:00Z",
+                "reverify_after_utc": "2027-04-05T12:00:00Z",
+            },
+        ],
+    })
+    pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _enable_pack(monkeypatch, pack_path)
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
+    permit_citation = next(c for c in result["claim_citations"] if c["field"] == "permit_type")
+
+    assert permit_citation["source_url"] == "https://denvergov.org/permit-type-source"
+    assert permit_citation["quoted_snippet"] == "Commercial tenant finish work requires a commercial building permit."
+    assert permit_citation["confidence"] == "high"
+    assert permit_citation["field_status"] == "verified"
+    assert "wrong-fee-source" not in json.dumps(permit_citation)
+
+
+def test_step7c_generated_scope_limit_blocks_verified_promotion(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    data = json.loads(pack_path.read_text(encoding="utf-8"))
+    data["records"].append({
+        "record_id": "denver-office-apply-generated-scope",
+        "state": "CO",
+        "ahj_name": "City of Denver",
+        "vertical": "office_ti",
+        "field": "apply_url",
+        "claim_value": "https://denvergov.org/generated-scope-portal",
+        "field_status": "verified",
+        "confidence": "high",
+        "ingestion_ready": True,
+        "source_scope_limit_generated": True,
+        "record_fingerprint_sha256": "3" * 64,
+        "field_evidence": [{
+            "source_url": "https://denvergov.org/generated-scope-source",
+            "source_title": "Denver Generated Scope Source",
+            "exact_quote_or_snippet": "Online permit applications begin in the listed portal.",
+            "quote_found": True,
+            "last_verified_utc": "2026-05-05T12:00:00Z",
+            "stale_after_utc": "2027-05-05T12:00:00Z",
+            "reverify_after_utc": "2027-04-05T12:00:00Z",
+        }],
+    })
+    pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _enable_pack(monkeypatch, pack_path)
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
+
+    assert "apply_url" in result["_evidence_pack"]["failed_closed_fields"]
+    assert result["_evidence_pack"]["blocked_fields"] == {"apply_url": ["source_scope_limit_generated"]}
+    assert result["apply_url"] is None
+    assert result["apply_path"]["support_level"] == "not available"
+
+
+def test_step7c_inferred_fetch_status_blocks_verified_promotion(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    data = json.loads(pack_path.read_text(encoding="utf-8"))
+    data["records"].append({
+        "record_id": "denver-office-fee-inferred-fetch",
+        "state": "CO",
+        "ahj_name": "City of Denver",
+        "vertical": "office_ti",
+        "field": "fee_range",
+        "claim_value": "$750-$1,200",
+        "field_status": "verified",
+        "confidence": "high",
+        "ingestion_ready": True,
+        "record_fingerprint_sha256": "4" * 64,
+        "field_evidence": [{
+            "source_url": "https://denvergov.org/inferred-fee-source",
+            "source_title": "Denver Inferred Fee Source",
+            "exact_quote_or_snippet": "Tenant finish permit fees are listed in the official fee schedule.",
+            "quote_found": True,
+            "fetch_status_inferred": True,
+            "last_verified_utc": "2026-05-05T12:00:00Z",
+            "stale_after_utc": "2027-05-05T12:00:00Z",
+            "reverify_after_utc": "2027-04-05T12:00:00Z",
+        }],
+    })
+    pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _enable_pack(monkeypatch, pack_path)
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
+
+    assert "fee_range" in result["_evidence_pack"]["failed_closed_fields"]
+    assert result["_evidence_pack"]["blocked_fields"] == {"fee_range": ["fetch_status_inferred"]}
+    assert result["fee_range"] is None
+    assert all(c["field"] != "fee_range" for c in result["claim_citations"])
+
+
+def test_step7c_clean_record_clears_same_field_blocked_candidate(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    data = json.loads(pack_path.read_text(encoding="utf-8"))
+    data["records"].extend([
+        {
+            "record_id": "denver-office-apply-blocked-candidate",
+            "state": "CO",
+            "ahj_name": "City of Denver",
+            "vertical": "office_ti",
+            "field": "apply_url",
+            "claim_value": "https://aca-prod.accela.com/DENVER/blocked",
+            "field_status": "verified",
+            "confidence": "high",
+            "ingestion_ready": True,
+            "source_scope_limit_generated": True,
+            "record_fingerprint_sha256": "6" * 64,
+            "field_evidence": [{
+                "source_url": "https://aca-prod.accela.com/DENVER/blocked-source",
+                "source_title": "Blocked Apply Source",
+                "exact_quote_or_snippet": "This generated scope limit candidate must not poison the clean candidate.",
+                "quote_found": True,
+                "last_verified_utc": "2026-05-05T12:00:00Z",
+                "stale_after_utc": "2027-05-05T12:00:00Z",
+                "reverify_after_utc": "2027-04-05T12:00:00Z",
+            }],
+        },
+        {
+            "record_id": "denver-office-apply-clean-candidate",
+            "state": "CO",
+            "ahj_name": "City of Denver",
+            "vertical": "office_ti",
+            "field": "apply_url",
+            "claim_value": "https://aca-prod.accela.com/DENVER/clean",
+            "field_status": "verified",
+            "confidence": "high",
+            "ingestion_ready": True,
+            "record_fingerprint_sha256": "7" * 64,
+            "field_evidence": [{
+                "source_url": "https://aca-prod.accela.com/DENVER/clean-source",
+                "source_title": "Clean Apply Source",
+                "exact_quote_or_snippet": "Online permit applications begin in the official portal.",
+                "quote_found": True,
+                "last_verified_utc": "2026-05-05T12:00:00Z",
+                "stale_after_utc": "2027-05-05T12:00:00Z",
+                "reverify_after_utc": "2027-04-05T12:00:00Z",
+            }],
+        },
+    ])
+    pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _enable_pack(monkeypatch, pack_path)
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
+
+    assert "apply_url" in result["_evidence_pack"]["matched_fields"]
+    assert result["_evidence_pack"]["blocked_fields"] == {}
+    assert result["apply_url"] == "https://aca-prod.accela.com/DENVER/clean"
+    assert result["apply_path"]["support_level"] == "verified path"
+
+
+def test_step7c_other_field_inferred_flag_does_not_block_record_field_evidence(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    data = json.loads(pack_path.read_text(encoding="utf-8"))
+    data["records"].append({
+        "record_id": "denver-office-permit-type-other-field-inferred",
+        "state": "CO",
+        "ahj_name": "City of Denver",
+        "vertical": "office_ti",
+        "field": "permit_type",
+        "claim_value": "Commercial Tenant Finish Permit",
+        "field_status": "verified",
+        "confidence": "high",
+        "ingestion_ready": True,
+        "record_fingerprint_sha256": "5" * 64,
+        "field_evidence": [
+            {
+                "field": "fee_range",
+                "source_url": "https://denvergov.org/fee-source-with-inferred-fetch",
+                "source_title": "Fee Source With Inferred Fetch",
+                "exact_quote_or_snippet": "This unrelated fee evidence must not block permit type.",
+                "quote_found": True,
+                "fetch_status_inferred": True,
+                "last_verified_utc": "2026-05-05T12:00:00Z",
+                "stale_after_utc": "2027-05-05T12:00:00Z",
+                "reverify_after_utc": "2027-04-05T12:00:00Z",
+            },
+            {
+                "field": "permit_type",
+                "source_url": "https://denvergov.org/permit-type-source",
+                "source_title": "Denver Permit Type Source",
+                "exact_quote_or_snippet": "Commercial tenant finish work requires a commercial building permit.",
+                "quote_found": True,
+                "last_verified_utc": "2026-05-05T12:00:00Z",
+                "stale_after_utc": "2027-05-05T12:00:00Z",
+                "reverify_after_utc": "2027-04-05T12:00:00Z",
+            },
+        ],
+    })
+    pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _enable_pack(monkeypatch, pack_path)
+    server = _import_server(tmp_path, monkeypatch)
+
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
+
+    assert "permit_type" in result["_evidence_pack"]["matched_fields"]
+    assert "permit_type" not in result["_evidence_pack"]["failed_closed_fields"]
+    assert result["_evidence_pack"]["blocked_fields"] == {}
+    permit_citation = next(c for c in result["claim_citations"] if c["field"] == "permit_type")
+    assert permit_citation["source_url"] == "https://denvergov.org/permit-type-source"
+    assert permit_citation["field_evidence_confidence"] == "high"
+
+
 def test_ui_exposure_gate_adds_warnings_and_blocks_unverified_inspection_booking(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     data = json.loads(pack_path.read_text(encoding="utf-8"))
@@ -907,6 +1180,8 @@ def test_ui_exposure_gate_adds_warnings_and_blocks_unverified_inspection_booking
 
     warnings = "\n".join(result.get("quality_warnings") or [])
     assert result["apply_url"] == "https://aca-prod.accela.com/DENVER/Default.aspx"
+    assert result["apply_path"]["support_level"] == "verified path"
+    assert result["_evidence_pack"]["matched_field_confidence"]["apply_url"] == "high"
     assert result["inspection_booking"] is None
     assert "inspections" in result["_evidence_pack"]["failed_closed_fields"]
     assert "fee_range" in result["_evidence_pack"]["failed_closed_fields"]

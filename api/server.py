@@ -625,11 +625,16 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
             "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission.",
             "Stop before final submit, payment, signature, or legal attestation until the AHJ details are verified.",
         ]
-        support_level = "verified path"
+        support_level = "needs verification"
         evidence_meta = result.get("_evidence_pack") or {}
         evidence_matched = set(evidence_meta.get("matched_fields") or [])
-        if evidence_meta.get("enabled") and "apply_url" in evidence_matched:
+        evidence_confidence = evidence_meta.get("matched_field_confidence") or {}
+        if evidence_meta.get("enabled") and "apply_url" in evidence_matched and evidence_confidence.get("apply_url") == "high":
+            support_level = "verified path"
             verification_note = f"{city or 'AHJ'} start portal is verified only as the application entry point; exact portal subcategory and filing path still require AHJ/portal verification before filing."
+        elif evidence_meta.get("enabled") and "apply_url" in evidence_matched:
+            support_level = "partial evidence"
+            verification_note = f"{city or 'AHJ'} start portal has field evidence, but it is not high-confidence local evidence; exact portal choice and filing path require AHJ/portal verification before filing."
         else:
             verification_note = "PermitAssist guides the application pathway; verify exact portal choice with the AHJ before filing."
         login_required = "likely" if platform != "PDF / paper form" else "not_applicable_or_unknown"
