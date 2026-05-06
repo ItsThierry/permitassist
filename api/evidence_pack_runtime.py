@@ -237,6 +237,63 @@ def _record_is_fresh(record: dict[str, Any], now: datetime | None = None) -> boo
     return all(cutoff > now for cutoff in cutoffs)
 
 
+def _truthy_flag(value: Any) -> bool:
+    return value is True or str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _primary_field_evidence(record: dict[str, Any]) -> dict[str, Any]:
+    """Return the first evidence item that is specific to this record field."""
+    field = str(record.get("field") or "")
+    evidence = record.get("field_evidence") or []
+    if not isinstance(evidence, list):
+        return {}
+    for item in evidence:
+        if not isinstance(item, dict):
+            continue
+        item_field = str(item.get("field") or "").strip()
+        if item_field and item_field != field:
+            continue
+        return item
+    return {}
+
+
+def _record_step7c_blockers(record: dict[str, Any]) -> tuple[str, ...]:
+    """Return production-trust blockers for a candidate field record."""
+    field = str(record.get("field") or "").strip()
+    evidence = record.get("field_evidence") or []
+    items = evidence if isinstance(evidence, list) else []
+
+    def item_applies_to_record_field(item: Any) -> bool:
+        if not isinstance(item, dict):
+            return False
+        item_field = str(item.get("field") or "").strip()
+        return not item_field or item_field == field
+
+    scoped_items = [item for item in items if item_applies_to_record_field(item)]
+    blockers: list[str] = []
+    if _truthy_flag(record.get("source_scope_limit_generated")) or any(
+        _truthy_flag(item.get("source_scope_limit_generated"))
+        for item in scoped_items
+    ):
+        blockers.append("source_scope_limit_generated")
+    if _truthy_flag(record.get("fetch_status_inferred")) or any(
+        _truthy_flag(item.get("fetch_status_inferred"))
+        for item in scoped_items
+    ):
+        blockers.append("fetch_status_inferred")
+    return tuple(sorted(set(blockers)))
+
+
+def _field_evidence_confidence(record: dict[str, Any]) -> str:
+    status = str(record.get("field_status") or "").strip().lower()
+    confidence = str(record.get("confidence") or "").strip().lower()
+    if status == "verified" and confidence in {"high", "verified"}:
+        return "high"
+    if status in {"partial", "limited"} or confidence in {"medium", "partial", "limited"}:
+        return "medium"
+    return "needs_verification"
+
+
 def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprint: str, mode: str) -> tuple[str, str, str, tuple[str, ...], bool, bool]:
     """Validate metadata and map failures to the Step 7P/7U fail-closed enum."""
     warnings: list[str] = []
@@ -294,10 +351,9 @@ def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fin
         if not _record_is_fresh(record):
             stale_candidate_count += 1
             continue
-        evidence = record.get("field_evidence")
-        if not isinstance(evidence, list) or not evidence or not isinstance(evidence[0], dict):
+        first = _primary_field_evidence(record)
+        if not first:
             continue
-        first = evidence[0]
         source_url = str(first.get("source_url") or "")
         if urlparse(source_url).scheme not in {"http", "https"}:
             continue
@@ -345,14 +401,15 @@ def get_local_evidence_pack() -> EvidencePackRuntime | None:
         return _invalid_runtime("invalid_contract", mode=mode, warnings=("evidence_pack_load_error",))
 
 
-def _match_records_with_fresh_count(pack: EvidencePackRuntime | None, job_type: str, city: str, state: str, *, explicit_vertical: Any = None, result: dict[str, Any] | None = None) -> tuple[dict[str, dict[str, Any]], int]:
-    """Return one matching record per field plus current fresh record count."""
+def _match_records_with_fresh_count(pack: EvidencePackRuntime | None, job_type: str, city: str, state: str, *, explicit_vertical: Any = None, result: dict[str, Any] | None = None) -> tuple[dict[str, dict[str, Any]], int, dict[str, tuple[str, ...]]]:
+    """Return one matching record per field plus fresh count and Step 7C blockers."""
     if not pack or not pack.active:
-        return {}, 0
+        return {}, 0, {}
     state_n = str(state or "").upper().strip()
     vertical = _vertical_for_job(job_type, explicit_vertical=explicit_vertical, result=result)
     fresh_records = [record for record in pack.records if _record_is_fresh(record)]
     matches: dict[str, dict[str, Any]] = {}
+    blocked_fields: dict[str, tuple[str, ...]] = {}
     for allowed_verticals in ((vertical,), ("ahj_level",)):
         if allowed_verticals == ("ahj_level",) and vertical == "unknown":
             continue
@@ -367,13 +424,19 @@ def _match_records_with_fresh_count(pack: EvidencePackRuntime | None, job_type: 
                 continue
             if not _ahj_matches(str(record.get("ahj_name") or ""), city):
                 continue
+            blockers = _record_step7c_blockers(record)
+            if blockers:
+                if field not in matches:
+                    blocked_fields.setdefault(field, blockers)
+                continue
             matches.setdefault(field, record)
-    return matches, len(fresh_records)
+            blocked_fields.pop(field, None)
+    return matches, len(fresh_records), blocked_fields
 
 
 def match_records(pack: EvidencePackRuntime | None, job_type: str, city: str, state: str, *, explicit_vertical: Any = None, result: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
     """Return one ingestion-ready matching record per field for the request."""
-    matches, _fresh_count = _match_records_with_fresh_count(
+    matches, _fresh_count, _blocked_fields = _match_records_with_fresh_count(
         pack,
         job_type,
         city,
@@ -385,8 +448,7 @@ def match_records(pack: EvidencePackRuntime | None, job_type: str, city: str, st
 
 
 def _citation_from_record(field: str, record: dict[str, Any], checked_at: str) -> dict[str, Any]:
-    evidence = record.get("field_evidence") or []
-    first = evidence[0] if evidence and isinstance(evidence[0], dict) else {}
+    first = _primary_field_evidence(record)
     quote = str(first.get("exact_quote_or_snippet") or "")
     value = str(record.get("claim_value") or "")
     if field == "apply_url" and urlparse(value).scheme not in {"http", "https"}:
@@ -400,6 +462,8 @@ def _citation_from_record(field: str, record: dict[str, Any], checked_at: str) -
         "quoted_snippet": quote,
         "checked_at": checked_at,
         "confidence": str(record.get("confidence") or "needs_verification").lower(),
+        "field_evidence_confidence": _field_evidence_confidence(record),
+        "field_status": str(record.get("field_status") or "needs_verification").lower(),
         "evidence_pack_record_id": record.get("record_id"),
         "evidence_pack_fingerprint": record.get("record_fingerprint_sha256"),
         "source_scope_limit": record.get("source_scope_limit") or "",
@@ -424,7 +488,7 @@ def _suppress_pack_controlled_fields(result: dict[str, Any], failed_closed: list
     result["claim_citations"] = []
 
 
-def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]], failed_closed: list[str], fresh_count: int, request_vertical: str) -> dict[str, Any]:
+def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]], failed_closed: list[str], fresh_count: int, request_vertical: str, blocked_fields: dict[str, tuple[str, ...]] | None = None) -> dict[str, Any]:
     return {
         "enabled": True,
         "contract_schema": RUNTIME_CONTRACT_SCHEMA,
@@ -437,6 +501,8 @@ def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]],
         "fingerprint_prefix": (pack.fingerprint or "")[:12] if pack.fingerprint_valid else "",
         "matched_fields": sorted(matches),
         "failed_closed_fields": failed_closed,
+        "matched_field_confidence": {field: _field_evidence_confidence(record) for field, record in sorted(matches.items())},
+        "blocked_fields": {field: list(reasons) for field, reasons in sorted((blocked_fields or {}).items())},
         "request_vertical": request_vertical,
         "cache_bypassed": True,
     }
@@ -477,7 +543,7 @@ def apply_evidence_pack_fail_closed(
             enabled=True,
         )
 
-    matches, current_fresh_records_loaded = _match_records_with_fresh_count(pack, job_type, city, state, explicit_vertical=explicit_vertical, result=result)
+    matches, current_fresh_records_loaded, blocked_fields = _match_records_with_fresh_count(pack, job_type, city, state, explicit_vertical=explicit_vertical, result=result)
     request_vertical = _vertical_for_job(job_type, explicit_vertical=explicit_vertical, result=result)
     failed_closed = sorted(SUPPORTED_FIELDS - set(matches))
 
@@ -489,7 +555,7 @@ def apply_evidence_pack_fail_closed(
         warning = "Evidence pack contract is not valid; all pack-controlled fields were failed closed."
         if warning not in warnings:
             warnings.append(warning)
-        result["_evidence_pack"] = _safe_meta(pack, matches={}, failed_closed=failed_closed, fresh_count=0, request_vertical=request_vertical)
+        result["_evidence_pack"] = _safe_meta(pack, matches={}, failed_closed=failed_closed, fresh_count=0, request_vertical=request_vertical, blocked_fields=blocked_fields)
         return result
 
     citations = []
@@ -521,7 +587,7 @@ def apply_evidence_pack_fail_closed(
     _suppress_pack_controlled_fields(result, failed_closed)
     if citations:
         result["claim_citations"] = citations
-    result["_evidence_pack"] = _safe_meta(pack, matches=matches, failed_closed=failed_closed, fresh_count=current_fresh_records_loaded, request_vertical=request_vertical)
+    result["_evidence_pack"] = _safe_meta(pack, matches=matches, failed_closed=failed_closed, fresh_count=current_fresh_records_loaded, request_vertical=request_vertical, blocked_fields=blocked_fields)
     if failed_closed:
         result["needs_review"] = True
         warnings = result.setdefault("quality_warnings", [])
