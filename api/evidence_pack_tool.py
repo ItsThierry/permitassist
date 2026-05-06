@@ -118,7 +118,7 @@ def discover_step6a_artifacts(project_briefs_dir: str | Path = DEFAULT_PROJECT_B
 def fail_closed_decision(fetch_status: Any) -> dict[str, Any]:
     """Describe the Step 7B/7C fail-closed policy for source runtime checks."""
     status = str(fetch_status or "").lower()
-    transient_or_blocked = any(token in status for token in ("403", "404", "500", "502", "503", "blocked", "cloudflare", "access_denied", "timeout"))
+    transient_or_blocked = any(marker in status for marker in ("403", "404", "500", "502", "503", "blocked", "cloudflare", "access_denied", "timeout"))
     browser_rendered_success = "browser_rendered_200" in status
     if not status:
         action = "downgrade_to_needs_verification_until_revalidated"
@@ -161,7 +161,16 @@ def _extract_quote(evidence: dict[str, Any]) -> tuple[str, bool]:
 
 
 def _normalized_length(evidence: dict[str, Any]) -> int | None:
-    for key in ("normalized_source_text_length", "normalized_rendered_text_length"):
+    for key in (
+        "normalized_source_text_length",
+        "normalized_rendered_text_length",
+        "normalized_text_length",
+        "normalized_rendered_text_len",
+        "normalized_text_len",
+        "source_content_length",
+        "content_length",
+        "browser_rendered_text_length",
+    ):
         value = evidence.get(key)
         if isinstance(value, int):
             return value
@@ -171,16 +180,24 @@ def _normalized_length(evidence: dict[str, Any]) -> int | None:
 
 
 def _normalized_hash(evidence: dict[str, Any]) -> str:
-    value = evidence.get("normalized_source_text_sha256") or evidence.get("normalized_rendered_text_sha256") or ""
+    value = (
+        evidence.get("normalized_source_text_sha256")
+        or evidence.get("normalized_rendered_text_sha256")
+        or evidence.get("normalized_text_sha256")
+        or evidence.get("source_content_sha256")
+        or evidence.get("content_sha256")
+        or evidence.get("browser_rendered_text_sha256")
+        or ""
+    )
     return str(value).strip()
 
 
 def _source_title(evidence: dict[str, Any]) -> str:
-    return str(evidence.get("source_title") or evidence.get("browser_title") or evidence.get("source_host") or "").strip()
+    return str(evidence.get("source_title") or evidence.get("browser_title") or evidence.get("title") or evidence.get("source_host") or "").strip()
 
 
 def _source_url(evidence: dict[str, Any]) -> str:
-    return str(evidence.get("source_url") or evidence.get("source_final_url") or "").strip()
+    return str(evidence.get("source_url") or evidence.get("source_final_url") or evidence.get("final_url") or evidence.get("url") or evidence.get("linked_pdf_url") or "").strip()
 
 
 def _validate_url(url: str) -> bool:
@@ -188,12 +205,66 @@ def _validate_url(url: str) -> bool:
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
-def _artifact_is_independently_accepted(artifact: dict[str, Any]) -> bool:
+def _review_accepts_artifact(review: dict[str, Any]) -> bool:
+    """Return true only for clean independent-review PASS shapes.
+
+    Step 6A artifacts were often written before the independent reviewer updated
+    the original artifact's status. Step 7B may reconcile that companion review,
+    but it must not treat PASS_WITH_BLOCKERS or blocker-bearing reviews as
+    accepted.
+    """
+    status = str(
+        review.get("verdict")
+        or review.get("status")
+        or review.get("review_status")
+        or review.get("overall_verdict")
+        or ""
+    ).upper()
+    blockers = review.get("blockers")
+    has_blockers = bool(blockers) if isinstance(blockers, (list, tuple, dict)) else bool(str(blockers or "").strip())
+    if has_blockers or "BLOCKER" in status or "FAIL" in status:
+        return False
+    if review.get("accepted") is True:
+        return True
+    return "PASS" in status
+
+
+def _independent_review_candidates(artifact_path: Path) -> list[Path]:
+    batch_match = re.search(r"step6a-batch(\d+)-", artifact_path.name)
+    if not batch_match:
+        return []
+    batch = batch_match.group(1)
+    patterns = [
+        f"permitassist-road-to-perfection-step6a-batch{batch}-*independent-review*.json",
+        f"permitassist-road-to-perfection-step6a-batch{batch}-independent-review*.json",
+    ]
+    candidates: list[Path] = []
+    for pattern in patterns:
+        candidates.extend(sorted(artifact_path.parent.glob(pattern)))
+    seen: set[Path] = set()
+    unique: list[Path] = []
+    for candidate in candidates:
+        if candidate not in seen and candidate.exists():
+            unique.append(candidate)
+            seen.add(candidate)
+    return unique
+
+
+def _artifact_is_independently_accepted(artifact: dict[str, Any], artifact_path: Path | None = None) -> bool:
     status = str(artifact.get("status") or "").upper()
     if "PASS_ACCEPTED" in status:
         return True
     # Older zero-row artifacts sometimes omitted status; they cannot promote rows.
-    return not artifact.get("accepted_upgrades")
+    if not artifact.get("accepted_upgrades"):
+        return True
+    if artifact_path is not None:
+        for review_path in _independent_review_candidates(artifact_path):
+            try:
+                if _review_accepts_artifact(_read_json(review_path)):
+                    return True
+            except Exception:
+                continue
+    return False
 
 
 def _row_evidence_items(row: dict[str, Any]) -> list[dict[str, Any]]:
@@ -212,7 +283,8 @@ def _row_evidence_items(row: dict[str, Any]) -> list[dict[str, Any]]:
                 "source_title": row.get("source_title") or row.get("browser_title") or "",
                 "source_type": row.get("source_type") or "unknown",
                 "exact_quote": legacy_quote or "",
-                "quote_found_current_run": row.get("quote_found_current_run", row.get("quote_found", True if legacy_quote else False)),
+                "exact_snippets": row.get("exact_snippets") or [],
+                "quote_found_current_run": row.get("quote_found_current_run", row.get("quote_found", True if legacy_quote or row.get("exact_snippets") else False)),
                 "normalized_source_text_sha256": row.get("normalized_source_text_sha256") or row.get("normalized_rendered_text_sha256") or row.get("source_text_sha256") or "",
                 "normalized_source_text_length": row.get("normalized_source_text_length") or row.get("normalized_rendered_text_length"),
                 "validation_method": row.get("validation_method") or row.get("verification_method") or "legacy flat Step 6A row adapted by Step 7B offline tool",
@@ -259,7 +331,7 @@ def _source_validation_items(artifact_path: Path) -> dict[str, dict[str, Any]]:
             payload = _read_json(candidate)
         except Exception:
             continue
-        sources = payload.get("sources") or []
+        sources = payload.get("sources") or payload.get("sources_checked") or []
         if isinstance(sources, dict):
             source_iter = []
             for source_id, source in sources.items():
@@ -267,12 +339,21 @@ def _source_validation_items(artifact_path: Path) -> dict[str, dict[str, Any]]:
                     enriched = dict(source)
                     enriched.setdefault("source_id", source_id)
                     source_iter.append(enriched)
-        elif isinstance(sources, list):
+        elif isinstance(sources, list) and sources:
             source_iter = [source for source in sources if isinstance(source, dict)]
+        elif any(payload.get(key) for key in ("source_url", "final_url", "url")):
+            source_iter = [payload]
         else:
             source_iter = []
         for source in source_iter:
-            for key in (source.get("source_id"), source.get("source_url"), source.get("source_final_url")):
+            for key in (
+                source.get("source_id"),
+                source.get("source_url"),
+                source.get("source_final_url"),
+                source.get("final_url"),
+                source.get("url"),
+                source.get("linked_pdf_url"),
+            ):
                 if key:
                     indexed[str(key).strip()] = source
     return indexed
@@ -348,7 +429,7 @@ def _display_contract(scope_limit: str, field: str) -> dict[str, Any]:
             forbidden.append(candidate)
     return {
         "must_display_scope_limit": bool(scope_limit),
-        "forbids_local_ahj_certainty": bool(scope_limit) and any(token in scope for token in ("no local", "statewide", "conditional")),
+        "forbids_local_ahj_certainty": bool(scope_limit) and any(marker in scope for marker in ("no local", "statewide", "conditional")),
         "must_not_use_for_fields": sorted(set(forbidden)),
     }
 
@@ -377,7 +458,7 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
     stale_after = checked_dt + timedelta(days=STALE_AFTER_DAYS) if checked_dt else None
 
     validation_errors: list[str] = []
-    if not _artifact_is_independently_accepted(artifact):
+    if not _artifact_is_independently_accepted(artifact, artifact_path):
         validation_errors.append("artifact_not_independently_accepted")
 
     source_validation_index = _source_validation_items(artifact_path)
@@ -402,7 +483,7 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
                 if isinstance(value, str) and value.isdigit():
                     norm_len = int(value)
                     break
-        fetch_status = _metadata_value(merged_evidence, source_validation, "fetch_status_code", "http_status", "status_code")
+        fetch_status = _metadata_value(merged_evidence, source_validation, "fetch_status_code", "http_status", "status_code", "status")
         if fetch_status is None and norm_hash and norm_len and quote_found:
             fetch_status = "validated_current_run"
         source_title = _source_title(merged_evidence) or str(_metadata_value(merged_evidence, source_validation, "title") or "").strip()
