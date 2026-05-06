@@ -34,7 +34,7 @@ from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result, get_cache_hit_rate
-from evidence_pack_runtime import apply_evidence_pack_fail_closed, get_local_evidence_pack
+from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -625,7 +625,12 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
             "Stop before final submit, payment, signature, or legal attestation until the AHJ details are verified.",
         ]
         support_level = "verified path"
-        verification_note = "PermitAssist guides the application pathway; verify exact portal choice with the AHJ before filing."
+        evidence_meta = result.get("_evidence_pack") or {}
+        evidence_matched = set(evidence_meta.get("matched_fields") or [])
+        if evidence_meta.get("enabled") and "apply_url" in evidence_matched:
+            verification_note = f"{city or 'AHJ'} start portal is verified only as the application entry point; exact portal subcategory and filing path still require AHJ/portal verification before filing."
+        else:
+            verification_note = "PermitAssist guides the application pathway; verify exact portal choice with the AHJ before filing."
         login_required = "likely" if platform != "PDF / paper form" else "not_applicable_or_unknown"
     else:
         steps = [
@@ -656,10 +661,11 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
     return apply_path
 
 
-def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False) -> dict:
+def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
     evidence_pack = get_local_evidence_pack()
     evidence_enabled = evidence_pack is not None
+    unexpected_evidence_cache = evidence_enabled and (is_cached or bool(result.get("_cached")))
 
     # Validate fresh URLs; cached rows are assumed to have gone through this once.
     if not is_cached:
@@ -693,7 +699,33 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     result = apply_permitiq_quality_gate(result, job_type, city, state)
 
     if evidence_enabled:
-        result = apply_evidence_pack_fail_closed(result, job_type, city, state, utc_now().date().isoformat())
+        forced_status = "invalid_contract" if unexpected_evidence_cache else None
+        result = apply_evidence_pack_fail_closed(result, job_type, city, state, utc_now().date().isoformat(), explicit_vertical=explicit_vertical, force_contract_status=forced_status)
+        evidence_meta = result.get("_evidence_pack") or {}
+        evidence_failed = set(evidence_meta.get("failed_closed_fields") or [])
+        evidence_matched = set(evidence_meta.get("matched_fields") or [])
+        warnings = result.setdefault("quality_warnings", [])
+        if "inspections" in evidence_failed:
+            result["inspection_booking"] = None
+            warning = "Inspection booking steps are not shown because local evidence-pack inspections failed closed; verify required inspections and booking with the AHJ."
+            if warning not in warnings:
+                warnings.append(warning)
+        if "fee_range" in evidence_failed:
+            warning = f"{city or 'AHJ'} fee range is not verified in this evidence pack; confirm fees before quoting."
+            if warning not in warnings:
+                warnings.append(warning)
+        if "approval_timeline" in evidence_matched:
+            warning = f"Approval timeline is statutory/AHJ outer-deadline evidence only, not a {city or 'local'} queue estimate."
+            if warning not in warnings:
+                warnings.append(warning)
+        if "apply_url" in evidence_matched:
+            warning = "Apply URL verifies the portal start page only; exact portal subcategory/filing path still needs AHJ or portal verification before filing."
+            if warning not in warnings:
+                warnings.append(warning)
+        if "companion_reviews_triggers" in evidence_matched:
+            warning = "Companion-review evidence is scope-limited; it is not a complete local health, fire, accessibility, MEP, hood, grease, or food-service trigger list."
+            if warning not in warnings:
+                warnings.append(warning)
         # Evidence-pack apply_url values are loaded after the generic engine URL
         # pass, so sanitize/strip once more before apply_path renders them.
         result = sanitize_result_urls(result)
@@ -760,7 +792,17 @@ def render_white_label_report_html(data: dict) -> str:
         f"<em>Checked {html.escape(c.get('checked_at',''))}; confidence {html.escape(c.get('confidence',''))}</em></li>"
         for c in citations
     ) or "<li>No citations attached yet; verify with AHJ.</li>"
-    warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in (result.get("quality_warnings") or []))
+    warnings_list = list(result.get("quality_warnings") or [])
+    evidence_meta = result.get("_evidence_pack") or {}
+    evidence_failed = [str(field) for field in (evidence_meta.get("failed_closed_fields") or []) if field]
+    evidence_matched = [str(field) for field in (evidence_meta.get("matched_fields") or []) if field]
+    if evidence_meta.get("enabled") and evidence_failed:
+        warnings_list.append("Local evidence pack failed closed for: " + ", ".join(evidence_failed) + ". Do not quote or file from those fields until AHJ-confirmed.")
+    if evidence_meta.get("enabled") and "approval_timeline" in evidence_matched:
+        warnings_list.append("Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate.")
+    if evidence_meta.get("enabled") and "companion_reviews_triggers" in evidence_matched:
+        warnings_list.append("Companion-review evidence is scope-limited; it is not a complete local health, fire, accessibility, MEP, hood, grease, or food-service trigger list.")
+    warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in dict.fromkeys(warnings_list))
     return f"""<!doctype html>
 <html><head><meta charset='utf-8'><title>Permit research report</title>
 <style>body{{font-family:Arial,sans-serif;max-width:820px;margin:32px auto;color:#172033;line-height:1.45}}.brand{{border-bottom:3px solid #0f766e;padding-bottom:12px;margin-bottom:24px}}.muted{{color:#64748b}}.card{{border:1px solid #dbe3ea;border-radius:12px;padding:16px;margin:16px 0}}@media print{{button{{display:none}}body{{margin:0.5in}}}}</style></head>
@@ -3269,6 +3311,32 @@ def observability_head_snippet() -> str:
     return "\n".join(snippets)
 
 
+_SENSITIVE_OUTPUT_RE = re.compile(
+    r"(?i)(/home/[^/\s\"'<>]+/[^\s\"'<>]+|/app/[^\s\"'<>]+|PERMITASSIST_[A-Z0-9_]+|RAILWAY_[A-Z0-9_]+|sk-[A-Za-z0-9_-]{16,}|whsec_[A-Za-z0-9_-]{16,}|[A-Fa-f0-9]{64})"
+)
+
+
+def redact_public_output(value):
+    """Redact filesystem/env/Railway/token-like strings from API JSON."""
+    if isinstance(value, dict):
+        redacted = {}
+        for key, item in value.items():
+            if key in {"path", "fingerprint_sha256", "evidence_pack_fingerprint"}:
+                redacted[key] = "[REDACTED]"
+            else:
+                redacted[key] = redact_public_output(item)
+        return redacted
+    if isinstance(value, list):
+        return [redact_public_output(item) for item in value]
+    if isinstance(value, str):
+        return _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", value)
+    return value
+
+
+def _evidence_pack_indexing_guard_enabled() -> bool:
+    return evidence_pack_enabled()
+
+
 # ── Request handler ───────────────────────────────────────────────────────────
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
@@ -3287,12 +3355,16 @@ class Handler(BaseHTTPRequestHandler):
         return _normalize_ip(self.client_address[0])
 
     def send_json(self, status: int, data: dict, extra_headers: dict | None = None):
+        data = redact_public_output(data)
         body = json.dumps(data, indent=2).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Expose-Headers", "X-Free-Lookups-Used, X-Free-Lookups-Remaining")
+        if _evidence_pack_indexing_guard_enabled():
+            self.send_header("X-Robots-Tag", "noindex, nofollow")
+            self.send_header("Cache-Control", "no-store")
         for key, value in (extra_headers or {}).items():
             self.send_header(key, value)
         self.end_headers()
@@ -3313,6 +3385,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
+            if _evidence_pack_indexing_guard_enabled() and ("text/html" in content_type or "xml" in content_type or "text/plain" in content_type):
+                self.send_header("X-Robots-Tag", "noindex, nofollow")
             # Prevent browser caching for HTML — always serve fresh version
             if "text/html" in content_type:
                 self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -3945,11 +4019,31 @@ class Handler(BaseHTTPRequestHandler):
 
         # ── SEO: sitemap.xml ──────────────────────────────────────────────
         elif path == "/sitemap.xml":
+            if _evidence_pack_indexing_guard_enabled():
+                body = b'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>\n'
+                self.send_response(200)
+                self.send_header("Content-Type", "application/xml")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("X-Robots-Tag", "noindex, nofollow")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(body)
+                return
             sitemap_path = os.path.join(SEO_DIR, "sitemap.xml")
             self.send_file(sitemap_path, "application/xml")
 
         # ── SEO: robots.txt ───────────────────────────────────────────────
         elif path == "/robots.txt":
+            if _evidence_pack_indexing_guard_enabled():
+                body = b"User-agent: *\nDisallow: /\n"
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("X-Robots-Tag", "noindex, nofollow")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(body)
+                return
             robots_path = os.path.join(SEO_DIR, "robots.txt")
             self.send_file(robots_path, "text/plain")
 
@@ -4260,6 +4354,7 @@ class Handler(BaseHTTPRequestHandler):
                 state        = data.get("state", "").strip()
                 zip_code     = data.get("zip_code", "").strip()
                 job_category = data.get("job_category", "residential").strip() or "residential"
+                explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
 
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
@@ -4359,7 +4454,7 @@ class Handler(BaseHTTPRequestHandler):
                 elif unlimited:
                     result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
-                result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached)
+                result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical)
 
                 # Record stats and beta telemetry
                 record_lookup_stat(job_type, city, state, is_cached)
@@ -4406,11 +4501,12 @@ class Handler(BaseHTTPRequestHandler):
                     state = item.get("state", "")
                     zip_code = item.get("zip", "") or item.get("zip_code", "")
                     job_value = item.get("job_value")
+                    explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
                     try:
                         evidence_enabled = get_local_evidence_pack() is not None
                         result = research_permit(job_type, city, state, zip_code, job_value=job_value, use_cache=not evidence_enabled, suppress_cache_write=evidence_enabled)
                         if evidence_enabled:
-                            result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False))
+                            result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical)
                             response = dict(result)
                             response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                             return response
@@ -4504,7 +4600,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not user_email:
                     self.send_json(401, {"error": "login_required"})
                     return
-                html_doc = render_white_label_report_html(data)
+                html_doc = _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", render_white_label_report_html(redact_public_output(data)))
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Cache-Control", "no-store")
@@ -4722,13 +4818,14 @@ class Handler(BaseHTTPRequestHandler):
                 state = data.get("state", "").strip()
                 zip_code = data.get("zip_code", "").strip()
                 job_category = data.get("job_category", "residential").strip() or "residential"
+                explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
                 evidence_enabled = get_local_evidence_pack() is not None
                 result = research_permit(job_type, city, state, zip_code, job_category=job_category, use_cache=not evidence_enabled, suppress_cache_write=evidence_enabled)
                 if evidence_enabled:
-                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False))
+                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical)
                 self.send_json(200, result)
             except Exception as e:
                 print(f"[api-v1-permit] Error: {e}")

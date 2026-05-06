@@ -2823,6 +2823,39 @@ function getNextSteps(d, job, city, state) {
   return steps.slice(0, 4);
 }
 
+function buildEvidencePackCaveats(evidencePack, options = {}) {
+  evidencePack = evidencePack || {};
+  if (!evidencePack.enabled) return [];
+
+  const includeFailedClosedNone = options.includeFailedClosedNone === true;
+  const caveats = [];
+  const evidenceFailedFields = Array.isArray(evidencePack.failed_closed_fields) ? evidencePack.failed_closed_fields.filter(Boolean) : [];
+  const evidenceMatchedFields = Array.isArray(evidencePack.matched_fields) ? evidencePack.matched_fields.filter(Boolean) : [];
+
+  if (evidenceFailedFields.length) {
+    caveats.push(`Failed-closed evidence fields: ${evidenceFailedFields.slice(0, 6).join(', ')}. These fields were not shown as verified because no fresh matching evidence was loaded. Do not quote or file from those fields until AHJ-confirmed.`);
+  } else if (includeFailedClosedNone) {
+    caveats.push('Failed closed: none flagged by the local pack.');
+  }
+  if (evidenceFailedFields.includes('fee_range')) {
+    caveats.push('Fee range is not verified in this evidence pack. Confirm fees with the AHJ before quoting.');
+  }
+  if (evidenceFailedFields.includes('inspections')) {
+    caveats.push('Inspections are not verified in this evidence pack. Confirm required inspections and booking steps with the AHJ before scheduling work.');
+  }
+  if (evidenceMatchedFields.includes('approval_timeline')) {
+    caveats.push('Timeline: statutory/AHJ outer deadline only — not a local queue or plan-review estimate. Confirm local review timing before promising dates.');
+  }
+  if (evidenceMatchedFields.includes('companion_reviews_triggers')) {
+    caveats.push('Companion reviews are limited to the cited evidence scope. This is not a complete local health, fire, accessibility, MEP, hood, grease, or food-service trigger list.');
+  }
+  if (evidenceMatchedFields.includes('apply_url')) {
+    caveats.push('Apply portal is a verified start portal only. Exact portal subcategory and filing path still need AHJ/portal verification before filing.');
+  }
+
+  return [...new Set(caveats)];
+}
+
 function buildUncertaintyWarnings(d) {
   d = d || {};
   const warnings = [];
@@ -2830,6 +2863,8 @@ function buildUncertaintyWarnings(d) {
   const dataSourceRaw = String(d.data_source || d._meta?.city_match_level || '').toLowerCase();
   const missingFields = Array.isArray(d.missing_fields) ? d.missing_fields.filter(Boolean) : [];
   const validationIssues = Array.isArray(d._validation_issues) ? d._validation_issues : [];
+  const qualityWarnings = Array.isArray(d.quality_warnings) ? d.quality_warnings.filter(Boolean) : [];
+  const evidencePack = d._evidence_pack || {};
   const hasOfficialSources = Array.isArray(d.sources) && d.sources.some(src => {
     const url = typeof src === 'string' ? src : (src && src.url) || '';
     return /\.gov|\.us|accela\.com|ladbs\.org|seattle\.gov|phoenix\.gov|nyc\.gov|sfgov\.org/i.test(url);
@@ -2850,6 +2885,8 @@ function buildUncertaintyWarnings(d) {
   if (missingFields.length) {
     warnings.push(`Missing fields: ${missingFields.slice(0, 6).join(', ')}.`);
   }
+  buildEvidencePackCaveats(evidencePack).forEach(caveat => warnings.push(caveat));
+  qualityWarnings.slice(0, 5).forEach(w => warnings.push(String(w)));
   validationIssues.slice(0, 4).forEach(issue => {
     const field = issue && (issue.field || issue.kind || issue.name);
     const message = issue && (issue.message || issue.reason || issue.detail);
@@ -2862,7 +2899,7 @@ function buildUncertaintyWarnings(d) {
     warnings.push('No official source link is attached to this result. Treat it as a verification checklist, not final authority.');
   }
 
-  return [...new Set(warnings)].slice(0, 8);
+  return [...new Set(warnings)].slice(0, 14);
 }
 
 function normalizeLicenseRequirementCopy(value) {
@@ -2956,6 +2993,17 @@ function renderResults(d, job, city, state) {
       <div style="font-size:13px;font-weight:900;color:#991b1b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⚠️ Verify before relying on this result</div>
       <div style="font-size:14px;color:#7f1d1d;line-height:1.55;margin-bottom:10px;font-weight:650">This result has uncertainty that can affect bid price, permit intake, or final inspection. Confirm these items with the AHJ before quoting or starting work.</div>
       <ul class="bullet-list" style="margin-top:8px;color:#7f1d1d">${uncertaintyWarnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  const evidencePack = d._evidence_pack || {};
+  const evidenceCaveats = buildEvidencePackCaveats(evidencePack, { includeFailedClosedNone: true });
+  if (evidencePack.enabled) {
+    html += `<div class="evidence-exposure-card" style="background:#fff7ed;border:2px solid #ea580c;border-radius:12px;padding:16px 18px;margin-bottom:14px;color:#7c2d12">
+      <div style="font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Evidence-pack exposure limits</div>
+      <ul class="bullet-list" style="margin-top:8px;line-height:1.55">
+        ${evidenceCaveats.map(caveat => `<li>${esc(caveat)}</li>`).join('')}
+      </ul>
     </div>`;
   }
 
@@ -3661,7 +3709,9 @@ function renderResultAsReport(d, job, city, state) {
   html += row(15, 'Failure risks (top 5)', _list(failureRisks, 5));
   // 16. Missing / uncertain items
   let missingBlock = '';
-  const missingRollup = [...missingFields, ...validationIssues.map(v => v.field || v.kind || '')].filter(Boolean);
+  const reportEvidencePack = d._evidence_pack || {};
+  const reportEvidenceFailedFields = Array.isArray(reportEvidencePack.failed_closed_fields) ? reportEvidencePack.failed_closed_fields : [];
+  const missingRollup = [...missingFields, ...validationIssues.map(v => v.field || v.kind || ''), ...reportEvidenceFailedFields.map(field => `failed closed: ${field}`)].filter(Boolean);
   if (missingRollup.length === 0) {
     missingBlock = '✅ None flagged';
   } else {
