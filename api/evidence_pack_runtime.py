@@ -39,7 +39,9 @@ SUPPORTED_EVIDENCE_PACK_VERSIONS = (
 ALLOWED_EVIDENCE_PACK_MODES = {
     "dallas_step7h_preview",
     "dallas_step7u_production_preview",
+    "solar_mep_controlled_preview",
 }
+SOLAR_MEP_CONTROLLED_PACK_FAMILY = "solar_commercial_mep_offline_v1"
 PRODUCTION_WIRING_ALLOWED_BY_VERSION = {
     "step7b_offline_v1": False,
     "step7b_offline_v1_test": False,
@@ -49,6 +51,7 @@ PRODUCTION_WIRING_ALLOWED_BY_VERSION = {
 EVIDENCE_PACK_VERSION_BY_MODE = {
     "dallas_step7h_preview": "step7h_dallas_only_staging_v1",
     "dallas_step7u_production_preview": "step7u_dallas_only_production_preview_v1",
+    "solar_mep_controlled_preview": "step7b_offline_v1",
 }
 VALID_CONTRACT_STATUSES = {
     "valid",
@@ -66,6 +69,18 @@ ALLOWED_REQUEST_VERTICALS = {
     "medical_clinic_ti",
     "office_ti",
     "retail_ti",
+    "solar_pv_battery",
+    "commercial_mechanical",
+    "commercial_electrical",
+    "commercial_plumbing",
+    "commercial_mep_ti",
+}
+SOLAR_MEP_REQUEST_VERTICALS = {
+    "solar_pv_battery",
+    "commercial_mechanical",
+    "commercial_electrical",
+    "commercial_plumbing",
+    "commercial_mep_ti",
 }
 
 
@@ -140,6 +155,24 @@ def _canonical_vertical(value: Any) -> str:
         "commercial office ti": "office_ti",
         "retail ti": "retail_ti",
         "retail tenant improvement": "retail_ti",
+        "solar pv": "solar_pv_battery",
+        "solar photovoltaic": "solar_pv_battery",
+        "solar pv battery": "solar_pv_battery",
+        "solar pv battery storage": "solar_pv_battery",
+        "battery storage": "solar_pv_battery",
+        "ess": "solar_pv_battery",
+        "energy storage": "solar_pv_battery",
+        "commercial mechanical": "commercial_mechanical",
+        "commercial mechanical permit": "commercial_mechanical",
+        "commercial electrical": "commercial_electrical",
+        "commercial electrical permit": "commercial_electrical",
+        "commercial plumbing": "commercial_plumbing",
+        "commercial plumbing permit": "commercial_plumbing",
+        "commercial mep": "commercial_mep_ti",
+        "commercial mep ti": "commercial_mep_ti",
+        "commercial mep tenant improvement": "commercial_mep_ti",
+        "cross trade commercial mep": "commercial_mep_ti",
+        "cross trade mep": "commercial_mep_ti",
         "ahj level": "ahj_level",
     }
     if text in aliases:
@@ -168,6 +201,9 @@ def _vertical_for_job(job_type: str, *, explicit_vertical: Any = None, result: d
         if vertical:
             return vertical
     text = _norm(job_type)
+    solar_negated = bool(re.search(r"\b(?:no|without)\s+(?:solar|pv|photovoltaic|battery|batteries|ess|energy storage)\b", text))
+    if not solar_negated and re.search(r"\b(solar|pv|photovoltaic|battery storage|batteries|ess|energy storage|powerwall)\b", text):
+        return "solar_pv_battery"
     if re.search(r"\b(medical|clinic|dental|healthcare|urgent care|doctor office|doctor s office|patient room|exam room)\b", text):
         return "medical_clinic_ti"
     office_signal = bool(re.search(r"\b(office|law office|corporate office|professional office|tenant office)\b", text))
@@ -190,6 +226,20 @@ def _vertical_for_job(job_type: str, *, explicit_vertical: Any = None, result: d
         return "office_ti"
     if re.search(r"\bretail\b", text):
         return "retail_ti"
+    commercial_signal = bool(re.search(r"\b(commercial|mep)\b", text))
+    trade_hits = {
+        "mechanical": bool(re.search(r"\b(mechanical|hvac|rtu|duct|ventilation|exhaust)\b", text)),
+        "electrical": bool(re.search(r"\b(electrical|lighting|branch circuit|panel|wiring)\b", text)),
+        "plumbing": bool(re.search(r"\b(plumbing|fixture|fixtures|dwv|water supply|sanitary|restroom|sink)\b", text)),
+    }
+    if commercial_signal and ("mep" in text or sum(trade_hits.values()) >= 2):
+        return "commercial_mep_ti"
+    if commercial_signal and trade_hits["mechanical"]:
+        return "commercial_mechanical"
+    if commercial_signal and trade_hits["electrical"]:
+        return "commercial_electrical"
+    if commercial_signal and trade_hits["plumbing"]:
+        return "commercial_plumbing"
     return "unknown"
 
 
@@ -198,6 +248,8 @@ def _canonical_ahj_name(value: Any) -> str:
     ahj_units = "city and county|city|town|village|county|borough|parish|township|municipality"
     text = re.sub(rf"^({ahj_units}) of ", "", text)
     text = re.sub(rf" ({ahj_units})$", "", text)
+    if text in {"nyc", "new york city"}:
+        return "new york"
     return text
 
 
@@ -318,7 +370,7 @@ def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprin
         status = "invalid_version"
     expected_version = EVIDENCE_PACK_VERSION_BY_MODE.get(mode)
     mode_locked_versions = set(EVIDENCE_PACK_VERSION_BY_MODE.values())
-    strict_mode = mode == "dallas_step7u_production_preview"
+    strict_mode = mode in {"dallas_step7u_production_preview", "solar_mep_controlled_preview"}
     if expected_version and version != expected_version and (strict_mode or version in mode_locked_versions):
         warnings.append("evidence_pack_version_not_allowed_for_mode")
         if status == "valid":
@@ -353,6 +405,12 @@ def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fin
     )
     records = []
     source_records = data.get("records") or [] if contract_status == "valid" else []
+    if contract_status == "valid" and mode == "solar_mep_controlled_preview":
+        families = {str(record.get("pack_family") or "").strip() for record in source_records if isinstance(record, dict)}
+        if families != {SOLAR_MEP_CONTROLLED_PACK_FAMILY}:
+            contract_status = "invalid_contract"
+            contract_warnings = tuple(sorted(set(contract_warnings + ("solar_mep_pack_family_required_for_mode",))))
+            source_records = []
     stale_candidate_count = 0
     for record in source_records:
         if not isinstance(record, dict):
@@ -426,6 +484,12 @@ def _match_records_with_fresh_count(pack: EvidencePackRuntime | None, job_type: 
     blocked_fields: dict[str, tuple[str, ...]] = {}
     for allowed_verticals in ((vertical,), ("ahj_level",)):
         if allowed_verticals == ("ahj_level",) and vertical == "unknown":
+            continue
+        if (
+            allowed_verticals == ("ahj_level",)
+            and vertical in SOLAR_MEP_REQUEST_VERTICALS
+            and pack.mode != "solar_mep_controlled_preview"
+        ):
             continue
         for record in fresh_records:
             if str(record.get("state") or "").upper().strip() != state_n:

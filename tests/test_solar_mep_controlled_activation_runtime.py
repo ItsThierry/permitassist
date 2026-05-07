@@ -1,0 +1,335 @@
+import copy
+import json
+import sys
+from pathlib import Path
+from importlib import util
+
+_HELPER_SPEC = util.spec_from_file_location(
+    "debug_headers_helper_solar_mep_activation",
+    Path(__file__).with_name("test_debug_headers_endpoint.py"),
+)
+_debug_helper = util.module_from_spec(_HELPER_SPEC)
+_HELPER_SPEC.loader.exec_module(_debug_helper)
+_LiveServer = _debug_helper._LiveServer
+_import_server = _debug_helper._import_server
+_post_json = _debug_helper._post_json
+
+_STEP7C_SPEC = util.spec_from_file_location(
+    "step7c_helpers_solar_mep_activation",
+    Path(__file__).with_name("test_step7c_evidence_pack_local_gates.py"),
+)
+_step7c = util.module_from_spec(_STEP7C_SPEC)
+_STEP7C_SPEC.loader.exec_module(_step7c)
+_post_json_response = _step7c._post_json_response
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SOLAR_MEP_PACK = REPO_ROOT / "evidence_packs" / "offline" / "solar_mep" / "permitassist-step7b-solar-commercial-mep-offline-evidence-pack-20260507.json"
+DALLAS_STEP7U_PACK = REPO_ROOT / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+DALLAS_STEP7H_PACK = REPO_ROOT / "evidence_packs" / "dallas" / "step7h" / "permitassist-step7h-dallas-only-staging-evidence-pack-20260505.json"
+
+
+def _base_engine_result():
+    return {
+        "permit_verdict": "YES",
+        "confidence": "high",
+        "permit_required": True,
+        "permits_required": [{"permit_type": "Generic Building Permit"}],
+        "fee_range": "$500-$1,000",
+        "approval_timeline": "2-4 weeks",
+        "inspections": ["final"],
+        "apply_url": "",
+        "sources": ["https://example.gov/generic-permits"],
+        "checklist": [],
+        "rejection_patterns": [],
+    }
+
+
+def _enable_pack(monkeypatch, pack_path: Path = SOLAR_MEP_PACK, *, mode: str = "solar_mep_controlled_preview", expected_fingerprint: str | None = None):
+    data = json.loads(pack_path.read_text(encoding="utf-8"))
+    fingerprint = expected_fingerprint or (data.get("metadata") or {}).get("fingerprint_sha256")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_ENABLED", "true")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_MODE", mode)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_EXPECTED_FINGERPRINT", fingerprint)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PATH", str(pack_path))
+
+
+def _finalize(tmp_path, monkeypatch, job_type: str, city: str, state: str, *, explicit_vertical: str | None = None, base: dict | None = None):
+    _enable_pack(monkeypatch)
+    server = _import_server(tmp_path, monkeypatch)
+    return server.finalize_permit_lookup_result(
+        copy.deepcopy(base or _base_engine_result()),
+        job_type,
+        city,
+        state,
+        explicit_vertical=explicit_vertical,
+    )
+
+
+def _assert_valid_meta(result: dict, expected_vertical: str):
+    meta = result["_evidence_pack"]
+    assert meta["enabled"] is True
+    assert meta["mode"] == "solar_mep_controlled_preview"
+    assert meta["contract_status"] == "valid"
+    assert meta["evidence_pack_version"] == "step7b_offline_v1"
+    assert meta["fingerprint_valid"] is True
+    assert meta["request_vertical"] == expected_vertical
+    assert meta["matched_fields"]
+    assert meta["cache_bypassed"] is True
+    assert "path" not in meta
+
+
+def test_solar_mep_positive_solar_pv_match(tmp_path, monkeypatch):
+    result = _finalize(tmp_path, monkeypatch, "NYC roof-mounted solar PV installation", "New York", "NY")
+    _assert_valid_meta(result, "solar_pv_battery")
+    assert {"approval_timeline", "companion_reviews_triggers", "permit_type"}.issubset(result["_evidence_pack"]["matched_fields"])
+    assert "solar" in result["permit_type"].lower() or "pv" in result["permit_type"].lower()
+
+
+def test_solar_mep_positive_battery_storage_match(tmp_path, monkeypatch):
+    result = _finalize(tmp_path, monkeypatch, "NYC rooftop solar PV with battery storage ESS", "New York", "NY")
+    _assert_valid_meta(result, "solar_pv_battery")
+    assert "permit_type" in result["_evidence_pack"]["matched_fields"]
+    assert "battery" in json.dumps(result).lower() or "storage" in json.dumps(result).lower()
+
+
+def test_solar_mep_positive_commercial_mechanical_match(tmp_path, monkeypatch):
+    result = _finalize(tmp_path, monkeypatch, "Dallas commercial mechanical RTU replacement and duct alterations", "Dallas", "TX")
+    _assert_valid_meta(result, "commercial_mechanical")
+    assert result["_evidence_pack"]["matched_fields"] == ["companion_reviews_triggers"]
+    assert "mechanical" in result["companion_reviews_triggers"].lower()
+
+
+def test_solar_mep_positive_commercial_electrical_match(tmp_path, monkeypatch):
+    result = _finalize(tmp_path, monkeypatch, "Dallas commercial electrical panel and branch circuit alteration", "Dallas", "TX")
+    _assert_valid_meta(result, "commercial_electrical")
+    assert result["_evidence_pack"]["matched_fields"] == ["companion_reviews_triggers"]
+    assert "electrical" in result["companion_reviews_triggers"].lower()
+
+
+def test_solar_mep_positive_commercial_plumbing_match(tmp_path, monkeypatch):
+    result = _finalize(tmp_path, monkeypatch, "Dallas commercial plumbing fixture relocation and DWV work", "Dallas", "TX")
+    _assert_valid_meta(result, "commercial_plumbing")
+    assert result["_evidence_pack"]["matched_fields"] == ["companion_reviews_triggers"]
+    assert "plumbing" in result["companion_reviews_triggers"].lower()
+
+
+def test_solar_mep_positive_cross_trade_commercial_mep_match(tmp_path, monkeypatch):
+    result = _finalize(
+        tmp_path,
+        monkeypatch,
+        "Dallas commercial MEP tenant improvement with mechanical electrical and plumbing scope",
+        "Dallas",
+        "TX",
+    )
+    _assert_valid_meta(result, "commercial_mep_ti")
+    assert {"apply_url", "inspections", "permit_type"}.issubset(result["_evidence_pack"]["matched_fields"])
+    assert result["apply_url"] == "https://aca-prod.accela.com/DALLASTX/Default.aspx"
+
+
+def test_solar_mep_unsupported_city_state_fail_closed(tmp_path, monkeypatch):
+    result = _finalize(tmp_path, monkeypatch, "solar PV with battery storage", "Boston", "MA")
+    meta = result["_evidence_pack"]
+    assert meta["contract_status"] == "valid"
+    assert meta["matched_fields"] == []
+    assert set(meta["failed_closed_fields"]) == {"permit_type", "apply_url", "fee_range", "approval_timeline", "inspections", "companion_reviews_triggers"}
+    assert result["claim_citations"] == []
+    assert result["permits_required"] == []
+
+
+def test_solar_mep_bad_fingerprint_fail_closed(tmp_path, monkeypatch):
+    _enable_pack(monkeypatch, expected_fingerprint="0" * 64)
+    server = _import_server(tmp_path, monkeypatch)
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "NYC solar PV", "New York", "NY")
+    assert result["_evidence_pack"]["contract_status"] == "invalid_fingerprint"
+    assert result["_evidence_pack"]["matched_fields"] == []
+    assert result["claim_citations"] == []
+
+
+def test_solar_mep_stale_records_fail_closed(tmp_path, monkeypatch):
+    data = json.loads(SOLAR_MEP_PACK.read_text(encoding="utf-8"))
+    for record in data["records"]:
+        record["stale_after_utc"] = "2020-01-01T00:00:00Z"
+        for evidence in record.get("field_evidence") or []:
+            evidence["stale_after_utc"] = "2020-01-01T00:00:00Z"
+    pack_path = tmp_path / "stale-solar-mep.json"
+    pack_path.write_text(json.dumps(data), encoding="utf-8")
+    _enable_pack(monkeypatch, pack_path)
+    server = _import_server(tmp_path, monkeypatch)
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "NYC solar PV", "New York", "NY")
+    assert result["_evidence_pack"]["contract_status"] == "stale"
+    assert result["_evidence_pack"]["matched_fields"] == []
+    assert result["claim_citations"] == []
+
+
+def test_solar_mep_public_no_header_no_evidence_leak(tmp_path, monkeypatch):
+    _enable_pack(monkeypatch)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo")
+    server = _import_server(tmp_path, monkeypatch)
+    calls = []
+
+    def fake_research(*args, **kwargs):
+        calls.append(kwargs)
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+    server.is_paid_user = lambda email: True
+    token = server.create_session_token("paid@example.com")
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json_response(
+            f"{live.base}/api/permit",
+            {"job_type": "NYC solar PV with battery storage", "city": "New York", "state": "NY", "job_category": "commercial"},
+            {"X-Session-Token": token},
+        )
+    assert status == 200
+    assert calls and calls[0]["use_cache"] is True
+    assert calls[0]["suppress_cache_write"] is False
+    assert "_evidence_pack" not in body
+    assert "02fea6" not in json.dumps(body)
+
+
+def test_solar_mep_preview_header_route_gating_works(tmp_path, monkeypatch):
+    _enable_pack(monkeypatch)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo")
+    server = _import_server(tmp_path, monkeypatch)
+    calls = []
+
+    def fake_research(*args, **kwargs):
+        calls.append(kwargs)
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+    server.is_paid_user = lambda email: True
+    token = server.create_session_token("paid@example.com")
+    body = {"job_type": "NYC solar PV with battery storage", "city": "New York", "state": "NY", "job_category": "commercial"}
+    with _LiveServer(server.Handler) as live:
+        status, preview_body = _post_json_response(
+            f"{live.base}/api/permit",
+            body,
+            {"X-Session-Token": token, "X-Sample-Demo": "1"},
+        )
+        batch_status, batch_body = _post_json_response(
+            f"{live.base}/api/batch-permit",
+            {"lookups": [body]},
+            {"X-Sample-Demo": "1"},
+        )
+    assert status == batch_status == 200
+    assert calls[0]["use_cache"] is False
+    assert calls[0]["suppress_cache_write"] is True
+    assert preview_body["_evidence_pack"]["mode"] == "solar_mep_controlled_preview"
+    assert "permit_type" in preview_body["_evidence_pack"]["matched_fields"]
+    assert "_evidence_pack" not in json.dumps(batch_body)
+
+
+def test_solar_mep_cache_interaction_fails_closed(tmp_path, monkeypatch):
+    result = _finalize(
+        tmp_path,
+        monkeypatch,
+        "NYC solar PV with battery storage",
+        "New York",
+        "NY",
+        base={**_base_engine_result(), "_cached": True},
+    )
+    assert result["_evidence_pack"]["contract_status"] == "invalid_contract"
+    assert result["_evidence_pack"]["matched_fields"] == []
+    assert result["claim_citations"] == []
+
+
+def test_solar_mep_dallas_step7u_preview_still_works(tmp_path, monkeypatch):
+    _enable_pack(monkeypatch, DALLAS_STEP7U_PACK, mode="dallas_step7u_production_preview")
+    server = _import_server(tmp_path, monkeypatch)
+    result = server.finalize_permit_lookup_result(
+        _base_engine_result(),
+        "medical clinic tenant improvement with exam rooms and accessibility review",
+        "Dallas",
+        "TX",
+        explicit_vertical="medical_clinic_ti",
+    )
+    assert result["_evidence_pack"]["mode"] == "dallas_step7u_production_preview"
+    assert result["_evidence_pack"]["contract_status"] == "valid"
+    assert result["_evidence_pack"]["request_vertical"] == "medical_clinic_ti"
+    assert "apply_url" in result["_evidence_pack"]["matched_fields"]
+
+
+def test_solar_mep_verticals_do_not_leak_into_dallas_modes(tmp_path, monkeypatch):
+    cases = [
+        (DALLAS_STEP7U_PACK, "dallas_step7u_production_preview"),
+        (DALLAS_STEP7H_PACK, "dallas_step7h_preview"),
+    ]
+    requests = [
+        ("Dallas commercial solar PV with battery storage", None, "solar_pv_battery"),
+        ("Dallas commercial electrical panel alteration", None, "commercial_electrical"),
+        (
+            "Dallas commercial MEP tenant improvement with mechanical electrical and plumbing scope",
+            None,
+            "commercial_mep_ti",
+        ),
+        ("generic Dallas tenant work", "solar_pv_battery", "solar_pv_battery"),
+        ("generic Dallas tenant work", "commercial_electrical", "commercial_electrical"),
+    ]
+    for pack_path, mode in cases:
+        monkeypatch.undo()
+        _enable_pack(monkeypatch, pack_path, mode=mode)
+        server = _import_server(tmp_path / mode, monkeypatch)
+        for job_type, explicit_vertical, expected_vertical in requests:
+            result = server.finalize_permit_lookup_result(
+                copy.deepcopy(_base_engine_result()),
+                job_type,
+                "Dallas",
+                "TX",
+                explicit_vertical=explicit_vertical,
+            )
+            meta = result["_evidence_pack"]
+            assert meta["mode"] == mode
+            assert meta["request_vertical"] == expected_vertical
+            assert meta["matched_fields"] == []
+            assert meta["failed_closed_fields"]
+            assert result["claim_citations"] == []
+
+
+def test_solar_mep_restaurant_medical_office_ti_unchanged_no_leakage(tmp_path, monkeypatch):
+    _enable_pack(monkeypatch)
+    server = _import_server(tmp_path, monkeypatch)
+    cases = [
+        ("restaurant tenant improvement with Type I hood", "Dallas", "TX", "restaurant_ti"),
+        ("medical clinic TI with exam rooms", "Dallas", "TX", "medical_clinic_ti"),
+        ("office tenant improvement with conference rooms", "Dallas", "TX", "office_ti"),
+    ]
+    for idx, (job_type, city, state, expected_vertical) in enumerate(cases):
+        result = server.finalize_permit_lookup_result(_base_engine_result(), job_type, city, state)
+        meta = result["_evidence_pack"]
+        assert meta["request_vertical"] == expected_vertical
+        assert meta["matched_fields"] == []
+        evidence_text = json.dumps(result.get("claim_citations", [])) + json.dumps(result.get("companion_reviews_triggers", ""))
+        assert "solar" not in evidence_text.lower()
+        assert "battery" not in evidence_text.lower()
+        assert "dallasnow" not in evidence_text.lower()
+
+
+def test_solar_mep_negative_terms_do_not_cross_pollute_verticals(tmp_path, monkeypatch):
+    solar = _finalize(
+        tmp_path / "solar",
+        monkeypatch,
+        "NYC solar PV array, not an office TI, no tenant improvement restaurant or medical clinic scope",
+        "New York",
+        "NY",
+    )
+    assert solar["_evidence_pack"]["request_vertical"] == "solar_pv_battery"
+    assert "restaurant" not in json.dumps(solar.get("claim_citations", [])).lower()
+    assert "office" not in json.dumps(solar.get("claim_citations", [])).lower()
+
+    monkeypatch.undo()
+    _enable_pack(monkeypatch)
+    office = _finalize(
+        tmp_path / "office",
+        monkeypatch,
+        "Dallas office TI without solar PV, without battery storage, no restaurant or food service",
+        "Dallas",
+        "TX",
+    )
+    assert office["_evidence_pack"]["request_vertical"] == "office_ti"
+    assert office["_evidence_pack"]["matched_fields"] == []
+    companion_text = json.dumps(office.get("companion_permits", [])) + json.dumps(office.get("claim_citations", []))
+    assert "solar" not in companion_text.lower()
+    assert "battery" not in companion_text.lower()
