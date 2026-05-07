@@ -4556,6 +4556,20 @@ _RESTAURANT_PLUMBING_SCOPE_TERMS = (
     "dishwasher", "commercial dishwasher", "4-compartment sink", "4 compartment sink",
     "3-compartment sink", "3 compartment sink", "mop sink", "floor sink", "indirect waste",
 )
+_RESTAURANT_FOOD_HEALTH_SCOPE_TERMS = (
+    "food establishment", "food service", "commercial kitchen", "prep kitchen",
+    "kitchen work", "kitchen plumbing", "cooking equipment", "food preparation", "food prep",
+    "health department review", "health review",
+    "type i hood", "type 1 hood", "grease interceptor", "grease trap",
+    "espresso bar", "hand sink", "mop sink", "dishwasher", "commercial dishwasher",
+    "3-compartment sink", "3 compartment sink", "4-compartment sink", "4 compartment sink",
+    "bar tenant", "bar buildout", "beer taps", "glass washer", "restaurant opening",
+)
+_RETAIL_FOOD_HEALTH_SCOPE_TERMS = (
+    "food preparation", "food prep", "beverage preparation", "beverage prep",
+    "coffee service", "espresso", "cafe", "café", "restaurant", "commercial kitchen",
+    "prep kitchen", "alcohol service", "bar tenant", "beer taps", "cannabis",
+)
 
 
 def _restaurant_hood_scope_present(job_type: str) -> bool:
@@ -4570,9 +4584,23 @@ def _restaurant_plumbing_scope_present(job_type: str) -> bool:
     return _has_unnegated_any(job_type or "", _RESTAURANT_PLUMBING_SCOPE_TERMS)
 
 
+def _restaurant_food_health_scope_present(job_type: str) -> bool:
+    """Only assert health/food-establishment review for actual food-prep/opening scope.
+
+    A space can already be a restaurant while the permit scope is only dining-room
+    paint/flooring/furniture/lighting. In that case a mandatory health-department
+    plan review is an overclaim unless the job states food-prep, kitchen, bar, sink,
+    dishwashing, or similar operational food-service work.
+    """
+    text = job_type or ""
+    return _has_unnegated_any(text, _RESTAURANT_FOOD_HEALTH_SCOPE_TERMS) or _restaurant_plumbing_scope_present(text)
+
+
 def _restaurant_checklist_item_applies(item: str, job_type: str) -> bool:
     """Suppress hood/grease/ANSUL checklist lines by the specific unnegated item family."""
     item_l = (item or "").lower()
+    if any(term in item_l for term in ("health department", "food establishment", "food-establishment", "environmental services")):
+        return _restaurant_food_health_scope_present(job_type)
     if any(term in item_l for term in ("hood", "ansul", "makeup air", "make-up air")):
         return _restaurant_hood_scope_present(job_type)
     if "grease" in item_l:
@@ -4596,13 +4624,7 @@ def _retail_checklist_item_applies(item: str, job_type: str) -> bool:
     """Suppress food/health retail checklist lines unless food/beverage is actually in scope."""
     item_l = (item or "").lower()
     if any(term in item_l for term in ("food", "beverage", "health department", "health/licensing")):
-        return _has_unnegated_any(
-            job_type or "",
-            (
-                "food", "beverage", "coffee", "cafe", "restaurant", "commercial kitchen",
-                "grocery", "alcohol", "bar ", " bar", "cannabis", "prep kitchen",
-            ),
-        )
+        return _has_unnegated_any(job_type or "", _RETAIL_FOOD_HEALTH_SCOPE_TERMS)
     return True
 
 
@@ -5591,7 +5613,8 @@ def _commercial_ti_required_permit_set(primary_scope: str, job_type: str) -> tup
 def _commercial_ti_secondary_companions(primary_scope: str, job_type: str = "") -> list[dict]:
     companions: list[dict] = []
     if primary_scope == "commercial_restaurant":
-        companions.append({"permit_type": "Health Department / Food Establishment Review", "reason": "Restaurant buildouts commonly require health review before opening.", "certainty": "almost_certain"})
+        if _restaurant_food_health_scope_present(job_type):
+            companions.append({"permit_type": "Health Department / Food Establishment Review", "reason": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.", "certainty": "likely"})
         if _has_unnegated_any(job_type, ("grease interceptor", "grease trap", "f.o.g", "fats oils grease", "3-compartment sink", "3 compartment sink")):
             companions.append({"permit_type": "Grease Interceptor / FOG Approval", "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.", "certainty": "likely"})
     elif primary_scope == "commercial_medical_clinic_ti":

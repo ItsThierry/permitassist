@@ -492,6 +492,32 @@ def _restaurant_grease_scope_present(text: str) -> bool:
     return _has_unnegated_any(text or "", ("grease interceptor", "grease trap", "f.o.g", "fats oils grease"))
 
 
+def _restaurant_food_health_scope_present(text: str) -> bool:
+    return _has_unnegated_any(
+        text or "",
+        (
+            "food establishment", "food service", "commercial kitchen", "prep kitchen",
+            "kitchen work", "kitchen plumbing", "cooking equipment", "food preparation", "food prep",
+            "health department review", "health review",
+            "type i hood", "type 1 hood", "grease interceptor", "grease trap",
+            "espresso bar", "hand sink", "mop sink", "dishwasher", "commercial dishwasher",
+            "3-compartment sink", "3 compartment sink", "4-compartment sink", "4 compartment sink",
+            "bar tenant", "bar buildout", "beer taps", "glass washer", "restaurant opening",
+        ),
+    )
+
+
+def _retail_food_health_scope_present(text: str) -> bool:
+    return _has_unnegated_any(
+        text or "",
+        (
+            "food preparation", "food prep", "beverage preparation", "beverage prep",
+            "coffee service", "espresso", "cafe", "café", "restaurant", "commercial kitchen",
+            "prep kitchen", "alcohol service", "bar tenant", "beer taps", "cannabis",
+        ),
+    )
+
+
 def _medical_gas_scope_present(text: str) -> bool:
     return _has_unnegated_any(text or "", ("medical gas", "med gas", "nitrous", "oxygen"))
 
@@ -519,7 +545,7 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         forbidden_terms += ["hood", "ansul", "fire suppression", "grease duct"]
     if not _restaurant_grease_scope_present(scope_text):
         forbidden_terms += ["grease", "f.o.g"]
-    if not _has_unnegated_any(scope_text, ("food", "beverage", "coffee", "cafe", "restaurant", "commercial kitchen", "grocery", "alcohol", "bar ", " bar", "cannabis", "prep kitchen")):
+    if not (_restaurant_food_health_scope_present(scope_text) or _retail_food_health_scope_present(scope_text)):
         forbidden_terms += ["food establishment", "food-establishment", "food service", "commercial kitchen", "health department", "food", "beverage"]
     if not _has_unnegated_any(scope_text, ("commercial dishwasher", "dishwasher", "prep sink", "floor sink", "mop sink", "indirect waste")):
         forbidden_terms += ["plumbing sheets", "plumbing sheet", "plumbing plans", "plumbing plan"]
@@ -711,7 +737,9 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
         companion_scope = _commercial_companion_scope(job_type, result)
         scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
         if companion_scope == "restaurant":
-            required_companions += ["fire", "health"]
+            required_companions += ["fire"]
+            if _restaurant_food_health_scope_present(scope_text):
+                required_companions.append("health")
             if _restaurant_grease_scope_present(scope_text):
                 required_companions.append("grease")
             if _restaurant_hood_scope_present(scope_text):
@@ -844,7 +872,13 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
         verification_note = "No verified online filing path is available from current sources; verify the exact filing path with the AHJ."
         login_required = "unknown"
     if commercial:
-        steps.insert(3, "For commercial TI, check whether separate building, MEP, fire/life-safety, accessibility, health, or change-of-occupancy reviews are required.")
+        scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
+        maybe_health = _restaurant_food_health_scope_present(scope_text) or _retail_food_health_scope_present(scope_text) or _medical_clinic_scope_present(scope_text)
+        review_list = "building, MEP, fire/life-safety, accessibility"
+        if maybe_health:
+            review_list += ", health"
+        review_list += ", or change-of-occupancy"
+        steps.insert(3, f"For commercial TI, check whether separate {review_list} reviews are required.")
     apply_path = {
         "support_level": support_level,
         "platform": platform,
