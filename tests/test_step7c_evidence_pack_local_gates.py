@@ -318,6 +318,59 @@ def test_step7u_preview_http_matrix_surfaces_contractor_fields_and_keeps_scope_g
         assert "_approval_timeline_evidence_detail" not in json.dumps(batch_body)
 
 
+def test_step7u_office_negations_do_not_surface_restaurant_companions_in_http_preview(tmp_path, monkeypatch):
+    repo_root = str(Path(__file__).resolve().parents[1])
+    if repo_root not in sys.path:
+        sys.path.insert(0, repo_root)
+    from api import research_engine as engine
+    from api import evidence_pack_runtime
+
+    assert evidence_pack_runtime._vertical_for_job(
+        "commercial office tenant improvement, no restaurant, no food service; demising walls and data cabling"
+    ) == "office_ti"
+
+    pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+    _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo")
+    server = _import_server(tmp_path, monkeypatch)
+
+    def fake_research(job_type, *_args, **_kwargs):
+        classified = engine.classify_scope_required_permits(job_type)
+        result = _base_engine_result()
+        result.update(classified or {})
+        return result
+
+    server.research_permit = fake_research
+    server.is_paid_user = lambda email: True
+    token = server.create_session_token("paid@example.com")
+    scope = (
+        "commercial office tenant improvement, non-restaurant office suite, no restaurant, no food service, "
+        "no commercial kitchen, no Type I hood, no fryer, no ANSUL, no grease interceptor; demising walls, "
+        "conference rooms, lighting, HVAC diffuser relocation, data cabling, card reader access control, "
+        "sprinkler head relocation"
+    )
+
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json_response(
+            f"{live.base}/api/permit",
+            {"job_type": scope, "city": "Dallas", "state": "TX", "job_category": "commercial"},
+            {"X-Session-Token": token, "X-Sample-Demo": "1"},
+        )
+
+    assert status == 200
+    assert body["_evidence_pack"]["request_vertical"] == "office_ti"
+    assert body["permit_type"] == "Commercial Building Permit"
+    permit_text = " | ".join(p.get("permit_type", "") for p in body.get("permits_required", [])).lower()
+    companion_text = " | ".join(c.get("permit_type", "") for c in body.get("companion_permits", [])).lower()
+    forbidden_restaurant_terms = ("restaurant", "health department", "food establishment", "grease interceptor", "fog")
+    for term in forbidden_restaurant_terms:
+        assert term not in permit_text
+        assert term not in companion_text
+    assert "low-voltage" in companion_text or "data cabling" in companion_text
+    assert "accessibility" in companion_text or "ada" in companion_text
+
+
 def test_step7u_production_preview_pack_fails_closed_in_staging_mode(monkeypatch, tmp_path):
     pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
     _enable_pack(monkeypatch, pack_path, mode="dallas_step7h_preview")

@@ -173,10 +173,10 @@ def _vertical_for_job(job_type: str, *, explicit_vertical: Any = None, result: d
     office_signal = bool(re.search(r"\b(office|law office|corporate office|professional office|tenant office)\b", text))
     negated_restaurant_signal = bool(
         re.search(
-            r"\b(?:no|without)\s+(?:type\s*i\s*hood|hood|fryer|griddle|ansul|grease interceptor|commercial kitchen|restaurant expansion)(?:\s+needed)?\b",
+            r"\b(?:no|without)\s+(?:restaurant|food service|type\s*i\s*hood|hood|fryer|griddle|ansul|grease interceptor|commercial kitchen|restaurant expansion)(?:\s+needed)?\b",
             text,
         )
-        or re.search(r"\b(?:non\s+restaurant|not\s+a\s+restaurant)\b", text)
+        or re.search(r"\b(?:non\s*[- ]?restaurant|not\s+a\s+restaurant)\b", text)
     )
     if office_signal and negated_restaurant_signal:
         return "office_ti"
