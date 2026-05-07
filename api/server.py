@@ -441,9 +441,18 @@ _COMMERCIAL_PRIMARY_TOKENS = (
 )
 
 
+def _job_has_unnegated_commercial_scope(job_type: str) -> bool:
+    text = (job_type or "").lower()
+    return any(_contains_unnegated_phrase(text, token.strip()) for token in _COMMERCIAL_SCOPE_TOKENS)
+
+
 def _is_commercial_scope(job_type: str, result: dict | None = None) -> bool:
-    text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
-    return any(token in text for token in _COMMERCIAL_SCOPE_TOKENS)
+    primary = str((result or {}).get("_primary_scope") or "").lower()
+    job_has_commercial = _job_has_unnegated_commercial_scope(job_type)
+    if primary.startswith("residential") and _residential_single_trade_scope(job_type) and not job_has_commercial:
+        return False
+    text = f"{job_type or ''} {primary}".lower()
+    return any(_contains_unnegated_phrase(text, token.strip()) for token in _COMMERCIAL_SCOPE_TOKENS)
 
 
 def _term_is_locally_negated(text: str, term_start: int) -> bool:
@@ -548,7 +557,11 @@ def _repair_residential_trade_model_leak(result: dict, job_type: str) -> None:
         return
     detected = detect_primary_scope(job_type or "")
     if detected in {"commercial_restaurant", "commercial_office_ti", "commercial_retail_ti", "commercial_medical_clinic_ti", "multifamily", "commercial"}:
-        return
+        if _job_has_unnegated_commercial_scope(job_type):
+            return
+        # Explicit residential single-trade wording wins over a stale commercial
+        # classifier hit caused only by negated phrases like "no commercial work".
+        detected = "residential"
     text = f" {(job_type or '').lower()} "
     result["_primary_scope"] = detected or "residential"
     if "water heater" in text:
