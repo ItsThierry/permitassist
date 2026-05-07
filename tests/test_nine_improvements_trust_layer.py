@@ -302,6 +302,58 @@ def test_quality_gate_does_not_clobber_ahj_specific_commercial_primary(tmp_path,
     assert any("AHJ-specific" in w for w in gated["quality_warnings"])
 
 
+def test_quality_gate_respects_office_ti_restaurant_negations_in_companion_warning(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "confidence": "medium",
+        "permits_required": [{"permit_type": "Commercial Building Permit"}],
+        "companion_permits": [
+            {"permit_type": "Electrical Permit"},
+            {"permit_type": "Mechanical Permit"},
+            {"permit_type": "Plumbing Permit"},
+        ],
+        "sources": [{"url": "https://city.gov/tenant-finish", "snippet": "Tenant finish review is required."}],
+    }
+
+    gated = server.apply_permitiq_quality_gate(
+        result,
+        "office tenant improvement with conference rooms, no restaurant, no food service, no Type I hood, no grease interceptor",
+        "Dallas",
+        "TX",
+    )
+
+    warnings = "\n".join(gated.get("quality_warnings") or []).lower()
+    assert "health" not in warnings
+    assert "grease" not in warnings
+    assert "hood" not in warnings
+
+
+def test_quality_gate_keeps_restaurant_ti_companion_warning_for_positive_scope(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "confidence": "medium",
+        "permits_required": [{"permit_type": "Commercial Building Permit"}],
+        "companion_permits": [
+            {"permit_type": "Electrical Permit"},
+            {"permit_type": "Mechanical Permit"},
+            {"permit_type": "Plumbing Permit"},
+        ],
+        "sources": [{"url": "https://city.gov/restaurant-ti", "snippet": "Restaurant tenant finish review is required."}],
+    }
+
+    gated = server.apply_permitiq_quality_gate(
+        result,
+        "restaurant tenant improvement with Type I hood and grease interceptor",
+        "Dallas",
+        "TX",
+    )
+
+    warnings = "\n".join(gated.get("quality_warnings") or []).lower()
+    assert "health" in warnings
+    assert "grease" in warnings
+    assert "hood" in warnings
+
+
 def test_city_watch_change_digest_contains_action_fields(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     responses = [
