@@ -5,7 +5,7 @@
       "artifact_name": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
       "batch_id": "solar-commercial-mep-seed-2026-05-07",
       "created_utc": "2026-05-07T01:20:00Z",
-      "path": "/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json"
+      "path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json"
     }
   ],
   "metadata": {
@@ -17,9 +17,10 @@
       "blocked": "downgrade_to_needs_verification_until_revalidated",
       "browser_rendered_200_direct_requests_403": "use_existing_evidence_only_if_not_expired_and_display_stale_warning"
     },
-    "fingerprint_sha256": "d012803578807f6e183e6686b16d23db8ce9ba9ff237e5e9379c798c7854b42e",
-    "generated_at_utc": "2026-05-07T02:49:00Z",
+    "fingerprint_sha256": "02fea6c42faee64c5ab1dd9cec2319a819b53f7f10e5abd58e1ae0fbbfe0116b",
+    "generated_at_utc": "2026-05-07T02:00:00Z",
     "production_wiring_allowed": false,
+    "safe_for_env_activation": false,
     "source_freshness_policy": {
       "default_reverify_after_days": 30,
       "rule": "Before Step 7C production import, revalidate official-source quote/hash freshness; expired or unreachable evidence fails closed.",
@@ -105,7 +106,7 @@
       "record_fingerprint_sha256": "09e94af912ba54b1bdec989d9109abb496a5addbb65765befd3414ae0d19990d",
       "record_id": "nyc-solar-pv-review-timeline",
       "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
-      "source_artifact_path": "/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
       "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
       "source_scope_limit": "Verifies NYC DOB solar review-time statement only. Does not verify fees, inspections, utility interconnection, battery/ESS approval, non-NYC AHJs, reroof without solar, roof repair only, or electrical panel work without PV/battery.",
       "source_scope_limit_generated": false,
@@ -183,7 +184,7 @@
       "record_fingerprint_sha256": "96eec4dbe8a055e5030457a055e2c82748a2a4de6ae8099b9ac60d3bde33b903",
       "record_id": "nyc-solar-pv-structural-electrical-companions",
       "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
-      "source_artifact_path": "/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
       "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
       "source_scope_limit": "Verifies NYC solar structural/electrical/construction companion trigger guidance only. Does not verify fees, inspections, utility interconnection, battery/ESS approval, non-NYC AHJs, reroof without solar, roof repair only, or electrical panel work without PV/battery.",
       "source_scope_limit_generated": false,
@@ -261,7 +262,7 @@
       "record_fingerprint_sha256": "f951bd6f2d168c36bf7944148816ce0ca78e4f8a735aa0c67546f52c1509b0f4",
       "record_id": "nyc-solar-pv-required-permits",
       "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
-      "source_artifact_path": "/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
       "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
       "source_scope_limit": "Verifies NYC solar/PV permit-type relationship only. Does not verify fees, inspections, utility interconnection, battery/ESS approval, non-NYC AHJs, reroof without solar, roof repair only, or electrical panel work without PV/battery.",
       "source_scope_limit_generated": false,
@@ -323,6 +324,11 @@
         "stale_after_utc": "2026-07-06T01:20:00Z"
       },
       "ingestion_ready": true,
+      "negative_scope_guards": [
+        "mechanical_only_without_electrical_scope",
+        "plumbing_only_without_electrical_scope",
+        "residential_electrical_only"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -333,10 +339,10 @@
         "low_voltage_when_explicit"
       ],
       "proposed_status_from_artifact": "verified",
-      "record_fingerprint_sha256": "98d5327182c11004d95ebec34059ceea2bb1df0658021c3c7e44dfde8b6dd3b2",
+      "record_fingerprint_sha256": "0fa0fa8a19141144bf9d34f7000710a0deb20340580013d829c59de264aba632",
       "record_id": "dallas-commercial-electrical-trigger",
       "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
-      "source_artifact_path": "/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
       "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
       "source_scope_limit": "Verifies Dallas electrical code/inspection source presence only. Does not verify unrelated trades, plumbing scope, mechanical scope, solar/PV, fees, timelines, apply URL, or exact permit subtype.",
       "source_scope_limit_generated": false,
@@ -398,6 +404,11 @@
         "stale_after_utc": "2026-07-06T01:20:00Z"
       },
       "ingestion_ready": true,
+      "negative_scope_guards": [
+        "electrical_only_without_mechanical_scope",
+        "plumbing_only_without_mechanical_scope",
+        "residential_hvac_only"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -408,10 +419,10 @@
         "exhaust"
       ],
       "proposed_status_from_artifact": "verified",
-      "record_fingerprint_sha256": "8ee20d8914b49e205f4ee16d1d69fe861ebde06620d2404641017d76930941d4",
+      "record_fingerprint_sha256": "98aa7067d5d2ddc5b7fabb7838d59ed939cf733a16094bcc94996557eba9335b",
       "record_id": "dallas-commercial-mechanical-trigger",
       "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
-      "source_artifact_path": "/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
       "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
       "source_scope_limit": "Verifies Dallas mechanical code/inspection source presence only. Does not verify unrelated trades, plumbing scope, electrical scope, solar/PV, fees, timelines, apply URL, or exact permit subtype.",
       "source_scope_limit_generated": false,
@@ -472,6 +483,11 @@
         "stale_after_utc": "2026-07-06T01:20:00Z"
       },
       "ingestion_ready": true,
+      "negative_scope_guards": [
+        "standalone_trade_repair_only",
+        "residential_trade_work_only",
+        "solar_pv_battery_without_commercial_mep_ti"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -480,10 +496,10 @@
         "plumbing_trade_permit"
       ],
       "proposed_status_from_artifact": "verified",
-      "record_fingerprint_sha256": "c17bcbab364af9303a442a23044f527d7515ca2b5d49459b3c89fb916ea8f2b6",
+      "record_fingerprint_sha256": "916406cab288bcf4f2c1204fa023f8d640c4e1620086ebad2e7a11cee48853e5",
       "record_id": "dallas-commercial-mep-online-trade-permit-path",
       "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
-      "source_artifact_path": "/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
       "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
       "source_scope_limit": "Verifies DallasNow/Accela as the routine Dallas online permitting platform and starting portal for permitting, planning, inspections, and engineering workflows. Does not verify eligibility for every trade-only permit, contractor registration status, fees, timelines, building-plan-review path, or solar/PV.",
       "source_scope_limit_generated": false,
@@ -545,6 +561,11 @@
         "stale_after_utc": "2026-07-06T01:20:00Z"
       },
       "ingestion_ready": true,
+      "negative_scope_guards": [
+        "standalone_trade_repair_only",
+        "residential_trade_work_only",
+        "solar_pv_battery_without_commercial_mep_ti"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -554,10 +575,10 @@
         "commercial_ti_with_mep"
       ],
       "proposed_status_from_artifact": "partial",
-      "record_fingerprint_sha256": "77323c7bec130d59a431d5add34596d765157f3958390828c90566f628a1d07e",
+      "record_fingerprint_sha256": "912a0af9a14d9900cd91b30f8018f3b6aa62037727f811eed099380cbbd5d5e9",
       "record_id": "dallas-commercial-mep-trade-inspections",
       "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
-      "source_artifact_path": "/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
       "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
       "source_scope_limit": "Verifies Dallas post-damage commercial FAQ trade inspection sequencing only as conditional cross-trade MEP guidance before framing inspection. Does not verify completion/final inspection, unrelated trades, solar/PV, fees, timelines, apply URL, or project-specific inspection card requirements.",
       "source_scope_limit_generated": false,
@@ -618,6 +639,11 @@
         "stale_after_utc": "2026-07-06T01:20:00Z"
       },
       "ingestion_ready": true,
+      "negative_scope_guards": [
+        "standalone_trade_repair_only",
+        "residential_trade_work_only",
+        "solar_pv_battery_without_commercial_mep_ti"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -626,10 +652,10 @@
         "tenant_improvement"
       ],
       "proposed_status_from_artifact": "verified",
-      "record_fingerprint_sha256": "5d04d98e5972e5662ce972ee3dede229f9bf6af2dfe04b576838564d24f2f650",
+      "record_fingerprint_sha256": "965360e075cf4d2eab94256ae43eb44853dfd1fbba74ac8c55ddd46f4f611ee9",
       "record_id": "dallas-commercial-building-permit",
       "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
-      "source_artifact_path": "/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
       "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
       "source_scope_limit": "Verifies Dallas commercial building permit requirement for commercial construction/alteration/renovation only. Does not verify unrelated trades, solar/PV, fees, inspections, or final apply category.",
       "source_scope_limit_generated": false,
@@ -691,6 +717,11 @@
         "stale_after_utc": "2026-07-06T01:20:00Z"
       },
       "ingestion_ready": true,
+      "negative_scope_guards": [
+        "mechanical_only_without_plumbing_scope",
+        "electrical_only_without_plumbing_scope",
+        "residential_plumbing_only"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -701,10 +732,10 @@
         "medical_gas_when_explicit"
       ],
       "proposed_status_from_artifact": "verified",
-      "record_fingerprint_sha256": "7e81134a1cc6cc4331e3dc3fd482cdb2bdc48b740f1e56306bb2cc4fc01b15d5",
+      "record_fingerprint_sha256": "d38f339337aab76d944146d66ede67420ca56aaeeae8001992b069d64c31169a",
       "record_id": "dallas-commercial-plumbing-trigger",
       "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
-      "source_artifact_path": "/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
       "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
       "source_scope_limit": "Verifies Dallas plumbing code/inspection source presence only. Does not verify unrelated trades, mechanical scope, electrical scope, solar/PV, fees, timelines, apply URL, grease interceptor, medical gas, or exact permit subtype.",
       "source_scope_limit_generated": false,

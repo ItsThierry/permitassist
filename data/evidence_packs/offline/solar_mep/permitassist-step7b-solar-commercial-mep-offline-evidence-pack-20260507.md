@@ -1,8 +1,8 @@
 # PermitAssist Step 7B Offline Evidence Pack
 
-Generated: 2026-05-07T02:49:00Z
+Generated: 2026-05-07T02:00:00Z
 Evidence version: `step7b_offline_v1`
-Fingerprint: `d012803578807f6e183e6686b16d23db8ce9ba9ff237e5e9379c798c7854b42e`
+Fingerprint: `02fea6c42faee64c5ab1dd9cec2319a819b53f7f10e5abd58e1ae0fbbfe0116b`
 Production wiring allowed: false
 
 ## Verdict
@@ -41,7 +41,7 @@ Production wiring allowed: false
 
 ## Artifact inputs
 
-- solar-commercial-mep-seed-2026-05-07: 9 rows — `/home/boban/projects/permitassist-solar-mep-quality-fix-20260507T024157Z/data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json`
+- solar-commercial-mep-seed-2026-05-07: 9 rows — `data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json`
 
 ## Sample fail-closed records
 

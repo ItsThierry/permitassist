@@ -48,6 +48,7 @@ def test_solar_mep_seed_artifact_builds_full_offline_fail_closed_pack(tmp_path):
     readiness = evidence_pack_tool_readiness(json_path, report_path=md_path)
 
     assert pack["metadata"]["production_wiring_allowed"] is False
+    assert pack["metadata"]["safe_for_env_activation"] is False
     assert pack["validation"]["verdict"] == "PASS_OFFLINE_READY"
     assert pack["validation"]["fail_closed_records"] == 0
     assert readiness["verdict"] == "FULLY_READY_OFFLINE_FAIL_CLOSED"
@@ -168,6 +169,23 @@ def test_dallas_mep_inspection_claim_is_fully_supported_or_narrowed():
     if "final" in claim or "completion" in claim:
         assert "final" in quotes or "completion" in quotes
     assert "prior to framing" in quotes or "framing inspection" in quotes
+
+
+def test_all_solar_mep_records_preserve_required_metadata_fields():
+    pack = build_evidence_pack([SOLAR_MEP_INPUT], generated_at_utc="2026-05-07T02:00:00Z")
+
+    for record in pack["records"]:
+        assert record["pack_family"] == "solar_commercial_mep_offline_v1"
+        assert isinstance(record["trade_scope"], str) and record["trade_scope"]
+        assert record["companion_review_policy"] == "conditional_only"
+        assert isinstance(record["negative_scope_guards"], list)
+        assert record["negative_scope_guards"]
+        assert all(isinstance(item, str) and item.strip() for item in record["negative_scope_guards"])
+        assert isinstance(record["positive_scope_triggers"], list)
+        assert record["positive_scope_triggers"]
+        assert all(isinstance(item, str) and item.strip() for item in record["positive_scope_triggers"])
+        assert isinstance(record["record_fingerprint_sha256"], str)
+        assert len(record["record_fingerprint_sha256"]) == 64
 
 
 def test_solar_mep_metadata_fields_are_required_and_validated(tmp_path):

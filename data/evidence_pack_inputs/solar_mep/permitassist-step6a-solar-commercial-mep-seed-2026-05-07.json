@@ -152,6 +152,11 @@
         }
       ],
       "field": "permit_type",
+      "negative_scope_guards": [
+        "standalone_trade_repair_only",
+        "residential_trade_work_only",
+        "solar_pv_battery_without_commercial_mep_ti"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -189,6 +194,11 @@
         }
       ],
       "field": "apply_url",
+      "negative_scope_guards": [
+        "standalone_trade_repair_only",
+        "residential_trade_work_only",
+        "solar_pv_battery_without_commercial_mep_ti"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -226,6 +236,11 @@
         }
       ],
       "field": "companion_reviews_triggers",
+      "negative_scope_guards": [
+        "electrical_only_without_mechanical_scope",
+        "plumbing_only_without_mechanical_scope",
+        "residential_hvac_only"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -265,6 +280,11 @@
         }
       ],
       "field": "companion_reviews_triggers",
+      "negative_scope_guards": [
+        "mechanical_only_without_electrical_scope",
+        "plumbing_only_without_electrical_scope",
+        "residential_electrical_only"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -304,6 +324,11 @@
         }
       ],
       "field": "companion_reviews_triggers",
+      "negative_scope_guards": [
+        "mechanical_only_without_plumbing_scope",
+        "electrical_only_without_plumbing_scope",
+        "residential_plumbing_only"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [
@@ -343,6 +368,11 @@
         }
       ],
       "field": "inspections",
+      "negative_scope_guards": [
+        "standalone_trade_repair_only",
+        "residential_trade_work_only",
+        "solar_pv_battery_without_commercial_mep_ti"
+      ],
       "old_status": "needs_verification",
       "pack_family": "solar_commercial_mep_offline_v1",
       "positive_scope_triggers": [

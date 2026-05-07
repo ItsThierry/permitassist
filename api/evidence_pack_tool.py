@@ -614,10 +614,7 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
             validation_errors.append("invalid_companion_review_policy")
         if not isinstance(positive_scope_triggers, list) or not positive_scope_triggers or not all(isinstance(item, str) and item.strip() for item in positive_scope_triggers):
             validation_errors.append("invalid_or_missing_positive_scope_triggers")
-        if str(row.get("vertical") or "").startswith("solar"):
-            if not isinstance(negative_scope_guards, list) or not negative_scope_guards or not all(isinstance(item, str) and item.strip() for item in negative_scope_guards):
-                validation_errors.append("invalid_negative_scope_guards")
-        elif negative_scope_guards not in (None, "", []) and not isinstance(negative_scope_guards, list):
+        if not isinstance(negative_scope_guards, list) or not negative_scope_guards or not all(isinstance(item, str) and item.strip() for item in negative_scope_guards):
             validation_errors.append("invalid_negative_scope_guards")
 
     if not evidence_items:
@@ -754,6 +751,7 @@ def build_evidence_pack(paths: Iterable[str | Path], generated_at_utc: str | Non
             "evidence_pack_version": EVIDENCE_PACK_VERSION,
             "generated_at_utc": generated,
             "fingerprint_sha256": fingerprint,
+            "safe_for_env_activation": False,
             "production_wiring_allowed": False,
             "source_freshness_policy": {
                 "default_reverify_after_days": REVERIFY_AFTER_DAYS,
