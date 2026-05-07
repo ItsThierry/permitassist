@@ -1236,9 +1236,22 @@ def _contains_unnegated_any(text: str, terms: tuple[str, ...]) -> bool:
     return any(_contains_unnegated_phrase(text, term) for term in terms)
 
 
-_RESTAURANT_SCOPE_TERMS = ("restaurant", "food establishment", "food service", "commercial kitchen", "prep kitchen", "cafe", "café", "tavern", "bar", "dishwasher", "walk-in cooler", "walk in cooler")
+_RESTAURANT_SCOPE_TERMS = ("restaurant", "food establishment", "food service", "commercial kitchen", "prep kitchen", "cafe", "café", "tavern", "bar tenant", "bar buildout", "dishwasher", "walk-in cooler", "walk in cooler")
+_STRONG_RESTAURANT_CROSS_SCOPE_TERMS = (
+    "restaurant", "food establishment", "food service", "commercial kitchen", "prep kitchen",
+    "cafe", "café", "tavern", "bar tenant", "bar buildout", "dishwasher", "walk-in cooler", "walk in cooler",
+)
 _RESTAURANT_HOOD_TERMS = ("type i hood", "type 1 hood", "hood", "ansul", "wet chemical", "hood suppression", "fryer", "griddle", "grease duct", "range")
 _RESTAURANT_GREASE_TERMS = ("grease interceptor", "grease trap", "f.o.g", "fats oils grease", "3-compartment sink", "3 compartment sink")
+_RESTAURANT_FOOD_HEALTH_TERMS = (
+    "food establishment", "food service", "commercial kitchen", "prep kitchen",
+    "kitchen work", "kitchen plumbing", "cooking equipment", "food preparation", "food prep",
+    "health department review", "health review",
+    "type i hood", "type 1 hood", "grease interceptor", "grease trap",
+    "espresso bar", "hand sink", "mop sink", "dishwasher", "commercial dishwasher",
+    "3-compartment sink", "3 compartment sink", "4-compartment sink", "4 compartment sink",
+    "bar tenant", "bar buildout", "beer taps", "glass washer", "restaurant opening",
+)
 
 
 def _normalize(value: Any) -> str:
@@ -1290,6 +1303,24 @@ def _is_commercial_scope(primary_scope: str) -> bool:
     return scope in {_normalize(s) for s in COMMERCIAL_SCOPES} or scope.startswith("commercial")
 
 
+def _negated_restaurant_context(text: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(?:no|without)\s+(?:restaurant|food service|commercial kitchen|kitchen cooking|kitchen work|type\s*i\s*hood|hood|fryer|griddle|ansul|grease interceptor)(?:\s+needed|\s+work|\s+modification)?\b",
+            text or "",
+            flags=re.I,
+        )
+        or re.search(r"\b(?:non\s*[- ]?restaurant|not\s+a\s+restaurant)\b", text or "", flags=re.I)
+    )
+
+
+def _strong_restaurant_cross_scope_signal(text: str) -> bool:
+    """Prevent coffee-bar / breakroom words from leaking restaurant triggers into office TI."""
+    if _negated_restaurant_context(text):
+        return False
+    return _contains_unnegated_any(text or "", _STRONG_RESTAURANT_CROSS_SCOPE_TERMS)
+
+
 def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
     trigger_scope_norm = _normalize(trigger_scope)
     primary_scope_norm = _normalize(primary_scope)
@@ -1300,7 +1331,7 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
     if trigger_scope_norm == _normalize("commercial_restaurant"):
         return (
             primary_scope_norm in {_normalize("commercial_restaurant"), _normalize("commercial_restaurant_ti")}
-            or (_contains_unnegated_any(text, _RESTAURANT_SCOPE_TERMS) and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
+            or (_strong_restaurant_cross_scope_signal(text) and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
         )
 
     if trigger_scope_norm == _normalize("commercial_retail_ti"):
@@ -1386,7 +1417,7 @@ def _trigger_matches(trigger: dict, text: str) -> bool:
             return False
         if any(token in trigger_id for token in ("grease", "fog")) and not _contains_unnegated_any(text, _RESTAURANT_GREASE_TERMS):
             return False
-        if "food_establishment" in trigger_id and not _contains_unnegated_any(text, _RESTAURANT_SCOPE_TERMS):
+        if "food_establishment" in trigger_id and not _contains_unnegated_any(text, _RESTAURANT_FOOD_HEALTH_TERMS):
             return False
     return any(_pattern_matches(pattern, text) for pattern in trigger.get("fired_by", []))
 

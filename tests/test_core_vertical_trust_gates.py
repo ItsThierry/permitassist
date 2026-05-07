@@ -102,6 +102,10 @@ def test_restaurant_cosmetic_no_kitchen_does_not_create_hood_or_grease_adders():
     assert "grease_interceptor" not in adder_keys
     assert "hood" not in out["fee_range"].lower()
     assert "grease" not in out["fee_range"].lower()
+    customer_blob = _trigger_blob(out["hidden_triggers"]) + " | " + _companion_blob(out) + " | " + " | ".join(engine.generate_permit_checklist(job, "Miami", "FL", out)).lower()
+    assert "health department" not in customer_blob
+    assert "food establishment" not in customer_blob
+    assert "food-establishment" not in customer_blob
 
 
 def test_full_restaurant_kitchen_still_triggers_health_hood_and_grease():
@@ -120,6 +124,42 @@ def test_full_restaurant_kitchen_still_triggers_health_hood_and_grease():
     assert "health" in blob or "food-establishment" in blob or "food establishment" in blob
     adder_keys = {a["key"] for a in out["_fee_floor_components"]["trigger_adders"]}
     assert {"hood_fire_suppression", "grease_interceptor"}.issubset(adder_keys)
+
+
+def test_retail_packaged_food_without_prep_does_not_surface_health_department_caution():
+    job = (
+        "retail tenant improvement for packaged snack and beverage store with shelving, "
+        "checkout counter, back stockroom and restroom refresh; no food preparation, "
+        "no restaurant, no kitchen, no hood, no grease work."
+    )
+
+    checklist = _checklist_blob(job, "Dallas", "TX")
+    out = _apply_core_layers(job, "Dallas", "TX")
+    gated = server.apply_permitiq_quality_gate(out, job, "Dallas", "TX")
+    blob = checklist + " | " + _customer_surface_blob(gated)
+
+    assert out["_primary_scope"] == "commercial_retail_ti"
+    for forbidden in ("health department", "food establishment", "food-establishment", "commercial kitchen", "hood", "grease"):
+        assert forbidden not in blob
+
+
+def test_law_firm_office_coffee_bar_does_not_return_restaurant_or_health_hidden_triggers():
+    job = (
+        "law firm office tenant improvement with private offices, conference rooms, reception, "
+        "records storage and break room coffee bar; no medical use, no restaurant, "
+        "no clinic, no kitchen cooking, no hood."
+    )
+
+    out = _apply_core_layers(job, "Dallas", "TX")
+    gated = server.apply_permitiq_quality_gate(out, job, "Dallas", "TX")
+    server.build_apply_path(gated, job, "Dallas", "TX")
+    blob = _trigger_blob(gated.get("hidden_triggers", [])) + " | " + _customer_surface_blob(gated)
+    apply_blob = " | ".join(gated.get("apply_path", {}).get("steps", [])).lower()
+
+    assert out["_primary_scope"] == "commercial_office_ti"
+    for forbidden in ("health department", "food establishment", "food-establishment", "clinic", "exam room", "x-ray", "medical gas"):
+        assert forbidden not in blob
+        assert forbidden not in apply_blob
 
 
 def test_professional_office_for_medical_billing_company_is_not_medical_clinic():
