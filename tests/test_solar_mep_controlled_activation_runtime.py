@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -53,6 +54,12 @@ def _enable_pack(monkeypatch, pack_path: Path = SOLAR_MEP_PACK, *, mode: str = "
     monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PATH", str(pack_path))
 
 
+def _enable_controlled_preview_token(monkeypatch, token: str = "test-controlled-preview-token"):
+    monkeypatch.setenv("PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_TOKEN", token)
+    monkeypatch.setenv("PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_HEADER", "X-Evidence-Pack-Preview-Token")
+    return token
+
+
 def _finalize(tmp_path, monkeypatch, job_type: str, city: str, state: str, *, explicit_vertical: str | None = None, base: dict | None = None):
     _enable_pack(monkeypatch)
     server = _import_server(tmp_path, monkeypatch)
@@ -76,6 +83,68 @@ def _assert_valid_meta(result: dict, expected_vertical: str):
     assert meta["matched_fields"]
     assert meta["cache_bypassed"] is True
     assert "path" not in meta
+
+
+def test_solar_mep_promotion_identity_is_pinned_to_checked_in_pack(tmp_path, monkeypatch):
+    _enable_pack(monkeypatch)
+    server = _import_server(tmp_path, monkeypatch)
+    promotion = sys.modules["evidence_pack_runtime"].SOLAR_MEP_CONTROLLED_PROMOTION
+    data = json.loads(SOLAR_MEP_PACK.read_text(encoding="utf-8"))
+    metadata = data["metadata"]
+    assert str(SOLAR_MEP_PACK).replace("\\", "/").endswith(promotion["path_suffix"])
+    assert hashlib.sha256(SOLAR_MEP_PACK.read_bytes()).hexdigest() == promotion["raw_sha256"]
+    assert metadata["fingerprint_sha256"] == promotion["fingerprint_sha256"]
+    assert metadata["evidence_pack_version"] == promotion["evidence_pack_version"] == "step7b_offline_v1"
+    assert len(data["records"]) == promotion["record_count"] == 9
+    assert {record["pack_family"] for record in data["records"]} == {promotion["pack_family"]}
+    pack = sys.modules["evidence_pack_runtime"].get_local_evidence_pack()
+    assert pack.contract_status == "valid"
+    assert pack.fingerprint_valid is True
+    assert pack.production_wiring_allowed is False
+
+
+def test_solar_mep_copied_same_bytes_path_mismatch_fails_closed(tmp_path, monkeypatch):
+    copied_pack = tmp_path / "permitassist-step7b-solar-commercial-mep-offline-evidence-pack-20260507.json"
+    copied_pack.write_bytes(SOLAR_MEP_PACK.read_bytes())
+    _enable_pack(monkeypatch, copied_pack)
+    server = _import_server(tmp_path, monkeypatch)
+    result = server.finalize_permit_lookup_result(_base_engine_result(), "NYC solar PV", "New York", "NY")
+    meta = result["_evidence_pack"]
+    assert meta["contract_status"] == "invalid_contract"
+    assert meta["matched_fields"] == []
+    assert meta["failed_closed_fields"]
+    assert meta["fingerprint_valid"] is False
+    assert "path" not in meta
+    assert str(tmp_path) not in json.dumps(result)
+
+
+def test_solar_mep_preview_mode_requires_preview_only_route_gate(tmp_path, monkeypatch):
+    _enable_pack(monkeypatch)
+    server = _import_server(tmp_path, monkeypatch)
+    assert server.evidence_pack_allowed_for_request("/api/permit", {"X-Sample-Demo": "1"}, is_sample_demo=True) is False
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+    assert server.evidence_pack_allowed_for_request("/api/permit", {"X-Sample-Demo": "1"}, is_sample_demo=True) is False
+    token = _enable_controlled_preview_token(monkeypatch)
+    assert server.evidence_pack_allowed_for_request(
+        "/api/permit",
+        {"X-Sample-Demo": "1", "X-Evidence-Pack-Preview-Token": token},
+        is_sample_demo=True,
+    ) is True
+    assert server.evidence_pack_allowed_for_request(
+        "/api/permit",
+        {"X-Sample-Demo": "1", "X-Evidence-Pack-Preview-Token": "wrong-token"},
+        is_sample_demo=True,
+    ) is False
+    assert server.evidence_pack_allowed_for_request(
+        "/api/v1/permit",
+        {"X-Sample-Demo": "1", "X-Evidence-Pack-Preview-Token": token},
+        is_sample_demo=True,
+    ) is False
+    assert server.evidence_pack_allowed_for_request(
+        "/api/batch-permit",
+        {"X-Sample-Demo": "1", "X-Evidence-Pack-Preview-Token": token},
+        is_sample_demo=True,
+    ) is False
 
 
 def test_solar_mep_positive_solar_pv_match(tmp_path, monkeypatch):
@@ -145,7 +214,7 @@ def test_solar_mep_bad_fingerprint_fail_closed(tmp_path, monkeypatch):
     assert result["claim_citations"] == []
 
 
-def test_solar_mep_stale_records_fail_closed(tmp_path, monkeypatch):
+def test_solar_mep_copied_or_modified_pack_fails_closed(tmp_path, monkeypatch):
     data = json.loads(SOLAR_MEP_PACK.read_text(encoding="utf-8"))
     for record in data["records"]:
         record["stale_after_utc"] = "2020-01-01T00:00:00Z"
@@ -156,9 +225,12 @@ def test_solar_mep_stale_records_fail_closed(tmp_path, monkeypatch):
     _enable_pack(monkeypatch, pack_path)
     server = _import_server(tmp_path, monkeypatch)
     result = server.finalize_permit_lookup_result(_base_engine_result(), "NYC solar PV", "New York", "NY")
-    assert result["_evidence_pack"]["contract_status"] == "stale"
-    assert result["_evidence_pack"]["matched_fields"] == []
+    meta = result["_evidence_pack"]
+    assert meta["contract_status"] == "invalid_contract"
+    assert meta["matched_fields"] == []
+    assert meta["fingerprint_valid"] is False
     assert result["claim_citations"] == []
+    assert result["permits_required"] == []
 
 
 def test_solar_mep_public_no_header_no_evidence_leak(tmp_path, monkeypatch):
@@ -192,6 +264,7 @@ def test_solar_mep_preview_header_route_gating_works(tmp_path, monkeypatch):
     _enable_pack(monkeypatch)
     monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
     monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo")
+    controlled_token = _enable_controlled_preview_token(monkeypatch)
     server = _import_server(tmp_path, monkeypatch)
     calls = []
 
@@ -207,7 +280,7 @@ def test_solar_mep_preview_header_route_gating_works(tmp_path, monkeypatch):
         status, preview_body = _post_json_response(
             f"{live.base}/api/permit",
             body,
-            {"X-Session-Token": token, "X-Sample-Demo": "1"},
+            {"X-Session-Token": token, "X-Sample-Demo": "1", "X-Evidence-Pack-Preview-Token": controlled_token},
         )
         batch_status, batch_body = _post_json_response(
             f"{live.base}/api/batch-permit",
