@@ -3110,12 +3110,12 @@ def generate_permit_checklist(job_type: str, city: str, state: str, result: dict
         #    + battery_ess together).
         _COMMERCIAL_COMPETING_SCOPES = frozenset({
             'commercial_restaurant', 'commercial_office_ti',
-            'commercial_retail_ti', 'multifamily',
+            'commercial_medical_clinic_ti', 'commercial_retail_ti', 'multifamily',
         })
         job_lc = (job_type or "").lower()
         for scope_key, scope in CHECKLIST_SCOPE.items():
             tokens = scope.get("tokens") or []
-            if not any(t in job_lc for t in tokens):
+            if not _has_unnegated_any(job_lc, tuple(tokens)):
                 continue
             if is_commercial and scope_key in _RESIDENTIAL_TRADE_SCOPES:
                 continue
@@ -3125,7 +3125,12 @@ def generate_permit_checklist(job_type: str, city: str, state: str, result: dict
                 and scope_key != primary_scope
             ):
                 continue
-            items.extend(scope.get("items", []))
+            scope_items = scope.get("items", [])
+            if scope_key == "commercial_restaurant":
+                scope_items = [item for item in scope_items if _restaurant_checklist_item_applies(item, job_lc)]
+            elif scope_key == "commercial_medical_clinic_ti":
+                scope_items = [item for item in scope_items if _medical_checklist_item_applies(item, job_lc)]
+            items.extend(scope_items)
         license_required = result.get('license_required') or ''
         applying_office = result.get('applying_office') or ''
         if license_required:
@@ -4538,6 +4543,53 @@ def _has_unnegated_any(job: str, phrases: tuple[str, ...]) -> bool:
     return any(_contains_unnegated_phrase(text, phrase) for phrase in phrases)
 
 
+_RESTAURANT_HOOD_SCOPE_TERMS = (
+    "type i hood", "type 1 hood", "kitchen hood", "hood suppression", "ansul",
+    "fryer", "griddle", "charbroiler", "grease duct", "commercial cooking",
+)
+_RESTAURANT_GREASE_SCOPE_TERMS = (
+    "grease interceptor", "grease trap", "f.o.g", "fats oils grease",
+)
+_RESTAURANT_PLUMBING_SCOPE_TERMS = (
+    "dishwasher", "commercial dishwasher", "4-compartment sink", "4 compartment sink",
+    "3-compartment sink", "3 compartment sink", "mop sink", "floor sink", "indirect waste",
+)
+
+
+def _restaurant_hood_scope_present(job_type: str) -> bool:
+    return _has_unnegated_any(job_type or "", _RESTAURANT_HOOD_SCOPE_TERMS)
+
+
+def _restaurant_grease_scope_present(job_type: str) -> bool:
+    return _has_unnegated_any(job_type or "", _RESTAURANT_GREASE_SCOPE_TERMS)
+
+
+def _restaurant_plumbing_scope_present(job_type: str) -> bool:
+    return _has_unnegated_any(job_type or "", _RESTAURANT_PLUMBING_SCOPE_TERMS)
+
+
+def _restaurant_checklist_item_applies(item: str, job_type: str) -> bool:
+    """Suppress hood/grease/ANSUL checklist lines by the specific unnegated item family."""
+    item_l = (item or "").lower()
+    if any(term in item_l for term in ("hood", "ansul", "makeup air", "make-up air")):
+        return _restaurant_hood_scope_present(job_type)
+    if "grease" in item_l:
+        return _restaurant_grease_scope_present(job_type)
+    if any(term in item_l for term in ("dishwasher", "mop sink", "food-service water")):
+        return _restaurant_plumbing_scope_present(job_type)
+    return True
+
+
+def _medical_checklist_item_applies(item: str, job_type: str) -> bool:
+    """Suppress med-gas/x-ray checklist lines when only other clinical scope is present."""
+    item_l = (item or "").lower()
+    if "medical gas" in item_l or "nitrous" in item_l or "oxygen" in item_l:
+        return _has_unnegated_any(job_type or "", ("medical gas", "med gas", "nitrous", "oxygen"))
+    if "x-ray" in item_l or "radiology" in item_l:
+        return _has_unnegated_any(job_type or "", ("x-ray", "x ray", "radiology"))
+    return True
+
+
 def _has_healthcare_scope_signal(job: str) -> bool:
     text = f" {(job or '').lower()} "
     admin_context = _has_unnegated_any(text, ("professional office", "office ti", "office tenant improvement", "office suite", "corporate office", "law office"))
@@ -5483,7 +5535,7 @@ def _commercial_ti_companion_permits(primary_scope: str, job_type: str) -> list[
     ]
     if primary_scope in {"commercial_restaurant", "commercial_office_ti", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["sink", "restroom", "bathroom", "plumbing", "grease", "interceptor", "kitchen", "fixture"]):
         plumbing_note = "Commercial fixtures, restrooms, sinks, and DWV changes commonly require plumbing review."
-        if primary_scope == "commercial_restaurant":
+        if primary_scope == "commercial_restaurant" and _restaurant_grease_scope_present(job):
             plumbing_note = "Commercial kitchen fixtures, grease-interceptor/FOG work, restrooms, sinks, and DWV changes commonly require plumbing review."
         elif primary_scope == "commercial_medical_clinic_ti":
             plumbing_note = "Commercial clinic fixtures, hand sinks, medical/dental equipment connections, restrooms, and DWV changes commonly require plumbing review."

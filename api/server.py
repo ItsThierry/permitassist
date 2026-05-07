@@ -439,6 +439,47 @@ def _is_commercial_scope(job_type: str, result: dict | None = None) -> bool:
     return any(token in text for token in _COMMERCIAL_SCOPE_TOKENS)
 
 
+def _term_is_locally_negated(text: str, term_start: int) -> bool:
+    prefix = text[max(0, term_start - 72):term_start]
+    if re.search(
+        r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b)"
+        r"(?:\s+(?:and|or|any|new|commercial|type\s*i|type\s*1))*"
+        r"(?:[\s,;/()-]+[a-z0-9]+){0,4}[\s,;/()-]*$",
+        prefix,
+        flags=re.I,
+    ):
+        return True
+    suffix = text[term_start:term_start + 96]
+    return bool(re.search(r"^[a-z0-9\s,;/()'\"-]{0,48}\b(?:not included|excluded|not in scope|outside(?: the)? scope|not part|not proposed)\b", suffix, flags=re.I))
+
+
+def _contains_unnegated_phrase(text: str, phrase: str) -> bool:
+    phrase_lc = (phrase or "").lower()
+    if not phrase_lc:
+        return False
+    pattern = re.compile(r"(?<![a-z0-9])" + re.escape(phrase_lc) + r"(?![a-z0-9])", flags=re.I)
+    for match in pattern.finditer(text or ""):
+        if not _term_is_locally_negated(text, match.start()):
+            return True
+    return False
+
+
+def _has_unnegated_any(text: str, phrases: tuple[str, ...]) -> bool:
+    return any(_contains_unnegated_phrase(text or "", phrase) for phrase in phrases)
+
+
+def _restaurant_hood_scope_present(text: str) -> bool:
+    return _has_unnegated_any(text or "", ("type i hood", "type 1 hood", "hood suppression", "ansul", "fryer", "griddle", "charbroiler", "grease duct"))
+
+
+def _restaurant_grease_scope_present(text: str) -> bool:
+    return _has_unnegated_any(text or "", ("grease interceptor", "grease trap", "f.o.g", "fats oils grease"))
+
+
+def _medical_gas_scope_present(text: str) -> bool:
+    return _has_unnegated_any(text or "", ("medical gas", "med gas", "nitrous", "oxygen"))
+
+
 def _commercial_companion_scope(job_type: str, result: dict | None = None) -> str:
     """Conservative subtype classifier for commercial companion warnings.
 
@@ -455,13 +496,13 @@ def _commercial_companion_scope(job_type: str, result: dict | None = None) -> st
         )
         or re.search(r"\b(?:non\s*[- ]?restaurant|not\s+a\s+restaurant)\b", text)
     )
-    office_signal = any(t in text for t in ("office tenant improvement", "office ti", "office buildout", "office tenant", "professional office", "law office"))
-    medical_signal = bool(re.search(r"\basc\b", text)) or any(t in text for t in ("medical clinic", "clinic tenant improvement", "clinic ti", "medical office", "dental clinic", "exam room", "medical gas", "x-ray", "x ray"))
+    office_signal = _has_unnegated_any(text, ("office tenant improvement", "office ti", "office buildout", "office tenant", "professional office", "law office"))
+    medical_signal = bool(re.search(r"\basc\b", text)) or _has_unnegated_any(text, ("medical clinic", "clinic tenant improvement", "clinic ti", "medical office", "dental clinic", "exam room", "medical gas", "x-ray", "x ray"))
     if medical_signal:
         return "medical"
     if office_signal and negated_restaurant:
         return "office"
-    restaurant_signal = any(t in text for t in ("restaurant", "commercial kitchen", "food service", " cafe", "fast casual", "fast-casual", "type i hood", "grease interceptor", "ansul", "walk-in cooler", "walk-in freezer"))
+    restaurant_signal = _has_unnegated_any(text, ("restaurant", "commercial kitchen", "food service", "cafe", "fast casual", "fast-casual", "type i hood", "grease interceptor", "ansul", "walk-in cooler", "walk-in freezer"))
     if restaurant_signal and not negated_restaurant:
         return "restaurant"
     if office_signal:
@@ -557,10 +598,17 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
         companion_text = " ".join(str(x) for x in (result.get("companion_permits") or result.get("permits_required") or [])).lower()
         required_companions = ["electrical", "mechanical", "plumbing"]
         companion_scope = _commercial_companion_scope(job_type, result)
+        scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
         if companion_scope == "restaurant":
-            required_companions += ["fire", "health", "grease", "hood"]
+            required_companions += ["fire", "health"]
+            if _restaurant_grease_scope_present(scope_text):
+                required_companions.append("grease")
+            if _restaurant_hood_scope_present(scope_text):
+                required_companions.append("hood")
         if companion_scope == "medical":
-            required_companions += ["fire", "accessibility", "medical gas"]
+            required_companions += ["fire", "accessibility"]
+            if _medical_gas_scope_present(scope_text):
+                required_companions.append("medical gas")
         missing = [token for token in required_companions if token not in companion_text]
         if missing:
             warnings.append("Commercial scope may require companion reviews/permits not fully proven here: " + ", ".join(missing[:5]) + ".")

@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "api"))
 
 import api.research_engine as engine  # noqa: E402
+import api.server as server  # noqa: E402
 from api.evidence_pack_runtime import _vertical_for_job  # noqa: E402
 from api.fee_realism_guardrail import apply_fee_realism_guardrail  # noqa: E402
 from api.hidden_trigger_detector import detect_hidden_triggers  # noqa: E402
@@ -34,6 +35,11 @@ def _companion_blob(result):
         for c in result.get("companion_permits", [])
         if isinstance(c, dict)
     ).lower()
+
+
+def _checklist_blob(job, city="Dallas", state="TX"):
+    result = {"_primary_scope": engine.detect_primary_scope(job), "license_required": "", "applying_office": ""}
+    return " | ".join(engine.generate_permit_checklist(job, city, state, result)).lower()
 
 
 def _apply_core_layers(job, city="Dallas", state="TX"):
@@ -133,6 +139,72 @@ def test_professional_office_for_medical_billing_company_is_not_medical_clinic()
     assert "exam room" not in medical_blob
     assert "medical gas" not in medical_blob
     assert "x-ray" not in medical_blob
+
+
+def test_medical_billing_admin_office_does_not_get_clinic_checklist_or_warning():
+    job = (
+        "2,400 sf professional office TI for medical billing and insurance administration company; "
+        "ordinary office desks and conference rooms only, no clinic, no exam rooms, no patient care, "
+        "no x-ray, no medical gas, no treatment rooms."
+    )
+
+    checklist = _checklist_blob(job, "Boston", "MA")
+    for forbidden in ("commercial clinic", "exam-room", "medical gas", "x-ray", "radiology"):
+        assert forbidden not in checklist
+
+    gated = server.apply_permitiq_quality_gate(
+        {
+            "_primary_scope": "commercial_office_ti",
+            "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration"}],
+            "companion_permits": [
+                {"permit_type": "Electrical Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Mechanical Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Plumbing Permit — Commercial Tenant Improvement"},
+            ],
+            "quality_warnings": [],
+            "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+            "confidence": "medium",
+        },
+        job,
+        "Boston",
+        "MA",
+    )
+    warning_blob = " | ".join(gated.get("quality_warnings", [])).lower()
+    assert "medical gas" not in warning_blob
+
+
+def test_clinic_with_exam_rooms_but_no_medgas_or_xray_filters_item_specific_checklist_and_warnings():
+    job = (
+        "3,000 sf medical clinic TI with exam rooms, patient check-in, accessible restroom, "
+        "and HVAC ventilation updates; no x-ray, no radiology and no medical gas."
+    )
+
+    checklist = _checklist_blob(job, "Boston", "MA")
+    assert "commercial clinic" in checklist
+    assert "medical gas" not in checklist
+    assert "x-ray" not in checklist
+    assert "radiology" not in checklist
+
+    gated = server.apply_permitiq_quality_gate(
+        {
+            "_primary_scope": "commercial_medical_clinic_ti",
+            "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration"}],
+            "companion_permits": [
+                {"permit_type": "Electrical Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Mechanical Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Plumbing Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Accessibility review"},
+            ],
+            "quality_warnings": [],
+            "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+            "confidence": "medium",
+        },
+        job,
+        "Boston",
+        "MA",
+    )
+    assert "medical gas" not in " | ".join(gated.get("quality_warnings", [])).lower()
 
 
 def test_real_medical_clinic_still_triggers_clinic_rulebook():
@@ -242,3 +314,35 @@ def test_commercial_kitchen_with_negated_hood_and_grease_does_not_create_hidden_
     assert "hood" not in blob
     assert "ansul" not in blob
     assert "grease" not in blob
+
+
+def test_commercial_kitchen_with_negated_hood_and_grease_does_not_get_kitchen_checklist():
+    job = (
+        "restaurant TI with commercial kitchen equipment storage and prep tables only; "
+        "no Type I hood, no fryer, no griddle, no ANSUL, no grease interceptor, "
+        "and no grease duct work."
+    )
+
+    checklist = _checklist_blob(job, "Chicago", "IL")
+    for forbidden in ("type i commercial exhaust hood", "ansul", "grease interceptor", "hood exhaust"):
+        assert forbidden not in checklist
+
+    out = _apply_core_layers(job, "Chicago", "IL")
+    permit_blob = " | ".join(str(p) for p in out.get("permits_required", []) + out.get("permits_required_logic", [])).lower()
+    assert "grease-interceptor" not in permit_blob
+
+
+def test_restaurant_dishwasher_without_hood_or_grease_filters_item_specific_checklist():
+    job = (
+        "restaurant TI with commercial dishwasher and prep sink plumbing; "
+        "no Type I hood, no fryer, no griddle, no ANSUL, and no grease interceptor."
+    )
+
+    checklist = _checklist_blob(job, "Chicago", "IL")
+    assert "dishwasher" in checklist or "indirect waste" in checklist
+    for forbidden in ("type i commercial exhaust hood", "ansul", "grease interceptor", "hood exhaust"):
+        assert forbidden not in checklist
+
+    out = _apply_core_layers(job, "Chicago", "IL")
+    permit_blob = " | ".join(str(p) for p in out.get("permits_required", []) + out.get("permits_required_logic", [])).lower()
+    assert "grease-interceptor" not in permit_blob
