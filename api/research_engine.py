@@ -4599,7 +4599,7 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
             "scope_classification": primary_scope,
             "permits_required": permits,
             "permits_required_logic": logic,
-            "companion_permits": _commercial_ti_secondary_companions(primary_scope),
+            "companion_permits": _commercial_ti_secondary_companions(primary_scope, job_type),
         }
 
     # Solar first so "roof solar" scopes don't collapse into a reroof permit.
@@ -5491,7 +5491,10 @@ def _commercial_ti_companion_permits(primary_scope: str, job_type: str) -> list[
     if primary_scope in {"commercial_restaurant", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["fire alarm", "sprinkler", "hood", "suppression", "ansul", "fire suppression"]):
         fire_note = "Commercial TI frequently affects fire alarm, sprinkler, egress, emergency lighting, or life-safety review."
         if primary_scope == "commercial_restaurant":
-            fire_note = "Commercial restaurant TI frequently affects fire alarm, sprinkler, hood suppression, egress, emergency lighting, or life-safety review."
+            if _has_unnegated_any(job, ("hood", "type i hood", "type 1 hood", "ansul", "hood suppression", "fryer", "griddle", "grease duct")):
+                fire_note = "Commercial restaurant TI frequently affects fire alarm, sprinkler, hood suppression, egress, emergency lighting, or life-safety review."
+            else:
+                fire_note = "Commercial restaurant TI frequently affects fire alarm, sprinkler, egress, emergency lighting, or life-safety review."
         companions.append(_scope_permit("Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement", "Fire Alarm / Fire Sprinkler Permit - Commercial", fire_note))
     if primary_scope == "commercial_retail_ti" or _scope_has_any(job, ["sign", "signage", "storefront"]):
         companions.append(_scope_permit("Sign Permit — Commercial Storefront / Wall Sign", "Sign Permit - Commercial", "Retail/storefront changes commonly require separate sign review if signage is included."))
@@ -5515,13 +5518,12 @@ def _commercial_ti_required_permit_set(primary_scope: str, job_type: str) -> tup
     return permits, logic
 
 
-def _commercial_ti_secondary_companions(primary_scope: str) -> list[dict]:
+def _commercial_ti_secondary_companions(primary_scope: str, job_type: str = "") -> list[dict]:
     companions: list[dict] = []
     if primary_scope == "commercial_restaurant":
-        companions.extend([
-            {"permit_type": "Health Department / Food Establishment Review", "reason": "Restaurant buildouts commonly require health review before opening.", "certainty": "almost_certain"},
-            {"permit_type": "Grease Interceptor / FOG Approval", "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.", "certainty": "likely"},
-        ])
+        companions.append({"permit_type": "Health Department / Food Establishment Review", "reason": "Restaurant buildouts commonly require health review before opening.", "certainty": "almost_certain"})
+        if _has_unnegated_any(job_type, ("grease interceptor", "grease trap", "f.o.g", "fats oils grease", "3-compartment sink", "3 compartment sink")):
+            companions.append({"permit_type": "Grease Interceptor / FOG Approval", "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.", "certainty": "likely"})
     elif primary_scope == "commercial_medical_clinic_ti":
         companions.extend([
             {"permit_type": "Health-care licensing / local health review", "reason": "Clinic opening may require licensing or health-care approval separate from building permit final.", "certainty": "likely"},

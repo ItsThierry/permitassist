@@ -1237,8 +1237,8 @@ def _contains_unnegated_any(text: str, terms: tuple[str, ...]) -> bool:
 
 
 _RESTAURANT_SCOPE_TERMS = ("restaurant", "food establishment", "food service", "commercial kitchen", "prep kitchen", "cafe", "café", "tavern", "bar", "dishwasher", "walk-in cooler", "walk in cooler")
-_RESTAURANT_HOOD_TERMS = ("type i hood", "type 1 hood", "hood", "ansul", "wet chemical", "hood suppression", "fryer", "griddle", "commercial kitchen", "grease duct", "range")
-_RESTAURANT_GREASE_TERMS = ("grease interceptor", "grease trap", "f.o.g", "fats oils grease", "commercial kitchen", "3-compartment sink", "3 compartment sink")
+_RESTAURANT_HOOD_TERMS = ("type i hood", "type 1 hood", "hood", "ansul", "wet chemical", "hood suppression", "fryer", "griddle", "grease duct", "range")
+_RESTAURANT_GREASE_TERMS = ("grease interceptor", "grease trap", "f.o.g", "fats oils grease", "3-compartment sink", "3 compartment sink")
 
 
 def _normalize(value: Any) -> str:
@@ -1313,7 +1313,7 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
         clinic_terms = ("medical clinic", "medical office", "dental clinic", "health clinic", "exam room", "med gas", "medical gas", "x ray", "x-ray", "radiology")
         return (
             primary_scope_norm == _normalize("commercial_medical_clinic_ti")
-            or (any(term in text for term in clinic_terms) and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
+            or (_contains_unnegated_any(text, clinic_terms) and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
         )
 
     if trigger_scope_norm == _normalize("commercial_ti"):

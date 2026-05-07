@@ -128,8 +128,11 @@ def test_professional_office_for_medical_billing_company_is_not_medical_clinic()
     out = _apply_core_layers(job, "Boston", "MA")
     assert out["_primary_scope"] == "commercial_office_ti"
     assert out.get("occupancy_analysis") is None
-    assert "clinic" not in _companion_blob(out)
-    assert "medical gas" not in _companion_blob(out)
+    medical_blob = _companion_blob(out) + " | " + _trigger_blob(out["hidden_triggers"])
+    assert "clinic" not in medical_blob
+    assert "exam room" not in medical_blob
+    assert "medical gas" not in medical_blob
+    assert "x-ray" not in medical_blob
 
 
 def test_real_medical_clinic_still_triggers_clinic_rulebook():
@@ -191,6 +194,11 @@ def test_healthcare_adjacent_admin_office_stays_office_without_clinical_scope():
     out = _apply_core_layers(job, "Boston", "MA")
     assert out["_primary_scope"] == "commercial_office_ti"
     assert out.get("occupancy_analysis") is None
+    medical_blob = _companion_blob(out) + " | " + _trigger_blob(out["hidden_triggers"])
+    assert "clinic" not in medical_blob
+    assert "exam room" not in medical_blob
+    assert "medical gas" not in medical_blob
+    assert "x-ray" not in medical_blob
 
 
 def test_post_position_negation_suppresses_restaurant_fee_adders():
@@ -217,3 +225,20 @@ def test_fog_as_stage_or_glass_word_does_not_trigger_grease_interceptor():
         blob = _trigger_blob(out["hidden_triggers"]) + " | " + _companion_blob(out) + " | " + out["fee_range"].lower()
         assert "grease_interceptor" not in adder_keys
         assert "grease" not in blob
+
+
+def test_commercial_kitchen_with_negated_hood_and_grease_does_not_create_hidden_triggers():
+    job = (
+        "restaurant TI with commercial kitchen equipment storage and prep tables only; "
+        "no Type I hood, no fryer, no griddle, no ANSUL, no grease interceptor, "
+        "and no grease duct work."
+    )
+
+    out = _apply_core_layers(job, "Chicago", "IL")
+    assert out["_primary_scope"] == "commercial_restaurant"
+    blob = _trigger_blob(out["hidden_triggers"]) + " | " + _companion_blob(out) + " | " + out["fee_range"].lower()
+    adder_keys = {a["key"] for a in (out.get("_fee_floor_components") or {}).get("trigger_adders", [])}
+    assert {"hood_fire_suppression", "grease_interceptor"}.isdisjoint(adder_keys)
+    assert "hood" not in blob
+    assert "ansul" not in blob
+    assert "grease" not in blob
