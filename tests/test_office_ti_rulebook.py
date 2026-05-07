@@ -90,6 +90,15 @@ def test_office_ti_negations_do_not_emit_restaurant_secondary_companions():
     assert "food establishment" not in companion_text
     assert "grease interceptor" not in companion_text
     assert "fog" not in companion_text
+    permit_text = " | ".join(
+        " ".join(str(p.get(k, "")) for k in ("permit_type", "portal_selection", "notes"))
+        for p in out["permits_required"]
+    ).lower()
+    assert "health department" not in permit_text
+    assert "food establishment" not in permit_text
+    assert "grease" not in permit_text
+    assert "fog" not in permit_text
+    assert "hood" not in permit_text
 
 
 def test_restaurant_ti_positive_terms_keep_restaurant_secondary_companions():
