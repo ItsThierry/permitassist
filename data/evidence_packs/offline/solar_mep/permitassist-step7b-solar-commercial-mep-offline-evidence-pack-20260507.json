@@ -1,0 +1,825 @@
+{
+  "artifact_inputs": [
+    {
+      "accepted_upgrade_rows": 9,
+      "artifact_name": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "batch_id": "solar-commercial-mep-seed-2026-05-07",
+      "created_utc": "2026-05-07T01:20:00Z",
+      "path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json"
+    }
+  ],
+  "metadata": {
+    "evidence_pack_version": "step7b_offline_v1",
+    "fail_closed_policy": {
+      "403": "downgrade_to_needs_verification_until_revalidated",
+      "404": "downgrade_to_needs_verification_until_revalidated",
+      "500": "downgrade_to_needs_verification_until_revalidated",
+      "blocked": "downgrade_to_needs_verification_until_revalidated",
+      "browser_rendered_200_direct_requests_403": "use_existing_evidence_only_if_not_expired_and_display_stale_warning"
+    },
+    "fingerprint_sha256": "02fea6c42faee64c5ab1dd9cec2319a819b53f7f10e5abd58e1ae0fbbfe0116b",
+    "generated_at_utc": "2026-05-07T02:00:00Z",
+    "production_wiring_allowed": false,
+    "safe_for_env_activation": false,
+    "source_freshness_policy": {
+      "default_reverify_after_days": 30,
+      "rule": "Before Step 7C production import, revalidate official-source quote/hash freshness; expired or unreachable evidence fails closed.",
+      "stale_after_days": 60
+    },
+    "step7c_blockers": [
+      "No production import until apply_path support labels mirror field evidence.",
+      "No production import until claim citations consume field_evidence per field, not broad first-source snippets.",
+      "No production import until smart cache keys include evidence_pack_version/fingerprint.",
+      "No production import until /api/permit, /api/batch-permit, and /api/v1/permit parity is decided/tested.",
+      "No production import of records with source_scope_limit_generated=true until Step 7C explicitly gates or revalidates generated scope limits.",
+      "No production import of evidence items with fetch_status_inferred=true until Step 7C explicitly gates or revalidates synthesized fetch status."
+    ],
+    "title": "PermitAssist Step 7B Offline Evidence Pack"
+  },
+  "records": [
+    {
+      "ahj_name": "New York City",
+      "claim_value": "NYC says complete solar applications can typically be reviewed in five to ten days; large/complex projects may take longer.",
+      "companion_review_policy": "conditional_only",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "fee_range",
+          "inspections"
+        ]
+      },
+      "field": "approval_timeline",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "Complete applications can typically be reviewed in five to ten days. Large or complex projects may require more review time.",
+          "fetch_status_code": "offline_snapshot_not_runtime_fetch",
+          "fetch_status_inferred": false,
+          "last_verified_utc": "2026-05-07T01:20:00Z",
+          "normalized_source_text_length": 7954,
+          "normalized_source_text_sha256": "dd4f000a6d20bca257349de9b11c07af33f7cfa935622edb590b5b4c11d811eb",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-06T01:20:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": "not_attempted_offline_snapshot",
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "www.nyc.gov",
+          "source_id": "nyc_solar_panels",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "NYC DOB Solar Panels",
+          "source_type": "official_ahj_page",
+          "source_url": "https://www.nyc.gov/site/buildings/codes/solar-panels.page",
+          "stale_after_utc": "2026-07-06T01:20:00Z",
+          "validation_errors": [],
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-07T01:20:00Z",
+        "reverify_after_utc": "2026-06-06T01:20:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-06T01:20:00Z"
+      },
+      "ingestion_ready": true,
+      "negative_scope_guards": [
+        "reroof_no_solar",
+        "roof_repair_only",
+        "electrical_panel_work_without_pv_or_battery"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "solar_pv",
+        "photovoltaic",
+        "solar_electric_generating_system",
+        "battery_energy_storage_when_explicit"
+      ],
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "09e94af912ba54b1bdec989d9109abb496a5addbb65765befd3414ae0d19990d",
+      "record_id": "nyc-solar-pv-review-timeline",
+      "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
+      "source_scope_limit": "Verifies NYC DOB solar review-time statement only. Does not verify fees, inspections, utility interconnection, battery/ESS approval, non-NYC AHJs, reroof without solar, roof repair only, or electrical panel work without PV/battery.",
+      "source_scope_limit_generated": false,
+      "state": "NY",
+      "trade_scope": "solar_pv",
+      "validation_errors": [],
+      "vertical": "solar_pv_battery"
+    },
+    {
+      "ahj_name": "New York City",
+      "claim_value": "Solar/PV work should be treated as conditional multi-discipline work: structural capacity review plus electrical/construction permitting are explicit NYC companion triggers.",
+      "companion_review_policy": "conditional_only",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "fee_range",
+          "inspections"
+        ]
+      },
+      "field": "companion_reviews_triggers",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "Before installing a solar hot-water or a solar electric-generating system, also known as photovoltaics, you must hire a Professional Engineer or Registered Architect to be sure your building's structural system can maintain the weight of the equipment.",
+          "fetch_status_code": "offline_snapshot_not_runtime_fetch",
+          "fetch_status_inferred": false,
+          "last_verified_utc": "2026-05-07T01:20:00Z",
+          "normalized_source_text_length": 7954,
+          "normalized_source_text_sha256": "dd4f000a6d20bca257349de9b11c07af33f7cfa935622edb590b5b4c11d811eb",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-06T01:20:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": "not_attempted_offline_snapshot",
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "www.nyc.gov",
+          "source_id": "nyc_solar_panels",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "NYC DOB Solar Panels",
+          "source_type": "official_ahj_page",
+          "source_url": "https://www.nyc.gov/site/buildings/codes/solar-panels.page",
+          "stale_after_utc": "2026-07-06T01:20:00Z",
+          "validation_errors": [],
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-07T01:20:00Z",
+        "reverify_after_utc": "2026-06-06T01:20:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-06T01:20:00Z"
+      },
+      "ingestion_ready": true,
+      "negative_scope_guards": [
+        "reroof_no_solar",
+        "roof_repair_only",
+        "electrical_panel_work_without_pv_or_battery"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "solar_pv",
+        "photovoltaic",
+        "solar_electric_generating_system",
+        "battery_energy_storage_when_explicit"
+      ],
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "96eec4dbe8a055e5030457a055e2c82748a2a4de6ae8099b9ac60d3bde33b903",
+      "record_id": "nyc-solar-pv-structural-electrical-companions",
+      "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
+      "source_scope_limit": "Verifies NYC solar structural/electrical/construction companion trigger guidance only. Does not verify fees, inspections, utility interconnection, battery/ESS approval, non-NYC AHJs, reroof without solar, roof repair only, or electrical panel work without PV/battery.",
+      "source_scope_limit_generated": false,
+      "state": "NY",
+      "trade_scope": "solar_pv_cross_trade",
+      "validation_errors": [],
+      "vertical": "solar_pv_battery"
+    },
+    {
+      "ahj_name": "New York City",
+      "claim_value": "Building-connected solar/PV installations require permits; NYC solar PV requires electrical and construction work permits.",
+      "companion_review_policy": "conditional_only",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "fee_range",
+          "inspections"
+        ]
+      },
+      "field": "permit_type",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "Solar installations require multiple permits. For solar PV systems, an electrical permit and a construction work permit are required.",
+          "fetch_status_code": "offline_snapshot_not_runtime_fetch",
+          "fetch_status_inferred": false,
+          "last_verified_utc": "2026-05-07T01:20:00Z",
+          "normalized_source_text_length": 9058,
+          "normalized_source_text_sha256": "d9d1a5ad3bdf1e7634812ecf5ec672c77d2bf921907ca4fd7a444c790d9972bb",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-06T01:20:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": "not_attempted_offline_snapshot",
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "www.nyc.gov",
+          "source_id": "nyc_solar_requirements",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "NYC DOB Solar Work & Site Requirements",
+          "source_type": "official_ahj_page",
+          "source_url": "https://www.nyc.gov/site/buildings/industry/project-requirements-registrant-solar-n-site-req.page",
+          "stale_after_utc": "2026-07-06T01:20:00Z",
+          "validation_errors": [],
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-07T01:20:00Z",
+        "reverify_after_utc": "2026-06-06T01:20:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-06T01:20:00Z"
+      },
+      "ingestion_ready": true,
+      "negative_scope_guards": [
+        "reroof_no_solar",
+        "roof_repair_only",
+        "electrical_panel_work_without_pv_or_battery"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "solar_pv",
+        "photovoltaic",
+        "solar_electric_generating_system",
+        "battery_energy_storage_when_explicit"
+      ],
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "f951bd6f2d168c36bf7944148816ce0ca78e4f8a735aa0c67546f52c1509b0f4",
+      "record_id": "nyc-solar-pv-required-permits",
+      "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
+      "source_scope_limit": "Verifies NYC solar/PV permit-type relationship only. Does not verify fees, inspections, utility interconnection, battery/ESS approval, non-NYC AHJs, reroof without solar, roof repair only, or electrical panel work without PV/battery.",
+      "source_scope_limit_generated": false,
+      "state": "NY",
+      "trade_scope": "solar_pv",
+      "validation_errors": [],
+      "vertical": "solar_pv_battery"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "claim_value": "Commercial electrical scope should trigger Dallas electrical code/inspection verification; do not infer plumbing, mechanical, or solar/PV companions unless the described scope includes them.",
+      "companion_review_policy": "conditional_only",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "apply_url",
+          "approval_timeline",
+          "fee_range"
+        ]
+      },
+      "field": "companion_reviews_triggers",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "The City of Dallas has adopted the following codes with Dallas Amendments effective June 13, 2022. 2023 National Electrical Code",
+          "fetch_status_code": "offline_snapshot_not_runtime_fetch",
+          "fetch_status_inferred": false,
+          "last_verified_utc": "2026-05-07T01:20:00Z",
+          "normalized_source_text_length": 21298,
+          "normalized_source_text_sha256": "c17dfd415d3ce8f07057cc6a9b2e6aab0d0d2adbf839d777bbd1503591b9a188",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-06T01:20:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": "not_attempted_offline_snapshot",
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_electrical",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "City of Dallas Electrical Inspections",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/electrical_section.aspx",
+          "stale_after_utc": "2026-07-06T01:20:00Z",
+          "validation_errors": [],
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-07T01:20:00Z",
+        "reverify_after_utc": "2026-06-06T01:20:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-06T01:20:00Z"
+      },
+      "ingestion_ready": true,
+      "negative_scope_guards": [
+        "mechanical_only_without_electrical_scope",
+        "plumbing_only_without_electrical_scope",
+        "residential_electrical_only"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "electrical",
+        "service_upgrade",
+        "panel",
+        "lighting_controls",
+        "low_voltage_when_explicit"
+      ],
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "0fa0fa8a19141144bf9d34f7000710a0deb20340580013d829c59de264aba632",
+      "record_id": "dallas-commercial-electrical-trigger",
+      "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
+      "source_scope_limit": "Verifies Dallas electrical code/inspection source presence only. Does not verify unrelated trades, plumbing scope, mechanical scope, solar/PV, fees, timelines, apply URL, or exact permit subtype.",
+      "source_scope_limit_generated": false,
+      "state": "TX",
+      "trade_scope": "electrical",
+      "validation_errors": [],
+      "vertical": "commercial_electrical"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "claim_value": "Commercial mechanical scope should trigger Dallas mechanical code/inspection verification; do not infer plumbing or electrical companions unless the described scope includes those trades.",
+      "companion_review_policy": "conditional_only",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "apply_url",
+          "approval_timeline",
+          "fee_range"
+        ]
+      },
+      "field": "companion_reviews_triggers",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "Chapter 55 Dallas Mechanical Code Amendments ​2021 International Mechanical Code (IMC)",
+          "fetch_status_code": "offline_snapshot_not_runtime_fetch",
+          "fetch_status_inferred": false,
+          "last_verified_utc": "2026-05-07T01:20:00Z",
+          "normalized_source_text_length": 21629,
+          "normalized_source_text_sha256": "0e7d344b5f499805c8fcc9956416ac82b0eb8ff212084a29dd7dd1dca33d1127",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-06T01:20:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": "not_attempted_offline_snapshot",
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_pm",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "City of Dallas Plumbing/Mechanical Inspections",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/plumbing_mechanical.aspx",
+          "stale_after_utc": "2026-07-06T01:20:00Z",
+          "validation_errors": [],
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-07T01:20:00Z",
+        "reverify_after_utc": "2026-06-06T01:20:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-06T01:20:00Z"
+      },
+      "ingestion_ready": true,
+      "negative_scope_guards": [
+        "electrical_only_without_mechanical_scope",
+        "plumbing_only_without_mechanical_scope",
+        "residential_hvac_only"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "hvac",
+        "mechanical",
+        "refrigeration",
+        "ductwork",
+        "exhaust"
+      ],
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "98aa7067d5d2ddc5b7fabb7838d59ed939cf733a16094bcc94996557eba9335b",
+      "record_id": "dallas-commercial-mechanical-trigger",
+      "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
+      "source_scope_limit": "Verifies Dallas mechanical code/inspection source presence only. Does not verify unrelated trades, plumbing scope, electrical scope, solar/PV, fees, timelines, apply URL, or exact permit subtype.",
+      "source_scope_limit_generated": false,
+      "state": "TX",
+      "trade_scope": "mechanical",
+      "validation_errors": [],
+      "vertical": "commercial_mechanical"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "claim_value": "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+      "companion_review_policy": "conditional_only",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "approval_timeline",
+          "fee_range"
+        ]
+      },
+      "field": "apply_url",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "DallasNow a new system that integrates Permitting, Planning, Platting, Inspections and Engineering, into one unified platform. Portal: https://aca-prod.accela.com/DALLASTX/Default.aspx",
+          "fetch_status_code": "offline_snapshot_not_runtime_fetch",
+          "fetch_status_inferred": false,
+          "last_verified_utc": "2026-05-07T01:20:00Z",
+          "normalized_source_text_length": 942,
+          "normalized_source_text_sha256": "4e54d40d3defe7071774e5d2f0638a36a1c23eb64febc6fa08945ce239622838",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-06T01:20:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": "not_attempted_offline_snapshot",
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_dallasnow",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "City of Dallas DallasNow",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/Pages/DallasNow.aspx",
+          "stale_after_utc": "2026-07-06T01:20:00Z",
+          "validation_errors": [],
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-07T01:20:00Z",
+        "reverify_after_utc": "2026-06-06T01:20:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-06T01:20:00Z"
+      },
+      "ingestion_ready": true,
+      "negative_scope_guards": [
+        "standalone_trade_repair_only",
+        "residential_trade_work_only",
+        "solar_pv_battery_without_commercial_mep_ti"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "electrical_trade_permit",
+        "mechanical_trade_permit",
+        "plumbing_trade_permit"
+      ],
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "916406cab288bcf4f2c1204fa023f8d640c4e1620086ebad2e7a11cee48853e5",
+      "record_id": "dallas-commercial-mep-online-trade-permit-path",
+      "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
+      "source_scope_limit": "Verifies DallasNow/Accela as the routine Dallas online permitting platform and starting portal for permitting, planning, inspections, and engineering workflows. Does not verify eligibility for every trade-only permit, contractor registration status, fees, timelines, building-plan-review path, or solar/PV.",
+      "source_scope_limit_generated": false,
+      "state": "TX",
+      "trade_scope": "cross_trade_mep",
+      "validation_errors": [],
+      "vertical": "commercial_mep_ti"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "claim_value": "Dallas commercial MEP trade work may require each trade to pass inspection before framing inspection; confirm exact inspection sequence on the permit documents.",
+      "companion_review_policy": "conditional_only",
+      "confidence": "medium",
+      "display_contract": {
+        "forbids_local_ahj_certainty": true,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "apply_url",
+          "approval_timeline",
+          "fee_range"
+        ]
+      },
+      "field": "inspections",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "Contractor for each trade (electrical, mechanical and plumbing) must pass inspection prior to the general contractor calling in framing inspection.",
+          "fetch_status_code": "offline_snapshot_not_runtime_fetch",
+          "fetch_status_inferred": false,
+          "last_verified_utc": "2026-05-07T01:20:00Z",
+          "normalized_source_text_length": 24737,
+          "normalized_source_text_sha256": "96ffabd550b402cffd3366eb3eb675599137154d69228de7ca9dad793bc62628",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-06T01:20:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": "not_attempted_offline_snapshot",
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_tornado_commercial",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "Dallas Commercial / Multifamily Structures FAQ",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/tornado/Pages/Commercial.aspx",
+          "stale_after_utc": "2026-07-06T01:20:00Z",
+          "validation_errors": [],
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field_status": "partial",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-07T01:20:00Z",
+        "reverify_after_utc": "2026-06-06T01:20:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-06T01:20:00Z"
+      },
+      "ingestion_ready": true,
+      "negative_scope_guards": [
+        "standalone_trade_repair_only",
+        "residential_trade_work_only",
+        "solar_pv_battery_without_commercial_mep_ti"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "electrical_trade",
+        "mechanical_trade",
+        "plumbing_trade",
+        "commercial_ti_with_mep"
+      ],
+      "proposed_status_from_artifact": "partial",
+      "record_fingerprint_sha256": "912a0af9a14d9900cd91b30f8018f3b6aa62037727f811eed099380cbbd5d5e9",
+      "record_id": "dallas-commercial-mep-trade-inspections",
+      "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
+      "source_scope_limit": "Verifies Dallas post-damage commercial FAQ trade inspection sequencing only as conditional cross-trade MEP guidance before framing inspection. Does not verify completion/final inspection, unrelated trades, solar/PV, fees, timelines, apply URL, or project-specific inspection card requirements.",
+      "source_scope_limit_generated": false,
+      "state": "TX",
+      "trade_scope": "cross_trade_mep",
+      "validation_errors": [],
+      "vertical": "commercial_mep_ti"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "claim_value": "Commercial Building Permit for constructing, altering, or renovating commercial property; MEP trade permits may be companion or trade-only depending on scope.",
+      "companion_review_policy": "conditional_only",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "fee_range",
+          "inspections"
+        ]
+      },
+      "field": "permit_type",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "fetch_status_code": "offline_snapshot_not_runtime_fetch",
+          "fetch_status_inferred": false,
+          "last_verified_utc": "2026-05-07T01:20:00Z",
+          "normalized_source_text_length": 23544,
+          "normalized_source_text_sha256": "9eb5738c5e7ad6680a5bbbc5a68b3c94219dc003c106515ad7067465af9df42c",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-06T01:20:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": "not_attempted_offline_snapshot",
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_commercial",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "City of Dallas Commercial Permits",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/commercial_overview.aspx",
+          "stale_after_utc": "2026-07-06T01:20:00Z",
+          "validation_errors": [],
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-07T01:20:00Z",
+        "reverify_after_utc": "2026-06-06T01:20:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-06T01:20:00Z"
+      },
+      "ingestion_ready": true,
+      "negative_scope_guards": [
+        "standalone_trade_repair_only",
+        "residential_trade_work_only",
+        "solar_pv_battery_without_commercial_mep_ti"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "commercial_alteration",
+        "commercial_renovation",
+        "tenant_improvement"
+      ],
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "965360e075cf4d2eab94256ae43eb44853dfd1fbba74ac8c55ddd46f4f611ee9",
+      "record_id": "dallas-commercial-building-permit",
+      "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
+      "source_scope_limit": "Verifies Dallas commercial building permit requirement for commercial construction/alteration/renovation only. Does not verify unrelated trades, solar/PV, fees, inspections, or final apply category.",
+      "source_scope_limit_generated": false,
+      "state": "TX",
+      "trade_scope": "commercial_building",
+      "validation_errors": [],
+      "vertical": "commercial_mep_ti"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "claim_value": "Commercial plumbing scope should trigger Dallas plumbing code/inspection verification; do not infer mechanical/electrical companions unless the described scope includes those trades.",
+      "companion_review_policy": "conditional_only",
+      "confidence": "high",
+      "display_contract": {
+        "forbids_local_ahj_certainty": false,
+        "must_display_scope_limit": true,
+        "must_not_use_for_fields": [
+          "apply_url",
+          "approval_timeline",
+          "fee_range"
+        ]
+      },
+      "field": "companion_reviews_triggers",
+      "field_evidence": [
+        {
+          "exact_quote_or_snippet": "Chapter 54 Dallas Plumbing Code Amendments 2021 International Plumbing Code (IPC)",
+          "fetch_status_code": "offline_snapshot_not_runtime_fetch",
+          "fetch_status_inferred": false,
+          "last_verified_utc": "2026-05-07T01:20:00Z",
+          "normalized_source_text_length": 21629,
+          "normalized_source_text_sha256": "0e7d344b5f499805c8fcc9956416ac82b0eb8ff212084a29dd7dd1dca33d1127",
+          "quote_found": true,
+          "reverify_after_utc": "2026-06-06T01:20:00Z",
+          "runtime_fail_closed_policy": {
+            "fetch_status": "not_attempted_offline_snapshot",
+            "must_not_promote": true,
+            "production_import_note": "If current revalidation cannot confirm the exact quote/hash within freshness policy, Step 7C must downgrade the field to needs_verification and show a visible warning.",
+            "runtime_action": "keep_current_status_if_quote_hash_still_matches"
+          },
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_pm",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "City of Dallas Plumbing/Mechanical Inspections",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/plumbing_mechanical.aspx",
+          "stale_after_utc": "2026-07-06T01:20:00Z",
+          "validation_errors": [],
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field_status": "verified",
+      "freshness": {
+        "default_reverify_after_days": 30,
+        "last_verified_utc": "2026-05-07T01:20:00Z",
+        "reverify_after_utc": "2026-06-06T01:20:00Z",
+        "stale_after_days": 60,
+        "stale_after_utc": "2026-07-06T01:20:00Z"
+      },
+      "ingestion_ready": true,
+      "negative_scope_guards": [
+        "mechanical_only_without_plumbing_scope",
+        "electrical_only_without_plumbing_scope",
+        "residential_plumbing_only"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "plumbing",
+        "fixtures",
+        "water_heater",
+        "backflow",
+        "medical_gas_when_explicit"
+      ],
+      "proposed_status_from_artifact": "verified",
+      "record_fingerprint_sha256": "d38f339337aab76d944146d66ede67420ca56aaeeae8001992b069d64c31169a",
+      "record_id": "dallas-commercial-plumbing-trigger",
+      "source_artifact": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_artifact_path": "data/evidence_pack_inputs/solar_mep/permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+      "source_batch_id": "solar-commercial-mep-seed-2026-05-07",
+      "source_scope_limit": "Verifies Dallas plumbing code/inspection source presence only. Does not verify unrelated trades, mechanical scope, electrical scope, solar/PV, fees, timelines, apply URL, grease interceptor, medical gas, or exact permit subtype.",
+      "source_scope_limit_generated": false,
+      "state": "TX",
+      "trade_scope": "plumbing",
+      "validation_errors": [],
+      "vertical": "commercial_plumbing"
+    }
+  ],
+  "validation": {
+    "errors_by_type": {},
+    "fail_closed_records": 0,
+    "field_status_counts_after_validation": {
+      "partial": 1,
+      "verified": 8
+    },
+    "ingestion_ready_records": 9,
+    "ingestion_regression_contract": {
+      "production_wiring_precondition": "Every production-imported record must be ingestion_ready=true; failures must remain needs_verification with visible warning.",
+      "required_evidence_fields": [
+        "source_url",
+        "source_title",
+        "exact_quote_or_snippet",
+        "quote_found",
+        "normalized_source_text_sha256",
+        "normalized_source_text_length",
+        "fetch_status_code",
+        "runtime_fetch_status",
+        "runtime_fetch_status_code",
+        "source_snapshot_status_code_at_capture",
+        "last_verified_utc",
+        "reverify_after_utc",
+        "runtime_fail_closed_policy"
+      ],
+      "required_record_fields": [
+        "record_id",
+        "state",
+        "ahj_name",
+        "vertical",
+        "field",
+        "field_status",
+        "confidence",
+        "claim_value",
+        "source_scope_limit",
+        "display_contract",
+        "field_evidence",
+        "freshness",
+        "record_fingerprint_sha256",
+        "source_scope_limit_generated",
+        "pack_family",
+        "trade_scope",
+        "companion_review_policy",
+        "negative_scope_guards",
+        "positive_scope_triggers"
+      ]
+    },
+    "records_by_field": {
+      "apply_url": {
+        "blocked": 0,
+        "ingestion_ready": 1,
+        "total": 1
+      },
+      "approval_timeline": {
+        "blocked": 0,
+        "ingestion_ready": 1,
+        "total": 1
+      },
+      "companion_reviews_triggers": {
+        "blocked": 0,
+        "ingestion_ready": 4,
+        "total": 4
+      },
+      "inspections": {
+        "blocked": 0,
+        "ingestion_ready": 1,
+        "total": 1
+      },
+      "permit_type": {
+        "blocked": 0,
+        "ingestion_ready": 2,
+        "total": 2
+      }
+    },
+    "total_records": 9,
+    "verdict": "PASS_OFFLINE_READY"
+  }
+}

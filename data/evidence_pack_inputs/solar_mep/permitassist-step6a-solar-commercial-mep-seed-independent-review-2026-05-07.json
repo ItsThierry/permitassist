@@ -1,0 +1,18 @@
+{
+  "accepted": true,
+  "artifact_sha256": "9db02d11f182b88c64f26758f23fbf1381e1e680c0a63b7bbd6de8a5d0b7b1cc",
+  "artifact_under_review": "permitassist-step6a-solar-commercial-mep-seed-2026-05-07.json",
+  "blockers": [],
+  "created_utc": "2026-05-07T02:49:00Z",
+  "review_notes": [
+    "Seed no longer self-certifies independent acceptance; this separate companion artifact is required by the tool for this pack family.",
+    "Offline snapshot statuses are metadata from captured source snapshots, not runtime fetch results.",
+    "Dallas MEP apply path uses routine DallasNow/Accela official source instead of tornado FAQ.",
+    "Dallas MEP inspection claim narrowed to the stored framing-inspection quote."
+  ],
+  "review_type": "independent_companion_review",
+  "reviewer": "Titi + Opus 4.7 quality-fix pass",
+  "scope": "Accepts the solar PV/battery + Dallas commercial MEP offline seed for offline/fail-closed Evidence Pack packaging only. Does not approve Step 7C import, production wiring, Railway env activation, deploy, public traffic, or customer-facing use.",
+  "status": "PASS_ACCEPTED",
+  "verdict": "PASS"
+}
