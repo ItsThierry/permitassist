@@ -2746,14 +2746,7 @@ def detect_primary_scope(job_type: str) -> str:
         'commercial office', 'office suite', 'professional office',
         'law office', 'corporate office', 'tenant office',
     ))
-    medical_signal = re.search(r'\basc\b', job_lc) or any(t in job_lc for t in (
-        'medical clinic', 'medical office tenant', 'dental clinic', 'dental office tenant',
-        'health clinic', 'clinic tenant improvement', 'clinic ti', 'exam room',
-        'exam rooms', 'med gas', 'medical gas', 'nitrous oxide', 'x-ray', 'x ray',
-        'radiology', 'sterilization room', 'surgical center', 'ambulatory surgical center',
-        'operating room', 'operating rooms', 'pacu', 'pre-op', 'pre op',
-        'recovery bay', 'recovery bays', 'outpatient surgery',
-    ))
+    medical_signal = _has_healthcare_scope_signal(job_lc)
     negated_restaurant_signal = bool(
         re.search(
             r'\b(?:no|without)\s+(?:restaurant|food service|commercial kitchen|type\s*i\s*hood|hood|fryer|griddle|ansul|grease interceptor)(?:\s+needed)?\b',
@@ -2767,8 +2760,8 @@ def detect_primary_scope(job_type: str) -> str:
         return 'commercial_office_ti'
 
     # Commercial restaurant — strongest signal
-    if any(t in job_lc for t in (
-        'restaurant', 'commercial kitchen', 'food service', ' cafe', 'fast-casual',
+    if _has_unnegated_any(job_lc, (
+        'restaurant', 'commercial kitchen', 'food service', 'cafe', 'fast-casual',
         'fast casual', 'tavern', 'brewery', 'type i hood', 'grease interceptor',
         'ansul', 'walk-in cooler', 'walk-in freezer', 'kitchen build-out',
     )):
@@ -4500,6 +4493,72 @@ def _scope_has_any(job: str, phrases: list[str]) -> bool:
     return any(p in job for p in phrases)
 
 
+def _term_is_locally_negated(text: str, term_start: int) -> bool:
+    """Return True for local phrases like "no hood" / "without exam rooms".
+
+    This is intentionally lexical and conservative. It only looks at the few
+    words immediately before the matched term so unrelated earlier negations do
+    not suppress a real scope signal later in the sentence.
+    """
+    prefix = text[max(0, term_start - 72):term_start]
+    prefix_negated = bool(
+        re.search(
+            r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b)"
+            r"(?:\s+(?:and|or|any|new|commercial|type\s*i|type\s*1))*"
+            r"(?:[\s,;/()-]+[a-z0-9]+){0,4}[\s,;/()-]*$",
+            prefix,
+            flags=re.I,
+        )
+    )
+    if prefix_negated:
+        return True
+    suffix = text[term_start:term_start + 96]
+    return bool(
+        re.search(
+            r"^[a-z0-9\s,;/()'\"-]{0,48}\b(?:not included|excluded|not in scope|outside(?: the)? scope|not part|not proposed)\b",
+            suffix,
+            flags=re.I,
+        )
+    )
+
+
+def _contains_unnegated_phrase(text: str, phrase: str) -> bool:
+    phrase_lc = (phrase or "").lower()
+    if not phrase_lc:
+        return False
+    pattern = re.compile(r"(?<![a-z0-9])" + re.escape(phrase_lc) + r"(?![a-z0-9])", flags=re.I)
+    for match in pattern.finditer(text or ""):
+        if not _term_is_locally_negated(text, match.start()):
+            return True
+    return False
+
+
+def _has_unnegated_any(job: str, phrases: tuple[str, ...]) -> bool:
+    text = (job or "").lower()
+    return any(_contains_unnegated_phrase(text, phrase) for phrase in phrases)
+
+
+def _has_healthcare_scope_signal(job: str) -> bool:
+    text = f" {(job or '').lower()} "
+    admin_context = _has_unnegated_any(text, ("professional office", "office ti", "office tenant improvement", "office suite", "corporate office", "law office"))
+    clinical_terms = (
+        "medical clinic", "dental clinic", "health clinic", "urgent care", "doctor office",
+        "doctor's office", "doctor s office", "clinic tenant improvement", "clinic ti",
+        "exam room", "exam rooms", "patient care", "patient room", "treatment room",
+        "procedure room", "medical gas", "med gas", "nitrous oxide", "x-ray", "x ray",
+        "radiology", "sterilization room", "surgical center", "ambulatory surgical center",
+        "operating room", "pacu", "pre-op", "pre op", "recovery bay", "outpatient surgery",
+    )
+    if _has_unnegated_any(text, clinical_terms) or re.search(r"\basc\b", text):
+        return True
+    # A bare word like "medical" inside an administrative office description
+    # (medical billing, medical insurance, medical records company) is not a
+    # clinic TI. Require an actual clinical/facility marker in office contexts.
+    if admin_context:
+        return False
+    return _has_unnegated_any(text, ("medical office tenant", "dental office tenant", "medical office", "healthcare"))
+
+
 def _scope_permit(permit_type: str, portal_selection: str, notes: str, required: bool | str = True) -> dict:
     return {
         "permit_type": permit_type,
@@ -4540,7 +4599,7 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
             "scope_classification": primary_scope,
             "permits_required": permits,
             "permits_required_logic": logic,
-            "companion_permits": _commercial_ti_secondary_companions(primary_scope),
+            "companion_permits": _commercial_ti_secondary_companions(primary_scope, job_type),
         }
 
     # Solar first so "roof solar" scopes don't collapse into a reroof permit.
@@ -5432,7 +5491,10 @@ def _commercial_ti_companion_permits(primary_scope: str, job_type: str) -> list[
     if primary_scope in {"commercial_restaurant", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["fire alarm", "sprinkler", "hood", "suppression", "ansul", "fire suppression"]):
         fire_note = "Commercial TI frequently affects fire alarm, sprinkler, egress, emergency lighting, or life-safety review."
         if primary_scope == "commercial_restaurant":
-            fire_note = "Commercial restaurant TI frequently affects fire alarm, sprinkler, hood suppression, egress, emergency lighting, or life-safety review."
+            if _has_unnegated_any(job, ("hood", "type i hood", "type 1 hood", "ansul", "hood suppression", "fryer", "griddle", "grease duct")):
+                fire_note = "Commercial restaurant TI frequently affects fire alarm, sprinkler, hood suppression, egress, emergency lighting, or life-safety review."
+            else:
+                fire_note = "Commercial restaurant TI frequently affects fire alarm, sprinkler, egress, emergency lighting, or life-safety review."
         companions.append(_scope_permit("Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement", "Fire Alarm / Fire Sprinkler Permit - Commercial", fire_note))
     if primary_scope == "commercial_retail_ti" or _scope_has_any(job, ["sign", "signage", "storefront"]):
         companions.append(_scope_permit("Sign Permit — Commercial Storefront / Wall Sign", "Sign Permit - Commercial", "Retail/storefront changes commonly require separate sign review if signage is included."))
@@ -5456,13 +5518,12 @@ def _commercial_ti_required_permit_set(primary_scope: str, job_type: str) -> tup
     return permits, logic
 
 
-def _commercial_ti_secondary_companions(primary_scope: str) -> list[dict]:
+def _commercial_ti_secondary_companions(primary_scope: str, job_type: str = "") -> list[dict]:
     companions: list[dict] = []
     if primary_scope == "commercial_restaurant":
-        companions.extend([
-            {"permit_type": "Health Department / Food Establishment Review", "reason": "Restaurant buildouts commonly require health review before opening.", "certainty": "almost_certain"},
-            {"permit_type": "Grease Interceptor / FOG Approval", "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.", "certainty": "likely"},
-        ])
+        companions.append({"permit_type": "Health Department / Food Establishment Review", "reason": "Restaurant buildouts commonly require health review before opening.", "certainty": "almost_certain"})
+        if _has_unnegated_any(job_type, ("grease interceptor", "grease trap", "f.o.g", "fats oils grease", "3-compartment sink", "3 compartment sink")):
+            companions.append({"permit_type": "Grease Interceptor / FOG Approval", "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.", "certainty": "likely"})
     elif primary_scope == "commercial_medical_clinic_ti":
         companions.extend([
             {"permit_type": "Health-care licensing / local health review", "reason": "Clinic opening may require licensing or health-care approval separate from building permit final.", "certainty": "likely"},
