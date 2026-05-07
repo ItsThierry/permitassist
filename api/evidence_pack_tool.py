@@ -27,6 +27,17 @@ SUPPORTED_FIELDS = {
     "inspections",
     "companion_reviews_triggers",
 }
+SOLAR_MEP_PACK_FAMILY = "solar_commercial_mep_offline_v1"
+ALLOWED_TRADE_SCOPES = {
+    "solar_pv",
+    "solar_pv_cross_trade",
+    "commercial_building",
+    "cross_trade_mep",
+    "mechanical",
+    "electrical",
+    "plumbing",
+}
+ALLOWED_COMPANION_REVIEW_POLICIES = {"conditional_only"}
 STATUS_TO_CONFIDENCE = {
     "verified": "high",
     "partial": "medium",
@@ -235,13 +246,18 @@ def _review_accepts_artifact(review: dict[str, Any]) -> bool:
 
 def _independent_review_candidates(artifact_path: Path) -> list[Path]:
     batch_match = re.search(r"step6a-batch(\d+)-", artifact_path.name)
-    if not batch_match:
-        return []
-    batch = batch_match.group(1)
-    patterns = [
-        f"permitassist-road-to-perfection-step6a-batch{batch}-*independent-review*.json",
-        f"permitassist-road-to-perfection-step6a-batch{batch}-independent-review*.json",
-    ]
+    patterns: list[str] = []
+    if batch_match:
+        batch = batch_match.group(1)
+        patterns.extend([
+            f"permitassist-road-to-perfection-step6a-batch{batch}-*independent-review*.json",
+            f"permitassist-road-to-perfection-step6a-batch{batch}-independent-review*.json",
+        ])
+    if "solar-commercial-mep-seed" in artifact_path.name:
+        patterns.extend([
+            "permitassist-step6a-solar-commercial-mep-seed-independent-review*.json",
+            "*solar-commercial-mep*independent-review*.json",
+        ])
     candidates: list[Path] = []
     for pattern in patterns:
         candidates.extend(sorted(artifact_path.parent.glob(pattern)))
@@ -254,9 +270,26 @@ def _independent_review_candidates(artifact_path: Path) -> list[Path]:
     return unique
 
 
+def _artifact_requires_external_review(artifact: dict[str, Any], artifact_path: Path | None = None) -> bool:
+    if artifact.get("requires_independent_review_artifact") is True:
+        return True
+    batch_id = str(artifact.get("batch_id") or artifact.get("title") or "").lower()
+    if "solar-commercial-mep" in batch_id or "solar commercial mep" in batch_id:
+        return True
+    rows = artifact.get("accepted_upgrades") or []
+    if isinstance(rows, list):
+        for row in rows:
+            if isinstance(row, dict) and row.get("pack_family") == SOLAR_MEP_PACK_FAMILY:
+                return True
+    if artifact_path is not None and "solar-commercial-mep-seed" in artifact_path.name:
+        return True
+    return False
+
+
 def _artifact_is_independently_accepted(artifact: dict[str, Any], artifact_path: Path | None = None) -> bool:
+    requires_external_review = _artifact_requires_external_review(artifact, artifact_path)
     status = str(artifact.get("status") or "").upper()
-    if "PASS_ACCEPTED" in status:
+    if "PASS_ACCEPTED" in status and not requires_external_review:
         return True
     # Older zero-row artifacts sometimes omitted status; they cannot promote rows.
     if not artifact.get("accepted_upgrades"):
@@ -507,11 +540,17 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
                 if isinstance(value, str) and value.isdigit():
                     norm_len = int(value)
                     break
-        fetch_status = _metadata_value(merged_evidence, source_validation, "fetch_status_code", "http_status", "status_code", "status")
+        fetch_status = _metadata_value(merged_evidence, source_validation, "fetch_status_code", "source_snapshot_status_code_at_capture", "http_status", "status_code", "status")
+        validation_method = str(merged_evidence.get("validation_method") or merged_evidence.get("verification_method") or merged_evidence.get("fetched_via") or "")
+        offline_snapshot_no_runtime_fetch = "no runtime fetch" in validation_method.lower()
+        source_snapshot_status_code_at_capture = fetch_status if offline_snapshot_no_runtime_fetch else None
         fetch_status_inferred = bool(merged_evidence.get("fetch_status_inferred")) and str(fetch_status) == "validated_current_run"
         if fetch_status is None and norm_hash and norm_len and quote_found:
             fetch_status = "validated_current_run"
             fetch_status_inferred = True
+        runtime_fetch_status_code = None if offline_snapshot_no_runtime_fetch else fetch_status
+        runtime_fetch_status = "not_attempted_offline_snapshot" if offline_snapshot_no_runtime_fetch else fetch_status
+        output_fetch_status = "offline_snapshot_not_runtime_fetch" if offline_snapshot_no_runtime_fetch else fetch_status
         source_title = _source_title(merged_evidence) or str(_metadata_value(merged_evidence, source_validation, "title") or "").strip()
         item_errors: list[str] = []
         if not url or not _validate_url(url):
@@ -542,10 +581,13 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
             "last_verified_utc": _format_utc(checked_dt),
             "reverify_after_utc": _format_utc(reverify_after),
             "stale_after_utc": _format_utc(stale_after),
-            "validation_method": merged_evidence.get("validation_method") or merged_evidence.get("verification_method") or merged_evidence.get("fetched_via") or "",
-            "fetch_status_code": fetch_status,
+            "validation_method": validation_method,
+            "fetch_status_code": output_fetch_status,
             "fetch_status_inferred": fetch_status_inferred,
-            "runtime_fail_closed_policy": fail_closed_decision(fetch_status),
+            "runtime_fetch_status": runtime_fetch_status,
+            "runtime_fetch_status_code": runtime_fetch_status_code,
+            "source_snapshot_status_code_at_capture": source_snapshot_status_code_at_capture,
+            "runtime_fail_closed_policy": fail_closed_decision(runtime_fetch_status),
             "validation_errors": item_errors,
         })
 
@@ -559,6 +601,25 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
         validation_errors.append("missing_source_scope_limit")
     if field not in SUPPORTED_FIELDS:
         validation_errors.append("unsupported_or_missing_field")
+
+    pack_family = str(row.get("pack_family") or "").strip()
+    trade_scope = str(row.get("trade_scope") or "").strip()
+    companion_review_policy = str(row.get("companion_review_policy") or "").strip()
+    negative_scope_guards = row.get("negative_scope_guards")
+    positive_scope_triggers = row.get("positive_scope_triggers")
+    if pack_family == SOLAR_MEP_PACK_FAMILY:
+        if trade_scope not in ALLOWED_TRADE_SCOPES:
+            validation_errors.append("invalid_or_missing_trade_scope")
+        if companion_review_policy not in ALLOWED_COMPANION_REVIEW_POLICIES:
+            validation_errors.append("invalid_companion_review_policy")
+        if not isinstance(positive_scope_triggers, list) or not positive_scope_triggers or not all(isinstance(item, str) and item.strip() for item in positive_scope_triggers):
+            validation_errors.append("invalid_or_missing_positive_scope_triggers")
+        if str(row.get("vertical") or "").startswith("solar"):
+            if not isinstance(negative_scope_guards, list) or not negative_scope_guards or not all(isinstance(item, str) and item.strip() for item in negative_scope_guards):
+                validation_errors.append("invalid_negative_scope_guards")
+        elif negative_scope_guards not in (None, "", []) and not isinstance(negative_scope_guards, list):
+            validation_errors.append("invalid_negative_scope_guards")
+
     if not evidence_items:
         validation_errors.append("missing_field_level_evidence")
     if not checked_dt:
@@ -595,6 +656,16 @@ def _normalize_record(row: dict[str, Any], artifact: dict[str, Any], artifact_pa
         "ingestion_ready": ingestion_ready,
         "validation_errors": sorted(set(validation_errors)),
     }
+    for optional_key in (
+        "pack_family",
+        "trade_scope",
+        "companion_review_policy",
+        "negative_scope_guards",
+        "positive_scope_triggers",
+    ):
+        value = row.get(optional_key)
+        if value not in (None, "", []):
+            record[optional_key] = value
     record["record_fingerprint_sha256"] = _sha256_json({k: record[k] for k in record if k not in {"record_fingerprint_sha256", "source_artifact_path"}})
     return record
 
@@ -646,11 +717,13 @@ def _validation_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
             "required_record_fields": [
                 "record_id", "state", "ahj_name", "vertical", "field", "field_status", "confidence",
                 "claim_value", "source_scope_limit", "display_contract", "field_evidence", "freshness",
-                "record_fingerprint_sha256", "source_scope_limit_generated",
+                "record_fingerprint_sha256", "source_scope_limit_generated", "pack_family", "trade_scope",
+                "companion_review_policy", "negative_scope_guards", "positive_scope_triggers",
             ],
             "required_evidence_fields": [
                 "source_url", "source_title", "exact_quote_or_snippet", "quote_found",
-                "normalized_source_text_sha256", "normalized_source_text_length", "fetch_status_code", "last_verified_utc",
+                "normalized_source_text_sha256", "normalized_source_text_length", "fetch_status_code", "runtime_fetch_status",
+                "runtime_fetch_status_code", "source_snapshot_status_code_at_capture", "last_verified_utc",
                 "reverify_after_utc", "runtime_fail_closed_policy",
             ],
             "production_wiring_precondition": "Every production-imported record must be ingestion_ready=true; failures must remain needs_verification with visible warning.",

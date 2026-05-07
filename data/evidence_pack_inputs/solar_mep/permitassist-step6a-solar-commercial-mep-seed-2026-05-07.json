@@ -1,0 +1,369 @@
+{
+  "accepted_upgrades": [
+    {
+      "ahj_name": "New York City",
+      "checked_at_utc": "2026-05-07T01:20:00Z",
+      "claim_value_after": "Building-connected solar/PV installations require permits; NYC solar PV requires electrical and construction work permits.",
+      "companion_review_policy": "conditional_only",
+      "evidence": [
+        {
+          "exact_quote": "Solar installations require multiple permits. For solar PV systems, an electrical permit and a construction work permit are required.",
+          "normalized_source_text_length": 9058,
+          "normalized_source_text_sha256": "d9d1a5ad3bdf1e7634812ecf5ec672c77d2bf921907ca4fd7a444c790d9972bb",
+          "quote_found_current_run": true,
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "www.nyc.gov",
+          "source_id": "nyc_solar_requirements",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "NYC DOB Solar Work & Site Requirements",
+          "source_type": "official_ahj_page",
+          "source_url": "https://www.nyc.gov/site/buildings/industry/project-requirements-registrant-solar-n-site-req.page",
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field": "permit_type",
+      "negative_scope_guards": [
+        "reroof_no_solar",
+        "roof_repair_only",
+        "electrical_panel_work_without_pv_or_battery"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "solar_pv",
+        "photovoltaic",
+        "solar_electric_generating_system",
+        "battery_energy_storage_when_explicit"
+      ],
+      "proposed_status": "verified",
+      "row_id": "nyc-solar-pv-required-permits",
+      "source_scope_limit": "Verifies NYC solar/PV permit-type relationship only. Does not verify fees, inspections, utility interconnection, battery/ESS approval, non-NYC AHJs, reroof without solar, roof repair only, or electrical panel work without PV/battery.",
+      "state": "NY",
+      "trade_scope": "solar_pv",
+      "vertical": "solar_pv_battery"
+    },
+    {
+      "ahj_name": "New York City",
+      "checked_at_utc": "2026-05-07T01:20:00Z",
+      "claim_value_after": "NYC says complete solar applications can typically be reviewed in five to ten days; large/complex projects may take longer.",
+      "companion_review_policy": "conditional_only",
+      "evidence": [
+        {
+          "exact_quote": "Complete applications can typically be reviewed in five to ten days. Large or complex projects may require more review time.",
+          "normalized_source_text_length": 7954,
+          "normalized_source_text_sha256": "dd4f000a6d20bca257349de9b11c07af33f7cfa935622edb590b5b4c11d811eb",
+          "quote_found_current_run": true,
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "www.nyc.gov",
+          "source_id": "nyc_solar_panels",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "NYC DOB Solar Panels",
+          "source_type": "official_ahj_page",
+          "source_url": "https://www.nyc.gov/site/buildings/codes/solar-panels.page",
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field": "approval_timeline",
+      "negative_scope_guards": [
+        "reroof_no_solar",
+        "roof_repair_only",
+        "electrical_panel_work_without_pv_or_battery"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "solar_pv",
+        "photovoltaic",
+        "solar_electric_generating_system",
+        "battery_energy_storage_when_explicit"
+      ],
+      "proposed_status": "verified",
+      "row_id": "nyc-solar-pv-review-timeline",
+      "source_scope_limit": "Verifies NYC DOB solar review-time statement only. Does not verify fees, inspections, utility interconnection, battery/ESS approval, non-NYC AHJs, reroof without solar, roof repair only, or electrical panel work without PV/battery.",
+      "state": "NY",
+      "trade_scope": "solar_pv",
+      "vertical": "solar_pv_battery"
+    },
+    {
+      "ahj_name": "New York City",
+      "checked_at_utc": "2026-05-07T01:20:00Z",
+      "claim_value_after": "Solar/PV work should be treated as conditional multi-discipline work: structural capacity review plus electrical/construction permitting are explicit NYC companion triggers.",
+      "companion_review_policy": "conditional_only",
+      "evidence": [
+        {
+          "exact_quote": "Before installing a solar hot-water or a solar electric-generating system, also known as photovoltaics, you must hire a Professional Engineer or Registered Architect to be sure your building's structural system can maintain the weight of the equipment.",
+          "normalized_source_text_length": 7954,
+          "normalized_source_text_sha256": "dd4f000a6d20bca257349de9b11c07af33f7cfa935622edb590b5b4c11d811eb",
+          "quote_found_current_run": true,
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "www.nyc.gov",
+          "source_id": "nyc_solar_panels",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "NYC DOB Solar Panels",
+          "source_type": "official_ahj_page",
+          "source_url": "https://www.nyc.gov/site/buildings/codes/solar-panels.page",
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field": "companion_reviews_triggers",
+      "negative_scope_guards": [
+        "reroof_no_solar",
+        "roof_repair_only",
+        "electrical_panel_work_without_pv_or_battery"
+      ],
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "solar_pv",
+        "photovoltaic",
+        "solar_electric_generating_system",
+        "battery_energy_storage_when_explicit"
+      ],
+      "proposed_status": "verified",
+      "row_id": "nyc-solar-pv-structural-electrical-companions",
+      "source_scope_limit": "Verifies NYC solar structural/electrical/construction companion trigger guidance only. Does not verify fees, inspections, utility interconnection, battery/ESS approval, non-NYC AHJs, reroof without solar, roof repair only, or electrical panel work without PV/battery.",
+      "state": "NY",
+      "trade_scope": "solar_pv_cross_trade",
+      "vertical": "solar_pv_battery"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "checked_at_utc": "2026-05-07T01:20:00Z",
+      "claim_value_after": "Commercial Building Permit for constructing, altering, or renovating commercial property; MEP trade permits may be companion or trade-only depending on scope.",
+      "companion_review_policy": "conditional_only",
+      "evidence": [
+        {
+          "exact_quote": "A commercial building permit is an official authorization required before constructing, altering, or renovating a commercial property.",
+          "normalized_source_text_length": 23544,
+          "normalized_source_text_sha256": "9eb5738c5e7ad6680a5bbbc5a68b3c94219dc003c106515ad7067465af9df42c",
+          "quote_found_current_run": true,
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_commercial",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "City of Dallas Commercial Permits",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/commercial_overview.aspx",
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field": "permit_type",
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "commercial_alteration",
+        "commercial_renovation",
+        "tenant_improvement"
+      ],
+      "proposed_status": "verified",
+      "row_id": "dallas-commercial-building-permit",
+      "source_scope_limit": "Verifies Dallas commercial building permit requirement for commercial construction/alteration/renovation only. Does not verify unrelated trades, solar/PV, fees, inspections, or final apply category.",
+      "state": "TX",
+      "trade_scope": "commercial_building",
+      "vertical": "commercial_mep_ti"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "checked_at_utc": "2026-05-07T01:20:00Z",
+      "claim_value_after": "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+      "companion_review_policy": "conditional_only",
+      "evidence": [
+        {
+          "exact_quote": "DallasNow a new system that integrates Permitting, Planning, Platting, Inspections and Engineering, into one unified platform. Portal: https://aca-prod.accela.com/DALLASTX/Default.aspx",
+          "normalized_source_text_length": 942,
+          "normalized_source_text_sha256": "4e54d40d3defe7071774e5d2f0638a36a1c23eb64febc6fa08945ce239622838",
+          "quote_found_current_run": true,
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_dallasnow",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "City of Dallas DallasNow",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/Pages/DallasNow.aspx",
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field": "apply_url",
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "electrical_trade_permit",
+        "mechanical_trade_permit",
+        "plumbing_trade_permit"
+      ],
+      "proposed_status": "verified",
+      "row_id": "dallas-commercial-mep-online-trade-permit-path",
+      "source_scope_limit": "Verifies DallasNow/Accela as the routine Dallas online permitting platform and starting portal for permitting, planning, inspections, and engineering workflows. Does not verify eligibility for every trade-only permit, contractor registration status, fees, timelines, building-plan-review path, or solar/PV.",
+      "state": "TX",
+      "trade_scope": "cross_trade_mep",
+      "vertical": "commercial_mep_ti"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "checked_at_utc": "2026-05-07T01:20:00Z",
+      "claim_value_after": "Commercial mechanical scope should trigger Dallas mechanical code/inspection verification; do not infer plumbing or electrical companions unless the described scope includes those trades.",
+      "companion_review_policy": "conditional_only",
+      "evidence": [
+        {
+          "exact_quote": "Chapter 55 Dallas Mechanical Code Amendments \u200b2021 International Mechanical Code (IMC)",
+          "normalized_source_text_length": 21629,
+          "normalized_source_text_sha256": "0e7d344b5f499805c8fcc9956416ac82b0eb8ff212084a29dd7dd1dca33d1127",
+          "quote_found_current_run": true,
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_pm",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "City of Dallas Plumbing/Mechanical Inspections",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/plumbing_mechanical.aspx",
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field": "companion_reviews_triggers",
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "hvac",
+        "mechanical",
+        "refrigeration",
+        "ductwork",
+        "exhaust"
+      ],
+      "proposed_status": "verified",
+      "row_id": "dallas-commercial-mechanical-trigger",
+      "source_scope_limit": "Verifies Dallas mechanical code/inspection source presence only. Does not verify unrelated trades, plumbing scope, electrical scope, solar/PV, fees, timelines, apply URL, or exact permit subtype.",
+      "state": "TX",
+      "trade_scope": "mechanical",
+      "vertical": "commercial_mechanical"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "checked_at_utc": "2026-05-07T01:20:00Z",
+      "claim_value_after": "Commercial electrical scope should trigger Dallas electrical code/inspection verification; do not infer plumbing, mechanical, or solar/PV companions unless the described scope includes them.",
+      "companion_review_policy": "conditional_only",
+      "evidence": [
+        {
+          "exact_quote": "The City of Dallas has adopted the following codes with Dallas Amendments effective June 13, 2022. 2023 National Electrical Code",
+          "normalized_source_text_length": 21298,
+          "normalized_source_text_sha256": "c17dfd415d3ce8f07057cc6a9b2e6aab0d0d2adbf839d777bbd1503591b9a188",
+          "quote_found_current_run": true,
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_electrical",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "City of Dallas Electrical Inspections",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/electrical_section.aspx",
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field": "companion_reviews_triggers",
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "electrical",
+        "service_upgrade",
+        "panel",
+        "lighting_controls",
+        "low_voltage_when_explicit"
+      ],
+      "proposed_status": "verified",
+      "row_id": "dallas-commercial-electrical-trigger",
+      "source_scope_limit": "Verifies Dallas electrical code/inspection source presence only. Does not verify unrelated trades, plumbing scope, mechanical scope, solar/PV, fees, timelines, apply URL, or exact permit subtype.",
+      "state": "TX",
+      "trade_scope": "electrical",
+      "vertical": "commercial_electrical"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "checked_at_utc": "2026-05-07T01:20:00Z",
+      "claim_value_after": "Commercial plumbing scope should trigger Dallas plumbing code/inspection verification; do not infer mechanical/electrical companions unless the described scope includes those trades.",
+      "companion_review_policy": "conditional_only",
+      "evidence": [
+        {
+          "exact_quote": "Chapter 54 Dallas Plumbing Code Amendments 2021 International Plumbing Code (IPC)",
+          "normalized_source_text_length": 21629,
+          "normalized_source_text_sha256": "0e7d344b5f499805c8fcc9956416ac82b0eb8ff212084a29dd7dd1dca33d1127",
+          "quote_found_current_run": true,
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_pm",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "City of Dallas Plumbing/Mechanical Inspections",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/plumbing_mechanical.aspx",
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field": "companion_reviews_triggers",
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "plumbing",
+        "fixtures",
+        "water_heater",
+        "backflow",
+        "medical_gas_when_explicit"
+      ],
+      "proposed_status": "verified",
+      "row_id": "dallas-commercial-plumbing-trigger",
+      "source_scope_limit": "Verifies Dallas plumbing code/inspection source presence only. Does not verify unrelated trades, mechanical scope, electrical scope, solar/PV, fees, timelines, apply URL, grease interceptor, medical gas, or exact permit subtype.",
+      "state": "TX",
+      "trade_scope": "plumbing",
+      "vertical": "commercial_plumbing"
+    },
+    {
+      "ahj_name": "City of Dallas",
+      "checked_at_utc": "2026-05-07T01:20:00Z",
+      "claim_value_after": "Dallas commercial MEP trade work may require each trade to pass inspection before framing inspection; confirm exact inspection sequence on the permit documents.",
+      "companion_review_policy": "conditional_only",
+      "evidence": [
+        {
+          "exact_quote": "Contractor for each trade (electrical, mechanical and plumbing) must pass inspection prior to the general contractor calling in framing inspection.",
+          "normalized_source_text_length": 24737,
+          "normalized_source_text_sha256": "96ffabd550b402cffd3366eb3eb675599137154d69228de7ca9dad793bc62628",
+          "quote_found_current_run": true,
+          "runtime_fetch_status": "not_attempted_offline_snapshot",
+          "runtime_fetch_status_code": null,
+          "source_host": "dallascityhall.com",
+          "source_id": "dallas_tornado_commercial",
+          "source_snapshot_status_code_at_capture": 200,
+          "source_title": "Dallas Commercial / Multifamily Structures FAQ",
+          "source_type": "official_ahj_page",
+          "source_url": "https://dallascityhall.com/tornado/Pages/Commercial.aspx",
+          "validation_method": "offline normalized official source snapshot captured 2026-05-07; no runtime fetch"
+        }
+      ],
+      "field": "inspections",
+      "old_status": "needs_verification",
+      "pack_family": "solar_commercial_mep_offline_v1",
+      "positive_scope_triggers": [
+        "electrical_trade",
+        "mechanical_trade",
+        "plumbing_trade",
+        "commercial_ti_with_mep"
+      ],
+      "proposed_status": "partial",
+      "row_id": "dallas-commercial-mep-trade-inspections",
+      "source_scope_limit": "Verifies Dallas post-damage commercial FAQ trade inspection sequencing only as conditional cross-trade MEP guidance before framing inspection. Does not verify completion/final inspection, unrelated trades, solar/PV, fees, timelines, apply URL, or project-specific inspection card requirements.",
+      "state": "TX",
+      "trade_scope": "cross_trade_mep",
+      "vertical": "commercial_mep_ti"
+    }
+  ],
+  "batch_id": "solar-commercial-mep-seed-2026-05-07",
+  "created_utc": "2026-05-07T01:20:00Z",
+  "independent_review_artifact": "permitassist-step6a-solar-commercial-mep-seed-independent-review-2026-05-07.json",
+  "requires_independent_review_artifact": true,
+  "source_snapshot_note": "Offline seed artifact built from official source snapshots; no production activation or runtime fetching. Runtime fetch status is intentionally not claimed.",
+  "status": "PENDING_SEPARATE_INDEPENDENT_REVIEW",
+  "title": "PermitAssist solar PV/battery + commercial MEP offline seed evidence upgrades"
+}
