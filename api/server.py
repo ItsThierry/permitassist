@@ -439,6 +439,36 @@ def _is_commercial_scope(job_type: str, result: dict | None = None) -> bool:
     return any(token in text for token in _COMMERCIAL_SCOPE_TOKENS)
 
 
+def _commercial_companion_scope(job_type: str, result: dict | None = None) -> str:
+    """Conservative subtype classifier for commercial companion warnings.
+
+    Keep this local to the web trust layer so tests that stub research_engine do
+    not need the full research module. Explicit office/medical wording with
+    restaurant/food-service negation must not trigger restaurant companion
+    warnings just because the negated words appear in the request.
+    """
+    text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
+    negated_restaurant = bool(
+        re.search(
+            r"\b(?:no|without)\s+(?:restaurant|food service|commercial kitchen|type\s*i\s*hood|hood|fryer|griddle|ansul|grease interceptor)(?:\s+needed)?\b",
+            text,
+        )
+        or re.search(r"\b(?:non\s*[- ]?restaurant|not\s+a\s+restaurant)\b", text)
+    )
+    office_signal = any(t in text for t in ("office tenant improvement", "office ti", "office buildout", "office tenant", "professional office", "law office"))
+    medical_signal = bool(re.search(r"\basc\b", text)) or any(t in text for t in ("medical clinic", "clinic tenant improvement", "clinic ti", "medical office", "dental clinic", "exam room", "medical gas", "x-ray", "x ray"))
+    if medical_signal:
+        return "medical"
+    if office_signal and negated_restaurant:
+        return "office"
+    restaurant_signal = any(t in text for t in ("restaurant", "commercial kitchen", "food service", " cafe", "fast casual", "fast-casual", "type i hood", "grease interceptor", "ansul", "walk-in cooler", "walk-in freezer"))
+    if restaurant_signal and not negated_restaurant:
+        return "restaurant"
+    if office_signal:
+        return "office"
+    return "commercial"
+
+
 def _primary_permit_text(result: dict) -> str:
     permits = result.get("permits_required") or []
     if permits and isinstance(permits[0], dict):
@@ -526,9 +556,10 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
 
         companion_text = " ".join(str(x) for x in (result.get("companion_permits") or result.get("permits_required") or [])).lower()
         required_companions = ["electrical", "mechanical", "plumbing"]
-        if "restaurant" in (job_type or "").lower():
+        companion_scope = _commercial_companion_scope(job_type, result)
+        if companion_scope == "restaurant":
             required_companions += ["fire", "health", "grease", "hood"]
-        if any(t in (job_type or "").lower() for t in ("medical", "clinic", "dental")):
+        if companion_scope == "medical":
             required_companions += ["fire", "accessibility", "medical gas"]
         missing = [token for token in required_companions if token not in companion_text]
         if missing:
