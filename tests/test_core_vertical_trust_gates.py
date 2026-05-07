@@ -523,7 +523,7 @@ def test_veterinary_admin_office_filters_medical_exclusions_from_logic_and_docs(
 
 
 def test_residential_dallas_water_heater_overrides_commercial_ti_model_leak_and_apply_path():
-    job = "single-family residential water heater replacement, same location and same capacity, Dallas TX"
+    job = "like-for-like residential water heater replacement in single-family house garage, same fuel type, no structural or commercial work."
     result = {
         "_primary_scope": "commercial",
         "apply_url": "https://example.com/commercial-tenant-improvement-application",
@@ -546,3 +546,35 @@ def test_residential_dallas_water_heater_overrides_commercial_ti_model_leak_and_
     assert apply_path["permit_category"] == "Residential / Trade Permit"
     assert apply_path["permit_type"] == "Plumbing Permit — Water Heater Replacement"
     assert apply_path["portal_url"] == ""
+
+
+def test_commercial_medical_ti_still_repairs_stale_residential_primary():
+    job = "medical clinic tenant improvement with exam rooms, x-ray room, and medical gas outlets"
+    result = {
+        "_primary_scope": "residential",
+        "permits_required": [{"permit_type": "Residential HVAC Permit", "required": True}],
+        "companion_permits": [],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+    gated = server.apply_permitiq_quality_gate(result, job, "Dallas", "TX")
+    blob = _customer_surface_blob(gated)
+    assert "commercial" in blob
+    assert "tenant improvement" in blob
+    assert "residential hvac permit" not in blob
+
+
+def test_commercial_conversion_with_residential_words_still_repairs_to_commercial():
+    job = "commercial tenant improvement to convert a single-family house to a medical clinic with water heater relocation"
+    result = {
+        "_primary_scope": "residential",
+        "permits_required": [{"permit_type": "Residential Plumbing Permit", "required": True}],
+        "companion_permits": [],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+    gated = server.apply_permitiq_quality_gate(result, job, "Dallas", "TX")
+    blob = _customer_surface_blob(gated)
+    assert "commercial" in blob
+    assert "tenant improvement" in blob
+    assert "residential plumbing permit" not in blob
