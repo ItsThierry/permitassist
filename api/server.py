@@ -706,10 +706,21 @@ def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: boo
     """Return whether this request may use the local evidence-pack overlay."""
     if not evidence_pack_enabled():
         return False
-    if not _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY"):
-        return True
+    preview_only = _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
+    mode = os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip()
+    if mode == "solar_mep_controlled_preview" and not preview_only:
+        return False
     preview_header = os.environ.get("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo").strip() or "X-Sample-Demo"
-    return path == "/api/permit" and is_sample_demo and headers.get(preview_header) == "1"
+    preview_route_allowed = path == "/api/permit" and is_sample_demo and headers.get(preview_header) == "1"
+    if mode == "solar_mep_controlled_preview":
+        if not preview_route_allowed:
+            return False
+        token = os.environ.get("PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_TOKEN", "").strip()
+        token_header = os.environ.get("PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_HEADER", "X-Evidence-Pack-Preview-Token").strip() or "X-Evidence-Pack-Preview-Token"
+        return bool(token) and headers.get(token_header) == token
+    if not preview_only:
+        return True
+    return preview_route_allowed
 
 
 def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None) -> dict:

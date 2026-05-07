@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import lru_cache
+import hashlib
 import json
 import os
 from datetime import datetime, timezone
@@ -42,6 +43,15 @@ ALLOWED_EVIDENCE_PACK_MODES = {
     "solar_mep_controlled_preview",
 }
 SOLAR_MEP_CONTROLLED_PACK_FAMILY = "solar_commercial_mep_offline_v1"
+SOLAR_MEP_CONTROLLED_PROMOTION = {
+    "path_suffix": "evidence_packs/offline/solar_mep/permitassist-step7b-solar-commercial-mep-offline-evidence-pack-20260507.json",
+    "raw_sha256": "678d1ad5b8ed04dc4350d26d133bc52f382c868bda3e407ca7e6b0fc642c3875",
+    "fingerprint_sha256": "02fea6c42faee64c5ab1dd9cec2319a819b53f7f10e5abd58e1ae0fbbfe0116b",
+    "evidence_pack_version": "step7b_offline_v1",
+    "record_count": 9,
+    "pack_family": SOLAR_MEP_CONTROLLED_PACK_FAMILY,
+    "eligibility": "controlled_preview_only",
+}
 PRODUCTION_WIRING_ALLOWED_BY_VERSION = {
     "step7b_offline_v1": False,
     "step7b_offline_v1_test": False,
@@ -393,10 +403,34 @@ def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprin
     return version or "unknown", fingerprint, status, tuple(sorted(set(warnings))), production_wiring_allowed, fingerprint_valid
 
 
+def _validate_solar_mep_controlled_promotion(path: Path, raw_bytes: bytes, data: dict[str, Any], metadata: dict[str, Any]) -> tuple[str, ...]:
+    """Pin solar/MEP controlled-preview eligibility to one reviewed offline pack."""
+    warnings: list[str] = []
+    promotion = SOLAR_MEP_CONTROLLED_PROMOTION
+    normalized_path = str(path).replace("\\", "/")
+    if not normalized_path.endswith(str(promotion["path_suffix"])):
+        warnings.append("solar_mep_promoted_pack_path_mismatch")
+    raw_sha = hashlib.sha256(raw_bytes).hexdigest()
+    if raw_sha != promotion["raw_sha256"]:
+        warnings.append("solar_mep_promoted_pack_raw_sha_mismatch")
+    if str(metadata.get("evidence_pack_version") or "").strip() != promotion["evidence_pack_version"]:
+        warnings.append("solar_mep_promoted_pack_version_mismatch")
+    if str(metadata.get("fingerprint_sha256") or "").strip() != promotion["fingerprint_sha256"]:
+        warnings.append("solar_mep_promoted_pack_fingerprint_mismatch")
+    records = data.get("records") or []
+    if not isinstance(records, list) or len(records) != promotion["record_count"]:
+        warnings.append("solar_mep_promoted_pack_record_count_mismatch")
+    families = {str(record.get("pack_family") or "").strip() for record in records if isinstance(record, dict)}
+    if families != {promotion["pack_family"]}:
+        warnings.append("solar_mep_promoted_pack_family_mismatch")
+    return tuple(sorted(set(warnings)))
+
+
 @lru_cache(maxsize=4)
 def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fingerprint: str) -> EvidencePackRuntime:
     path = Path(path_text)
-    data = json.loads(path.read_text(encoding="utf-8"))
+    raw_bytes = path.read_bytes()
+    data = json.loads(raw_bytes.decode("utf-8"))
     metadata = data.get("metadata") if isinstance(data.get("metadata"), dict) else {}
     version, fingerprint, contract_status, contract_warnings, production_wiring_allowed, fingerprint_valid = _validate_metadata_contract(
         metadata,
@@ -406,11 +440,17 @@ def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fin
     records = []
     source_records = data.get("records") or [] if contract_status == "valid" else []
     if contract_status == "valid" and mode == "solar_mep_controlled_preview":
-        families = {str(record.get("pack_family") or "").strip() for record in source_records if isinstance(record, dict)}
-        if families != {SOLAR_MEP_CONTROLLED_PACK_FAMILY}:
+        promotion_warnings = _validate_solar_mep_controlled_promotion(path, raw_bytes, data, metadata)
+        if promotion_warnings:
             contract_status = "invalid_contract"
-            contract_warnings = tuple(sorted(set(contract_warnings + ("solar_mep_pack_family_required_for_mode",))))
+            contract_warnings = tuple(sorted(set(contract_warnings + promotion_warnings)))
             source_records = []
+        else:
+            families = {str(record.get("pack_family") or "").strip() for record in source_records if isinstance(record, dict)}
+            if families != {SOLAR_MEP_CONTROLLED_PACK_FAMILY}:
+                contract_status = "invalid_contract"
+                contract_warnings = tuple(sorted(set(contract_warnings + ("solar_mep_pack_family_required_for_mode",))))
+                source_records = []
     stale_candidate_count = 0
     for record in source_records:
         if not isinstance(record, dict):
