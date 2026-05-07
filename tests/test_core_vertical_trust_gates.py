@@ -162,6 +162,10 @@ def test_medical_billing_admin_office_does_not_get_clinic_checklist_or_warning()
                 {"permit_type": "Plumbing Permit — Commercial Tenant Improvement"},
             ],
             "quality_warnings": [],
+            "pro_tips": [
+                "Keep the scope clearly non-clinical in the permit narrative: 'office administration only, no patient care, no exam rooms, no medical gas' — that helps avoid healthcare review confusion",
+                "Use the city's commercial TI permit category for partitions and lighting.",
+            ],
             "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
             "confidence": "medium",
         },
@@ -170,7 +174,11 @@ def test_medical_billing_admin_office_does_not_get_clinic_checklist_or_warning()
         "MA",
     )
     warning_blob = " | ".join(gated.get("quality_warnings", [])).lower()
+    tip_blob = " | ".join(gated.get("pro_tips", [])).lower()
     assert "medical gas" not in warning_blob
+    assert "exam room" not in tip_blob
+    assert "medical gas" not in tip_blob
+    assert "commercial ti permit" in tip_blob
 
 
 def test_clinic_with_exam_rooms_but_no_medgas_or_xray_filters_item_specific_checklist_and_warnings():
@@ -330,6 +338,35 @@ def test_commercial_kitchen_with_negated_hood_and_grease_does_not_get_kitchen_ch
     out = _apply_core_layers(job, "Chicago", "IL")
     permit_blob = " | ".join(str(p) for p in out.get("permits_required", []) + out.get("permits_required_logic", [])).lower()
     assert "grease-interceptor" not in permit_blob
+
+    gated = server.apply_permitiq_quality_gate(
+        {
+            "_primary_scope": "commercial_restaurant",
+            "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Restaurant Interior Alteration"}],
+            "companion_permits": [
+                {"permit_type": "Electrical Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Mechanical Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Plumbing Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Health Department / Food Establishment Review"},
+            ],
+            "common_mistakes": ["Assuming no hood means no permit — the interior alteration still needs a building permit"],
+            "pro_tips": [
+                "Keep the scope explicit: no Type I hood, no grease duct, no grease interceptor, no ANSUL. That helps avoid being bounced into fire suppression or plumbing review unnecessarily",
+                "Confirm whether prep tables and storage affect health review.",
+            ],
+            "quality_warnings": [],
+            "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+            "confidence": "medium",
+        },
+        job,
+        "Chicago",
+        "IL",
+    )
+    surface_blob = " | ".join(gated.get("common_mistakes", []) + gated.get("pro_tips", [])).lower()
+    assert "hood" not in surface_blob
+    assert "ansul" not in surface_blob
+    assert "grease" not in surface_blob
+    assert "prep tables" in surface_blob
 
 
 def test_restaurant_dishwasher_without_hood_or_grease_filters_item_specific_checklist():

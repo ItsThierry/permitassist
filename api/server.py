@@ -480,6 +480,49 @@ def _medical_gas_scope_present(text: str) -> bool:
     return _has_unnegated_any(text or "", ("medical gas", "med gas", "nitrous", "oxygen"))
 
 
+def _medical_xray_scope_present(text: str) -> bool:
+    return _has_unnegated_any(text or "", ("x-ray", "x ray", "radiology", "cbct", "fluoroscopy"))
+
+
+def _medical_clinic_scope_present(text: str) -> bool:
+    return _has_unnegated_any(text or "", ("medical clinic", "clinic tenant improvement", "clinic ti", "exam room", "exam rooms", "patient care", "treatment room", "treatment rooms"))
+
+
+def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
+    """Remove generated tip/mistake/watch-out lines for explicitly absent sub-systems.
+
+    PR #16 filtered checklist/warning surfaces, but production smoke showed the
+    model can still echo negated hood/grease/ANSUL and clinic/x-ray/med-gas
+    concepts into generic advice lists. These lists are user-visible report
+    surfaces, so item-specific scope gates must apply here too.
+    """
+    scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
+    forbidden_terms: list[str] = []
+    if not _restaurant_hood_scope_present(scope_text):
+        forbidden_terms += ["hood", "ansul", "fire suppression", "grease duct"]
+    if not _restaurant_grease_scope_present(scope_text):
+        forbidden_terms += ["grease", "f.o.g", "fog"]
+    if not _medical_clinic_scope_present(scope_text):
+        forbidden_terms += ["commercial clinic", "clinic", "exam room", "exam rooms", "patient care", "treatment room", "treatment rooms"]
+    if not _medical_xray_scope_present(scope_text):
+        forbidden_terms += ["x-ray", "x ray", "radiology"]
+    if not _medical_gas_scope_present(scope_text):
+        forbidden_terms += ["medical gas", "med gas"]
+
+    if not forbidden_terms:
+        return
+
+    for key in ("pro_tips", "common_mistakes", "watch_out"):
+        items = result.get(key)
+        if not isinstance(items, list):
+            continue
+        result[key] = [
+            item
+            for item in items
+            if not any(term in str(item).lower() for term in forbidden_terms)
+        ]
+
+
 def _commercial_companion_scope(job_type: str, result: dict | None = None) -> str:
     """Conservative subtype classifier for commercial companion warnings.
 
@@ -616,6 +659,8 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     if str(result.get("confidence") or "").lower() == "high" and not sources:
         result["confidence"] = "medium"
         warnings.append("Confidence downgraded because no source URLs were attached to the result.")
+
+    _filter_negated_surface_lists(result, job_type)
 
     if warnings:
         deduped = []
