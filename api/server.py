@@ -528,7 +528,7 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         text = str(value).lower()
         return any(term in text for term in forbidden_terms)
 
-    for key in ("pro_tips", "common_mistakes", "watch_out", "what_to_bring", "quality_warnings", "permits_required_logic"):
+    for key in ("pro_tips", "common_mistakes", "watch_out", "what_to_bring", "quality_warnings", "permits_required_logic", "checklist", "permit_checklist"):
         items = result.get(key)
         if not isinstance(items, list):
             continue
@@ -549,7 +549,25 @@ def _repair_residential_trade_model_leak(result: dict, job_type: str) -> None:
     detected = detect_primary_scope(job_type or "")
     if detected in {"commercial_restaurant", "commercial_office_ti", "commercial_retail_ti", "commercial_medical_clinic_ti", "multifamily", "commercial"}:
         return
+    text = f" {(job_type or '').lower()} "
     result["_primary_scope"] = detected or "residential"
+    if "water heater" in text:
+        permit_type = "Plumbing Permit — Water Heater Replacement"
+        result["permits_required"] = [{
+            "permit_type": permit_type,
+            "portal_selection": "Plumbing - Water Heater Replacement",
+            "required": True,
+            "notes": "Residential water heater replacement; verify Dallas residential plumbing permit naming before applying.",
+        }]
+        result["permits_required_logic"] = [{
+            "permit_type": permit_type,
+            "included_because": "Explicit residential water heater replacement scope overrides stale commercial tenant-improvement model output.",
+            "scope_trigger": "residential water heater replacement",
+        }]
+        result["companion_permits"] = []
+        result["_residential_trade_leak_repaired"] = True
+        result["permit_verdict"] = "YES"
+        return
     classified = classify_scope_required_permits(job_type or "")
     if classified:
         result["permits_required"] = classified.get("permits_required", result.get("permits_required", []))

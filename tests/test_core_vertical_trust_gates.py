@@ -443,6 +443,7 @@ def test_barber_shop_false_bar_does_not_get_food_health_checklist_language():
     )
     checklist = _checklist_blob(job, "Dallas", "TX")
     out = _apply_core_layers(job, "Dallas", "TX")
+    out["checklist"] = list(checklist.split(" | ")) + ["Health department clearance if any food/beverage prep beyond pre-packaged sales"]
     out["what_to_bring"] = [
         "Bring barber shop floor plan and finish schedule.",
         "Bring food establishment and health department forms if the barber shop serves beverages.",
@@ -536,7 +537,6 @@ def test_residential_dallas_water_heater_overrides_commercial_ti_model_leak_and_
         "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
         "confidence": "medium",
     }
-    engine.apply_scope_aware_permit_classification(result, job)
     gated = server.apply_permitiq_quality_gate(result, job, "Dallas", "TX")
     apply_path = server.build_apply_path(gated, job, "Dallas", "TX")
     blob = _customer_surface_blob(gated)
