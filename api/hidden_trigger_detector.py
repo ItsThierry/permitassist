@@ -1198,6 +1198,49 @@ PRIVATE_TRIGGER_KEYS = {"_notes", "_jurisdiction", "_scope_aliases"}
 INTERNAL_TRIGGER_KEYS = {"regions", "not_regions"}
 
 
+def _term_is_locally_negated(text: str, term_start: int) -> bool:
+    prefix = text[max(0, term_start - 72):term_start]
+    prefix_negated = bool(
+        re.search(
+            r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b)"
+            r"(?:\s+(?:and|or|any|new|commercial|type\s*i|type\s*1))*"
+            r"(?:[\s,;/()-]+[a-z0-9]+){0,4}[\s,;/()-]*$",
+            prefix,
+            flags=re.I,
+        )
+    )
+    if prefix_negated:
+        return True
+    suffix = text[term_start:term_start + 96]
+    return bool(
+        re.search(
+            r"^[a-z0-9\s,;/()'\"-]{0,48}\b(?:not included|excluded|not in scope|outside(?: the)? scope|not part|not proposed)\b",
+            suffix,
+            flags=re.I,
+        )
+    )
+
+
+def _contains_unnegated_phrase(text: str, phrase: str) -> bool:
+    phrase_lc = (phrase or "").lower()
+    if not phrase_lc:
+        return False
+    pattern = re.compile(r"(?<![a-z0-9])" + re.escape(phrase_lc) + r"(?![a-z0-9])", flags=re.I)
+    for match in pattern.finditer(text or ""):
+        if not _term_is_locally_negated(text, match.start()):
+            return True
+    return False
+
+
+def _contains_unnegated_any(text: str, terms: tuple[str, ...]) -> bool:
+    return any(_contains_unnegated_phrase(text, term) for term in terms)
+
+
+_RESTAURANT_SCOPE_TERMS = ("restaurant", "food establishment", "food service", "commercial kitchen", "prep kitchen", "cafe", "café", "tavern", "bar", "dishwasher", "walk-in cooler", "walk in cooler")
+_RESTAURANT_HOOD_TERMS = ("type i hood", "type 1 hood", "hood", "ansul", "wet chemical", "hood suppression", "fryer", "griddle", "commercial kitchen", "grease duct", "range")
+_RESTAURANT_GREASE_TERMS = ("grease interceptor", "grease trap", "f.o.g", "fats oils grease", "commercial kitchen", "3-compartment sink", "3 compartment sink")
+
+
 def _normalize(value: Any) -> str:
     """Lowercase, collapse whitespace, and normalize common punctuation."""
     text = "" if value is None else str(value)
@@ -1257,7 +1300,7 @@ def _scope_applies(trigger_scope: str, primary_scope: str, text: str) -> bool:
     if trigger_scope_norm == _normalize("commercial_restaurant"):
         return (
             primary_scope_norm in {_normalize("commercial_restaurant"), _normalize("commercial_restaurant_ti")}
-            or ("restaurant" in text and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
+            or (_contains_unnegated_any(text, _RESTAURANT_SCOPE_TERMS) and (_is_commercial_scope(primary_scope_norm) or "tenant improvement" in text or " ti " in f" {text} "))
         )
 
     if trigger_scope_norm == _normalize("commercial_retail_ti"):
@@ -1337,6 +1380,14 @@ def _pattern_matches(pattern: str, text: str) -> bool:
 
 
 def _trigger_matches(trigger: dict, text: str) -> bool:
+    trigger_id = _normalize(trigger.get("id", "")).replace(" ", "_")
+    if trigger_id.startswith("restaurant_") or "_restaurant_" in trigger_id:
+        if any(token in trigger_id for token in ("hood", "suppression", "duct", "cooking")) and not _contains_unnegated_any(text, _RESTAURANT_HOOD_TERMS):
+            return False
+        if any(token in trigger_id for token in ("grease", "fog")) and not _contains_unnegated_any(text, _RESTAURANT_GREASE_TERMS):
+            return False
+        if "food_establishment" in trigger_id and not _contains_unnegated_any(text, _RESTAURANT_SCOPE_TERMS):
+            return False
     return any(_pattern_matches(pattern, text) for pattern in trigger.get("fired_by", []))
 
 

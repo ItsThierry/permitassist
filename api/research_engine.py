@@ -2746,14 +2746,7 @@ def detect_primary_scope(job_type: str) -> str:
         'commercial office', 'office suite', 'professional office',
         'law office', 'corporate office', 'tenant office',
     ))
-    medical_signal = re.search(r'\basc\b', job_lc) or any(t in job_lc for t in (
-        'medical clinic', 'medical office tenant', 'dental clinic', 'dental office tenant',
-        'health clinic', 'clinic tenant improvement', 'clinic ti', 'exam room',
-        'exam rooms', 'med gas', 'medical gas', 'nitrous oxide', 'x-ray', 'x ray',
-        'radiology', 'sterilization room', 'surgical center', 'ambulatory surgical center',
-        'operating room', 'operating rooms', 'pacu', 'pre-op', 'pre op',
-        'recovery bay', 'recovery bays', 'outpatient surgery',
-    ))
+    medical_signal = _has_healthcare_scope_signal(job_lc)
     negated_restaurant_signal = bool(
         re.search(
             r'\b(?:no|without)\s+(?:restaurant|food service|commercial kitchen|type\s*i\s*hood|hood|fryer|griddle|ansul|grease interceptor)(?:\s+needed)?\b',
@@ -2767,8 +2760,8 @@ def detect_primary_scope(job_type: str) -> str:
         return 'commercial_office_ti'
 
     # Commercial restaurant — strongest signal
-    if any(t in job_lc for t in (
-        'restaurant', 'commercial kitchen', 'food service', ' cafe', 'fast-casual',
+    if _has_unnegated_any(job_lc, (
+        'restaurant', 'commercial kitchen', 'food service', 'cafe', 'fast-casual',
         'fast casual', 'tavern', 'brewery', 'type i hood', 'grease interceptor',
         'ansul', 'walk-in cooler', 'walk-in freezer', 'kitchen build-out',
     )):
@@ -4498,6 +4491,72 @@ def hedge_companion_permits(result: dict, job_type: str) -> dict:
 
 def _scope_has_any(job: str, phrases: list[str]) -> bool:
     return any(p in job for p in phrases)
+
+
+def _term_is_locally_negated(text: str, term_start: int) -> bool:
+    """Return True for local phrases like "no hood" / "without exam rooms".
+
+    This is intentionally lexical and conservative. It only looks at the few
+    words immediately before the matched term so unrelated earlier negations do
+    not suppress a real scope signal later in the sentence.
+    """
+    prefix = text[max(0, term_start - 72):term_start]
+    prefix_negated = bool(
+        re.search(
+            r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b)"
+            r"(?:\s+(?:and|or|any|new|commercial|type\s*i|type\s*1))*"
+            r"(?:[\s,;/()-]+[a-z0-9]+){0,4}[\s,;/()-]*$",
+            prefix,
+            flags=re.I,
+        )
+    )
+    if prefix_negated:
+        return True
+    suffix = text[term_start:term_start + 96]
+    return bool(
+        re.search(
+            r"^[a-z0-9\s,;/()'\"-]{0,48}\b(?:not included|excluded|not in scope|outside(?: the)? scope|not part|not proposed)\b",
+            suffix,
+            flags=re.I,
+        )
+    )
+
+
+def _contains_unnegated_phrase(text: str, phrase: str) -> bool:
+    phrase_lc = (phrase or "").lower()
+    if not phrase_lc:
+        return False
+    pattern = re.compile(r"(?<![a-z0-9])" + re.escape(phrase_lc) + r"(?![a-z0-9])", flags=re.I)
+    for match in pattern.finditer(text or ""):
+        if not _term_is_locally_negated(text, match.start()):
+            return True
+    return False
+
+
+def _has_unnegated_any(job: str, phrases: tuple[str, ...]) -> bool:
+    text = (job or "").lower()
+    return any(_contains_unnegated_phrase(text, phrase) for phrase in phrases)
+
+
+def _has_healthcare_scope_signal(job: str) -> bool:
+    text = f" {(job or '').lower()} "
+    admin_context = _has_unnegated_any(text, ("professional office", "office ti", "office tenant improvement", "office suite", "corporate office", "law office"))
+    clinical_terms = (
+        "medical clinic", "dental clinic", "health clinic", "urgent care", "doctor office",
+        "doctor's office", "doctor s office", "clinic tenant improvement", "clinic ti",
+        "exam room", "exam rooms", "patient care", "patient room", "treatment room",
+        "procedure room", "medical gas", "med gas", "nitrous oxide", "x-ray", "x ray",
+        "radiology", "sterilization room", "surgical center", "ambulatory surgical center",
+        "operating room", "pacu", "pre-op", "pre op", "recovery bay", "outpatient surgery",
+    )
+    if _has_unnegated_any(text, clinical_terms) or re.search(r"\basc\b", text):
+        return True
+    # A bare word like "medical" inside an administrative office description
+    # (medical billing, medical insurance, medical records company) is not a
+    # clinic TI. Require an actual clinical/facility marker in office contexts.
+    if admin_context:
+        return False
+    return _has_unnegated_any(text, ("medical office tenant", "dental office tenant", "medical office", "healthcare"))
 
 
 def _scope_permit(permit_type: str, portal_selection: str, notes: str, required: bool | str = True) -> dict:

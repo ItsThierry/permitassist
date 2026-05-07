@@ -198,6 +198,55 @@ def canonical_request_vertical(value: Any) -> str | None:
     return None
 
 
+def _term_is_locally_negated(text: str, term_start: int) -> bool:
+    prefix = text[max(0, term_start - 72):term_start]
+    prefix_negated = bool(
+        re.search(
+            r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b)"
+            r"(?:\s+(?:and|or|any|new))*"
+            r"(?:[\s,;/()-]+[a-z0-9]+){0,4}[\s,;/()-]*$",
+            prefix,
+            flags=re.I,
+        )
+    )
+    if prefix_negated:
+        return True
+    suffix = text[term_start:term_start + 96]
+    return bool(
+        re.search(
+            r"^[a-z0-9\s,;/()'\"-]{0,48}\b(?:not included|excluded|not in scope|outside(?: the)? scope|not part|not proposed)\b",
+            suffix,
+            flags=re.I,
+        )
+    )
+
+
+def _contains_unnegated_phrase(text: str, phrase: str) -> bool:
+    phrase_lc = (phrase or "").lower()
+    if not phrase_lc:
+        return False
+    pattern = re.compile(r"(?<![a-z0-9])" + re.escape(phrase_lc) + r"(?![a-z0-9])", flags=re.I)
+    for match in pattern.finditer(text or ""):
+        if not _term_is_locally_negated(text, match.start()):
+            return True
+    return False
+
+
+def _job_has_healthcare_scope_signal(text: str) -> bool:
+    admin_context = any(_contains_unnegated_phrase(text, term) for term in ("professional office", "office ti", "office tenant improvement", "office suite", "corporate office", "law office"))
+    clinical_terms = (
+        "medical clinic", "dental clinic", "health clinic", "urgent care", "doctor office",
+        "doctor s office", "doctor's office", "clinic tenant improvement", "clinic ti",
+        "exam room", "exam rooms", "patient care", "patient room", "treatment room",
+        "procedure room", "medical gas", "med gas", "x-ray", "x ray", "radiology",
+    )
+    if any(_contains_unnegated_phrase(text, term) for term in clinical_terms):
+        return True
+    if admin_context:
+        return False
+    return any(_contains_unnegated_phrase(text, term) for term in ("medical office tenant", "dental office tenant", "medical office", "healthcare"))
+
+
 def _vertical_for_job(job_type: str, *, explicit_vertical: Any = None, result: dict[str, Any] | None = None) -> str:
     for candidate in (
         explicit_vertical,
@@ -214,7 +263,7 @@ def _vertical_for_job(job_type: str, *, explicit_vertical: Any = None, result: d
     solar_negated = bool(re.search(r"\b(?:no|without)\s+(?:solar|pv|photovoltaic|battery|batteries|ess|energy storage)\b", text))
     if not solar_negated and re.search(r"\b(solar|pv|photovoltaic|battery storage|batteries|ess|energy storage|powerwall)\b", text):
         return "solar_pv_battery"
-    if re.search(r"\b(medical|clinic|dental|healthcare|urgent care|doctor office|doctor s office|patient room|exam room)\b", text):
+    if _job_has_healthcare_scope_signal(text):
         return "medical_clinic_ti"
     office_signal = bool(re.search(r"\b(office|law office|corporate office|professional office|tenant office)\b", text))
     negated_restaurant_signal = bool(

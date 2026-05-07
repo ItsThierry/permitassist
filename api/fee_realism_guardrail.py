@@ -312,6 +312,44 @@ def _norm(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value or "").strip().lower())
 
 
+def _term_is_locally_negated(text: str, term_start: int) -> bool:
+    prefix = text[max(0, term_start - 72):term_start]
+    prefix_negated = bool(
+        re.search(
+            r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b)"
+            r"(?:\s+(?:and|or|any|new|commercial|type\s*i|type\s*1))*"
+            r"(?:[\s,;/()-]+[a-z0-9]+){0,4}[\s,;/()-]*$",
+            prefix,
+            flags=re.I,
+        )
+    )
+    if prefix_negated:
+        return True
+    suffix = text[term_start:term_start + 96]
+    return bool(
+        re.search(
+            r"^[a-z0-9\s,;/()'\"-]{0,48}\b(?:not included|excluded|not in scope|outside(?: the)? scope|not part|not proposed)\b",
+            suffix,
+            flags=re.I,
+        )
+    )
+
+
+def _contains_unnegated_phrase(text: str, phrase: str) -> bool:
+    phrase_lc = (phrase or "").lower()
+    if not phrase_lc:
+        return False
+    pattern = re.compile(r"(?<![a-z0-9])" + re.escape(phrase_lc) + r"(?![a-z0-9])", flags=re.I)
+    for match in pattern.finditer(text or ""):
+        if not _term_is_locally_negated(text, match.start()):
+            return True
+    return False
+
+
+def _contains_unnegated_any(text: str, terms: Iterable[str]) -> bool:
+    return any(_contains_unnegated_phrase(text, term) for term in terms)
+
+
 def _normalize_scope(primary_scope: str, job_type: str) -> str:
     """Map caller scope + job description onto SCOPE_FEE_FLOORS keys."""
     scope = _norm(primary_scope).replace("-", "_").replace(" ", "_")
@@ -418,8 +456,10 @@ def detect_fee_triggers_from_text(job_type: str) -> List[str]:
             triggers.append(key)
 
     add_if("change_of_occupancy", "change of occupancy", "change-of-occupancy", "new co", "certificate of occupancy", "occupancy change")
-    add_if("hood_fire_suppression", "hood", "type i", "type 1 hood", "ansul", "fire suppression", "kitchen suppression")
-    add_if("grease_interceptor", "grease", "interceptor", "fats oils grease", "fog")
+    if _contains_unnegated_any(text, ("hood", "type i hood", "type 1 hood", "ansul", "fire suppression", "kitchen suppression", "fryer", "griddle")):
+        triggers.append("hood_fire_suppression")
+    if _contains_unnegated_any(text, ("grease interceptor", "grease trap", "fats oils grease", "f.o.g")):
+        triggers.append("grease_interceptor")
     add_if("hillside_grading", "hillside", "grading", "slope", "soils", "geology", "haul route")
     add_if("demising_wall", "demising", "tenant separation", "rated wall", "fire wall", "party wall")
     add_if("fire_sprinkler_modify", "sprinkler", "hydraulic", "fire sprinkler")
@@ -432,6 +472,11 @@ def detect_fee_triggers_from_text(job_type: str) -> List[str]:
 def _trigger_names_for_fee(result: Dict[str, Any], job_type: str) -> List[str]:
     names = _hidden_trigger_names(result.get("hidden_triggers"))
     names.extend(detect_fee_triggers_from_text(job_type))
+    text = _norm(job_type)
+    if not _contains_unnegated_any(text, ("hood", "type i hood", "type 1 hood", "ansul", "fire suppression", "kitchen suppression", "fryer", "griddle")):
+        names = [name for name in names if name != "hood_fire_suppression"]
+    if not _contains_unnegated_any(text, ("grease interceptor", "grease trap", "fats oils grease", "f.o.g")):
+        names = [name for name in names if name != "grease_interceptor"]
     # stable de-dupe preserving declaration order
     ordered = []
     for key in TRIGGER_FEE_ADDERS.keys():
