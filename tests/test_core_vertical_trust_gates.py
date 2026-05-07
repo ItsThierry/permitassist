@@ -383,3 +383,166 @@ def test_restaurant_dishwasher_without_hood_or_grease_filters_item_specific_chec
     out = _apply_core_layers(job, "Chicago", "IL")
     permit_blob = " | ".join(str(p) for p in out.get("permits_required", []) + out.get("permits_required_logic", [])).lower()
     assert "grease-interceptor" not in permit_blob
+
+
+def _customer_surface_blob(result):
+    fields = []
+    for key in (
+        "what_to_bring", "common_mistakes", "pro_tips", "watch_out",
+        "quality_warnings", "permits_required_logic", "permits_required", "apply_path",
+    ):
+        value = result.get(key)
+        if isinstance(value, list):
+            fields.extend(str(item) for item in value)
+        elif isinstance(value, dict):
+            fields.append(str(value))
+        elif value:
+            fields.append(str(value))
+    return " | ".join(fields).lower()
+
+
+def test_negative_restaurant_scope_filters_what_to_bring_and_advice_surfaces():
+    job = (
+        "restaurant TI with prep-table storage and interior finishes only; no Type I hood, "
+        "no fryer, no griddle, no ANSUL, no grease interceptor, and no grease duct work."
+    )
+    gated = server.apply_permitiq_quality_gate(
+        {
+            "_primary_scope": "commercial_restaurant",
+            "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Restaurant Interior Alteration"}],
+            "companion_permits": [
+                {"permit_type": "Electrical Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Mechanical Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Plumbing Permit — Commercial Tenant Improvement"},
+                {"permit_type": "Health Department / Food Establishment Review"},
+            ],
+            "what_to_bring": [
+                "Bring hood, ANSUL, grease interceptor, and plumbing sheets even though they are not in scope.",
+                "Bring architectural floor plan and finish schedule.",
+            ],
+            "common_mistakes": ["Repeating no hood/no grease/no ANSUL in the permit narrative."],
+            "pro_tips": ["Keep prep-table storage clearly described."],
+            "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+            "confidence": "medium",
+        },
+        job,
+        "Chicago",
+        "IL",
+    )
+    blob = _customer_surface_blob(gated)
+    for forbidden in ("hood", "ansul", "grease", "grease interceptor", "plumbing sheets"):
+        assert forbidden not in blob
+    assert "architectural floor plan" in blob
+    assert "prep-table storage" in blob
+
+
+def test_barber_shop_false_bar_does_not_get_food_health_checklist_language():
+    job = (
+        "2,000 sf barber shop tenant improvement with reception, haircut stations, retail shelving, "
+        "and lighting; no bar, no alcohol, no food service, no kitchen, no hood, no grease interceptor."
+    )
+    checklist = _checklist_blob(job, "Dallas", "TX")
+    out = _apply_core_layers(job, "Dallas", "TX")
+    out["what_to_bring"] = [
+        "Bring barber shop floor plan and finish schedule.",
+        "Bring food establishment and health department forms if the barber shop serves beverages.",
+    ]
+    out["quality_warnings"] = ["Health department food service review may be required."]
+    out = server.apply_permitiq_quality_gate(out, job, "Dallas", "TX")
+    blob = checklist + " | " + _customer_surface_blob(out)
+    for forbidden in ("food", "beverage", "health department", "food-establishment", "commercial kitchen", "hood", "grease"):
+        assert forbidden not in blob
+    assert out["_primary_scope"] != "commercial_restaurant"
+
+
+def test_theater_fog_machine_does_not_repeat_hood_or_grease_in_permit_logic():
+    job = (
+        "2,800 sf theater tenant improvement with stage fog machine and lighting controls; "
+        "no food service, no kitchen, no hood, no grease interceptor."
+    )
+    out = _apply_core_layers(job, "Dallas", "TX")
+    out["permits_required_logic"].append({
+        "permit_type": "Building Permit — Commercial Tenant Improvement",
+        "included_because": "No hood or grease work is included, but the theater TI still needs building review.",
+        "scope_trigger": "model echo",
+    })
+    out["pro_tips"] = ["Include the stage fog machine cut sheet and fire alarm interface notes if the AHJ asks for theatrical effects documentation."]
+    gated = server.apply_permitiq_quality_gate(out, job, "Dallas", "TX")
+    blob = _customer_surface_blob(gated)
+    for forbidden in ("hood", "grease", "food service", "commercial kitchen"):
+        assert forbidden not in blob
+    assert "fog machine" in blob
+
+
+def test_dental_admin_office_filters_clinic_terms_from_permit_logic_and_docs():
+    job = (
+        "2,400 sf professional office TI for dental billing and insurance administration company; "
+        "ordinary office desks and conference rooms only, no clinic, no exam rooms, no patient care, "
+        "no x-ray, no medical gas, no treatment rooms."
+    )
+    out = _apply_core_layers(job, "Boston", "MA")
+    out["permits_required_logic"].append({
+        "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+        "included_because": "No exam rooms, x-ray, or medical gas are included, so clinic submittals are not needed.",
+        "scope_trigger": "model echo",
+    })
+    out["what_to_bring"] = [
+        "Office floor plan and lighting schedule.",
+        "Do not bring clinic, exam-room, x-ray, or medical-gas sheets because they are out of scope.",
+    ]
+    out["quality_warnings"] = ["Clinic, x-ray, and medical gas review were mentioned by the model but are not in scope."]
+    gated = server.apply_permitiq_quality_gate(out, job, "Boston", "MA")
+    assert gated["_primary_scope"] == "commercial_office_ti"
+    blob = _customer_surface_blob(gated)
+    for forbidden in ("clinic", "exam room", "exam-room", "x-ray", "medical gas", "medical-gas"):
+        assert forbidden not in blob
+    assert "office floor plan" in blob
+
+
+def test_veterinary_admin_office_filters_medical_exclusions_from_logic_and_docs():
+    job = (
+        "2,400 sf professional office TI for veterinary billing and records administration company; "
+        "ordinary office desks and conference rooms only, no clinic, no exam rooms, no animal treatment, "
+        "no x-ray, no medical gas, no treatment rooms."
+    )
+    out = _apply_core_layers(job, "Boston", "MA")
+    out["permits_required_logic"].append({
+        "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+        "included_because": "No medical-gas or exam-room scope is present; keep veterinary clinic docs out.",
+        "scope_trigger": "model echo",
+    })
+    out["what_to_bring"] = ["Office reflected ceiling plan.", "No exam room, x-ray, medical gas, or clinic documents are required."]
+    out["quality_warnings"] = ["Veterinary clinic, exam room, x-ray, and medical gas documents should be excluded."]
+    gated = server.apply_permitiq_quality_gate(out, job, "Boston", "MA")
+    assert gated["_primary_scope"] == "commercial_office_ti"
+    blob = _customer_surface_blob(gated)
+    for forbidden in ("clinic", "exam room", "exam-room", "x-ray", "medical gas", "medical-gas"):
+        assert forbidden not in blob
+    assert "office reflected ceiling plan" in blob
+
+
+def test_residential_dallas_water_heater_overrides_commercial_ti_model_leak_and_apply_path():
+    job = "single-family residential water heater replacement, same location and same capacity, Dallas TX"
+    result = {
+        "_primary_scope": "commercial",
+        "apply_url": "https://example.com/commercial-tenant-improvement-application",
+        "permits_required": [{"permit_type": "Building Permit — Commercial Tenant Improvement", "required": True}],
+        "permits_required_logic": [{
+            "permit_type": "Building Permit — Commercial Tenant Improvement",
+            "included_because": "Model selected commercial TI.",
+            "scope_trigger": "model leak",
+        }],
+        "companion_permits": [],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+    engine.apply_scope_aware_permit_classification(result, job)
+    gated = server.apply_permitiq_quality_gate(result, job, "Dallas", "TX")
+    apply_path = server.build_apply_path(gated, job, "Dallas", "TX")
+    blob = _customer_surface_blob(gated)
+    assert gated["_primary_scope"] == "residential"
+    assert "water heater" in gated["permits_required"][0]["permit_type"].lower()
+    assert "commercial tenant improvement" not in blob
+    assert apply_path["permit_category"] == "Residential / Trade Permit"
+    assert apply_path["permit_type"] == "Plumbing Permit — Water Heater Replacement"
+    assert apply_path["portal_url"] == ""

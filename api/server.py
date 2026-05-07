@@ -34,7 +34,14 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-from research_engine import research_permit, build_google_maps_url, strip_pdf_from_result, get_cache_hit_rate
+from research_engine import (
+    research_permit,
+    build_google_maps_url,
+    strip_pdf_from_result,
+    get_cache_hit_rate,
+    detect_primary_scope,
+    classify_scope_required_permits,
+)
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
@@ -489,38 +496,67 @@ def _medical_clinic_scope_present(text: str) -> bool:
 
 
 def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
-    """Remove generated tip/mistake/watch-out lines for explicitly absent sub-systems.
+    """Remove generated advice/docs/logic lines for explicitly absent sub-systems.
 
-    PR #16 filtered checklist/warning surfaces, but production smoke showed the
-    model can still echo negated hood/grease/ANSUL and clinic/x-ray/med-gas
-    concepts into generic advice lists. These lists are user-visible report
-    surfaces, so item-specific scope gates must apply here too.
+    PR #16/17 filtered checklist + initial advice surfaces. Broader production
+    QA showed the same negative evidence can echo into `what_to_bring`,
+    `quality_warnings`, and `permits_required_logic`. Drop only the individual
+    customer-visible item that mentions an absent subsystem; keep unrelated
+    permits and companion permits intact.
     """
     scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
     forbidden_terms: list[str] = []
     if not _restaurant_hood_scope_present(scope_text):
         forbidden_terms += ["hood", "ansul", "fire suppression", "grease duct"]
     if not _restaurant_grease_scope_present(scope_text):
-        forbidden_terms += ["grease", "f.o.g", "fog"]
+        forbidden_terms += ["grease", "f.o.g"]
+    if not _has_unnegated_any(scope_text, ("food", "beverage", "coffee", "cafe", "restaurant", "commercial kitchen", "grocery", "alcohol", "bar ", " bar", "cannabis", "prep kitchen")):
+        forbidden_terms += ["food establishment", "food-establishment", "food service", "commercial kitchen", "health department", "food", "beverage"]
+    if not _has_unnegated_any(scope_text, ("commercial dishwasher", "dishwasher", "prep sink", "floor sink", "mop sink", "indirect waste")):
+        forbidden_terms += ["plumbing sheets", "plumbing sheet", "plumbing plans", "plumbing plan"]
     if not _medical_clinic_scope_present(scope_text):
-        forbidden_terms += ["commercial clinic", "clinic", "exam room", "exam rooms", "patient care", "treatment room", "treatment rooms"]
+        forbidden_terms += ["commercial clinic", "clinic", "exam room", "exam rooms", "exam-room", "patient care", "treatment room", "treatment rooms"]
     if not _medical_xray_scope_present(scope_text):
         forbidden_terms += ["x-ray", "x ray", "radiology"]
     if not _medical_gas_scope_present(scope_text):
-        forbidden_terms += ["medical gas", "med gas"]
+        forbidden_terms += ["medical gas", "medical-gas", "med gas"]
 
     if not forbidden_terms:
         return
 
-    for key in ("pro_tips", "common_mistakes", "watch_out"):
+    def has_forbidden(value) -> bool:
+        text = str(value).lower()
+        return any(term in text for term in forbidden_terms)
+
+    for key in ("pro_tips", "common_mistakes", "watch_out", "what_to_bring", "quality_warnings", "permits_required_logic"):
         items = result.get(key)
         if not isinstance(items, list):
             continue
-        result[key] = [
-            item
-            for item in items
-            if not any(term in str(item).lower() for term in forbidden_terms)
-        ]
+        result[key] = [item for item in items if not has_forbidden(item)]
+
+
+def _residential_single_trade_scope(job_type: str) -> bool:
+    text = f" {(job_type or '').lower()} "
+    residential_marker = _has_unnegated_any(text, ("residential", "single-family", "single family", "single family home", "single-family home", "dwelling", "house", "home"))
+    trade_marker = _has_unnegated_any(text, ("water heater", "hvac", "furnace", "air conditioner", "heat pump", "reroof", "re-roof", "roof replacement"))
+    return residential_marker and trade_marker
+
+
+def _repair_residential_trade_model_leak(result: dict, job_type: str) -> None:
+    """Trust explicit residential single-trade scope over stale commercial model output."""
+    if not _residential_single_trade_scope(job_type):
+        return
+    detected = detect_primary_scope(job_type or "")
+    if detected in {"commercial_restaurant", "commercial_office_ti", "commercial_retail_ti", "commercial_medical_clinic_ti", "multifamily", "commercial"}:
+        return
+    result["_primary_scope"] = detected or "residential"
+    classified = classify_scope_required_permits(job_type or "")
+    if classified:
+        result["permits_required"] = classified.get("permits_required", result.get("permits_required", []))
+        result["permits_required_logic"] = classified.get("permits_required_logic", result.get("permits_required_logic", []))
+        result["companion_permits"] = classified.get("companion_permits", [])
+        result["_residential_trade_leak_repaired"] = True
+        result["permit_verdict"] = "YES"
 
 
 def _commercial_companion_scope(job_type: str, result: dict | None = None) -> str:
@@ -606,6 +642,7 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     and expose uncertainty instead of letting a polished but mismatched report
     reach a contractor.
     """
+    _repair_residential_trade_model_leak(result, job_type)
     warnings = list(result.get("quality_warnings") or [])
     primary = _primary_permit_text(result)
     primary_l = primary.lower()
@@ -660,8 +697,6 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
         result["confidence"] = "medium"
         warnings.append("Confidence downgraded because no source URLs were attached to the result.")
 
-    _filter_negated_surface_lists(result, job_type)
-
     if warnings:
         deduped = []
         for w in warnings:
@@ -669,6 +704,8 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
                 deduped.append(w)
         result["quality_warnings"] = deduped
         result["needs_review"] = True
+
+    _filter_negated_surface_lists(result, job_type)
     return result
 
 
@@ -726,6 +763,9 @@ def build_claim_citations(result: dict) -> list[dict]:
 
 def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict:
     url = result.get("apply_url") or ""
+    if result.get("_residential_trade_leak_repaired") and re.search(r"commercial|tenant[-_ ]?improvement|tenant[-_ ]?finish", str(url), re.I):
+        url = ""
+        result["apply_url"] = ""
     lower = url.lower()
     platform = "unknown"
     if "accela" in lower or "citizenaccess" in lower:

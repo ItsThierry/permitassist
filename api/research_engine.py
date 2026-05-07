@@ -3130,6 +3130,8 @@ def generate_permit_checklist(job_type: str, city: str, state: str, result: dict
                 scope_items = [item for item in scope_items if _restaurant_checklist_item_applies(item, job_lc)]
             elif scope_key == "commercial_medical_clinic_ti":
                 scope_items = [item for item in scope_items if _medical_checklist_item_applies(item, job_lc)]
+            elif scope_key == "commercial_retail_ti":
+                scope_items = [item for item in scope_items if _retail_checklist_item_applies(item, job_lc)]
             items.extend(scope_items)
         license_required = result.get('license_required') or ''
         applying_office = result.get('applying_office') or ''
@@ -4590,6 +4592,20 @@ def _medical_checklist_item_applies(item: str, job_type: str) -> bool:
     return True
 
 
+def _retail_checklist_item_applies(item: str, job_type: str) -> bool:
+    """Suppress food/health retail checklist lines unless food/beverage is actually in scope."""
+    item_l = (item or "").lower()
+    if any(term in item_l for term in ("food", "beverage", "health department", "health/licensing")):
+        return _has_unnegated_any(
+            job_type or "",
+            (
+                "food", "beverage", "coffee", "cafe", "restaurant", "commercial kitchen",
+                "grocery", "alcohol", "bar ", " bar", "cannabis", "prep kitchen",
+            ),
+        )
+    return True
+
+
 def _has_healthcare_scope_signal(job: str) -> bool:
     text = f" {(job or '').lower()} "
     admin_context = _has_unnegated_any(text, ("professional office", "office ti", "office tenant improvement", "office suite", "corporate office", "law office"))
@@ -4976,7 +4992,9 @@ def apply_scope_aware_permit_classification(result: dict, job_type: str) -> dict
     if not isinstance(result, dict):
         return result
     classified = classify_scope_required_permits(job_type)
+    primary_scope = detect_primary_scope(job_type or "")
     if classified:
+        result["_primary_scope"] = primary_scope
         result["permits_required"] = classified["permits_required"]
         result["permits_required_logic"] = classified["permits_required_logic"]
         result["companion_permits"] = classified.get("companion_permits", result.get("companion_permits", []))
