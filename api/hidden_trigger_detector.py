@@ -1194,8 +1194,11 @@ NAMED_REGIONS = {
 PRIVATE_TRIGGER_KEYS = {"_notes", "_jurisdiction", "_scope_aliases"}
 
 # Schema keys that exist on the trigger dict but should not be returned to the
-# caller because they are internal gating metadata.
-INTERNAL_TRIGGER_KEYS = {"regions", "not_regions"}
+# caller because they are internal gating/matcher metadata. In particular,
+# `fired_by` contains raw regexes used by the detector; exposing those regexes in
+# production responses leaks unrelated scope terms into customer-visible output
+# and can trip downstream sell-readiness gates.
+INTERNAL_TRIGGER_KEYS = {"regions", "not_regions", "fired_by"}
 
 
 def _term_is_locally_negated(text: str, term_start: int) -> bool:
@@ -1492,7 +1495,6 @@ def _public_trigger(trigger: dict) -> dict:
     clean.setdefault("companion_permits", [])
     clean.setdefault("agencies", [])
     clean.setdefault("citations", [])
-    clean.setdefault("fired_by", [])
     return clean
 
 
