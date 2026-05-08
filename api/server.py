@@ -660,8 +660,20 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
             "fog interceptor", "fog review", "fog approval", "fog requirement",
             "fog requirements", "fog forms", "fog sizing", "fog wastewater", "fog worksheet", "fog plan",
         ]
+    restaurant_scope_present = (
+        _restaurant_hood_scope_present(scope_text)
+        or _restaurant_grease_scope_present(scope_text)
+        or _restaurant_food_health_scope_present(scope_text)
+    )
     if not (_restaurant_food_health_scope_present(scope_text) or _retail_food_health_scope_present(scope_text)):
         forbidden_terms += ["food establishment", "food-establishment", "food service", "commercial kitchen", "health department", "food", "beverage"]
+    if not restaurant_scope_present:
+        # Customer-visible classification/prose surfaces should use positive
+        # scope framing. Even semantically negative contrast like "not a
+        # restaurant hood" can read as wrong-vertical leakage in lab fume hood
+        # or office/retail outputs. Preserve true restaurant positives via the
+        # unnegated-scope checks above.
+        forbidden_terms += ["restaurant", "commercial kitchen", "kitchen", "ansul", "grease", "f.o.g", "fog"]
     if not _has_unnegated_any(scope_text, ("commercial dishwasher", "dishwasher", "prep sink", "floor sink", "mop sink", "indirect waste")):
         forbidden_terms += ["plumbing sheets", "plumbing sheet", "plumbing plans", "plumbing plan"]
     if not _medical_clinic_scope_present(scope_text):
