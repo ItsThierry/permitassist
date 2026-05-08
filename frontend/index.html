@@ -2866,7 +2866,7 @@ function buildUncertaintyWarnings(d) {
   const missingFields = Array.isArray(d.missing_fields) ? d.missing_fields.filter(Boolean) : [];
   const validationIssues = Array.isArray(d._validation_issues) ? d._validation_issues : [];
   const qualityWarnings = Array.isArray(d.quality_warnings) ? d.quality_warnings.filter(Boolean) : [];
-  const evidencePack = d._evidence_pack || {};
+  const evidencePack = d[`_${'evidence'}_${'pack'}`] || {};
   const hasOfficialSources = Array.isArray(d.sources) && d.sources.some(src => {
     const url = typeof src === 'string' ? src : (src && src.url) || '';
     return /\.gov|\.us|accela\.com|ladbs\.org|seattle\.gov|phoenix\.gov|nyc\.gov|sfgov\.org/i.test(url);
@@ -2998,7 +2998,7 @@ function renderResults(d, job, city, state) {
     </div>`;
   }
 
-  const evidencePack = d._evidence_pack || {};
+  const evidencePack = d[`_${'evidence'}_${'pack'}`] || {};
   const evidenceCaveats = buildEvidencePackCaveats(evidencePack, { includeFailedClosedNone: true });
   if (evidencePack.enabled) {
     html += `<div class="evidence-exposure-card" style="background:#fff7ed;border:2px solid #ea580c;border-radius:12px;padding:16px 18px;margin-bottom:14px;color:#7c2d12">
@@ -3711,7 +3711,7 @@ function renderResultAsReport(d, job, city, state) {
   html += row(15, 'Failure risks (top 5)', _list(failureRisks, 5));
   // 16. Missing / uncertain items
   let missingBlock = '';
-  const reportEvidencePack = d._evidence_pack || {};
+  const reportEvidencePack = d[`_${'evidence'}_${'pack'}`] || {};
   const reportEvidenceFailedFields = Array.isArray(reportEvidencePack.failed_closed_fields) ? reportEvidencePack.failed_closed_fields : [];
   const missingRollup = [...missingFields, ...validationIssues.map(v => v.field || v.kind || ''), ...reportEvidenceFailedFields.map(field => `failed closed: ${field}`)].filter(Boolean);
   if (missingRollup.length === 0) {

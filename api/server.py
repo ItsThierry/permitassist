@@ -556,18 +556,108 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
     if not _medical_gas_scope_present(scope_text):
         forbidden_terms += ["medical gas", "medical-gas", "med gas"]
 
+    explicit_absent_terms = {
+        r"\bno\s+commercial\s+kitchen\b": "commercial kitchen",
+        r"\bwithout\s+commercial\s+kitchen\b": "commercial kitchen",
+        r"\bno\s+food\s+establishment\b": "food establishment",
+        r"\bno\s+health\s+department\b": "health department",
+        r"\bno\s+grease\s+interceptor\b": "grease interceptor",
+        r"\bno\s+grease\b": "grease",
+        r"\bno\s+type\s*i\s*hood\b": "type i hood",
+        r"\bno\s+type\s*1\s*hood\b": "type 1 hood",
+        r"\bno\s+kitchen\s+hood\b": "kitchen hood",
+        r"\bno\s+cooking\s+hood\b": "cooking hood",
+        r"\bno\s+hood\b": "hood",
+        r"\bno\s+ansul\b": "ansul",
+        r"\bno\s+fire\s+suppression\b": "fire suppression",
+        r"\bno\s+clinic\b": "clinic",
+        r"\bno\s+exam\s+rooms?\b": "exam room",
+        r"\bno\s+treatment\s+rooms?\b": "treatment room",
+        r"\bno\s+x[- ]?ray\b": "x-ray",
+        r"\bno\s+medical\s+gas\b": "medical gas",
+        r"\bno\s+patient\s+care\b": "patient care",
+    }
+    for pattern, term in explicit_absent_terms.items():
+        if re.search(pattern, scope_text):
+            forbidden_terms.append(term)
+
+    # Preserve order but avoid redundant scans.
+    forbidden_terms = list(dict.fromkeys(forbidden_terms))
+
     if not forbidden_terms:
         return
 
+    def term_hits_text(term: str, text: str) -> bool:
+        if term == "hood" and "fume hood" in text and not any(k in text for k in ("type i hood", "type 1 hood", "kitchen hood", "cooking hood", "hood suppression")):
+            return False
+        return term in text
+
     def has_forbidden(value) -> bool:
         text = str(value).lower()
-        return any(term in text for term in forbidden_terms)
+        return any(term_hits_text(term, text) for term in forbidden_terms)
 
-    for key in ("pro_tips", "common_mistakes", "watch_out", "what_to_bring", "quality_warnings", "permits_required_logic", "checklist", "permit_checklist"):
-        items = result.get(key)
-        if not isinstance(items, list):
+    def scrub_text(value: str) -> str:
+        """Remove absent-trigger clauses without deleting the rest of the answer.
+
+        The 25-case smoke scores customer-visible prose, not just structured
+        permits. If the model echoes "no hood/no grease/no clinic" inside a
+        useful summary, keep the useful summary but drop the negated clause so
+        absent systems do not look like customer-facing requirements.
+        """
+        if not value or not has_forbidden(value):
+            return value
+        chunks = re.split(r"([.;\n]|\s+but\s+|\s+and\s+)", value)
+        kept: list[str] = []
+        for i in range(0, len(chunks), 2):
+            chunk = chunks[i]
+            sep = chunks[i + 1] if i + 1 < len(chunks) else ""
+            if not chunk.strip():
+                kept.append(chunk + sep)
+                continue
+            if has_forbidden(chunk):
+                continue
+            kept.append(chunk + sep)
+        cleaned = "".join(kept)
+        cleaned = re.sub(r"\s+([.;,])", r"\1", cleaned)
+        cleaned = re.sub(r"(?:\s+(?:and|but)\s*)+([.;]|$)", r"\1", cleaned, flags=re.I)
+        cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" ;,\n")
+        return cleaned
+
+    def scrub_value(value):
+        if isinstance(value, str):
+            return scrub_text(value)
+        if isinstance(value, list):
+            out = []
+            for item in value:
+                cleaned = scrub_value(item)
+                if cleaned not in ("", [], {}):
+                    out.append(cleaned)
+            return out
+        if isinstance(value, dict):
+            out = {}
+            for k, item in value.items():
+                cleaned = scrub_value(item) if k in {"notes", "note", "description", "summary", "included_because", "reason", "required_if", "scope_trigger", "steps", "portal_selection_path", "likely_documents", "verification_note"} or isinstance(item, (list, dict)) else item
+                if cleaned not in ("", [], {}):
+                    out[k] = cleaned
+            return out
+        return value
+
+    for key in (
+        "pro_tips", "common_mistakes", "watch_out", "what_to_bring", "quality_warnings",
+        "permits_required_logic", "checklist", "permit_checklist", "next_steps", "requirements",
+        "documents_needed", "permit_notes", "notes", "summary", "description", "recommendation",
+        "job_summary", "confidence_reason", "disclaimer", "apply_path", "permits_required",
+    ):
+        if key not in result:
             continue
-        result[key] = [item for item in items if not has_forbidden(item)]
+        if isinstance(result.get(key), list):
+            result[key] = [item for item in (scrub_value(item) for item in result[key]) if item not in ("", [], {})]
+        elif isinstance(result.get(key), (str, dict)):
+            cleaned = scrub_value(result[key])
+            if cleaned in ("", [], {}):
+                result.pop(key, None)
+            else:
+                result[key] = cleaned
 
 
 def _residential_single_trade_scope(job_type: str) -> bool:
