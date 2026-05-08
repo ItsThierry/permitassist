@@ -62,6 +62,14 @@ BLOG_DIR       = os.path.join(os.path.dirname(__file__), "..", "seo", "blog")
 _default_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
 DATA_DIR = os.environ.get("CACHE_DIR") or os.environ.get("RAILWAY_VOLUME_MOUNT_PATH") or _default_data_dir
 PORT           = int(os.environ.get("PORT", 8766))
+# Railway hobby production has a single small app instance. The permit engine can
+# fan out to search/provider calls and large JSON shaping, so keep expensive
+# /api/permit work serialized by default while still allowing static/auth/limit
+# routes to respond on ThreadingHTTPServer. This prevents paired smoke lookups
+# from starving or restarting the worker and surfacing as Railway edge 502s.
+PERMIT_LOOKUP_CONCURRENCY_LIMIT = max(1, int(os.environ.get("PERMIT_LOOKUP_CONCURRENCY_LIMIT", "1")))
+PERMIT_LOOKUP_QUEUE_TIMEOUT_SECONDS = max(1, int(os.environ.get("PERMIT_LOOKUP_QUEUE_TIMEOUT_SECONDS", "45")))
+PERMIT_LOOKUP_SEMAPHORE = threading.BoundedSemaphore(PERMIT_LOOKUP_CONCURRENCY_LIMIT)
 EMAILS_CSV     = os.path.join(DATA_DIR, "captured_emails.csv")
 CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
 SHARE_TTL_DAYS = 90  # shareable links expire after 90 days
@@ -4766,6 +4774,7 @@ class Handler(BaseHTTPRequestHandler):
                 used_before = 0 if unlimited else get_effective_free_usage(ip, fingerprint)
                 response_headers = {} if unlimited else build_free_lookup_headers(used_before)
 
+                admin_bypass = False
                 if not is_sample_demo and not is_benchmark:
                     limited, retry_after = check_rate_limit(ip)
                     if limited and not unlimited:
@@ -4778,6 +4787,7 @@ class Handler(BaseHTTPRequestHandler):
                     # Admin-bypass: if X-Admin-Token header matches ADMIN_TOKEN env, skip the free-tier limit
                     admin_token = self.headers.get("X-Admin-Token", "")
                     if ADMIN_TOKEN and admin_token == ADMIN_TOKEN:
+                        admin_bypass = True
                         # Log the bypass for audit trail
                         print(f"[admin-bypass] /api/permit lookup bypass at {datetime.utcnow().isoformat()} email={data.get('email','')}")
                         # Skip free-tier limit check — proceed to engine
@@ -4812,44 +4822,72 @@ class Handler(BaseHTTPRequestHandler):
                     "benchmark": is_benchmark,
                 }, user_email or "")
                 evidence_allowed = evidence_pack_allowed_for_request(path, self.headers, is_sample_demo=is_sample_demo)
-                _use_cache = (not is_benchmark) and (not evidence_allowed)
-                result = research_permit(
-                    job_type, city, state, zip_code,
-                    job_category=job_category,
-                    use_cache=_use_cache,
-                    force_model=force_model,
-                    suppress_cache_write=evidence_allowed,
-                )
-                is_cached = result.get("_cached", False)
+                acquired_lookup_slot = PERMIT_LOOKUP_SEMAPHORE.acquire(timeout=PERMIT_LOOKUP_QUEUE_TIMEOUT_SECONDS)
+                if not acquired_lookup_slot:
+                    print(
+                        f"[permit] busy: concurrency limit {PERMIT_LOOKUP_CONCURRENCY_LIMIT} "
+                        f"held for >{PERMIT_LOOKUP_QUEUE_TIMEOUT_SECONDS}s; returning 429"
+                    )
+                    self.send_json(429, {
+                        "error": "server_busy",
+                        "message": "PermitAssist is processing other lookups. Please retry in a few seconds.",
+                    }, extra_headers={**response_headers, "Retry-After": "10"})
+                    return
+                try:
+                    if not unlimited and not admin_bypass:
+                        # A queued free lookup can become exhausted while waiting
+                        # behind another expensive lookup. Re-check immediately
+                        # before research so public/no-header traffic still
+                        # blocks cheaply instead of consuming worker resources.
+                        used_now = get_effective_free_usage(ip, fingerprint)
+                        if used_now >= FREE_LOOKUP_LIMIT:
+                            response_headers = build_free_lookup_headers(used_now)
+                            self.send_json(403, {
+                                "error": "free_limit_reached",
+                                "message": "You've used your 3 free lookups. Subscribe to continue.",
+                                "upgrade_url": FREE_LOOKUP_UPGRADE_URL,
+                            }, extra_headers=response_headers)
+                            return
+                    _use_cache = (not is_benchmark) and (not evidence_allowed)
+                    result = research_permit(
+                        job_type, city, state, zip_code,
+                        job_category=job_category,
+                        use_cache=_use_cache,
+                        force_model=force_model,
+                        suppress_cache_write=evidence_allowed,
+                    )
+                    is_cached = result.get("_cached", False)
 
-                if not unlimited and not is_sample_demo:
-                    used_after = max(*record_lookup_usage(ip, fingerprint))
-                    response_headers = build_free_lookup_headers(used_after)
-                    result["remaining_lookups"] = max(0, FREE_LOOKUP_LIMIT - used_after)
-                elif paid:
-                    result["remaining_lookups"] = -1
-                elif unlimited:
-                    result["remaining_lookups"] = FREE_LOOKUP_LIMIT
+                    if not unlimited and not is_sample_demo:
+                        used_after = max(*record_lookup_usage(ip, fingerprint))
+                        response_headers = build_free_lookup_headers(used_after)
+                        result["remaining_lookups"] = max(0, FREE_LOOKUP_LIMIT - used_after)
+                    elif paid:
+                        result["remaining_lookups"] = -1
+                    elif unlimited:
+                        result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
-                result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
+                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
 
-                # Record stats and beta telemetry
-                record_lookup_stat(job_type, city, state, is_cached)
-                record_beta_event("lookup_completed", {
-                    "city": city,
-                    "state": state,
-                    "job_category": job_category,
-                    "commercial_scope": _is_commercial_scope(job_type, result),
-                    "confidence": result.get("confidence"),
-                    "needs_review": result.get("needs_review", False),
-                    "cached": is_cached,
-                    "paid": paid,
-                    "free_limit_remaining": result.get("remaining_lookups"),
-                }, user_email or "")
+                    # Record stats and beta telemetry
+                    record_lookup_stat(job_type, city, state, is_cached)
+                    record_beta_event("lookup_completed", {
+                        "city": city,
+                        "state": state,
+                        "job_category": job_category,
+                        "commercial_scope": _is_commercial_scope(job_type, result),
+                        "confidence": result.get("confidence"),
+                        "needs_review": result.get("needs_review", False),
+                        "cached": is_cached,
+                        "paid": paid,
+                        "free_limit_remaining": result.get("remaining_lookups"),
+                    }, user_email or "")
 
-                # No Telegram on lookups — only notify on paying customers
+                    # No Telegram on lookups — only notify on paying customers
 
-                self.send_json(200, result, extra_headers=response_headers)
+                    self.send_json(200, result, extra_headers=response_headers)
+                finally:
+                    PERMIT_LOOKUP_SEMAPHORE.release()
 
             except Exception as e:
                 print(f"[permit] Error: {e}")
