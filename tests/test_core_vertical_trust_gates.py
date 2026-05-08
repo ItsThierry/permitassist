@@ -334,6 +334,88 @@ def test_pa300_restaurant_positive_can_still_use_public_health_restaurant_source
     assert "restaurant" in source["title"].lower()
 
 
+def test_pa300_exact_cache_hit_scrubs_stale_ab671_source_metadata(tmp_path, monkeypatch):
+    job = (
+        "Retail tenant improvement for packaged snacks and bottled drinks only: shelving, checkout counter, "
+        "lighting, no food prep, no commercial kitchen, no cooking, no hood, no grease. "
+        "QA marker PA300-008; marker is not permit scope."
+    )
+    stale_result = {
+        "permit_verdict": "YES",
+        "confidence": "medium",
+        "permit_name": "Commercial Building Permit — Tenant Improvement / Retail Interior Alteration",
+        "permit_type": "Commercial Building Permit — Tenant Improvement / Retail Interior Alteration",
+        "applying_office": "Los Angeles Department of Building and Safety (LADBS)",
+        "apply_url": "https://www.ladbs.org/services/apply-for-a-permit",
+        "sources": [],
+        "code_section_source": {
+            "url": "http://publichealth.lacounty.gov/eh/docs/faq/ab-671-plan-review-tenant-improvements-faq-en.pdf",
+            "title": "[PDF] AB 671 - Accelerated Restaurant Building Plan Review: California ...",
+            "verified_at": "2026-05-07",
+            "source_type": "official",
+        },
+    }
+    monkeypatch.setattr(engine, "CACHE_DB", str(tmp_path / "cache.db"))
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "")
+    engine.init_cache()
+    key = engine.cache_key(job, "Los Angeles", "CA", "commercial")
+    engine.save_cache(key, job, "commercial", "Los Angeles", "CA", "90012", stale_result)
+
+    out = engine.research_permit(job, "Los Angeles", "CA", "90012", use_cache=True, job_category="commercial")
+    customer_visible = {k: v for k, v in out.items() if not str(k).startswith("_")}
+    out_blob = f"{customer_visible}".lower()
+
+    assert out.get("_cached") is True
+    assert out.get("code_section_source") in ({}, None)
+    for forbidden in ("ab 671", "accelerated restaurant", "publichealth.lacounty.gov", "restaurant building plan"):
+        assert forbidden not in out_blob
+    dropped = out.get("_sources_locality_dropped") or []
+    assert any(d.get("field") == "code_section_source" and d.get("kind") == "source_scope" for d in dropped)
+
+
+def test_pa300_restaurant_source_metadata_preserved_for_true_restaurant_scope():
+    job = (
+        "Los Angeles restaurant tenant improvement with commercial kitchen, Type I hood, "
+        "grease interceptor and food preparation code section permit"
+    )
+    result = {
+        "sources": [],
+        "code_section_source": {
+            "url": "http://publichealth.lacounty.gov/eh/docs/faq/ab-671-plan-review-tenant-improvements-faq-en.pdf",
+            "title": "[PDF] AB 671 - Accelerated Restaurant Building Plan Review: California ...",
+            "verified_at": "2026-05-07",
+            "source_type": "official",
+        },
+    }
+
+    engine.apply_source_locality_hard_block(result, "Los Angeles", "CA", job)
+
+    assert result["code_section_source"]["title"].startswith("[PDF] AB 671")
+
+
+def test_pa300_negated_office_source_metadata_rejects_restaurant_public_health():
+    job = (
+        "Los Angeles office tenant improvement for admin desks, conference rooms, and breakroom sink; "
+        "no restaurant, no food prep, no commercial kitchen, no cooking, no hood, no grease."
+    )
+    result = {
+        "sources": [],
+        "code_section_source": {
+            "url": "http://publichealth.lacounty.gov/eh/docs/faq/ab-671-plan-review-tenant-improvements-faq-en.pdf",
+            "title": "[PDF] AB 671 - Accelerated Restaurant Building Plan Review: California ...",
+            "verified_at": "2026-05-07",
+            "source_type": "official",
+        },
+    }
+
+    engine.apply_source_locality_hard_block(result, "Los Angeles", "CA", job)
+
+    assert result.get("code_section_source") in ({}, None)
+    dropped = result.get("_sources_locality_dropped") or []
+    assert any(d.get("field") == "code_section_source" for d in dropped)
+
+
 def test_pa300_non_code_claim_source_also_rejects_restaurant_leak_for_packaged_retail(tmp_path, monkeypatch):
     packaged_query = (
         "Los Angeles CA packaged snack and bottled beverage retail tenant improvement with shelving, "
