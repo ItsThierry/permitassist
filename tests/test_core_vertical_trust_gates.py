@@ -1513,3 +1513,84 @@ def test_pa300_church_classroom_commercial_note_does_not_repeat_residential_cont
     assert "classrooms" in blob
     assert "commercial" in blob
     assert "residential" not in blob
+
+
+def test_pa300_cached_church_classroom_with_stale_residential_primary_is_sanitized():
+    job = (
+        "Church classroom alteration: divide fellowship hall into classrooms, new doors, "
+        "emergency lighting, egress signage, fire alarm coordination, no residential work. "
+        "QA marker PA300-012; marker is not permit scope."
+    )
+    stale_cached_result = {
+        "_cached": True,
+        "_primary_scope": "residential",
+        "_meta": {"job_category": "commercial"},
+        "permits_required": [
+            {
+                "permit_type": "Building Permit — Commercial Interior Alteration / Tenant Improvement",
+                "portal_selection": "Building Permit - Commercial Tenant Improvement",
+                "required": True,
+                "notes": (
+                    "Required for the interior reconfiguration of the fellowship hall into classrooms, "
+                    "including new interior partitions and new doors. Because this is a church/commercial "
+                    "occupancy space, the work is not a simple residential alteration."
+                ),
+            }
+        ],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+
+    out = server.finalize_permit_lookup_result(
+        stale_cached_result,
+        job,
+        "San Diego",
+        "CA",
+        is_cached=True,
+        evidence_allowed=False,
+    )
+    blob = _customer_surface_blob(out)
+
+    assert out["_cached"] is True
+    assert "fellowship hall" in blob
+    assert "classrooms" in blob
+    assert "commercial" in blob
+    assert "tenant improvement" in blob
+    assert "residential" not in blob
+
+
+def test_residential_single_trade_cached_result_preserves_residential_wording():
+    job = "Residential water heater replacement in a single-family home; no commercial work."
+    cached_result = {
+        "_cached": True,
+        "_primary_scope": "residential",
+        "_meta": {"job_category": "residential"},
+        "permits_required": [
+            {
+                "permit_type": "Residential Plumbing Permit — Water Heater Replacement",
+                "portal_selection": "Residential Plumbing - Water Heater Replacement",
+                "required": True,
+                "notes": "Residential water heater replacement; verify local plumbing permit naming before applying.",
+            }
+        ],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+
+    out = server.finalize_permit_lookup_result(
+        cached_result,
+        job,
+        "Dallas",
+        "TX",
+        is_cached=True,
+        evidence_allowed=False,
+    )
+    blob = _customer_surface_blob(out)
+
+    assert "residential water heater" in blob
+    assert "residential plumbing permit" in blob
+    assert "tenant improvement" not in blob
