@@ -237,6 +237,92 @@ def test_pc10_office_coffee_trap_chicago_no_required_mechanical_without_hvac():
         assert forbidden not in required_blob
 
 
+def test_pr24_negative_trap_customer_prose_does_not_repeat_absent_restaurant_or_medical_terms():
+    cases = [
+        (
+            "restaurant dining-room cosmetic refresh: paint, flooring, decorative lighting, tables and chairs only; "
+            "no kitchen work, no cooking equipment, no hood, no fryer, no grease interceptor, no fire suppression modification",
+            "Los Angeles",
+            "CA",
+            ["ansul", "grease interceptor", "type i hood", "commercial kitchen", "health department food establishment"],
+        ),
+        (
+            "coffee shop tenant improvement with espresso bar, hand sink, undercounter refrigerator, pastry display, seating and restroom refresh; "
+            "no cooking line, no Type I hood, no grease fryer, no ANSUL changes",
+            "Orlando",
+            "FL",
+            ["type i hood", "grease interceptor", "ansul"],
+        ),
+        (
+            "bar tenant improvement with serving counter, beer taps, glass washer, seating, restrooms and occupancy layout; "
+            "no commercial kitchen, no fryer, no Type I hood, no grease interceptor work",
+            "Miami",
+            "FL",
+            ["type i hood", "grease interceptor", "commercial kitchen"],
+        ),
+        (
+            "dental insurance administration office remodel with cubicles, training room and records storage only; "
+            "no dental chairs, no treatment rooms, no exam rooms, no x-ray equipment, no medical gas",
+            "Irvine",
+            "CA",
+            ["treatment room", "x-ray", "medical gas", "patient care"],
+        ),
+        (
+            "law firm office tenant improvement with private offices, conference rooms, reception, records storage and break room coffee bar; "
+            "no medical use, no restaurant, no clinic, no kitchen cooking, no hood",
+            "Chicago",
+            "IL",
+            ["hood", "grease interceptor", "health department", "clinic", "exam room", "x-ray", "medical gas"],
+        ),
+        (
+            "packaged snack and beverage retail tenant improvement with shelving, checkout, stockroom, restroom refresh; "
+            "no food preparation, no restaurant, no kitchen, no hood, no grease work",
+            "Phoenix",
+            "AZ",
+            ["hood", "ansul", "grease interceptor", "food establishment", "commercial kitchen"],
+        ),
+    ]
+
+    for job, city, state, forbidden_terms in cases:
+        out = _apply_core_layers(job, city, state)
+        out.update({
+            "job_summary": f"Model echo: {job}.",
+            "summary": f"Model echo: {job}.",
+            "description": f"Model echo: {job}.",
+            "recommendation": f"Model echo: {job}.",
+            "next_steps": [f"Model echo: {job} before filing."],
+            "quality_warnings": [f"Model echo: {job}."] + out.get("quality_warnings", []),
+        })
+        gated = server.apply_permitiq_quality_gate(out, job, city, state)
+        server.build_apply_path(gated, job, city, state)
+        blob = _customer_surface_blob(gated)
+        assert any(expected in blob for expected in ("restaurant", "coffee", "bar", "dental", "law firm", "office", "retail", "tenant improvement"))
+        assert "building permit" in blob or "tenant improvement" in blob or "interior alteration" in blob
+        for forbidden in forbidden_terms:
+            assert forbidden not in blob
+
+
+def test_pr24_lab_fume_hood_positive_scope_survives_restaurant_hood_hygiene():
+    job = (
+        "office research/admin suite adding a small laboratory fume hood for non-food sample preparation "
+        "and chemical ventilation; no cooking hood, no restaurant, no food prep, no grease, no clinic"
+    )
+    out = _apply_core_layers(job, "Portland", "OR")
+    out.update({
+        "job_summary": "Office research/admin suite with laboratory fume hood and chemical ventilation; no cooking hood or restaurant scope.",
+        "pro_tips": ["Include laboratory fume hood ventilation details and mechanical drawings."],
+        "quality_warnings": [],
+    })
+
+    gated = server.apply_permitiq_quality_gate(out, job, "Portland", "OR")
+    blob = _customer_surface_blob(gated)
+
+    assert "fume hood" in blob
+    assert "ventilation" in blob or "mechanical" in blob
+    for forbidden in ("grease interceptor", "food establishment", "commercial kitchen", "ansul", "clinic"):
+        assert forbidden not in blob
+
+
 def test_professional_office_for_medical_billing_company_is_not_medical_clinic():
     job = (
         "2,400 sf professional office TI for medical billing and insurance administration company; "
