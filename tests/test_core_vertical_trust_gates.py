@@ -706,6 +706,28 @@ def test_hidden_trigger_public_payload_excludes_internal_fired_by_regexes():
     assert all("regions" not in trigger and "not_regions" not in trigger for trigger in triggers)
 
 
+def test_cached_hidden_trigger_payload_scrubs_internal_matcher_metadata():
+    cached = {
+        "hidden_triggers": [
+            {
+                "id": "commercial_change_of_occupancy_b_to_a2_or_m_sprinkler_general",
+                "title": "Change of occupancy review",
+                "fired_by": [r"\b(office|warehouse)\s+to\s+(restaurant|retail)\b"],
+                "regions": ["ca"],
+                "not_regions": ["outside_ca"],
+            }
+        ]
+    }
+
+    engine.scrub_hidden_trigger_internal_metadata(cached)
+
+    assert cached["hidden_triggers"][0]["title"] == "Change of occupancy review"
+    assert "fired_by" not in cached["hidden_triggers"][0]
+    assert "regions" not in cached["hidden_triggers"][0]
+    assert "not_regions" not in cached["hidden_triggers"][0]
+    assert cached["_hidden_trigger_metadata_sanitized"]
+
+
 def test_pc10_office_coffee_trap_chicago_no_required_mechanical_without_hvac():
     job = (
         "PC10 QA marker: Chicago law office tenant improvement with private offices, conference room, "
