@@ -7932,6 +7932,32 @@ def validate_and_sanitize_permit_result(result: dict, job_type: str, city: str, 
     return result
 
 
+def scrub_hidden_trigger_internal_metadata(result: dict) -> dict:
+    """Remove hidden-trigger matcher metadata from cached and fresh responses.
+
+    Older exact-cache entries can contain `hidden_triggers[].fired_by` raw regex
+    patterns from the detector. Those patterns are internal implementation data,
+    not contractor-facing evidence, and can leak unrelated vertical terms (for
+    example restaurant regex alternatives) into non-restaurant outputs.
+    """
+    if not isinstance(result, dict):
+        return result
+    triggers = result.get("hidden_triggers")
+    if not isinstance(triggers, list):
+        return result
+    removed: list[dict] = []
+    for idx, trigger in enumerate(triggers):
+        if not isinstance(trigger, dict):
+            continue
+        for key in ("fired_by", "regions", "not_regions"):
+            if key in trigger:
+                trigger.pop(key, None)
+                removed.append({"field": f"hidden_triggers[{idx}].{key}", "kind": "internal_hidden_trigger_metadata_removed"})
+    if removed:
+        result["_hidden_trigger_metadata_sanitized"] = removed[:25]
+    return result
+
+
 # ─── Main Research Function ───────────────────────────────────────────────────
 
 def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False) -> dict:
@@ -8005,6 +8031,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             enforce_ti_min_permits_floor(cached, job_type, city, state)
             enforce_commercial_primary_permit_guardrail(cached, job_type, city, state)
             validate_and_sanitize_permit_result(cached, job_type, city, state)
+            scrub_hidden_trigger_internal_metadata(cached)
             apply_state_expert_pack(cached, city, state, job_type)
             hedge_companion_permits(cached, job_type)
             enrich_result_with_serper_sources(cached, job_type, city, state)
@@ -8932,6 +8959,7 @@ Return ONLY the JSON object."""
     # issues are found, redacts the bad fields, downgrades confidence to
     # "low", and sets needs_review=True so the UI surfaces the warning.
     validate_and_sanitize_permit_result(result, job_type, city, state)
+    scrub_hidden_trigger_internal_metadata(result)
     apply_rulebook_depth(result, job_type, city, state)
     sanitize_non_food_office_breakroom_text(result, job_type)
 
