@@ -1476,6 +1476,131 @@ def test_commercial_conversion_with_residential_words_still_repairs_to_commercia
     assert "residential plumbing permit" not in blob
 
 
+def test_pa300_lab_fume_hood_note_preserves_lab_meaning_without_restaurant_contrast():
+    job = (
+        "Research lab tenant improvement: install chemical fume hood, exhaust ducting, "
+        "lab sinks, emergency eyewash, electrical, and hazardous material storage review; "
+        "not a restaurant hood. QA marker PA300-015; marker is not permit scope."
+    )
+    result = {
+        "_primary_scope": "commercial",
+        "permits_required": [
+            {
+                "permit_type": "Building Permit — Commercial Laboratory Tenant Improvement",
+                "portal_selection": "Building Permit - Commercial Tenant Improvement",
+                "required": True,
+                "notes": "Required for the research laboratory tenant improvement and hazardous materials review.",
+            },
+            {
+                "permit_type": "Mechanical Permit — Chemical Fume Hood Exhaust",
+                "portal_selection": "Mechanical Permit - Commercial Alteration",
+                "required": True,
+                "notes": "Required for the chemical fume hood exhaust system and associated ducting. This is a lab exhaust system, not a restaurant hood.",
+            },
+        ],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+
+    gated = server.apply_permitiq_quality_gate(result, job, "Los Angeles", "CA")
+    blob = _customer_surface_blob(gated)
+
+    for required in ("chemical fume hood", "lab", "exhaust", "hazardous"):
+        assert required in blob
+    for forbidden in ("restaurant", "kitchen", "food service", "food-service", "grease", "fog", "ansul"):
+        assert forbidden not in blob
+
+
+def test_pa300_true_restaurant_hood_scope_preserves_restaurant_grease_health_fire_guidance():
+    job = (
+        "Los Angeles restaurant tenant improvement with full commercial kitchen, Type I hood, "
+        "ANSUL fire suppression, fryer, griddle, grease interceptor, hand sinks, "
+        "and health department food-establishment review."
+    )
+    result = {
+        "_primary_scope": "commercial_restaurant",
+        "permits_required": [
+            {
+                "permit_type": "Building Permit — Tenant Improvement / Restaurant Interior Alteration",
+                "portal_selection": "Building Permit - Restaurant Tenant Improvement",
+                "required": True,
+                "notes": "Required for the restaurant tenant improvement and commercial kitchen buildout.",
+            },
+            {
+                "permit_type": "Mechanical Permit — Type I Kitchen Hood",
+                "portal_selection": "Mechanical Permit - Commercial Kitchen Hood",
+                "required": True,
+                "notes": "Required for the Type I hood, grease duct, and ANSUL fire suppression scope.",
+            },
+            {
+                "permit_type": "Health Department / Food Establishment Review",
+                "portal_selection": "Public Health Food Facility Plan Review",
+                "required": True,
+                "notes": "Required for restaurant food preparation and grease interceptor coordination.",
+            },
+        ],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+
+    gated = server.apply_permitiq_quality_gate(result, job, "Los Angeles", "CA")
+    blob = _customer_surface_blob(gated)
+
+    for required in ("restaurant", "kitchen", "hood", "grease", "health", "fire"):
+        assert required in blob
+
+
+def test_pa300_cached_lab_fume_hood_exact_response_scrubs_restaurant_contrast():
+    job = (
+        "Research lab tenant improvement: install chemical fume hood, exhaust ducting, "
+        "lab sinks, emergency eyewash, electrical, and hazardous material storage review; "
+        "not a restaurant hood. QA marker PA300-015; marker is not permit scope."
+    )
+    cached_result = {
+        "_cached": True,
+        "_primary_scope": "commercial",
+        "_meta": {"job_category": "commercial", "vertical": "commercial_specialty"},
+        "permits_required": [
+            {
+                "permit_type": "Building Permit — Commercial Laboratory Tenant Improvement",
+                "portal_selection": "Building Permit - Commercial Tenant Improvement",
+                "required": True,
+                "notes": "Required for the research laboratory tenant improvement and hazardous materials review.",
+            },
+            {
+                "permit_type": "Mechanical Permit — Chemical Fume Hood Exhaust",
+                "portal_selection": "Mechanical Permit - Commercial Alteration",
+                "required": True,
+                "notes": "Required for the chemical fume hood exhaust system and associated ducting. This is a lab exhaust system, not a restaurant hood.",
+            },
+        ],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+
+    out = server.finalize_permit_lookup_result(
+        cached_result,
+        job,
+        "Los Angeles",
+        "CA",
+        is_cached=True,
+        evidence_allowed=False,
+    )
+    blob = _customer_surface_blob(out)
+
+    assert out["_cached"] is True
+    for required in ("chemical fume hood", "lab", "exhaust", "hazardous"):
+        assert required in blob
+    for forbidden in ("restaurant", "kitchen", "food service", "food-service", "grease", "fog", "ansul"):
+        assert forbidden not in blob
+
+
 def test_pa300_church_classroom_commercial_note_does_not_repeat_residential_contrast():
     job = (
         "Church classroom alteration: divide fellowship hall into classrooms, new doors, "
