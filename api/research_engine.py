@@ -676,10 +676,29 @@ def apply_source_locality_hard_block(result: dict, city: str, state: str, job_ty
             result.pop("_apply_url_locality_warning", None)
 
     for key, value in list(result.items()):
-        if key.endswith("_source") and isinstance(value, str) and value.startswith("http"):
-            if not is_url_allowed_for_locality(value, city, state, result=result):
-                dropped.append({"field": key, "url": value})
+        if not key.endswith("_source"):
+            continue
+        if isinstance(value, str) and value.startswith("http"):
+            locality_bad = not is_url_allowed_for_locality(value, city, state, result=result)
+            scope_bad = _source_url_incompatible_with_scope(value, job_type)
+            if locality_bad or scope_bad:
+                dropped.append({"field": key, "url": value, "kind": "source_scope" if scope_bad else "source_locality"})
                 result[key] = None
+        elif isinstance(value, dict):
+            url = str(value.get("url") or "")
+            source_item = {
+                "url": url,
+                "title": value.get("title") or url,
+                "content": value.get("content") or value.get("snippet") or "",
+                "snippet": value.get("snippet") or value.get("content") or "",
+            }
+            locality_bad = bool(url) and not is_url_allowed_for_locality(url, city, state, result=result)
+            scope_bad = _source_incompatible_with_scope_text(source_item, job_type, key.removesuffix("_source"))
+            if locality_bad and not scope_bad and _specialty_source_metadata_allowed_for_scope(source_item, job_type, city, state):
+                locality_bad = False
+            if locality_bad or scope_bad:
+                dropped.append({"field": key, "url": url or "source_metadata", "kind": "source_scope" if scope_bad else "source_locality"})
+                result[key] = {}
 
     text_policy = {
         "fee_range": False,
@@ -4162,6 +4181,28 @@ def _scope_text_is_admin_office_not_medical(scope_text: str) -> bool:
     ))
     actual_medical_scope = _has_healthcare_scope_signal(text)
     return office_signal and explicit_no_medical and not actual_medical_scope
+
+
+def _specialty_source_metadata_allowed_for_scope(item: dict, scope_text: str, city: str, state: str) -> bool:
+    """Allow cross-agency specialty source metadata only when the scope truly matches.
+
+    Los Angeles restaurant work can legitimately cite LA County Public Health food
+    plan-review pages even when the building permit AHJ is LADBS. The same source
+    is a stop-condition leak for packaged retail that explicitly says no food prep
+    / no restaurant / no kitchen / no hood / no grease.
+    """
+    haystack = " ".join(str(item.get(k) or "") for k in ("title", "url", "content", "snippet")).lower()
+    scope = (scope_text or "").lower()
+    if (city or "").strip().lower() == "los angeles" and (state or "").strip().lower() == "ca":
+        if "publichealth.lacounty.gov" in haystack and any(term in haystack for term in ("restaurant", "food", "public health", "environmental health")):
+            if _scope_text_is_non_food_packaged_retail(scope):
+                return False
+            return _has_unnegated_any(scope, (
+                "restaurant", "food prep", "food preparation", "food service",
+                "commercial kitchen", "cooking", "type i hood", "type 1 hood",
+                "grease interceptor", "food establishment",
+            ))
+    return False
 
 
 def _source_incompatible_with_scope_text(item: dict, scope_text: str, claim_type: str = "") -> bool:
