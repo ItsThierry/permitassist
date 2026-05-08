@@ -60,7 +60,7 @@ def test_dallas_evidence_exposure_limits_are_visible_in_standard_report_and_copy
         "fee_range",
         "inspections",
         "statutory/AHJ outer deadline only — not a local queue or plan-review estimate",
-        "not a complete local health, fire, accessibility, MEP, hood, grease, or food-service trigger list",
+        "not a complete local specialty-trigger list",
         "Exact portal subcategory and filing path still need AHJ/portal verification before filing",
         "Failed-closed evidence fields:",
     ]
@@ -91,7 +91,7 @@ def test_dallas_evidence_caveats_are_surface_scoped_to_copy_and_report():
 
     shared_builder_body = _function_body(source, "buildEvidencePackCaveats")
     required_surface_caveats = [
-        "not a complete local health, fire, accessibility, MEP, hood, grease, or food-service trigger list",
+        "not a complete local specialty-trigger list",
         "Exact portal subcategory and filing path still need AHJ/portal verification before filing",
     ]
 

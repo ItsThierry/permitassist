@@ -1512,7 +1512,7 @@ def test_ui_exposure_gate_adds_warnings_and_blocks_unverified_inspection_booking
     assert "outer-deadline evidence only" in warnings
     assert "queue estimate" in warnings
     assert "exact portal subcategory/filing path" in warnings
-    assert "not a complete local health" in warnings
+    assert "not a complete local specialty-trigger list" in warnings
     assert "exact portal subcategory" in result["apply_path"]["verification_note"]
 
 
@@ -1542,7 +1542,7 @@ def test_white_label_report_surfaces_evidence_pack_limits(tmp_path, monkeypatch)
 
     assert "Local evidence pack failed closed for: fee_range, inspections" in html
     assert "Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate" in html
-    assert "not a complete local health" in html
+    assert "not a complete local specialty-trigger list" in html
     assert "exact portal subcategory requires AHJ verification" in html
 
 

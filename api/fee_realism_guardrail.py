@@ -458,7 +458,7 @@ def detect_fee_triggers_from_text(job_type: str) -> List[str]:
     add_if("change_of_occupancy", "change of occupancy", "change-of-occupancy", "new co", "certificate of occupancy", "occupancy change")
     if _contains_unnegated_any(text, ("hood", "type i hood", "type 1 hood", "ansul", "fire suppression", "kitchen suppression", "fryer", "griddle")):
         triggers.append("hood_fire_suppression")
-    if _contains_unnegated_any(text, ("grease interceptor", "grease trap", "fats oils grease", "f.o.g")):
+    if _contains_unnegated_any(text, ("grease interceptor", "grease trap", "fats oils grease", "f.o.g", "fog interceptor", "fog wastewater", "fog worksheet", "fog industrial waste", "fog sewer approval")):
         triggers.append("grease_interceptor")
     add_if("hillside_grading", "hillside", "grading", "slope", "soils", "geology", "haul route")
     add_if("demising_wall", "demising", "tenant separation", "rated wall", "fire wall", "party wall")
@@ -475,7 +475,7 @@ def _trigger_names_for_fee(result: Dict[str, Any], job_type: str) -> List[str]:
     text = _norm(job_type)
     if not _contains_unnegated_any(text, ("hood", "type i hood", "type 1 hood", "ansul", "fire suppression", "kitchen suppression", "fryer", "griddle")):
         names = [name for name in names if name != "hood_fire_suppression"]
-    if not _contains_unnegated_any(text, ("grease interceptor", "grease trap", "fats oils grease", "f.o.g")):
+    if not _contains_unnegated_any(text, ("grease interceptor", "grease trap", "fats oils grease", "f.o.g", "fog interceptor", "fog wastewater", "fog worksheet", "fog industrial waste", "fog sewer approval")):
         names = [name for name in names if name != "grease_interceptor"]
     # stable de-dupe preserving declaration order
     ordered = []
