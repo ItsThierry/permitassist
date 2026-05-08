@@ -2804,10 +2804,23 @@ def detect_primary_scope(job_type: str) -> str:
         )
         or re.search(r'\b(?:non\s*[- ]?restaurant|not\s+a\s+restaurant)\b', job_lc)
     )
+    retail_signal = any(t in job_lc for t in (
+        'retail tenant improvement', 'retail ti', 'retail buildout',
+        'showroom', 'boutique', 'mall tenant', 'strip mall', 'store buildout',
+        'commercial retail', 'clothing store',
+    ))
+    historical_restaurant_shell = bool(
+        re.search(r'\b(?:former|old|existing)\s+restaurant\s+(?:shell|space|tenant|suite)\b', job_lc)
+        and re.search(r'\b(?:convert|conversion|change)\b.{0,80}\b(?:retail|clothing store|store|shop|boutique)\b', job_lc)
+        and re.search(r'\b(?:no|without)\s+(?:food service|grease|cooking|commercial kitchen|kitchen work)\b', job_lc)
+    )
+
     if medical_signal:
         return 'commercial_medical_clinic_ti'
     if office_signal and negated_restaurant_signal:
         return 'commercial_office_ti'
+    if retail_signal and (negated_restaurant_signal or historical_restaurant_shell):
+        return 'commercial_retail_ti'
 
     # Commercial restaurant — strongest signal
     if _has_unnegated_any(job_lc, (
@@ -4671,6 +4684,8 @@ def _term_is_locally_negated(text: str, term_start: int) -> bool:
     not suppress a real scope signal later in the sentence.
     """
     prefix = text[max(0, term_start - 72):term_start]
+    if re.search(r"\b(?:remove|remove old|remove existing|removed|demolish|demo|cap|cap existing|abandon)\b(?:\s+(?:old|existing|unused|prior))*[\s,;/()-]*$", prefix, flags=re.I):
+        return True
     prefix_negated = bool(
         re.search(
             r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b|\bnon[- ]+)"
