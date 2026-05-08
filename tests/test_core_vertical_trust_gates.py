@@ -734,6 +734,42 @@ def test_general_office_breakroom_kitchenette_negative_filters_restaurant_langua
     assert "zoning" in blob or "hoa" in blob
 
 
+def test_office_breakroom_customer_text_sanitizer_rewrites_negated_restaurant_mistake():
+    job = (
+        "Commercial office tenant improvement with staff kitchenette/breakroom sink, microwave, "
+        "refrigerator, lighting, and data cabling; no restaurant, no food service, "
+        "no commercial kitchen, no hood, and no grease interceptor."
+    )
+    result = _apply_core_layers(job, "Los Angeles", "CA")
+    result["common_mistakes"] = [
+        "Missing accessible route details for the breakroom sink.",
+        "Assuming no permit is needed because the kitchenette is not a restaurant — the sink and electrical work still trigger permits",
+    ]
+
+    engine.sanitize_non_food_office_breakroom_text(result, job)
+
+    blob = " | ".join(str(x) for x in result.get("common_mistakes", [])).lower()
+    assert "restaurant" not in blob
+    assert "food service" not in blob
+    assert "commercial kitchen" not in blob
+    assert "grease" not in blob
+    assert "breakroom sink" in blob
+
+
+def test_restaurant_customer_text_sanitizer_does_not_touch_true_restaurant_scope():
+    job = "restaurant tenant improvement with commercial kitchen, Type I hood, fryer, and grease interceptor"
+    result = {
+        "_primary_scope": "commercial_restaurant",
+        "common_mistakes": ["Forgetting health department restaurant plan review and grease interceptor sizing."],
+    }
+
+    engine.sanitize_non_food_office_breakroom_text(result, job)
+
+    blob = " | ".join(result["common_mistakes"]).lower()
+    assert "restaurant" in blob
+    assert "grease interceptor" in blob
+
+
 def test_restaurant_fog_interceptor_positive_survives_office_breakroom_filter():
     job = (
         "restaurant tenant improvement with full commercial kitchen, Type I hood, fryer, griddle, "
