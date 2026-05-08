@@ -827,6 +827,21 @@ def test_office_breakroom_customer_text_sanitizer_rewrites_negated_restaurant_mi
         "Missing accessible route details for the breakroom sink.",
         "Assuming no permit is needed because the kitchenette is not a restaurant — the sink and electrical work still trigger permits",
     ]
+    result["inspections"] = [
+        {
+            "stage": "Final Building / Plumbing / Electrical Inspection",
+            "description": "Inspector checks that the breakroom matches the approved commercial TI scope with no restaurant-style equipment installed.",
+            "timing": "Final inspection",
+        }
+    ]
+    result["claim_citations"] = [
+        {
+            "field": "inspections",
+            "claim": "Likely inspections",
+            "value": "Inspector checks that the breakroom has no restaurant-style equipment installed.",
+            "source_title": "Official source",
+        }
+    ]
 
     engine.sanitize_non_food_office_breakroom_text(result, job)
 
@@ -838,6 +853,8 @@ def test_office_breakroom_customer_text_sanitizer_rewrites_negated_restaurant_mi
     assert "grease" not in blob
     assert "breakroom sink" in blob
     assert "not a restaurant" not in full_blob
+    assert "restaurant-style" not in full_blob
+    assert "restaurant" not in full_blob
     assert "food service" not in full_blob
     assert "commercial kitchen" not in full_blob
     assert "grease interceptor" not in full_blob

@@ -4814,27 +4814,78 @@ def sanitize_non_food_office_breakroom_text(result: dict, job_type: str) -> dict
     )
     sanitized: list[dict] = []
 
-    def _clean_list(field: str) -> None:
-        value = result.get(field)
-        if not isinstance(value, list):
-            return
-        cleaned: list = []
-        replacement_added = False
-        for item in value:
-            if not isinstance(item, str):
-                cleaned.append(item)
-                continue
-            if not _OFFICE_BREAKROOM_WRONG_VERTICAL_RE.search(item):
-                cleaned.append(item)
-                continue
-            sanitized.append({"field": field, "kind": "office_breakroom_wrong_vertical_text_removed"})
-            if field == "common_mistakes" and not replacement_added:
-                cleaned.append(replacement_common_mistake)
-                replacement_added = True
-        result[field] = cleaned
+    def _neutralize_wrong_vertical_text(text: str) -> str:
+        """Rewrite restaurant/FOG wording without dropping useful office-breakroom details."""
+        cleaned = text
+        replacements = [
+            (r"\bno\s+restaurant[- ]style equipment installed\b", "no out-of-scope cooking equipment installed"),
+            (r"\brestaurant[- ]style equipment\b", "out-of-scope cooking equipment"),
+            (r"\b(?:not\s+a\s+restaurant|non\s*[- ]?restaurant)\b", "office-only"),
+            (r"\brestaurant zoning review\b", "change-of-use zoning review"),
+            (r"\brestaurant\b", "office breakroom"),
+            (r"\bfood\s+service\b", "staff breakroom use"),
+            (r"\bfood\s+establishment\b", "staff breakroom use"),
+            (r"\bhealth\s+department\b", "building department"),
+            (r"\bcommercial\s+kitchen\b", "staff kitchenette"),
+            (r"\btype\s*[i1]\s*hood\b", "cooking exhaust system"),
+            (r"\bansul\b", "suppression system"),
+            (r"\bgrease\s+interceptor\b", "special waste interceptor"),
+            (r"\bgrease\s+trap\b", "special waste trap"),
+            (r"\bgrease\b", "special waste"),
+            (r"\bfog\b", "wastewater"),
+        ]
+        for pattern, repl in replacements:
+            cleaned = re.sub(pattern, repl, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        return cleaned
 
-    for field in ("common_mistakes", "pro_tips", "watch_out", "requirements", "documents_needed", "what_to_bring", "checklist", "inspections"):
-        _clean_list(field)
+    def _clean_value(value, field: str):
+        if isinstance(value, str):
+            if not _OFFICE_BREAKROOM_WRONG_VERTICAL_RE.search(value):
+                return value, False
+            rewritten = _neutralize_wrong_vertical_text(value)
+            if _OFFICE_BREAKROOM_WRONG_VERTICAL_RE.search(rewritten):
+                # Last-resort safety: avoid preserving customer-visible wrong-vertical prose.
+                return "", True
+            return rewritten, True
+        if isinstance(value, list):
+            changed = False
+            cleaned_items = []
+            for item in value:
+                cleaned_item, item_changed = _clean_value(item, field)
+                changed = changed or item_changed
+                if cleaned_item in ("", None):
+                    continue
+                cleaned_items.append(cleaned_item)
+            return cleaned_items, changed
+        if isinstance(value, dict):
+            changed = False
+            cleaned_dict = {}
+            for key, item in value.items():
+                cleaned_item, item_changed = _clean_value(item, field)
+                changed = changed or item_changed
+                if cleaned_item in ("", None):
+                    continue
+                cleaned_dict[key] = cleaned_item
+            return cleaned_dict, changed
+        return value, False
+
+    def _clean_field(field: str) -> None:
+        if field not in result:
+            return
+        cleaned, changed = _clean_value(result.get(field), field)
+        if not changed:
+            return
+        if field == "common_mistakes" and isinstance(cleaned, list) and not cleaned:
+            cleaned = [replacement_common_mistake]
+        result[field] = cleaned
+        sanitized.append({"field": field, "kind": "office_breakroom_wrong_vertical_text_removed"})
+
+    for field in (
+        "common_mistakes", "pro_tips", "watch_out", "requirements", "documents_needed",
+        "what_to_bring", "checklist", "inspections", "claim_citations"
+    ):
+        _clean_field(field)
 
     if isinstance(result.get("zoning_hoa_flag"), str) and _OFFICE_BREAKROOM_WRONG_VERTICAL_RE.search(result["zoning_hoa_flag"]):
         sanitized.append({"field": "zoning_hoa_flag", "kind": "office_breakroom_wrong_vertical_text_removed"})
