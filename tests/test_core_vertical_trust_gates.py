@@ -694,6 +694,18 @@ def test_law_firm_office_coffee_bar_does_not_return_restaurant_or_health_hidden_
         assert forbidden not in apply_blob
 
 
+def test_hidden_trigger_public_payload_excludes_internal_fired_by_regexes():
+    job = "restaurant tenant improvement with Type I hood, fryer, seating, and grease interceptor"
+
+    triggers = detect_hidden_triggers(job, "Los Angeles", "CA", "commercial_restaurant_ti", {})
+
+    assert triggers
+    assert any(trigger.get("likely_required_actions") for trigger in triggers)
+    assert any(trigger.get("title") for trigger in triggers)
+    assert all("fired_by" not in trigger for trigger in triggers)
+    assert all("regions" not in trigger and "not_regions" not in trigger for trigger in triggers)
+
+
 def test_pc10_office_coffee_trap_chicago_no_required_mechanical_without_hvac():
     job = (
         "PC10 QA marker: Chicago law office tenant improvement with private offices, conference room, "
