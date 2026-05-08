@@ -42,44 +42,45 @@ def test_phoenix_office_ti_returns_floor_and_mep_families():
     assert {"mechanical", "plumbing", "electrical"}.issubset(_families(out))
 
 
-def test_clark_county_office_ti_returns_floor():
+def test_clark_county_office_ti_without_plumbing_scope_does_not_invent_plumbing():
     r = _base_result("commercial_office_ti", ["Building Permit", "Electrical Permit", "Mechanical Permit"])
     out = engine.enforce_ti_min_permits_floor(r, "office TI", "Las Vegas", "NV")
-    assert len(out["permits_required"]) >= 4
-    assert "plumbing" in _families(out)
+    assert len(out["permits_required"]) == 3
+    assert "plumbing" not in _families(out)
 
 
-def test_seattle_office_ti_returns_floor():
+def test_seattle_office_ti_without_plumbing_scope_does_not_invent_plumbing():
     r = _base_result("commercial_office_ti", ["Building Permit", "Mechanical Permit", "Electrical Permit"])
     out = engine.enforce_ti_min_permits_floor(r, "office tenant improvement", "Seattle", "WA")
-    assert len(out["permits_required"]) >= 4
-    assert "plumbing" in _families(out)
+    assert len(out["permits_required"]) == 3
+    assert "plumbing" not in _families(out)
 
 
-def test_los_angeles_office_ti_returns_floor():
+def test_los_angeles_office_ti_without_mechanical_scope_does_not_invent_mechanical():
     r = _base_result("commercial_office_ti", ["Building Permit", "Plumbing Permit", "Electrical Permit"])
     out = engine.enforce_ti_min_permits_floor(r, "professional office tenant improvement", "Los Angeles", "CA")
-    assert len(out["permits_required"]) >= 4
-    assert "mechanical" in _families(out)
+    assert len(out["permits_required"]) == 3
+    assert "mechanical" not in _families(out)
 
 
-def test_dallas_retail_ti_returns_floor_including_sign_permit():
+def test_dallas_retail_ti_including_sign_permit_does_not_invent_mechanical():
     r = _base_result("commercial_retail_ti", [
         "Building Permit — Commercial Tenant Improvement / Interior Alteration",
         "Electrical Permit — Commercial Lighting and Branch Circuit Work",
         "Sign Permit — Commercial Wall Sign / Storefront Signage",
     ])
     out = engine.enforce_ti_min_permits_floor(r, "retail tenant improvement with new storefront signage", "Dallas", "TX")
-    assert len(out["permits_required"]) >= 4
+    assert len(out["permits_required"]) == 3
     assert "sign" in _families(out)
-    assert "mechanical" in _families(out)
+    assert "mechanical" not in _families(out)
 
 
-def test_phoenix_retail_ti_returns_floor():
+def test_phoenix_retail_ti_with_sign_changes_does_not_invent_mechanical():
     r = _base_result("commercial_retail_ti", ["Building Permit", "Electrical Permit"])
     out = engine.enforce_ti_min_permits_floor(r, "retail TI boutique with sign changes", "Phoenix", "AZ")
-    assert len(out["permits_required"]) >= 4
-    assert {"building", "mechanical", "electrical", "sign"}.issubset(_families(out))
+    assert len(out["permits_required"]) == 3
+    assert {"building", "electrical", "sign"}.issubset(_families(out))
+    assert "mechanical" not in _families(out)
 
 
 def test_restaurant_ti_regression_untouched_at_five_permits():

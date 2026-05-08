@@ -125,11 +125,11 @@ def test_residential_adu_does_not_include_retail_triggers():
     assert not (got & RETAIL_IDS)
 
 
-def test_a3_floor_still_applies_retail_returns_at_least_four_permits():
+def test_retail_scope_aware_floor_keeps_sign_and_electrical_without_inventing_mechanical():
     out = enriched("retail TI boutique with new storefront sign and lighting", "Phoenix", "AZ")
-    assert len(out["permits_required"]) >= 4
     families = {engine._permit_family(p) for p in out["permits_required"]}
-    assert {"building", "mechanical", "electrical", "sign"}.issubset(families)
+    assert {"building", "electrical", "sign"}.issubset(families)
+    assert "mechanical" not in families
 
 
 def test_retail_companion_permits_surface_sign_and_facade_from_triggers():
