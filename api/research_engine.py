@@ -5487,11 +5487,62 @@ def apply_medical_clinic_ti_rulebook(result: dict, job_type: str, city: str, sta
     return result
 
 
-def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: str) -> dict:
-    """A3: ensure office/retail TI required permits include core MEP families.
+_MECHANICAL_REQUIRED_SCOPE_TERMS = (
+    "hvac", "mechanical", "ventilation", "exhaust", "diffuser", "rtu",
+    "air balance", "air-balance", "duct", "thermostat", "economizer",
+    "type i hood", "type 1 hood", "kitchen hood", "hood suppression",
+    "commercial cooking", "makeup air", "make-up air", "medical gas", "med gas",
+)
+_ELECTRICAL_REQUIRED_SCOPE_TERMS = (
+    "electrical", "lighting", "light fixture", "receptacle", "branch circuit",
+    "panel", "subpanel", "sub-panel", "service upgrade", "low-voltage",
+    "low voltage", "data cabling", "access control", "emergency lighting",
+    "exit sign", "equipment power", "power connection", "x-ray", "xray", "radiology",
+)
+_PLUMBING_REQUIRED_SCOPE_TERMS = (
+    "plumbing", "restroom", "bathroom", "toilet", "lavatory", "sink",
+    "hand sink", "mop sink", "floor sink", "dishwasher", "water line",
+    "sewer", "dwv", "fixture", "grease interceptor", "grease trap",
+    "medical gas", "nitrous", "oxygen", "vacuum line",
+)
+_FIRE_REQUIRED_SCOPE_TERMS = (
+    "fire alarm", "sprinkler", "sprinkler relocation", "relocate sprinkler",
+    "fire sprinkler", "fire suppression", "ansul", "hood suppression",
+    "duct detector", "notification appliance", "smoke detector",
+)
+_SIGN_REQUIRED_SCOPE_TERMS = ("sign", "signage", "storefront sign", "wall sign", "monument sign")
 
-    Runs after model/scope assembly and before final render/cache. Restaurant,
-    residential, and simple-trade scopes are intentionally untouched.
+
+def _commercial_ti_required_trade_families(primary_scope: str, job_type: str) -> list[str]:
+    """Required structured trade permits must be scope-triggered, not generic TI floor.
+
+    Commercial TI prose can safely say trade permits may be needed if the scope
+    includes HVAC, electrical, plumbing, fire, etc. The structured
+    permits_required list is stronger: only list those trade families as required
+    when the user gave an unnegated trade-work signal.
+    """
+    job = (job_type or "").lower()
+    families: list[str] = []
+    if _has_unnegated_any(job, _MECHANICAL_REQUIRED_SCOPE_TERMS):
+        families.append("mechanical")
+    if _has_unnegated_any(job, _ELECTRICAL_REQUIRED_SCOPE_TERMS):
+        families.append("electrical")
+    if _has_unnegated_any(job, _PLUMBING_REQUIRED_SCOPE_TERMS):
+        families.append("plumbing")
+    if _has_unnegated_any(job, _FIRE_REQUIRED_SCOPE_TERMS):
+        families.append("fire")
+    if _has_unnegated_any(job, _SIGN_REQUIRED_SCOPE_TERMS):
+        families.append("sign")
+    return families
+
+
+def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: str) -> dict:
+    """A3: add only scope-triggered commercial TI trade permits to permits_required.
+
+    Restaurant, residential, and simple-trade scopes are intentionally untouched.
+    For office/retail/medical TI, the building/TI permit remains the structured
+    required permit; MEP/fire/sign permits are required only when their trade work
+    is explicitly and unnegatedly in scope.
     """
     if not isinstance(result, dict):
         return result
@@ -5504,17 +5555,7 @@ def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: 
         permits = []
         result["permits_required"] = permits
 
-    job = (job_type or "").lower()
-    required = ["building", "mechanical", "electrical"]
-    if primary_scope == "commercial_office_ti":
-        required.append("plumbing")
-    else:
-        if any(t in job for t in ("restroom", "bathroom", "toilet", "lavatory", "sink", "kitchen", "plumbing")):
-            required.append("plumbing")
-        if primary_scope == "commercial_retail_ti" or any(t in job for t in ("sign", "signage", "storefront")):
-            required.append("sign")
-    if any(t in job for t in ("change of occupancy", "change of use", "sprinkler", "fire alarm", "relocate sprinkler", "sprinkler relocation", ">50% sprinkler", "more than 50% sprinkler")):
-        required.append("fire")
+    required = ["building"] + _commercial_ti_required_trade_families(primary_scope, job_type)
 
     existing = {_permit_family(p) for p in permits if isinstance(p, dict)}
     verified_row = _get_verified_city_row(city, state)
@@ -5524,16 +5565,16 @@ def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: 
         if family in existing:
             continue
         permit_type, portal = _ahj_companion_permit_name(family, primary_scope, city, state, verified)
-        notes = f"Added by A3 TI permit-floor guardrail: {family} review is a core companion permit family for {primary_scope.replace('_', ' ')} scope. Verify exact AHJ portal label before submittal."
+        notes = f"Added by A3 TI permit-floor guardrail: {family} review is required because that trade scope is stated for {primary_scope.replace('_', ' ')}. Verify exact AHJ portal label before submittal."
         permits.append(_scope_permit(permit_type, portal, notes))
         existing.add(family)
         added.append(family)
 
     if added:
-        result["_a3_min_permits"] = {"scope": primary_scope, "floor": 4, "added_families": added, "verified_city_row": verified}
+        result["_a3_min_permits"] = {"scope": primary_scope, "added_families": added, "verified_city_row": verified}
         logic = result.get("permits_required_logic") if isinstance(result.get("permits_required_logic"), list) else []
         for p in permits[-len(added):]:
-            logic.append({"permit_type": p.get("permit_type"), "included_because": p.get("notes"), "scope_trigger": "A3 commercial TI min_permits floor"})
+            logic.append({"permit_type": p.get("permit_type"), "included_because": p.get("notes"), "scope_trigger": "A3 commercial TI scope-triggered permit floor"})
         result["permits_required_logic"] = logic
         result["permit_verdict"] = "YES"
     return result
@@ -5568,27 +5609,25 @@ def _commercial_ti_building_permit(primary_scope: str) -> dict:
 
 
 def _commercial_ti_companion_permits(primary_scope: str, job_type: str) -> list[dict]:
-    job = (job_type or "").lower()
-    companions = [
-        _scope_permit("Mechanical Permit — Commercial Tenant Improvement", "Mechanical Permit - Commercial Interior Alteration", "Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope commonly requires mechanical review."),
-        _scope_permit("Electrical Permit — Commercial Tenant Improvement", "Electrical Permit - Commercial Interior Alteration", "Commercial lighting, panels, branch circuits, equipment, emergency lighting, and controls commonly require electrical review."),
-    ]
-    if primary_scope in {"commercial_restaurant", "commercial_office_ti", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["sink", "restroom", "bathroom", "plumbing", "grease", "interceptor", "kitchen", "fixture"]):
-        plumbing_note = "Commercial fixtures, restrooms, sinks, and DWV changes commonly require plumbing review."
-        if primary_scope == "commercial_restaurant" and _restaurant_grease_scope_present(job):
+    families = _commercial_ti_required_trade_families(primary_scope, job_type)
+    companions: list[dict] = []
+    if "mechanical" in families:
+        companions.append(_scope_permit("Mechanical Permit — Commercial Tenant Improvement", "Mechanical Permit - Commercial Interior Alteration", "Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope is stated and commonly requires mechanical review."))
+    if "electrical" in families:
+        companions.append(_scope_permit("Electrical Permit — Commercial Tenant Improvement", "Electrical Permit - Commercial Interior Alteration", "Commercial lighting, panels, branch circuits, equipment, emergency lighting, controls, or low-voltage/electrical scope is stated and commonly requires electrical review."))
+    if "plumbing" in families:
+        plumbing_note = "Commercial fixtures, restrooms, sinks, and DWV changes commonly require plumbing review when stated in the scope."
+        if primary_scope == "commercial_restaurant" and _restaurant_grease_scope_present(job_type or ""):
             plumbing_note = "Commercial kitchen fixtures, grease-interceptor/FOG work, restrooms, sinks, and DWV changes commonly require plumbing review."
         elif primary_scope == "commercial_medical_clinic_ti":
-            plumbing_note = "Commercial clinic fixtures, hand sinks, medical/dental equipment connections, restrooms, and DWV changes commonly require plumbing review."
+            plumbing_note = "Commercial clinic fixtures, hand sinks, medical/dental equipment connections, restrooms, and DWV changes commonly require plumbing review when stated in the scope."
         companions.append(_scope_permit("Plumbing Permit — Commercial Tenant Improvement", "Plumbing Permit - Commercial Interior Alteration", plumbing_note))
-    if primary_scope in {"commercial_restaurant", "commercial_medical_clinic_ti"} or _scope_has_any(job, ["fire alarm", "sprinkler", "hood", "suppression", "ansul", "fire suppression"]):
-        fire_note = "Commercial TI frequently affects fire alarm, sprinkler, egress, emergency lighting, or life-safety review."
-        if primary_scope == "commercial_restaurant":
-            if _has_unnegated_any(job, ("hood", "type i hood", "type 1 hood", "ansul", "hood suppression", "fryer", "griddle", "grease duct")):
-                fire_note = "Commercial restaurant TI frequently affects fire alarm, sprinkler, hood suppression, egress, emergency lighting, or life-safety review."
-            else:
-                fire_note = "Commercial restaurant TI frequently affects fire alarm, sprinkler, egress, emergency lighting, or life-safety review."
+    if "fire" in families:
+        fire_note = "Commercial TI fire-alarm, sprinkler, suppression, or related life-safety trade scope is stated and commonly requires fire review."
+        if primary_scope == "commercial_restaurant" and _has_unnegated_any(job_type or "", ("hood", "type i hood", "type 1 hood", "ansul", "hood suppression", "fryer", "griddle", "grease duct")):
+            fire_note = "Commercial restaurant hood/suppression or cooking-equipment scope is stated and commonly requires fire review."
         companions.append(_scope_permit("Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement", "Fire Alarm / Fire Sprinkler Permit - Commercial", fire_note))
-    if primary_scope == "commercial_retail_ti" or _scope_has_any(job, ["sign", "signage", "storefront"]):
+    if "sign" in families:
         companions.append(_scope_permit("Sign Permit — Commercial Storefront / Wall Sign", "Sign Permit - Commercial", "Retail/storefront changes commonly require separate sign review if signage is included."))
     return companions
 

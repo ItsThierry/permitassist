@@ -42,6 +42,19 @@ def _checklist_blob(job, city="Dallas", state="TX"):
     return " | ".join(engine.generate_permit_checklist(job, city, state, result)).lower()
 
 
+def _required_families(result):
+    return {engine._permit_family(p) for p in result.get("permits_required", []) if isinstance(p, dict)}
+
+
+def _required_permit_blob(result):
+    fields = []
+    for key in ("permits_required", "permits_required_logic"):
+        value = result.get(key)
+        if isinstance(value, list):
+            fields.extend(str(item) for item in value)
+    return " | ".join(fields).lower()
+
+
 def _apply_core_layers(job, city="Dallas", state="TX"):
     result = {
         "permit_verdict": "YES",
@@ -102,10 +115,35 @@ def test_restaurant_cosmetic_no_kitchen_does_not_create_hood_or_grease_adders():
     assert "grease_interceptor" not in adder_keys
     assert "hood" not in out["fee_range"].lower()
     assert "grease" not in out["fee_range"].lower()
+    assert "mechanical" not in _required_families(out)
+    assert "plumbing" not in _required_families(out)
+    assert "fire" not in _required_families(out)
+    required_blob = _required_permit_blob(out)
+    assert "hood" not in required_blob
+    assert "grease" not in required_blob
+    assert "ansul" not in required_blob
     customer_blob = _trigger_blob(out["hidden_triggers"]) + " | " + _companion_blob(out) + " | " + " | ".join(engine.generate_permit_checklist(job, "Miami", "FL", out)).lower()
     assert "health department" not in customer_blob
     assert "food establishment" not in customer_blob
     assert "food-establishment" not in customer_blob
+
+
+def test_pc02_restaurant_cosmetic_negative_los_angeles_no_required_trade_permits():
+    job = (
+        "PC02 QA marker: restaurant cosmetic refresh in Los Angeles CA, dining room finishes, "
+        "paint, flooring, seating and decor only; no kitchen, no hood, no fryer, no grease, "
+        "no fire suppression, no ANSUL, no food-prep equipment changes."
+    )
+
+    out = _apply_core_layers(job, "Los Angeles", "CA")
+
+    assert out["_primary_scope"] == "commercial_restaurant"
+    assert "building" in _required_families(out)
+    for forbidden in ("mechanical", "plumbing", "fire"):
+        assert forbidden not in _required_families(out)
+    required_blob = _required_permit_blob(out)
+    for forbidden in ("mechanical permit", "grease", "hood", "ansul"):
+        assert forbidden not in required_blob
 
 
 def test_full_restaurant_kitchen_still_triggers_health_hood_and_grease():
@@ -132,15 +170,34 @@ def test_retail_packaged_food_without_prep_does_not_surface_health_department_ca
         "checkout counter, back stockroom and restroom refresh; no food preparation, "
         "no restaurant, no kitchen, no hood, no grease work."
     )
-
     checklist = _checklist_blob(job, "Dallas", "TX")
     out = _apply_core_layers(job, "Dallas", "TX")
     gated = server.apply_permitiq_quality_gate(out, job, "Dallas", "TX")
     blob = checklist + " | " + _customer_surface_blob(gated)
 
     assert out["_primary_scope"] == "commercial_retail_ti"
+    assert "mechanical" not in _required_families(out)
+    assert "fire" not in _required_families(out)
     for forbidden in ("health department", "food establishment", "food-establishment", "commercial kitchen", "hood", "grease"):
         assert forbidden not in blob
+
+
+def test_rc04_random_commercial_packaged_retail_phoenix_no_required_mechanical_without_hvac():
+    job = (
+        "RC04 QA marker: packaged retail tenant improvement in Phoenix AZ for shelving, checkout, "
+        "back stockroom and sealed snack and bottled beverage sales only; no food prep, no kitchen, "
+        "no hood, no grease, no HVAC, no mechanical work stated."
+    )
+
+    out = _apply_core_layers(job, "Phoenix", "AZ")
+
+    assert out["_primary_scope"] == "commercial_retail_ti"
+    assert "building" in _required_families(out)
+    for forbidden in ("mechanical", "fire"):
+        assert forbidden not in _required_families(out)
+    required_blob = _required_permit_blob(out)
+    for forbidden in ("mechanical permit", "hood", "grease"):
+        assert forbidden not in required_blob
 
 
 def test_law_firm_office_coffee_bar_does_not_return_restaurant_or_health_hidden_triggers():
@@ -157,9 +214,27 @@ def test_law_firm_office_coffee_bar_does_not_return_restaurant_or_health_hidden_
     apply_blob = " | ".join(gated.get("apply_path", {}).get("steps", [])).lower()
 
     assert out["_primary_scope"] == "commercial_office_ti"
+    assert "mechanical" not in _required_families(out)
     for forbidden in ("health department", "food establishment", "food-establishment", "clinic", "exam room", "x-ray", "medical gas"):
         assert forbidden not in blob
         assert forbidden not in apply_blob
+
+
+def test_pc10_office_coffee_trap_chicago_no_required_mechanical_without_hvac():
+    job = (
+        "PC10 QA marker: Chicago law office tenant improvement with private offices, conference room, "
+        "reception, records storage and break-room coffee bar; no cooking, no hood, no restaurant, "
+        "no clinic, no HVAC, no mechanical work stated."
+    )
+
+    out = _apply_core_layers(job, "Chicago", "IL")
+
+    assert out["_primary_scope"] == "commercial_office_ti"
+    assert "building" in _required_families(out)
+    assert "mechanical" not in _required_families(out)
+    required_blob = _required_permit_blob(out)
+    for forbidden in ("mechanical permit", "health department", "food establishment", "clinic"):
+        assert forbidden not in required_blob
 
 
 def test_professional_office_for_medical_billing_company_is_not_medical_clinic():
