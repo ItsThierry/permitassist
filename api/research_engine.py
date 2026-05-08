@@ -4734,6 +4734,78 @@ def _restaurant_checklist_item_applies(item: str, job_type: str) -> bool:
     return True
 
 
+def _is_non_food_office_breakroom_scope(job_type: str, result: dict | None = None) -> bool:
+    text = (job_type or "").lower()
+    primary_scope = ""
+    if isinstance(result, dict):
+        primary_scope = str(result.get("_primary_scope") or "")
+    if not primary_scope:
+        primary_scope = detect_primary_scope(job_type or "")
+    if primary_scope != "commercial_office_ti":
+        return False
+    has_breakroom = any(term in text for term in ("breakroom", "break room", "kitchenette", "coffee maker", "microwave", "staff sink"))
+    has_food_service_negation = bool(
+        re.search(r"\b(?:no|without)\s+(?:restaurant|food service|commercial kitchen|hood|type\s*i\s*hood|grease|fog|ansul)\b", text)
+        or re.search(r"\b(?:not\s+a\s+restaurant|non\s*[- ]?restaurant)\b", text)
+    )
+    return has_breakroom and has_food_service_negation and not _restaurant_food_health_scope_present(job_type or "")
+
+
+_OFFICE_BREAKROOM_WRONG_VERTICAL_RE = re.compile(
+    r"\b(restaurant|food\s+service|food\s+establishment|health\s+department|commercial\s+kitchen|"
+    r"type\s*i\s*hood|type\s*1\s*hood|ansul|grease|fog)\b",
+    re.IGNORECASE,
+)
+
+
+def sanitize_non_food_office_breakroom_text(result: dict, job_type: str) -> dict:
+    """Remove restaurant/FOG wording from office breakroom negative customer surfaces.
+
+    Office kitchenette/breakroom jobs should explain building/plumbing/electrical scope
+    without teaching the customer to think about restaurant, health-department, hood,
+    grease, or FOG paths. True restaurant scopes are left untouched.
+    """
+    if not isinstance(result, dict) or not _is_non_food_office_breakroom_scope(job_type, result):
+        return result
+
+    replacement_common_mistake = (
+        "Assuming the breakroom sink or added receptacles are exempt — plumbing and electrical work can still trigger permits."
+    )
+    sanitized: list[dict] = []
+
+    def _clean_list(field: str) -> None:
+        value = result.get(field)
+        if not isinstance(value, list):
+            return
+        cleaned: list = []
+        replacement_added = False
+        for item in value:
+            if not isinstance(item, str):
+                cleaned.append(item)
+                continue
+            if not _OFFICE_BREAKROOM_WRONG_VERTICAL_RE.search(item):
+                cleaned.append(item)
+                continue
+            sanitized.append({"field": field, "removed": item[:220]})
+            if field == "common_mistakes" and not replacement_added:
+                cleaned.append(replacement_common_mistake)
+                replacement_added = True
+        result[field] = cleaned
+
+    for field in ("common_mistakes", "pro_tips", "watch_out", "requirements", "documents_needed", "what_to_bring", "checklist", "inspections"):
+        _clean_list(field)
+
+    if isinstance(result.get("zoning_hoa_flag"), str) and _OFFICE_BREAKROOM_WRONG_VERTICAL_RE.search(result["zoning_hoa_flag"]):
+        sanitized.append({"field": "zoning_hoa_flag", "removed": result["zoning_hoa_flag"][:220]})
+        result["zoning_hoa_flag"] = (
+            "For an office tenant improvement, zoning issues are usually limited to lease/building rules, occupancy limits, signage, parking, or change-of-use checks."
+        )
+
+    if sanitized:
+        result["_office_breakroom_text_sanitized"] = sanitized
+    return result
+
+
 def _medical_checklist_item_applies(item: str, job_type: str) -> bool:
     """Suppress med-gas/x-ray checklist lines when only other clinical scope is present."""
     item_l = (item or "").lower()
@@ -7847,6 +7919,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             apply_source_locality_hard_block(cached, city, state, job_type)
             apply_fee_verify_caveat(cached)
             apply_rulebook_depth(cached, job_type, city, state)
+            sanitize_non_food_office_breakroom_text(cached, job_type)
             return cached
 
     # ── Check auto-verified data first ──
@@ -8768,6 +8841,7 @@ Return ONLY the JSON object."""
     # "low", and sets needs_review=True so the UI surfaces the warning.
     validate_and_sanitize_permit_result(result, job_type, city, state)
     apply_rulebook_depth(result, job_type, city, state)
+    sanitize_non_food_office_breakroom_text(result, job_type)
 
     if not suppress_cache_write:
         save_cache(key, job_type, job_category, city, state, zip_code, result)
