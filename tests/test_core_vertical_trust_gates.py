@@ -749,11 +749,16 @@ def test_office_breakroom_customer_text_sanitizer_rewrites_negated_restaurant_mi
     engine.sanitize_non_food_office_breakroom_text(result, job)
 
     blob = " | ".join(str(x) for x in result.get("common_mistakes", [])).lower()
+    full_blob = str(result).lower()
     assert "restaurant" not in blob
     assert "food service" not in blob
     assert "commercial kitchen" not in blob
     assert "grease" not in blob
     assert "breakroom sink" in blob
+    assert "not a restaurant" not in full_blob
+    assert "food service" not in full_blob
+    assert "commercial kitchen" not in full_blob
+    assert "grease interceptor" not in full_blob
 
 
 def test_restaurant_customer_text_sanitizer_does_not_touch_true_restaurant_scope():
