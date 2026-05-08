@@ -32,7 +32,7 @@ import time
 import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from research_engine import (
     research_permit,
@@ -3639,18 +3639,23 @@ class Handler(BaseHTTPRequestHandler):
     def send_json(self, status: int, data: dict, extra_headers: dict | None = None):
         data = redact_public_output(data)
         body = json.dumps(data, indent=2).encode()
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Expose-Headers", "X-Free-Lookups-Used, X-Free-Lookups-Remaining")
-        if _evidence_pack_indexing_guard_enabled():
-            self.send_header("X-Robots-Tag", "noindex, nofollow")
-            self.send_header("Cache-Control", "no-store")
-        for key, value in (extra_headers or {}).items():
-            self.send_header(key, value)
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Expose-Headers", "X-Free-Lookups-Used, X-Free-Lookups-Remaining")
+            if _evidence_pack_indexing_guard_enabled():
+                self.send_header("X-Robots-Tag", "noindex, nofollow")
+                self.send_header("Cache-Control", "no-store")
+            for key, value in (extra_headers or {}).items():
+                self.send_header(key, value)
+            self.end_headers()
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError) as e:
+            # Client/edge already disconnected. Do not turn a late response write
+            # into noisy traceback spam or a second 500 path.
+            print(f"[response] client disconnected before JSON response completed: {type(e).__name__}")
 
     def send_file(self, path: str, content_type: str):
         try:
@@ -5771,7 +5776,8 @@ if __name__ == "__main__":
     print(f"   Stripe portal: {'configured' if STRIPE_SECRET_KEY else 'no STRIPE_SECRET_KEY'}")
     print(f"   Telegram: {'enabled' if TG_BOT_TOKEN else 'disabled'}")
     print(f"   Open: http://localhost:{PORT}")
-    server = HTTPServer(("0.0.0.0", PORT), Handler)
+    server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
+    server.daemon_threads = True
     server.serve_forever()
 
 # ── Messenger Bot Helper ──────────────────────────────────────────────────────
