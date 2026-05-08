@@ -790,7 +790,9 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         "documents_needed", "permit_notes", "notes", "summary", "description", "recommendation",
         "job_summary", "zoning_hoa_flag", "confidence_reason", "disclaimer", "apply_path", "permits_required",
         "inspections", "inspect_checklist", "inspection_requirements", "claim_citations",
-        "companion_permits", "hidden_triggers",
+        "companion_permits", "hidden_triggers", "fee_source", "fee_sources", "fee_calculator",
+        "fee_estimate", "total_cost_estimate", "code_section_source", "required_documents_source",
+        "inspection_process_source", "ahj_contact_source",
     ):
         if key not in result:
             continue
