@@ -4551,6 +4551,8 @@ _RESTAURANT_HOOD_SCOPE_TERMS = (
 )
 _RESTAURANT_GREASE_SCOPE_TERMS = (
     "grease interceptor", "grease trap", "f.o.g", "fats oils grease",
+    "fog interceptor", "fog approval", "fog review", "fog sizing",
+    "fog wastewater", "fog worksheet", "fog plan",
 )
 _RESTAURANT_PLUMBING_SCOPE_TERMS = (
     "dishwasher", "commercial dishwasher", "4-compartment sink", "4 compartment sink",
@@ -5654,7 +5656,7 @@ def _commercial_ti_secondary_companions(primary_scope: str, job_type: str = "") 
     if primary_scope == "commercial_restaurant":
         if _restaurant_food_health_scope_present(job_type):
             companions.append({"permit_type": "Health Department / Food Establishment Review", "reason": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.", "certainty": "likely"})
-        if _has_unnegated_any(job_type, ("grease interceptor", "grease trap", "f.o.g", "fats oils grease", "3-compartment sink", "3 compartment sink")):
+        if _restaurant_grease_scope_present(job_type):
             companions.append({"permit_type": "Grease Interceptor / FOG Approval", "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.", "certainty": "likely"})
     elif primary_scope == "commercial_medical_clinic_ti":
         companions.extend([

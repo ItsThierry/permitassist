@@ -1242,7 +1242,11 @@ _STRONG_RESTAURANT_CROSS_SCOPE_TERMS = (
     "cafe", "café", "tavern", "bar tenant", "bar buildout", "dishwasher", "walk-in cooler", "walk in cooler",
 )
 _RESTAURANT_HOOD_TERMS = ("type i hood", "type 1 hood", "hood", "ansul", "wet chemical", "hood suppression", "fryer", "griddle", "grease duct", "range")
-_RESTAURANT_GREASE_TERMS = ("grease interceptor", "grease trap", "f.o.g", "fats oils grease", "3-compartment sink", "3 compartment sink")
+_RESTAURANT_GREASE_TERMS = (
+    "grease interceptor", "grease trap", "f.o.g", "fats oils grease",
+    "fog interceptor", "fog wastewater", "fog worksheet",
+    "fog industrial waste", "fog sewer approval", "3-compartment sink", "3 compartment sink",
+)
 _RESTAURANT_FOOD_HEALTH_TERMS = (
     "food establishment", "food service", "commercial kitchen", "prep kitchen",
     "kitchen work", "kitchen plumbing", "cooking equipment", "food preparation", "food prep",

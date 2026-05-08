@@ -497,7 +497,14 @@ def _restaurant_hood_scope_present(text: str) -> bool:
 
 
 def _restaurant_grease_scope_present(text: str) -> bool:
-    return _has_unnegated_any(text or "", ("grease interceptor", "grease trap", "f.o.g", "fats oils grease"))
+    return _has_unnegated_any(
+        text or "",
+        (
+            "grease interceptor", "grease trap", "f.o.g", "fats oils grease",
+            "fog interceptor", "fog approval", "fog review", "fog sizing",
+            "fog wastewater", "fog worksheet", "fog plan",
+        ),
+    )
 
 
 def _restaurant_food_health_scope_present(text: str) -> bool:
@@ -552,7 +559,11 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
     if not _restaurant_hood_scope_present(scope_text):
         forbidden_terms += ["hood", "ansul", "fire suppression", "grease duct"]
     if not _restaurant_grease_scope_present(scope_text):
-        forbidden_terms += ["grease", "f.o.g"]
+        forbidden_terms += [
+            "grease", "f.o.g", "fats oils grease", "fog",
+            "fog interceptor", "fog review", "fog approval", "fog requirement",
+            "fog requirements", "fog forms", "fog sizing", "fog wastewater", "fog worksheet", "fog plan",
+        ]
     if not (_restaurant_food_health_scope_present(scope_text) or _retail_food_health_scope_present(scope_text)):
         forbidden_terms += ["food establishment", "food-establishment", "food service", "commercial kitchen", "health department", "food", "beverage"]
     if not _has_unnegated_any(scope_text, ("commercial dishwasher", "dishwasher", "prep sink", "floor sink", "mop sink", "indirect waste")):
@@ -598,6 +609,12 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
     def term_hits_text(term: str, text: str) -> bool:
         if term == "hood" and "fume hood" in text and not any(k in text for k in ("type i hood", "type 1 hood", "kitchen hood", "cooking hood", "hood suppression")):
             return False
+        if term == "fog":
+            # Bare FOG means fats/oils/grease in this permit context. Do not
+            # treat theatrical/test smoke references as restaurant grease scope.
+            if re.search(r"\bfog\s+(?:machine|machines|effect|effects|system|systems|testing|test)\b", text):
+                return False
+            return re.search(r"\bfog\b", text) is not None
         return term in text
 
     def has_forbidden(value) -> bool:
@@ -642,9 +659,18 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
                     out.append(cleaned)
             return out
         if isinstance(value, dict):
+            drop_if_forbidden_keys = {
+                "permit_type", "title", "name", "id", "key", "stage", "value", "claim",
+                "description", "summary", "why_it_matters", "reason", "required_if",
+            }
+            if any(
+                k in drop_if_forbidden_keys and isinstance(item, str) and has_forbidden(item)
+                for k, item in value.items()
+            ):
+                return {}
             out = {}
             for k, item in value.items():
-                cleaned = scrub_value(item) if k in {"notes", "note", "description", "summary", "included_because", "reason", "required_if", "scope_trigger", "steps", "portal_selection_path", "likely_documents", "verification_note"} or isinstance(item, (list, dict)) else item
+                cleaned = scrub_value(item) if k in {"notes", "note", "description", "summary", "included_because", "reason", "required_if", "scope_trigger", "steps", "portal_selection_path", "likely_documents", "verification_note", "stage", "title", "value", "claim", "text", "message", "details", "source_title", "quoted_snippet", "source_excerpt", "snippet"} or isinstance(item, (list, dict)) else item
                 if cleaned not in ("", [], {}):
                     out[k] = cleaned
             return out
@@ -655,6 +681,8 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         "permits_required_logic", "checklist", "permit_checklist", "next_steps", "requirements",
         "documents_needed", "permit_notes", "notes", "summary", "description", "recommendation",
         "job_summary", "confidence_reason", "disclaimer", "apply_path", "permits_required",
+        "inspections", "inspect_checklist", "inspection_requirements", "claim_citations",
+        "companion_permits", "hidden_triggers",
     ):
         if key not in result:
             continue
@@ -1081,7 +1109,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             if warning not in warnings:
                 warnings.append(warning)
         if "companion_reviews_triggers" in evidence_matched:
-            warning = "Companion-review evidence is scope-limited; it is not a complete local health, fire, accessibility, MEP, hood, grease, or food-service trigger list."
+            warning = "Companion-review evidence is scope-limited; it is not a complete local specialty-trigger list. Verify specialty reviews with the AHJ before filing."
             if warning not in warnings:
                 warnings.append(warning)
         # Evidence-pack apply_url values are loaded after the generic engine URL
@@ -1165,7 +1193,7 @@ def render_white_label_report_html(data: dict) -> str:
     if evidence_meta.get("enabled") and "approval_timeline" in evidence_matched:
         warnings_list.append("Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate.")
     if evidence_meta.get("enabled") and "companion_reviews_triggers" in evidence_matched:
-        warnings_list.append("Companion-review evidence is scope-limited; it is not a complete local health, fire, accessibility, MEP, hood, grease, or food-service trigger list.")
+        warnings_list.append("Companion-review evidence is scope-limited; it is not a complete local specialty-trigger list. Verify specialty reviews with the AHJ before filing.")
     warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in dict.fromkeys(warnings_list))
     return f"""<!doctype html>
 <html><head><meta charset='utf-8'><title>Permit research report</title>

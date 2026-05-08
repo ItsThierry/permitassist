@@ -237,6 +237,126 @@ def test_pc10_office_coffee_trap_chicago_no_required_mechanical_without_hvac():
         assert forbidden not in required_blob
 
 
+def test_pc23_san_jose_office_breakroom_kitchenette_filters_grease_from_downstream_surfaces():
+    job = (
+        "PC23 QA marker: San Jose CA commercial office tenant improvement for a software office "
+        "with kitchenette/breakroom sink, microwave, refrigerator, and coffee machine; no restaurant, "
+        "no food service, no commercial kitchen, no cooking line, no Type I hood, no fryer, "
+        "no ANSUL, and no grease interceptor."
+    )
+    out = _apply_core_layers(job, "San Jose", "CA")
+    out.update({
+        "what_to_bring": ["Office TI plans, breakroom sink plumbing sheet, and grease interceptor sizing sheet."],
+        "pro_tips": ["Keep the scope labeled as office breakroom sink and kitchenette only."],
+        "inspections": [
+            {
+                "stage": "Grease interceptor final",
+                "title": "Grease interceptor / FOG final inspection",
+                "description": "Inspector verifies the office breakroom sink and grease interceptor installation before final.",
+                "timing": "Final inspection",
+            }
+        ],
+        "claim_citations": [
+            {
+                "field": "inspections",
+                "claim": "Likely inspections",
+                "value": "Final plumbing inspection may verify grease interceptor access.",
+                "source_title": "San Jose FOG requirements",
+                "quoted_snippet": "Grease interceptor approval is required for food service.",
+            }
+        ],
+        "companion_permits": [
+            {"permit_type": "FOG / industrial waste / sewer approval", "reason": "Office breakroom sink was mistaken for commercial food prep."},
+            {"permit_type": "Electrical Permit — Commercial Tenant Improvement", "reason": "Office lighting and receptacles."},
+        ],
+        "hidden_triggers": [
+            {
+                "id": "restaurant_grease_interceptor_fog_review",
+                "title": "Grease interceptor / FOG review may be required",
+                "why_it_matters": "FOG requirements are often enforced by sewer agencies.",
+                "companion_permits": ["FOG / industrial waste / sewer approval, if required"],
+            }
+        ],
+    })
+
+    gated = server.apply_permitiq_quality_gate(out, job, "San Jose", "CA")
+    pre_citation_blob = " | ".join(str(c) for c in gated.get("claim_citations", [])).lower()
+    assert "grease" not in pre_citation_blob
+    assert "fog" not in pre_citation_blob
+    server.build_claim_citations(gated)
+    server.build_apply_path(gated, job, "San Jose", "CA")
+    blob = (
+        _customer_surface_blob(gated)
+        + " | " + " | ".join(str(i) for i in gated.get("inspections", [])).lower()
+        + " | " + " | ".join(str(c) for c in gated.get("claim_citations", [])).lower()
+        + " | " + _companion_blob(gated)
+        + " | " + _trigger_blob(gated.get("hidden_triggers", []))
+    )
+
+    assert gated["_primary_scope"] == "commercial_office_ti"
+    assert "building" in _required_families(gated)
+    assert "plumbing" in _required_families(gated)
+    assert "breakroom sink" in blob or "kitchenette" in blob
+    for forbidden in ("grease interceptor", "grease", "fog", "food establishment", "health department", "commercial kitchen", "type i hood", "ansul"):
+        assert forbidden not in blob
+
+
+def test_general_office_breakroom_kitchenette_negative_filters_restaurant_language():
+    job = (
+        "commercial office tenant improvement with staff kitchenette, breakroom sink, refrigerator, "
+        "microwave, coffee maker, partitions, lighting, and data cabling; not a restaurant, "
+        "no food service, no commercial kitchen, no hood, and no grease interceptor."
+    )
+    out = _apply_core_layers(job, "Dallas", "TX")
+    out.update({
+        "permits_required_logic": out.get("permits_required_logic", []) + [{
+            "permit_type": "Plumbing Permit — Commercial Tenant Improvement",
+            "included_because": "Breakroom sink is in scope; grease interceptor / FOG review is not required for this office kitchenette.",
+            "scope_trigger": "model leakage",
+        }],
+        "inspections": ["Final inspection includes sink trap, venting, and grease interceptor check."],
+        "what_to_bring": ["Bring FOG interceptor sizing and FOG wastewater worksheet."],
+        "companion_permits": [{"permit_type": "FOG / industrial waste / sewer approval", "reason": "Office kitchenette was mistaken for food service."}],
+        "hidden_triggers": [{"id": "restaurant_grease_interceptor_fog_review", "title": "FOG requirements", "why_it_matters": "FOG / industrial waste / sewer approval may be required."}],
+        "pro_tips": ["Label the space as office breakroom only, not food service."],
+    })
+
+    gated = server.apply_permitiq_quality_gate(out, job, "Dallas", "TX")
+    server.build_apply_path(gated, job, "Dallas", "TX")
+    blob = (
+        _customer_surface_blob(gated)
+        + " | " + " | ".join(str(i) for i in gated.get("inspections", [])).lower()
+        + " | " + _companion_blob(gated)
+        + " | " + _trigger_blob(gated.get("hidden_triggers", []))
+    )
+
+    assert gated["_primary_scope"] == "commercial_office_ti"
+    assert "office" in blob
+    for forbidden in ("grease interceptor", "grease", "fog", "food establishment", "health department", "commercial kitchen", "food service"):
+        assert forbidden not in blob
+
+
+def test_restaurant_fog_interceptor_positive_survives_office_breakroom_filter():
+    job = (
+        "restaurant tenant improvement with full commercial kitchen, Type I hood, fryer, griddle, "
+        "ANSUL suppression, three-compartment sink, mop sink, FOG interceptor, and FOG approval."
+    )
+    out = _apply_core_layers(job, "San Jose", "CA")
+    out.update({
+        "inspections": ["Plumbing final verifies FOG interceptor approval before opening."],
+        "what_to_bring": ["Bring FOG interceptor sizing and commercial kitchen plumbing sheets."],
+    })
+
+    gated = server.apply_permitiq_quality_gate(out, job, "San Jose", "CA")
+    blob = _customer_surface_blob(gated) + " | " + " | ".join(str(i) for i in gated.get("inspections", [])).lower()
+
+    assert gated["_primary_scope"] == "commercial_restaurant"
+    assert "grease_interceptor" in {a["key"] for a in gated["_fee_floor_components"]["trigger_adders"]}
+    assert "fog" in _trigger_blob(gated.get("hidden_triggers", []))
+    assert "fog" in blob
+    assert "commercial kitchen" in blob or "food establishment" in blob or "health department" in blob
+
+
 def test_pr24_negative_trap_customer_prose_does_not_repeat_absent_restaurant_or_medical_terms():
     cases = [
         (
@@ -497,6 +617,8 @@ def test_post_position_negation_suppresses_restaurant_fee_adders():
 def test_fog_as_stage_or_glass_word_does_not_trigger_grease_interceptor():
     cases = [
         "2,800 sf theater tenant improvement with stage fog machine and lighting controls; no food service or kitchen.",
+        "4,000 sf auditorium tenant improvement with stage fog approval forms for theatrical effects and lighting controls; no food service, no kitchen, no hood, no grease interceptor.",
+        "3,200 sf event venue TI with stage fog review for smoke effects and no restaurant, no food prep, no kitchen plumbing.",
         "3,000 sf office TI with fog-resistant glass partitions; no food service, no kitchen, no hood and no grease interceptor.",
     ]
 
