@@ -454,13 +454,62 @@ def _job_has_unnegated_commercial_scope(job_type: str) -> bool:
     return any(_contains_unnegated_phrase(text, token.strip()) for token in _COMMERCIAL_SCOPE_TOKENS)
 
 
+def _result_has_commercial_scope_signal(result: dict | None) -> bool:
+    """Detect commercial scope from cached result metadata/permit surfaces.
+
+    Exact permit-cache hits can carry stale `_primary_scope=residential` even
+    when the original request/category and permit fields are commercial. Use
+    these narrow signals only as a fallback after job text is considered so real
+    residential single-trade work still keeps residential wording.
+    """
+    if not isinstance(result, dict):
+        return False
+    meta = result.get("_meta") if isinstance(result.get("_meta"), dict) else {}
+    category = " ".join(
+        str(value or "")
+        for value in (
+            result.get("job_category"),
+            result.get("category"),
+            meta.get("job_category"),
+            meta.get("category"),
+            meta.get("vertical"),
+        )
+    ).lower()
+    if _contains_unnegated_phrase(category, "commercial"):
+        return True
+
+    fields: list[str] = []
+    for permit in result.get("permits_required") or []:
+        if not isinstance(permit, dict):
+            continue
+        for key in ("permit_type", "portal_selection", "notes"):
+            value = permit.get(key)
+            if isinstance(value, str):
+                fields.append(value)
+    text = " | ".join(fields).lower()
+    return _has_unnegated_any(
+        text,
+        (
+            "commercial",
+            "tenant improvement",
+            "interior alteration",
+            "change of occupancy",
+            "change of use",
+            "buildout",
+            "build-out",
+        ),
+    )
+
+
 def _is_commercial_scope(job_type: str, result: dict | None = None) -> bool:
     primary = str((result or {}).get("_primary_scope") or "").lower()
     job_has_commercial = _job_has_unnegated_commercial_scope(job_type)
     if primary.startswith("residential") and _residential_single_trade_scope(job_type) and not job_has_commercial:
         return False
     text = f"{job_type or ''} {primary}".lower()
-    return any(_contains_unnegated_phrase(text, token.strip()) for token in _COMMERCIAL_SCOPE_TOKENS)
+    if any(_contains_unnegated_phrase(text, token.strip()) for token in _COMMERCIAL_SCOPE_TOKENS):
+        return True
+    return _result_has_commercial_scope_signal(result)
 
 
 def _term_is_locally_negated(text: str, term_start: int) -> bool:
