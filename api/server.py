@@ -680,7 +680,7 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         "pro_tips", "common_mistakes", "watch_out", "what_to_bring", "quality_warnings",
         "permits_required_logic", "checklist", "permit_checklist", "next_steps", "requirements",
         "documents_needed", "permit_notes", "notes", "summary", "description", "recommendation",
-        "job_summary", "confidence_reason", "disclaimer", "apply_path", "permits_required",
+        "job_summary", "zoning_hoa_flag", "confidence_reason", "disclaimer", "apply_path", "permits_required",
         "inspections", "inspect_checklist", "inspection_requirements", "claim_citations",
         "companion_permits", "hidden_triggers",
     ):

@@ -319,6 +319,11 @@ def test_general_office_breakroom_kitchenette_negative_filters_restaurant_langua
         "companion_permits": [{"permit_type": "FOG / industrial waste / sewer approval", "reason": "Office kitchenette was mistaken for food service."}],
         "hidden_triggers": [{"id": "restaurant_grease_interceptor_fog_review", "title": "FOG requirements", "why_it_matters": "FOG / industrial waste / sewer approval may be required."}],
         "pro_tips": ["Label the space as office breakroom only, not food service."],
+        "zoning_hoa_flag": (
+            "For a commercial office tenant improvement, zoning and HOA issues are usually limited to the lease, "
+            "building rules, and any change-of-use or occupancy limits. The stated kitchenette scope does not by "
+            "itself trigger a grease interceptor or restaurant zoning review."
+        ),
     })
 
     gated = server.apply_permitiq_quality_gate(out, job, "Dallas", "TX")
@@ -332,8 +337,9 @@ def test_general_office_breakroom_kitchenette_negative_filters_restaurant_langua
 
     assert gated["_primary_scope"] == "commercial_office_ti"
     assert "office" in blob
-    for forbidden in ("grease interceptor", "grease", "fog", "food establishment", "health department", "commercial kitchen", "food service"):
+    for forbidden in ("grease interceptor", "grease", "fog", "food establishment", "health department", "commercial kitchen", "food service", "restaurant zoning"):
         assert forbidden not in blob
+    assert "zoning" in blob or "hoa" in blob
 
 
 def test_restaurant_fog_interceptor_positive_survives_office_breakroom_filter():
@@ -713,6 +719,7 @@ def _customer_surface_blob(result):
     for key in (
         "what_to_bring", "common_mistakes", "pro_tips", "watch_out",
         "quality_warnings", "permits_required_logic", "permits_required", "apply_path",
+        "zoning_hoa_flag",
     ):
         value = result.get(key)
         if isinstance(value, list):
