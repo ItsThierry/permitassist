@@ -1285,7 +1285,9 @@ def _customer_surface_blob(result):
     for key in (
         "what_to_bring", "common_mistakes", "pro_tips", "watch_out",
         "quality_warnings", "permits_required_logic", "permits_required", "apply_path",
-        "zoning_hoa_flag",
+        "zoning_hoa_flag", "fee_source", "fee_sources", "fee_calculator", "fee_estimate",
+        "total_cost_estimate", "code_section_source", "required_documents_source",
+        "inspection_process_source",
     ):
         value = result.get(key)
         if isinstance(value, list):
@@ -1474,6 +1476,115 @@ def test_commercial_conversion_with_residential_words_still_repairs_to_commercia
     assert "commercial" in blob
     assert "tenant improvement" in blob
     assert "residential plumbing permit" not in blob
+
+
+def test_pa300_stage_fog_fee_source_drops_food_establishment_metadata_without_losing_fog_scope():
+    job = (
+        "Small theater tenant improvement: install stage fog machine and lighting controls "
+        "for performances, no food service, no restaurant, no grease interceptor, no cooking hood. "
+        "QA marker PA300-081; marker is not permit scope."
+    )
+    result = {
+        "_primary_scope": "commercial",
+        "permits_required": [
+            {
+                "permit_type": "Electrical Permit — Commercial Lighting Controls",
+                "portal_selection": "Electrical Permit",
+                "required": True,
+                "notes": "Required for lighting controls serving stage performance equipment.",
+            },
+            {
+                "permit_type": "Mechanical Permit — Commercial Special Effects Equipment (Fog Machine)",
+                "portal_selection": "Mechanical Permit",
+                "required": True,
+                "notes": "Only required if the fog machine is permanently installed or tied into building ventilation.",
+            },
+        ],
+        "fee_source": {
+            "url": "https://www.fortworthtexas.gov/departments/environmental-services/consumer-health/temporary-permits",
+            "title": "Temporary Food Establishment Permit - the City of Fort Worth",
+            "source_type": "official",
+        },
+        "fee_calculator": {"source_title": "Temporary Food Establishment Permit fee schedule"},
+        "confidence": "medium",
+    }
+
+    gated = server.apply_permitiq_quality_gate(result, job, "Fort Worth", "TX")
+    blob = _customer_surface_blob(gated)
+
+    assert "fog machine" in blob
+    assert "lighting controls" in blob
+    assert "food establishment" not in blob
+    assert "food service" not in blob
+    assert "restaurant" not in blob
+    assert "grease" not in blob
+    assert gated.get("fee_source") in (None, {}, [])
+
+
+def test_pa300_cached_stage_fog_fee_source_drops_food_establishment_metadata():
+    job = (
+        "Small theater tenant improvement: install stage fog machine and lighting controls "
+        "for performances, no food service, no restaurant, no grease interceptor, no cooking hood. "
+        "QA marker PA300-081; marker is not permit scope."
+    )
+    cached_result = {
+        "_cached": True,
+        "_primary_scope": "commercial",
+        "permits_required": [
+            {"permit_type": "Electrical Permit — Commercial Lighting Controls", "notes": "Required for stage lighting controls."},
+            {"permit_type": "Mechanical Permit — Commercial Special Effects Equipment (Fog Machine)", "notes": "Only required for permanently installed fog machine building-system connections."},
+        ],
+        "fee_source": {
+            "url": "https://www.fortworthtexas.gov/departments/environmental-services/consumer-health/temporary-permits",
+            "title": "Temporary Food Establishment Permit - the City of Fort Worth",
+            "source_type": "official",
+        },
+        "confidence": "medium",
+    }
+
+    out = server.finalize_permit_lookup_result(
+        cached_result,
+        job,
+        "Fort Worth",
+        "TX",
+        is_cached=True,
+        evidence_allowed=False,
+    )
+    blob = _customer_surface_blob(out)
+
+    assert out["_cached"] is True
+    assert "fog machine" in blob
+    assert "food establishment" not in blob
+    assert "restaurant" not in blob
+    assert "grease" not in blob
+    assert out.get("fee_source") in (None, {}, [])
+
+
+def test_pa300_true_restaurant_fee_source_preserves_food_establishment_metadata():
+    job = (
+        "Fort Worth restaurant tenant improvement with commercial kitchen, food prep, Type I hood, "
+        "grease interceptor, and health department food establishment review."
+    )
+    result = {
+        "_primary_scope": "commercial_restaurant",
+        "permits_required": [
+            {"permit_type": "Building Permit — Restaurant Tenant Improvement", "required": True},
+            {"permit_type": "Health Department / Food Establishment Review", "required": True},
+        ],
+        "fee_source": {
+            "url": "https://www.fortworthtexas.gov/departments/environmental-services/consumer-health/temporary-permits",
+            "title": "Temporary Food Establishment Permit - the City of Fort Worth",
+            "source_type": "official",
+        },
+        "confidence": "medium",
+    }
+
+    gated = server.apply_permitiq_quality_gate(result, job, "Fort Worth", "TX")
+    blob = _customer_surface_blob(gated)
+
+    assert "food establishment" in blob
+    assert "restaurant" in blob
+    assert gated.get("fee_source", {}).get("title") == "Temporary Food Establishment Permit - the City of Fort Worth"
 
 
 def test_pa300_lab_fume_hood_note_preserves_lab_meaning_without_restaurant_contrast():
