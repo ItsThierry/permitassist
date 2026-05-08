@@ -200,6 +200,361 @@ def test_rc04_random_commercial_packaged_retail_phoenix_no_required_mechanical_w
         assert forbidden not in required_blob
 
 
+class _FakeSerperResponse:
+    status_code = 200
+
+    def __init__(self, organic):
+        self._organic = organic
+
+    def json(self):
+        return {"organic": self._organic}
+
+
+def test_pa300_packaged_retail_source_cache_is_query_aware(tmp_path, monkeypatch):
+    restaurant_query = (
+        "Los Angeles CA restaurant tenant improvement with commercial kitchen, Type I hood, "
+        "grease interceptor and food preparation code section permit"
+    )
+    packaged_query = (
+        "Los Angeles CA packaged snack and bottled beverage retail tenant improvement with shelving, "
+        "checkout, stockroom and restroom refresh; no food preparation, no restaurant, no kitchen, "
+        "no hood, no grease code section permit"
+    )
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "")
+    engine._set_cached_serper_source(
+        "Los Angeles",
+        "CA",
+        "code_section",
+        restaurant_query,
+        {
+            "title": "[PDF] AB 671 - Accelerated Restaurant Building Plan Review: California ...",
+            "url": "https://publichealth.lacounty.gov/eh/docs/ab-671-plan-review-tenant-improvements-faq-en.pdf",
+            "snippet": "Restaurant plan review and public health food establishment routing.",
+        },
+    )
+
+    stats = {"queries": 0, "cache_hits": 0}
+    source = engine._serper_claim_source(packaged_query, "code_section", "Los Angeles", "CA", stats)
+
+    assert source is None
+    assert stats["cache_hits"] == 0
+
+
+def test_pa300_packaged_retail_source_search_rejects_restaurant_public_health_source(tmp_path, monkeypatch):
+    packaged_query = (
+        "Los Angeles CA packaged snack and bottled beverage retail tenant improvement with shelving, "
+        "checkout, stockroom and restroom refresh; no food preparation, no restaurant, no kitchen, "
+        "no hood, no grease code section permit"
+    )
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "test-not-real")
+
+    def fake_post(*args, **kwargs):
+        return _FakeSerperResponse([
+            {
+                "title": "[PDF] AB 671 - Accelerated Restaurant Building Plan Review: California ...",
+                "link": "https://publichealth.lacounty.gov/eh/docs/ab-671-plan-review-tenant-improvements-faq-en.pdf",
+                "snippet": "Restaurant plan review and public health food establishment routing.",
+            },
+            {
+                "title": "Permit and Inspection Report - Los Angeles Department of Building and Safety",
+                "link": "https://www.ladbs.org/services/core-services/plan-check-permit/plan-check-permit-special-assistance",
+                "snippet": "Building permit and plan check assistance for Los Angeles construction work.",
+            },
+        ])
+
+    monkeypatch.setattr(engine, "_http_post_with_backoff", fake_post)
+
+    stats = {"queries": 0, "cache_hits": 0}
+    source = engine._serper_claim_source(packaged_query, "code_section", "Los Angeles", "CA", stats)
+    source_blob = f"{source}".lower()
+
+    assert source is not None
+    assert "ladbs.org" in source["url"]
+    for forbidden in ("publichealth.lacounty.gov", "ab 671", "restaurant", "food establishment"):
+        assert forbidden not in source_blob
+
+
+def test_pa300_source_cache_mismatch_is_symmetric_for_restaurant_query(tmp_path, monkeypatch):
+    packaged_query = (
+        "Los Angeles CA packaged snack and bottled beverage retail tenant improvement with shelving, "
+        "checkout, stockroom and restroom refresh; no food preparation, no restaurant, no kitchen, "
+        "no hood, no grease code section permit"
+    )
+    restaurant_query = (
+        "Los Angeles CA restaurant tenant improvement with commercial kitchen, Type I hood, "
+        "grease interceptor and food preparation code section permit"
+    )
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "")
+    engine._set_cached_serper_source(
+        "Los Angeles",
+        "CA",
+        "code_section",
+        packaged_query,
+        {
+            "title": "Permit and Inspection Report - Los Angeles Department of Building and Safety",
+            "url": "https://www.ladbs.org/services/core-services/plan-check-permit/plan-check-permit-special-assistance",
+            "snippet": "Building permit and plan check assistance for Los Angeles construction work.",
+        },
+    )
+
+    stats = {"queries": 0, "cache_hits": 0}
+    source = engine._serper_claim_source(restaurant_query, "code_section", "Los Angeles", "CA", stats)
+
+    assert source is None
+    assert stats["cache_hits"] == 0
+
+
+def test_pa300_restaurant_positive_can_still_use_public_health_restaurant_source(tmp_path, monkeypatch):
+    restaurant_query = (
+        "Los Angeles CA restaurant tenant improvement with commercial kitchen, Type I hood, "
+        "grease interceptor and food preparation code section permit"
+    )
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "test-not-real")
+
+    def fake_post(*args, **kwargs):
+        return _FakeSerperResponse([
+            {
+                "title": "[PDF] AB 671 - Accelerated Restaurant Building Plan Review: California ...",
+                "link": "https://publichealth.lacounty.gov/eh/docs/ab-671-plan-review-tenant-improvements-faq-en.pdf",
+                "snippet": "Restaurant plan review and public health food establishment routing.",
+            }
+        ])
+
+    monkeypatch.setattr(engine, "_http_post_with_backoff", fake_post)
+
+    stats = {"queries": 0, "cache_hits": 0}
+    source = engine._serper_claim_source(restaurant_query, "code_section", "Los Angeles", "CA", stats)
+
+    assert source is not None
+    assert "publichealth.lacounty.gov" in source["url"]
+    assert "restaurant" in source["title"].lower()
+
+
+def test_pa300_non_code_claim_source_also_rejects_restaurant_leak_for_packaged_retail(tmp_path, monkeypatch):
+    packaged_query = (
+        "Los Angeles CA packaged snack and bottled beverage retail tenant improvement with shelving, "
+        "checkout, stockroom and restroom refresh; no food preparation, no restaurant, no kitchen, "
+        "no hood, no grease inspection process permit"
+    )
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "test-not-real")
+
+    def fake_post(*args, **kwargs):
+        return _FakeSerperResponse([
+            {
+                "title": "Restaurant Plan Review Inspection Process - Public Health",
+                "link": "https://publichealth.lacounty.gov/eh/business/food-plan-review.htm",
+                "snippet": "Environmental health inspection routing for restaurants and food establishments.",
+            },
+            {
+                "title": "Los Angeles Building Inspection Information",
+                "link": "https://www.ladbs.org/services/core-services/inspection",
+                "snippet": "Building inspections for permitted construction work in Los Angeles.",
+            },
+        ])
+
+    monkeypatch.setattr(engine, "_http_post_with_backoff", fake_post)
+
+    stats = {"queries": 0, "cache_hits": 0}
+    source = engine._serper_claim_source(packaged_query, "inspection_process", "Los Angeles", "CA", stats)
+    source_blob = f"{source}".lower()
+
+    assert source is not None
+    assert "ladbs.org" in source["url"]
+    for forbidden in ("publichealth.lacounty.gov", "restaurant", "food establishment", "environmental health"):
+        assert forbidden not in source_blob
+
+
+def test_pa300_admin_office_source_search_rejects_medical_clinic_source(tmp_path, monkeypatch):
+    office_query = (
+        "Denver CO professional office tenant improvement for insurance administration, billing, "
+        "private offices and records room; no clinic, no exam rooms, no x-ray, no medical gas code section permit"
+    )
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "test-not-real")
+
+    def fake_post(*args, **kwargs):
+        return _FakeSerperResponse([
+            {
+                "title": "Medical Clinic Plan Review Requirements",
+                "link": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Medical-Clinic-Plan-Review",
+                "snippet": "Medical clinic, x-ray and medical gas plan review routing.",
+            },
+            {
+                "title": "Commercial Tenant Finish Permits - Denver",
+                "link": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Permits/Commercial-Construction",
+                "snippet": "Commercial tenant finish permits for office construction.",
+            },
+        ])
+
+    monkeypatch.setattr(engine, "_http_post_with_backoff", fake_post)
+
+    stats = {"queries": 0, "cache_hits": 0}
+    source = engine._serper_claim_source(office_query, "code_section", "Denver", "CO", stats)
+    source_blob = f"{source}".lower()
+
+    assert source is not None
+    assert "commercial-construction" in source["url"].lower()
+    for forbidden in ("medical clinic", "x-ray", "medical gas"):
+        assert forbidden not in source_blob
+
+
+def test_pa300_real_medical_clinic_can_still_use_medical_source(tmp_path, monkeypatch):
+    medical_query = (
+        "Denver CO medical clinic tenant improvement with exam rooms, x-ray room and medical gas coordination "
+        "code section permit"
+    )
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "test-not-real")
+
+    def fake_post(*args, **kwargs):
+        return _FakeSerperResponse([
+            {
+                "title": "Medical Clinic Plan Review Requirements",
+                "link": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Medical-Clinic-Plan-Review",
+                "snippet": "Medical clinic, x-ray and medical gas plan review routing.",
+            }
+        ])
+
+    monkeypatch.setattr(engine, "_http_post_with_backoff", fake_post)
+
+    stats = {"queries": 0, "cache_hits": 0}
+    source = engine._serper_claim_source(medical_query, "code_section", "Denver", "CO", stats)
+
+    assert source is not None
+    assert "medical-clinic-plan-review" in source["url"].lower()
+
+
+def test_pa300_cache_query_normalization_uses_case_and_whitespace_insensitive_match(tmp_path, monkeypatch):
+    stored_query = "Los Angeles CA restaurant tenant improvement code section permit"
+    lookup_query = "  LOS   ANGELES   CA   RESTAURANT   TENANT   IMPROVEMENT   CODE   SECTION   PERMIT  "
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "")
+    engine._set_cached_serper_source(
+        "Los Angeles",
+        "CA",
+        "code_section",
+        stored_query,
+        {
+            "title": "Los Angeles Restaurant Plan Review",
+            "url": "https://publichealth.lacounty.gov/eh/docs/restaurant-plan-review.pdf",
+            "snippet": "Restaurant plan review guidance.",
+        },
+    )
+
+    stats = {"queries": 0, "cache_hits": 0}
+    source = engine._serper_claim_source(lookup_query, "code_section", "Los Angeles", "CA", stats)
+
+    assert source is not None
+    assert source["cache"] == "hit"
+    assert stats["cache_hits"] == 1
+
+
+def test_pa300_cache_single_slot_semantics_are_safe_on_query_overwrite(tmp_path, monkeypatch):
+    first_query = "Los Angeles CA restaurant tenant improvement code section permit"
+    second_query = "Los Angeles CA office tenant improvement code section permit"
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "")
+    engine._set_cached_serper_source(
+        "Los Angeles",
+        "CA",
+        "code_section",
+        first_query,
+        {"title": "First Source", "url": "https://www.lacity.gov/first", "snippet": "First source."},
+    )
+    engine._set_cached_serper_source(
+        "Los Angeles",
+        "CA",
+        "code_section",
+        second_query,
+        {"title": "Second Source", "url": "https://www.lacity.gov/second", "snippet": "Second source."},
+    )
+
+    stats = {"queries": 0, "cache_hits": 0}
+    stale_source = engine._serper_claim_source(first_query, "code_section", "Los Angeles", "CA", stats)
+
+    assert stale_source is None
+    assert stats["cache_hits"] == 0
+
+
+def test_pa300_packaged_retail_negation_phrase_variants_trigger_source_filter():
+    source = {
+        "title": "AB 671 Accelerated Restaurant Building Plan Review",
+        "url": "https://publichealth.lacounty.gov/eh/docs/ab-671-plan-review-tenant-improvements-faq-en.pdf",
+        "content": "Restaurant food establishment plan review.",
+    }
+    scope_variants = [
+        "Los Angeles convenience store packaged-only grocery tenant improvement without food preparation",
+        "Los Angeles dry-goods retail TI, non-restaurant, shelving and checkout only",
+        "Los Angeles mercantile tenant improvement, not a restaurant, no kitchen",
+    ]
+
+    for scope in scope_variants:
+        assert engine._source_incompatible_with_scope_text(source, scope)
+
+
+def test_pa300_mixed_use_scope_does_not_overfilter_restaurant_or_medical_sources():
+    restaurant_source = {
+        "title": "Restaurant Plan Review",
+        "url": "https://publichealth.lacounty.gov/eh/docs/restaurant-plan-review.pdf",
+        "content": "Restaurant plan review.",
+    }
+    medical_source = {
+        "title": "Medical Clinic Plan Review",
+        "url": "https://www.denvergov.org/medical-clinic-plan-review",
+        "content": "Medical clinic x-ray and medical gas routing.",
+    }
+
+    assert not engine._source_incompatible_with_scope_text(
+        restaurant_source,
+        "Los Angeles mixed-use retail and cafe tenant improvement with food preparation",
+    )
+    assert not engine._source_incompatible_with_scope_text(
+        medical_source,
+        "Denver medical clinic tenant improvement with exam rooms and x-ray",
+    )
+
+
+def test_pa300_original_incident_prose_does_not_attach_public_health_restaurant_source(tmp_path, monkeypatch):
+    job = (
+        "Los Angeles CA packaged snack and bottled beverage retail tenant improvement with shelving, "
+        "checkout, stockroom and restroom refresh; no food preparation, no restaurant, no commercial kitchen, "
+        "no cooking, no hood, no grease"
+    )
+    result = {"permit_type": "Commercial Tenant Improvement"}
+    monkeypatch.setattr(engine, "SERPER_CACHE_DB", str(tmp_path / "serper_cache.db"))
+    monkeypatch.setattr(engine, "SERPER_API_KEY", "test-not-real")
+
+    def fake_post(*args, **kwargs):
+        return _FakeSerperResponse([
+            {
+                "title": "[PDF] AB 671 - Accelerated Restaurant Building Plan Review: California ...",
+                "link": "https://publichealth.lacounty.gov/eh/docs/ab-671-plan-review-tenant-improvements-faq-en.pdf",
+                "snippet": "Restaurant plan review and public health food establishment routing.",
+            },
+            {
+                "title": "Permit and Inspection Report - Los Angeles Department of Building and Safety",
+                "link": "https://www.ladbs.org/services/core-services/plan-check-permit/plan-check-permit-special-assistance",
+                "snippet": "Building permit and plan check assistance for Los Angeles construction work.",
+            },
+        ])
+
+    monkeypatch.setattr(engine, "_http_post_with_backoff", fake_post)
+
+    claim_results, stats = engine._serper_claim_sources_sequential(job, "Los Angeles", "CA", result)
+    attached = engine._attach_serper_claim_results(result, claim_results, stats)
+    customer_blob = f"{result}".lower()
+
+    assert attached > 0
+    assert "ladbs.org" in customer_blob
+    for forbidden in ("publichealth.lacounty.gov", "ab 671", "restaurant building plan", "food establishment"):
+        assert forbidden not in customer_blob
+
+
 def test_law_firm_office_coffee_bar_does_not_return_restaurant_or_health_hidden_triggers():
     job = (
         "law firm office tenant improvement with private offices, conference rooms, reception, "

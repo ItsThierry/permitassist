@@ -3943,20 +3943,30 @@ def _cache_norm(value: str) -> str:
     return (value or "").strip().lower()
 
 
-def _get_cached_serper_source(city: str, state: str, claim_type: str) -> dict | None:
+def _cache_norm_query(value: str) -> str:
+    return re.sub(r"\s+", " ", (value or "").strip().lower())
+
+
+def _get_cached_serper_source(city: str, state: str, claim_type: str, query: str) -> dict | None:
     try:
         conn = _serper_cache_conn()
         try:
             row = conn.execute(
-                "SELECT title, url, snippet, created_at FROM serper_claim_cache WHERE city=? AND state=? AND claim_type=?",
+                "SELECT title, url, snippet, created_at, query FROM serper_claim_cache WHERE city=? AND state=? AND claim_type=?",
                 (_cache_norm(city), _cache_norm(state), _cache_norm(claim_type)),
             ).fetchone()
         finally:
             conn.close()
         if not row:
             return None
-        title, url, snippet, created_at = row
+        title, url, snippet, created_at, cached_query = row
         if not url or (time.time() - float(created_at or 0)) > SERPER_TRUST_TTL_SECONDS:
+            return None
+        if _cache_norm_query(cached_query) != _cache_norm_query(query):
+            return None
+        cached_item = {"title": title or url, "url": url, "content": snippet or "", "snippet": snippet or ""}
+        if _source_incompatible_with_scope_text(cached_item, query, claim_type):
+            print(f"[trust] Serper cache ignored scope-incompatible source: {url}")
             return None
         source_class = classify_source_url(url)
         if source_class == SOURCE_CLASS_EXCLUDED:
@@ -4092,10 +4102,83 @@ def _filter_allowed_source_results(results: list[dict]) -> list[dict]:
     return allowed
 
 
-def _best_serper_source_from_results(results: list[dict], city: str, state: str) -> dict | None:
+def _scope_text_is_non_food_packaged_retail(scope_text: str) -> bool:
+    text = (scope_text or "").lower()
+    retail_signal = any(term in text for term in (
+        "retail tenant improvement", "retail ti", "packaged snack", "packaged snacks",
+        "bottled beverage", "sealed snack", "packaged food", "shelving", "checkout",
+        "convenience store", "dry-goods", "dry goods retail", "dry-goods retail", "packaged-only grocery",
+        "packaged only grocery", "grocery packaged only", "mercantile tenant improvement",
+    ))
+    explicit_no_food_service = (
+        bool(re.search(r"\bno\s+(?:food\s+prep|food\s+preparation|restaurant|commercial\s+kitchen|kitchen|hood|grease|cooking)\b", text))
+        or bool(re.search(r"\b(?:not\s+a\s+restaurant|non\s*[- ]?restaurant|without\s+food\s+prep(?:aration)?)\b", text))
+    )
+    actual_food_health_scope = _has_unnegated_any(text, _RETAIL_FOOD_HEALTH_SCOPE_TERMS)
+    return retail_signal and explicit_no_food_service and not actual_food_health_scope
+
+
+def _scope_text_is_admin_office_not_medical(scope_text: str) -> bool:
+    text = (scope_text or "").lower()
+    office_signal = any(term in text for term in (
+        "office tenant improvement", "office ti", "professional office", "administration office",
+        "billing", "insurance administration", "records administration", "law office",
+        "admin office", "back-office", "back office", "telesales", "call center", "claims office",
+    ))
+    explicit_no_medical = bool(re.search(
+        r"\bno\s+(?:clinic|exam\s+rooms?|patient\s+care|x[- ]?ray|medical\s+gas|treatment\s+rooms?|dental\s+chairs?)\b",
+        text,
+    ))
+    actual_medical_scope = _has_healthcare_scope_signal(text)
+    return office_signal and explicit_no_medical and not actual_medical_scope
+
+
+def _source_incompatible_with_scope_text(item: dict, scope_text: str, claim_type: str = "") -> bool:
+    """Reject public citation sources that belong to a negated specialty vertical.
+
+    Claim sources are customer-visible evidence. A city/state official page can
+    still be wrong for the contractor's scope (for example LA County Public
+    Health restaurant plan-review guidance on a packaged-retail TI that states
+    no food prep / no restaurant / no kitchen). The scope_text passed here is
+    the Serper query built from the original job prose; preserving negations in
+    that query is part of the source-selection safety contract. Keep this as a
+    conservative source-selection guard; true restaurant/medical positives are
+    not filtered.
+    """
+    haystack = " ".join(str(item.get(k) or "") for k in ("title", "url", "content", "snippet")).lower()
+    if not haystack:
+        return False
+
+    if _scope_text_is_non_food_packaged_retail(scope_text):
+        restaurant_health_source = (
+            any(term in haystack for term in (
+                "ab 671", "accelerated restaurant", "restaurant building plan", "restaurant plan review",
+                "food establishment", "food service", "commercial kitchen", "type i hood", "type 1 hood",
+                "grease interceptor", "public health", "environmental health",
+            ))
+            or "publichealth.lacounty.gov/eh" in haystack
+        )
+        if restaurant_health_source:
+            return True
+
+    if _scope_text_is_admin_office_not_medical(scope_text):
+        medical_source = any(term in haystack for term in (
+            "medical clinic", "dental clinic", "clinic plan review", "x-ray", "x ray", "radiology",
+            "medical gas", "health care facility", "healthcare facility", "outpatient surgery",
+            "outpatient clinic", "urgent care", "hospital", "infusion", "physical therapy",
+            "ambulatory care", "ambulatory surgery",
+        ))
+        if medical_source:
+            return True
+
+    return False
+
+
+def _best_serper_source_from_results(results: list[dict], city: str, state: str, scope_text: str = "", claim_type: str = "") -> dict | None:
     if not results:
         return None
     allowed = _filter_allowed_source_results(results)
+    allowed = [item for item in allowed if not _source_incompatible_with_scope_text(item, scope_text, claim_type)]
     if not allowed:
         return None
     ranked = _rank_search_results(allowed, limit=min(len(allowed), 5), city=city, state=state)
@@ -4120,9 +4203,13 @@ def _best_serper_source_from_results(results: list[dict], city: str, state: str)
     return source
 
 
-def _serper_claim_source(query: str, claim_type: str, city: str, state: str, stats: dict, request_timeout: float = 15) -> dict | None:
-    cached = _get_cached_serper_source(city, state, claim_type)
+def _serper_claim_source(query: str, claim_type: str, city: str, state: str, stats: dict, request_timeout: float = 15, scope_text: str = "") -> dict | None:
+    guard_scope_text = scope_text or query
+    cached = _get_cached_serper_source(city, state, claim_type, query)
     if cached:
+        if _source_incompatible_with_scope_text(cached, guard_scope_text, claim_type):
+            print(f"[trust] Serper {claim_type}: cache hit rejected by scope guard {cached.get('url')}")
+            return None
         stats["cache_hits"] = stats.get("cache_hits", 0) + 1
         print(f"[trust] Serper {claim_type}: cache hit {cached.get('url')}")
         return cached
@@ -4159,7 +4246,7 @@ def _serper_claim_source(query: str, claim_type: str, city: str, state: str, sta
                 "url": url,
                 "content": clean_summary_text(r.get("snippet", ""), max_len=500),
             })
-        source = _best_serper_source_from_results(results, city, state)
+        source = _best_serper_source_from_results(results, city, state, scope_text=guard_scope_text, claim_type=claim_type)
         if source:
             _set_cached_serper_source(city, state, claim_type, query, source)
             label = source.get("source_label") or source.get("source_type") or "source"
@@ -4228,7 +4315,7 @@ def _merge_serper_stats(total: dict, partial: dict | None) -> None:
         total["failure_reason"] = partial.get("failure_reason")
 
 
-def _run_serper_claim_task(index: int, claim_type: str, field_name: str, query: str, city: str, state: str) -> dict:
+def _run_serper_claim_task(index: int, claim_type: str, field_name: str, query: str, city: str, state: str, scope_text: str = "") -> dict:
     local_stats = {"queries": 0, "cache_hits": 0}
     source = _serper_claim_source(
         query,
@@ -4237,6 +4324,7 @@ def _run_serper_claim_task(index: int, claim_type: str, field_name: str, query: 
         state,
         local_stats,
         request_timeout=SERPER_TRUST_REQUEST_TIMEOUT_SECONDS,
+        scope_text=scope_text,
     )
     return {
         "index": index,
@@ -4264,7 +4352,7 @@ def _serper_claim_sources_parallel(job_type: str, city: str, state: str, result:
     completed: dict[int, dict] = {}
     executor = ThreadPoolExecutor(max_workers=max_workers)
     futures = {
-        executor.submit(_run_serper_claim_task, idx, claim_type, field_name, query, city, state): idx
+        executor.submit(_run_serper_claim_task, idx, claim_type, field_name, query, city, state, job_type): idx
         for idx, (claim_type, field_name, query) in enumerate(claims)
     }
     try:
@@ -4317,6 +4405,7 @@ def _serper_claim_sources_sequential(job_type: str, city: str, state: str, resul
             state,
             local_stats,
             request_timeout=min(SERPER_TRUST_REQUEST_TIMEOUT_SECONDS, max(1, remaining)),
+            scope_text=job_type,
         )
         _merge_serper_stats(stats, local_stats)
         completed.append({
@@ -4510,7 +4599,7 @@ def _term_is_locally_negated(text: str, term_start: int) -> bool:
     prefix = text[max(0, term_start - 72):term_start]
     prefix_negated = bool(
         re.search(
-            r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b)"
+            r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b|\bnon[- ]+)"
             r"(?:\s+(?:and|or|any|new|commercial|type\s*i|type\s*1))*"
             r"(?:[\s,;/()-]+[a-z0-9]+){0,4}[\s,;/()-]*$",
             prefix,
