@@ -514,6 +514,8 @@ def _is_commercial_scope(job_type: str, result: dict | None = None) -> bool:
 
 def _term_is_locally_negated(text: str, term_start: int) -> bool:
     prefix = text[max(0, term_start - 72):term_start]
+    if re.search(r"\b(?:remove|remove old|remove existing|removed|demolish|demo|cap|cap existing|abandon)\b(?:\s+(?:old|existing|unused|prior))*[\s,;/()-]*$", prefix, flags=re.I):
+        return True
     if re.search(
         r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b)"
         r"(?:\s+(?:and|or|any|new|commercial|type\s*i|type\s*1))*"
@@ -650,7 +652,20 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
     customer-visible item that mentions an absent subsystem; keep unrelated
     permits and companion permits intact.
     """
+    job_text = f"{job_type or ''}".lower()
     scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
+    historical_retail_conversion = bool(
+        re.search(r"\b(?:retail tenant improvement|retail ti|retail buildout|clothing store|boutique)\b", job_text)
+        and re.search(r"\b(?:former|old|existing)\s+restaurant\s+(?:shell|space|tenant|suite)\b", job_text)
+        and re.search(r"\b(?:convert|conversion|change)\b.{0,80}\b(?:retail|clothing store|store|shop|boutique)\b", job_text)
+        and re.search(r"\b(?:no|without)\s+(?:food service|grease|cooking|commercial kitchen|kitchen work)\b", job_text)
+    )
+    if historical_retail_conversion:
+        result["_primary_scope"] = "commercial_retail_ti"
+        scope_text = job_text
+        components = result.get("_fee_floor_components")
+        if isinstance(components, dict) and components.get("scope") == "commercial_restaurant":
+            result.pop("_fee_floor_components", None)
     forbidden_terms: list[str] = []
     if not _restaurant_hood_scope_present(scope_text):
         forbidden_terms += ["hood", "ansul", "fire suppression", "grease duct"]
@@ -789,6 +804,7 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         "permits_required_logic", "checklist", "permit_checklist", "next_steps", "requirements",
         "documents_needed", "permit_notes", "notes", "summary", "description", "recommendation",
         "job_summary", "zoning_hoa_flag", "confidence_reason", "disclaimer", "apply_path", "permits_required",
+        "fee_range", "total_cost_estimate", "fee_estimate", "fee_calculator",
         "inspections", "inspect_checklist", "inspection_requirements", "claim_citations",
         "companion_permits", "hidden_triggers", "fee_source", "fee_sources", "fee_calculator",
         "fee_estimate", "total_cost_estimate", "code_section_source", "required_documents_source",

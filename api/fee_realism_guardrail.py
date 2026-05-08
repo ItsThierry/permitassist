@@ -314,6 +314,8 @@ def _norm(value: Any) -> str:
 
 def _term_is_locally_negated(text: str, term_start: int) -> bool:
     prefix = text[max(0, term_start - 72):term_start]
+    if re.search(r"\b(?:remove|remove old|remove existing|removed|demolish|demo|cap|cap existing|abandon)\b(?:\s+(?:old|existing|unused|prior))*[\s,;/()-]*$", prefix, flags=re.I):
+        return True
     prefix_negated = bool(
         re.search(
             r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b|\bno new\b)"
@@ -354,6 +356,15 @@ def _normalize_scope(primary_scope: str, job_type: str) -> str:
     """Map caller scope + job description onto SCOPE_FEE_FLOORS keys."""
     scope = _norm(primary_scope).replace("-", "_").replace(" ", "_")
     text = f"{scope} {_norm(job_type)}"
+
+    historical_retail_conversion = bool(
+        re.search(r"\b(?:retail tenant improvement|retail ti|retail buildout|clothing store|boutique)\b", text)
+        and re.search(r"\b(?:former|old|existing)\s+restaurant\s+(?:shell|space|tenant|suite)\b", text)
+        and re.search(r"\b(?:convert|conversion|change)\b.{0,80}\b(?:retail|clothing store|store|shop|boutique)\b", text)
+        and re.search(r"\b(?:no|without)\s+(?:food service|grease|cooking|commercial kitchen|kitchen work)\b", text)
+    )
+    if historical_retail_conversion:
+        return "commercial_retail_ti"
 
     if scope in SCOPE_FEE_FLOORS:
         return scope

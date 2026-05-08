@@ -1354,6 +1354,63 @@ def test_barber_shop_false_bar_does_not_get_food_health_checklist_language():
     assert out["_primary_scope"] != "commercial_restaurant"
 
 
+def test_pa300_former_restaurant_shell_retail_conversion_uses_retail_fee_floor_not_restaurant():
+    job = (
+        "Retail tenant improvement in former restaurant shell: convert to clothing store, "
+        "cap existing kitchen utilities, remove old hood, no food service, no grease work, no cooking. "
+        "QA marker PA300-086; marker is not permit scope."
+    )
+    out = _apply_core_layers(job, "Austin", "TX")
+    out = server.apply_permitiq_quality_gate(out, job, "Austin", "TX")
+    blob = _customer_surface_blob(out) + " | " + str(out.get("fee_range", "")).lower()
+    adder_keys = {a["key"] for a in (out.get("_fee_floor_components") or {}).get("trigger_adders", [])}
+
+    assert out["_primary_scope"] == "commercial_retail_ti"
+    assert out["_fee_floor_components"]["scope"] == "commercial_retail_ti"
+    assert {"hood_fire_suppression", "grease_interceptor"}.isdisjoint(adder_keys)
+    for forbidden in ("restaurant", "food service", "grease", "hood-fire-suppression", "commercial kitchen"):
+        assert forbidden not in blob
+    assert "retail" in blob or "clothing" in blob
+
+
+def test_pa300_cached_former_restaurant_shell_fee_range_scrubs_stale_restaurant_floor():
+    job = (
+        "Retail tenant improvement in former restaurant shell: convert to clothing store, "
+        "cap existing kitchen utilities, remove old hood, no food service, no grease work, no cooking. "
+        "QA marker PA300-086; marker is not permit scope."
+    )
+    cached_result = {
+        "_cached": True,
+        "_primary_scope": "commercial_restaurant",
+        "fee_range": (
+            "Fee Estimate: **$19,000-$27,500+** (structured floor — see breakdown). "
+            "Components: ~$12,000 base permit + plan review (Austin, TX commercial restaurant TI floor) "
+            "× 1.2× jurisdiction multiplier + $5,500 hood-fire-suppression adder + $3,000 ada-path-of-travel adder. "
+            "**Verify against current fee schedule before quoting.**"
+        ),
+        "_fee_floor_components": {
+            "scope": "commercial_restaurant",
+            "trigger_adders": [{"key": "hood_fire_suppression"}, {"key": "ada_path_of_travel"}],
+        },
+        "permits_required": [{"permit_type": "Building Permit — Commercial Retail Tenant Improvement", "notes": "Required for conversion to clothing store."}],
+        "confidence": "medium",
+    }
+    out = server.finalize_permit_lookup_result(
+        cached_result,
+        job,
+        "Austin",
+        "TX",
+        is_cached=True,
+        evidence_allowed=False,
+    )
+    blob = _customer_surface_blob(out) + " | " + str(out.get("fee_range", "")).lower()
+
+    assert out["_cached"] is True
+    for forbidden in ("restaurant", "food service", "grease", "hood-fire-suppression", "commercial kitchen"):
+        assert forbidden not in blob
+    assert out.get("_fee_floor_components", {}).get("scope") != "commercial_restaurant"
+
+
 def test_theater_fog_machine_does_not_repeat_hood_or_grease_in_permit_logic():
     job = (
         "2,800 sf theater tenant improvement with stage fog machine and lighting controls; "
