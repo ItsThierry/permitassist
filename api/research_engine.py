@@ -625,17 +625,43 @@ def _strip_nonlocal_urls_from_text(text: str, city: str, state: str, result: dic
     return _URL_REGEX.sub(_replace, text)
 
 
-def apply_source_locality_hard_block(result: dict, city: str, state: str) -> dict:
-    """Apply A1 locality filtering to citations, apply URL, *_source URL fields, and prose."""
+def _source_url_incompatible_with_scope(src: str, scope_text: str) -> bool:
+    if not isinstance(src, str) or not scope_text:
+        return False
+    item = {"url": src, "title": src, "snippet": src, "content": src}
+    return _source_incompatible_with_scope_text(item, scope_text, "sources")
+
+
+def filter_sources_by_scope(sources: list[str], scope_text: str) -> tuple[list[str], list[str]]:
+    if not isinstance(sources, list) or not sources:
+        return sources or [], []
+    kept: list[str] = []
+    dropped: list[str] = []
+    for src in sources:
+        if not isinstance(src, str) or not src.startswith("http"):
+            continue
+        if _source_url_incompatible_with_scope(src, scope_text):
+            dropped.append(src)
+            continue
+        kept.append(src)
+    return kept, dropped
+
+
+def apply_source_locality_hard_block(result: dict, city: str, state: str, job_type: str = "") -> dict:
+    """Apply source locality and scope filtering to citations, URL fields, and prose."""
     if not isinstance(result, dict):
         return result
     dropped: list[dict] = []
 
     pre_sources = list(result.get("sources") or []) if isinstance(result.get("sources"), list) else []
-    result["sources"] = filter_sources_by_locality(pre_sources, city, state, result=result)
+    locality_sources = filter_sources_by_locality(pre_sources, city, state, result=result)
+    scoped_sources, scope_dropped = filter_sources_by_scope(locality_sources, job_type)
+    result["sources"] = scoped_sources
     for src in pre_sources:
-        if src not in result["sources"]:
-            dropped.append({"field": "sources", "url": src})
+        if src not in locality_sources:
+            dropped.append({"field": "sources", "url": src, "kind": "source_locality"})
+    for src in scope_dropped:
+        dropped.append({"field": "sources", "url": src, "kind": "source_scope"})
 
     apply_url = result.get("apply_url")
     if isinstance(apply_url, str) and apply_url.startswith("http"):
@@ -1923,7 +1949,12 @@ def classify_rulebook_scope(job_type: str) -> str:
         return "unknown"
     if any(t in job for t in ("tribal", "reservation", "sovereign land", "federal enclave")):
         return "edge_case"
-    if any(t in job for t in ("restaurant", "commercial kitchen", "food service", "type i hood", "grease interceptor")):
+    restaurant_scope_terms = (
+        "restaurant", "commercial kitchen", "food service", "cafe", "café",
+        "fast-casual", "fast casual", "tavern", "brewery", "type i hood",
+        "type 1 hood", "grease interceptor", "commercial cooking",
+    )
+    if _has_unnegated_any(job, restaurant_scope_terms) or _restaurant_food_health_scope_present(job):
         return "restaurant_ti"
     if any(t in job for t in ("office ti", "office tenant improvement", "office buildout")):
         return "office_ti"
@@ -4148,13 +4179,15 @@ def _source_incompatible_with_scope_text(item: dict, scope_text: str, claim_type
     haystack = " ".join(str(item.get(k) or "") for k in ("title", "url", "content", "snippet")).lower()
     if not haystack:
         return False
+    normalized_haystack = re.sub(r"[-_/]+", " ", haystack)
 
     if _scope_text_is_non_food_packaged_retail(scope_text):
         restaurant_health_source = (
-            any(term in haystack for term in (
+            any(term in normalized_haystack for term in (
                 "ab 671", "accelerated restaurant", "restaurant building plan", "restaurant plan review",
-                "food establishment", "food service", "commercial kitchen", "type i hood", "type 1 hood",
-                "grease interceptor", "public health", "environmental health",
+                "food establishment", "food service", "food program", "retail food code",
+                "commercial kitchen", "type i hood", "type 1 hood", "grease interceptor",
+                "public health", "environmental health",
             ))
             or "publichealth.lacounty.gov/eh" in haystack
         )
@@ -7811,6 +7844,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             apply_state_expert_pack(cached, city, state, job_type)
             hedge_companion_permits(cached, job_type)
             enrich_result_with_serper_sources(cached, job_type, city, state)
+            apply_source_locality_hard_block(cached, city, state, job_type)
             apply_fee_verify_caveat(cached)
             apply_rulebook_depth(cached, job_type, city, state)
             return cached
@@ -8440,7 +8474,7 @@ Return ONLY the JSON object."""
     # allowlist (NFPA, IAPMO, ICC, ada.gov, energy.gov, etc.) and anything with
     # a city/state/state-code locality match. Telemetry on `_sources_locality_dropped`.
     try:
-        apply_source_locality_hard_block(result, city, state)
+        apply_source_locality_hard_block(result, city, state, job_type)
     except Exception as _e:
         # Defensive — never let the filter break the engine
         print(f"[locality_filter] failed: {_e}")
