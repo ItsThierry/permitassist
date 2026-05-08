@@ -4786,7 +4786,7 @@ def sanitize_non_food_office_breakroom_text(result: dict, job_type: str) -> dict
             if not _OFFICE_BREAKROOM_WRONG_VERTICAL_RE.search(item):
                 cleaned.append(item)
                 continue
-            sanitized.append({"field": field, "removed": item[:220]})
+            sanitized.append({"field": field, "kind": "office_breakroom_wrong_vertical_text_removed"})
             if field == "common_mistakes" and not replacement_added:
                 cleaned.append(replacement_common_mistake)
                 replacement_added = True
@@ -4796,7 +4796,7 @@ def sanitize_non_food_office_breakroom_text(result: dict, job_type: str) -> dict
         _clean_list(field)
 
     if isinstance(result.get("zoning_hoa_flag"), str) and _OFFICE_BREAKROOM_WRONG_VERTICAL_RE.search(result["zoning_hoa_flag"]):
-        sanitized.append({"field": "zoning_hoa_flag", "removed": result["zoning_hoa_flag"][:220]})
+        sanitized.append({"field": "zoning_hoa_flag", "kind": "office_breakroom_wrong_vertical_text_removed"})
         result["zoning_hoa_flag"] = (
             "For an office tenant improvement, zoning issues are usually limited to lease/building rules, occupancy limits, signage, parking, or change-of-use checks."
         )
