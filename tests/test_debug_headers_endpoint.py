@@ -29,6 +29,8 @@ def _install_server_import_stubs():
     research_stub.build_google_maps_url = lambda *a, **k: ""
     research_stub.strip_pdf_from_result = lambda result: result
     research_stub.get_cache_hit_rate = lambda: 0
+    research_stub.detect_primary_scope = lambda job_type: {"primary_scope": "generic", "signals": []}
+    research_stub.classify_scope_required_permits = lambda job_type, city="", state="": []
     sys.modules.setdefault("research_engine", research_stub)
 
 
