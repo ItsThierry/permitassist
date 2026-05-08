@@ -481,6 +481,43 @@ def test_pa300_cache_single_slot_semantics_are_safe_on_query_overwrite(tmp_path,
     assert stats["cache_hits"] == 0
 
 
+def test_pa300_packaged_retail_scope_filter_rejects_public_health_food_code_url():
+    packaged_scope = (
+        "Los Angeles CA retail tenant improvement for packaged snacks and bottled beverages only; "
+        "no food preparation, no restaurant, no kitchen, no hood, no grease."
+    )
+    source = {
+        "title": "California Retail Food Code - Food Program",
+        "url": "https://www.slocounty.ca.gov/Departments/Health-Agency/Public-Health/Environmental-Health/Forms-Documents/Food-Program/California-Retail-Food-Code.aspx",
+        "snippet": "Retail food code and public health food program guidance.",
+    }
+
+    assert engine._source_incompatible_with_scope_text(source, packaged_scope, "code_section") is True
+
+
+def test_pa300_scope_filter_removes_food_code_url_from_customer_sources():
+    job = (
+        "Los Angeles CA retail tenant improvement for packaged snacks and bottled beverages only; "
+        "no food preparation, no restaurant, no kitchen, no hood, no grease."
+    )
+    food_code_url = (
+        "https://www.slocounty.ca.gov/Departments/Health-Agency/Public-Health/"
+        "Environmental-Health/Forms-Documents/Food-Program/California-Retail-Food-Code.aspx"
+    )
+    ladbs_url = "https://www.ladbs.org/services/core-services/plan-check-permit/plan-check-permit-special-assistance"
+    result = {
+        "applying_office": "Los Angeles Department of Building and Safety",
+        "sources": [food_code_url, ladbs_url],
+    }
+
+    engine.apply_source_locality_hard_block(result, "Los Angeles", "CA", job)
+
+    assert food_code_url not in result["sources"]
+    assert ladbs_url in result["sources"]
+    dropped_blob = str(result.get("_sources_locality_dropped") or "").lower()
+    assert "source_scope" in dropped_blob
+
+
 def test_pa300_packaged_retail_negation_phrase_variants_trigger_source_filter():
     source = {
         "title": "AB 671 Accelerated Restaurant Building Plan Review",

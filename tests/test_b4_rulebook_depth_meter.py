@@ -90,3 +90,17 @@ def test_disclaimer_copy_per_tier():
 
 def test_deep_city_untested_non_edge_scope_is_medium():
     assert _out("commercial warehouse mezzanine expansion", "Dallas", "TX")["rulebook_depth"] == "MEDIUM"
+
+
+def test_los_angeles_packaged_retail_no_restaurant_uses_retail_rulebook_depth():
+    job = (
+        "PA300_008 QA marker: retail tenant improvement in Los Angeles CA for packaged snacks "
+        "and bottled drinks with shelving, checkout, stockroom and restroom refresh only; "
+        "no food preparation, no restaurant, no kitchen, no hood, no grease."
+    )
+
+    out = _out(job, "Los Angeles", "CA", office="Los Angeles Department of Building and Safety")
+
+    assert out["rulebook_depth"] == "DEEP"
+    assert "retail ti" in out["_rulebook_depth_disclaimer"].lower()
+    assert "restaurant ti" not in out["_rulebook_depth_disclaimer"].lower()
