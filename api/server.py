@@ -545,6 +545,53 @@ def _medical_clinic_scope_present(text: str) -> bool:
     return _has_unnegated_any(text or "", ("medical clinic", "clinic tenant improvement", "clinic ti", "exam room", "exam rooms", "patient care", "treatment room", "treatment rooms"))
 
 
+def _neutralize_commercial_permit_residential_contrast(result: dict, job_type: str) -> None:
+    """Remove wrong-category residential contrast wording from commercial permit fields.
+
+    Full300 scores `permits_required` fields as customer-visible classification
+    signals. A commercial note that says "not residential" is semantically
+    negative, but contractors and strict gates still see the wrong category.
+    Preserve the commercial/church/TI meaning and remove the contrast word.
+    """
+    if not isinstance(result, dict) or not _is_commercial_scope(job_type, result):
+        return
+    permits = result.get("permits_required")
+    if not isinstance(permits, list):
+        return
+
+    def clean_text(value: str) -> str:
+        if not isinstance(value, str) or not re.search(r"\bresidential\b", value, flags=re.I):
+            return value
+        cleaned = value
+        cleaned = re.sub(
+            r"\bBecause\s+this\s+is\s+[^.]{0,160}?\bthe\s+work\s+is\s+not\s+(?:a\s+)?(?:simple\s+)?residential\s+(?:alteration|remodel|project|scope|job|work)\.?,?",
+            "Because this is a commercial occupancy space, handle the work as a commercial interior alteration / tenant improvement review.",
+            cleaned,
+            flags=re.I,
+        )
+        cleaned = re.sub(
+            r"\b(?:not\s+(?:a\s+)?(?:simple\s+)?|no\s+)(?:residential\s+)(?:alteration|remodel|project|scope|job|work)\b",
+            "commercial alteration review",
+            cleaned,
+            flags=re.I,
+        )
+        cleaned = re.sub(r"\bresidential\s*/\s*trade-only\b", "trade-only", cleaned, flags=re.I)
+        cleaned = re.sub(r"\bresidential\s+or\s+trade-only\b", "trade-only", cleaned, flags=re.I)
+        # Permit fields are classification surfaces. If a standalone category
+        # word survives after the targeted rewrites above, use neutral occupancy
+        # wording rather than showing the wrong category to a commercial user.
+        cleaned = re.sub(r"\bresidential\b", "dwelling", cleaned, flags=re.I)
+        cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+        return cleaned
+
+    for permit in permits:
+        if not isinstance(permit, dict):
+            continue
+        for field in ("permit_type", "portal_selection", "notes"):
+            if isinstance(permit.get(field), str):
+                permit[field] = clean_text(permit[field])
+
+
 def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
     """Remove generated advice/docs/logic lines for explicitly absent sub-systems.
 
@@ -891,6 +938,7 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
         result["needs_review"] = True
 
     _filter_negated_surface_lists(result, job_type)
+    _neutralize_commercial_permit_residential_contrast(result, job_type)
     return result
 
 

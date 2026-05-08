@@ -1474,3 +1474,42 @@ def test_commercial_conversion_with_residential_words_still_repairs_to_commercia
     assert "commercial" in blob
     assert "tenant improvement" in blob
     assert "residential plumbing permit" not in blob
+
+
+def test_pa300_church_classroom_commercial_note_does_not_repeat_residential_contrast():
+    job = (
+        "Church classroom alteration: divide fellowship hall into classrooms, new doors, "
+        "emergency lighting, egress signage, fire alarm coordination, no residential work."
+    )
+    result = {
+        "_primary_scope": "commercial",
+        "permits_required": [
+            {
+                "permit_type": "Building Permit — Commercial Interior Alteration / Tenant Improvement",
+                "portal_selection": "Building Permit - Commercial Tenant Improvement",
+                "required": True,
+                "notes": (
+                    "Required for the interior reconfiguration of the fellowship hall into classrooms, "
+                    "including new interior partitions and new doors. Because this is a church/commercial "
+                    "occupancy space, the work is not a simple residential alteration."
+                ),
+            },
+            {
+                "permit_type": "Electrical Permit — Emergency Lighting and Egress Signage",
+                "portal_selection": "Electrical Permit - Commercial Alteration",
+                "required": True,
+            },
+        ],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+
+    gated = server.apply_permitiq_quality_gate(result, job, "San Diego", "CA")
+    blob = _customer_surface_blob(gated)
+
+    assert "fellowship hall" in blob
+    assert "classrooms" in blob
+    assert "commercial" in blob
+    assert "residential" not in blob
