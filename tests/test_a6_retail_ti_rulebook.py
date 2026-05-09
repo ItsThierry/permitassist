@@ -92,7 +92,15 @@ def test_retail_pro_tips_has_at_least_three_specific_items():
     out = enriched()
     text = " | ".join(out["pro_tips"]).lower()
     assert len(out["pro_tips"]) >= 3
-    assert "master sign" in text and "parking" in text and "health" in text
+    assert "master sign" in text and "parking" in text and "storefront" in text
+    assert "health" not in text
+
+
+def test_retail_food_alcohol_cannabis_scope_adds_health_licensing_pro_tip():
+    out = enriched("grocery convenience store retail TI with coffee service, beer/wine sales, and cannabis accessories")
+    text = " | ".join(out["pro_tips"]).lower()
+    assert "health/licensing/zoning" in text
+    assert "groceries" in text and "alcohol" in text and "cannabis" in text
 
 
 def test_retail_watch_out_has_at_least_three_specific_items():

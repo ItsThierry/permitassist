@@ -1411,6 +1411,87 @@ def test_pa300_cached_former_restaurant_shell_fee_range_scrubs_stale_restaurant_
     assert out.get("_fee_floor_components", {}).get("scope") != "commercial_restaurant"
 
 
+def test_pa300131_tampa_former_restaurant_shell_retail_conversion_suppresses_food_health_customer_copy():
+    job = (
+        "Retail tenant improvement in former restaurant shell: convert to clothing store, "
+        "cap existing kitchen utilities, remove old hood, no food service, no grease work, no cooking. "
+        "QA marker PA300-131; marker is not permit scope."
+    )
+    checklist = _checklist_blob(job, "Tampa", "FL")
+    out = _apply_core_layers(job, "Tampa", "FL")
+    out["checklist"] = list(checklist.split(" | "))
+    out["pro_tips"] = list(out.get("pro_tips", [])) + [
+        "If the tenant sells food, groceries, coffee, alcohol, or cannabis, start health/licensing/zoning review in parallel with the building TI.",
+    ]
+    gated = server.apply_permitiq_quality_gate(out, job, "Tampa", "FL")
+    blob = checklist + " | " + _customer_surface_blob(gated)
+
+    assert gated["_primary_scope"] == "commercial_retail_ti"
+    assert gated["_fee_floor_components"]["scope"] == "commercial_retail_ti"
+    for forbidden in (
+        "health department", "food/beverage", "food service", "food establishment",
+        "health/licensing", "restaurant licensing", "restaurant", "commercial kitchen",
+        "hood", "grease", "cooking", "alcohol", "cannabis", "groceries", "coffee",
+    ):
+        assert forbidden not in blob
+    for required in ("retail", "tenant improvement", "sign", "storefront", "accessib", "egress"):
+        assert required in blob
+
+
+def test_pa300086_austin_former_restaurant_shell_retail_conversion_stays_clean_after_pa300131_fix():
+    job = (
+        "Retail tenant improvement in former restaurant shell: convert to clothing store, "
+        "cap existing kitchen utilities, remove old hood, no food service, no grease work, no cooking. "
+        "QA marker PA300-086; marker is not permit scope."
+    )
+    checklist = _checklist_blob(job, "Austin", "TX")
+    out = _apply_core_layers(job, "Austin", "TX")
+    out["checklist"] = list(checklist.split(" | "))
+    gated = server.apply_permitiq_quality_gate(out, job, "Austin", "TX")
+    blob = checklist + " | " + _customer_surface_blob(gated)
+
+    assert gated["_primary_scope"] == "commercial_retail_ti"
+    assert "retail" in blob
+    for forbidden in ("health department", "food/beverage", "food service", "restaurant", "hood", "grease", "commercial kitchen"):
+        assert forbidden not in blob
+
+
+def test_true_restaurant_ti_preserves_health_food_hood_grease_guidance_when_in_scope():
+    job = (
+        "Restaurant tenant improvement with commercial kitchen, food prep, Type I hood, "
+        "grease interceptor, three-compartment sink, dishwasher, and health department food establishment review."
+    )
+    checklist = _checklist_blob(job, "Tampa", "FL")
+    out = _apply_core_layers(job, "Tampa", "FL")
+    gated = server.apply_permitiq_quality_gate(out, job, "Tampa", "FL")
+    blob = checklist + " | " + _customer_surface_blob(gated)
+
+    assert gated["_primary_scope"] == "commercial_restaurant"
+    for required in ("health department", "food establishment", "hood", "grease", "commercial kitchen"):
+        assert required in blob
+
+
+def test_retail_packaged_food_grocery_alcohol_cannabis_guidance_only_when_in_scope():
+    dry_goods_job = "Retail tenant improvement for clothing boutique with sales floor, fitting rooms, lighting, and signage."
+    dry_out = _apply_core_layers(dry_goods_job, "Tampa", "FL")
+    dry_out = server.apply_permitiq_quality_gate(dry_out, dry_goods_job, "Tampa", "FL")
+    dry_blob = _customer_surface_blob(dry_out)
+    for forbidden in ("food", "groceries", "grocery", "alcohol", "cannabis", "health/licensing", "health department"):
+        assert forbidden not in dry_blob
+
+    grocery_job = "Retail tenant improvement for packaged food grocery and beer/wine shop with retail shelving and POS; no cooking or food prep."
+    grocery_out = _apply_core_layers(grocery_job, "Tampa", "FL")
+    grocery_out = server.apply_permitiq_quality_gate(grocery_out, grocery_job, "Tampa", "FL")
+    grocery_blob = _customer_surface_blob(grocery_out)
+    assert any(term in grocery_blob for term in ("grocery", "packaged food", "beer", "wine", "alcohol", "licensing"))
+
+    cannabis_job = "Retail tenant improvement for cannabis dispensary with secured sales floor and retail POS; no food service."
+    cannabis_out = _apply_core_layers(cannabis_job, "Tampa", "FL")
+    cannabis_out = server.apply_permitiq_quality_gate(cannabis_out, cannabis_job, "Tampa", "FL")
+    cannabis_blob = _customer_surface_blob(cannabis_out)
+    assert "cannabis" in cannabis_blob or "special use" in cannabis_blob
+
+
 def test_theater_fog_machine_does_not_repeat_hood_or_grease_in_permit_logic():
     job = (
         "2,800 sf theater tenant improvement with stage fog machine and lighting controls; "

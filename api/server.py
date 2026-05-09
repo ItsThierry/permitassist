@@ -578,8 +578,10 @@ def _retail_food_health_scope_present(text: str) -> bool:
         text or "",
         (
             "food preparation", "food prep", "beverage preparation", "beverage prep",
-            "coffee service", "espresso", "cafe", "café", "restaurant", "commercial kitchen",
-            "prep kitchen", "alcohol service", "bar tenant", "beer taps", "cannabis",
+            "coffee service", "coffee", "espresso", "cafe", "café", "grocery", "groceries",
+            "convenience store", "commercial kitchen", "prep kitchen", "alcohol service",
+            "alcohol", "liquor", "beer/wine", "beer and wine", "wine shop", "bottle shop",
+            "bar tenant", "beer taps", "cannabis", "dispensary",
         ),
     )
 
@@ -680,7 +682,11 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         or _restaurant_grease_scope_present(scope_text)
         or _restaurant_food_health_scope_present(scope_text)
     )
-    if not (_restaurant_food_health_scope_present(scope_text) or _retail_food_health_scope_present(scope_text)):
+    retail_food_health_scope_present = (
+        str((result or {}).get("_primary_scope") or "").lower() == "commercial_retail_ti"
+        and _retail_food_health_scope_present(scope_text)
+    )
+    if not (_restaurant_food_health_scope_present(scope_text) or retail_food_health_scope_present):
         forbidden_terms += ["food establishment", "food-establishment", "food service", "commercial kitchen", "health department", "food", "beverage"]
     if not restaurant_scope_present:
         # Customer-visible classification/prose surfaces should use positive
@@ -1126,7 +1132,12 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
         login_required = "unknown"
     if commercial:
         scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
-        maybe_health = _restaurant_food_health_scope_present(scope_text) or _retail_food_health_scope_present(scope_text) or _medical_clinic_scope_present(scope_text)
+        primary_scope = str((result or {}).get("_primary_scope") or "").lower()
+        maybe_health = (
+            _restaurant_food_health_scope_present(scope_text)
+            or (primary_scope == "commercial_retail_ti" and _retail_food_health_scope_present(scope_text))
+            or _medical_clinic_scope_present(scope_text)
+        )
         review_list = "building, MEP, fire/life-safety, accessibility"
         if maybe_health:
             review_list += ", health"
