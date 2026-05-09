@@ -627,7 +627,7 @@ def _retail_food_health_scope_present(text: str) -> bool:
             "coffee service", "coffee", "espresso", "cafe", "café", "grocery", "groceries",
             "convenience store", "commercial kitchen", "prep kitchen", "alcohol service",
             "alcohol", "liquor", "beer/wine", "beer and wine", "wine shop", "bottle shop",
-            "bar tenant", "beer taps", "cannabis", "dispensary",
+            "bar tenant", "beer taps",
         ),
     )
 

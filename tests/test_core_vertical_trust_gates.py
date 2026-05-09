@@ -236,6 +236,72 @@ def test_pa500070_cannabis_retail_preserves_special_use_licensing_and_security_g
     assert "security" in blob
 
 
+def test_pa500070_cached_cannabis_retail_sanitizes_stale_food_beverage_checklist_copy():
+    job = (
+        "PA500_070 packaged cannabis retail tenant improvement for sealed packaged goods only, "
+        "sales floor shelving, checkout counter, secure storage room, security cameras and access control; "
+        "no consumption lounge, no food prep, no food preparation, no beverage prep, "
+        "no kitchen, no hood, no grease."
+    )
+    stale_cached = {
+        "_cached": True,
+        "_primary_scope": "commercial_retail_ti",
+        "permit_verdict": "YES",
+        "confidence": "medium",
+        "license_required": "State cannabis/alcohol license path must be checked in parallel.",
+        "checklist": [
+            "Building permit application and tenant improvement plans",
+            "Health department clearance if any food/beverage prep beyond pre-packaged sales",
+        ],
+        "hidden_triggers": [
+            {
+                "id": "retail_cannabis_alcohol_special_use",
+                "title": "Cannabis or alcohol retail needs special-use / state licensing parallel path",
+                "why_it_matters": "Cannabis approvals can control zoning clearance, security plans, hearings, inspections, and opening date.",
+                "likely_required_actions": [
+                    "Start special-use/zoning clearance and state license in parallel",
+                    "Keep floor/security plan consistent across licensing and permit sets",
+                ],
+                "companion_permits": ["Special Use Permit", "State cannabis/alcohol license"],
+            }
+        ],
+        "companion_permits": [
+            {
+                "permit_type": "Special Use Permit / State cannabis license",
+                "reason": "Cannabis retail requires licensing, zoning clearance, and security-plan coordination.",
+            }
+        ],
+        "what_to_bring": ["Security plan, floor plan, and cannabis licensing/zoning documents."],
+    }
+
+    gated = server.finalize_permit_lookup_result(stale_cached, job, "Los Angeles", "CA", is_cached=True)
+    blob = (
+        " | ".join(str(item) for item in gated.get("checklist", []))
+        + " | "
+        + _trigger_blob(gated.get("hidden_triggers", []))
+        + " | "
+        + _companion_blob(gated)
+        + " | "
+        + _customer_surface_blob(gated)
+    ).lower()
+
+    for forbidden in (
+        "health department",
+        "food/beverage prep",
+        "food prep",
+        "beverage prep",
+        "food establishment",
+        "commercial kitchen",
+        "hood",
+        "grease",
+    ):
+        assert forbidden not in blob
+    assert "cannabis" in blob
+    assert "special-use" in blob or "special use" in blob
+    assert "state cannabis/alcohol license" in blob or "state license" in blob or "licensing" in blob
+    assert "security" in blob
+
+
 def test_true_restaurant_food_prep_kitchen_hood_and_grease_still_show_health_food_hood_and_grease_guidance():
     job = (
         "PA500 restaurant tenant improvement for commercial kitchen with food prep, Type I hood, "
