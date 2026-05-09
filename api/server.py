@@ -449,7 +449,51 @@ _COMMERCIAL_PRIMARY_TOKENS = (
 )
 
 
+def _looks_like_residential_home_office_noncommercial(job_type: str) -> bool:
+    """True for residential home-office/studio wording with explicit no-commercial-use markers."""
+    text = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
+    if not text:
+        return False
+    has_residential_marker = bool(re.search(r"\b(?:single[- ]family|residential|dwelling|house|home)\b", text))
+    has_home_office_marker = bool(
+        re.search(r"\bhome[- ]office\b", text)
+        or re.search(r"\bspare\s+bedroom\b.{0,80}\b(?:office|studio)\b", text)
+        or re.search(r"\bbedroom\b.{0,80}\bhome[- ]office\b", text)
+    )
+    if not (has_residential_marker and has_home_office_marker):
+        return False
+    noncommercial_markers = (
+        r"\bno\s+employees\b",
+        r"\bno\s+customer\s+visits\b",
+        r"\bno\s+commercial\s+tenant\s+improvement\b",
+        r"\bno\s+office\s+tenant\s+improvement\b",
+        r"\bno\s+office\s+ti\b",
+        r"\bno\s+medical\s+clinic\b",
+        r"\bno\s+restaurant\b",
+    )
+    if sum(1 for pattern in noncommercial_markers if re.search(pattern, text, flags=re.I)) < 2:
+        return False
+    positive_commercial = _has_unnegated_any(text, (
+        "commercial tenant improvement",
+        "office tenant improvement",
+        "office ti",
+        "commercial office",
+        "office buildout",
+        "professional office",
+        "law office",
+        "coworking",
+        "co-working",
+        "tenant finish",
+        "tenant buildout",
+        "change of occupancy",
+        "change of use",
+    ))
+    return not positive_commercial
+
+
 def _job_has_unnegated_commercial_scope(job_type: str) -> bool:
+    if _looks_like_residential_home_office_noncommercial(job_type or ""):
+        return False
     text = (job_type or "").lower()
     return any(_contains_unnegated_phrase(text, token.strip()) for token in _COMMERCIAL_SCOPE_TOKENS)
 
@@ -502,6 +546,8 @@ def _result_has_commercial_scope_signal(result: dict | None) -> bool:
 
 
 def _is_commercial_scope(job_type: str, result: dict | None = None) -> bool:
+    if _looks_like_residential_home_office_noncommercial(job_type or ""):
+        return False
     primary = str((result or {}).get("_primary_scope") or "").lower()
     job_has_commercial = _job_has_unnegated_commercial_scope(job_type)
     if primary.startswith("residential") and _residential_single_trade_scope(job_type) and not job_has_commercial:
@@ -836,7 +882,41 @@ def _residential_single_trade_scope(job_type: str) -> bool:
 
 
 def _repair_residential_trade_model_leak(result: dict, job_type: str) -> None:
-    """Trust explicit residential single-trade scope over stale commercial model output."""
+    """Trust explicit residential single-trade/home-office scope over stale commercial model output."""
+    if _looks_like_residential_home_office_noncommercial(job_type or ""):
+        result["_primary_scope"] = "residential"
+        surface = " ".join(
+            str(value or "")
+            for permit in (result.get("permits_required") or [])
+            if isinstance(permit, dict)
+            for value in (permit.get("permit_type"), permit.get("portal_selection"), permit.get("notes"))
+        ).lower()
+        if _has_unnegated_any(surface, ("commercial", "tenant improvement", "office interior alteration", "commercial building permit")):
+            result["permits_required"] = [{
+                "permit_type": "Residential Building Permit — Home Office / Interior Alteration",
+                "portal_selection": "Residential Building / Interior Alteration",
+                "required": True,
+                "notes": "Residential home-office/studio conversion for private use; no employee or customer-facing use is stated. Verify local residential alteration/electrical permit naming before applying.",
+            }]
+            result["permits_required_logic"] = [{
+                "permit_type": result["permits_required"][0]["permit_type"],
+                "included_because": "Explicit residential home-office/studio scope with no employee or customer-facing use overrides stale business buildout wording.",
+                "scope_trigger": "residential home-office private-use guardrail",
+            }]
+            result["companion_permits"] = []
+            result["hidden_triggers"] = []
+            result["inspections"] = []
+            result["permit_summary"] = "Residential home-office/studio interior alteration; verify local residential permit naming before applying."
+            result["job_summary"] = "Private-use residential home-office/studio scope."
+            result["confidence_reason"] = "Residential home-office/private-use scope is explicit; local AHJ naming still needs verification."
+            result["pro_tips"] = ["Confirm whether painting/shelving alone is exempt and whether new electrical outlets require a separate electrical permit."]
+            result["common_mistakes"] = ["Assuming a private home-office update is automatically exempt — added outlets, walls, or structural changes can still trigger residential permits."]
+            result["watch_out"] = ["If the scope later adds employees, customer visits, signage, or a separate business space, re-check the permit path."]
+            result["what_to_bring"] = ["Scope description", "Floor plan or room sketch", "Electrical outlet/lighting details if applicable"]
+            result["permit_verdict"] = "YES"
+            result["needs_review"] = True
+            result["_residential_home_office_leak_repaired"] = True
+        return
     if not _residential_single_trade_scope(job_type):
         return
     detected = detect_primary_scope(job_type or "")
@@ -3867,7 +3947,7 @@ def redact_public_output(value):
     if isinstance(value, dict):
         redacted = {}
         for key, item in value.items():
-            if key in {"_fee_floor_components", "_rulebook_depth_disclaimer"}:
+            if key in {"_fee_floor_components", "_rulebook_depth_disclaimer", "_residential_home_office_leak_repaired"}:
                 continue
             if key in {"path", "fingerprint_sha256", "evidence_pack_fingerprint"}:
                 redacted[key] = "[REDACTED]"

@@ -53,6 +53,45 @@ def test_permitiq_quality_gate_repairs_commercial_residential_primary(tmp_path, 
     assert gated["quality_warnings"]
 
 
+def test_quality_gate_does_not_force_commercial_for_residential_home_office_negations(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    job = (
+        "Single-family home in Birmingham: convert a spare bedroom into a quiet home office/studio "
+        "with desk outlets, shelving, and paint; no employees, no customer visits, "
+        "no commercial tenant improvement, no restaurant, no medical clinic, no office TI."
+    )
+    result = {
+        "confidence": "medium",
+        "_primary_scope": "commercial_office_ti",
+        "permits_required": [{
+            "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+            "portal_selection": "Commercial Building Permit - Tenant Improvement / Interior Alteration",
+            "required": True,
+            "notes": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope.",
+        }],
+        "companion_permits": [{"permit_type": "Electrical Permit — Commercial Tenant Improvement"}],
+        "hidden_triggers": [{"label": "Commercial tenant improvement plan review"}],
+        "inspections": ["Commercial tenant improvement final inspection"],
+        "pro_tips": ["Commercial TI drawings usually need a registered design professional."],
+        "watch_out": ["Tenant improvement work may require accessibility upgrades."],
+        "common_mistakes": ["Skipping commercial tenant improvement plan review."],
+        "permit_summary": "Commercial tenant improvement / office interior alteration permit likely required.",
+        "confidence_reason": "Office TI commercial scope detected from stale model output.",
+        "job_summary": "Commercial office tenant improvement.",
+        "what_to_bring": ["Commercial TI plans"],
+        "sources": [{"url": "https://city.gov/residential-permits", "snippet": "Residential alterations may require permits."}],
+    }
+
+    gated = server.apply_permitiq_quality_gate(result, job, "Birmingham", "AL")
+
+    blob = json.dumps(gated, sort_keys=True).lower()
+    assert gated["_primary_scope"] == "residential"
+    assert gated["companion_permits"] == []
+    assert "commercial" not in blob
+    assert "tenant improvement" not in blob
+    assert "office interior alteration" not in blob
+
+
 def test_claim_citations_never_invent_missing_quotes(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     result = {
