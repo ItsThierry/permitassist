@@ -49,14 +49,25 @@ def test_office_scope_stays_office_not_retail_or_medical():
 def test_true_commercial_office_and_workshop_tis_are_preserved():
     office_job = "commercial office tenant improvement with demising partitions, employees, customer visits, lighting, HVAC zoning, and data cabling"
     workshop_job = "commercial contractor office tenant improvement with workshop bay, employees, customer visits, demising walls, electrical, and HVAC"
+    garage_workshop_job = "commercial office tenant improvement for a garage hobby workshop maker studio with employees, customer visits, demising walls, electrical, and HVAC"
 
-    for job in (office_job, workshop_job):
+    for job in (office_job, workshop_job, garage_workshop_job):
         assert engine.detect_primary_scope(job) == "commercial_office_ti"
         out = engine.classify_scope_required_permits(job)
         assert out["scope_classification"] == "commercial_office_ti"
         primary = out["permits_required"][0]
         assert "Tenant Improvement" in primary["permit_type"]
         assert "Commercial Building Permit" in primary["portal_selection"]
+
+
+def test_medical_ti_no_medical_gas_does_not_count_as_residential_negation():
+    job = (
+        "Commercial medical clinic tenant improvement: exam rooms, reception, sterilization room, "
+        "patient care sinks, no medical gas required, no surgery, no overnight stay."
+    )
+    assert engine.detect_primary_scope(job) == "commercial_medical_clinic_ti"
+    out = engine.classify_scope_required_permits(job)
+    assert out["scope_classification"] == "commercial_medical_clinic_ti"
 
 
 def test_residential_home_office_negations_do_not_classify_as_office_ti():

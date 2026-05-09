@@ -126,6 +126,8 @@ def test_quality_gate_does_not_force_commercial_for_pa500090_garage_workshop_neg
     blob = json.dumps(gated, sort_keys=True).lower()
     assert gated["_primary_scope"] == "residential"
     assert gated["companion_permits"] == []
+    assert "Garage Hobby Workshop" in gated["permits_required"][0]["permit_type"]
+    assert "garage hobby-workshop" in gated["permits_required"][0]["notes"].lower()
     assert "commercial" not in blob
     assert "tenant improvement" not in blob
     assert "office interior alteration" not in blob

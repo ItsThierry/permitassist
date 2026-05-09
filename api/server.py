@@ -472,7 +472,7 @@ def _looks_like_residential_home_office_noncommercial(job_type: str) -> bool:
         r"\bno\s+commercial\s+tenant\s+improvement\b",
         r"\bno\s+office\s+tenant\s+improvement\b",
         r"\bno\s+office\s+ti\b",
-        r"\bno\s+medical(?:\s+clinic)?\b",
+        r"\bno\s+medical(?:\s+(?:clinic|office|use))?\b(?=[,.;]|\s+(?:and|or|nor|no)\b|$)",
         r"\bno\s+restaurant\b",
     )
     if sum(1 for pattern in noncommercial_markers if re.search(pattern, text, flags=re.I)) < 2:
@@ -896,7 +896,8 @@ def _repair_residential_trade_model_leak(result: dict, job_type: str) -> None:
             for value in (permit.get("permit_type"), permit.get("portal_selection"), permit.get("notes"))
         ).lower()
         if _has_unnegated_any(surface, ("commercial", "tenant improvement", "office interior alteration", "commercial building permit")):
-            is_garage_hobby = bool(re.search(r"\bgarage\b.{0,80}\bhobby\s+workshop\b|\bhobby\s+workshop\b.{0,80}\bgarage\b", job_type or "", flags=re.I))
+            garage_text = re.sub(r"\s+", " ", job_type or "")
+            is_garage_hobby = bool(re.search(r"\bgarage\b.{0,80}\bhobby\s+workshop\b|\bhobby\s+workshop\b.{0,80}\bgarage\b", garage_text, flags=re.I))
             permit_type = "Residential Building Permit — Garage Hobby Workshop / Interior Alteration" if is_garage_hobby else "Residential Building Permit — Home Office / Interior Alteration"
             notes = (
                 "Private residential garage hobby-workshop/storage scope; no employee or customer-facing use is stated. Verify local residential alteration/electrical permit naming before applying."
