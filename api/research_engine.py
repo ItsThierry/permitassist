@@ -4177,8 +4177,13 @@ def _scope_text_is_non_food_packaged_retail(scope_text: str) -> bool:
         bool(re.search(r"\bno\s+(?:food\s+prep|food\s+preparation|restaurant|commercial\s+kitchen|kitchen|hood|grease|cooking)\b", text))
         or bool(re.search(r"\b(?:not\s+a\s+restaurant|non\s*[- ]?restaurant|without\s+food\s+prep(?:aration)?)\b", text))
     )
-    actual_food_health_scope = _has_unnegated_any(text, _RETAIL_FOOD_HEALTH_SCOPE_TERMS)
-    return retail_signal and explicit_no_food_service and not actual_food_health_scope
+    actual_restaurant_food_prep_scope = _has_unnegated_any(text, (
+        "food prep", "food preparation", "beverage prep", "beverage preparation",
+        "cafe", "café", "restaurant opening", "food service", "commercial kitchen",
+        "kitchen work", "cooking", "type i hood", "type 1 hood", "grease interceptor",
+        "grease trap", "food establishment", "walk-in cooler", "walk in cooler",
+    ))
+    return retail_signal and explicit_no_food_service and not actual_restaurant_food_prep_scope
 
 
 def _scope_text_is_admin_office_not_medical(scope_text: str) -> bool:
@@ -4747,9 +4752,15 @@ _RESTAURANT_FOOD_HEALTH_SCOPE_TERMS = (
 )
 _RETAIL_FOOD_HEALTH_SCOPE_TERMS = (
     "food preparation", "food prep", "beverage preparation", "beverage prep",
-    "coffee service", "espresso", "cafe", "café", "restaurant", "commercial kitchen",
-    "prep kitchen", "alcohol service", "bar tenant", "beer taps", "cannabis",
+    "coffee service", "coffee", "espresso", "cafe", "café", "grocery", "groceries",
+    "convenience store", "commercial kitchen", "prep kitchen", "alcohol service",
+    "alcohol", "liquor", "beer/wine", "beer and wine", "wine shop", "bottle shop",
+    "bar tenant", "beer taps", "cannabis", "dispensary",
 )
+
+
+def _retail_food_health_scope_present(job_type: str) -> bool:
+    return _has_unnegated_any(job_type or "", _RETAIL_FOOD_HEALTH_SCOPE_TERMS)
 
 
 def _restaurant_hood_scope_present(job_type: str) -> bool:
@@ -4927,7 +4938,7 @@ def _retail_checklist_item_applies(item: str, job_type: str) -> bool:
     """Suppress food/health retail checklist lines unless food/beverage is actually in scope."""
     item_l = (item or "").lower()
     if any(term in item_l for term in ("food", "beverage", "health department", "health/licensing")):
-        return _has_unnegated_any(job_type or "", _RETAIL_FOOD_HEALTH_SCOPE_TERMS)
+        return _retail_food_health_scope_present(job_type or "")
     return True
 
 
@@ -5417,7 +5428,12 @@ def apply_retail_ti_rulebook(result: dict, job_type: str, city: str, state: str)
     add_unique("pro_tips", [
         "Coordinate the sign permit with the landlord's master sign program before ordering storefront signage.",
         "Confirm retail parking ratio and accessible parking/path-of-travel scope before lease execution or final layout.",
-        "If the tenant sells food, groceries, coffee, alcohol, or cannabis, start health/licensing/zoning review in parallel with the building TI.",
+    ])
+    if _retail_food_health_scope_present(job_type or ""):
+        add_unique("pro_tips", [
+            "If the tenant sells food, groceries, coffee, alcohol, or cannabis, start health/licensing/zoning review in parallel with the building TI.",
+        ])
+    add_unique("pro_tips", [
         "Package storefront elevations, glazing specs, awning details, and sign locations together so facade/design review does not lag the TI.",
     ])
     add_unique("watch_out", [
