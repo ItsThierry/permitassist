@@ -140,6 +140,34 @@ def test_public_json_redaction_drops_internal_fee_floor_components(tmp_path, mon
     assert "restaurant" not in json.dumps(response).lower()
 
 
+def test_negated_former_restaurant_license_required_is_scrubbed(tmp_path, monkeypatch):
+    job = (
+        "Retail tenant improvement in former restaurant space: convert to dry retail store, "
+        "remove old cooking equipment, no food service, no hood, no grease interceptor."
+    )
+    result = _finalize(
+        tmp_path,
+        monkeypatch,
+        job,
+        "Nashville",
+        "TN",
+        base={
+            **_base_engine_result(),
+            "license_required": (
+                "Licensed commercial contractor pulls the permit on behalf of the tenant or owner, "
+                "and the contractor's license/registration information must appear on the application. "
+                "In Nashville, contractors must also have current Metro Codes contractor registration before they can pull permits. "
+                "The permit is still required even though the space is being converted away from food service."
+            ),
+        },
+    )
+    license_text = result.get("license_required", "")
+    assert "Licensed commercial contractor pulls the permit" in license_text
+    assert "Metro Codes contractor registration" in license_text
+    for forbidden in ("food service", "restaurant", "hood", "grease"):
+        assert forbidden not in license_text.lower()
+
+
 def test_solar_mep_preview_mode_requires_preview_only_route_gate(tmp_path, monkeypatch):
     _enable_pack(monkeypatch)
     server = _import_server(tmp_path, monkeypatch)
