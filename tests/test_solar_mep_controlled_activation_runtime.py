@@ -118,6 +118,24 @@ def test_solar_mep_copied_same_bytes_path_mismatch_fails_closed(tmp_path, monkey
     assert str(tmp_path) not in json.dumps(result)
 
 
+def test_public_json_redaction_drops_internal_fee_floor_components(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    response = server.redact_public_output({
+        "fee_range": "$18,000 - $65,000",
+        "_fee_floor_components": {
+            "jurisdiction_rationale": "baseline calibration from Phoenix restaurant TI test case",
+            "scope": "commercial_restaurant",
+        },
+        "nested": {
+            "_fee_floor_components": {"jurisdiction_rationale": "restaurant"},
+            "ok": True,
+        },
+    })
+    assert "_fee_floor_components" not in response
+    assert "_fee_floor_components" not in response["nested"]
+    assert "restaurant" not in json.dumps(response).lower()
+
+
 def test_solar_mep_preview_mode_requires_preview_only_route_gate(tmp_path, monkeypatch):
     _enable_pack(monkeypatch)
     server = _import_server(tmp_path, monkeypatch)
