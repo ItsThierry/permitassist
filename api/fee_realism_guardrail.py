@@ -119,7 +119,7 @@ JURISDICTION_FEE_MULTIPLIERS: Dict[Tuple[str, str], Dict[str, Any]] = {
     },
     ("phoenix", "az"): {
         "mult": 1.0,
-        "rationale": "baseline calibration from Phoenix restaurant TI test case [verify current Phoenix Planning & Development fees]",
+        "rationale": "baseline calibration from Phoenix commercial TI fee review [verify current Phoenix Planning & Development fees]",
     },
 
     # Additional metro calibrations. Values are conservative heuristic buckets, not official multipliers.
