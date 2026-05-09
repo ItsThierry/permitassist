@@ -46,6 +46,19 @@ def test_office_scope_stays_office_not_retail_or_medical():
     assert engine.detect_primary_scope("law office buildout with conference rooms, lighting and HVAC balancing") == "commercial_office_ti"
 
 
+def test_true_commercial_office_and_workshop_tis_are_preserved():
+    office_job = "commercial office tenant improvement with demising partitions, employees, customer visits, lighting, HVAC zoning, and data cabling"
+    workshop_job = "commercial contractor office tenant improvement with workshop bay, employees, customer visits, demising walls, electrical, and HVAC"
+
+    for job in (office_job, workshop_job):
+        assert engine.detect_primary_scope(job) == "commercial_office_ti"
+        out = engine.classify_scope_required_permits(job)
+        assert out["scope_classification"] == "commercial_office_ti"
+        primary = out["permits_required"][0]
+        assert "Tenant Improvement" in primary["permit_type"]
+        assert "Commercial Building Permit" in primary["portal_selection"]
+
+
 def test_residential_home_office_negations_do_not_classify_as_office_ti():
     jobs = [
         (
@@ -60,6 +73,11 @@ def test_residential_home_office_negations_do_not_classify_as_office_ti():
         (
             "Residential house in Birmingham: bedroom closet and spare bedroom will become a home-office "
             "workspace with shelving and outlets; no employees, no customer visits, no office tenant improvement."
+        ),
+        (
+            "Single-family garage hobby workshop: workbench, hobby tools, and storage shelves; "
+            "no commercial business, no employees, no customer visits, no tenant improvement, "
+            "no restaurant, no medical, no office TI. QA marker PA500-090; marker is not permit scope."
         ),
     ]
 

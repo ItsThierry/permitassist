@@ -450,25 +450,29 @@ _COMMERCIAL_PRIMARY_TOKENS = (
 
 
 def _looks_like_residential_home_office_noncommercial(job_type: str) -> bool:
-    """True for residential home-office/studio wording with explicit no-commercial-use markers."""
+    """True for private residential workspace wording with explicit no-commercial-use markers."""
     text = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
     if not text:
         return False
     has_residential_marker = bool(re.search(r"\b(?:single[- ]family|residential|dwelling|house|home)\b", text))
-    has_home_office_marker = bool(
+    has_private_workspace_marker = bool(
         re.search(r"\bhome[- ]office\b", text)
         or re.search(r"\bspare\s+bedroom\b.{0,80}\b(?:office|studio)\b", text)
         or re.search(r"\bbedroom\b.{0,80}\bhome[- ]office\b", text)
+        or re.search(r"\bgarage\b.{0,80}\bhobby\s+workshop\b", text)
+        or re.search(r"\bhobby\s+workshop\b.{0,80}\bgarage\b", text)
     )
-    if not (has_residential_marker and has_home_office_marker):
+    if not (has_residential_marker and has_private_workspace_marker):
         return False
     noncommercial_markers = (
+        r"\bno\s+commercial\s+business\b",
         r"\bno\s+employees\b",
         r"\bno\s+customer\s+visits\b",
+        r"\bno\s+tenant\s+improvement\b",
         r"\bno\s+commercial\s+tenant\s+improvement\b",
         r"\bno\s+office\s+tenant\s+improvement\b",
         r"\bno\s+office\s+ti\b",
-        r"\bno\s+medical\s+clinic\b",
+        r"\bno\s+medical(?:\s+clinic)?\b",
         r"\bno\s+restaurant\b",
     )
     if sum(1 for pattern in noncommercial_markers if re.search(pattern, text, flags=re.I)) < 2:
@@ -892,25 +896,33 @@ def _repair_residential_trade_model_leak(result: dict, job_type: str) -> None:
             for value in (permit.get("permit_type"), permit.get("portal_selection"), permit.get("notes"))
         ).lower()
         if _has_unnegated_any(surface, ("commercial", "tenant improvement", "office interior alteration", "commercial building permit")):
+            is_garage_hobby = bool(re.search(r"\bgarage\b.{0,80}\bhobby\s+workshop\b|\bhobby\s+workshop\b.{0,80}\bgarage\b", job_type or "", flags=re.I))
+            permit_type = "Residential Building Permit — Garage Hobby Workshop / Interior Alteration" if is_garage_hobby else "Residential Building Permit — Home Office / Interior Alteration"
+            notes = (
+                "Private residential garage hobby-workshop/storage scope; no employee or customer-facing use is stated. Verify local residential alteration/electrical permit naming before applying."
+                if is_garage_hobby
+                else "Residential home-office/studio conversion for private use; no employee or customer-facing use is stated. Verify local residential alteration/electrical permit naming before applying."
+            )
+            private_label = "garage hobby-workshop" if is_garage_hobby else "home-office/studio"
             result["permits_required"] = [{
-                "permit_type": "Residential Building Permit — Home Office / Interior Alteration",
+                "permit_type": permit_type,
                 "portal_selection": "Residential Building / Interior Alteration",
                 "required": True,
-                "notes": "Residential home-office/studio conversion for private use; no employee or customer-facing use is stated. Verify local residential alteration/electrical permit naming before applying.",
+                "notes": notes,
             }]
             result["permits_required_logic"] = [{
                 "permit_type": result["permits_required"][0]["permit_type"],
-                "included_because": "Explicit residential home-office/studio scope with no employee or customer-facing use overrides stale business buildout wording.",
-                "scope_trigger": "residential home-office private-use guardrail",
+                "included_because": f"Explicit residential {private_label} scope with no employee or customer-facing use overrides stale business buildout wording.",
+                "scope_trigger": f"residential {private_label} private-use guardrail",
             }]
             result["companion_permits"] = []
             result["hidden_triggers"] = []
             result["inspections"] = []
-            result["permit_summary"] = "Residential home-office/studio interior alteration; verify local residential permit naming before applying."
-            result["job_summary"] = "Private-use residential home-office/studio scope."
-            result["confidence_reason"] = "Residential home-office/private-use scope is explicit; local AHJ naming still needs verification."
+            result["permit_summary"] = f"Residential {private_label} interior alteration; verify local residential permit naming before applying."
+            result["job_summary"] = f"Private-use residential {private_label} scope."
+            result["confidence_reason"] = f"Residential {private_label}/private-use scope is explicit; local AHJ naming still needs verification."
             result["pro_tips"] = ["Confirm whether painting/shelving alone is exempt and whether new electrical outlets require a separate electrical permit."]
-            result["common_mistakes"] = ["Assuming a private home-office update is automatically exempt — added outlets, walls, or structural changes can still trigger residential permits."]
+            result["common_mistakes"] = [f"Assuming a private {private_label} update is automatically exempt — added outlets, walls, or structural changes can still trigger residential permits."]
             result["watch_out"] = ["If the scope later adds employees, customer visits, signage, or a separate business space, re-check the permit path."]
             result["what_to_bring"] = ["Scope description", "Floor plan or room sketch", "Electrical outlet/lighting details if applicable"]
             result["permit_verdict"] = "YES"
