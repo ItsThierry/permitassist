@@ -4806,7 +4806,7 @@ _RETAIL_FOOD_HEALTH_SCOPE_TERMS = (
     "coffee service", "coffee", "espresso", "cafe", "café", "grocery", "groceries",
     "convenience store", "commercial kitchen", "prep kitchen", "alcohol service",
     "alcohol", "liquor", "beer/wine", "beer and wine", "wine shop", "bottle shop",
-    "bar tenant", "beer taps", "cannabis", "dispensary",
+    "bar tenant", "beer taps",
 )
 
 
@@ -5483,6 +5483,10 @@ def apply_retail_ti_rulebook(result: dict, job_type: str, city: str, state: str)
     if _retail_food_health_scope_present(job_type or ""):
         add_unique("pro_tips", [
             "If the tenant sells food, groceries, coffee, alcohol, or cannabis, start health/licensing/zoning review in parallel with the building TI.",
+        ])
+    if _has_unnegated_any(job_type or "", ("cannabis", "dispensary", "marijuana")):
+        add_unique("pro_tips", [
+            "For cannabis retail, start special-use/zoning clearance, state cannabis licensing, and security-plan review in parallel with the building TI.",
         ])
     add_unique("pro_tips", [
         "Package storefront elevations, glazing specs, awning details, and sign locations together so facade/design review does not lag the TI.",

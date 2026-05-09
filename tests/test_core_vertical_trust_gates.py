@@ -8,7 +8,10 @@ not become medical clinic, and residential work must not leak commercial warning
 """
 
 from pathlib import Path
+import os
 import sys
+
+os.environ.setdefault("OPENAI_API_KEY", "test-not-real-openai-key")
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -180,6 +183,76 @@ def test_retail_packaged_food_without_prep_does_not_surface_health_department_ca
     assert "fire" not in _required_families(out)
     for forbidden in ("health department", "food establishment", "food-establishment", "commercial kitchen", "hood", "grease"):
         assert forbidden not in blob
+
+
+def test_pa500070_packaged_cannabis_retail_without_food_prep_does_not_show_health_food_or_beverage_checklist_copy():
+    job = (
+        "PA500_070 packaged cannabis retail tenant improvement for sealed packaged goods only, "
+        "sales floor shelving, checkout counter, secure storage room, security cameras and access control; "
+        "no consumption lounge, no food prep, no food preparation, no beverage prep, "
+        "no beverage preparation, no kitchen, no hood, no grease."
+    )
+
+    checklist = _checklist_blob(job, "Los Angeles", "CA")
+    out = _apply_core_layers(job, "Los Angeles", "CA")
+    gated = server.apply_permitiq_quality_gate(out, job, "Los Angeles", "CA")
+    blob = checklist + " | " + _customer_surface_blob(gated)
+
+    assert out["_primary_scope"] == "commercial_retail_ti"
+    assert "retail_cannabis_alcohol_special_use" in {t["id"] for t in out["hidden_triggers"]}
+    assert "retail_health_food_handling" not in {t["id"] for t in out["hidden_triggers"]}
+    for forbidden in (
+        "health department",
+        "health-department",
+        "food establishment",
+        "food-establishment",
+        "health plan review",
+        "hand sinks",
+        "mop sink",
+        "warewashing",
+        "food prep",
+        "food-prep",
+        "food/beverage prep",
+        "beverage prep",
+        "beverage-prep",
+    ):
+        assert forbidden not in blob
+
+
+def test_pa500070_cannabis_retail_preserves_special_use_licensing_and_security_guidance():
+    job = (
+        "PA500_070 packaged cannabis retail tenant improvement for sealed packaged goods only, "
+        "sales floor shelving, checkout counter, secure storage room, security cameras and access control; "
+        "no consumption lounge, no food prep, no kitchen, no hood, no grease."
+    )
+
+    out = _apply_core_layers(job, "Los Angeles", "CA")
+    gated = server.apply_permitiq_quality_gate(out, job, "Los Angeles", "CA")
+    blob = _trigger_blob(out["hidden_triggers"]) + " | " + _companion_blob(out) + " | " + _customer_surface_blob(gated)
+
+    assert "cannabis" in blob
+    assert "special-use" in blob or "special use" in blob
+    assert "state cannabis/alcohol license" in blob or "state license" in blob or "licensing" in blob
+    assert "security" in blob
+
+
+def test_true_restaurant_food_prep_kitchen_hood_and_grease_still_show_health_food_hood_and_grease_guidance():
+    job = (
+        "PA500 restaurant tenant improvement for commercial kitchen with food prep, Type I hood, "
+        "ANSUL fire suppression, fryer, griddle, grease interceptor, prep sink, mop sink, "
+        "dishwasher, and health department food-establishment plan review."
+    )
+
+    checklist = _checklist_blob(job, "Chicago", "IL")
+    out = _apply_core_layers(job, "Chicago", "IL")
+    gated = server.apply_permitiq_quality_gate(out, job, "Chicago", "IL")
+    blob = checklist + " | " + _trigger_blob(out["hidden_triggers"]) + " | " + _companion_blob(out) + " | " + _customer_surface_blob(gated)
+
+    assert out["_primary_scope"] == "commercial_restaurant"
+    assert "health" in blob
+    assert "food" in blob
+    assert "hood" in blob or "ansul" in blob
+    assert "grease" in blob
 
 
 def test_rc04_random_commercial_packaged_retail_phoenix_no_required_mechanical_without_hvac():
