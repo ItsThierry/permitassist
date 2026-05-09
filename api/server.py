@@ -3867,7 +3867,7 @@ def redact_public_output(value):
     if isinstance(value, dict):
         redacted = {}
         for key, item in value.items():
-            if key in {"_fee_floor_components"}:
+            if key in {"_fee_floor_components", "_rulebook_depth_disclaimer"}:
                 continue
             if key in {"path", "fingerprint_sha256", "evidence_pack_fingerprint"}:
                 redacted[key] = "[REDACTED]"

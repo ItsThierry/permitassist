@@ -126,13 +126,17 @@ def test_public_json_redaction_drops_internal_fee_floor_components(tmp_path, mon
             "jurisdiction_rationale": "baseline calibration from Phoenix restaurant TI test case",
             "scope": "commercial_restaurant",
         },
+        "_rulebook_depth_disclaimer": "Confidence: HIGH — verified rulebook depth for Phoenix on restaurant ti",
         "nested": {
             "_fee_floor_components": {"jurisdiction_rationale": "restaurant"},
+            "_rulebook_depth_disclaimer": "restaurant ti",
             "ok": True,
         },
     })
     assert "_fee_floor_components" not in response
+    assert "_rulebook_depth_disclaimer" not in response
     assert "_fee_floor_components" not in response["nested"]
+    assert "_rulebook_depth_disclaimer" not in response["nested"]
     assert "restaurant" not in json.dumps(response).lower()
 
 
