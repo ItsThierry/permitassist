@@ -2772,6 +2772,55 @@ def _looks_like_commercial_trade_only_scope(job_type: str) -> bool:
     )
 
 
+def _looks_like_residential_home_office_noncommercial(job_type: str) -> bool:
+    """True for residential home-office/studio wording that explicitly negates commercial TI.
+
+    This blocks false commercial-office hits from phrases like "home office" and
+    "no office TI" while preserving true office tenant-improvement positives.
+    """
+    text = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
+    if not text:
+        return False
+    has_residential_marker = bool(re.search(r"\b(?:single[- ]family|residential|dwelling|house|home)\b", text))
+    has_home_office_marker = bool(
+        re.search(r"\bhome[- ]office\b", text)
+        or re.search(r"\bspare\s+bedroom\b.{0,80}\b(?:office|studio)\b", text)
+        or re.search(r"\bbedroom\b.{0,80}\bhome[- ]office\b", text)
+    )
+    if not (has_residential_marker and has_home_office_marker):
+        return False
+
+    noncommercial_markers = [
+        r"\bno\s+employees\b",
+        r"\bno\s+customer\s+visits\b",
+        r"\bno\s+commercial\s+tenant\s+improvement\b",
+        r"\bno\s+office\s+tenant\s+improvement\b",
+        r"\bno\s+office\s+ti\b",
+        r"\bno\s+medical\s+clinic\b",
+        r"\bno\s+restaurant\b",
+    ]
+    negation_count = sum(1 for pattern in noncommercial_markers if re.search(pattern, text, flags=re.I))
+    if negation_count < 2:
+        return False
+
+    positive_commercial = _has_unnegated_any(text, (
+        "commercial tenant improvement",
+        "office tenant improvement",
+        "office ti",
+        "commercial office",
+        "office buildout",
+        "professional office",
+        "law office",
+        "coworking",
+        "co-working",
+        "tenant finish",
+        "tenant buildout",
+        "change of occupancy",
+        "change of use",
+    ))
+    return not positive_commercial
+
+
 def detect_primary_scope(job_type: str) -> str:
     """Identify the primary occupancy/project class for a permit query.
 
@@ -2787,6 +2836,8 @@ def detect_primary_scope(job_type: str) -> str:
       multifamily | commercial (generic) | residential_adu | residential (default)
     """
     job_lc = (job_type or "").lower()
+    if _looks_like_residential_home_office_noncommercial(job_lc):
+        return 'residential'
     if _looks_like_commercial_trade_only_scope(job_lc):
         return 'commercial'
 
@@ -5900,6 +5951,8 @@ def enforce_ti_min_permits_floor(result: dict, job_type: str, city: str, state: 
 
 
 def _is_commercial_ti_scope(primary_scope: str, job_type: str) -> bool:
+    if _looks_like_residential_home_office_noncommercial(job_type or ""):
+        return False
     if primary_scope in {"commercial_restaurant", "commercial_office_ti", "commercial_retail_ti", "commercial_medical_clinic_ti"}:
         return True
     if primary_scope != "commercial":
@@ -5995,6 +6048,53 @@ def _is_residential_or_trade_only_primary(permit: dict) -> bool:
     if any(bad in text for bad in ("hvac changeout", "hvac system replacement", "changeout / replacement")):
         return True
     return _permit_family(permit) != "building"
+
+
+def repair_residential_home_office_commercial_leak(result: dict, job_type: str, city: str = "", state: str = "") -> dict:
+    """Repair stale commercial/TI surfaces on explicit residential home-office scopes."""
+    if not isinstance(result, dict) or not _looks_like_residential_home_office_noncommercial(job_type or ""):
+        return result
+    result["_primary_scope"] = "residential"
+    surface = " ".join(
+        str(value or "")
+        for permit in (result.get("permits_required") or [])
+        if isinstance(permit, dict)
+        for value in (permit.get("permit_type"), permit.get("portal_selection"), permit.get("notes"))
+    ).lower()
+    commercial_surface = _has_unnegated_any(surface, (
+        "commercial",
+        "tenant improvement",
+        "office interior alteration",
+        "commercial building permit",
+        "commercial tenant improvement",
+    ))
+    if commercial_surface:
+        result["permits_required"] = [_scope_permit(
+            "Residential Building Permit — Home Office / Interior Alteration",
+            "Residential Building / Interior Alteration",
+            "Residential home-office/studio conversion for private use; no employee or customer-facing use is stated. Verify local residential alteration/electrical permit naming before applying.",
+        )]
+        result["permits_required_logic"] = [{
+            "permit_type": result["permits_required"][0]["permit_type"],
+            "included_because": "Explicit residential home-office/studio scope with no employee or customer-facing use overrides stale business buildout wording.",
+            "scope_trigger": "residential home-office private-use guardrail",
+        }]
+        result["companion_permits"] = []
+        result["hidden_triggers"] = []
+        result["inspections"] = []
+        result["permit_summary"] = "Residential home-office/studio interior alteration; verify local residential permit naming before applying."
+        result["job_summary"] = "Private-use residential home-office/studio scope."
+        result["confidence_reason"] = "Residential home-office/private-use scope is explicit; local AHJ naming still needs verification."
+        result["pro_tips"] = ["Confirm whether painting/shelving alone is exempt and whether new electrical outlets require a separate electrical permit."]
+        result["common_mistakes"] = ["Assuming a private home-office update is automatically exempt — added outlets, walls, or structural changes can still trigger residential permits."]
+        result["watch_out"] = ["If the scope later adds employees, customer visits, signage, or a separate business space, re-check the permit path."]
+        result["what_to_bring"] = ["Scope description", "Floor plan or room sketch", "Electrical outlet/lighting details if applicable"]
+        result["permit_verdict"] = "YES"
+        result["needs_review"] = True
+        result["_residential_home_office_leak_repaired"] = {"city": city, "state": state}
+        if str(result.get("confidence") or "").lower() == "high":
+            result["confidence"] = "medium"
+    return result
 
 
 def enforce_commercial_primary_permit_guardrail(result: dict, job_type: str, city: str, state: str) -> dict:
@@ -7866,7 +7966,8 @@ def validate_and_sanitize_permit_result(result: dict, job_type: str, city: str, 
                     permit[sub] = None
 
     # 3. Scope/checklist mismatch — commercial query, residential-only checklist
-    is_commercial = bool(_COMMERCIAL_TOKENS.search(job_type or ""))
+    residential_home_office_noncommercial = _looks_like_residential_home_office_noncommercial(job_type or "")
+    is_commercial = False if residential_home_office_noncommercial else bool(_COMMERCIAL_TOKENS.search(job_type or ""))
     # Cross-reference with primary scope detection — catches commercial signals
     # the regex misses (e.g. "85-person seating", "B-occupancy", "A-2 occupancy
     # change") that detect_primary_scope picks up via stronger lexicon.
@@ -8061,6 +8162,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             apply_medical_clinic_ti_rulebook(cached, job_type, city, state)
             enforce_ti_min_permits_floor(cached, job_type, city, state)
             enforce_commercial_primary_permit_guardrail(cached, job_type, city, state)
+            repair_residential_home_office_commercial_leak(cached, job_type, city, state)
             validate_and_sanitize_permit_result(cached, job_type, city, state)
             scrub_hidden_trigger_internal_metadata(cached)
             apply_state_expert_pack(cached, city, state, job_type)
@@ -8952,6 +9054,7 @@ Return ONLY the JSON object."""
     # hidden-trigger try/except so a detector failure cannot let a residential
     # HVAC/changeout card leak as the primary permit for commercial TI.
     enforce_commercial_primary_permit_guardrail(result, job_type, city, state)
+    repair_residential_home_office_commercial_leak(result, job_type, city, state)
 
     # 2026-04-28: Fee Realism Guardrail V1. Closes the systematic 3-10x under-
     # quote bug Opus 4.7 grading caught across all 4 cities of restaurant TI

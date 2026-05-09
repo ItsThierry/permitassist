@@ -46,6 +46,28 @@ def test_office_scope_stays_office_not_retail_or_medical():
     assert engine.detect_primary_scope("law office buildout with conference rooms, lighting and HVAC balancing") == "commercial_office_ti"
 
 
+def test_residential_home_office_negations_do_not_classify_as_office_ti():
+    jobs = [
+        (
+            "Single-family home in Birmingham: convert a spare bedroom into a quiet home office/studio "
+            "with desk outlets, shelving, and paint; no employees, no customer visits, "
+            "no commercial tenant improvement, no restaurant, no medical clinic, no office TI."
+        ),
+        (
+            "Single-family home in Birmingham: convert a spare bedroom into a quiet home office/studio "
+            "with desk outlets and paint; no employees, no customer visits, no office tenant improvement."
+        ),
+        (
+            "Residential house in Birmingham: bedroom closet and spare bedroom will become a home-office "
+            "workspace with shelving and outlets; no employees, no customer visits, no office tenant improvement."
+        ),
+    ]
+
+    for job in jobs:
+        assert engine.detect_primary_scope(job) == "residential"
+        assert engine.classify_scope_required_permits(job) is None
+
+
 def test_office_ti_negated_restaurant_terms_stay_office():
     assert engine.detect_primary_scope(
         "Dallas TX office tenant improvement: demising walls, conference rooms, ceiling grid, lighting, "
