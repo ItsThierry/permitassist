@@ -92,6 +92,49 @@ def test_quality_gate_does_not_force_commercial_for_residential_home_office_nega
     assert "office interior alteration" not in blob
 
 
+def test_quality_gate_does_not_force_commercial_for_pa500090_garage_workshop_negations(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    job = (
+        "Single-family garage hobby workshop: workbench, hobby tools, and storage shelves; "
+        "no commercial business, no employees, no customer visits, no tenant improvement, "
+        "no restaurant, no medical, no office TI. QA marker PA500-090; marker is not permit scope."
+    )
+    result = {
+        "confidence": "medium",
+        "_primary_scope": "commercial_office_ti",
+        "permits_required": [{
+            "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+            "portal_selection": "Commercial Building Permit - Tenant Improvement / Interior Alteration",
+            "required": True,
+            "notes": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope.",
+        }],
+        "companion_permits": [{"permit_type": "Electrical Permit — Commercial Tenant Improvement"}],
+        "hidden_triggers": [{"label": "Commercial tenant improvement plan review"}],
+        "inspections": ["Commercial tenant improvement final inspection"],
+        "pro_tips": ["Commercial TI drawings usually need a registered design professional."],
+        "watch_out": ["Tenant improvement work may require accessibility upgrades."],
+        "common_mistakes": ["Skipping commercial tenant improvement plan review."],
+        "permit_summary": "Commercial tenant improvement / office interior alteration permit likely required.",
+        "confidence_reason": "Office TI commercial scope detected from stale model output.",
+        "job_summary": "Commercial office tenant improvement.",
+        "what_to_bring": ["Commercial TI plans"],
+        "sources": [{"url": "https://city.gov/residential-permits", "snippet": "Residential alterations may require permits."}],
+    }
+
+    gated = server.apply_permitiq_quality_gate(result, job, "Miami", "FL")
+
+    blob = json.dumps(gated, sort_keys=True).lower()
+    assert gated["_primary_scope"] == "residential"
+    assert gated["companion_permits"] == []
+    assert "Garage Hobby Workshop" in gated["permits_required"][0]["permit_type"]
+    assert "garage hobby-workshop" in gated["permits_required"][0]["notes"].lower()
+    assert "commercial" not in blob
+    assert "tenant improvement" not in blob
+    assert "office interior alteration" not in blob
+    assert "home-office" not in blob
+    assert "home office" not in blob
+
+
 def test_claim_citations_never_invent_missing_quotes(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     result = {
