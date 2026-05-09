@@ -156,6 +156,9 @@ def test_office_fee_floor_accounts_for_commercial_ti_complexity():
     assert guarded["_fee_adjusted"] is True
     assert guarded["_fee_floor_components"]["scope"] == "commercial_office_ti"
     assert guarded["_fee_floor_components"]["structured_low"] >= 12000
+    rationale = guarded["_fee_floor_components"]["jurisdiction_rationale"].lower()
+    for forbidden in ("restaurant", "hood", "grease", "fog", "food service"):
+        assert forbidden not in rationale
     assert "$300" not in guarded["fee_range"]
 
 
