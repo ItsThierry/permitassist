@@ -645,7 +645,10 @@ def _medical_xray_scope_present(text: str) -> bool:
 
 
 def _medical_clinic_scope_present(text: str) -> bool:
-    return _has_unnegated_any(text or "", ("medical clinic", "clinic tenant improvement", "clinic ti", "exam room", "exam rooms", "patient care", "treatment room", "treatment rooms"))
+    return _has_unnegated_any(text or "", (
+        "medical clinic", "clinic tenant improvement", "clinic ti", "exam room", "exam rooms",
+        "patient care", "treatment room", "treatment rooms", "procedure room", "procedure rooms",
+    ))
 
 
 def _neutralize_commercial_permit_residential_contrast(result: dict, job_type: str) -> None:
@@ -748,7 +751,12 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
     if not _has_unnegated_any(scope_text, ("commercial dishwasher", "dishwasher", "prep sink", "floor sink", "mop sink", "indirect waste")):
         forbidden_terms += ["plumbing sheets", "plumbing sheet", "plumbing plans", "plumbing plan"]
     if not _medical_clinic_scope_present(scope_text):
-        forbidden_terms += ["commercial clinic", "clinic", "exam room", "exam rooms", "exam-room", "patient care", "treatment room", "treatment rooms"]
+        forbidden_terms += [
+            "commercial clinic", "clinic", "exam room", "exam rooms", "exam-room",
+            "patient care", "treatment room", "treatment rooms", "procedure room",
+            "procedure rooms", "procedure-room", "clinic services", "healthcare-specific",
+            "health-care-specific", "healthcare services", "health-care services",
+        ]
     if not _medical_xray_scope_present(scope_text):
         forbidden_terms += ["x-ray", "x ray", "radiology"]
     if not _medical_gas_scope_present(scope_text):
@@ -769,8 +777,12 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         r"\bno\s+ansul\b": "ansul",
         r"\bno\s+fire\s+suppression\b": "fire suppression",
         r"\bno\s+clinic\b": "clinic",
+        r"\bno\s+clinic\s+services?\b": "clinic services",
         r"\bno\s+exam\s+rooms?\b": "exam room",
+        r"\bno\s+treatment\s+services?\b": "treatment services",
+        r"\bno\s+treatment\b": "no treatment",
         r"\bno\s+treatment\s+rooms?\b": "treatment room",
+        r"\bno\s+procedure\s+rooms?\b": "procedure room",
         r"\bno\s+x[- ]?ray\b": "x-ray",
         r"\bno\s+medical\s+gas\b": "medical gas",
         r"\bno\s+patient\s+care\b": "patient care",

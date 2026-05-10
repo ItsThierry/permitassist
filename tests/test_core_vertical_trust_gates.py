@@ -2174,6 +2174,80 @@ def test_pa500090_residential_garage_hobby_cached_fee_and_citations_drop_office_
     )
 
 
+def test_pa500274_medical_admin_office_negative_trap_scrubs_medical_negative_echo():
+    job = (
+        "Medical billing/admin office tenant improvement in Las Vegas: open office partitions, "
+        "reception desk, data cabling, paint and flooring; no exam rooms, no treatment, "
+        "no clinic services, no x-ray, no medical gas, no procedure room. "
+        "QA marker PA500-274; marker is not permit scope."
+    )
+    cached_result = {
+        "_cached": True,
+        "_primary_scope": "commercial_office_ti",
+        "_meta": {"job_category": "commercial"},
+        "permits_required": [
+            {
+                "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+                "portal_selection": "Building Permit - Commercial Tenant Improvement",
+                "required": True,
+                "notes": "Commercial office TI for admin/billing suite; verify exact AHJ portal label.",
+            }
+        ],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "pro_tips": [
+            "Use no procedure room language. That helps keep the review in standard commercial TI instead of healthcare-specific review.",
+            "Do not include no clinic services or no treatment services language in the customer-facing advice.",
+            "Keep the scope focused on office partitions, reception, data cabling, paint, and flooring.",
+        ],
+        "watch_out": ["No x-ray or medical gas means specialty clinic review should not be listed."],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+
+    out = server.finalize_permit_lookup_result(
+        cached_result,
+        job,
+        "Las Vegas",
+        "NV",
+        is_cached=True,
+        evidence_allowed=False,
+    )
+    customer_blob = _customer_surface_blob(out)
+
+    assert out["_primary_scope"] == "commercial_office_ti"
+    assert "office partitions" in customer_blob
+    for forbidden in (
+        "procedure room",
+        "healthcare-specific",
+        "health-care",
+        "clinic services",
+        "treatment services",
+        "no treatment",
+        "exam rooms",
+        "x-ray",
+        "medical gas",
+        "treatment",
+    ):
+        assert forbidden not in customer_blob
+
+
+def test_true_medical_clinic_positive_preserves_procedure_xray_and_medical_gas_guidance():
+    job = (
+        "Medical clinic tenant improvement in Las Vegas with exam rooms, treatment room, "
+        "procedure room, x-ray equipment, medical gas outlets, reception, accessibility, "
+        "lighting, HVAC, and fire alarm coordination."
+    )
+    out = _apply_core_layers(job, "Las Vegas", "NV")
+    out = server.apply_permitiq_quality_gate(out, job, "Las Vegas", "NV")
+    customer_blob = _customer_surface_blob(out) + " | " + _companion_blob(out)
+
+    assert out["_primary_scope"] == "commercial_medical_clinic_ti"
+    for expected in ("procedure", "x-ray", "medical gas", "exam-room", "clinic"):
+        assert expected in customer_blob
+    assert "office partitions" not in customer_blob
+
+
 def test_true_commercial_office_garage_workshop_cached_fee_floor_is_preserved():
     job = (
         "Commercial office tenant improvement for a garage hobby workshop maker studio with "
