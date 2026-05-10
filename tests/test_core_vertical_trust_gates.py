@@ -2107,3 +2107,113 @@ def test_residential_single_trade_cached_result_preserves_residential_wording():
     assert "residential water heater" in blob
     assert "residential plumbing permit" in blob
     assert "tenant improvement" not in blob
+
+
+def test_pa500090_residential_garage_hobby_cached_fee_and_citations_drop_office_ti_floor():
+    job = (
+        "Residential single-family home garage hobby workshop / interior alteration: "
+        "paint, shelving, workbench, and a couple of outlets for private owner hobby use; "
+        "no commercial business, no employees, no customer visits, no tenant improvement. "
+        "QA marker PA500_090; marker is not permit scope."
+    )
+    leaked_fee = (
+        "Fee Estimate: **$7,000-$7,000+** (structured floor — see breakdown). "
+        "Components: ~$5,000 base permit + plan review (Miami, FL commercial office TI floor) "
+        "× 1.4× jurisdiction multiplier. **Verify against current fee schedule before quoting.** "
+        "— verify in city portal before quoting"
+    )
+    cached_result = {
+        "_cached": True,
+        "_primary_scope": "residential",
+        "_meta": {"job_category": "residential"},
+        "permits_required": [
+            {
+                "permit_type": "Residential Building Permit — Garage Hobby Workshop / Interior Alteration",
+                "portal_selection": "Residential Building / Interior Alteration",
+                "required": True,
+                "notes": "Private residential garage hobby-workshop/storage scope; verify local permit naming.",
+            }
+        ],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "fee_range": leaked_fee,
+        "claim_citations": [
+            {
+                "field": "fee_range",
+                "value": leaked_fee,
+                "source_url": "",
+                "source_title": "",
+                "quoted_snippet": "",
+                "confidence": "needs_verification",
+            }
+        ],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+
+    out = server.finalize_permit_lookup_result(
+        cached_result,
+        job,
+        "Miami",
+        "FL",
+        is_cached=True,
+        evidence_allowed=False,
+    )
+    customer_blob = f"{out.get('fee_range', '')} {out.get('claim_citations', [])} {_customer_surface_blob(out)}".lower()
+
+    assert out["_cached"] is True
+    assert out["_primary_scope"] == "residential"
+    assert "garage hobby" in customer_blob
+    assert "residential" in customer_blob
+    assert "commercial office ti floor" not in customer_blob
+    assert "structured floor" not in customer_blob
+    assert "$7,000-$7,000+" not in customer_blob
+    assert all(
+        "commercial office ti floor" not in str(citation.get("value", "")).lower()
+        for citation in out.get("claim_citations", [])
+    )
+
+
+def test_true_commercial_office_garage_workshop_cached_fee_floor_is_preserved():
+    job = (
+        "Commercial office tenant improvement for a garage hobby workshop maker studio with "
+        "employees, customer visits, demising walls, electrical, HVAC, and data cabling."
+    )
+    office_fee = (
+        "Fee Estimate: **$7,000-$7,000+** (structured floor — see breakdown). "
+        "Components: ~$5,000 base permit + plan review (Miami, FL commercial office TI floor) "
+        "× 1.4× jurisdiction multiplier. Verify against current fee schedule before quoting."
+    )
+    cached_result = {
+        "_cached": True,
+        "_primary_scope": "commercial_office_ti",
+        "_meta": {"job_category": "commercial"},
+        "permits_required": [
+            {
+                "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+                "portal_selection": "Building Permit - Commercial Tenant Improvement",
+                "required": True,
+                "notes": "Commercial office TI with employees and customer visits.",
+            }
+        ],
+        "fee_range": office_fee,
+        "claim_citations": [],
+        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "confidence": "medium",
+    }
+
+    out = server.finalize_permit_lookup_result(
+        cached_result,
+        job,
+        "Miami",
+        "FL",
+        is_cached=True,
+        evidence_allowed=False,
+    )
+    customer_blob = f"{out.get('fee_range', '')} {out.get('claim_citations', [])} {_customer_surface_blob(out)}".lower()
+
+    assert out["_primary_scope"] == "commercial_office_ti"
+    assert "commercial office ti floor" in customer_blob
+    assert "structured floor" in customer_blob
+    assert "$7,000-$7,000+" in customer_blob
+    assert "tenant improvement" in customer_blob

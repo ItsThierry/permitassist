@@ -885,10 +885,73 @@ def _residential_single_trade_scope(job_type: str) -> bool:
     return residential_marker and trade_marker
 
 
-def _repair_residential_trade_model_leak(result: dict, job_type: str) -> None:
+def _commercial_office_ti_fee_floor_leak(value) -> bool:
+    text = str(value or "").lower()
+    if not text:
+        return False
+    return (
+        "commercial office ti floor" in text
+        or ("structured floor" in text and "office ti" in text)
+        or ("commercial office" in text and "structured floor" in text and "fee" in text)
+    )
+
+
+def _scrub_residential_private_workspace_fee_floor(result: dict, private_label: str, city: str | None = None) -> None:
+    """Remove stale commercial-office-TI fee floors from residential private workspace results."""
+    fee_fields = ("fee_range", "fee_estimate", "total_cost_estimate", "fee_calculator")
+    leaked = any(_commercial_office_ti_fee_floor_leak(result.get(field)) for field in fee_fields)
+    if not leaked:
+        leaked = any(
+            _commercial_office_ti_fee_floor_leak((citation or {}).get("value"))
+            or _commercial_office_ti_fee_floor_leak((citation or {}).get("claim"))
+            for citation in (result.get("claim_citations") or [])
+            if isinstance(citation, dict)
+        )
+    if not leaked:
+        return
+
+    location = f"{city} " if city else "Local "
+    clean_fee = (
+        f"{location}residential {private_label} fees vary by exact scope. Verify whether cosmetic "
+        "painting/shelving/workbench work is exempt and whether any electrical or interior-alteration "
+        "permit fees apply before quoting."
+    )
+    for field in fee_fields:
+        if field in result and _commercial_office_ti_fee_floor_leak(result.get(field)):
+            if field == "fee_range":
+                result[field] = clean_fee
+            else:
+                result.pop(field, None)
+    result.pop("_fee_floor_components", None)
+    if isinstance(result.get("claim_citations"), list):
+        result["claim_citations"] = [
+            citation
+            for citation in result["claim_citations"]
+            if not (
+                isinstance(citation, dict)
+                and (
+                    str(citation.get("field") or "").lower() == "fee_range"
+                    or _commercial_office_ti_fee_floor_leak(citation.get("value"))
+                    or _commercial_office_ti_fee_floor_leak(citation.get("claim"))
+                )
+            )
+        ]
+    warnings = result.setdefault("quality_warnings", [])
+    warning = "Removed stale commercial office TI fee-floor text from a residential private-workspace cached result; verify local residential fees before quoting."
+    if warning not in warnings:
+        warnings.append(warning)
+    result["needs_review"] = True
+    result["_residential_fee_floor_leak_repaired"] = True
+
+
+def _repair_residential_trade_model_leak(result: dict, job_type: str, city: str | None = None) -> None:
     """Trust explicit residential single-trade/home-office scope over stale commercial model output."""
     if _looks_like_residential_home_office_noncommercial(job_type or ""):
         result["_primary_scope"] = "residential"
+        garage_text = re.sub(r"\s+", " ", job_type or "")
+        is_garage_hobby = bool(re.search(r"\bgarage\b.{0,80}\bhobby\s+workshop\b|\bhobby\s+workshop\b.{0,80}\bgarage\b", garage_text, flags=re.I))
+        private_label = "garage hobby-workshop" if is_garage_hobby else "home-office/studio"
+        _scrub_residential_private_workspace_fee_floor(result, private_label, city)
         surface = " ".join(
             str(value or "")
             for permit in (result.get("permits_required") or [])
@@ -896,15 +959,12 @@ def _repair_residential_trade_model_leak(result: dict, job_type: str) -> None:
             for value in (permit.get("permit_type"), permit.get("portal_selection"), permit.get("notes"))
         ).lower()
         if _has_unnegated_any(surface, ("commercial", "tenant improvement", "office interior alteration", "commercial building permit")):
-            garage_text = re.sub(r"\s+", " ", job_type or "")
-            is_garage_hobby = bool(re.search(r"\bgarage\b.{0,80}\bhobby\s+workshop\b|\bhobby\s+workshop\b.{0,80}\bgarage\b", garage_text, flags=re.I))
             permit_type = "Residential Building Permit — Garage Hobby Workshop / Interior Alteration" if is_garage_hobby else "Residential Building Permit — Home Office / Interior Alteration"
             notes = (
                 "Private residential garage hobby-workshop/storage scope; no employee or customer-facing use is stated. Verify local residential alteration/electrical permit naming before applying."
                 if is_garage_hobby
                 else "Residential home-office/studio conversion for private use; no employee or customer-facing use is stated. Verify local residential alteration/electrical permit naming before applying."
             )
-            private_label = "garage hobby-workshop" if is_garage_hobby else "home-office/studio"
             result["permits_required"] = [{
                 "permit_type": permit_type,
                 "portal_selection": "Residential Building / Interior Alteration",
@@ -1050,7 +1110,7 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     and expose uncertainty instead of letting a polished but mismatched report
     reach a contractor.
     """
-    _repair_residential_trade_model_leak(result, job_type)
+    _repair_residential_trade_model_leak(result, job_type, city)
     warnings = list(result.get("quality_warnings") or [])
     primary = _primary_permit_text(result)
     primary_l = primary.lower()
