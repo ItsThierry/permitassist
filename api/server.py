@@ -593,6 +593,44 @@ def _has_unnegated_any(text: str, phrases: tuple[str, ...]) -> bool:
     return any(_contains_unnegated_phrase(text or "", phrase) for phrase in phrases)
 
 
+def _historical_restaurant_retail_conversion(job_type: str) -> bool:
+    """Former restaurant shell/space converted to non-food retail, not active restaurant TI."""
+    text = f" {(job_type or '').lower()} "
+    retail_signal = _has_unnegated_any(
+        text,
+        (
+            "dry retail",
+            "retail tenant improvement",
+            "retail ti",
+            "retail buildout",
+            "retail store",
+            "clothing store",
+            "boutique",
+        ),
+    ) or bool(re.search(r"\b(?:retail|store|shop|boutique)\b", text))
+    former_restaurant_signal = bool(
+        re.search(
+            r"\b(?:former|old|existing|prior|previous)\s+restaurant\s+(?:shell|space|tenant|suite|occupancy|unit|buildout)?\b",
+            text,
+        )
+    )
+    conversion_signal = bool(
+        re.search(
+            r"\b(?:convert(?:ing|ed|s)?|conversion|change(?:\s+of\s+(?:use|occupancy))?)\b.{0,100}\b(?:dry\s+retail|retail|clothing\s+store|store|shop|boutique)\b",
+            text,
+        )
+        or re.search(
+            r"\b(?:dry\s+retail|retail|clothing\s+store|store|shop|boutique)\b.{0,100}\b(?:convert(?:ing|ed|s)?|conversion|change(?:\s+of\s+(?:use|occupancy))?)\b",
+            text,
+        )
+    )
+    absent_food_terms = re.findall(
+        r"\b(?:no|without)\s+(?:current\s+|public\s+|new\s+)?(?:food\s+prep(?:aration)?|food\s+service|kitchen\s+work|commercial\s+kitchen|cooking|hood|type\s*i\s*hood|type\s*1\s*hood|fryer|griddle|ansul|grease\s+interceptor|grease\s+work|f\.o\.g|fog)\b",
+        text,
+    )
+    return retail_signal and former_restaurant_signal and conversion_signal and len(absent_food_terms) >= 2
+
+
 def _restaurant_hood_scope_present(text: str) -> bool:
     return _has_unnegated_any(text or "", ("type i hood", "type 1 hood", "hood suppression", "ansul", "fryer", "griddle", "charbroiler", "grease duct"))
 
@@ -709,12 +747,7 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
     """
     job_text = f"{job_type or ''}".lower()
     scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
-    historical_retail_conversion = bool(
-        re.search(r"\b(?:retail tenant improvement|retail ti|retail buildout|clothing store|boutique)\b", job_text)
-        and re.search(r"\b(?:former|old|existing)\s+restaurant\s+(?:shell|space|tenant|suite)\b", job_text)
-        and re.search(r"\b(?:convert|conversion|change)\b.{0,80}\b(?:retail|clothing store|store|shop|boutique)\b", job_text)
-        and re.search(r"\b(?:no|without)\s+(?:food service|grease|cooking|commercial kitchen|kitchen work)\b", job_text)
-    )
+    historical_retail_conversion = _historical_restaurant_retail_conversion(job_type)
     if historical_retail_conversion:
         result["_primary_scope"] = "commercial_retail_ti"
         scope_text = job_text
@@ -861,7 +894,7 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
                 return {}
             out = {}
             for k, item in value.items():
-                cleaned = scrub_value(item) if k in {"notes", "note", "description", "summary", "included_because", "reason", "required_if", "scope_trigger", "steps", "portal_selection_path", "likely_documents", "verification_note", "stage", "title", "value", "claim", "text", "message", "details", "source_title", "quoted_snippet", "source_excerpt", "snippet"} or isinstance(item, (list, dict)) else item
+                cleaned = scrub_value(item) if k in {"notes", "note", "description", "summary", "included_because", "reason", "required_if", "scope_trigger", "steps", "portal_selection_path", "likely_documents", "verification_note", "stage", "title", "value", "claim", "text", "message", "details", "source_title", "quoted_snippet", "source_excerpt", "snippet", "simple", "complex", "timeline"} or isinstance(item, (list, dict)) or (isinstance(item, str) and has_forbidden(item)) else item
                 if cleaned not in ("", [], {}):
                     out[k] = cleaned
             return out
@@ -876,7 +909,7 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         "inspections", "inspect_checklist", "inspection_requirements", "claim_citations",
         "companion_permits", "hidden_triggers", "fee_source", "fee_sources", "fee_calculator",
         "fee_estimate", "total_cost_estimate", "code_section_source", "required_documents_source",
-        "inspection_process_source", "ahj_contact_source", "license_required",
+        "inspection_process_source", "ahj_contact_source", "license_required", "approval_timeline",
     ):
         if key not in result:
             continue
@@ -1048,6 +1081,8 @@ def _commercial_companion_scope(job_type: str, result: dict | None = None) -> st
     warnings just because the negated words appear in the request.
     """
     text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
+    if _historical_restaurant_retail_conversion(job_type):
+        return "retail"
     negated_restaurant = bool(
         re.search(
             r"\b(?:no|without)\s+(?:restaurant|food service|commercial kitchen|type\s*i\s*hood|hood|fryer|griddle|ansul|grease interceptor)(?:\s+needed)?\b",
@@ -1123,6 +1158,9 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     reach a contractor.
     """
     _repair_residential_trade_model_leak(result, job_type, city)
+    historical_retail_conversion = _historical_restaurant_retail_conversion(job_type)
+    if historical_retail_conversion:
+        result["_primary_scope"] = "commercial_retail_ti"
     warnings = list(result.get("quality_warnings") or [])
     primary = _primary_permit_text(result)
     primary_l = primary.lower()
@@ -1134,7 +1172,9 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
         has_residential_leak = any(token in primary_l for token in _RESIDENTIAL_PRIMARY_TOKENS) and not has_commercial_primary
         if has_residential_leak or not primary:
             fixed_primary = "Building Permit — Commercial Tenant Improvement / Interior Alteration"
-            if "restaurant" in (job_type or "").lower():
+            if historical_retail_conversion:
+                fixed_primary = "Building Permit — Commercial Interior Alteration / Tenant Improvement"
+            elif "restaurant" in (job_type or "").lower():
                 fixed_primary = "Building Permit — Tenant Improvement / Restaurant Interior Alteration"
             elif any(t in (job_type or "").lower() for t in ("medical", "clinic", "dental", "exam room")):
                 fixed_primary = "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration"

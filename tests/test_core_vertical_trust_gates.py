@@ -1424,7 +1424,7 @@ def _customer_surface_blob(result):
     for key in (
         "what_to_bring", "common_mistakes", "pro_tips", "watch_out",
         "quality_warnings", "permits_required_logic", "permits_required", "apply_path",
-        "zoning_hoa_flag", "fee_source", "fee_sources", "fee_calculator", "fee_estimate",
+        "approval_timeline", "zoning_hoa_flag", "fee_source", "fee_sources", "fee_calculator", "fee_estimate",
         "total_cost_estimate", "code_section_source", "required_documents_source",
         "inspection_process_source",
     ):
@@ -1510,6 +1510,54 @@ def test_pa300_former_restaurant_shell_retail_conversion_uses_retail_fee_floor_n
     for forbidden in ("restaurant", "food service", "grease", "hood-fire-suppression", "commercial kitchen"):
         assert forbidden not in blob
     assert "retail" in blob or "clothing" in blob
+
+
+def test_pa500_382_former_restaurant_dry_retail_negative_trap_scrubs_timeline_restaurant_leak():
+    job = (
+        "Former restaurant shell in Providence converting to dry retail: paint, flooring, shelves, "
+        "checkout counter; no current food prep, no public food service, no kitchen work, no cooking, "
+        "no hood, no fryer, no grease interceptor. QA marker PA500-382; marker is not permit scope."
+    )
+    out = _apply_core_layers(job, "Providence", "RI")
+    out["approval_timeline"] = {
+        "simple": "1-5 business days for over-the-counter review if the scope stays as interior finish work only.",
+        "complex": (
+            "1-3 weeks if the city requires plan review for change of use, accessibility review, "
+            "egress review, or any code upgrades tied to the former restaurant occupancy"
+        ),
+    }
+    out = server.apply_permitiq_quality_gate(out, job, "Providence", "RI")
+    blob = _customer_surface_blob(out) + " | " + str(out.get("fee_range", "")).lower()
+    companion_blob = _companion_blob(out)
+    adder_keys = {a["key"] for a in (out.get("_fee_floor_components") or {}).get("trigger_adders", [])}
+
+    assert out["_primary_scope"] == "commercial_retail_ti"
+    assert out["_fee_floor_components"]["scope"] == "commercial_retail_ti"
+    assert {"hood_fire_suppression", "grease_interceptor"}.isdisjoint(adder_keys)
+    assert "health" not in companion_blob
+    for forbidden in (
+        "restaurant", "food service", "food prep", "health department", "commercial kitchen",
+        "hood", "fryer", "grease", "f.o.g", "fog",
+    ):
+        assert forbidden not in blob
+    assert "retail" in blob or "interior finish" in blob
+
+
+def test_active_restaurant_kitchen_hood_grease_scope_keeps_restaurant_language():
+    job = (
+        "Restaurant tenant improvement in Providence with new commercial kitchen, Type I hood, fryer line, "
+        "food prep sinks, and grease interceptor."
+    )
+    out = _apply_core_layers(job, "Providence", "RI")
+    out["approval_timeline"] = {
+        "complex": "2-4 weeks for restaurant plan review, hood/fire suppression review, and health department coordination."
+    }
+    out = server.apply_permitiq_quality_gate(out, job, "Providence", "RI")
+    blob = _customer_surface_blob(out) + " | " + _companion_blob(out)
+
+    assert out["_primary_scope"] == "commercial_restaurant"
+    assert "restaurant" in blob
+    assert "hood" in blob or "health" in blob or "grease" in blob
 
 
 def test_pa300_cached_former_restaurant_shell_fee_range_scrubs_stale_restaurant_floor():
