@@ -352,17 +352,32 @@ def _contains_unnegated_any(text: str, terms: Iterable[str]) -> bool:
     return any(_contains_unnegated_phrase(text, term) for term in terms)
 
 
+def _historical_restaurant_retail_conversion_text(text: str) -> bool:
+    """Former restaurant shell/space converted to non-food retail, not active restaurant TI."""
+    text = f" {(text or '').lower()} "
+    retail_signal = bool(
+        re.search(r"\b(?:dry\s+retail|retail\s+tenant\s+improvement|retail\s+ti|retail\s+buildout|retail\s+store|clothing\s+store|boutique|retail|store|shop)\b", text)
+    )
+    former_restaurant_signal = bool(
+        re.search(r"\b(?:former|old|existing|prior|previous)\s+restaurant\s+(?:shell|space|tenant|suite|occupancy|unit|buildout)?\b", text)
+    )
+    conversion_signal = bool(
+        re.search(r"\b(?:convert(?:ing|ed|s)?|conversion|change(?:\s+of\s+(?:use|occupancy))?)\b.{0,100}\b(?:dry\s+retail|retail|clothing\s+store|store|shop|boutique)\b", text)
+        or re.search(r"\b(?:dry\s+retail|retail|clothing\s+store|store|shop|boutique)\b.{0,100}\b(?:convert(?:ing|ed|s)?|conversion|change(?:\s+of\s+(?:use|occupancy))?)\b", text)
+    )
+    absent_food_terms = re.findall(
+        r"\b(?:no|without)\s+(?:current\s+|public\s+|new\s+)?(?:food\s+prep(?:aration)?|food\s+service|kitchen\s+work|commercial\s+kitchen|cooking|hood|type\s*i\s*hood|type\s*1\s*hood|fryer|griddle|ansul|grease\s+interceptor|grease\s+work|f\.o\.g|fog)\b",
+        text,
+    )
+    return retail_signal and former_restaurant_signal and conversion_signal and len(absent_food_terms) >= 2
+
+
 def _normalize_scope(primary_scope: str, job_type: str) -> str:
     """Map caller scope + job description onto SCOPE_FEE_FLOORS keys."""
     scope = _norm(primary_scope).replace("-", "_").replace(" ", "_")
     text = f"{scope} {_norm(job_type)}"
 
-    historical_retail_conversion = bool(
-        re.search(r"\b(?:retail tenant improvement|retail ti|retail buildout|clothing store|boutique)\b", text)
-        and re.search(r"\b(?:former|old|existing)\s+restaurant\s+(?:shell|space|tenant|suite)\b", text)
-        and re.search(r"\b(?:convert|conversion|change)\b.{0,80}\b(?:retail|clothing store|store|shop|boutique)\b", text)
-        and re.search(r"\b(?:no|without)\s+(?:food service|grease|cooking|commercial kitchen|kitchen work)\b", text)
-    )
+    historical_retail_conversion = _historical_restaurant_retail_conversion_text(text)
     if historical_retail_conversion:
         return "commercial_retail_ti"
 
