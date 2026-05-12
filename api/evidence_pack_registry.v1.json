@@ -10,6 +10,85 @@
       "public_redaction": "redact_internal_fields",
       "strict_version": true
     },
+    "phase7b_golden_beta_guarded": {
+      "activation": {
+        "audience": "customer_beta_guarded",
+        "authenticated_session_required": true,
+        "beta_email_allowlist_env": "PERMITASSIST_EVIDENCE_PACK_BETA_EMAIL_ALLOWLIST",
+        "preview_only_required": false,
+        "preview_route_required": false,
+        "route": "/api/permit"
+      },
+      "coverage_truth": {
+        "heading": "Coverage scope",
+        "not_confirmed_from_official_source": [
+          "fees",
+          "timelines",
+          "inspections",
+          "forms/checklists",
+          "trade permits",
+          "companion reviews",
+          "specialty triggers"
+        ],
+        "official_source_backed": [
+          "permit type",
+          "apply URL / route"
+        ]
+      },
+      "expected_version": "phase7b_golden_local_preview_v1",
+      "promotion": {
+        "exact_fields_per_row": [
+          "apply_url",
+          "permit_type"
+        ],
+        "fingerprint_algorithm": "metadata_without_fingerprint_and_records_canonical_sha256",
+        "metadata_dict_equals": {
+          "row_level_classification_counts": {
+            "customer-ready": 12,
+            "safe-with-caveat": 18
+          }
+        },
+        "metadata_equals": {
+          "batch_id": "PA7B-HYBRID10-20260511",
+          "evidence_pack_version": "phase7b_golden_local_preview_v1",
+          "mode": "phase7b_golden_local_preview",
+          "source_artifact": "golden-evidence-pack-third-pass.json",
+          "source_artifact_sha256": "91e0589edbf17aae15f2dc21f3734c333e9d4f02debe0e1575f7117f884753f9",
+          "source_schema_name": "permitassist_golden_evidence_record_v1"
+        },
+        "metadata_int_equals": {
+          "golden_row_count": 30,
+          "transformed_record_count": 60
+        },
+        "metadata_set_equals": {
+          "locked_verticals": [
+            "medical_clinic_ti",
+            "office_ti",
+            "restaurant_ti"
+          ]
+        },
+        "path_suffix": "data/evidence_packs/local_golden/phase7b/permitassist-phase7b-golden-local-preview-pack-PA7B-HYBRID10-20260511.json",
+        "record_count": 60,
+        "record_fields_exact": [
+          "apply_url",
+          "permit_type"
+        ],
+        "record_verticals_exact": [
+          "medical_clinic_ti",
+          "office_ti",
+          "restaurant_ti"
+        ],
+        "source_golden_field_status_allowed": [
+          "promoted_caveated_source_backed",
+          "promoted_source_backed"
+        ],
+        "unique_row_count": 30,
+        "unique_row_id_field": "golden_row_id",
+        "warning_prefix": "phase7b_golden"
+      },
+      "public_redaction": "drop_evidence_pack",
+      "strict_version": true
+    },
     "phase7b_golden_local_preview": {
       "activation": {
         "loader_preview_only_required": true,
