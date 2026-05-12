@@ -1375,16 +1375,22 @@ def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: boo
         return False
     preview_only = _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
     mode = os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip()
-    if mode == "solar_mep_controlled_preview" and not preview_only:
+    if mode in {"solar_mep_controlled_preview", "phase7b_golden_local_preview"} and not preview_only:
         return False
     preview_header = os.environ.get("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo").strip() or "X-Sample-Demo"
     preview_route_allowed = path == "/api/permit" and is_sample_demo and headers.get(preview_header) == "1"
+    if mode == "phase7b_golden_local_preview":
+        if not preview_route_allowed:
+            return False
+        token = os.environ.get("PERMITASSIST_PHASE7B_GOLDEN_LOCAL_PREVIEW_TOKEN", "").strip()
+        token_header = os.environ.get("PERMITASSIST_PHASE7B_GOLDEN_LOCAL_PREVIEW_HEADER", "X-Phase7B-Golden-Preview-Token").strip() or "X-Phase7B-Golden-Preview-Token"
+        return bool(token) and hmac.compare_digest(str(headers.get(token_header) or ""), token)
     if mode == "solar_mep_controlled_preview":
         if not preview_route_allowed:
             return False
         token = os.environ.get("PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_TOKEN", "").strip()
         token_header = os.environ.get("PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_HEADER", "X-Evidence-Pack-Preview-Token").strip() or "X-Evidence-Pack-Preview-Token"
-        return bool(token) and headers.get(token_header) == token
+        return bool(token) and hmac.compare_digest(str(headers.get(token_header) or ""), token)
     if not preview_only:
         return True
     return preview_route_allowed
@@ -1462,8 +1468,9 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         # Evidence pack mode bypasses permit_cache reads and writes by design;
         # make that visible and testable so stale non-evidence rows cannot leak
         # into local trials.
-        meta = result.setdefault('_evidence_pack', {})
-        meta['cache_bypassed'] = True
+        if "_evidence_pack" in result:
+            meta = result.setdefault('_evidence_pack', {})
+            meta['cache_bypassed'] = True
     else:
         build_claim_citations(result)
 
@@ -1538,14 +1545,29 @@ def render_white_label_report_html(data: dict) -> str:
     if evidence_meta.get("enabled") and "companion_reviews_triggers" in evidence_matched:
         warnings_list.append("Companion-review evidence is scope-limited; it is not a complete local specialty-trigger list. Verify specialty reviews with the AHJ before filing.")
     warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in dict.fromkeys(warnings_list))
+    golden_coverage_box = ""
+    coverage_truth = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
+    is_golden_coverage = (
+        evidence_meta.get("enabled") and evidence_meta.get("mode") == "phase7b_golden_local_preview"
+    ) or str(coverage_truth.get("heading") or "").lower() in {"coverage truth — golden local mode", "coverage scope"}
+    if is_golden_coverage:
+        official = coverage_truth.get("official_source_backed") or ["permit type", "apply URL / route"]
+        not_confirmed = coverage_truth.get("not_confirmed_from_official_source") or ["fees", "timelines", "inspections", "forms/checklists", "trade permits", "companion reviews", "specialty triggers"]
+        golden_coverage_box = f"""
+<div class='card'><h3>{html.escape(str(coverage_truth.get('heading') or 'Coverage scope'))}</h3>
+<p><strong>Official-source backed:</strong> {html.escape(', '.join(str(item) for item in official))}.</p>
+<p><strong>Not confirmed:</strong> {html.escape(', '.join(str(item) for item in not_confirmed))}.</p>
+</div>"""
+    warnings_box = f"<div class='card'><h3>Warnings</h3><ul>{warnings}</ul></div>" if warnings else ""
     return f"""<!doctype html>
 <html><head><meta charset='utf-8'><title>Permit research report</title>
 <style>body{{font-family:Arial,sans-serif;max-width:820px;margin:32px auto;color:#172033;line-height:1.45}}.brand{{border-bottom:3px solid #0f766e;padding-bottom:12px;margin-bottom:24px}}.muted{{color:#64748b}}.card{{border:1px solid #dbe3ea;border-radius:12px;padding:16px;margin:16px 0}}@media print{{button{{display:none}}body{{margin:0.5in}}}}</style></head>
 <body><button onclick='window.print()'>Print / Save PDF</button><div class='brand'><h1>{contractor}</h1><div class='muted'>Permit research prepared for {client}</div></div>
 <h2>{job}</h2><p><strong>Location:</strong> {location}</p>
+{golden_coverage_box}
+{warnings_box}
 <div class='card'><h3>Likely permits</h3><ul>{permit_items}</ul></div>
 <div class='card'><h3>How to apply</h3><p>{html.escape(str((result.get('apply_path') or {}).get('verification_note') or 'Verify exact filing path with the AHJ.'))}</p><p><strong>Start URL:</strong> {_render_safe_link(safe_apply_url) or 'Not found'}</p></div>
-{f"<div class='card'><h3>Warnings</h3><ul>{warnings}</ul></div>" if warnings else ""}
 <div class='card'><h3>Source footnotes</h3><ol>{footnotes}</ol></div>
 <p class='muted'>PermitAssist is guidance only. Verify exact permit type with the AHJ before quoting or starting work.</p></body></html>"""
 
@@ -4068,11 +4090,28 @@ _SENSITIVE_OUTPUT_RE = re.compile(
 
 
 def redact_public_output(value):
-    """Redact filesystem/env/Railway/token-like strings from API JSON."""
+    """Redact filesystem/env/Railway/token-like strings and internal evidence diagnostics from API JSON."""
     if isinstance(value, dict):
         redacted = {}
+        internal_keys = {
+            "local_golden",
+            "golden_row_id",
+            "matched_row_ids",
+            "batch_id",
+            "contract",
+            "needs_review_reasons",
+            "evidence_pack_record_id",
+            "record_fingerprint_sha256",
+        }
         for key, item in value.items():
             if key in {"_fee_floor_components", "_rulebook_depth_disclaimer", "_residential_home_office_leak_repaired"}:
+                continue
+            if key == "_evidence_pack":
+                if isinstance(item, dict) and item.get("mode") == "phase7b_golden_local_preview":
+                    continue
+                redacted[key] = redact_public_output(item)
+                continue
+            if key in internal_keys:
                 continue
             if key in {"path", "fingerprint_sha256", "evidence_pack_fingerprint"}:
                 redacted[key] = "[REDACTED]"

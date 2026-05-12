@@ -36,13 +36,28 @@ SUPPORTED_EVIDENCE_PACK_VERSIONS = (
     "step7b_offline_v1_test",
     "step7h_dallas_only_staging_v1",
     "step7u_dallas_only_production_preview_v1",
+    "phase7b_golden_local_preview_v1",
 )
 ALLOWED_EVIDENCE_PACK_MODES = {
     "dallas_step7h_preview",
     "dallas_step7u_production_preview",
     "solar_mep_controlled_preview",
+    "phase7b_golden_local_preview",
 }
 SOLAR_MEP_CONTROLLED_PACK_FAMILY = "solar_commercial_mep_offline_v1"
+PHASE7B_GOLDEN_LOCAL_MODE = "phase7b_golden_local_preview"
+PHASE7B_GOLDEN_LOCAL_VERSION = "phase7b_golden_local_preview_v1"
+PHASE7B_GOLDEN_LOCAL_PROMOTION = {
+    "path_suffix": "data/evidence_packs/local_golden/phase7b/permitassist-phase7b-golden-local-preview-pack-PA7B-HYBRID10-20260511.json",
+    "source_artifact": "golden-evidence-pack-third-pass.json",
+    "source_artifact_sha256": "91e0589edbf17aae15f2dc21f3734c333e9d4f02debe0e1575f7117f884753f9",
+    "source_schema_name": "permitassist_golden_evidence_record_v1",
+    "batch_id": "PA7B-HYBRID10-20260511",
+    "golden_row_count": 30,
+    "transformed_record_count": 60,
+    "locked_verticals": {"restaurant_ti", "medical_clinic_ti", "office_ti"},
+    "row_level_classification_counts": {"customer-ready": 12, "safe-with-caveat": 18},
+}
 SOLAR_MEP_CONTROLLED_PROMOTION = {
     "path_suffix": "evidence_packs/offline/solar_mep/permitassist-step7b-solar-commercial-mep-offline-evidence-pack-20260507.json",
     "raw_sha256": "678d1ad5b8ed04dc4350d26d133bc52f382c868bda3e407ca7e6b0fc642c3875",
@@ -57,11 +72,13 @@ PRODUCTION_WIRING_ALLOWED_BY_VERSION = {
     "step7b_offline_v1_test": False,
     "step7h_dallas_only_staging_v1": False,
     "step7u_dallas_only_production_preview_v1": True,
+    "phase7b_golden_local_preview_v1": False,
 }
 EVIDENCE_PACK_VERSION_BY_MODE = {
     "dallas_step7h_preview": "step7h_dallas_only_staging_v1",
     "dallas_step7u_production_preview": "step7u_dallas_only_production_preview_v1",
     "solar_mep_controlled_preview": "step7b_offline_v1",
+    "phase7b_golden_local_preview": "phase7b_golden_local_preview_v1",
 }
 VALID_CONTRACT_STATUSES = {
     "valid",
@@ -121,6 +138,12 @@ def _norm(value: Any) -> str:
 
 def _env_truthy(name: str) -> bool:
     return str(os.environ.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def canonical_json_sha256(value: Any) -> str:
+    """Shared canonical SHA-256 helper for builder/runtime fingerprints."""
+    canonical = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def evidence_pack_enabled() -> bool:
@@ -429,7 +452,7 @@ def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprin
         status = "invalid_version"
     expected_version = EVIDENCE_PACK_VERSION_BY_MODE.get(mode)
     mode_locked_versions = set(EVIDENCE_PACK_VERSION_BY_MODE.values())
-    strict_mode = mode in {"dallas_step7u_production_preview", "solar_mep_controlled_preview"}
+    strict_mode = mode in {"dallas_step7u_production_preview", "solar_mep_controlled_preview", PHASE7B_GOLDEN_LOCAL_MODE}
     if expected_version and version != expected_version and (strict_mode or version in mode_locked_versions):
         warnings.append("evidence_pack_version_not_allowed_for_mode")
         if status == "valid":
@@ -475,6 +498,95 @@ def _validate_solar_mep_controlled_promotion(path: Path, raw_bytes: bytes, data:
     return tuple(sorted(set(warnings)))
 
 
+def _phase7b_golden_pack_fingerprint(data: dict[str, Any]) -> str:
+    """Recompute the generated local-golden pack fingerprint."""
+    metadata = dict(data.get("metadata") or {})
+    metadata.pop("fingerprint_sha256", None)
+    payload = {"metadata": metadata, "records": data.get("records") or []}
+    return canonical_json_sha256(payload)
+
+
+def _phase7b_golden_contract_warnings(records: list[Any]) -> tuple[str, ...]:
+    """Validate exact Phase 7B Golden runtime row/field semantics."""
+    if not isinstance(records, list):
+        return ("phase7b_golden_record_count_mismatch",)
+    warnings: list[str] = []
+    expected_rows = int(PHASE7B_GOLDEN_LOCAL_PROMOTION["golden_row_count"])
+    row_fields: dict[str, list[str]] = {}
+    seen_pairs: set[tuple[str, str]] = set()
+    duplicate_pairs: set[tuple[str, str]] = set()
+    for record in records:
+        if not isinstance(record, dict):
+            warnings.append("phase7b_golden_invalid_record_shape")
+            continue
+        row_id = str(record.get("golden_row_id") or "").strip()
+        field = str(record.get("field") or "").strip()
+        pair = (row_id, field)
+        if pair in seen_pairs:
+            duplicate_pairs.add(pair)
+        seen_pairs.add(pair)
+        row_fields.setdefault(row_id, []).append(field)
+        value = str(record.get("claim_value") or "").strip()
+        if field == "permit_type" and not value:
+            warnings.append("phase7b_golden_empty_promoted_claim")
+        if field == "apply_url" and urlparse(value).scheme not in {"http", "https"}:
+            warnings.append("phase7b_golden_invalid_apply_url")
+    if len(records) != expected_rows * 2 or len(seen_pairs) != expected_rows * 2:
+        warnings.append("phase7b_golden_duplicate_or_missing_row_field")
+    if duplicate_pairs:
+        warnings.append("phase7b_golden_duplicate_row_field")
+    if len(row_fields) != expected_rows:
+        warnings.append("phase7b_golden_row_count_mismatch")
+    for _row_id, fields in row_fields.items():
+        if sorted(fields) != ["apply_url", "permit_type"]:
+            warnings.append("phase7b_golden_exact_field_set_mismatch")
+            break
+    return tuple(sorted(set(warnings)))
+
+
+def _validate_phase7b_golden_local_promotion(path: Path, data: dict[str, Any], metadata: dict[str, Any]) -> tuple[str, ...]:
+    """Pin Phase 7B Golden local-preview eligibility to the approved artifact transform."""
+    warnings: list[str] = []
+    promotion = PHASE7B_GOLDEN_LOCAL_PROMOTION
+    normalized_path = str(path).replace("\\", "/")
+    if not normalized_path.endswith(str(promotion["path_suffix"])):
+        warnings.append("phase7b_golden_pack_path_mismatch")
+    if str(metadata.get("mode") or "").strip() != PHASE7B_GOLDEN_LOCAL_MODE:
+        warnings.append("phase7b_golden_mode_mismatch")
+    if str(metadata.get("evidence_pack_version") or "").strip() != PHASE7B_GOLDEN_LOCAL_VERSION:
+        warnings.append("phase7b_golden_version_mismatch")
+    for key in ("source_artifact", "source_artifact_sha256", "source_schema_name", "batch_id"):
+        if str(metadata.get(key) or "").strip() != str(promotion[key]):
+            warnings.append(f"phase7b_golden_{key}_mismatch")
+    for key in ("golden_row_count", "transformed_record_count"):
+        if int(metadata.get(key) or -1) != int(promotion[key]):
+            warnings.append(f"phase7b_golden_{key}_mismatch")
+    if set(metadata.get("locked_verticals") or []) != set(promotion["locked_verticals"]):
+        warnings.append("phase7b_golden_locked_verticals_mismatch")
+    if dict(metadata.get("row_level_classification_counts") or {}) != dict(promotion["row_level_classification_counts"]):
+        warnings.append("phase7b_golden_row_classification_counts_mismatch")
+    records = data.get("records") or []
+    if not isinstance(records, list) or len(records) != int(promotion["transformed_record_count"]):
+        warnings.append("phase7b_golden_record_count_mismatch")
+        records = [] if not isinstance(records, list) else records
+    warnings.extend(_phase7b_golden_contract_warnings(records))
+    row_ids = {str(record.get("golden_row_id") or "").strip() for record in records if isinstance(record, dict)}
+    if len(row_ids) != int(promotion["golden_row_count"]):
+        warnings.append("phase7b_golden_row_count_mismatch")
+    verticals = {str(record.get("vertical") or "").strip() for record in records if isinstance(record, dict)}
+    if verticals != set(promotion["locked_verticals"]):
+        warnings.append("phase7b_golden_record_verticals_mismatch")
+    fields = {str(record.get("field") or "").strip() for record in records if isinstance(record, dict)}
+    if fields != {"permit_type", "apply_url"}:
+        warnings.append("phase7b_golden_runtime_fields_mismatch")
+    statuses = {str(record.get("source_golden_field_status") or "").strip() for record in records if isinstance(record, dict)}
+    if not statuses or not statuses <= {"promoted_source_backed", "promoted_caveated_source_backed"}:
+        warnings.append("phase7b_golden_unpromoted_status_present")
+    if str(metadata.get("fingerprint_sha256") or "").strip() != _phase7b_golden_pack_fingerprint(data):
+        warnings.append("phase7b_golden_fingerprint_mismatch")
+    return tuple(sorted(set(warnings)))
+
+
 @lru_cache(maxsize=4)
 def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fingerprint: str) -> EvidencePackRuntime:
     path = Path(path_text)
@@ -500,6 +612,16 @@ def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fin
                 contract_status = "invalid_contract"
                 contract_warnings = tuple(sorted(set(contract_warnings + ("solar_mep_pack_family_required_for_mode",))))
                 source_records = []
+    if mode == PHASE7B_GOLDEN_LOCAL_MODE:
+        promotion_warnings = _validate_phase7b_golden_local_promotion(path, data, metadata)
+        if contract_status != "valid":
+            promotion_warnings = tuple(sorted(set(promotion_warnings + ("phase7b_golden_metadata_contract_invalid",))))
+        if promotion_warnings:
+            contract_status = "invalid_contract"
+            contract_warnings = tuple(sorted(set(contract_warnings + promotion_warnings)))
+            source_records = []
+        else:
+            source_records = data.get("records") or []
     stale_candidate_count = 0
     for record in source_records:
         if not isinstance(record, dict):
@@ -511,6 +633,11 @@ def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fin
             continue
         if not _record_is_fresh(record):
             stale_candidate_count += 1
+            continue
+        value_text = str(record.get("claim_value") or "").strip()
+        if not value_text:
+            continue
+        if field == "apply_url" and urlparse(value_text).scheme not in {"http", "https"}:
             continue
         first = _primary_field_evidence(record)
         if not first:
@@ -546,6 +673,8 @@ def get_local_evidence_pack() -> EvidencePackRuntime | None:
     mode = os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip()
     if mode not in ALLOWED_EVIDENCE_PACK_MODES:
         return _invalid_runtime("invalid_contract", mode=mode, warnings=("invalid_evidence_pack_mode",))
+    if mode == PHASE7B_GOLDEN_LOCAL_MODE and not _env_truthy("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY"):
+        return _invalid_runtime("invalid_contract", mode=mode, version=PHASE7B_GOLDEN_LOCAL_VERSION, warnings=("phase7b_golden_preview_only_required",))
     expected = os.environ.get("PERMITASSIST_EVIDENCE_PACK_EXPECTED_FINGERPRINT", "").strip()
     if not re.fullmatch(r"[0-9a-fA-F]{64}", expected or ""):
         return _invalid_runtime("invalid_fingerprint", mode=mode, warnings=("missing_or_invalid_expected_fingerprint",))
@@ -655,8 +784,42 @@ def _suppress_pack_controlled_fields(result: dict[str, Any], failed_closed: list
     result["claim_citations"] = []
 
 
-def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]], failed_closed: list[str], fresh_count: int, request_vertical: str, blocked_fields: dict[str, tuple[str, ...]] | None = None) -> dict[str, Any]:
+def _add_review_reason(result: dict[str, Any], reason: str) -> None:
+    allowed = {
+        "unsupported_ahj",
+        "unsupported_vertical",
+        "caveated_row",
+        "unsupported_fields_failed_closed",
+        "invalid_pack_contract",
+        "empty_promoted_claim",
+    }
+    if reason not in allowed:
+        return
+    reasons = result.setdefault("needs_review_reasons", [])
+    if reason not in reasons:
+        reasons.append(reason)
+    result["needs_review"] = True
+
+
+def _golden_coverage_truth() -> dict[str, Any]:
+    """Public-safe coverage disclosure for Phase 7C Golden-backed preview output."""
     return {
+        "heading": "Coverage scope",
+        "official_source_backed": ["permit type", "apply URL / route"],
+        "not_confirmed_from_official_source": [
+            "fees",
+            "timelines",
+            "inspections",
+            "forms/checklists",
+            "trade permits",
+            "companion reviews",
+            "specialty triggers",
+        ],
+    }
+
+
+def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]], failed_closed: list[str], fresh_count: int, request_vertical: str, blocked_fields: dict[str, tuple[str, ...]] | None = None) -> dict[str, Any]:
+    meta = {
         "enabled": True,
         "contract_schema": RUNTIME_CONTRACT_SCHEMA,
         "runtime_contract_version": RUNTIME_CONTRACT_VERSION,
@@ -673,6 +836,20 @@ def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]],
         "request_vertical": request_vertical,
         "cache_bypassed": True,
     }
+    if pack.mode == PHASE7B_GOLDEN_LOCAL_MODE and matches:
+        matched_records = [record for _field, record in sorted(matches.items())]
+        row_ids = sorted({str(record.get("golden_row_id") or "") for record in matched_records if record.get("golden_row_id")})
+        classifications = sorted({str(record.get("row_level_classification") or "") for record in matched_records if record.get("row_level_classification")})
+        batches = sorted({str(record.get("batch_id") or "") for record in matched_records if record.get("batch_id")})
+        meta["local_golden"] = {
+            "row_id": row_ids[0] if len(row_ids) == 1 else "",
+            "matched_row_ids": row_ids,
+            "row_level_classification": classifications[0] if len(classifications) == 1 else "",
+            "batch_id": batches[0] if len(batches) == 1 else "",
+            "source_field_statuses": {field: record.get("source_golden_field_status") for field, record in sorted(matches.items())},
+            "contract": "phase7b_golden_local_preview_internal_only_v1",
+        }
+    return meta
 
 
 def _customer_facing_timeline(value: Any, *, city: str, state: str, pack: EvidencePackRuntime) -> str:
@@ -735,7 +912,7 @@ def apply_evidence_pack_fail_closed(
     if pack.contract_status != "valid":
         failed_closed = sorted(SUPPORTED_FIELDS)
         _suppress_pack_controlled_fields(result, failed_closed)
-        result["needs_review"] = True
+        _add_review_reason(result, "invalid_pack_contract")
         warnings = result.setdefault("quality_warnings", [])
         warning = "Evidence pack contract is not valid; all pack-controlled fields were failed closed."
         if warning not in warnings:
@@ -743,9 +920,30 @@ def apply_evidence_pack_fail_closed(
         result["_evidence_pack"] = _safe_meta(pack, matches={}, failed_closed=failed_closed, fresh_count=0, request_vertical=request_vertical, blocked_fields=blocked_fields)
         return result
 
+    if pack.mode == PHASE7B_GOLDEN_LOCAL_MODE and not matches:
+        # Golden preview is locked to the approved 30 AHJ×vertical rows only. For
+        # unsupported AHJs/verticals, fail pack-controlled fields closed but do
+        # not leak local-golden metadata into the response.
+        _suppress_pack_controlled_fields(result, sorted(SUPPORTED_FIELDS))
+        unsupported_reason = "unsupported_vertical" if request_vertical not in PHASE7B_GOLDEN_LOCAL_PROMOTION["locked_verticals"] else "unsupported_ahj"
+        _add_review_reason(result, unsupported_reason)
+        _add_review_reason(result, "unsupported_fields_failed_closed")
+        warnings = result.setdefault("quality_warnings", [])
+        warning = "Official-source preview coverage is not available for this AHJ/vertical; pack-controlled fields were failed closed."
+        if warning not in warnings:
+            warnings.append(warning)
+        result.pop("_evidence_pack", None)
+        return result
+
     citations = []
     for field, record in matches.items():
         value = record.get("claim_value")
+        value_text = str(value or "").strip()
+        is_empty_promoted_claim = not value_text
+        if is_empty_promoted_claim:
+            failed_closed.append((field, "empty_promoted_claim"))
+            _add_review_reason(result, "empty_promoted_claim")
+            continue
         if field == "approval_timeline":
             result["approval_timeline"] = _customer_facing_timeline(value, city=city, state=state, pack=pack)
         elif field == "permit_type":
@@ -775,13 +973,27 @@ def apply_evidence_pack_fail_closed(
             warnings = result.setdefault("quality_warnings", [])
             if scope_limit not in warnings:
                 warnings.append(scope_limit)
+        field_caveat = str(record.get("customer_facing_caveat") or "").strip()
+        if field_caveat:
+            warnings = result.setdefault("quality_warnings", [])
+            if field_caveat not in warnings:
+                warnings.append(field_caveat)
+        row_caveat = str(record.get("row_level_caveat") or "").strip()
+        if row_caveat:
+            _add_review_reason(result, "caveated_row")
+            warnings = result.setdefault("quality_warnings", [])
+            caveat_warning = f"Coverage caveat: {row_caveat}"
+            if caveat_warning not in warnings:
+                warnings.append(caveat_warning)
 
     _suppress_pack_controlled_fields(result, failed_closed)
     if citations:
         result["claim_citations"] = citations
     result["_evidence_pack"] = _safe_meta(pack, matches=matches, failed_closed=failed_closed, fresh_count=current_fresh_records_loaded, request_vertical=request_vertical, blocked_fields=blocked_fields)
+    if pack.mode == PHASE7B_GOLDEN_LOCAL_MODE:
+        result["coverage_truth"] = _golden_coverage_truth()
     if failed_closed:
-        result["needs_review"] = True
+        _add_review_reason(result, "unsupported_fields_failed_closed")
         warnings = result.setdefault("quality_warnings", [])
         warning = "Evidence pack is enabled; fields without ingestion-ready matching evidence were failed closed."
         if warning not in warnings:
