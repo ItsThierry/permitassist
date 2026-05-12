@@ -25,6 +25,7 @@ SOURCE_ARTIFACT = Path("/home/boban/.hermes/project-briefs/artifacts/permitassis
 SOURCE_SHA256 = "91e0589edbf17aae15f2dc21f3734c333e9d4f02debe0e1575f7117f884753f9"
 BATCH_ID = "PA7B-HYBRID10-20260511"
 GOLDEN_MODE = "phase7b_golden_local_preview"
+GOLDEN_BETA_MODE = "phase7b_golden_beta_guarded"
 GOLDEN_VERSION = "phase7b_golden_local_preview_v1"
 GOLDEN_PACK = REPO_ROOT / "data" / "evidence_packs" / "local_golden" / "phase7b" / "permitassist-phase7b-golden-local-preview-pack-PA7B-HYBRID10-20260511.json"
 TOKEN = "test"
@@ -214,6 +215,132 @@ def test_phase7c_golden_negative_scope_controls_fail_closed_without_golden_leak(
         expected = "unsupported_ahj" if vertical == "office_ti" else "unsupported_vertical"
         assert expected in result.get("needs_review_reasons", [])
         assert "unsupported_fields_failed_closed" in result.get("needs_review_reasons", [])
+
+
+def test_phase7d_golden_beta_guard_requires_session_allowlist_and_supported_route(monkeypatch, tmp_path):
+    _enable_golden(monkeypatch, mode=GOLDEN_BETA_MODE)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "false")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_BETA_EMAIL_ALLOWLIST", "beta@example.com, friend@example.com")
+    monkeypatch.delenv("PERMITASSIST_PHASE7B_GOLDEN_LOCAL_PREVIEW_TOKEN", raising=False)
+    server = _import_server(tmp_path, monkeypatch)
+
+    assert server.evidence_pack_allowed_for_request(
+        "/api/permit",
+        {"X-Session-Token": "session"},
+        is_sample_demo=False,
+        user_email="beta@example.com",
+        paid=False,
+    ) is True
+    assert server.evidence_pack_allowed_for_request(
+        "/api/permit",
+        {"X-Session-Token": "session"},
+        is_sample_demo=False,
+        user_email="paid-not-allowlisted@example.com",
+        paid=True,
+    ) is False
+    assert server.evidence_pack_allowed_for_request(
+        "/api/permit",
+        {},
+        is_sample_demo=False,
+        user_email="",
+        paid=False,
+    ) is False
+    assert server.evidence_pack_allowed_for_request(
+        "/api/batch-permit",
+        {"X-Session-Token": "session"},
+        is_sample_demo=False,
+        user_email="beta@example.com",
+        paid=True,
+    ) is False
+    assert server.evidence_pack_allowed_for_request(
+        "/api/permit",
+        {"X-Sample-Demo": "1", "X-Phase7B-Golden-Preview-Token": TOKEN},
+        is_sample_demo=True,
+        user_email="",
+        paid=False,
+    ) is False
+
+
+def test_phase7d_golden_beta_http_path_bypasses_cache_and_redacts_pack_metadata(monkeypatch, tmp_path):
+    from test_debug_headers_endpoint import _LiveServer
+    from test_step7c_evidence_pack_local_gates import _post_json_response
+
+    _enable_golden(monkeypatch, mode=GOLDEN_BETA_MODE)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "false")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_BETA_EMAIL_ALLOWLIST", "beta@example.com")
+    monkeypatch.delenv("PERMITASSIST_PHASE7B_GOLDEN_LOCAL_PREVIEW_TOKEN", raising=False)
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "validate_url", lambda *_args, **_kwargs: True)
+    calls = []
+
+    def fake_research(*args, **kwargs):
+        calls.append(kwargs)
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+    server.is_paid_user = lambda email: False
+    token = server.create_session_token("beta@example.com")
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json_response(
+            f"{live.base}/api/permit",
+            {
+                "job_type": "office tenant improvement",
+                "city": "Los Angeles",
+                "state": "CA",
+                "job_category": "commercial",
+                "vertical": "office_ti",
+            },
+            {"X-Session-Token": token},
+        )
+
+    assert status == 200
+    assert calls and calls[0]["use_cache"] is False
+    assert calls[0]["suppress_cache_write"] is True
+    assert body["apply_url"].startswith("http")
+    assert "coverage_truth" in body
+    body_text = json.dumps(body, sort_keys=True)
+    for forbidden in (
+        "_evidence_pack",
+        "local_golden",
+        "golden_row_id",
+        "matched_row_ids",
+        BATCH_ID,
+        GOLDEN_MODE,
+        GOLDEN_BETA_MODE,
+        "phase7b-golden::",
+    ):
+        assert forbidden not in body_text
+
+
+def test_phase7d_golden_beta_allowlist_guard_prevents_cache_poisoning(monkeypatch, tmp_path):
+    from test_debug_headers_endpoint import _LiveServer
+    from test_step7c_evidence_pack_local_gates import _post_json_response
+
+    _enable_golden(monkeypatch, mode=GOLDEN_BETA_MODE)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "false")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_BETA_EMAIL_ALLOWLIST", "beta@example.com")
+    server = _import_server(tmp_path, monkeypatch)
+    calls = []
+
+    def fake_research(*args, **kwargs):
+        calls.append(kwargs)
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+    server.is_paid_user = lambda email: True
+    token = server.create_session_token("paid-not-allowlisted@example.com")
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json_response(
+            f"{live.base}/api/permit",
+            {"job_type": "office tenant improvement", "city": "Los Angeles", "state": "CA", "job_category": "commercial", "vertical": "office_ti"},
+            {"X-Session-Token": token},
+        )
+
+    assert status == 200
+    assert calls and calls[0]["use_cache"] is True
+    assert calls[0]["suppress_cache_write"] is False
+    assert "_evidence_pack" not in json.dumps(body, sort_keys=True)
+    assert "coverage_truth" not in body
 
 
 def test_phase7c_golden_rejects_wrong_contract_pins(monkeypatch, tmp_path):

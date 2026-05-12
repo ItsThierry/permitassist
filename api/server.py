@@ -1380,14 +1380,46 @@ def _env_flag_enabled(name: str) -> bool:
     return str(os.environ.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
 
 
-def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: bool = False) -> bool:
+PHASE7D_GOLDEN_BETA_GUARDED_MODE = "phase7b_golden_beta_guarded"
+
+
+def _env_list_values(name: str) -> set[str]:
+    raw = os.environ.get(name, "")
+    values = re.split(r"[,;\s]+", raw)
+    return {value.strip().lower() for value in values if value.strip()}
+
+
+def _evidence_pack_beta_email_allowed(user_email: str | None) -> bool:
+    email = str(user_email or "").strip().lower()
+    if not email:
+        return False
+    return email in _env_list_values("PERMITASSIST_EVIDENCE_PACK_BETA_EMAIL_ALLOWLIST")
+
+
+def evidence_pack_allowed_for_request(
+    path: str,
+    headers,
+    *,
+    is_sample_demo: bool = False,
+    user_email: str | None = None,
+    paid: bool = False,
+) -> bool:
     """Return whether this request may use the local evidence-pack overlay."""
+    del paid  # Stage 0 beta/customer exposure is governed by the dedicated allowlist.
     if not evidence_pack_enabled():
         return False
     preview_only = _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
     mode = os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip()
     if mode not in ALLOWED_EVIDENCE_PACK_MODES or not evidence_pack_mode_request_gate_valid(mode):
         return False
+    if mode == PHASE7D_GOLDEN_BETA_GUARDED_MODE:
+        return (
+            path == "/api/permit"
+            and not preview_only
+            and not is_sample_demo
+            and bool(str(headers.get("X-Session-Token") or "").strip())
+            and _evidence_pack_beta_email_allowed(user_email)
+        )
     if evidence_pack_mode_requires_preview_only(mode) and not preview_only:
         return False
     preview_header = os.environ.get("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo").strip() or "X-Sample-Demo"
@@ -5252,7 +5284,13 @@ class Handler(BaseHTTPRequestHandler):
                     "sample_demo": is_sample_demo,
                     "benchmark": is_benchmark,
                 }, user_email or "")
-                evidence_allowed = evidence_pack_allowed_for_request(path, self.headers, is_sample_demo=is_sample_demo)
+                evidence_allowed = evidence_pack_allowed_for_request(
+                    path,
+                    self.headers,
+                    is_sample_demo=is_sample_demo,
+                    user_email=user_email,
+                    paid=paid,
+                )
                 acquired_lookup_slot = PERMIT_LOOKUP_SEMAPHORE.acquire(timeout=PERMIT_LOOKUP_QUEUE_TIMEOUT_SECONDS)
                 if not acquired_lookup_slot:
                     print(
