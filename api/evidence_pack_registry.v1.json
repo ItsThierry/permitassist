@@ -1,0 +1,147 @@
+{
+  "modes": {
+    "dallas_step7h_preview": {
+      "expected_version": "step7h_dallas_only_staging_v1",
+      "public_redaction": "redact_internal_fields",
+      "strict_version": false
+    },
+    "dallas_step7u_production_preview": {
+      "expected_version": "step7u_dallas_only_production_preview_v1",
+      "public_redaction": "redact_internal_fields",
+      "strict_version": true
+    },
+    "phase7b_golden_local_preview": {
+      "activation": {
+        "loader_preview_only_required": true,
+        "missing_preview_only_warning": "phase7b_golden_preview_only_required",
+        "preview_only_required": true,
+        "preview_route_required": true,
+        "token_env": "PERMITASSIST_PHASE7B_GOLDEN_LOCAL_PREVIEW_TOKEN",
+        "token_header_default": "X-Phase7B-Golden-Preview-Token",
+        "token_header_env": "PERMITASSIST_PHASE7B_GOLDEN_LOCAL_PREVIEW_HEADER"
+      },
+      "coverage_truth": {
+        "heading": "Coverage scope",
+        "not_confirmed_from_official_source": [
+          "fees",
+          "timelines",
+          "inspections",
+          "forms/checklists",
+          "trade permits",
+          "companion reviews",
+          "specialty triggers"
+        ],
+        "official_source_backed": [
+          "permit type",
+          "apply URL / route"
+        ]
+      },
+      "expected_version": "phase7b_golden_local_preview_v1",
+      "promotion": {
+        "exact_fields_per_row": [
+          "apply_url",
+          "permit_type"
+        ],
+        "fingerprint_algorithm": "metadata_without_fingerprint_and_records_canonical_sha256",
+        "metadata_dict_equals": {
+          "row_level_classification_counts": {
+            "customer-ready": 12,
+            "safe-with-caveat": 18
+          }
+        },
+        "metadata_equals": {
+          "batch_id": "PA7B-HYBRID10-20260511",
+          "evidence_pack_version": "phase7b_golden_local_preview_v1",
+          "mode": "phase7b_golden_local_preview",
+          "source_artifact": "golden-evidence-pack-third-pass.json",
+          "source_artifact_sha256": "91e0589edbf17aae15f2dc21f3734c333e9d4f02debe0e1575f7117f884753f9",
+          "source_schema_name": "permitassist_golden_evidence_record_v1"
+        },
+        "metadata_int_equals": {
+          "golden_row_count": 30,
+          "transformed_record_count": 60
+        },
+        "metadata_set_equals": {
+          "locked_verticals": [
+            "medical_clinic_ti",
+            "office_ti",
+            "restaurant_ti"
+          ]
+        },
+        "path_suffix": "data/evidence_packs/local_golden/phase7b/permitassist-phase7b-golden-local-preview-pack-PA7B-HYBRID10-20260511.json",
+        "record_count": 60,
+        "record_fields_exact": [
+          "apply_url",
+          "permit_type"
+        ],
+        "record_verticals_exact": [
+          "medical_clinic_ti",
+          "office_ti",
+          "restaurant_ti"
+        ],
+        "source_golden_field_status_allowed": [
+          "promoted_caveated_source_backed",
+          "promoted_source_backed"
+        ],
+        "unique_row_count": 30,
+        "unique_row_id_field": "golden_row_id",
+        "warning_prefix": "phase7b_golden"
+      },
+      "public_redaction": "drop_evidence_pack",
+      "strict_version": true
+    },
+    "solar_mep_controlled_preview": {
+      "activation": {
+        "preview_only_required": true,
+        "preview_route_required": true,
+        "token_env": "PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_TOKEN",
+        "token_header_default": "X-Evidence-Pack-Preview-Token",
+        "token_header_env": "PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_HEADER"
+      },
+      "expected_version": "step7b_offline_v1",
+      "promotion": {
+        "metadata_equals": {
+          "evidence_pack_version": "step7b_offline_v1",
+          "fingerprint_sha256": "02fea6c42faee64c5ab1dd9cec2319a819b53f7f10e5abd58e1ae0fbbfe0116b"
+        },
+        "path_suffix": "evidence_packs/offline/solar_mep/permitassist-step7b-solar-commercial-mep-offline-evidence-pack-20260507.json",
+        "raw_sha256": "678d1ad5b8ed04dc4350d26d133bc52f382c868bda3e407ca7e6b0fc642c3875",
+        "record_count": 9,
+        "record_field_exact": {
+          "pack_family": "solar_commercial_mep_offline_v1"
+        },
+        "warning_prefix": "solar_mep_promoted_pack"
+      },
+      "public_redaction": "redact_internal_fields",
+      "strict_version": true
+    }
+  },
+  "pack_versions": {
+    "phase7b_golden_local_preview_v1": {
+      "production_wiring_allowed": false
+    },
+    "step7b_offline_v1": {
+      "production_wiring_allowed": false
+    },
+    "step7b_offline_v1_test": {
+      "production_wiring_allowed": false
+    },
+    "step7h_dallas_only_staging_v1": {
+      "production_wiring_allowed": false
+    },
+    "step7u_dallas_only_production_preview_v1": {
+      "production_wiring_allowed": true
+    }
+  },
+  "runtime_contract_schema": "permitassist.evidence_pack.runtime.v1",
+  "runtime_contract_version": "step7l_runtime_contract_v1",
+  "schema": "permitassist.evidence_pack.registry.v1",
+  "supported_fields": [
+    "apply_url",
+    "approval_timeline",
+    "companion_reviews_triggers",
+    "fee_range",
+    "inspections",
+    "permit_type"
+  ]
+}
