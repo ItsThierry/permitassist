@@ -42,7 +42,16 @@ from research_engine import (
     detect_primary_scope,
     classify_scope_required_permits,
 )
-from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
+from evidence_pack_runtime import (
+    apply_evidence_pack_fail_closed,
+    canonical_request_vertical,
+    evidence_pack_enabled,
+    evidence_pack_mode_preview_token_config,
+    evidence_pack_mode_public_redaction,
+    evidence_pack_mode_requires_preview_only,
+    evidence_pack_mode_requires_preview_route,
+    get_local_evidence_pack,
+)
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -1375,22 +1384,21 @@ def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: boo
         return False
     preview_only = _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
     mode = os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip()
-    if mode in {"solar_mep_controlled_preview", "phase7b_golden_local_preview"} and not preview_only:
+    if evidence_pack_mode_requires_preview_only(mode) and not preview_only:
         return False
     preview_header = os.environ.get("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo").strip() or "X-Sample-Demo"
     preview_route_allowed = path == "/api/permit" and is_sample_demo and headers.get(preview_header) == "1"
-    if mode == "phase7b_golden_local_preview":
+    token_config = evidence_pack_mode_preview_token_config(mode)
+    if token_config:
         if not preview_route_allowed:
             return False
-        token = os.environ.get("PERMITASSIST_PHASE7B_GOLDEN_LOCAL_PREVIEW_TOKEN", "").strip()
-        token_header = os.environ.get("PERMITASSIST_PHASE7B_GOLDEN_LOCAL_PREVIEW_HEADER", "X-Phase7B-Golden-Preview-Token").strip() or "X-Phase7B-Golden-Preview-Token"
+        token = os.environ.get(token_config.get("token_env", ""), "").strip()
+        token_header_default = token_config.get("token_header_default") or "X-Evidence-Pack-Preview-Token"
+        token_header_env = token_config.get("token_header_env") or ""
+        token_header = os.environ.get(token_header_env, token_header_default).strip() or token_header_default
         return bool(token) and hmac.compare_digest(str(headers.get(token_header) or ""), token)
-    if mode == "solar_mep_controlled_preview":
-        if not preview_route_allowed:
-            return False
-        token = os.environ.get("PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_TOKEN", "").strip()
-        token_header = os.environ.get("PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_HEADER", "X-Evidence-Pack-Preview-Token").strip() or "X-Evidence-Pack-Preview-Token"
-        return bool(token) and hmac.compare_digest(str(headers.get(token_header) or ""), token)
+    if evidence_pack_mode_requires_preview_route(mode):
+        return preview_route_allowed
     if not preview_only:
         return True
     return preview_route_allowed
@@ -1548,7 +1556,7 @@ def render_white_label_report_html(data: dict) -> str:
     golden_coverage_box = ""
     coverage_truth = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
     is_golden_coverage = (
-        evidence_meta.get("enabled") and evidence_meta.get("mode") == "phase7b_golden_local_preview"
+        evidence_meta.get("enabled") and bool(coverage_truth)
     ) or str(coverage_truth.get("heading") or "").lower() in {"coverage truth — golden local mode", "coverage scope"}
     if is_golden_coverage:
         official = coverage_truth.get("official_source_backed") or ["permit type", "apply URL / route"]
@@ -4107,7 +4115,9 @@ def redact_public_output(value):
             if key in {"_fee_floor_components", "_rulebook_depth_disclaimer", "_residential_home_office_leak_repaired"}:
                 continue
             if key == "_evidence_pack":
-                if isinstance(item, dict) and item.get("mode") == "phase7b_golden_local_preview":
+                mode = str(item.get("mode") or "") if isinstance(item, dict) else ""
+                redaction_policy = str(item.get("public_redaction") or evidence_pack_mode_public_redaction(mode)) if isinstance(item, dict) else "redact_internal_fields"
+                if redaction_policy == "drop_evidence_pack":
                     continue
                 redacted[key] = redact_public_output(item)
                 continue
