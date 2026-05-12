@@ -802,7 +802,7 @@ def test_enabled_pack_rejects_malformed_evidence_records(tmp_path, monkeypatch):
     assert "companion_reviews_triggers" in result["_evidence_pack"]["failed_closed_fields"]
 
 
-def test_enabled_pack_apply_url_is_sanitized_after_overlay(tmp_path, monkeypatch):
+def test_enabled_pack_invalid_apply_url_fails_closed_before_overlay(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     data = json.loads(pack_path.read_text(encoding="utf-8"))
     data["records"].append({
@@ -832,9 +832,11 @@ def test_enabled_pack_apply_url_is_sanitized_after_overlay(tmp_path, monkeypatch
 
     result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
 
-    assert "apply_url" in result["_evidence_pack"]["matched_fields"]
+    assert "apply_url" not in result["_evidence_pack"]["matched_fields"]
+    assert "apply_url" in result["_evidence_pack"]["failed_closed_fields"]
     assert result["apply_url"] is None
     assert result["apply_path"]["portal_url"] in (None, "")
+    assert not any(c["field"] == "apply_url" for c in result["claim_citations"])
     assert "javascript:" not in json.dumps(result)
 
 

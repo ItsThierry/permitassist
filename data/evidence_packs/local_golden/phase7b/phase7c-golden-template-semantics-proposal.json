@@ -1,0 +1,48 @@
+{
+  "artifact": "phase7c-golden-template-semantics-proposal",
+  "scope": "local_internal_preview_only",
+  "source_artifact_locked": "golden-evidence-pack-third-pass.json",
+  "notes": "Proposal artifact only; does not mutate the locked source artifact.",
+  "row_readiness_enum": [
+    "customer_ready",
+    "customer_ready_with_minor_caveat",
+    "safe_with_caveat",
+    "internal_only"
+  ],
+  "field_certainty_enum": [
+    "promoted_clean",
+    "promoted_caveated",
+    "not_published_on_official_sources",
+    "not_researched_enough",
+    "rejected"
+  ],
+  "caveat_type_enum": [
+    "none",
+    "field_caveat",
+    "row_caveat",
+    "row_and_field_caveat",
+    "unsupported_official_source_gap"
+  ],
+  "customer_surface_policy_enum": [
+    "show_as_fact",
+    "show_with_caveat",
+    "suppress_but_log_internal",
+    "never_show"
+  ],
+  "field_semantics": {
+    "caveat_type": "Machine-readable caveat category; human caveat text is carried separately in caveat_text/customer_facing_caveat.",
+    "caveat_text": "Human-readable caveat that may be surfaced only when customer_surface_policy is show_with_caveat.",
+    "last_verified_date": "YYYY-MM-DD date when official source support was last verified.",
+    "next_reverification_due": "YYYY-MM-DD date when reviewer should re-check the source before continued promotion.",
+    "stale_after_date": "YYYY-MM-DD date after which the row/field must fail closed until reverified.",
+    "source_retrieval_method": "Controlled vocabulary describing how the source snapshot was obtained.",
+    "source_snapshot_ref": "Stable local/internal reference to the reviewed source snapshot or locked artifact row.",
+    "customer_surface_policy": "Controls whether a field may be shown as fact, shown with caveat, suppressed but logged internally, or never shown."
+  },
+  "source_retrieval_method_enum": [
+    "locked_local_artifact_transform",
+    "official_site_manual_review",
+    "official_site_fetch_snapshot",
+    "official_pdf_manual_review"
+  ]
+}
