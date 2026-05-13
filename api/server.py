@@ -921,6 +921,7 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         "companion_permits", "hidden_triggers", "fee_source", "fee_sources", "fee_calculator",
         "fee_estimate", "total_cost_estimate", "code_section_source", "required_documents_source",
         "inspection_process_source", "ahj_contact_source", "license_required", "approval_timeline",
+        "warnings", "coverage_truth",
     ):
         if key not in result:
             continue
@@ -1530,6 +1531,11 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             if warning and warning not in merged_warnings:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
+    # Evidence-pack overlays, merged warnings, and apply-path rendering happen
+    # after the first quality gate. Run the absent-subsystem scrub one final
+    # time so negated customer input such as "no restaurant/no hood/no grease"
+    # does not echo into authenticated beta customer JSON as wrong-vertical copy.
+    _filter_negated_surface_lists(result, job_type)
     return result
 
 
