@@ -4151,6 +4151,11 @@ def redact_public_output(value):
             "needs_review_reasons",
             "evidence_pack_record_id",
             "record_fingerprint_sha256",
+            # Internal state-overlay routing/debug payload. Customer JSON should
+            # expose only the final contractor guidance, not inactive/wrong-
+            # vertical schema metadata such as CA medical-clinic overlays inside
+            # an office TI response.
+            "state_schema_context",
         }
         for key, item in value.items():
             key_text = str(key or "")
