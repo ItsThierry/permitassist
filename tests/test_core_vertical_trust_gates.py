@@ -845,6 +845,31 @@ def test_hidden_trigger_public_payload_excludes_internal_fired_by_regexes():
     assert all("regions" not in trigger and "not_regions" not in trigger for trigger in triggers)
 
 
+def test_public_json_redaction_drops_internal_state_schema_context():
+    payload = {
+        "permit_verdict": "YES",
+        "state_schema_context": {
+            "active_vertical": "office_ti",
+            "coverage_level": "phase4b_ca_medical_clinic_ti",
+            "contractor_warning": "California medical/dental clinic overlay is populated.",
+        },
+        "nested": {
+            "state_schema_context": {
+                "contractor_warning": "Nested medical clinic overlay should not be public."
+            }
+        },
+    }
+
+    redacted = server.redact_public_output(payload)
+    blob = str(redacted).lower()
+
+    assert "state_schema_context" not in redacted
+    assert "state_schema_context" not in redacted["nested"]
+    assert "medical" not in blob
+    assert "clinic" not in blob
+    assert "dental" not in blob
+
+
 def test_cached_hidden_trigger_payload_scrubs_internal_matcher_metadata():
     cached = {
         "hidden_triggers": [
