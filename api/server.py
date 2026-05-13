@@ -84,6 +84,14 @@ PERMIT_LOOKUP_SEMAPHORE = threading.BoundedSemaphore(PERMIT_LOOKUP_CONCURRENCY_L
 EMAILS_CSV     = os.path.join(DATA_DIR, "captured_emails.csv")
 CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
 SHARE_TTL_DAYS = 90  # shareable links expire after 90 days
+_OPENAI_REASONING_EFFORTS = {"low", "medium", "high"}
+
+
+def _sanitize_openai_reasoning_effort(value: str | None) -> str | None:
+    effort = (value or "").strip().lower()
+    if effort in {"", "none", "off", "false", "0"}:
+        return None
+    return effort if effort in _OPENAI_REASONING_EFFORTS else None
 
 
 def utc_now() -> datetime:
@@ -5249,6 +5257,10 @@ class Handler(BaseHTTPRequestHandler):
                     and hmac.compare_digest(_benchmark_token, _BENCHMARK_SECRET)
                 )
                 force_model = self.headers.get("X-PermitIQ-Engine", "").strip() if is_benchmark else None
+                openai_reasoning_effort = (
+                    _sanitize_openai_reasoning_effort(self.headers.get("X-PermitIQ-Reasoning-Effort", ""))
+                    if is_benchmark else None
+                )
 
                 session_token = self.headers.get("X-Session-Token", "")
                 user_email = validate_session_token(session_token) if session_token else None
@@ -5344,6 +5356,7 @@ class Handler(BaseHTTPRequestHandler):
                         use_cache=_use_cache,
                         force_model=force_model,
                         suppress_cache_write=evidence_allowed,
+                        openai_reasoning_effort=openai_reasoning_effort,
                     )
                     is_cached = result.get("_cached", False)
 
