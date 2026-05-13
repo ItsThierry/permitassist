@@ -75,6 +75,27 @@ def _promoted_field_caveats(source_row):
     return caveats
 
 
+def _assert_no_customer_private_markers(body):
+    body_text = json.dumps(body, sort_keys=True, default=str)
+    for forbidden in (
+        "_evidence_pack",
+        "Evidence Pack",
+        "Evidence pack",
+        "Evidence-pack",
+        "evidence pack",
+        "evidence_pack",
+        "fingerprint",
+        "local_golden",
+        "golden_row_id",
+        "matched_row_ids",
+        BATCH_ID,
+        GOLDEN_MODE,
+        GOLDEN_BETA_MODE,
+        "phase7b-golden::",
+    ):
+        assert forbidden not in body_text
+
+
 def test_phase7c_golden_pack_is_generated_from_locked_artifact_contract():
     rows = _source_rows()
     assert len(rows) == 30
@@ -261,7 +282,7 @@ def test_phase7d_golden_beta_guard_requires_session_allowlist_and_supported_rout
     ) is False
 
 
-def test_phase7d_golden_beta_http_path_bypasses_cache_and_redacts_pack_metadata(monkeypatch, tmp_path):
+def test_phase7d_golden_beta_paid_http_path_bypasses_cache_and_redacts_pack_metadata(monkeypatch, tmp_path):
     from test_debug_headers_endpoint import _LiveServer
     from test_step7c_evidence_pack_local_gates import _post_json_response
 
@@ -278,7 +299,7 @@ def test_phase7d_golden_beta_http_path_bypasses_cache_and_redacts_pack_metadata(
         return copy.deepcopy(_base_engine_result())
 
     server.research_permit = fake_research
-    server.is_paid_user = lambda email: False
+    server.is_paid_user = lambda email: email == "beta@example.com"
     token = server.create_session_token("beta@example.com")
     with _LiveServer(server.Handler) as live:
         status, body = _post_json_response(
@@ -297,19 +318,44 @@ def test_phase7d_golden_beta_http_path_bypasses_cache_and_redacts_pack_metadata(
     assert calls and calls[0]["use_cache"] is False
     assert calls[0]["suppress_cache_write"] is True
     assert body["apply_url"].startswith("http")
-    assert "coverage_truth" in body
-    body_text = json.dumps(body, sort_keys=True)
-    for forbidden in (
-        "_evidence_pack",
-        "local_golden",
-        "golden_row_id",
-        "matched_row_ids",
-        BATCH_ID,
-        GOLDEN_MODE,
-        GOLDEN_BETA_MODE,
-        "phase7b-golden::",
-    ):
-        assert forbidden not in body_text
+    assert body["coverage_truth"]["official_source_backed"] == ["permit type", "apply URL / route"]
+    assert body["permit_type"]
+    assert body["permits_required"] and body["permits_required"][0]["permit_type"] == body["permit_type"]
+    assert body["permit_required"] is True
+    assert body["remaining_lookups"] == -1
+    _assert_no_customer_private_markers(body)
+
+
+def test_phase7d_golden_beta_public_and_invalid_session_do_not_expose_protected_evidence(monkeypatch, tmp_path):
+    from test_debug_headers_endpoint import _LiveServer
+    from test_step7c_evidence_pack_local_gates import _post_json_response
+
+    _enable_golden(monkeypatch, mode=GOLDEN_BETA_MODE)
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "false")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_BETA_EMAIL_ALLOWLIST", "beta@example.com")
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "validate_url", lambda *_args, **_kwargs: True)
+    calls = []
+
+    def fake_research(*args, **kwargs):
+        calls.append(kwargs)
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+    server.is_paid_user = lambda email: email == "beta@example.com"
+    payload = {"job_type": "office tenant improvement", "city": "Los Angeles", "state": "CA", "job_category": "commercial", "vertical": "office_ti"}
+    with _LiveServer(server.Handler) as live:
+        public_status, public_body = _post_json_response(f"{live.base}/api/permit", payload, {})
+        invalid_status, invalid_body = _post_json_response(f"{live.base}/api/permit", payload, {"X-Session-Token": "not-a-valid-session"})
+
+    assert public_status == 200
+    assert invalid_status == 200
+    assert len(calls) == 2
+    assert all(call["use_cache"] is True and call["suppress_cache_write"] is False for call in calls)
+    assert "coverage_truth" not in public_body
+    assert "coverage_truth" not in invalid_body
+    _assert_no_customer_private_markers(public_body)
+    _assert_no_customer_private_markers(invalid_body)
 
 
 def test_phase7d_golden_beta_allowlist_guard_prevents_cache_poisoning(monkeypatch, tmp_path):

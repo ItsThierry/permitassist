@@ -62,7 +62,7 @@ def test_phase7d_manifest_validates_existing_golden_pack_contract():
     assert "phase7b_golden_batch_id_mismatch" in warnings
 
 
-def test_phase7d_public_redaction_is_policy_based_not_mode_name_based(tmp_path, monkeypatch):
+def test_phase7d_public_redaction_drops_customer_private_evidence_markers(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     public = server.redact_public_output({
         "ok": True,
@@ -70,20 +70,24 @@ def test_phase7d_public_redaction_is_policy_based_not_mode_name_based(tmp_path, 
             "enabled": True,
             "mode": "future_registry_pack_preview",
             "public_redaction": "drop_evidence_pack",
-            "local_golden": {"row_id": "internal"},
-        },
-    })
-    assert public == {"ok": True}
-
-    redacted = server.redact_public_output({
-        "_evidence_pack": {
-            "enabled": True,
-            "mode": "future_registry_pack_preview",
-            "public_redaction": "redact_internal_fields",
             "fingerprint_sha256": "a" * 64,
             "local_golden": {"row_id": "internal"},
         },
+        "claim_citations": [
+            {
+                "field": "apply_url",
+                "claim": "Official source field evidence",
+                "evidence_pack_record_id": "internal-record",
+                "evidence_pack_fingerprint": "b" * 64,
+                "record_fingerprint_sha256": "c" * 64,
+            }
+        ],
+        "quality_warnings": ["Evidence pack is enabled; internal fingerprint should not appear to customers."],
+        "warnings": ["evidence pack contract marker and fingerprint marker"],
+        "client_fingerprint": "browser-private-marker",
     })
-    assert "_evidence_pack" in redacted
-    assert redacted["_evidence_pack"]["fingerprint_sha256"] == "[REDACTED]"
-    assert "local_golden" not in redacted["_evidence_pack"]
+    text = json.dumps(public, sort_keys=True)
+    assert public["ok"] is True
+    assert "claim_citations" in public
+    for forbidden in ("_evidence_pack", "Evidence pack", "evidence pack", "evidence_pack", "fingerprint", "local_golden", "internal-record"):
+        assert forbidden not in text

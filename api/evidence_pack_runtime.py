@@ -917,7 +917,7 @@ def _citation_from_record(field: str, record: dict[str, Any], checked_at: str) -
         value = ""
     return {
         "field": field,
-        "claim": "Evidence-pack field evidence",
+        "claim": "Official source field evidence",
         "value": value,
         "source_url": str(first.get("source_url") or ""),
         "source_title": str(first.get("source_title") or ""),
@@ -926,8 +926,6 @@ def _citation_from_record(field: str, record: dict[str, Any], checked_at: str) -
         "confidence": str(record.get("confidence") or "needs_verification").lower(),
         "field_evidence_confidence": _field_evidence_confidence(record),
         "field_status": str(record.get("field_status") or "needs_verification").lower(),
-        "evidence_pack_record_id": record.get("record_id"),
-        "evidence_pack_fingerprint": record.get("record_fingerprint_sha256"),
         "source_scope_limit": record.get("source_scope_limit") or "",
     }
 

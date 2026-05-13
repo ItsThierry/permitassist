@@ -4139,7 +4139,7 @@ _SENSITIVE_OUTPUT_RE = re.compile(
 
 
 def redact_public_output(value):
-    """Redact filesystem/env/Railway/token-like strings and internal evidence diagnostics from API JSON."""
+    """Redact secrets and customer-private evidence/debug markers from API JSON."""
     if isinstance(value, dict):
         redacted = {}
         internal_keys = {
@@ -4153,18 +4153,24 @@ def redact_public_output(value):
             "record_fingerprint_sha256",
         }
         for key, item in value.items():
-            if key in {"_fee_floor_components", "_rulebook_depth_disclaimer", "_residential_home_office_leak_repaired"}:
+            key_text = str(key or "")
+            key_lc = key_text.lower()
+            if key_text in {"_fee_floor_components", "_rulebook_depth_disclaimer", "_residential_home_office_leak_repaired"}:
                 continue
-            if key == "_evidence_pack":
+            if key_text == "_evidence_pack":
                 mode = str(item.get("mode") or "") if isinstance(item, dict) else ""
                 redaction_policy = str(item.get("public_redaction") or evidence_pack_mode_public_redaction(mode)) if isinstance(item, dict) else "redact_internal_fields"
                 if redaction_policy == "drop_evidence_pack":
                     continue
                 redacted[key] = redact_public_output(item)
                 continue
-            if key in internal_keys:
+            if "evidence_pack" in key_lc or "fingerprint" in key_lc:
                 continue
-            if key in {"path", "fingerprint_sha256", "evidence_pack_fingerprint"}:
+            if key_text in internal_keys:
+                continue
+            if key_text.startswith("_") and key_text not in {"_cached"}:
+                continue
+            if key_text in {"path"}:
                 redacted[key] = "[REDACTED]"
             else:
                 redacted[key] = redact_public_output(item)
@@ -4172,7 +4178,10 @@ def redact_public_output(value):
     if isinstance(value, list):
         return [redact_public_output(item) for item in value]
     if isinstance(value, str):
-        return _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", value)
+        text = _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", value)
+        text = re.sub(r"(?i)evidence[-_ ]pack", "official source record", text)
+        text = re.sub(r"(?i)fingerprint", "checksum", text)
+        return text
     return value
 
 

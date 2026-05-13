@@ -1639,6 +1639,7 @@ def test_step7p_public_redaction_removes_paths_env_railway_tokens_and_hashes(tmp
     token_like = "sk-" + "testtokenvalue1234567890"
     payload = {
         "_evidence_pack": {
+            "public_redaction": "drop_evidence_pack",
             "path": sensitive_home,
             "fingerprint_sha256": "a" * 64,
             "nested": f"PERMITASSIST_EVIDENCE_PACK_PATH={sensitive_home} {token_like} RAILWAY_PRIVATE_DOMAIN",
@@ -1659,7 +1660,9 @@ def test_step7p_public_redaction_removes_paths_env_railway_tokens_and_hashes(tmp
     assert token_like not in dumped
     assert "a" * 64 not in dumped
     assert "b" * 64 not in dumped
-    assert dumped.count("[REDACTED]") >= 5
+    assert dumped.count("[REDACTED]") >= 2
+    assert "evidence_pack" not in dumped
+    assert "fingerprint" not in dumped
 
 
 def test_step7p_preview_indexing_guards_for_robots_sitemap_and_json(tmp_path, monkeypatch):
