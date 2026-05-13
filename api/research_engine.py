@@ -2980,14 +2980,12 @@ def _a4_solar_ess_in_scope(result: dict, job_type: str) -> bool:
         return True
     if _A4_SOLAR_ESS_SCOPE_RE.search(primary_scope):
         return True
-    for trig in (result or {}).get("hidden_triggers") or []:
-        trig_id = ""
-        if isinstance(trig, dict):
-            trig_id = str(trig.get("id") or trig.get("trigger_id") or "")
-        else:
-            trig_id = str(trig or "")
-        if _A4_SOLAR_ESS_SCOPE_RE.search(trig_id):
-            return True
+    # Do not treat downstream hidden-trigger/advisory residue as proof that
+    # solar/ESS is in scope. PA30_020 showed that a plain panel/service upgrade
+    # can inherit a battery/ESS advisory trigger after assembly; using that
+    # residue here makes the cleanup skip the exact leak it is meant to remove.
+    # Actual solar/ESS positives are preserved by the original job text and
+    # primary-scope checks above.
     return False
 
 
@@ -3059,8 +3057,9 @@ def purge_solar_ess_residue(result: dict, job_type: str) -> dict:
     for key in ("pro_tips", "common_mistakes", "watch_out", "what_to_bring", "requirements", "checklist"):
         if key in result:
             result[key] = clean_list(result.get(key))
-    if "expert_notes" in result:
-        result["expert_notes"] = clean_list(result.get("expert_notes"), drop_keyword_dicts=True)
+    for key in ("expert_notes", "hidden_triggers", "claim_citations", "code_citation"):
+        if key in result:
+            result[key] = clean_list(result.get(key), drop_keyword_dicts=True)
     for key in ("inspections",):
         if isinstance(result.get(key), list):
             result[key] = [clean_dict(item) if isinstance(item, dict) else item for item in result[key]]

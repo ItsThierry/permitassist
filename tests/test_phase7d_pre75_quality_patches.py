@@ -46,6 +46,18 @@ def test_no_solar_negation_does_not_protect_solar_residue_from_purge():
             {"permit_type": "Electrical Permit — Solar PV + Battery ESS", "included_because": "Battery scope adds ESS review under NEC 706 + NFPA 855.", "scope_trigger": "battery/ESS present"},
         ],
         "pro_tips": ["Coordinate utility disconnect/reconnect.", "Battery ESS labeling may be required."],
+        "hidden_triggers": [
+            {"id": "battery_ess", "label": "Battery ESS advisory residue"},
+            {"id": "utility_disconnect", "label": "Coordinate utility disconnect/reconnect"},
+        ],
+        "expert_notes": [
+            {"note": "Main service panel upgrades need utility coordination.", "applies_to": "service_panel"},
+            {"note": "Battery ESS systems need clearance checks.", "applies_to": "battery_present"},
+        ],
+        "claim_citations": [
+            {"field": "permit_type", "value": "Electrical service upgrade permit"},
+            {"field": "expert_note", "value": "Battery ESS advisory text should not survive."},
+        ],
     }
 
     out = engine.purge_solar_ess_residue(result, PA30_020_JOB)
@@ -53,6 +65,7 @@ def test_no_solar_negation_does_not_protect_solar_residue_from_purge():
     for forbidden in ("solar", "pv", "photovoltaic", "battery", "ess", "nec 706", "nfpa 855"):
         assert forbidden not in combined
     assert "utility disconnect" in combined
+    assert "main service panel" in combined
 
 
 def test_openai_reasoning_effort_medium_is_passed_when_configured(monkeypatch):
