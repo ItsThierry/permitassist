@@ -110,6 +110,7 @@ _PERMIT_CACHE_ETAG_CHECK_FRACTION = 0.50  # at 50% of TTL, check ETag
 _OPENAI_REQUEST_TIMEOUT_S = 30
 _GEMINI_REQUEST_TIMEOUT_S = 30
 _OPENAI_REASONING_EFFORTS = {"low", "medium", "high"}
+_OPENAI_DEFAULT_TEMPERATURE_ONLY_PREFIXES = ("gpt-5", "o1", "o3", "o4", "o5")
 
 
 def _sanitize_openai_reasoning_effort(value: str | None) -> str | None:
@@ -125,6 +126,22 @@ def _openai_reasoning_effort_kwargs(value: str | None = None) -> dict:
         value if value is not None else os.environ.get("PERMITASSIST_OPENAI_REASONING_EFFORT")
     )
     return {"reasoning_effort": effort} if effort else {}
+
+
+def _openai_temperature_kwargs(model_name: str | None) -> dict:
+    """Return temperature only for OpenAI chat models that accept custom values.
+
+    Newer reasoning/default-temperature-only models reject non-default
+    temperature values. Keep the deterministic 0.1 setting for older chat
+    models, but omit it for gpt-5/o-series models so benchmark reasoning
+    requests do not fail before the model answers.
+    """
+    model = (model_name or "").strip().lower()
+    if model.startswith(_OPENAI_DEFAULT_TEMPERATURE_ONLY_PREFIXES):
+        return {}
+    return {"temperature": 0.1}
+
+
 ACCELA_BASE_URL = "https://apis.accela.com"
 ACCELA_DOCS_BASE_URL = "https://developer.accela.com/docs/api_reference"
 _accela_token = ""
@@ -8411,7 +8428,7 @@ Return ONLY the JSON object."""
                 {"role": "system",  "content": SYSTEM_PROMPT},
                 {"role": "user",    "content": user_prompt},
             ],
-            temperature=0.1,
+            **_openai_temperature_kwargs(_openai_fallback_model),
             # 2026-04-27 evening: bumped 8000→16000 after Boban hit "Lookup failed"
             # on complex ADU/basement-conversion payloads. The model was producing
             # valid-but-truncated JSON when output approached the cap.

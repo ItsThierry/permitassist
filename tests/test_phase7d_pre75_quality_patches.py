@@ -74,6 +74,14 @@ def test_openai_reasoning_effort_medium_is_passed_when_configured(monkeypatch):
     assert engine._openai_reasoning_effort_kwargs() == {"reasoning_effort": "medium"}
 
 
+def test_openai_temperature_is_omitted_for_gpt54_mini_reasoning_model():
+    assert engine._openai_temperature_kwargs("gpt-5.4-mini") == {}
+
+
+def test_openai_temperature_is_kept_for_temperature_capable_chat_models():
+    assert engine._openai_temperature_kwargs("gpt-4o-mini") == {"temperature": 0.1}
+
+
 def test_benchmark_reasoning_header_is_sanitized_for_ab_only(monkeypatch):
     monkeypatch.delenv("PERMITASSIST_OPENAI_REASONING_EFFORT", raising=False)
 
