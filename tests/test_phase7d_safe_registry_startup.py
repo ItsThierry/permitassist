@@ -85,6 +85,65 @@ def test_phase7d_missing_registry_imports_but_request_gate_fails_closed(tmp_path
     ) is False
 
 
+def test_phase7d_golden_pack_resolves_code_owned_copy_when_runtime_data_is_shadowed(tmp_path, monkeypatch):
+    """Railway may hide repo data/ with a volume; approved bundled Golden pack must still load."""
+    repo_pack = REPO_ROOT / "data" / "evidence_packs" / "local_golden" / "phase7b" / "permitassist-phase7b-golden-local-preview-pack-PA7B-HYBRID10-20260511.json"
+    pack_data = json.loads(repo_pack.read_text(encoding="utf-8"))
+    shadowed_pack_path = tmp_path / "data" / "evidence_packs" / "local_golden" / "phase7b" / repo_pack.name
+    assert not shadowed_pack_path.exists()
+
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_ENABLED", "true")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_MODE", "phase7b_golden_beta_guarded")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "false")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PATH", str(shadowed_pack_path))
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_EXPECTED_FINGERPRINT", pack_data["metadata"]["fingerprint_sha256"])
+
+    server = _import_server_fresh(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "validate_url", lambda *_args, **_kwargs: True)
+
+    result = server.finalize_permit_lookup_result(
+        _pack_controlled_engine_result(),
+        "office tenant improvement",
+        "Los Angeles",
+        "CA",
+        explicit_vertical="office_ti",
+        evidence_allowed=True,
+    )
+
+    assert result["_evidence_pack"]["contract_status"] == "valid"
+    assert set(result["_evidence_pack"]["matched_fields"]) == {"apply_url", "permit_type"}
+    assert result["apply_url"].startswith("https://")
+    assert result["permit_type"]
+    assert "coverage_truth" in result
+
+
+def test_phase7d_unknown_missing_pack_path_still_fails_closed(tmp_path, monkeypatch):
+    repo_pack = REPO_ROOT / "data" / "evidence_packs" / "local_golden" / "phase7b" / "permitassist-phase7b-golden-local-preview-pack-PA7B-HYBRID10-20260511.json"
+    pack_data = json.loads(repo_pack.read_text(encoding="utf-8"))
+    unknown_path = tmp_path / "data" / "evidence_packs" / "local_golden" / "phase7b" / "unknown-pack.json"
+
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_ENABLED", "true")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_MODE", "phase7b_golden_beta_guarded")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "false")
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PATH", str(unknown_path))
+    monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_EXPECTED_FINGERPRINT", pack_data["metadata"]["fingerprint_sha256"])
+
+    server = _import_server_fresh(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "validate_url", lambda *_args, **_kwargs: True)
+    result = server.finalize_permit_lookup_result(
+        _pack_controlled_engine_result(),
+        "office tenant improvement",
+        "Los Angeles",
+        "CA",
+        explicit_vertical="office_ti",
+        evidence_allowed=True,
+    )
+
+    assert result["_evidence_pack"]["contract_status"] == "invalid_path"
+    assert "coverage_truth" not in result
+    assert result["apply_url"] is None
+
+
 def _assert_pack_controlled_fields_suppressed(result: dict):
     evidence = result["_evidence_pack"]
     assert evidence["contract_status"] == "invalid_contract"

@@ -21,6 +21,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 DEFAULT_EVIDENCE_PACK_REGISTRY_PATH = Path(__file__).resolve().with_name("evidence_pack_registry.v1.json")
+CODE_OWNED_EVIDENCE_PACK_ROOT = Path(__file__).resolve().parent
 CONSERVATIVE_PACK_CONTROLLED_FIELDS = frozenset(
     {
         "apply_url",
@@ -77,6 +78,26 @@ def _registry_modes() -> dict[str, dict[str, Any]]:
     if not isinstance(modes, dict):
         return {}
     return {str(k): v for k, v in modes.items() if isinstance(v, dict)}
+
+
+def _code_owned_pack_fallback_path(configured_path: Path, mode: str) -> Path | None:
+    """Resolve approved bundled packs when Railway's data volume hides repo data/.
+
+    This is intentionally narrow: only registry-declared `data/evidence_packs/...`
+    suffixes are eligible, and the caller still performs fingerprint/contract
+    validation after the fallback path is selected.
+    """
+    promotion = _promotion_config(mode)
+    suffix = str(promotion.get("path_suffix") or "").strip()
+    if not suffix.startswith("data/evidence_packs/"):
+        return None
+    configured_text = configured_path.as_posix()
+    if not configured_text.endswith(suffix):
+        return None
+    candidate = CODE_OWNED_EVIDENCE_PACK_ROOT / suffix
+    if candidate.exists() and candidate.is_file():
+        return candidate
+    return None
 
 
 def _mode_config(mode: str) -> dict[str, Any]:
@@ -825,7 +846,10 @@ def get_local_evidence_pack() -> EvidencePackRuntime | None:
         return _invalid_runtime("invalid_path", mode=mode, warnings=("missing_evidence_pack_path",))
     path = Path(path_text)
     if not path.exists() or not path.is_file():
-        return _invalid_runtime("invalid_path", mode=mode, warnings=("evidence_pack_path_missing_or_not_file",))
+        fallback_path = _code_owned_pack_fallback_path(path, mode)
+        if fallback_path is None:
+            return _invalid_runtime("invalid_path", mode=mode, warnings=("evidence_pack_path_missing_or_not_file",))
+        path = fallback_path
     try:
         stat = path.stat()
         return _load_pack(str(path), stat.st_mtime_ns, stat.st_size, mode, expected)
