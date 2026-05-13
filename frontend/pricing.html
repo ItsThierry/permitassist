@@ -187,7 +187,7 @@
         <button class="billing-btn" id="btn-annual" onclick="setBilling('annual')">Annual <span class="best-value-badge">BEST VALUE</span></button>
       </div>
       <div id="savings-callout" style="display:none;margin-top:10px">
-        <span class="billing-savings">💰 Save $100/year — 2 months free!</span>
+        <span class="billing-savings">💰 Annual plans show exact savings below.</span>
       </div>
     </div>
 
@@ -243,7 +243,7 @@
           <li>Billing portal for your office manager</li>
           <li>Priority city requests (48hr turnaround)</li>
         </ul>
-        <a href="https://buy.stripe.com/4gMdR2ddVgMs7S5cCp3VC0f" class="plan-cta plan-cta-secondary">Start Team Plan — takes 60 seconds →</a>
+        <a id="team-cta" href="https://buy.stripe.com/4gMdR2ddVgMs7S5cCp3VC0f" class="plan-cta plan-cta-secondary">Start Team Plan — takes 60 seconds →</a>
       </div>
     </div>
 
@@ -416,10 +416,12 @@
     if (soloPriceEl) soloPriceEl.innerHTML = prices.solo;
     // Update solo CTA link
     var soloCta = document.getElementById('solo-cta');
-    if (soloCta) { soloCta.href = prices.soloLink; soloCta.textContent = period === 'annual' ? 'Get Annual Plan — takes 60 seconds →' : 'Upgrade to Solo — takes 60 seconds →'; }
-    // Update team price (3rd .plan-price element)
+    if (soloCta) { soloCta.href = prices.soloLink; soloCta.textContent = period === 'annual' ? 'Get Solo Annual — takes 60 seconds →' : 'Upgrade to Solo — takes 60 seconds →'; }
+    // Update team price and CTA link
     var teamPriceEl = document.querySelectorAll('.plan-price')[2];
     if (teamPriceEl) teamPriceEl.innerHTML = prices.team;
+    var teamCta = document.getElementById('team-cta');
+    if (teamCta) { teamCta.href = prices.teamLink; teamCta.textContent = period === 'annual' ? 'Get Team Annual — takes 60 seconds →' : 'Start Team Plan — takes 60 seconds →'; }
   }
 
   // FAQ toggle
