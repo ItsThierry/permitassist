@@ -9164,6 +9164,9 @@ Return ONLY the JSON object."""
     scrub_hidden_trigger_internal_metadata(result)
     apply_rulebook_depth(result, job_type, city, state)
     sanitize_non_food_office_breakroom_text(result, job_type)
+    # Final pass after validators/rulebook layers, which can add public notes,
+    # citations, or hidden-trigger summaries after the first cleanup.
+    purge_solar_ess_residue(result, job_type)
 
     if not suppress_cache_write:
         save_cache(key, job_type, job_category, city, state, zip_code, result)
