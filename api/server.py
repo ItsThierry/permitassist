@@ -1449,6 +1449,117 @@ def evidence_pack_allowed_for_request(
     return preview_route_allowed
 
 
+PHASE7H_AHJ_VERIFY_PERMIT_TYPE = "Permit required — exact permit type needs AHJ verification"
+
+
+def _phase7h_string(value) -> str:
+    return str(value or "").strip()
+
+
+def _phase7h_truthy_yes_verdict(result: dict) -> bool:
+    verdict = _phase7h_string(result.get("permit_verdict") or result.get("verdict") or result.get("requirement")).upper()
+    return verdict in {"YES", "REQUIRED"} or result.get("permit_required") is True
+
+
+def _phase7h_current_permit_name(result: dict) -> str:
+    permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+    for value in (result.get("permit_type"), result.get("permit_name")):
+        text = _phase7h_string(value)
+        if text and text.lower() not in {"none", "null", "n/a"}:
+            return text
+    for permit in permits:
+        if isinstance(permit, dict):
+            for key in ("portal_selection", "permit_type"):
+                text = _phase7h_string(permit.get(key))
+                if text and text.lower() not in {"none", "null", "n/a"}:
+                    return text
+    return ""
+
+
+def _phase7h_permit_type_verified(result: dict, permit_name: str) -> bool:
+    if not permit_name or permit_name == PHASE7H_AHJ_VERIFY_PERMIT_TYPE:
+        return False
+    evidence_meta = result.get("_evidence_pack") if isinstance(result.get("_evidence_pack"), dict) else {}
+    matched_fields = {str(field) for field in (evidence_meta.get("matched_fields") or [])}
+    failed_fields = {str(field) for field in (evidence_meta.get("failed_closed_fields") or [])}
+    if evidence_meta.get("enabled"):
+        return "permit_type" in matched_fields and "permit_type" not in failed_fields
+    source = _phase7h_string(result.get("data_source") or (result.get("_meta") or {}).get("city_match_level")).lower()
+    return source in {"city", "city_database", "accela_api", "auto_verified"}
+
+
+def _phase7h_contact_phrase(result: dict, city: str) -> str:
+    office = _phase7h_string(result.get("applying_office") or result.get("office_name"))
+    phone = _phase7h_string(result.get("apply_phone") or result.get("office_phone"))
+    if office and phone:
+        return f"{office} or call {phone}"
+    if office:
+        return office
+    if phone:
+        return f"the AHJ at {phone}"
+    return f"the {city} AHJ" if _phase7h_string(city) else "the AHJ"
+
+
+def _phase7h_mark_coverage_truth_unverified(result: dict) -> None:
+    coverage = result.get("coverage_truth")
+    if not isinstance(coverage, dict):
+        return
+    official = [str(item) for item in (coverage.get("official_source_backed") or [])]
+    coverage["official_source_backed"] = [item for item in official if "permit type" not in item.lower()]
+    not_confirmed = [str(item) for item in (coverage.get("not_confirmed_from_official_source") or [])]
+    if "exact permit type" not in {item.lower() for item in not_confirmed}:
+        not_confirmed.insert(0, "exact permit type")
+    coverage["not_confirmed_from_official_source"] = not_confirmed
+
+
+def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "", state: str = "") -> dict:
+    """Keep YES customer output explicit without inventing official permit-type certainty."""
+    if not isinstance(result, dict) or not _phase7h_truthy_yes_verdict(result):
+        return result
+
+    permit_name = _phase7h_current_permit_name(result)
+    evidence_meta = result.get("_evidence_pack") if isinstance(result.get("_evidence_pack"), dict) else {}
+    evidence_enabled = bool(evidence_meta.get("enabled"))
+    verified = _phase7h_permit_type_verified(result, permit_name)
+    warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
+    if result.get("warnings") is not warnings:
+        result["warnings"] = warnings
+
+    if permit_name:
+        result.setdefault("permit_type", permit_name)
+        result.setdefault("permit_name", permit_name)
+        if not result.get("permit_type"):
+            result["permit_type"] = permit_name
+        if not result.get("permit_name"):
+            result["permit_name"] = permit_name
+        permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+        if not permits:
+            note = (
+                "Official-source backed permit type. Verify final filing path with the AHJ before submitting."
+                if verified else
+                "Permit type is shown from the current lookup, but final filing path still needs AHJ verification before submitting."
+            )
+            result["permits_required"] = [{"permit_type": permit_name, "required": True, "notes": note}]
+        if evidence_enabled:
+            result["permit_type_verified"] = bool(verified)
+        return result
+
+    result["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+    result["permit_name"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+    result["permit_type_verified"] = False
+    contact = _phase7h_contact_phrase(result, city)
+    note = (
+        "Permit is required, but the exact permit category was not official-source verified for this lookup. "
+        f"Confirm the exact filing type with {contact} before filing."
+    )
+    result["permits_required"] = [{"permit_type": PHASE7H_AHJ_VERIFY_PERMIT_TYPE, "required": True, "notes": note}]
+    warning = "Permit is required, but exact permit type was not official-source verified; confirm the exact filing type with the AHJ before filing."
+    if warning not in warnings:
+        warnings.append(warning)
+    _phase7h_mark_coverage_truth_unverified(result)
+    return result
+
+
 def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
     evidence_pack_config_invalid = (
@@ -1544,6 +1655,10 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     # time so negated customer input such as "no restaurant/no hood/no grease"
     # does not echo into authenticated beta customer JSON as wrong-vertical copy.
     _filter_negated_surface_lists(result, job_type)
+    # Phase 7H customer-trust patch: keep the customer surface explicit for YES
+    # verdicts without changing evidence-pack matching or inventing official
+    # permit-type certainty.
+    ensure_customer_visible_permit_trust_statement(result, city, state)
     return result
 
 
