@@ -86,6 +86,32 @@ CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
 SHARE_TTL_DAYS = 90  # shareable links expire after 90 days
 _OPENAI_REASONING_EFFORTS = {"low", "medium", "high"}
 
+_US_STATE_CODES = {
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+    "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+    "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT",
+    "VA", "WA", "WV", "WI", "WY", "DC", "PR",
+}
+_AHJ_COVERAGE_CACHE: set[tuple[str, str]] | None = None
+_AHJ_CITY_TOKEN_RE = re.compile(r"^[A-Za-z][A-Za-z .'-]{1,98}[A-Za-z.]$")
+_UNSUPPORTED_AHJ_STATUSES = {"unsupported", "invalid", "invalid_city", "invalid_state"}
+_UNSUPPORTED_AHJ_FORBIDDEN_KEYS = {
+    "apply_path",
+    "apply_url",
+    "apply_phone",
+    "apply_google_maps",
+    "permits_required",
+    "permit_type",
+    "permit_name",
+    "inspections",
+    "approval_timeline",
+    "fee_range",
+    "companion_reviews_triggers",
+    "_evidence_pack",
+    "field_evidence_confidence",
+    "claim_citations",
+}
+
 
 def _sanitize_openai_reasoning_effort(value: str | None) -> str | None:
     effort = (value or "").strip().lower()
@@ -96,6 +122,141 @@ def _sanitize_openai_reasoning_effort(value: str | None) -> str | None:
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _normalize_ahj_city(city: str | None) -> str:
+    return " ".join(str(city or "").strip().split())
+
+
+def _normalize_ahj_state(state: str | None) -> str:
+    return str(state or "").strip().upper()
+
+
+def _ahj_coverage_pairs() -> set[tuple[str, str]]:
+    """Return the launch-supported AHJ city/state pairs from code-owned coverage data."""
+    global _AHJ_COVERAGE_CACHE
+    if _AHJ_COVERAGE_CACHE is not None:
+        return _AHJ_COVERAGE_CACHE
+
+    pairs: set[tuple[str, str]] = set()
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "knowledge", "verified_cities.json"))
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        if isinstance(data, dict):
+            for record in data.values():
+                if not isinstance(record, dict):
+                    continue
+                city = _normalize_ahj_city(record.get("city"))
+                state = _normalize_ahj_state(record.get("state"))
+                if city and state:
+                    pairs.add((city.casefold(), state))
+    except Exception as exc:
+        print(f"[ahj-coverage] failed to load code-owned verified city coverage: {type(exc).__name__}")
+    _AHJ_COVERAGE_CACHE = pairs
+    return pairs
+
+
+def classify_ahj_coverage(city: str | None, state: str | None) -> dict:
+    """Classify an AHJ request as supported, unsupported, or invalid before lookup work."""
+    normalized_city = _normalize_ahj_city(city)
+    normalized_state = _normalize_ahj_state(state)
+    if not normalized_city or len(normalized_city) > 100 or not _AHJ_CITY_TOKEN_RE.match(normalized_city):
+        return {
+            "classification": "invalid",
+            "status": "invalid_city",
+            "city": normalized_city,
+            "state": normalized_state,
+            "reason": "invalid_city",
+        }
+    if normalized_state not in _US_STATE_CODES:
+        return {
+            "classification": "invalid",
+            "status": "invalid_state",
+            "city": normalized_city,
+            "state": normalized_state,
+            "reason": "invalid_state",
+        }
+    pair = (normalized_city.casefold(), normalized_state)
+    if pair in _ahj_coverage_pairs():
+        return {
+            "classification": "supported",
+            "status": "supported",
+            "city": normalized_city,
+            "state": normalized_state,
+            "reason": "city_state_supported",
+        }
+    return {
+        "classification": "unsupported",
+        "status": "unsupported",
+        "city": normalized_city,
+        "state": normalized_state,
+        "reason": "city_not_in_supported_coverage",
+    }
+
+
+def _unsupported_ahj_http_status(classification: dict) -> int:
+    return 400 if classification.get("classification") == "invalid" else 422
+
+
+def build_unsupported_ahj_response(city: str | None, state: str | None, classification: dict) -> dict:
+    normalized_city = classification.get("city") or _normalize_ahj_city(city)
+    normalized_state = classification.get("state") or _normalize_ahj_state(state)
+    status = classification.get("status") or "unsupported"
+    reason = classification.get("reason") or status
+    if classification.get("classification") == "invalid":
+        message = "This AHJ is not supported by PermitAssist because the city or state is invalid. Check the city/state and try again."
+        error = "invalid_ahj"
+    else:
+        message = "This AHJ is not supported by PermitAssist yet. Try a supported launch city or contact the local building department directly."
+        error = "unsupported_ahj"
+    return scrub_unsupported_ahj_response({
+        "error": error,
+        "ahj_status": status,
+        "message": message,
+        "location": {"city": normalized_city, "state": normalized_state},
+        "coverage_truth": {
+            "status": "ahj_not_supported",
+            "classification": classification.get("classification") or status,
+            "reason": reason,
+        },
+    }, normalized_city, normalized_state)
+
+
+def _is_unsupported_ahj_result(result: dict | None) -> bool:
+    if not isinstance(result, dict):
+        return False
+    status = str(result.get("ahj_status") or "").strip().lower()
+    coverage = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
+    coverage_status = str(coverage.get("status") or "").strip().lower()
+    return status in _UNSUPPORTED_AHJ_STATUSES or coverage_status == "ahj_not_supported"
+
+
+def scrub_unsupported_ahj_response(result, city: str | None = None, state: str | None = None):
+    """Remove any supported-looking fields from unsupported/invalid AHJ responses."""
+    def _scrub(value):
+        if isinstance(value, list):
+            return [_scrub(item) for item in value]
+        if not isinstance(value, dict):
+            return value
+        for key in list(value.keys()):
+            if key in _UNSUPPORTED_AHJ_FORBIDDEN_KEYS:
+                value.pop(key, None)
+                continue
+            value[key] = _scrub(value[key])
+        return value
+
+    if not isinstance(result, dict):
+        return result
+    result = _scrub(result)
+    result.setdefault("ahj_status", "unsupported")
+    result.setdefault("error", "unsupported_ahj")
+    result.setdefault("message", "This AHJ is not supported by PermitAssist yet. Try a supported launch city or contact the local building department directly.")
+    result.setdefault("location", {"city": _normalize_ahj_city(city), "state": _normalize_ahj_state(state)})
+    coverage = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
+    coverage["status"] = "ahj_not_supported"
+    result["coverage_truth"] = coverage
+    return result
 
 
 def parse_timestamp(value: str) -> datetime:
@@ -1324,6 +1485,9 @@ def build_claim_citations(result: dict) -> list[dict]:
 
 
 def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict:
+    if _is_unsupported_ahj_result(result):
+        scrub_unsupported_ahj_response(result, city, state)
+        return {}
     url = result.get("apply_url") or ""
     if result.get("_residential_trade_leak_repaired") and re.search(r"commercial|tenant[-_ ]?improvement|tenant[-_ ]?finish", str(url), re.I):
         url = ""
@@ -1581,6 +1745,8 @@ def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "",
 
 def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
+    if _is_unsupported_ahj_result(result):
+        return scrub_unsupported_ahj_response(result, city, state)
     evidence_pack_config_invalid = (
         evidence_allowed is False
         and evidence_pack_enabled()
@@ -5380,6 +5546,18 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
 
+                ahj_coverage = classify_ahj_coverage(city, state)
+                if ahj_coverage.get("classification") != "supported":
+                    response = build_unsupported_ahj_response(city, state, ahj_coverage)
+                    record_beta_event("lookup_unsupported_ahj", {
+                        "city": ahj_coverage.get("city", ""),
+                        "state": ahj_coverage.get("state", ""),
+                        "status": ahj_coverage.get("status", ""),
+                        "reason": ahj_coverage.get("reason", ""),
+                    }, "")
+                    self.send_json(_unsupported_ahj_http_status(ahj_coverage), response)
+                    return
+
                 ip = self.client_ip()
                 fingerprint = _normalize_fingerprint(self.headers.get("X-Client-Fingerprint", ""))
 
@@ -5883,14 +6061,21 @@ class Handler(BaseHTTPRequestHandler):
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
+                ahj_coverage = classify_ahj_coverage(city, state)
+                if ahj_coverage.get("classification") != "supported":
+                    self.send_json(
+                        _unsupported_ahj_http_status(ahj_coverage),
+                        build_unsupported_ahj_response(city, state, ahj_coverage),
+                    )
+                    return
                 evidence_allowed = evidence_pack_allowed_for_request(path, self.headers)
                 result = research_permit(job_type, city, state, zip_code, job_category=job_category, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
                 if evidence_allowed:
                     result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
                 self.send_json(200, result)
             except Exception as e:
-                print(f"[api-v1-permit] Error: {e}")
-                self.send_json(500, {"error": str(e)})
+                print(f"[api-v1-permit] Error: {type(e).__name__}")
+                self.send_json(500, {"error": "internal_error", "message": "Internal error while processing permit lookup"})
 
         elif path == "/api/email-report":
             try:
