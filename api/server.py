@@ -94,6 +94,10 @@ _US_STATE_CODES = {
 }
 _AHJ_COVERAGE_CACHE: set[tuple[str, str]] | None = None
 _AHJ_CITY_TOKEN_RE = re.compile(r"^[A-Za-z][A-Za-z .'-]{1,98}[A-Za-z.]$")
+_AHJ_CITY_STATE_ALIASES = {
+    ("new york", "NY"): "New York City",
+    ("new york city", "NY"): "New York City",
+}
 _UNSUPPORTED_AHJ_STATUSES = {"unsupported", "invalid", "invalid_city", "invalid_state"}
 _UNSUPPORTED_AHJ_FORBIDDEN_KEYS = {
     "apply_path",
@@ -130,6 +134,10 @@ def _normalize_ahj_city(city: str | None) -> str:
 
 def _normalize_ahj_state(state: str | None) -> str:
     return str(state or "").strip().upper()
+
+
+def _canonicalize_ahj_city_for_state(city: str, state: str) -> str:
+    return _AHJ_CITY_STATE_ALIASES.get((city.casefold(), state), city)
 
 
 def _ahj_coverage_pairs() -> set[tuple[str, str]]:
@@ -177,12 +185,13 @@ def classify_ahj_coverage(city: str | None, state: str | None) -> dict:
             "state": normalized_state,
             "reason": "invalid_state",
         }
-    pair = (normalized_city.casefold(), normalized_state)
+    canonical_city = _canonicalize_ahj_city_for_state(normalized_city, normalized_state)
+    pair = (canonical_city.casefold(), normalized_state)
     if pair in _ahj_coverage_pairs():
         return {
             "classification": "supported",
             "status": "supported",
-            "city": normalized_city,
+            "city": canonical_city,
             "state": normalized_state,
             "reason": "city_state_supported",
         }

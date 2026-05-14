@@ -62,6 +62,79 @@ def test_phase7l_classifies_supported_unsupported_invalid_and_normalized_city_to
     assert server.classify_ahj_coverage("Springfield", "IL")["status"] == "unsupported"
 
 
+def test_phase7m_new_york_alias_classifies_as_supported_without_weakening_fake_ahj_gate(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+
+    new_york = server.classify_ahj_coverage("New York", "NY")
+    assert new_york["status"] == "supported"
+    assert new_york["classification"] == "supported"
+    assert new_york["city"] == "New York City"
+    assert new_york["reason"] == "city_state_supported"
+
+    new_york_city = server.classify_ahj_coverage(" new york city ", " ny ")
+    assert new_york_city["status"] == "supported"
+    assert new_york_city["city"] == "New York City"
+
+    assert server.classify_ahj_coverage("Faketown", "NY")["status"] == "unsupported"
+    assert server.classify_ahj_coverage("Nowhereville", "CA")["status"] == "unsupported"
+    assert server.classify_ahj_coverage("Springfield", "ZZ")["status"] == "invalid_state"
+
+
+def test_phase7m_api_permit_allows_new_york_alias_to_existing_lookup_path(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    called = {"research": False, "city": None, "state": None}
+
+    def fake_research(job_type, city, state, zip_code, **kwargs):
+        called.update({"research": True, "city": city, "state": state})
+        return {
+            "permit_verdict": "YES",
+            "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+            "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration", "required": True}],
+            "apply_url": "https://www.nyc.gov/site/buildings/property-or-business-owner/project-requirements-owner.page",
+            "sources": ["https://www.nyc.gov/site/buildings/property-or-business-owner/project-requirements-owner.page"],
+            "confidence": "medium",
+        }
+
+    monkeypatch.setattr(server, "research_permit", fake_research)
+    monkeypatch.setattr(server, "validate_url", lambda *args, **kwargs: True)
+
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json(
+            f"{live.base}/api/permit",
+            {"job_type": "office tenant improvement", "city": "New York", "state": "NY", "job_category": "commercial"},
+            {"X-Sample-Demo": "1"},
+        )
+
+    payload = json.loads(body)
+    assert status == 200
+    assert called == {"research": True, "city": "New York", "state": "NY"}
+    assert payload.get("ahj_status") != "unsupported"
+    assert "apply_path" in payload
+    assert payload["permits_required"]
+
+
+def test_phase7m_api_permit_keeps_fake_new_york_city_unsupported_contract(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    called = {"research": False}
+
+    def fail_if_called(*args, **kwargs):
+        called["research"] = True
+        raise AssertionError("research_permit must not run for fake NY AHJ")
+
+    monkeypatch.setattr(server, "research_permit", fail_if_called)
+
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json(
+            f"{live.base}/api/permit",
+            {"job_type": "office tenant improvement", "city": "Faketown", "state": "NY", "job_category": "commercial"},
+            {"X-Sample-Demo": "1"},
+        )
+
+    assert status == 422
+    _assert_unsupported_contract(body, "unsupported")
+    assert called["research"] is False
+
+
 def test_phase7l_unsupported_response_builder_is_canonical_and_has_no_supported_fields(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
 
