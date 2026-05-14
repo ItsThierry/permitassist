@@ -48,7 +48,6 @@ from evidence_pack_runtime import (
     canonical_request_vertical,
     evidence_pack_enabled,
     evidence_pack_mode_preview_token_config,
-    evidence_pack_mode_public_redaction,
     evidence_pack_mode_request_gate_valid,
     evidence_pack_mode_requires_preview_only,
     evidence_pack_mode_requires_preview_route,
@@ -4487,11 +4486,10 @@ def redact_public_output(value):
             if key_text in {"_fee_floor_components", "_rulebook_depth_disclaimer", "_residential_home_office_leak_repaired"}:
                 continue
             if key_text == "_evidence_pack":
-                mode = str(item.get("mode") or "") if isinstance(item, dict) else ""
-                redaction_policy = str(item.get("public_redaction") or evidence_pack_mode_public_redaction(mode)) if isinstance(item, dict) else "redact_internal_fields"
-                if redaction_policy == "drop_evidence_pack":
-                    continue
-                redacted[key] = redact_public_output(item)
+                # Customer API responses must not expose internal evidence-pack
+                # metadata or even the private key name. Customer-safe source
+                # confidence belongs in public fields such as coverage_truth and
+                # claim_citations, not in the internal routing/debug payload.
                 continue
             if "evidence_pack" in key_lc or "fingerprint" in key_lc:
                 continue
