@@ -135,6 +135,108 @@ def test_quality_gate_does_not_force_commercial_for_pa500090_garage_workshop_neg
     assert "home office" not in blob
 
 
+def test_residential_garage_conversion_to_conditioned_office_keeps_residential_apply_path(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    job = "Residential detached garage conversion to conditioned office, electrical and insulation"
+    result = {
+        "confidence": "medium",
+        "permits_required": [{"permit_type": "Permit type needs AHJ verification", "required": True}],
+        "companion_permits": [],
+        "sources": [{"url": "https://dallascityhall.com/departments/sustainabledevelopment", "title": "Official source"}],
+    }
+
+    assert server._looks_like_residential_home_office_noncommercial(job) is True
+    assert server._job_has_unnegated_commercial_scope(job) is False
+    assert server._is_commercial_scope(job, result) is False
+
+    apply_path = server.build_apply_path(result, job, "Dallas", "TX")
+    blob = json.dumps(apply_path, sort_keys=True).lower()
+    assert apply_path["permit_category"] == "Residential / Trade Permit"
+    assert "commercial building" not in blob
+    assert "tenant improvement" not in blob
+    assert "commercial ti" not in blob
+
+
+def test_residential_garage_change_of_use_to_home_office_keeps_residential_apply_path(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    job = "Residential detached garage change of use to private home office with electrical and insulation"
+    result = {
+        "confidence": "medium",
+        "permits_required": [{"permit_type": "Permit type needs AHJ verification", "required": True}],
+        "companion_permits": [],
+        "sources": [{"url": "https://dallascityhall.com/departments/sustainabledevelopment", "title": "Official source"}],
+    }
+
+    assert server._looks_like_residential_home_office_noncommercial(job) is True
+    assert server._job_has_unnegated_commercial_scope(job) is False
+    assert server._is_commercial_scope(job, result) is False
+
+    apply_path = server.build_apply_path(result, job, "Dallas", "TX")
+    blob = json.dumps(apply_path, sort_keys=True).lower()
+    assert apply_path["permit_category"] == "Residential / Trade Permit"
+    assert "commercial building" not in blob
+    assert "tenant improvement" not in blob
+
+
+
+def test_real_commercial_office_ti_still_gets_commercial_apply_path(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    job = "Dallas TX commercial office tenant improvement with demising walls, conference rooms, lighting and HVAC diffuser relocation"
+    result = {
+        "confidence": "medium",
+        "permits_required": [{"permit_type": "Building Permit — Office Tenant Improvement", "required": True}],
+        "companion_permits": [],
+        "sources": [{"url": "https://dallascityhall.com/departments/sustainabledevelopment", "title": "Official source"}],
+    }
+
+    assert server._looks_like_residential_home_office_noncommercial(job) is False
+    assert server._job_has_unnegated_commercial_scope(job) is True
+    assert server._is_commercial_scope(job, result) is True
+
+    apply_path = server.build_apply_path(result, job, "Dallas", "TX")
+    assert apply_path["permit_category"] == "Commercial Building / Tenant Improvement"
+    assert any("commercial ti" in step.lower() for step in apply_path["steps"])
+
+
+def test_professional_office_in_residential_garage_keeps_commercial_apply_path(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    job = "Residential detached garage conversion to professional office for client meetings"
+    result = {
+        "confidence": "medium",
+        "permits_required": [{"permit_type": "Building Permit — Commercial Office Tenant Improvement", "required": True}],
+        "companion_permits": [],
+        "sources": [{"url": "https://dallascityhall.com/departments/sustainabledevelopment", "title": "Official source"}],
+    }
+
+    assert server._looks_like_residential_home_office_noncommercial(job) is False
+    assert server._job_has_unnegated_commercial_scope(job) is True
+    assert server._is_commercial_scope(job, result) is True
+
+    apply_path = server.build_apply_path(result, job, "Dallas", "TX")
+    assert apply_path["permit_category"] == "Commercial Building / Tenant Improvement"
+
+
+def test_adu_private_office_keeps_residential_apply_path(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    job = "Residential ADU conversion into a private office and studio, no employees, no customer visits"
+    result = {
+        "confidence": "medium",
+        "permits_required": [{"permit_type": "Permit type needs AHJ verification", "required": True}],
+        "companion_permits": [],
+        "sources": [{"url": "https://dallascityhall.com/departments/sustainabledevelopment", "title": "Official source"}],
+    }
+
+    assert server._looks_like_residential_home_office_noncommercial(job) is True
+    assert server._job_has_unnegated_commercial_scope(job) is False
+    assert server._is_commercial_scope(job, result) is False
+
+    apply_path = server.build_apply_path(result, job, "Dallas", "TX")
+    blob = json.dumps(apply_path, sort_keys=True).lower()
+    assert apply_path["permit_category"] == "Residential / Trade Permit"
+    assert "tenant improvement" not in blob
+
+
+
 def test_claim_citations_never_invent_missing_quotes(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     result = {

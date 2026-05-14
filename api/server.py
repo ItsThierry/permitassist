@@ -469,33 +469,17 @@ _COMMERCIAL_PRIMARY_TOKENS = (
 
 
 def _looks_like_residential_home_office_noncommercial(job_type: str) -> bool:
-    """True for private residential workspace wording with explicit no-commercial-use markers."""
+    """True for private residential workspace wording that should not become commercial office TI.
+
+    Normal homeowners rarely say "no employees / no customer visits" when asking
+    about a garage or bedroom converted to a private office. Treat explicit
+    residential + private-workspace language as residential unless there is a
+    strong unnegated commercial/TI signal.
+    """
     text = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
     if not text:
         return False
-    has_residential_marker = bool(re.search(r"\b(?:single[- ]family|residential|dwelling|house|home)\b", text))
-    has_private_workspace_marker = bool(
-        re.search(r"\bhome[- ]office\b", text)
-        or re.search(r"\bspare\s+bedroom\b.{0,80}\b(?:office|studio)\b", text)
-        or re.search(r"\bbedroom\b.{0,80}\bhome[- ]office\b", text)
-        or re.search(r"\bgarage\b.{0,80}\bhobby\s+workshop\b", text)
-        or re.search(r"\bhobby\s+workshop\b.{0,80}\bgarage\b", text)
-    )
-    if not (has_residential_marker and has_private_workspace_marker):
-        return False
-    noncommercial_markers = (
-        r"\bno\s+commercial\s+business\b",
-        r"\bno\s+employees\b",
-        r"\bno\s+customer\s+visits\b",
-        r"\bno\s+tenant\s+improvement\b",
-        r"\bno\s+commercial\s+tenant\s+improvement\b",
-        r"\bno\s+office\s+tenant\s+improvement\b",
-        r"\bno\s+office\s+ti\b",
-        r"\bno\s+medical(?:\s+(?:clinic|office|use))?\b(?=[,.;]|\s+(?:and|or|nor|no)\b|$)",
-        r"\bno\s+restaurant\b",
-    )
-    if sum(1 for pattern in noncommercial_markers if re.search(pattern, text, flags=re.I)) < 2:
-        return False
+
     positive_commercial = _has_unnegated_any(text, (
         "commercial tenant improvement",
         "office tenant improvement",
@@ -508,10 +492,45 @@ def _looks_like_residential_home_office_noncommercial(job_type: str) -> bool:
         "co-working",
         "tenant finish",
         "tenant buildout",
-        "change of occupancy",
-        "change of use",
+        "retail tenant improvement",
+        "medical clinic tenant improvement",
+        "restaurant tenant improvement",
     ))
-    return not positive_commercial
+    if positive_commercial:
+        return False
+
+    has_residential_marker = bool(re.search(r"\b(?:single[- ]family|residential|dwelling|house|home|adu|accessory\s+(?:structure|building|dwelling)|detached\s+garage)\b", text))
+    has_private_workspace_marker = bool(
+        re.search(r"\bhome[- ]office\b", text)
+        or re.search(r"\bspare\s+bedroom\b.{0,80}\b(?:office|studio|workspace)\b", text)
+        or re.search(r"\bbedroom\b.{0,80}\b(?:home[- ]office|office|studio|workspace)\b", text)
+        or re.search(r"\bgarage\b.{0,100}\b(?:hobby\s+workshop|office|studio|workspace|conditioned\s+office)\b", text)
+        or re.search(r"\b(?:hobby\s+workshop|office|studio|workspace)\b.{0,100}\bgarage\b", text)
+        or re.search(r"\b(?:adu|accessory\s+(?:structure|building|dwelling))\b.{0,100}\b(?:office|studio|workspace)\b", text)
+    )
+    if not (has_residential_marker and has_private_workspace_marker):
+        return False
+
+    noncommercial_markers = (
+        r"\bno\s+commercial\s+business\b",
+        r"\bno\s+employees\b",
+        r"\bno\s+customer\s+visits\b",
+        r"\bno\s+tenant\s+improvement\b",
+        r"\bno\s+commercial\s+tenant\s+improvement\b",
+        r"\bno\s+office\s+tenant\s+improvement\b",
+        r"\bno\s+office\s+ti\b",
+        r"\bno\s+medical(?:\s+(?:clinic|office|use))?\b(?=[,.;]|\s+(?:and|or|nor|no)\b|$)",
+        r"\bno\s+restaurant\b",
+    )
+    if sum(1 for pattern in noncommercial_markers if re.search(pattern, text, flags=re.I)) >= 2:
+        return True
+
+    unambiguous_residential_private_space = bool(
+        re.search(r"\b(?:residential|single[- ]family|house|home|dwelling)\b", text)
+        and re.search(r"\b(?:garage|detached\s+garage|spare\s+bedroom|bedroom|adu|accessory\s+(?:structure|building|dwelling))\b", text)
+        and re.search(r"\b(?:office|studio|workspace|hobby\s+workshop)\b", text)
+    )
+    return unambiguous_residential_private_space
 
 
 def _job_has_unnegated_commercial_scope(job_type: str) -> bool:
