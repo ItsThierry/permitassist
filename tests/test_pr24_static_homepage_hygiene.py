@@ -21,9 +21,22 @@ PRIVATE_TERMS = [
     "_evidence_pack",
 ]
 
+UNSCOPED_LAUNCH_MODAL_TERMS = [
+    'id="upgrade-modal-sub">Unlimited permit lookups,',
+    ">Unlimited lookups<",
+]
+
 
 def test_static_customer_pages_do_not_ship_private_evidence_pack_terms():
     for rel in ["frontend/index.html"]:
         html = (ROOT / rel).read_text(encoding="utf-8").lower()
         leaked = [term for term in PRIVATE_TERMS if term.lower() in html]
         assert leaked == []
+
+
+def test_upgrade_modal_scopes_unlimited_lookup_copy_to_launch_scope():
+    html = (ROOT / "frontend/index.html").read_text(encoding="utf-8")
+    assert "Unlimited launch-scope permit lookups" in html
+    assert "Unlimited launch-scope lookups" in html
+    leaked = [term for term in UNSCOPED_LAUNCH_MODAL_TERMS if term in html]
+    assert leaked == []

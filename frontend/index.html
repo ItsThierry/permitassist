@@ -1645,7 +1645,7 @@
     <button class="upgrade-modal-close" type="button" aria-label="Close upgrade modal" onclick="closeUpgrade()">×</button>
     <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Solo</div>
     <div class="upgrade-modal-accent"></div>
-    <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
+    <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited launch-scope permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
 
     <div class="upgrade-plan-toggle" role="tablist" aria-label="Choose a plan">
       <button class="upgrade-plan-btn active" id="upgrade-plan-pro" type="button" onclick="setUpgradePlan('pro')">Solo — $39.99/mo</button>
@@ -1653,7 +1653,7 @@
     </div>
 
     <ul class="upgrade-feature-list" id="upgrade-features-pro">
-      <li><span class="upgrade-feature-check">✓</span><span>Unlimited lookups</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Unlimited launch-scope lookups</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Foreman Brief PDF export</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Job tracking &amp; reminders</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Priority city requests</span></li>
@@ -2363,7 +2363,7 @@ function refreshUpgradeModal(){
   if(cta) cta.href=getUpgradeUrl(plan, upgradeModalState.couponApplied);
   if(sub) sub.textContent=plan==='team'
     ? 'Bring your office and field crew onto one shared permit workflow with faster city-request turnaround.'
-    : 'Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.';
+    : 'Unlimited launch-scope permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.';
 }
 
 function setUpgradePlan(plan){
