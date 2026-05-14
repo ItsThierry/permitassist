@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="PermitAssist covers permit requirements for 5,000+ US cities and counties across all 50 states — verified from official building department sources." />
+  <meta name="description" content="PermitAssist launch support is strongest for restaurant, medical clinic, and office tenant improvements in supported jurisdictions. Broader city listings may be contact/portal research and still require AHJ verification." />
   <link rel="canonical" href="https://permitassist.io/cities" />
-  <meta property="og:title" content="Verified Cities &amp; Counties — PermitAssist" />
-  <meta property="og:description" content="PermitAssist covers permit requirements for 5,000+ US cities and counties across all 50 states — verified from official building department sources." />
+  <meta property="og:title" content="Supported Jurisdictions — PermitAssist" />
+  <meta property="og:description" content="PermitAssist launch support is strongest for restaurant, medical clinic, and office tenant improvements in supported jurisdictions. Broader city listings may be contact/portal research and still require AHJ verification." />
   <meta property="og:url" content="https://permitassist.io/cities" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PermitAssist" />
   <meta property="og:image" content="https://permitassist.io/icons/icon-512.png" />
-  <title>Verified Cities &amp; Counties — PermitAssist</title>
+  <title>Supported Jurisdictions — PermitAssist</title>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "PermitAssist — Verified Cities & Counties",
+    "name": "PermitAssist — Supported Jurisdictions",
     "url": "https://permitassist.io/cities",
     "isPartOf": { "@id": "https://permitassist.io/#website" },
     "about": { "@id": "https://permitassist.io/#organization" },
-    "description": "PermitAssist covers permit requirements for 5,000+ US cities and counties across all 50 states."
+    "description": "PermitAssist launch support is strongest for restaurant, medical clinic, and office tenant improvements in supported jurisdictions."
   }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -145,31 +145,31 @@
   </nav>
 
   <div class="hero">
-    <h1>Verified <em>Cities &amp; Counties</em></h1>
-    <p class="hero-sub">Permit data verified from official building department sources across all 50 states. Cities and counties marked ✓ Verified have been cross-checked against real fee schedules and department contacts; AI-Researched entries have a confirmed portal + contact but fewer official cross-checks.</p>
+    <h1>Supported <em>Jurisdictions</em></h1>
+    <p class="hero-sub">Launch support is strongest for restaurant tenant improvements, medical clinic tenant improvements, and office tenant improvements. ✓ Verified entries have stronger official-source cross-checks; AI-Researched entries may provide portal/contact guidance but should be confirmed with the AHJ before submission.</p>
     <div class="hero-stats">
       <div class="hero-stat"><span id="total-count">—</span> Total</div>
       <div class="hero-stat"><span id="city-count">—</span> Cities</div>
       <div class="hero-stat"><span id="county-count">—</span> Counties</div>
-      <div class="hero-stat"><span id="state-count">—</span> States</div>
+      <div class="hero-stat"><span>Launch scope</span> Restaurant · Medical · Office TI</div>
     </div>
   </div>
 
   <input class="search-input" type="text" id="city-search" placeholder="Search cities or counties... (e.g. Houston, Harris County, Denver)" oninput="filterCities()" />
 
   <div class="request-bar" id="request-bar">
-    <p>Don't see your city? We add new cities weekly. Solo and Team users get priority additions.</p>
+    <p>Don't see your city, or need a different commercial TI jurisdiction? Request it. Unsupported cities should fail closed instead of returning fake certainty.</p>
     <input class="request-input" type="text" id="request-city" placeholder="City, State (e.g. Columbus, OH)" />
     <button class="request-btn" onclick="submitCityRequest()">Request</button>
     <span id="request-sent">✓ Requested! We'll add it within a week.</span>
   </div>
 
   <div id="cities-container">
-    <div class="loading">Loading verified cities...</div>
+    <div class="loading">Loading supported jurisdictions...</div>
   </div>
 
   <div class="footer">
-    <p>Data verified from official building department sources. Always confirm fees and requirements directly with your local building department before submitting.</p>
+    <p>PermitAssist provides guidance, not final AHJ approval. Always confirm permit type, fees, and submittal requirements directly with the local building department before submitting.</p>
     <p style="margin-top:8px"><a href="/">← Back to PermitAssist</a> · <a href="/pricing">Pricing</a> · <a href="/help">Help</a> · © 2026 PermitAssist</p>
   </div>
 </div>

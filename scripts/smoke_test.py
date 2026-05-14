@@ -70,7 +70,7 @@ def check_frontend_content() -> None:
         "Foreman Brief",
         "cosmetic cabinets/counters only, no plumbing/electrical/walls",
         "Log in to use Job Tracker",
-        "See a real permit result",
+        "See a restaurant TI sample",
         "/pricing",
     ]
     for needle in required_index:

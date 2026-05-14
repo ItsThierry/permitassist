@@ -1941,7 +1941,7 @@ def render_white_label_report_html(data: dict) -> str:
 <div class='card'><h3>Likely permits</h3><ul>{permit_items}</ul></div>
 <div class='card'><h3>How to apply</h3><p>{html.escape(str((result.get('apply_path') or {}).get('verification_note') or 'Verify exact filing path with the AHJ.'))}</p><p><strong>Start URL:</strong> {_render_safe_link(safe_apply_url) or 'Not found'}</p></div>
 <div class='card'><h3>Source footnotes</h3><ol>{footnotes}</ol></div>
-<p class='muted'>PermitAssist is guidance only. Verify exact permit type with the AHJ before quoting or starting work.</p></body></html>"""
+<p class='muted'>PermitAssist is guidance only. Verify final permit type with the AHJ before quoting or starting work.</p></body></html>"""
 
 # ── Telegram notifications ────────────────────────────────────────────────────
 def notify_telegram(message: str):
@@ -2729,14 +2729,14 @@ def send_confirmation_email(to_email: str, plan: str) -> bool:
     plan_name = "Team" if plan == "team" else "Solo"
     team_line_text = "\n\u2022 Up to 3 team seats — invite your crew at no extra cost" if plan == "team" else ""
     team_line_html = "<li>Up to 3 team seats — invite your crew at no extra cost</li>" if plan == "team" else ""
-    subject = f"You're now on PermitAssist {plan_name} — unlimited lookups unlocked"
+    subject = f"You're now on PermitAssist {plan_name} — unlimited launch-scope lookups unlocked"
     text_body = (
         f"Hi,\n\n"
         f"You're now on PermitAssist {plan_name}! 🎉{team_line_text}\n\n"
-        f"Unlimited permit lookups are now active on your account.\n\n"
+        f"Unlimited launch-scope permit lookups are now active on your account.\n\n"
         f"What you have now:\n"
-        f"\u2022 Unlimited lookups every month, any job, any city\n"
-        f"\u2022 Exact permit names, current fees, and office contacts\n"
+        f"\u2022 Unlimited launch-scope lookups every month in supported jurisdictions\n"
+        f"\u2022 Permit names to verify, current fee estimates, and office contacts\n"
         f"\u2022 Job tracker to manage all your permits in one place\n\n"
         f"Go look up your permits: https://permitassist.io\n\n"
         f"Questions? Just reply to this email.\n\n"
@@ -2746,10 +2746,10 @@ def send_confirmation_email(to_email: str, plan: str) -> bool:
     html_body = f"""
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
       <h2 style="color:#1e3a5f;">You're on PermitAssist {plan_name}! 🎉</h2>
-      <p style="color:#374151;">Unlimited permit lookups are now active on your account.</p>
+      <p style="color:#374151;">Unlimited launch-scope permit lookups are now active on your account.</p>
       <ul style="color:#374151;line-height:1.8;">
-        <li>Unlimited lookups every month, any job, any city</li>
-        <li>Exact permit names, current fees, and office contacts</li>
+        <li>Unlimited launch-scope lookups every month in supported jurisdictions</li>
+        <li>Permit names to verify, current fee estimates, and office contacts</li>
         <li>Job tracker to manage all your permits in one place</li>
         {team_line_html}
       </ul>
@@ -2773,7 +2773,7 @@ ONBOARDING_SCHEDULE = [
 ONBOARDING_BODIES = {
     0: (
         "Welcome to PermitAssist! Here are 3 quick tips to get the most out of it:\n\n"
-        "1. 🔍 BE SPECIFIC with your job description. Instead of 'HVAC work', try 'Residential furnace replacement, gas, 3-ton unit'. You'll get a more exact permit name and fee.\n\n"
+        "1. 🔍 BE SPECIFIC with your job description. Instead of 'HVAC work', try 'restaurant tenant improvement with kitchen hood, grease interceptor, plumbing, electrical, and ADA restroom upgrades'. You'll get a more useful permit name and fee estimate to verify with the AHJ.\n\n"
         "2. 📌 ADD THE CITY + STATE. Every jurisdiction has different rules. The building department in one city may require a permit that the next city over doesn't.\n\n"
         "3. 📁 SAVE YOUR LOOKUPS. After your first lookup, check the History tab (📋) to find past results instantly — no need to look up the same job twice.\n\n"
         "Start your first lookup now: https://permitassist.io\n\n"
@@ -4235,10 +4235,9 @@ def get_rejection_fix_plan(job_id: str, rejection_text: str, city: str, state: s
 
 # ── Cities page SSR (Fix 10) ──────────────────────────────────────────────────
 # Render frontend/cities.html with real city counts injected so crawlers and
-# pre-JS visitors see "5,260 Total / 5,000 Cities / 260 Counties / 50 States"
-# instead of the "Loading verified cities..." placeholder. Falls back to
-# stable hardcoded numbers if the SQLite read fails — never the legacy 263
-# fallback. The /api/verified-cities JSON path is unchanged and is what
+# pre-JS visitors see current jurisdiction counts plus launch-scope caveats
+# instead of a loading placeholder. Falls back to stable hardcoded numbers if
+# the SQLite read fails — never the legacy 263 count.
 # powers the interactive grid once JS hydrates.
 
 _CITIES_PAGE_CACHE: dict = {"ts": 0.0, "html": None}
@@ -4294,7 +4293,7 @@ def _format_count(n: int) -> str:
 
 
 def render_cities_page_ssr(html_path: str) -> bytes:
-    """Read cities.html and inject real counts into the hero stats placeholders.
+    """Read cities.html and inject current jurisdiction counts into placeholders.
 
     Uses a 5-minute in-process cache so repeat hits don't touch SQLite. Crawlers
     that don't run JS now see real numbers instead of em-dashes; the JS still
@@ -4320,20 +4319,21 @@ def render_cities_page_ssr(html_path: str) -> bytes:
         html = html.replace(old, new)
 
     # Replace the loading div with a noscript-friendly summary so non-JS
-    # crawlers see real content instead of "Loading verified cities...".
+    # crawlers see launch-scope caveats instead of stale nationwide certainty.
     noscript_summary = (
-        f'<div class="loading">Loading verified cities…</div>'
+        f'<div class="loading">Loading supported jurisdictions…</div>'
         f'<noscript><div style="padding:24px 0;color:var(--text2);font-size:14px;line-height:1.7">'
-        f'PermitAssist verifies permit requirements across <strong>{_format_count(counts["total"])}'
-        f'</strong> US jurisdictions — '
+        f'PermitAssist lists <strong>{_format_count(counts["total"])}'
+        f'</strong> jurisdictions for lookup/routing, with launch support strongest for '
+        f'restaurant, medical clinic, and office tenant improvements. Current list includes '
         f'{_format_count(counts["city"])} cities and {_format_count(counts["county"])} counties '
-        f'covering all {_format_count(counts["state"])} states. '
-        f'Enable JavaScript to browse the full searchable list, or visit '
+        f'across {_format_count(counts["state"])} states. Unsupported cities/scopes should be requested or verified with the AHJ. '
+        f'Enable JavaScript to browse the searchable list, or visit '
         f'<a href="/">PermitAssist</a> to look up a permit directly.'
         f'</div></noscript>'
     )
     html = html.replace(
-        '<div class="loading">Loading verified cities...</div>',
+        '<div class="loading">Loading supported jurisdictions...</div>',
         noscript_summary,
     )
 
@@ -5624,7 +5624,7 @@ class Handler(BaseHTTPRequestHandler):
                                 threading.Thread(target=send_free_limit_email_once, args=(user["email"],), daemon=True).start()
                             self.send_json(403, {
                                 "error": "free_limit_reached",
-                                "message": "You've used your 3 free lookups. Subscribe to continue.",
+                                "message": "Server-side free limit reached for this browser, account, or network. Subscribe to continue.",
                                 "upgrade_url": FREE_LOOKUP_UPGRADE_URL,
                             }, extra_headers=response_headers)
                             return
@@ -5676,7 +5676,7 @@ class Handler(BaseHTTPRequestHandler):
                             response_headers = build_free_lookup_headers(used_now)
                             self.send_json(403, {
                                 "error": "free_limit_reached",
-                                "message": "You've used your 3 free lookups. Subscribe to continue.",
+                                "message": "Server-side free limit reached for this browser, account, or network. Subscribe to continue.",
                                 "upgrade_url": FREE_LOOKUP_UPGRADE_URL,
                             }, extra_headers=response_headers)
                             return
