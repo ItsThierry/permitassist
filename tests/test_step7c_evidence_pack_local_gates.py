@@ -1665,7 +1665,7 @@ def test_step7p_public_redaction_removes_paths_env_railway_tokens_and_hashes(tmp
     assert "fingerprint" not in dumped
 
 
-def test_step7p_preview_indexing_guards_for_robots_sitemap_and_json(tmp_path, monkeypatch):
+def test_step7p_public_launch_crawlability_preserves_evidence_pack_runtime(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     _enable_pack(monkeypatch, pack_path)
     server = _import_server(tmp_path, monkeypatch)
@@ -1674,25 +1674,26 @@ def test_step7p_preview_indexing_guards_for_robots_sitemap_and_json(tmp_path, mo
         root_req = urllib.request.Request(f"{live.base}/")
         with urllib.request.urlopen(root_req, timeout=5) as resp:
             resp.read()
-            assert resp.headers.get("X-Robots-Tag") == "noindex, nofollow"
+            assert resp.headers.get("X-Robots-Tag") is None
         robots_req = urllib.request.Request(f"{live.base}/robots.txt")
         with urllib.request.urlopen(robots_req, timeout=5) as resp:
             robots_body = resp.read().decode("utf-8")
-            assert resp.headers.get("X-Robots-Tag") == "noindex, nofollow"
-            assert resp.headers.get("Cache-Control") == "no-store"
+            assert resp.headers.get("X-Robots-Tag") is None
         sitemap_req = urllib.request.Request(f"{live.base}/sitemap.xml")
         with urllib.request.urlopen(sitemap_req, timeout=5) as resp:
             sitemap_body = resp.read().decode("utf-8")
-            assert resp.headers.get("X-Robots-Tag") == "noindex, nofollow"
-            assert resp.headers.get("Cache-Control") == "no-store"
-        status, body = _post_json_response(
-            f"{live.base}/api/batch-permit",
-            {"lookups": [{"job_type": "office tenant improvement", "city": "Denver", "state": "CO", "job_category": "commercial"}]},
-        )
+            assert resp.headers.get("X-Robots-Tag") is None
 
-    assert "User-agent: *" in robots_body
-    assert "Disallow: /" in robots_body
+    assert server.evidence_pack_enabled() is True
+    robot_lines = {line.strip() for line in robots_body.splitlines()}
+    assert "User-agent: *" in robot_lines
+    assert "Allow: /" in robot_lines
+    assert "Disallow: /" not in robot_lines
+    assert "Disallow: /permits/" in robot_lines
+    assert "Disallow: /trades/" in robot_lines
+    assert "Sitemap: https://permitassist.io/sitemap.xml" in robot_lines
     assert "<urlset" in sitemap_body
-    assert "<url>" not in sitemap_body
-    assert status == 200
-    assert body["results"][0]["_evidence_pack"]["cache_bypassed"] is True
+    assert "https://permitassist.io/" in sitemap_body
+    assert "https://permitassist.io/pricing" in sitemap_body
+    assert "https://permitassist.io/cities" in sitemap_body
+    assert "/permits/" not in sitemap_body

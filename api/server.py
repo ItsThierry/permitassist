@@ -4553,9 +4553,6 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Access-Control-Expose-Headers", "X-Free-Lookups-Used, X-Free-Lookups-Remaining")
-            if _evidence_pack_indexing_guard_enabled():
-                self.send_header("X-Robots-Tag", "noindex, nofollow")
-                self.send_header("Cache-Control", "no-store")
             for key, value in (extra_headers or {}).items():
                 self.send_header(key, value)
             self.end_headers()
@@ -4580,8 +4577,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
-            if _evidence_pack_indexing_guard_enabled() and ("text/html" in content_type or "xml" in content_type or "text/plain" in content_type):
-                self.send_header("X-Robots-Tag", "noindex, nofollow")
+            # Public launch: do not emit the former launch noindex header on
+            # HTML/XML/plaintext routes. Crawl scope is controlled by robots.txt
+            # and a launch-scope sitemap instead of a global X-Robots block.
             # Prevent browser caching for HTML — always serve fresh version
             if "text/html" in content_type:
                 self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -5215,12 +5213,31 @@ class Handler(BaseHTTPRequestHandler):
         # ── SEO: sitemap.xml ──────────────────────────────────────────────
         elif path == "/sitemap.xml":
             if _evidence_pack_indexing_guard_enabled():
-                body = b'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>\n'
+                # Public launch sitemap is intentionally narrow. Legacy SEO and
+                # trade pages still need copy cleanup before they should be
+                # promoted for indexing.
+                launch_urls = [
+                    "https://permitassist.io/",
+                    "https://permitassist.io/pricing",
+                    "https://permitassist.io/help",
+                    "https://permitassist.io/cities",
+                    "https://permitassist.io/login",
+                    "https://permitassist.io/terms",
+                    "https://permitassist.io/privacy",
+                ]
+                url_entries = "\n".join(
+                    f"  <url><loc>{url}</loc></url>" for url in launch_urls
+                )
+                body = (
+                    '<?xml version="1.0" encoding="UTF-8"?>\n'
+                    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                    f"{url_entries}\n"
+                    "</urlset>\n"
+                ).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/xml")
                 self.send_header("Content-Length", str(len(body)))
-                self.send_header("X-Robots-Tag", "noindex, nofollow")
-                self.send_header("Cache-Control", "no-store")
+                self.send_header("Cache-Control", "public, max-age=3600")
                 self.end_headers()
                 self.wfile.write(body)
                 return
@@ -5230,12 +5247,20 @@ class Handler(BaseHTTPRequestHandler):
         # ── SEO: robots.txt ───────────────────────────────────────────────
         elif path == "/robots.txt":
             if _evidence_pack_indexing_guard_enabled():
-                body = b"User-agent: *\nDisallow: /\n"
+                body = (
+                    "User-agent: *\n"
+                    "Allow: /\n"
+                    "Disallow: /permits/\n"
+                    "Disallow: /trades/\n"
+                    "Disallow: /blog/\n"
+                    "Disallow: /preview\n"
+                    "\n"
+                    "Sitemap: https://permitassist.io/sitemap.xml\n"
+                ).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "text/plain")
                 self.send_header("Content-Length", str(len(body)))
-                self.send_header("X-Robots-Tag", "noindex, nofollow")
-                self.send_header("Cache-Control", "no-store")
+                self.send_header("Cache-Control", "public, max-age=3600")
                 self.end_headers()
                 self.wfile.write(body)
                 return
