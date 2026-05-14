@@ -73,10 +73,12 @@ def test_phase7d_public_redaction_drops_customer_private_evidence_markers(tmp_pa
             "fingerprint_sha256": "a" * 64,
             "local_golden": {"row_id": "internal"},
         },
+        "field_evidence_confidence": "high",
         "claim_citations": [
             {
                 "field": "apply_url",
                 "claim": "Official source field evidence",
+                "field_evidence_confidence": "high",
                 "evidence_pack_record_id": "internal-record",
                 "evidence_pack_fingerprint": "b" * 64,
                 "record_fingerprint_sha256": "c" * 64,
@@ -89,5 +91,14 @@ def test_phase7d_public_redaction_drops_customer_private_evidence_markers(tmp_pa
     text = json.dumps(public, sort_keys=True)
     assert public["ok"] is True
     assert "claim_citations" in public
-    for forbidden in ("_evidence_pack", "Evidence pack", "evidence pack", "evidence_pack", "fingerprint", "local_golden", "internal-record"):
+    for forbidden in (
+        "_evidence_pack",
+        "Evidence pack",
+        "evidence pack",
+        "evidence_pack",
+        "field_evidence_confidence",
+        "fingerprint",
+        "local_golden",
+        "internal-record",
+    ):
         assert forbidden not in text

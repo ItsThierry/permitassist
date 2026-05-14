@@ -56,15 +56,38 @@ def test_feedback_endpoint_works_on_fresh_volume_before_any_lookup(tmp_path, mon
 
 
 def test_health_and_homepage_smoke_from_local_handler(tmp_path, monkeypatch):
+    monkeypatch.delenv("RAILWAY_GIT_COMMIT_SHA", raising=False)
+    monkeypatch.delenv("GIT_COMMIT_SHA", raising=False)
+    monkeypatch.delenv("SOURCE_VERSION", raising=False)
     server = _import_server(tmp_path, monkeypatch)
     with _LiveServer(server.Handler) as live:
         with urllib.request.urlopen(f"{live.base}/health", timeout=5) as resp:
             assert resp.status == 200
-            assert json.loads(resp.read().decode())["status"] == "ok"
+            health = json.loads(resp.read().decode())
+            assert health["status"] == "ok"
+            assert health["commit_prefix"] == "unknown"
         with urllib.request.urlopen(f"{live.base}/", timeout=5) as resp:
             html = resp.read().decode("utf-8", "replace")
             assert resp.status == 200
             assert "PermitAssist" in html
+
+
+def test_health_commit_prefix_uses_safe_deploy_sha(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAILWAY_GIT_COMMIT_SHA", "68f1575fed3526eee0707e4889a9bd2b32d6520e")
+    server = _import_server(tmp_path, monkeypatch)
+
+    assert server.health_commit_prefix() == "68f1575fed35"
+
+
+def test_health_commit_prefix_falls_back_to_unknown_for_missing_or_invalid_env(tmp_path, monkeypatch):
+    monkeypatch.delenv("RAILWAY_GIT_COMMIT_SHA", raising=False)
+    monkeypatch.delenv("GIT_COMMIT_SHA", raising=False)
+    monkeypatch.delenv("SOURCE_VERSION", raising=False)
+    server = _import_server(tmp_path, monkeypatch)
+    assert server.health_commit_prefix() == "unknown"
+
+    monkeypatch.setenv("GIT_COMMIT_SHA", "not-a-sha-or-secret")
+    assert server.health_commit_prefix() == "unknown"
 
 
 def test_paid_permit_lookup_does_not_emit_free_lookup_headers(tmp_path, monkeypatch):

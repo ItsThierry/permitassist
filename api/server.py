@@ -4163,6 +4163,7 @@ def redact_public_output(value):
             "batch_id",
             "contract",
             "needs_review_reasons",
+            "field_evidence_confidence",
             "evidence_pack_record_id",
             "record_fingerprint_sha256",
             # Internal state-overlay routing/debug payload. Customer JSON should
@@ -4206,6 +4207,15 @@ def redact_public_output(value):
 
 def _evidence_pack_indexing_guard_enabled() -> bool:
     return evidence_pack_enabled()
+
+
+def health_commit_prefix() -> str:
+    """Return a safe short deploy commit marker for /health."""
+    for env_name in ("RAILWAY_GIT_COMMIT_SHA", "GIT_COMMIT_SHA", "SOURCE_VERSION"):
+        candidate = str(os.environ.get(env_name) or "").strip()
+        if re.fullmatch(r"[A-Fa-f0-9]{40}", candidate):
+            return candidate[:12].lower()
+    return "unknown"
 
 
 # ── Request handler ───────────────────────────────────────────────────────────
@@ -4537,7 +4547,7 @@ class Handler(BaseHTTPRequestHandler):
         elif path in ("/admin", "/admin.html", "/admin/"):
             self.send_file(os.path.join(FRONTEND_DIR, "admin.html"), "text/html; charset=utf-8")
         elif path == "/health":
-            self.send_json(200, {"status": "ok", "service": "PermitAssist"})
+            self.send_json(200, {"status": "ok", "service": "PermitAssist", "commit_prefix": health_commit_prefix()})
 
         # ── Facebook Webhook verification (GET) ───────────────────────────────
         elif path == "/api/fb-webhook":
