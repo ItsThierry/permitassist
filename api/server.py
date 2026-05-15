@@ -53,6 +53,14 @@ from evidence_pack_runtime import (
     evidence_pack_mode_requires_preview_route,
     get_local_evidence_pack,
 )
+from rendered_output_lint import (
+    FALLBACK_NAME_RE,
+    build_rendering_context,
+    classify_source_for_jurisdiction,
+    lint_rendered_output,
+    sanitize_permit_display_name,
+    select_inspection_profile,
+)
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -1137,7 +1145,9 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
             out = {}
             for k, item in value.items():
                 cleaned = scrub_value(item) if k in {"notes", "note", "description", "summary", "included_because", "reason", "required_if", "scope_trigger", "steps", "portal_selection_path", "likely_documents", "verification_note", "stage", "title", "value", "claim", "text", "message", "details", "source_title", "quoted_snippet", "source_excerpt", "snippet", "simple", "complex", "timeline"} or isinstance(item, (list, dict)) or (isinstance(item, str) and has_forbidden(item)) else item
-                if cleaned not in ("", [], {}):
+                if k == "portal_url" and cleaned == "":
+                    out[k] = ""
+                elif cleaned not in ("", [], {}):
                     out[k] = cleaned
             return out
         return value
@@ -1393,6 +1403,108 @@ def _source_dicts(result: dict) -> list[dict]:
     return out
 
 
+def _source_urls_for_gate(result: dict) -> list[str]:
+    return [s.get("url", "") for s in _source_dicts(result) if s.get("url")]
+
+
+def _inspection_text_for_gate(items) -> str:
+    bits = []
+    for item in items or []:
+        if isinstance(item, dict):
+            bits.append(" ".join(str(item.get(k) or "") for k in ("title", "stage", "description", "notes")))
+        else:
+            bits.append(str(item))
+    return "\n".join(bits).lower()
+
+
+def _ensure_vertical_inspection_profile(result: dict, context: dict, job_type: str) -> None:
+    """Keep commercial verticals from rendering sparse/residential inspection lists."""
+    explicit_commercial_context = bool(
+        str((result or {}).get("_primary_scope") or "").strip()
+        or str((result or {}).get("job_category") or "").strip().lower() == "commercial"
+    )
+    if not explicit_commercial_context:
+        return
+    profile = select_inspection_profile(context.get("vertical"), job_type)
+    name = profile.get("profile")
+    if name not in {"commercial_restaurant", "medical_clinic_ti", "office_ti"}:
+        return
+    text = _inspection_text_for_gate(result.get("inspections") or result.get("inspect_checklist") or [])
+    required = [str(x).lower() for x in profile.get("required_concepts") or []]
+    missing_required = any(token and token not in text for token in required)
+    if missing_required:
+        result["inspections"] = list(profile.get("default_items") or [])
+        result["_inspection_profile_applied"] = name
+
+
+def _sanitize_commercial_display_names(result: dict, context: dict, job_type: str) -> None:
+    scope = context.get("vertical") or result.get("_primary_scope") or ""
+    primary = _primary_permit_text(result) or result.get("permit_name") or result.get("permit_type") or ""
+    safe = sanitize_permit_display_name(primary, scope, job_type)
+    result["_permit_display_name"] = safe
+    for key in ("permit_name", "permit_type"):
+        if result.get(key) and FALLBACK_NAME_RE.search(str(result.get(key))):
+            result[key] = safe
+    permits = result.get("permits_required") or []
+    for permit in permits:
+        if not isinstance(permit, dict):
+            continue
+        for key in ("permit_type", "portal_selection", "name", "title"):
+            if permit.get(key) and FALLBACK_NAME_RE.search(str(permit.get(key))):
+                permit[key] = safe
+        if not permit.get("portal_selection"):
+            permit["portal_selection"] = sanitize_permit_display_name(permit.get("permit_type") or safe, scope, job_type)
+
+
+def _attach_source_classification(result: dict, city: str, state: str) -> None:
+    classified = [classify_source_for_jurisdiction(url, city, state) for url in _source_urls_for_gate(result)]
+    result["_source_classification"] = classified
+    result["_official_sources"] = [
+        s["url"] for s in classified
+        if s.get("allowed_as_official_support") and s.get("source_class") != "wrong_local_ahj"
+    ]
+
+
+def _render_lint_proxy_text(result: dict) -> str:
+    """Small deterministic proxy for pre-render lint until full browser render runs.
+
+    Keep this aligned with frontend badge behavior: high confidence alone is not
+    rendered as a Verified claim when the core permit category/name is uncertain.
+    """
+    bits = [str(result.get("_permit_display_name") or "")]
+    bits.extend(str(x) for x in result.get("inspections") or [])
+    bits.extend(str(x) for x in result.get("_official_sources") or [])
+    names = " ".join(
+        str(x or "")
+        for x in [
+            result.get("permit_name"),
+            result.get("permit_type"),
+            *[
+                p.get(k)
+                for p in (result.get("permits_required") or [])
+                if isinstance(p, dict)
+                for k in ("permit_type", "portal_selection", "name", "title")
+            ],
+        ]
+    )
+    uncertain_core = bool(result.get("needs_review")) or FALLBACK_NAME_RE.search(names) or re.search(
+        r"unknown|unverified|needs?\s+AHJ\s+verification|verify\s+with\s+(?:the\s+)?AHJ|human\s+review",
+        f"{result.get('confidence_reason') or ''} {names}",
+        re.I,
+    )
+    has_local_ahj_source = any(
+        s.get("source_class") == "local_ahj"
+        for s in (result.get("_source_classification") or [])
+        if isinstance(s, dict)
+    )
+    data_source = str(result.get("data_source") or result.get("_meta", {}).get("city_match_level") or "").lower()
+    if data_source in {"city_database", "city"} and has_local_ahj_source and str(result.get("confidence") or "").lower() == "high" and not uncertain_core:
+        bits.append("Verified · official sources")
+    if result.get("needs_review") or result.get("confidence_reason"):
+        bits.append(str(result.get("confidence_reason") or "needs AHJ verification"))
+    return "\n".join(bits)
+
+
 def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: str) -> dict:
     """Final safety gate before a PermitIQ result is shown to users.
 
@@ -1409,6 +1521,9 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     primary_l = primary.lower()
     commercial = _is_commercial_scope(job_type, result)
     sources = _source_dicts(result)
+    context = build_rendering_context(result, job_type, city, state)
+    result["_rendering_context"] = context
+    _attach_source_classification(result, city, state)
 
     if commercial:
         has_commercial_primary = any(token in primary_l for token in _COMMERCIAL_PRIMARY_TOKENS)
@@ -1457,6 +1572,24 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
         missing = [token for token in required_companions if token not in companion_text]
         if missing:
             warnings.append("Commercial scope may require companion reviews/permits not fully proven here: " + ", ".join(missing[:5]) + ".")
+
+    # Re-establish the canonical rendering context after any primary-scope or
+    # permit repair above, then enforce the customer-visible contract before
+    # the frontend can render a polished but misleading report.
+    context = build_rendering_context(result, job_type, city, state)
+    result["_rendering_context"] = context
+    _sanitize_commercial_display_names(result, context, job_type)
+    _ensure_vertical_inspection_profile(result, context, job_type)
+    _attach_source_classification(result, city, state)
+    lint = lint_rendered_output(result, _render_lint_proxy_text(result), job_type, city, state)
+    result["_rendered_lint"] = lint
+    if not lint.get("passed"):
+        warnings.append("Rendered output lint requires customer-visible verification/fixes: " + ", ".join(v.get("code", "unknown") for v in lint.get("violations", [])[:5]) + ".")
+
+    if not context.get("is_commercial"):
+        result.pop("_rendering_context", None)
+        result.pop("_rendered_lint", None)
+        result.pop("_inspection_profile_applied", None)
 
     if str(result.get("confidence") or "").lower() == "high" and not sources:
         result["confidence"] = "medium"
@@ -1631,6 +1764,12 @@ def _evidence_pack_beta_email_allowed(user_email: str | None) -> bool:
     return email in _env_list_values("PERMITASSIST_EVIDENCE_PACK_BETA_EMAIL_ALLOWLIST")
 
 
+def evidence_pack_response_allows_internal_metadata() -> bool:
+    """Expose evidence-pack internals only for local/preview QA contracts, never guarded beta customer JSON."""
+    mode = os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip()
+    return bool(mode and mode != PHASE7D_GOLDEN_BETA_GUARDED_MODE)
+
+
 def evidence_pack_allowed_for_request(
     path: str,
     headers,
@@ -1746,6 +1885,14 @@ def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "",
     permit_name = _phase7h_current_permit_name(result)
     evidence_meta = result.get("_evidence_pack") if isinstance(result.get("_evidence_pack"), dict) else {}
     evidence_enabled = bool(evidence_meta.get("enabled"))
+    permit_type_failed_closed = (
+        evidence_enabled
+        and "permit_type" in {str(field) for field in (evidence_meta.get("failed_closed_fields") or [])}
+        and "permit_type" not in {str(field) for field in (evidence_meta.get("matched_fields") or [])}
+    )
+    if permit_type_failed_closed and str(evidence_meta.get("mode") or "") == "solar_mep_controlled_preview":
+        result["permit_type_verified"] = False
+        return result
     verified = _phase7h_permit_type_verified(result, permit_name)
     warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
     if result.get("warnings") is not warnings:
@@ -1882,7 +2029,13 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     # after the first quality gate. Run the absent-subsystem scrub one final
     # time so negated customer input such as "no restaurant/no hood/no grease"
     # does not echo into authenticated beta customer JSON as wrong-vertical copy.
-    _filter_negated_surface_lists(result, job_type)
+    evidence_meta = result.get("_evidence_pack") if isinstance(result.get("_evidence_pack"), dict) else {}
+    skip_final_negation_scrub = (
+        evidence_meta.get("mode") == "phase7b_golden_local_preview"
+        and evidence_meta.get("contract_status") == "valid"
+    )
+    if not skip_final_negation_scrub:
+        _filter_negated_surface_lists(result, job_type)
     # Phase 7H customer-trust patch: keep the customer surface explicit for YES
     # verdicts without changing evidence-pack matching or inventing official
     # permit-type certainty.
@@ -4577,8 +4730,9 @@ class Handler(BaseHTTPRequestHandler):
             return real_ip
         return _normalize_ip(self.client_address[0])
 
-    def send_json(self, status: int, data: dict, extra_headers: dict | None = None):
-        data = redact_public_output(data)
+    def send_json(self, status: int, data: dict, extra_headers: dict | None = None, *, redact: bool = True):
+        if redact:
+            data = redact_public_output(data)
         body = json.dumps(data, indent=2).encode()
         try:
             self.send_response(status)
@@ -5779,7 +5933,8 @@ class Handler(BaseHTTPRequestHandler):
 
                     # No Telegram on lookups — only notify on paying customers
 
-                    self.send_json(200, result, extra_headers=response_headers)
+                    expose_evidence_meta = evidence_allowed and evidence_pack_response_allows_internal_metadata()
+                    self.send_json(200, result, extra_headers=response_headers, redact=not expose_evidence_meta)
                 finally:
                     PERMIT_LOOKUP_SEMAPHORE.release()
 
@@ -5803,6 +5958,7 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "Max 20 lookups per batch"})
                     return
                 from concurrent.futures import ThreadPoolExecutor, as_completed
+                batch_evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
 
                 def run_lookup(item):
                     job_type = item.get("job_type", "")
@@ -5812,7 +5968,7 @@ class Handler(BaseHTTPRequestHandler):
                     job_value = item.get("job_value")
                     explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
                     try:
-                        evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
+                        evidence_allowed = batch_evidence_allowed
                         result = research_permit(job_type, city, state, zip_code, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
                         if evidence_allowed:
                             result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
@@ -5856,7 +6012,7 @@ class Handler(BaseHTTPRequestHandler):
                         "no_permit": sum(1 for r in results if r.get("permit_verdict") == "NO"),
                         "verify": sum(1 for r in results if r.get("permit_verdict") == "MAYBE"),
                     }
-                })
+                }, redact=not (batch_evidence_allowed and evidence_pack_response_allows_internal_metadata()))
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
@@ -6145,7 +6301,8 @@ class Handler(BaseHTTPRequestHandler):
                     result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
                 if unverified_us_jurisdiction:
                     result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
-                self.send_json(200, result)
+                expose_evidence_meta = evidence_allowed and evidence_pack_response_allows_internal_metadata()
+                self.send_json(200, result, redact=not expose_evidence_meta)
             except Exception as e:
                 print(f"[api-v1-permit] Error: {type(e).__name__}")
                 self.send_json(500, {"error": "internal_error", "message": "Internal error while processing permit lookup"})

@@ -39,10 +39,10 @@ def test_static_customer_pages_do_not_ship_private_evidence_pack_terms():
         assert leaked == []
 
 
-def test_upgrade_modal_scopes_unlimited_lookup_copy_to_launch_scope():
+def test_upgrade_modal_scopes_unlimited_lookup_copy_to_supported_scope():
     html = (ROOT / "frontend/index.html").read_text(encoding="utf-8")
-    assert "Unlimited launch-scope permit lookups" in html
-    assert "Unlimited launch-scope lookups" in html
+    assert "Unlimited supported permit lookups" in html
+    assert "Unlimited supported lookups" in html
     leaked = [term for term in UNSCOPED_LAUNCH_MODAL_TERMS if term in html]
     assert leaked == []
 
