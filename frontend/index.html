@@ -2718,11 +2718,192 @@ function verdictState(d){
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
 
 // ── Render Results ───────────────────────────────────────────────────────────
-function getPermitDisplayName(d) {
-  const permits = d.permits_required || [];
-  return (permits.length > 0 && permits[0].portal_selection)
-    ? permits[0].portal_selection
-    : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
+function getRenderingContext(d, job, city, state) {
+  d = d || {};
+  const existing = d._rendering_context || d.rendering_context || {};
+  const joined = `${existing.vertical || ''} ${existing.scope || ''} ${d._primary_scope || ''} ${d.primary_scope || ''} ${d.project_scope || ''} ${d.job_category || ''} ${job || ''}`.toLowerCase();
+  let vertical = existing.vertical || '';
+  if (!vertical) {
+    if (/restaurant|food service|commercial kitchen|type\s*i\s*hood|grease duct|grease interceptor/.test(joined)) vertical = 'commercial_restaurant';
+    else if (/medical|clinic|dental|exam room|imaging|x-ray|medical gas|office-to-clinic/.test(joined)) vertical = 'medical_clinic_ti';
+    else if (/office\s*ti|office tenant|office build(?:out|-out)|demising|multi-tenant office|high-rise office/.test(joined)) vertical = 'office_ti';
+    else if (/commercial/.test(joined) && /(hvac|rtu|rooftop unit|electrical|plumbing|trade-only|trade only)/.test(joined) && !/(tenant improvement|buildout|build-out|change of use|change of occupancy)/.test(joined)) vertical = 'commercial_trade_only';
+    else if (/commercial|tenant improvement|buildout|build-out|change of use|change of occupancy/.test(joined)) vertical = 'commercial_unknown';
+    else if (/residential|single-family|single family|homeowner|dwelling/.test(joined)) vertical = 'residential';
+    else vertical = 'unknown';
+  }
+  const isCommercial = existing.is_commercial === true || /^commercial_/.test(vertical) || ['medical_clinic_ti', 'office_ti'].includes(vertical);
+  const inspectionProfile = existing.inspection_profile || ({
+    commercial_restaurant: 'commercial_restaurant',
+    medical_clinic_ti: 'medical_clinic_ti',
+    office_ti: 'office_ti',
+    commercial_trade_only: 'commercial_trade_only',
+    residential: 'residential'
+  }[vertical] || (isCommercial ? 'commercial_trade_only' : 'residential'));
+  return {
+    city: city || d.city || existing.city || '',
+    state: state || d.state || existing.state || '',
+    vertical,
+    is_commercial: isCommercial,
+    template_family: isCommercial ? 'commercial' : (searchMode === 'homeowner' ? 'residential' : 'contractor'),
+    allow_homeowner_template: !isCommercial && searchMode === 'homeowner',
+    inspection_profile: inspectionProfile,
+  };
+}
+
+function isFallbackPermitName(name) {
+  return /permit\s+required\s*[-–—]+\s*exact\s+permit\s+type\s+needs\s+ahj\s+verification|exact\s+permit\s+(?:type|category).*needs\s+ahj\s+verification|needs\s+ahj\s+verification/i.test(String(name || ''));
+}
+
+function defaultPermitDisplayName(renderContext) {
+  const vertical = renderContext?.vertical || '';
+  if (vertical === 'commercial_restaurant') return 'Commercial Alteration / Tenant Improvement Permit';
+  if (vertical === 'medical_clinic_ti') return 'Medical Clinic Tenant Improvement Permit';
+  if (vertical === 'office_ti') return 'Commercial Office Tenant Improvement Permit';
+  if ((renderContext?.is_commercial || false) && vertical === 'commercial_trade_only') return 'Commercial Trade Permit';
+  if (renderContext?.is_commercial) return 'Commercial Permit / Tenant Improvement Review';
+  return 'the required permit';
+}
+
+function sanitizePermitDisplayName(name, renderContext) {
+  const raw = String(name || '').trim();
+  if (!raw || isFallbackPermitName(raw)) return defaultPermitDisplayName(renderContext);
+  return raw.replace(/\s+/g, ' ');
+}
+
+function normalizePermitDisplayData(d, renderContext) {
+  const rawPermits = Array.isArray(d?.permits_required) ? d.permits_required : [];
+  const fallback = defaultPermitDisplayName(renderContext);
+  if (!rawPermits.length && renderContext?.is_commercial) {
+    return [{ permit_type: fallback, portal_selection: fallback, required: true, notes: 'Exact AHJ intake category needs verification before quoting.' }];
+  }
+  return rawPermits.map(p => {
+    if (!p || typeof p !== 'object') return p;
+    const display = sanitizePermitDisplayName(p.portal_selection || p.permit_type || p.name || p.title, renderContext);
+    return { ...p, permit_type: sanitizePermitDisplayName(p.permit_type || display, renderContext), portal_selection: display };
+  });
+}
+
+function getPermitDisplayName(d, renderContext) {
+  renderContext = renderContext || getRenderingContext(d, window._lastLookupJob || '', window._lastLookupCity || '', window._lastLookupState || '');
+  if (d?._permit_display_name) return sanitizePermitDisplayName(d._permit_display_name, renderContext);
+  const permits = normalizePermitDisplayData(d || {}, renderContext);
+  return sanitizePermitDisplayName((permits.length > 0 && permits[0].portal_selection) || d?.permit_name || d?.permit_type || permits[0]?.permit_type || '', renderContext);
+}
+
+function corePermitUnverified(d) {
+  const names = [d?.permit_name, d?.permit_type, ...((d?.permits_required || []).flatMap(p => p ? [p.permit_type, p.portal_selection, p.name, p.title] : []))].filter(Boolean).join(' ');
+  return !!d?.needs_review || isFallbackPermitName(names) || /unknown|unverified|needs?\s+AHJ\s+verification|verify\s+with\s+(?:the\s+)?AHJ|human\s+review/i.test(`${d?.confidence_reason || ''} ${names}`);
+}
+
+const LOCAL_AHJ_HOSTS = {
+  'chicago|il': ['chicago.gov', 'cityofchicago.org'],
+  'philadelphia|pa': ['phila.gov', 'permits.phila.gov'],
+  'new york|ny': ['nyc.gov'],
+  'los angeles|ca': ['lacity.org', 'ladbs.org', 'ladbsservices2.lacity.org'],
+  'houston|tx': ['houstontx.gov', 'houstonpermittingcenter.org'],
+  'phoenix|az': ['phoenix.gov'],
+  'austin|tx': ['austintexas.gov'],
+  'seattle|wa': ['seattle.gov'],
+  'denver|co': ['denvergov.org'],
+  'boston|ma': ['boston.gov', 'bostonpermits.com'],
+};
+const STATE_ABBR_BY_NAME = {
+  illinois: 'il', pennsylvania: 'pa', 'new york': 'ny', california: 'ca', texas: 'tx',
+  arizona: 'az', washington: 'wa', colorado: 'co', massachusetts: 'ma'
+};
+const KNOWN_LOCAL_AHJ_HOSTS = ['phila.gov','permits.phila.gov','nyc.gov','chicago.gov','cityofchicago.org','lacity.org','ladbs.org','houstontx.gov','phoenix.gov','austintexas.gov','seattle.gov','denvergov.org','boston.gov'];
+const MODEL_CODE_HOSTS = ['codes.iccsafe.org', 'iccsafe.org', 'up.codes', 'nfpa.org'];
+function hostMatches(host, allowed) { host = String(host || '').replace(/^www\./, '').toLowerCase(); return (allowed || []).some(h => host === h || host.endsWith('.' + h)); }
+function sourceUrl(src) { return typeof src === 'string' ? src : ((src && (src.url || src.link)) || ''); }
+function normalizeStateForAhjKey(state) {
+  const raw = String(state || '').trim().toLowerCase();
+  return STATE_ABBR_BY_NAME[raw] || raw;
+}
+function classifySourceForJurisdiction(src, city, state) {
+  const url = sourceUrl(src);
+  let host = '';
+  try { host = new URL(url).hostname.replace(/^www\./, '').toLowerCase(); } catch { return { url, host:'', source_class:'invalid', allowed_as_official_support:false, allowed_as_local_ahj_support:false }; }
+  const key = `${String(city || '').trim().toLowerCase()}|${normalizeStateForAhjKey(state)}`;
+  const localHosts = LOCAL_AHJ_HOSTS[key] || [];
+  if (hostMatches(host, localHosts)) return { url, host, source_class:'local_ahj', allowed_as_official_support:true, allowed_as_local_ahj_support:true };
+  if (hostMatches(host, KNOWN_LOCAL_AHJ_HOSTS)) return { url, host, source_class:'wrong_local_ahj', allowed_as_official_support:false, allowed_as_local_ahj_support:false };
+  if (hostMatches(host, MODEL_CODE_HOSTS)) return { url, host, source_class:'model_code', allowed_as_official_support:true, allowed_as_local_ahj_support:false };
+  if (/\.(gov|gov\.us|us)$/.test(host)) return { url, host, source_class:'government_other', allowed_as_official_support:false, allowed_as_local_ahj_support:false };
+  if (/accela\.com$|citizenaccess/i.test(host)) return { url, host, source_class:'permit_portal', allowed_as_official_support:true, allowed_as_local_ahj_support:false };
+  return { url, host, source_class:'other', allowed_as_official_support:false, allowed_as_local_ahj_support:false };
+}
+
+function getOfficialSourceLinks(d, city, state) {
+  if (Array.isArray(d?._official_sources) && d._official_sources.length) {
+    return d._official_sources.map(sourceUrl).filter(Boolean).slice(0, 5);
+  }
+  return (Array.isArray(d?.sources) ? d.sources : [])
+    .map(s => classifySourceForJurisdiction(s, city, state))
+    .filter(s => s.allowed_as_official_support && s.source_class !== 'wrong_local_ahj')
+    .map(s => s.url)
+    .filter(Boolean)
+    .filter((u, i, arr) => arr.indexOf(u) === i)
+    .slice(0, 5);
+}
+
+function hasLocalAhjSource(d, city, state) {
+  return (Array.isArray(d?.sources) ? d.sources : []).some(s => classifySourceForJurisdiction(s, city, state).source_class === 'local_ahj')
+    || (Array.isArray(d?._source_classification) && d._source_classification.some(s => s.source_class === 'local_ahj'));
+}
+
+function buildConfidenceBadgeHtml(d, renderContext, city, state) {
+  const dataSourceRaw = d?.data_source || d?._meta?.city_match_level || '';
+  const isCountyFB = d?.county_fallback === true;
+  if (corePermitUnverified(d)) {
+    return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Needs AHJ verification<span class="conf-tooltip">Core permit category/name is not verified. Use this as a verification checklist, not final authority.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Core permit category needs AHJ confirmation before quoting</div>`;
+  }
+  if ((dataSourceRaw === 'city_database' || dataSourceRaw === 'city') && hasLocalAhjSource(d, city, state)) {
+    return `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified · official sources<span class="conf-tooltip">Cross-checked against local AHJ sources for the core permit claim. Verify final intake details before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Core permit claim is supported by local AHJ sources · verify final intake details</div>`;
+  }
+  if (dataSourceRaw === 'web_search') {
+    return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
+  }
+  if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
+    return `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
+  }
+  return `<span class="confidence-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🔴 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#b91c1c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
+}
+
+const COMMERCIAL_INSPECTION_PROFILES = {
+  commercial_restaurant: [
+    'Building rough inspection for framing, rated assemblies, exits, accessibility path-of-travel, and commercial alteration work',
+    'Building final inspection before opening or Certificate of Occupancy / occupancy final approval',
+    'Hood and grease duct inspection for Type I hood, shaft/rated duct, and kitchen exhaust where applicable',
+    'Fire suppression acceptance test for hood/Ansul or sprinkler modifications where applicable',
+    'Fire alarm inspection where alarm devices, monitoring, or occupant notification are affected',
+    'Health department / food establishment inspection before opening where applicable',
+    'Egress and occupancy final inspection for exits, occupant load, emergency lighting, and final sign-off',
+  ],
+  medical_clinic_ti: [
+    'Building rough/final inspection for clinic layout, rated corridors/rooms, and tenant-improvement work',
+    'Accessibility inspection for accessible route, restrooms, exam rooms, reception, and path-of-travel where applicable',
+    'Fire/life-safety inspection for alarm, sprinkler, egress, and occupancy features',
+    'Mechanical/electrical/plumbing inspections for exam rooms, hand sinks, ventilation, equipment loads, and dedicated circuits',
+    'Medical gas, imaging/shielding, or special-equipment inspection/review where oxygen, vacuum, x-ray, CT, or similar equipment is included',
+    'Health/licensing or clinic operational inspection where the AHJ or state program requires it',
+  ],
+  office_ti: [
+    'Commercial alteration / tenant-improvement building rough inspection for partitions, rated assemblies, and ceiling grid',
+    'Egress and life-safety inspection for exits, travel distance, exit signs, emergency lighting, and occupant load',
+    'Accessibility inspection for path-of-travel, doors/hardware, restrooms, reception counters, and accessible routes where applicable',
+    'Trade rough/final inspections for electrical, mechanical, plumbing, and low-voltage work included in the TI',
+    'Final building inspection and occupancy/tenant authorization before use of the space',
+  ],
+};
+function resolveInspectionItems(d, renderContext, job) {
+  const raw = d?.inspections || d?.inspect_checklist || [];
+  const text = raw.map(x => typeof x === 'string' ? x : `${x?.title || ''} ${x?.stage || ''} ${x?.description || ''} ${x?.notes || ''}`).join(' ').toLowerCase();
+  const profile = renderContext?.inspection_profile;
+  if (profile === 'commercial_restaurant' && (!/hood/.test(text) || !/grease duct/.test(text) || !/fire suppression/.test(text) || !/health/.test(text) || !/egress/.test(text))) return COMMERCIAL_INSPECTION_PROFILES.commercial_restaurant;
+  if (profile === 'medical_clinic_ti' && (!/clinic/.test(text) || !/health/.test(text) || !/life/.test(text) || !/accessibility/.test(text) || !/equipment|medical gas|imaging|x-ray/.test(text))) return COMMERCIAL_INSPECTION_PROFILES.medical_clinic_ti;
+  if (profile === 'office_ti' && (!/commercial alteration/.test(text) || !/egress/.test(text) || !/accessibility/.test(text))) return COMMERCIAL_INSPECTION_PROFILES.office_ti;
+  return raw;
 }
 
 // Known historic / HPC districts. Keyed by `${city}|${state}` (state is the
@@ -2807,8 +2988,9 @@ function getJurisdictionDisplay(d, city, state, jobAddress) {
   };
 }
 
-function getNextSteps(d, job, city, state) {
-  const permitName = getPermitDisplayName(d);
+function getNextSteps(d, job, city, state, renderContext) {
+  renderContext = renderContext || getRenderingContext(d, job, city, state);
+  const permitName = getPermitDisplayName(d, renderContext);
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])].slice(0, 3);
   const steps = [
     `Ask for \"${permitName}\" with the ${d.applying_office || `${city} building department`}.`,
@@ -2818,7 +3000,7 @@ function getNextSteps(d, job, city, state) {
   if (d.approval_timeline?.simple || d.approval_timeline?.complex) {
     steps.push(`Plan around the approval timeline: ${d.approval_timeline.simple || d.approval_timeline.complex}.`);
   }
-  if (normalizeInspectionItems(d.inspections || []).length) {
+  if (normalizeInspectionItems(resolveInspectionItems(d, renderContext, job)).length) {
     steps.push('Post the permit on site and schedule inspections in the right order.');
   }
   return steps.slice(0, 4);
@@ -2915,7 +3097,9 @@ function normalizeLicenseRequirementCopy(value) {
 }
 
 function isCommercialPrimaryScope(primaryScope) {
-  return String(primaryScope || '').startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial' || primaryScope === 'change_of_occupancy';
+  const scope = String(primaryScope || '');
+  return scope.startsWith('commercial_')
+    || ['multifamily', 'commercial', 'change_of_occupancy', 'medical_clinic_ti', 'office_ti'].includes(scope);
 }
 
 function normalizeInspectionItems(items) {
@@ -2944,9 +3128,11 @@ function renderResults(d, job, city, state) {
   window._lastLookupJob = job || '';
   window._lastLookupCity = city || '';
   window._lastLookupState = state || '';
+  const renderContext = getRenderingContext(d, job, city, state);
   const verdict = verdictState(d);
-  const permits = d.permits_required || [];
-  const insps = normalizeInspectionItems(d.inspections || []);
+  const permits = normalizePermitDisplayData(d, renderContext);
+  const safePermitName = getPermitDisplayName(d, renderContext);
+  const insps = normalizeInspectionItems(resolveInspectionItems(d, renderContext, job));
   const tips = d.pro_tips || [];
   const mistakes = d.common_mistakes || [];
   const checklist = d.what_to_bring || d.checklist || [];
@@ -3001,9 +3187,9 @@ function renderResults(d, job, city, state) {
   }
 
   // Homeowner mode — special "Did they pull the permit?" section
-  if (searchMode === 'homeowner') {
+  if (renderContext.allow_homeowner_template && searchMode === 'homeowner') {
     const permitRequired = (verdict === 'yes' || verdict === 'maybe');
-    const permitName = (d.permits_required && d.permits_required[0] && d.permits_required[0].permit_type) || d.permit_name || 'a permit';
+    const permitName = safePermitName;
     const officeLink = maps ? `<a href="${esc(maps)}" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">Find the Permit Office →</a>` : '';
     const onlineLink = applyUrl ? `<a href="${esc(applyUrl)}" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">Search Permit Records Online →</a>` : '';
     if (permitRequired) {
@@ -3046,19 +3232,10 @@ function renderResults(d, job, city, state) {
     }
   }
 
-  // Data confidence badge
-  const dataSourceRaw = d.data_source || d._meta?.city_match_level || '';
-  const isCountyFB = d.county_fallback === true;
-  let confBadgeHtml = '';
-  if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified · official sources<span class="conf-tooltip">Cross-checked against official building-department sources. Verify final requirements with the AHJ before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Cross-checked against official sources · verify with AHJ before submitting</div>`;
-  } else if (dataSourceRaw === 'web_search') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
-  } else if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
-  } else {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🔴 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#b91c1c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
-  }
+  // Claim-specific confidence badge. Never show global Verified while the core
+  // permit type/category is unknown, unverified, or needs AHJ confirmation.
+  const confBadgeHtml = buildConfidenceBadgeHtml(d, renderContext, city, state);
+  const sourceLinks = getOfficialSourceLinks(d, city, state);
   const heroUpdatedRaw = d.last_verified_at || d._meta?.generated_at || '';
   const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown';
   const rulebookDepth = String(d.rulebook_depth || '').toUpperCase();
@@ -3107,7 +3284,7 @@ function renderResults(d, job, city, state) {
   // above-the-fold so the contractor sees WHERE the data came from before
   // scrolling. Filters to .gov / .us / known portal hosts; drops junk.
   const _PORTAL_HOSTS_OK = /(\.gov(\.us)?$|\.us$|\.edu$|\.mil$|accela\.com$|ladbs\.org$|ladbsservices2?\.lacity\.org$|austintexas\.gov$|phoenix\.gov$|cityofchicago\.org$|nyc\.gov$|sfgov\.org$|seattle\.gov$|denvergov\.org$|bostonpermits\.com$)/i;
-  const sourceHostChips = (Array.isArray(d.sources) ? d.sources : [])
+  const sourceHostChips = sourceLinks
     .map(s => typeof s === 'string' ? s : (s && s.url) || '')
     .filter(Boolean)
     .map(u => { try { const h = new URL(u).hostname.replace(/^www\./, ''); return _PORTAL_HOSTS_OK.test(h) ? { url: u, host: h } : null; } catch { return null; } })
@@ -3152,13 +3329,14 @@ function renderResults(d, job, city, state) {
   // Summary card (for YES/MAYBE)
   if (verdict !== 'no') {
     const portalSel = permits.length > 0 ? permits[0].portal_selection : null;
-    const exactPermitName = portalSel || d.permit_name || d.permit_type || permits[0]?.permit_type || 'Permit details';
+    const exactPermitName = safePermitName;
     html += `<div class="summary-card">
       <div class="section-label">📋 Permit Details</div>
       <div class="verdict-pill ${verdict==='yes'?'verdict-yes':'verdict-maybe'}">${verdict==='yes'?'✅ YES — Permit Required':'⚠️ MAYBE — Check With Building Dept'}</div>
       <div class="permit-name-big">${esc(exactPermitName)}</div>`;
-    if (portalSel && (d.permit_name || d.permit_type || permits[0]?.permit_type) && portalSel !== (d.permit_name || d.permit_type || permits[0]?.permit_type)) {
-      html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">Also known as: ${esc(d.permit_name || d.permit_type || permits[0]?.permit_type)}</div>`;
+    const aliasPermitName = sanitizePermitDisplayName(d.permit_name || d.permit_type || permits[0]?.permit_type || '', renderContext);
+    if (portalSel && aliasPermitName && aliasPermitName !== exactPermitName) {
+      html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">Also known as: ${esc(aliasPermitName)}</div>`;
     }
     html += `<div class="big-meta">${esc(d.job_summary || d.permit_summary || d.summary || d.notes || 'Review the details below before starting the job.')}</div>`;
     if (fee) {
@@ -3220,8 +3398,8 @@ function renderResults(d, job, city, state) {
 
   // How to Apply card (replaces misleading "Apply Online" button)
   if (verdict !== 'no') {
-    const portalName = (permits.length > 0 && permits[0].portal_selection) ? permits[0].portal_selection : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
-    const permitTypeNeedsAhjVerify = d.permit_type_verified === false || /exact permit type needs AHJ verification/i.test(portalName);
+    const portalName = safePermitName;
+    const permitTypeNeedsAhjVerify = d.permit_type_verified === false || corePermitUnverified(d) || isFallbackPermitName(portalName);
     const cityName = city || 'your city';
     html += `<div class="how-to-apply-card">`;
     html += `<div class="section-label">📝 How to Apply</div>`;
@@ -3415,8 +3593,6 @@ function renderResults(d, job, city, state) {
   const isCached = d._cached || d._meta?.cached;
   const freshDate = genAt ? new Date(genAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const isStale = genAt && (Date.now() - new Date(genAt).getTime()) > 30 * 24 * 60 * 60 * 1000;
-  const sourceLinks = Array.isArray(d.sources) ? d.sources.filter(Boolean).slice(0, 5) : [];
-
   if (freshDate) {
     html += `<div class="cache-disclaimer">Data current as of ${freshDate}. Always verify fees with your local building department.</div>`;
     html += `<div class="freshness-row">
