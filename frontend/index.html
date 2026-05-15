@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PermitAssist" />
   <meta name="theme-color" content="#2563EB" />
-  <meta name="description" content="PermitAssist — permit research for contractors, currently strongest for restaurant, medical clinic, and office tenant improvements in supported jurisdictions. No demo calls, no sales team." />
+  <meta name="description" content="PermitAssist — permit research for contractors in supported jurisdictions. Get practical permit guidance before you dispatch." />
   <link rel="canonical" href="https://permitassist.io/" />
   <!-- Open Graph -->
   <meta property="og:title" content="PermitAssist — Commercial Tenant Improvement Permit Guidance" />
@@ -45,7 +45,7 @@
           "width": 512,
           "height": 512
         },
-        "description": "Permit research for contractors, currently strongest for restaurant, medical clinic, and office tenant improvements in supported jurisdictions.",
+        "description": "Permit research for contractors in supported jurisdictions.",
         "sameAs": []
       },
       {
@@ -283,10 +283,6 @@
     .counter-progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #2563EB, #3B82F6); transition: width .4s ease; }
     .counter-text { color: var(--text2); font-weight: 600; }
     .counter-upgrade { color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-    .launch-scope-card { max-width: 540px; margin: 12px auto 16px; padding: 14px 16px; border: 1px solid rgba(37,99,235,0.22); border-radius: 14px; background: rgba(37,99,235,0.07); color: var(--text2); font-size: 13px; line-height: 1.55; box-shadow: var(--shadow-sm); }
-    .launch-scope-card strong { color: var(--text); }
-    .launch-scope-card a { color: var(--brand); font-weight: 800; text-decoration: none; }
-
     /* Cards */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow-sm); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.15s ease; animation: slideIn 0.4s ease forwards; max-width: 100%; overflow-x: hidden; overflow-y: visible; box-sizing: border-box; }
     .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: rgba(37,99,235,0.15); }
@@ -1291,9 +1287,9 @@
 
       <!-- Free/Paid clarity line -->
       <div class="free-paid-bar">
-        <span>✅ <strong>3 free launch-scope lookups</strong> — no credit card, checked server-side</span>
+        <span>✅ <strong>3 free permit lookups</strong> — no credit card, checked server-side</span>
         <span class="free-paid-divider">·</span>
-        <span>Then <strong>$39.99/mo</strong> for unlimited launch-scope</span>
+        <span>Then <strong>$39.99/mo</strong> for unlimited supported lookups</span>
         <span class="free-paid-divider">·</span>
         <span>Cancel anytime</span>
       </div>
@@ -1307,10 +1303,6 @@
       <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
       </div>
 
-      <div class="launch-scope-card">
-        <strong>Launch focus:</strong> strongest today for <strong>restaurant tenant improvements</strong>, <strong>medical clinic tenant improvements</strong>, and <strong>office tenant improvements</strong> in supported jurisdictions. If your city is unsupported, PermitAssist will say so clearly or you can <a href="/cities">request support</a>.
-      </div>
-
       <!-- Search Action Zone -->
       <div class="search-action-zone">
         <!-- Contractor / Homeowner mode toggle -->
@@ -1320,7 +1312,7 @@
         </div>
         <div class="search-section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span id="search-section-title">🔍 Look Up Your Permit</span>
-          <a href="#" onclick="event.preventDefault();runSampleLookup()" style="font-size:13px;color:var(--brand);text-decoration:none;font-weight:700;letter-spacing:0;text-transform:none;background:transparent;border:2px solid var(--brand);border-radius:20px;padding:6px 16px;transition:all .15s" onmouseover="this.style.background='var(--brand)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--brand)'">👀 See a restaurant TI sample →</a>
+          <a href="#" onclick="event.preventDefault();runSampleLookup()" style="font-size:13px;color:var(--brand);text-decoration:none;font-weight:700;letter-spacing:0;text-transform:none;background:transparent;border:2px solid var(--brand);border-radius:20px;padding:6px 16px;transition:all .15s" onmouseover="this.style.background='var(--brand)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--brand)'">👀 See a real permit lookup →</a>
         </div>
               <div class="card">
           <div class="card-label" id="search-card-label">What do you need a permit for?</div>
@@ -1375,7 +1367,7 @@
           </div>
         </div>
 
-        <div class="trust-note">🧠 Not a generic chatbot. PermitAssist combines official-source research with verified launch-jurisdiction records. <strong>Strongest today for restaurant TI, medical clinic TI, and office TI</strong>; unsupported cities fail closed or can be requested instead of pretending every city/trade is verified.</div>
+        <div class="trust-note">🧠 Not a generic chatbot. PermitAssist combines official-source research with verified jurisdiction records and fails closed instead of pretending every city or trade is verified.</div>
         <button class="lookup-btn" id="lookup-btn" type="submit">🔍 &nbsp;Find Permit Requirements</button>
       </div>
 
@@ -1412,11 +1404,11 @@
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;align-items:center;gap:10px;text-align:left">
               <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">✓</div>
-              <div style="font-size:13px;color:var(--text2)">3 free launch-scope lookups — usage checked server-side</div>
+              <div style="font-size:13px;color:var(--text2)">3 free permit lookups — usage checked server-side</div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;text-align:left">
               <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">✓</div>
-              <div style="font-size:13px;color:var(--text2)">Most launch-scope results in about 60–90 seconds</div>
+              <div style="font-size:13px;color:var(--text2)">Most supported results in about 60–90 seconds</div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;text-align:left">
               <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">✓</div>
@@ -1463,7 +1455,7 @@
           </div>
           <div class="new-col">
             <h3 class="new-col-title">✅ With PermitAssist</h3>
-            <div class="vs-item">Practical answer in about 60–90 seconds for launch-scope lookups</div>
+            <div class="vs-item">Practical answer in about 60–90 seconds for supported lookups</div>
             <div class="vs-item">AI-verified, jurisdiction-specific results</div>
             <div class="vs-item">Know fees &amp; timeline before you show up</div>
             <div class="vs-item">Permit name and AHJ wording to verify</div>
@@ -1496,9 +1488,9 @@
         <div class="compare-strip-cols">
           <div class="compare-col compare-col-winner">
             <h3 class="compare-col-name">✅ PermitAssist</h3>
-            <div class="compare-col-price">$39.99/mo · unlimited launch-scope</div>
+            <div class="compare-col-price">$39.99/mo · unlimited supported lookups</div>
             <ul class="compare-col-features">
-              <li>⚡ Usually about 60–90 seconds for launch-scope lookups</li>
+              <li>⚡ Usually about 60–90 seconds for supported lookups</li>
               <li>🔍 100% self-serve</li>
               <li>📋 No demo call needed</li>
               <li>✓ Checklists &amp; fee guidance</li>
@@ -1585,7 +1577,7 @@
 
       <!-- Stats strip: cities link + lifetime + today (single source of truth) -->
       <div class="stats-strip">
-        <a href="/cities" class="stats-link" target="_blank">📍 Launch-scope support: restaurant, medical clinic &amp; office TI in supported jurisdictions →</a>
+        <a href="/cities" class="stats-link" target="_blank">📍 View supported jurisdictions →</a>
         <span class="stats-sep">·</span>
         <span><strong id="stat-lookups">1,847</strong> total lookups</span>
         <span id="lookups-today-bar" class="stats-today" style="display:none"><span class="stats-sep">·</span>🔥 <strong id="stat-today">0</strong> today</span>
@@ -1645,7 +1637,7 @@
     <button class="upgrade-modal-close" type="button" aria-label="Close upgrade modal" onclick="closeUpgrade()">×</button>
     <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Solo</div>
     <div class="upgrade-modal-accent"></div>
-    <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited launch-scope permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
+    <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited supported permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
 
     <div class="upgrade-plan-toggle" role="tablist" aria-label="Choose a plan">
       <button class="upgrade-plan-btn active" id="upgrade-plan-pro" type="button" onclick="setUpgradePlan('pro')">Solo — $39.99/mo</button>
@@ -1653,7 +1645,7 @@
     </div>
 
     <ul class="upgrade-feature-list" id="upgrade-features-pro">
-      <li><span class="upgrade-feature-check">✓</span><span>Unlimited launch-scope lookups</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Unlimited supported lookups</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Foreman Brief PDF export</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Job tracking &amp; reminders</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Priority city requests</span></li>
@@ -2309,7 +2301,7 @@ function updateCounterBarFromServer(used, remaining, plan){
   const bar=document.getElementById('counter-bar'),text=document.getElementById('counter-text');
   if(!bar)return;
   const total=FREE_LIMIT,pct=Math.max(0,Math.min(100,Math.round(normalizedUsed/total*100)));
-  text.textContent=normalizedRemaining===0?'Server-side free limit reached. Upgrade for unlimited launch-scope lookups':`${Math.min(normalizedUsed,total)} of ${total} free lookups used, no reset (server-side)`;
+  text.textContent=normalizedRemaining===0?'Server-side free limit reached. Upgrade for unlimited supported lookups':`${Math.min(normalizedUsed,total)} of ${total} free lookups used, no reset (server-side)`;
   const fill=bar.querySelector('.counter-progress-fill');
   if(fill)requestAnimationFrame(()=>fill.style.width=pct+'%');
   bar.style.borderColor=normalizedRemaining===0?'rgba(239,68,68,0.4)':'';
@@ -2363,7 +2355,7 @@ function refreshUpgradeModal(){
   if(cta) cta.href=getUpgradeUrl(plan, upgradeModalState.couponApplied);
   if(sub) sub.textContent=plan==='team'
     ? 'Bring your office and field crew onto one shared permit workflow with faster city-request turnaround.'
-    : 'Unlimited launch-scope permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.';
+    : 'Unlimited supported permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.';
 }
 
 function setUpgradePlan(plan){
@@ -2490,7 +2482,7 @@ function skipPreLookupGate() {
 
 function showGate(hardBlock){
   const title=document.getElementById('gate-title'),sub=document.getElementById('gate-sub'),skip=document.getElementById('gate-skip-link');
-  if(hardBlock){title.textContent='Server-side free limit reached';sub.textContent='This browser, account, or network has already used the 3 free lookups. Upgrade to Solo for unlimited launch-scope lookups — $39.99/mo, cancel anytime.';if(skip)skip.style.display='none';}
+  if(hardBlock){title.textContent='Server-side free limit reached';sub.textContent='This browser, account, or network has already used the 3 free lookups. Upgrade to Solo for unlimited supported lookups — $39.99/mo, cancel anytime.';if(skip)skip.style.display='none';}
   else{title.textContent='Save your results';sub.textContent='Enter your email to save your lookup history and get your results by email. Completely free.';if(skip)skip.style.display='block';}
   // Reset to step 1
   document.getElementById('magic-step1').style.display='block';
@@ -2997,14 +2989,6 @@ function renderResults(d, job, city, state) {
   html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify final permit type with the AHJ before quoting or starting work.</div>`;
 
   const uncertaintyWarnings = buildUncertaintyWarnings(d);
-  if (uncertaintyWarnings.length) {
-    html += `<div class="uncertainty-warning-card" style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:0 10px 20px rgba(220,38,38,0.08)">
-      <div style="font-size:13px;font-weight:900;color:#991b1b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⚠️ Verify before relying on this result</div>
-      <div style="font-size:14px;color:#7f1d1d;line-height:1.55;margin-bottom:10px;font-weight:650">This result has uncertainty that can affect bid price, permit intake, or final inspection. Confirm these items with the AHJ before quoting or starting work.</div>
-      <ul class="bullet-list" style="margin-top:8px;color:#7f1d1d">${uncertaintyWarnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
-    </div>`;
-  }
-
   const evidencePack = d[`_${'evidence'}_${'pack'}`] || {};
   const evidenceCaveats = buildEvidencePackCaveats(evidencePack, { includeFailedClosedNone: true });
   if (evidencePack.enabled) {
@@ -3601,7 +3585,6 @@ function renderResultAsReport(d, job, city, state) {
   const confidenceReason = d.confidence_reason || '';
   const needsReview = !!d.needs_review;
   const hiddenTriggers = Array.isArray(d.hidden_triggers) ? d.hidden_triggers : [];
-  const reportUncertaintyWarnings = buildUncertaintyWarnings(d);
 
   // Field renderer helper — returns "<value>" or _missing marker
   const _v = (s) => {
@@ -3640,14 +3623,6 @@ function renderResultAsReport(d, job, city, state) {
   html += `</div>`;
 
   html += `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.5">⚠️ <strong>PermitAssist is guidance only.</strong> Verify final permit type with the AHJ before quoting or starting work.</div>`;
-
-  if (reportUncertaintyWarnings.length) {
-    html += `<div style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:14px 18px;margin-bottom:14px;color:#7f1d1d">
-      <div style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#991b1b;margin-bottom:6px">⚠️ Report needs verification</div>
-      <div style="font-size:13px;line-height:1.5;margin-bottom:8px;font-weight:650">This warning is intentionally shown in report/print view so uncertainty is not hidden when the result is copied, shared, or saved as PDF.</div>
-      <ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.55">${reportUncertaintyWarnings.map(w => `<li>${_esc(w)}</li>`).join('')}</ul>
-    </div>`;
-  }
 
   // Hidden triggers — render BEFORE field 1 (per spec)
   if (hiddenTriggers.length > 0) {
@@ -4648,7 +4623,7 @@ function runSampleLookup() {
   document.getElementById('city').value = 'Austin';
   document.getElementById('state').value = 'TX';
   document.getElementById('zip').value = '78701';
-  // Launch-scope commercial sample: restaurant tenant improvement.
+  // Commercial sample: restaurant tenant improvement.
   document.getElementById('query').value = 'restaurant tenant improvement with commercial kitchen hood, grease interceptor, dining area, plumbing, electrical, and ADA restroom upgrades';
   setJobCategory('commercial');
   checkShimmer();
