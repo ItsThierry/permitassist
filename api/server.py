@@ -216,8 +216,8 @@ def build_unsupported_ahj_response(city: str | None, state: str | None, classifi
         message = "This AHJ is not supported by PermitAssist because the city or state is invalid. Check the city/state and try again."
         error = "invalid_ahj"
     else:
-        message = "This AHJ is not supported by PermitAssist yet. Try a supported launch city or contact the local building department directly."
-        error = "unsupported_ahj"
+        message = "PermitAssist could not verify this city/state as a launch-covered AHJ. Check the city/state or verify directly with the local building department."
+        error = "unverified_ahj"
     return scrub_unsupported_ahj_response({
         "error": error,
         "ahj_status": status,
@@ -241,7 +241,7 @@ def _is_unsupported_ahj_result(result: dict | None) -> bool:
 
 
 def scrub_unsupported_ahj_response(result, city: str | None = None, state: str | None = None):
-    """Remove any supported-looking fields from unsupported/invalid AHJ responses."""
+    """Remove any supported-looking fields from invalid AHJ responses."""
     def _scrub(value):
         if isinstance(value, list):
             return [_scrub(item) for item in value]
@@ -259,11 +259,46 @@ def scrub_unsupported_ahj_response(result, city: str | None = None, state: str |
     result = _scrub(result)
     result.setdefault("ahj_status", "unsupported")
     result.setdefault("error", "unsupported_ahj")
-    result.setdefault("message", "This AHJ is not supported by PermitAssist yet. Try a supported launch city or contact the local building department directly.")
+    result.setdefault("message", "This AHJ is not supported by PermitAssist because the city or state is invalid. Check the city/state and try again.")
     result.setdefault("location", {"city": _normalize_ahj_city(city), "state": _normalize_ahj_state(state)})
     coverage = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
     coverage["status"] = "ahj_not_supported"
     result["coverage_truth"] = coverage
+    return result
+
+
+def annotate_unverified_us_jurisdiction_result(result: dict, city: str | None, state: str | None, classification: dict | None = None) -> dict:
+    """Mark best-effort results for valid-looking US AHJs outside verified launch coverage.
+
+    These are not treated as unsupported/fatal. They keep the lookup useful while
+    making the launch-coverage caveat explicit and review-worthy.
+    """
+    if not isinstance(result, dict):
+        return result
+    normalized_city = (classification or {}).get("city") or _normalize_ahj_city(city)
+    normalized_state = (classification or {}).get("state") or _normalize_ahj_state(state)
+    location_label = f"{normalized_city}, {normalized_state}".strip(" ,")
+    warning = (
+        f"PermitAssist has not verified launch coverage for {location_label} yet. "
+        "This is a best-effort official-source lookup; verify details with the local building department before filing."
+    )
+    result["ahj_status"] = "unverified"
+    result["jurisdiction_verification"] = "unverified_us_jurisdiction"
+    result["needs_review"] = True
+    result.setdefault("location", {"city": normalized_city, "state": normalized_state})
+    coverage = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
+    coverage.update({
+        "status": "jurisdiction_unverified",
+        "classification": "unverified_us_jurisdiction",
+        "reason": (classification or {}).get("reason") or "city_not_in_verified_launch_coverage",
+        "verified_launch_coverage": False,
+    })
+    result["coverage_truth"] = coverage
+    warnings = result.get("quality_warnings") if isinstance(result.get("quality_warnings"), list) else []
+    if warning not in warnings:
+        result["quality_warnings"] = [warning, *warnings]
+    else:
+        result["quality_warnings"] = warnings
     return result
 
 
@@ -5579,9 +5614,10 @@ class Handler(BaseHTTPRequestHandler):
                     return
 
                 ahj_coverage = classify_ahj_coverage(city, state)
-                if ahj_coverage.get("classification") != "supported":
+                unverified_us_jurisdiction = ahj_coverage.get("classification") == "unsupported"
+                if ahj_coverage.get("classification") == "invalid":
                     response = build_unsupported_ahj_response(city, state, ahj_coverage)
-                    record_beta_event("lookup_unsupported_ahj", {
+                    record_beta_event("lookup_invalid_ahj", {
                         "city": ahj_coverage.get("city", ""),
                         "state": ahj_coverage.get("state", ""),
                         "status": ahj_coverage.get("status", ""),
@@ -5724,6 +5760,8 @@ class Handler(BaseHTTPRequestHandler):
                         result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
                     result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
+                    if unverified_us_jurisdiction:
+                        result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
 
                     # Record stats and beta telemetry
                     record_lookup_stat(job_type, city, state, is_cached)
@@ -6094,7 +6132,8 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
                 ahj_coverage = classify_ahj_coverage(city, state)
-                if ahj_coverage.get("classification") != "supported":
+                unverified_us_jurisdiction = ahj_coverage.get("classification") == "unsupported"
+                if ahj_coverage.get("classification") == "invalid":
                     self.send_json(
                         _unsupported_ahj_http_status(ahj_coverage),
                         build_unsupported_ahj_response(city, state, ahj_coverage),
@@ -6104,6 +6143,8 @@ class Handler(BaseHTTPRequestHandler):
                 result = research_permit(job_type, city, state, zip_code, job_category=job_category, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
                 if evidence_allowed:
                     result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
+                if unverified_us_jurisdiction:
+                    result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
                 self.send_json(200, result)
             except Exception as e:
                 print(f"[api-v1-permit] Error: {type(e).__name__}")

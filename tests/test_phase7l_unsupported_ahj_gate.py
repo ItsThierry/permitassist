@@ -113,15 +113,23 @@ def test_phase7m_api_permit_allows_new_york_alias_to_existing_lookup_path(tmp_pa
     assert payload["permits_required"]
 
 
-def test_phase7m_api_permit_keeps_fake_new_york_city_unsupported_contract(tmp_path, monkeypatch):
+def test_phase7m_api_permit_marks_unverified_us_jurisdiction_without_blocking_lookup(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     called = {"research": False}
 
-    def fail_if_called(*args, **kwargs):
+    def fake_research(job_type, city, state, zip_code, **kwargs):
         called["research"] = True
-        raise AssertionError("research_permit must not run for fake NY AHJ")
+        return {
+            "permit_verdict": "YES",
+            "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+            "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration", "required": True}],
+            "apply_url": "https://example.gov/building-permits",
+            "sources": ["https://example.gov/building-permits"],
+            "confidence": "medium",
+        }
 
-    monkeypatch.setattr(server, "research_permit", fail_if_called)
+    monkeypatch.setattr(server, "research_permit", fake_research)
+    monkeypatch.setattr(server, "validate_url", lambda *args, **kwargs: True)
 
     with _LiveServer(server.Handler) as live:
         status, body = _post_json(
@@ -130,9 +138,15 @@ def test_phase7m_api_permit_keeps_fake_new_york_city_unsupported_contract(tmp_pa
             {"X-Sample-Demo": "1"},
         )
 
-    assert status == 422
-    _assert_unsupported_contract(body, "unsupported")
-    assert called["research"] is False
+    payload = json.loads(body)
+    assert status == 200
+    assert called["research"] is True
+    assert payload["ahj_status"] == "unverified"
+    assert payload["coverage_truth"]["status"] == "jurisdiction_unverified"
+    assert payload["coverage_truth"]["verified_launch_coverage"] is False
+    assert payload["needs_review"] is True
+    assert payload["permits_required"]
+    assert "not supported" not in body.lower()
 
 
 def test_phase7l_unsupported_response_builder_is_canonical_and_has_no_supported_fields(tmp_path, monkeypatch):
@@ -215,7 +229,7 @@ def test_phase7l_api_permit_blocks_springfield_zz_with_structured_response_not_r
     _assert_unsupported_contract(body, "invalid_state")
 
 
-def test_phase7l_api_permit_blocks_nowhereville_ca_before_semaphore_and_research(tmp_path, monkeypatch):
+def test_phase7l_api_permit_runs_unverified_us_jurisdiction_through_lookup(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     called = {"acquire": False, "research": False}
 
@@ -225,15 +239,23 @@ def test_phase7l_api_permit_blocks_nowhereville_ca_before_semaphore_and_research
             return True
 
         def release(self):
-            raise AssertionError("semaphore should not be released when never acquired")
+            called["released"] = True
 
     monkeypatch.setattr(server, "PERMIT_LOOKUP_SEMAPHORE", _SemaphoreProbe())
 
-    def fail_if_called(*args, **kwargs):
+    def fake_research(job_type, city, state, zip_code, **kwargs):
         called["research"] = True
-        raise AssertionError("research_permit must not run for unsupported AHJ")
+        return {
+            "permit_verdict": "MAYBE",
+            "permit_type": "Building Permit — Medical Clinic Tenant Improvement",
+            "permits_required": [{"permit_type": "Building Permit — Medical Clinic Tenant Improvement", "required": True}],
+            "apply_url": "https://example.gov/permits",
+            "sources": ["https://example.gov/permits"],
+            "confidence": "low",
+        }
 
-    monkeypatch.setattr(server, "research_permit", fail_if_called)
+    monkeypatch.setattr(server, "research_permit", fake_research)
+    monkeypatch.setattr(server, "validate_url", lambda *args, **kwargs: True)
 
     with _LiveServer(server.Handler) as live:
         status, body = _post_json(
@@ -242,9 +264,15 @@ def test_phase7l_api_permit_blocks_nowhereville_ca_before_semaphore_and_research
             {"X-Sample-Demo": "1"},
         )
 
-    assert status == 422
-    _assert_unsupported_contract(body, "unsupported")
-    assert called == {"acquire": False, "research": False}
+    payload = json.loads(body)
+    assert status == 200
+    assert called["acquire"] is True
+    assert called["research"] is True
+    assert called["released"] is True
+    assert payload["ahj_status"] == "unverified"
+    assert payload["coverage_truth"]["status"] == "jurisdiction_unverified"
+    assert payload["quality_warnings"]
+    assert "not supported" not in body.lower()
 
 
 def test_phase7l_supported_city_still_follows_existing_lookup_path(tmp_path, monkeypatch):
@@ -280,11 +308,23 @@ def test_phase7l_supported_city_still_follows_existing_lookup_path(tmp_path, mon
     assert payload["permits_required"]
 
 
-def test_phase7l_api_v1_blocks_unsupported_before_research_for_paid_api_user(tmp_path, monkeypatch):
+def test_phase7l_api_v1_marks_unverified_us_jurisdiction_for_paid_api_user(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "validate_api_key", lambda header: ("paid@example.test", {"id": "k"}))
     monkeypatch.setattr(server, "is_paid_user", lambda email: True)
-    monkeypatch.setattr(server, "research_permit", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no research")))
+    monkeypatch.setattr(server, "validate_url", lambda *args, **kwargs: True)
+
+    def fake_research(job_type, city, state, zip_code, **kwargs):
+        return {
+            "permit_verdict": "MAYBE",
+            "permit_type": "Building Permit — Medical Clinic Tenant Improvement",
+            "permits_required": [{"permit_type": "Building Permit — Medical Clinic Tenant Improvement", "required": True}],
+            "apply_url": "https://example.gov/permits",
+            "sources": ["https://example.gov/permits"],
+            "confidence": "low",
+        }
+
+    monkeypatch.setattr(server, "research_permit", fake_research)
 
     with _LiveServer(server.Handler) as live:
         status, body = _post_json(
@@ -293,8 +333,11 @@ def test_phase7l_api_v1_blocks_unsupported_before_research_for_paid_api_user(tmp
             {"Authorization": "Bearer test-api-key"},
         )
 
-    assert status == 422
-    _assert_unsupported_contract(body, "unsupported")
+    payload = json.loads(body)
+    assert status == 200
+    assert payload["ahj_status"] == "unverified"
+    assert payload["coverage_truth"]["status"] == "jurisdiction_unverified"
+    assert "not supported" not in body.lower()
 
 
 def test_phase7l_api_v1_internal_errors_do_not_leak_exception_text(tmp_path, monkeypatch):

@@ -4517,6 +4517,29 @@ function reloadResult(i) {
 }
 
 // ── Main lookup ──────────────────────────────────────────────────────────────
+function showLookupError(message, title = 'We could not finish that lookup') {
+  const safeMessage = message || 'Please check the details and try again.';
+  stopProgress();
+  const loading = document.getElementById('loading');
+  const form = document.getElementById('search-form');
+  const results = document.getElementById('results');
+  const inner = document.getElementById('results-inner');
+  if (loading) loading.style.display = 'none';
+  if (form) form.style.display = 'block';
+  if (results) results.style.display = 'block';
+  if (inner) {
+    inner.innerHTML = `
+      <section class="result-card" role="alert" aria-live="polite">
+        <div class="section-label">Lookup issue</div>
+        <h2>${esc(title)}</h2>
+        <p>${esc(safeMessage)}</p>
+        <p class="small-note">You can edit the job or location above and run it again.</p>
+      </section>
+    `;
+  }
+  document.getElementById('page-search').scrollTop = 0;
+}
+
 async function doLookup() {
   const raw = document.getElementById('query').value.trim();
   const address = document.getElementById('address')?.value.trim() || '';
@@ -4567,9 +4590,8 @@ async function doLookup() {
     const data = await res.json();
     syncLookupCounterFromResponse(res,data);
     if (res.status === 429) {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('search-form').style.display = 'block';
-      alert(data.message||"Too many requests. Please wait a minute and try again."); return;
+      showLookupError(data.message||"Too many requests. Please wait a minute and try again.", 'PermitAssist is busy');
+      return;
     }
     if (res.status === 403 && data.error==='free_limit_reached') {
       document.getElementById('loading').style.display = 'none';
@@ -4586,10 +4608,7 @@ async function doLookup() {
     renderResults(data, parsed.job_type, parsed.city, parsed.state);
     document.getElementById('page-search').scrollTop = 0;
   } catch (err) {
-    stopProgress();
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('search-form').style.display = 'block';
-    alert('Error: ' + err.message);
+    showLookupError(err.message, 'Lookup needs attention');
   }
 }
 
