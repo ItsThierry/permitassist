@@ -40,7 +40,8 @@ def test_frontend_confidence_badge_is_core_claim_aware():
     assert "const confBadgeHtml = buildConfidenceBadgeHtml(d, renderContext, city, state)" in body
     badge_body = _function_body("buildConfidenceBadgeHtml")
     assert "corePermitUnverified(d)" in badge_body
-    assert "Needs AHJ verification" in badge_body
+    assert "Permit required · name not source-confirmed" in badge_body
+    assert "Needs AHJ verification" not in badge_body
     assert "Verified · official sources" in badge_body
     assert "hasLocalAhjSource(d, city, state)" in badge_body
 
@@ -54,6 +55,25 @@ def test_frontend_sources_are_jurisdiction_filtered_before_display():
     body = _function_body("renderResults")
     assert "const sourceLinks = getOfficialSourceLinks(d, city, state)" in body
     assert "Array.isArray(d.sources) ? d.sources.filter(Boolean).slice(0, 5)" not in body
+
+
+def test_frontend_trust_patch_hides_internal_evidence_field_names_and_uses_name_precedence():
+    assert "'display_permit_name', 'official_permit_name', 'official_application_category', '_permit_display_name'" in HTML
+    assert "function customerFieldLabel(" in HTML
+    assert "Failed-closed evidence fields" not in HTML
+    assert "Missing fields:" not in HTML
+    assert "Fee information is not source-confirmed for this lookup" in HTML
+    caveat_body = _function_body("buildEvidencePackCaveats")
+    assert "customerFieldLabel" in caveat_body
+    assert "fee_range" in caveat_body
+    assert "Some field-specific details are not source-confirmed yet" in caveat_body
+
+
+def test_frontend_residential_missing_name_uses_customer_safe_fallback():
+    fallback_body = _function_body("defaultPermitDisplayName")
+    assert "Permit required — local permit name not confirmed" in fallback_body
+    assert "Permit -- verify exact AHJ title" not in HTML
+    assert "Permit — verify exact AHJ title" not in HTML
 
 
 def test_frontend_uses_vertical_inspection_profiles_when_engine_output_is_sparse_or_wrong():

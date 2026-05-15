@@ -2752,7 +2752,7 @@ function getRenderingContext(d, job, city, state) {
 }
 
 function isFallbackPermitName(name) {
-  return /permit\s+required\s*[-–—]+\s*exact\s+permit\s+type\s+needs\s+ahj\s+verification|exact\s+permit\s+(?:type|category).*needs\s+ahj\s+verification|needs\s+ahj\s+verification/i.test(String(name || ''));
+  return /permit\s+required\s*[-–—]+\s*exact\s+permit\s+type\s+needs\s+ahj\s+verification|permit\s*[-–—]+\s*verify\s+exact\s+ahj\s+title|exact\s+permit\s+(?:type|category).*needs\s+ahj\s+verification|needs\s+ahj\s+verification/i.test(String(name || ''));
 }
 
 function defaultPermitDisplayName(renderContext) {
@@ -2762,7 +2762,7 @@ function defaultPermitDisplayName(renderContext) {
   if (vertical === 'office_ti') return 'Commercial Office Tenant Improvement Permit';
   if ((renderContext?.is_commercial || false) && vertical === 'commercial_trade_only') return 'Commercial Trade Permit';
   if (renderContext?.is_commercial) return 'Commercial Permit / Tenant Improvement Review';
-  return 'the required permit';
+  return 'Permit required — local permit name not confirmed';
 }
 
 function sanitizePermitDisplayName(name, renderContext) {
@@ -2786,14 +2786,48 @@ function normalizePermitDisplayData(d, renderContext) {
 
 function getPermitDisplayName(d, renderContext) {
   renderContext = renderContext || getRenderingContext(d, window._lastLookupJob || '', window._lastLookupCity || '', window._lastLookupState || '');
-  if (d?._permit_display_name) return sanitizePermitDisplayName(d._permit_display_name, renderContext);
+  for (const field of ['display_permit_name', 'official_permit_name', 'official_application_category', '_permit_display_name']) {
+    if (d?.[field]) return sanitizePermitDisplayName(d[field], renderContext);
+  }
   const permits = normalizePermitDisplayData(d || {}, renderContext);
   return sanitizePermitDisplayName((permits.length > 0 && permits[0].portal_selection) || d?.permit_name || d?.permit_type || permits[0]?.permit_type || '', renderContext);
 }
 
+function evidenceFieldFailed(d, fieldName) {
+  const evidencePack = d?.[`_${'evidence'}_${'pack'}`] || {};
+  return Array.isArray(evidencePack.failed_closed_fields) && evidencePack.failed_closed_fields.includes(fieldName);
+}
+
+function customerSafeText(value) {
+  return String(value == null ? '' : value)
+    .replace(/\s*\[verify[^\]]*before merging\]/gi, '')
+    .replace(/\bfailed closed\b/gi, 'not source-confirmed')
+    .replace(/\bingestion-ready\b/gi, 'source-confirmed')
+    .replace(/\bpack-controlled\b/gi, 'source-backed')
+    .replace(/\blocal pack\b/gi, 'official source record')
+    .replace(/\bfee_range\b/g, 'fees')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function customerFieldLabel(field) {
+  const labels = {
+    fee_range: 'fees',
+    approval_timeline: 'timelines',
+    inspections: 'inspections',
+    apply_url: 'application link',
+    permit_type: 'permit-name label',
+    display_permit_name: 'permit-name label',
+    official_permit_name: 'official permit name',
+    official_application_category: 'official application category',
+    companion_reviews_triggers: 'companion reviews',
+  };
+  return labels[field] || 'supporting detail';
+}
+
 function corePermitUnverified(d) {
   const names = [d?.permit_name, d?.permit_type, ...((d?.permits_required || []).flatMap(p => p ? [p.permit_type, p.portal_selection, p.name, p.title] : []))].filter(Boolean).join(' ');
-  return !!d?.needs_review || isFallbackPermitName(names) || /unknown|unverified|needs?\s+AHJ\s+verification|verify\s+with\s+(?:the\s+)?AHJ|human\s+review/i.test(`${d?.confidence_reason || ''} ${names}`);
+  return d?.permit_name_confidence === 'low' || d?.permit_name_confidence === 'medium' || d?.permit_name_status === 'official_category_confirmed_exact_label_missing' || d?.permit_name_verified === false || d?.permit_type_verified === false || isFallbackPermitName(names) || /unknown|unverified|needs?\s+AHJ\s+verification|verify\s+with\s+(?:the\s+)?AHJ|human\s+review/i.test(`${d?.confidence_reason || ''} ${names}`);
 }
 
 const LOCAL_AHJ_HOSTS = {
@@ -2856,7 +2890,7 @@ function buildConfidenceBadgeHtml(d, renderContext, city, state) {
   const dataSourceRaw = d?.data_source || d?._meta?.city_match_level || '';
   const isCountyFB = d?.county_fallback === true;
   if (corePermitUnverified(d)) {
-    return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Needs AHJ verification<span class="conf-tooltip">Core permit category/name is not verified. Use this as a verification checklist, not final authority.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Core permit category needs AHJ confirmation before quoting</div>`;
+    return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Permit required · name not source-confirmed<span class="conf-tooltip">Permit appears required, but the exact official permit/application name is not source-confirmed for this lookup.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Permit required confidence is separate from exact permit-name confidence</div>`;
   }
   if ((dataSourceRaw === 'city_database' || dataSourceRaw === 'city') && hasLocalAhjSource(d, city, state)) {
     return `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified · official sources<span class="conf-tooltip">Cross-checked against local AHJ sources for the core permit claim. Verify final intake details before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Core permit claim is supported by local AHJ sources · verify final intake details</div>`;
@@ -2994,7 +3028,7 @@ function getNextSteps(d, job, city, state, renderContext) {
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])].slice(0, 3);
   const steps = [
     `Ask for \"${permitName}\" with the ${d.applying_office || `${city} building department`}.`,
-    d.fee_range ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Confirm the fee and save the receipt / confirmation number.',
+    d.fee_range && !evidenceFieldFailed(d, 'fee_range') ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Fee information is not source-confirmed for this lookup; save the receipt / confirmation number once the permit office calculates it.',
     docs.length ? `Bring or upload: ${docs.join(', ')}.` : 'Bring your scope of work, any required plans, and contractor/license details.',
   ];
   if (d.approval_timeline?.simple || d.approval_timeline?.complex) {
@@ -3016,12 +3050,13 @@ function buildEvidencePackCaveats(evidencePack, options = {}) {
   const evidenceMatchedFields = Array.isArray(evidencePack.matched_fields) ? evidencePack.matched_fields.filter(Boolean) : [];
 
   if (evidenceFailedFields.length) {
-    caveats.push(`Failed-closed evidence fields: ${evidenceFailedFields.slice(0, 6).join(', ')}. These fields were not shown as verified because no fresh matching evidence was loaded. Do not quote or file from those fields until AHJ-confirmed.`);
+    const safeLabels = [...new Set(evidenceFailedFields.slice(0, 6).map(customerFieldLabel))];
+    caveats.push(`Some field-specific details are not source-confirmed yet: ${safeLabels.join(', ')}. These details are kept separate from the permit-required answer.`);
   } else if (includeFailedClosedNone) {
-    caveats.push('Failed closed: none flagged by the local pack.');
+    caveats.push('No field-specific source-confirmation gaps were flagged.');
   }
   if (evidenceFailedFields.includes('fee_range')) {
-    caveats.push('Fee range is not verified in this evidence pack. Confirm fees with the AHJ before quoting.');
+    caveats.push('Fee information is not source-confirmed for this lookup.');
   }
   if (evidenceFailedFields.includes('inspections')) {
     caveats.push('Inspections are not verified in this evidence pack. Confirm required inspections and booking steps with the AHJ before scheduling work.');
@@ -3066,14 +3101,14 @@ function buildUncertaintyWarnings(d) {
     warnings.push('No city-level official-source match is confirmed for this lookup.');
   }
   if (missingFields.length) {
-    warnings.push(`Missing fields: ${missingFields.slice(0, 6).join(', ')}.`);
+    warnings.push(`Some fields need more source confirmation: ${[...new Set(missingFields.slice(0, 6).map(customerFieldLabel))].join(', ')}.`);
   }
   buildEvidencePackCaveats(evidencePack).forEach(caveat => warnings.push(caveat));
-  qualityWarnings.slice(0, 5).forEach(w => warnings.push(String(w)));
+  qualityWarnings.slice(0, 5).map(customerSafeText).filter(Boolean).forEach(w => warnings.push(w));
   validationIssues.slice(0, 4).forEach(issue => {
     const field = issue && (issue.field || issue.kind || issue.name);
     const message = issue && (issue.message || issue.reason || issue.detail);
-    warnings.push([field, message].filter(Boolean).join(': ') || 'Validation issue needs review.');
+    warnings.push([field ? customerFieldLabel(field) : '', message].filter(Boolean).join(': ') || 'Validation issue needs review.');
   });
   if (d._fee_unverified || /call|confirm|varies|estimate/i.test(String(d.fee_range || d.fee || ''))) {
     warnings.push('Fee is not firm. Confirm with the permit office before quoting the customer.');
@@ -3142,7 +3177,7 @@ function renderResults(d, job, city, state) {
   const officeAddress = d.apply_address || d.office_address || '';
   const jobAddress = currentResult?.address || '';
   const maps = d.apply_google_maps || d.maps_url || '';
-  const fee = d.fee_range || d.fee || d.cost || '';
+  const fee = evidenceFieldFailed(d, 'fee_range') ? '' : (d.fee_range || d.fee || d.cost || '');
   const applyUrl = d.apply_url || '';
   const applyPdf = d.apply_pdf || '';
   const countyNote = d.county_fallback_note || '';
@@ -3328,13 +3363,15 @@ function renderResults(d, job, city, state) {
 
   // Summary card (for YES/MAYBE)
   if (verdict !== 'no') {
-    const portalSel = permits.length > 0 ? permits[0].portal_selection : null;
+    const portalSel = safePermitName;
     const exactPermitName = safePermitName;
     html += `<div class="summary-card">
       <div class="section-label">📋 Permit Details</div>
       <div class="verdict-pill ${verdict==='yes'?'verdict-yes':'verdict-maybe'}">${verdict==='yes'?'✅ YES — Permit Required':'⚠️ MAYBE — Check With Building Dept'}</div>
       <div class="permit-name-big">${esc(exactPermitName)}</div>`;
-    const aliasPermitName = sanitizePermitDisplayName(d.permit_name || d.permit_type || permits[0]?.permit_type || '', renderContext);
+    const aliasPermitName = [d.official_permit_name, d.official_application_category]
+      .map(name => sanitizePermitDisplayName(name, renderContext))
+      .find(name => name && name !== exactPermitName) || '';
     if (portalSel && aliasPermitName && aliasPermitName !== exactPermitName) {
       html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">Also known as: ${esc(aliasPermitName)}</div>`;
     }
@@ -3732,7 +3769,8 @@ function renderResultAsReport(d, job, city, state) {
                      : '<span class="badge badge-gray">— verdict pending</span>';
 
   const permits = Array.isArray(d.permits_required) ? d.permits_required : [];
-  const permitName = d.permit_name || d.permit_type || (permits[0] && permits[0].permit_type) || '';
+  const renderContext = getRenderingContext(d, job, city, state);
+  const permitName = getPermitDisplayName(d, renderContext);
   const office = d.applying_office || '';
   const phone = d.apply_phone || '';
   const address = d.apply_address || '';
@@ -3740,7 +3778,7 @@ function renderResultAsReport(d, job, city, state) {
   const applyPdf = d.apply_pdf || '';
   const license = d.license_required || '';
   const cityReg = d.city_contractor_registration || '';
-  const fee = d.fee_range || '';
+  const fee = evidenceFieldFailed(d, 'fee_range') ? '' : (d.fee_range || '');
   const feeAdjusted = !!d._fee_adjusted;
   const tl = d.approval_timeline || {};
   const reqs = (Array.isArray(d.requirements) && d.requirements.length) ? d.requirements
@@ -3815,7 +3853,7 @@ function renderResultAsReport(d, job, city, state) {
         html += `<div style="font-size:11px;color:var(--text2);margin-top:4px"><strong>Action:</strong> ${_esc(t.likely_required_actions.join(' · '))}</div>`;
       }
       if (Array.isArray(t.citations) && t.citations.length) {
-        html += `<div style="font-size:11px;color:var(--muted);margin-top:2px"><strong>Code:</strong> ${_esc(t.citations.join(' · '))}</div>`;
+        html += `<div style="font-size:11px;color:var(--muted);margin-top:2px"><strong>Code:</strong> ${_esc(t.citations.map(customerSafeText).filter(Boolean).join(' · '))}</div>`;
       }
       html += `</div>`;
     });
@@ -3880,7 +3918,11 @@ function renderResultAsReport(d, job, city, state) {
   let missingBlock = '';
   const reportEvidencePack = d[`_${'evidence'}_${'pack'}`] || {};
   const reportEvidenceFailedFields = Array.isArray(reportEvidencePack.failed_closed_fields) ? reportEvidencePack.failed_closed_fields : [];
-  const missingRollup = [...missingFields, ...validationIssues.map(v => v.field || v.kind || ''), ...reportEvidenceFailedFields.map(field => `failed closed: ${field}`)].filter(Boolean);
+  const missingRollup = [
+    ...missingFields.map(customerFieldLabel),
+    ...validationIssues.map(v => customerFieldLabel(v.field || v.kind || '')),
+    ...reportEvidenceFailedFields.map(customerFieldLabel),
+  ].filter(Boolean);
   if (missingRollup.length === 0) {
     missingBlock = '✅ None flagged';
   } else {

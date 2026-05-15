@@ -1501,7 +1501,7 @@ def _render_lint_proxy_text(result: dict) -> str:
     if data_source in {"city_database", "city"} and has_local_ahj_source and str(result.get("confidence") or "").lower() == "high" and not uncertain_core:
         bits.append("Verified · official sources")
     if result.get("needs_review") or result.get("confidence_reason"):
-        bits.append(str(result.get("confidence_reason") or "needs AHJ verification"))
+        bits.append(str(result.get("confidence_reason") or "Some fields need source confirmation."))
     return "\n".join(bits)
 
 
@@ -2104,25 +2104,59 @@ def render_white_label_report_html(data: dict) -> str:
     result = data.get("result") or {}
     contractor = html.escape(str(data.get("contractor_name") or "Contractor"))
     client = html.escape(str(data.get("client_name") or "Client / Property"))
-    job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
+    job_type_raw = str(data.get("job_type") or result.get("job_summary") or "Permit research")
+    job = html.escape(job_type_raw)
     location = html.escape(", ".join(x for x in [str(data.get("city") or ""), str(data.get("state") or "")] if x))
     citations = result.get("claim_citations") or build_claim_citations(result)
+    display_scope = result.get("_primary_scope") or result.get("primary_scope") or result.get("job_category") or ""
+    permit_display_name = sanitize_permit_display_name(
+        result.get("_permit_display_name") or result.get("permit_name") or result.get("permit_type"),
+        scope=display_scope,
+        job_type=job_type_raw,
+    )
     permits = result.get("permits_required") or []
-    permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or "<li>Permit type needs AHJ verification.</li>"
+
+    def _report_permit_item_text(permit_item):
+        if isinstance(permit_item, dict):
+            raw_name = (
+                permit_item.get("_permit_display_name")
+                or permit_item.get("permit_name")
+                or permit_item.get("permit_type")
+                or permit_item.get("name")
+                or permit_item.get("title")
+                or permit_item.get("portal_selection")
+            )
+        else:
+            raw_name = permit_item
+        return sanitize_permit_display_name(raw_name, scope=display_scope, job_type=job_type_raw)
+
+    permit_items = "".join(f"<li>{html.escape(_report_permit_item_text(p))}</li>" for p in permits) or f"<li>{html.escape(str(permit_display_name))}</li>"
     safe_apply_url = _safe_external_url(result.get('apply_url') or '')
     footnotes = "".join(
         f"<li><strong>{html.escape(c.get('id',''))}</strong> {html.escape(c.get('claim',''))}: "
-        f"{html.escape(c.get('quoted_snippet') or 'No quoted snippet available yet — verify with AHJ.')} "
+        f"{html.escape(c.get('quoted_snippet') or 'Source quote not attached for this field yet.')} "
         f"<br>{_render_safe_link(c.get('source_url','')) or 'No safe source URL attached'} "
         f"<em>Checked {html.escape(c.get('checked_at',''))}; confidence {html.escape(c.get('confidence',''))}</em></li>"
         for c in citations
-    ) or "<li>No citations attached yet; verify with AHJ.</li>"
+    ) or "<li>No citations attached yet.</li>"
     warnings_list = list(result.get("quality_warnings") or [])
-    evidence_meta = result.get("_evidence_pack") or {}
+    evidence_meta = result.get("_evidence_pack") or result.get("source_confirmation") or {}
     evidence_failed = [str(field) for field in (evidence_meta.get("failed_closed_fields") or []) if field]
+    evidence_gap_labels = [str(field) for field in (evidence_meta.get("field_gap_labels") or []) if field]
     evidence_matched = [str(field) for field in (evidence_meta.get("matched_fields") or []) if field]
-    if evidence_meta.get("enabled") and evidence_failed:
-        warnings_list.append("Local evidence pack failed closed for: " + ", ".join(evidence_failed) + ". Do not quote or file from those fields until AHJ-confirmed.")
+    if evidence_meta.get("enabled") and (evidence_failed or evidence_gap_labels):
+        field_labels = {
+            "fee_range": "fees",
+            "approval_timeline": "timelines",
+            "inspections": "inspections",
+            "apply_url": "application link",
+            "permit_type": "permit-name label",
+            "companion_reviews_triggers": "companion reviews",
+        }
+        safe_failed = evidence_gap_labels or [field_labels.get(field, "supporting detail") for field in evidence_failed]
+        if "fee_range" in evidence_failed or "fees" in evidence_gap_labels or evidence_meta.get("fee_unavailable"):
+            warnings_list.append("Fee information is not source-confirmed for this lookup.")
+        warnings_list.append("Some field-specific details are not source-confirmed yet: " + ", ".join(dict.fromkeys(safe_failed)) + ".")
     if evidence_meta.get("enabled") and "approval_timeline" in evidence_matched:
         warnings_list.append("Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate.")
     if evidence_meta.get("enabled") and "companion_reviews_triggers" in evidence_matched:
@@ -4686,6 +4720,9 @@ def redact_public_output(value):
             "field_evidence_confidence",
             "evidence_pack_record_id",
             "record_fingerprint_sha256",
+            "permit_name_source_field",
+            "display_source_field",
+            "name_source_precedence",
             # Internal state-overlay routing/debug payload. Customer JSON should
             # expose only the final contractor guidance, not inactive/wrong-
             # vertical schema metadata such as CA medical-clinic overlays inside
@@ -4698,10 +4735,20 @@ def redact_public_output(value):
             if key_text in {"_fee_floor_components", "_rulebook_depth_disclaimer", "_residential_home_office_leak_repaired"}:
                 continue
             if key_text == "_evidence_pack":
-                # Customer API responses must not expose internal evidence-pack
-                # metadata or even the private key name. Customer-safe source
-                # confidence belongs in public fields such as coverage_truth and
-                # claim_citations, not in the internal routing/debug payload.
+                failed = item.get("failed_closed_fields") if isinstance(item, dict) else []
+                field_labels = {
+                    "fee_range": "fees",
+                    "approval_timeline": "timelines",
+                    "inspections": "inspections",
+                    "apply_url": "application link",
+                    "permit_type": "permit-name label",
+                    "companion_reviews_triggers": "companion reviews",
+                }
+                redacted["source_confirmation"] = {
+                    "enabled": bool(item.get("enabled")) if isinstance(item, dict) else False,
+                    "field_gap_labels": list(dict.fromkeys(field_labels.get(str(field), "supporting detail") for field in (failed or []))),
+                    "fee_unavailable": "fee_range" in set(str(field) for field in (failed or [])),
+                }
                 continue
             if "evidence_pack" in key_lc or "fingerprint" in key_lc:
                 continue
@@ -4720,7 +4767,13 @@ def redact_public_output(value):
         text = _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", value)
         text = re.sub(r"(?i)evidence[-_ ]pack", "official source record", text)
         text = re.sub(r"(?i)fingerprint", "checksum", text)
-        return text
+        text = re.sub(r"(?i)\bfee_range\b", "fees", text)
+        text = re.sub(r"(?i)\s*\[verify[^\]]*before merging\]", "", text)
+        text = re.sub(r"(?i)\bfailed closed\b", "not source-confirmed", text)
+        text = re.sub(r"(?i)\bingestion-ready\b", "source-confirmed", text)
+        text = re.sub(r"(?i)\bpack-controlled\b", "source-backed", text)
+        text = re.sub(r"(?i)\blocal pack\b", "official source record", text)
+        return re.sub(r"\s{2,}", " ", text).strip()
     return value
 
 

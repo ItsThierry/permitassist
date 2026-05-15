@@ -63,13 +63,13 @@ def test_dallas_evidence_exposure_limits_are_visible_in_standard_report_and_copy
 
     required = [
         "Evidence-pack exposure limits",
-        "Failed-closed evidence fields:",
-        "fee_range",
+        "Some field-specific details are not source-confirmed yet:",
+        "fees",
         "inspections",
+        "Fee information is not source-confirmed for this lookup",
         "statutory/AHJ outer deadline only — not a local queue or plan-review estimate",
         "not a complete local specialty-trigger list",
         "Exact portal subcategory and filing path still need AHJ/portal verification before filing",
-        "Failed-closed evidence fields:",
     ]
     for text in required:
         assert text in source
@@ -80,7 +80,7 @@ def test_dallas_evidence_exposure_limits_are_visible_in_standard_report_and_copy
 
     report_body = _function_body(source, "renderResultAsReport")
     small_warning_pos = report_body.index("PermitAssist is guidance only")
-    missing_rollup_pos = report_body.index("failed closed: ${field}")
+    missing_rollup_pos = report_body.index("...reportEvidenceFailedFields.map(customerFieldLabel)")
     assert small_warning_pos < missing_rollup_pos
 
 
