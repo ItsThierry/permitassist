@@ -1,6 +1,9 @@
 from importlib import util
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SERVER_PATH = REPO_ROOT / "api" / "server.py"
+
 _HELPER_SPEC = util.spec_from_file_location(
     "debug_headers_helper",
     Path(__file__).with_name("test_debug_headers_endpoint.py"),
@@ -10,6 +13,12 @@ _HELPER_SPEC.loader.exec_module(_debug_helper)
 _import_server = _debug_helper._import_server
 
 FALLBACK_TITLE = "Permit required -- exact permit type needs AHJ verification"
+
+
+def test_finalize_pipeline_reenforces_rendered_contract_after_phase7h_statement():
+    source = SERVER_PATH.read_text(encoding="utf-8")
+    tail = source.split("ensure_customer_visible_permit_trust_statement(result, city, state)", 1)[1].split("return result", 1)[0]
+    assert "_enforce_rendered_output_contract(result, job_type, city, state" in tail
 
 
 def test_quality_gate_attaches_canonical_context_display_names_source_classes_and_lint(tmp_path, monkeypatch):
@@ -105,3 +114,39 @@ def test_quality_gate_proxy_verified_claim_requires_city_data_and_local_ahj(tmp_
     proxy_text = server._render_lint_proxy_text(gated)
     assert "Verified · official sources" not in proxy_text
     assert gated["_rendered_lint"]["passed"] is True
+
+
+def test_finalize_pipeline_does_not_reintroduce_fallback_text_after_quality_gate(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    server = _import_server(tmp_path, monkeypatch)
+    finalized = server.finalize_permit_lookup_result(
+        {
+            "permit_verdict": "YES",
+            "confidence": "high",
+            "confidence_reason": "Permit required, but exact permit type needs AHJ verification.",
+            "data_source": "city",
+            "_primary_scope": "commercial_restaurant",
+            "job_category": "commercial",
+            "inspections": [
+                "Building rough inspection",
+                "Building final inspection",
+                "Commercial kitchen hood and grease duct inspection",
+                "Fire suppression and fire alarm inspection",
+                "Health inspection",
+                "Egress and occupancy final inspection",
+            ],
+            "sources": ["https://www.chicago.gov/city/en/depts/bldgs.html"],
+        },
+        "Chicago restaurant tenant improvement with Type I hood and grease duct",
+        "Chicago",
+        "IL",
+        evidence_allowed=False,
+    )
+
+    assert finalized["_rendering_context"]["template_family"] == "commercial"
+    assert finalized["_permit_display_name"] == "Building Permit — Tenant Improvement / Restaurant Interior Alteration"
+    names = [finalized.get("permit_name"), finalized.get("permit_type")]
+    names.extend(p.get("permit_type") for p in finalized.get("permits_required", []) if isinstance(p, dict))
+    assert all("needs AHJ verification" not in str(name) for name in names)
+    assert all("exact permit type" not in str(name).lower() for name in names)
+    assert finalized["_rendered_lint"]["passed"] is True

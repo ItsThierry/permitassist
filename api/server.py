@@ -1505,6 +1505,31 @@ def _render_lint_proxy_text(result: dict) -> str:
     return "\n".join(bits)
 
 
+def _enforce_rendered_output_contract(result: dict, job_type: str, city: str, state: str, warnings: list | None = None) -> dict:
+    """Re-apply the customer-visible rendering contract after every overlay.
+
+    Later overlays such as evidence-pack fail-closed handling and Phase 7H trust
+    statements can intentionally reintroduce uncertainty placeholders in raw
+    permit fields. Commercial customer surfaces still need clean title/name
+    slots, with uncertainty kept in notes/warnings only.
+    """
+    context = build_rendering_context(result, job_type, city, state)
+    result["_rendering_context"] = context
+    _sanitize_commercial_display_names(result, context, job_type)
+    _ensure_vertical_inspection_profile(result, context, job_type)
+    _attach_source_classification(result, city, state)
+    lint = lint_rendered_output(result, _render_lint_proxy_text(result), job_type, city, state)
+    result["_rendered_lint"] = lint
+    if warnings is not None and not lint.get("passed"):
+        warnings.append("Rendered output lint requires customer-visible verification/fixes: " + ", ".join(v.get("code", "unknown") for v in lint.get("violations", [])[:5]) + ".")
+
+    if not context.get("is_commercial"):
+        result.pop("_rendering_context", None)
+        result.pop("_rendered_lint", None)
+        result.pop("_inspection_profile_applied", None)
+    return result
+
+
 def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: str) -> dict:
     """Final safety gate before a PermitIQ result is shown to users.
 
@@ -1576,20 +1601,7 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     # Re-establish the canonical rendering context after any primary-scope or
     # permit repair above, then enforce the customer-visible contract before
     # the frontend can render a polished but misleading report.
-    context = build_rendering_context(result, job_type, city, state)
-    result["_rendering_context"] = context
-    _sanitize_commercial_display_names(result, context, job_type)
-    _ensure_vertical_inspection_profile(result, context, job_type)
-    _attach_source_classification(result, city, state)
-    lint = lint_rendered_output(result, _render_lint_proxy_text(result), job_type, city, state)
-    result["_rendered_lint"] = lint
-    if not lint.get("passed"):
-        warnings.append("Rendered output lint requires customer-visible verification/fixes: " + ", ".join(v.get("code", "unknown") for v in lint.get("violations", [])[:5]) + ".")
-
-    if not context.get("is_commercial"):
-        result.pop("_rendering_context", None)
-        result.pop("_rendered_lint", None)
-        result.pop("_inspection_profile_applied", None)
+    _enforce_rendered_output_contract(result, job_type, city, state, warnings)
 
     if str(result.get("confidence") or "").lower() == "high" and not sources:
         result["confidence"] = "medium"
@@ -2040,6 +2052,18 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     # verdicts without changing evidence-pack matching or inventing official
     # permit-type certainty.
     ensure_customer_visible_permit_trust_statement(result, city, state)
+    # Phase 7H can reinsert uncertainty placeholders into raw permit name/type
+    # fields after the first quality gate. Re-enforce the commercial rendered
+    # output contract last so API/report title slots stay clean.
+    final_warnings = result.get("quality_warnings") if isinstance(result.get("quality_warnings"), list) else []
+    _enforce_rendered_output_contract(result, job_type, city, state)
+    if final_warnings:
+        result["quality_warnings"] = final_warnings
+        merged_warnings = []
+        for warning in list(result.get("warnings") or []) + list(final_warnings):
+            if warning and warning not in merged_warnings:
+                merged_warnings.append(warning)
+        result["warnings"] = merged_warnings
     return result
 
 
