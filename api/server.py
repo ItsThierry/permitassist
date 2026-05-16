@@ -1998,7 +1998,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         warnings = result.setdefault("quality_warnings", [])
         if "inspections" in evidence_failed:
             result["inspection_booking"] = None
-            warning = "Inspection booking steps are not shown because local evidence-pack inspections failed closed; verify required inspections and booking with the AHJ."
+            warning = "Inspection booking steps are not shown because official-source inspection evidence is not confirmed yet; verify required inspections and booking with the AHJ."
             if warning not in warnings:
                 warnings.append(warning)
         if "fee_range" in evidence_failed:
