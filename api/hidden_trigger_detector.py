@@ -1483,9 +1483,21 @@ def _region_applies(trigger: dict, city: str, state: str, text: str) -> bool:
     return True
 
 
+def _sanitize_public_trigger_value(value: Any) -> Any:
+    """Strip internal data-pack research notes before trigger data reaches customer surfaces."""
+    if isinstance(value, str):
+        cleaned = re.sub(r"\s*\[verify[^\]]*before merging\]", "", value, flags=re.I)
+        return re.sub(r"\s{2,}", " ", cleaned).strip()
+    if isinstance(value, list):
+        return [_sanitize_public_trigger_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _sanitize_public_trigger_value(item) for key, item in value.items()}
+    return value
+
+
 def _public_trigger(trigger: dict) -> dict:
     clean = {
-        k: copy.deepcopy(v)
+        k: _sanitize_public_trigger_value(copy.deepcopy(v))
         for k, v in trigger.items()
         if k not in PRIVATE_TRIGGER_KEYS and k not in INTERNAL_TRIGGER_KEYS
     }

@@ -16,15 +16,24 @@ from urllib.parse import urlparse
 
 FALLBACK_NAME_RE = re.compile(
     r"permit\s+required\s*[-–—]+\s*exact\s+permit\s+type\s+needs\s+ahj\s+verification|"
+    r"permit\s*[-–—]+\s*verify\s+exact\s+ahj\s+title|"
     r"exact\s+permit\s+(?:type|category).*needs\s+ahj\s+verification|"
     r"needs\s+ahj\s+verification",
     re.I,
 )
-
 UNCERTAINTY_RE = re.compile(r"\b(unknown|unverified|needs?\s+AHJ\s+verification|verify\s+with\s+(?:the\s+)?AHJ|human\s+review)\b", re.I)
 VERIFIED_RE = re.compile(r"\b(Verified\s*[·-]?\s*(?:official\s+sources?|source|data)|City-verified|✓\s*Verified)\b", re.I)
 HOMEOWNER_RE = re.compile(r"\b(homeowner|home\s*sale|selling\s+your\s+home|sell\s+the\s+home|homeowner\s+insurance|your\s+contractor\s+should\s+have)\b", re.I)
 STRING_ARTIFACT_RE = re.compile(r"\b(undefined|null|NaN)\b|\$\s*,|,\s*,|\(\s*\)|\b1\s+inspections\b", re.I)
+CUSTOMER_VISIBLE_DEBUG_RE = re.compile(
+    r"permit\s*[-–—]+\s*verify\s+exact\s+ahj\s+title|"
+    r"needs\s+review\s+for\s*:\s*[a-z_]+|"
+    r"\bfee_range\b|"
+    r"verify\s+before\s+merging|"
+    r"\b(?:needs_review_reasons|quality_warnings|failed_closed_fields|source_golden_field_status)\b",
+    re.I,
+)
+
 
 LOCAL_HOST_BY_CITY = {
     "chicago": ("chicago.gov", "cityofchicago.org"),
@@ -278,7 +287,7 @@ def sanitize_permit_display_name(name: str | None, scope: str | None = None, job
             return "Commercial Office Tenant Improvement Permit"
         if vertical in {"commercial_unknown", "commercial_trade_only"}:
             return "Commercial Permit / Trade Permit"
-        return "Permit — verify exact AHJ title"
+        return "Permit required — local permit name not confirmed"
     return re.sub(r"\s+", " ", raw)
 
 
@@ -388,6 +397,9 @@ def lint_rendered_output(result: dict[str, Any] | None, rendered_text: str, job_
     names = _current_names(result)
     if any(FALLBACK_NAME_RE.search(n) for n in names):
         add("fallback_text_in_permit_title", "Fallback/uncertainty text appears inside permit title/name slot.")
+
+    if CUSTOMER_VISIBLE_DEBUG_RE.search(text):
+        add("internal_debug_language_visible", "Customer-visible output contains placeholder text, raw internal field names, or debug/review instructions.")
 
     profile = select_inspection_profile(context["vertical"], job_type)
     inspection_text = _inspection_text(result, text)

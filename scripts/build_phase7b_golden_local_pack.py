@@ -65,6 +65,24 @@ SUPPRESSED_SOURCE_FIELDS = {
     "specialty_vertical_triggers",
     "trade_permit_obligations",
 }
+EXACT_PERMIT_NAME_TEMPLATE_FIELDS = (
+    "display_permit_name",
+    "official_permit_name",
+    "official_application_category",
+    "display_source_field",
+    "name_source_precedence",
+    "residential_project_type",
+    "trade_permit_names",
+    "septic_or_sewer_review",
+    "customer_visibility_tier",
+)
+PERMIT_NAME_STATUS_ENUM = (
+    "exact_official_name_confirmed",
+    "official_category_confirmed_exact_label_missing",
+    "no_evidence_found_after_completed_search",
+    "needs_research",
+    "conflict_needs_human_review",
+)
 
 
 def _sha256(data: bytes) -> str:
@@ -280,6 +298,11 @@ def build_pack(source_path: Path) -> dict[str, Any]:
         "field_certainty_enum": ["promoted_clean", "promoted_caveated", "not_published_on_official_sources", "not_researched_enough", "rejected"],
         "caveat_type_enum": ["none", "field_caveat", "row_caveat", "row_and_field_caveat"],
         "customer_surface_policy_enum": ["show_as_fact", "show_with_caveat", "suppress_but_log_internal", "never_show"],
+        "exact_permit_name_template_fields": list(EXACT_PERMIT_NAME_TEMPLATE_FIELDS),
+        "name_source_precedence": ["display_permit_name", "official_permit_name", "official_application_category"],
+        "permit_name_status_enum": list(PERMIT_NAME_STATUS_ENUM),
+        "customer_visibility_tier_enum": ["customer_ready", "show_with_caveat", "internal_only", "never_show"],
+        "residential_commercial_expansion_ready": True,
         "suppressed_source_fields": sorted(SUPPRESSED_SOURCE_FIELDS),
         "internal_unpromoted_field_reasons": _internal_unpromoted_field_reasons(rows),
         "generated_from": SOURCE_ARTIFACT,

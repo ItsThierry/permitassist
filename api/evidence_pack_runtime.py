@@ -32,6 +32,21 @@ CONSERVATIVE_PACK_CONTROLLED_FIELDS = frozenset(
         "permit_type",
     }
 )
+PERMIT_NAME_SOURCE_FIELDS = ("display_permit_name", "official_permit_name", "official_application_category")
+PERMIT_NAME_TEMPLATE_FIELDS = frozenset(
+    {
+        "display_permit_name",
+        "official_permit_name",
+        "official_application_category",
+        "display_source_field",
+        "name_source_precedence",
+        "residential_project_type",
+        "trade_permit_names",
+        "septic_or_sewer_review",
+        "customer_visibility_tier",
+    }
+)
+PACK_FAIL_CLOSED_FIELDS = CONSERVATIVE_PACK_CONTROLLED_FIELDS
 PROTECTED_PREVIEW_EVIDENCE_PACK_MODES = frozenset(
     {
         "phase7b_golden_local_preview",
@@ -243,6 +258,7 @@ VALID_CONTRACT_STATUSES = {
 }
 
 ALLOWED_REQUEST_VERTICALS = {
+    "residential",
     "restaurant_ti",
     "medical_clinic_ti",
     "office_ti",
@@ -357,6 +373,11 @@ def _canonical_vertical(value: Any) -> str:
         "commercial mep tenant improvement": "commercial_mep_ti",
         "cross trade commercial mep": "commercial_mep_ti",
         "cross trade mep": "commercial_mep_ti",
+        "residential": "residential",
+        "residential remodel": "residential",
+        "residential bathroom remodel": "residential",
+        "single family": "residential",
+        "single family residential": "residential",
         "ahj level": "ahj_level",
     }
     if text in aliases:
@@ -473,6 +494,8 @@ def _vertical_for_job(job_type: str, *, explicit_vertical: Any = None, result: d
         return "commercial_electrical"
     if commercial_signal and trade_hits["plumbing"]:
         return "commercial_plumbing"
+    if re.search(r"\b(residential|single family|single family home|dwelling|home remodel|bathroom remodel|kitchen remodel)\b", text):
+        return "residential"
     return "unknown"
 
 
@@ -930,6 +953,44 @@ def _citation_from_record(field: str, record: dict[str, Any], checked_at: str) -
     }
 
 
+def _source_backed_permit_name(matches: dict[str, dict[str, Any]]) -> tuple[str, str, str, str]:
+    """Return (display name, source field, status, confidence) using official-source precedence."""
+    for field in PERMIT_NAME_SOURCE_FIELDS:
+        record = matches.get(field)
+        value = str((record or {}).get("claim_value") or "").strip()
+        if not value:
+            continue
+        if field in {"display_permit_name", "official_permit_name"}:
+            return value, field, "exact_official_name_confirmed", "high"
+        return value, field, "official_category_confirmed_exact_label_missing", "medium"
+    return "Permit required — local permit name not confirmed", "", "needs_research", "low"
+
+
+def _apply_source_backed_permit_name(result: dict[str, Any], matches: dict[str, dict[str, Any]]) -> None:
+    display, source_field, status, confidence = _source_backed_permit_name(matches)
+    result["_permit_display_name"] = display
+    result["permit_name_status"] = status
+    result["permit_name_confidence"] = confidence
+    result["permit_required_confidence"] = "high" if source_field else str(result.get("confidence") or "medium").lower()
+    if source_field:
+        result["permit_name_source_field"] = source_field
+        result["permit_name"] = display
+        result["permit_type"] = display
+        if status == "official_category_confirmed_exact_label_missing":
+            warnings = result.setdefault("quality_warnings", [])
+            caveat = "Official application category is source-confirmed; exact local permit label is not source-confirmed yet."
+            if caveat not in warnings:
+                warnings.append(caveat)
+        result["permit_required"] = True
+        permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+        if permits and isinstance(permits[0], dict):
+            permits[0]["permit_type"] = display
+            permits[0]["portal_selection"] = display
+            permits[0]["required"] = True
+        else:
+            result["permits_required"] = [{"permit_type": display, "portal_selection": display, "required": True}]
+
+
 def _suppress_pack_controlled_fields(result: dict[str, Any], failed_closed: list[str]) -> None:
     if "permit_type" in failed_closed:
         result["permits_required"] = []
@@ -989,6 +1050,14 @@ def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]],
         "cache_bypassed": True,
         "public_redaction": evidence_pack_mode_public_redaction(pack.mode),
     }
+    name_value, name_source_field, name_status, name_confidence = _source_backed_permit_name(matches)
+    meta.update({
+        "permit_name_source_field": name_source_field,
+        "permit_name_status": name_status,
+        "permit_name_confidence": name_confidence,
+    })
+    if name_source_field:
+        meta["permit_name_display_value"] = name_value
     if evidence_pack_mode_public_redaction(pack.mode) == "drop_evidence_pack" and matches:
         matched_records = [record for _field, record in sorted(matches.items())]
         row_ids = sorted({str(record.get("golden_row_id") or "") for record in matched_records if record.get("golden_row_id")})
@@ -1060,10 +1129,12 @@ def apply_evidence_pack_fail_closed(
 
     matches, current_fresh_records_loaded, blocked_fields = _match_records_with_fresh_count(pack, job_type, city, state, explicit_vertical=explicit_vertical, result=result)
     request_vertical = _vertical_for_job(job_type, explicit_vertical=explicit_vertical, result=result)
-    failed_closed = sorted(SUPPORTED_FIELDS - set(matches))
+    failed_closed = sorted(PACK_FAIL_CLOSED_FIELDS - set(matches))
+    if any(field in matches for field in PERMIT_NAME_SOURCE_FIELDS) and "permit_type" in failed_closed:
+        failed_closed.remove("permit_type")
 
     if pack.contract_status != "valid":
-        failed_closed = sorted(SUPPORTED_FIELDS)
+        failed_closed = sorted(PACK_FAIL_CLOSED_FIELDS)
         _suppress_pack_controlled_fields(result, failed_closed)
         _add_review_reason(result, "invalid_pack_contract")
         warnings = result.setdefault("quality_warnings", [])
@@ -1077,7 +1148,7 @@ def apply_evidence_pack_fail_closed(
         # Golden preview is locked to the approved 30 AHJ×vertical rows only. For
         # unsupported AHJs/verticals, fail pack-controlled fields closed but do
         # not leak local-golden metadata into the response.
-        _suppress_pack_controlled_fields(result, sorted(SUPPORTED_FIELDS))
+        _suppress_pack_controlled_fields(result, sorted(PACK_FAIL_CLOSED_FIELDS))
         supported_verticals = set(_promotion_config(pack.mode).get("record_verticals_exact") or _promotion_config(pack.mode).get("locked_verticals") or [])
         unsupported_reason = "unsupported_vertical" if supported_verticals and request_vertical not in supported_verticals else "unsupported_ahj"
         _add_review_reason(result, unsupported_reason)
@@ -1139,6 +1210,9 @@ def apply_evidence_pack_fail_closed(
             caveat_warning = f"Coverage caveat: {row_caveat}"
             if caveat_warning not in warnings:
                 warnings.append(caveat_warning)
+
+    if any(field in matches for field in PERMIT_NAME_SOURCE_FIELDS):
+        _apply_source_backed_permit_name(result, matches)
 
     _suppress_pack_controlled_fields(result, failed_closed)
     if citations:

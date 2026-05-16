@@ -215,12 +215,33 @@
   "runtime_contract_schema": "permitassist.evidence_pack.runtime.v1",
   "runtime_contract_version": "step7l_runtime_contract_v1",
   "schema": "permitassist.evidence_pack.registry.v1",
+  "permit_name_status_enum": [
+    "exact_official_name_confirmed",
+    "official_category_confirmed_exact_label_missing",
+    "no_evidence_found_after_completed_search",
+    "needs_research",
+    "conflict_needs_human_review"
+  ],
+  "name_source_precedence": [
+    "display_permit_name",
+    "official_permit_name",
+    "official_application_category"
+  ],
   "supported_fields": [
     "apply_url",
     "approval_timeline",
     "companion_reviews_triggers",
+    "customer_visibility_tier",
+    "display_permit_name",
+    "display_source_field",
     "fee_range",
     "inspections",
-    "permit_type"
+    "name_source_precedence",
+    "official_application_category",
+    "official_permit_name",
+    "permit_type",
+    "residential_project_type",
+    "septic_or_sewer_review",
+    "trade_permit_names"
   ]
 }

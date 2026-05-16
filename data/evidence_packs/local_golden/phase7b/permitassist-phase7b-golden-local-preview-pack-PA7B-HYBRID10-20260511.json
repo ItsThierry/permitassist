@@ -14,8 +14,25 @@
       "suppress_but_log_internal",
       "never_show"
     ],
+    "customer_visibility_tier_enum": [
+      "customer_ready",
+      "show_with_caveat",
+      "internal_only",
+      "never_show"
+    ],
     "eligibility": "local_internal_preview_only",
     "evidence_pack_version": "phase7b_golden_local_preview_v1",
+    "exact_permit_name_template_fields": [
+      "display_permit_name",
+      "official_permit_name",
+      "official_application_category",
+      "display_source_field",
+      "name_source_precedence",
+      "residential_project_type",
+      "trade_permit_names",
+      "septic_or_sewer_review",
+      "customer_visibility_tier"
+    ],
     "field_certainty_enum": [
       "promoted_clean",
       "promoted_caveated",
@@ -23,7 +40,7 @@
       "not_researched_enough",
       "rejected"
     ],
-    "fingerprint_sha256": "6bcdd911b43f080e789c31f3335e80caf5bbe85dc09de9188eebfbc6bbb002fa",
+    "fingerprint_sha256": "6619a958c3e1513bfe894b50255d80870b5e8d011582c4fd9f7abae725fb3057",
     "generated_from": "golden-evidence-pack-third-pass.json",
     "golden_row_count": 30,
     "internal_unpromoted_field_reasons": [
@@ -1504,7 +1521,20 @@
       "restaurant_ti"
     ],
     "mode": "phase7b_golden_local_preview",
+    "name_source_precedence": [
+      "display_permit_name",
+      "official_permit_name",
+      "official_application_category"
+    ],
+    "permit_name_status_enum": [
+      "exact_official_name_confirmed",
+      "official_category_confirmed_exact_label_missing",
+      "no_evidence_found_after_completed_search",
+      "needs_research",
+      "conflict_needs_human_review"
+    ],
     "production_wiring_allowed": false,
+    "residential_commercial_expansion_ready": true,
     "row_level_classification_counts": {
       "customer-ready": 12,
       "safe-with-caveat": 18

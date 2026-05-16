@@ -1542,7 +1542,9 @@ def test_white_label_report_surfaces_evidence_pack_limits(tmp_path, monkeypatch)
         }
     )
 
-    assert "Local evidence pack failed closed for: fee_range, inspections" in html
+    assert "Fee information is not source-confirmed for this lookup" in html
+    assert "Some field-specific details are not source-confirmed yet: fees, inspections" in html
+    assert "fee_range" not in html
     assert "Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate" in html
     assert "not a complete local specialty-trigger list" in html
     assert "exact portal subcategory requires AHJ verification" in html
