@@ -50,6 +50,7 @@ PACK_FAIL_CLOSED_FIELDS = CONSERVATIVE_PACK_CONTROLLED_FIELDS
 PROTECTED_PREVIEW_EVIDENCE_PACK_MODES = frozenset(
     {
         "phase7b_golden_local_preview",
+        "phase1b_commercial_ti_exact_names_preview",
         "solar_mep_controlled_preview",
     }
 )
@@ -997,7 +998,7 @@ def _suppress_pack_controlled_fields(result: dict[str, Any], failed_closed: list
     if "apply_url" in failed_closed:
         result["apply_url"] = None
         result["inspection_booking"] = None
-        result["_url_warning"] = "Evidence pack is enabled, but no valid matching apply URL evidence is active. Failing closed; verify with the AHJ."
+        result["_url_warning"] = "Official-source apply route is not confirmed for this AHJ/vertical yet; verify the application route with the AHJ."
     if "fee_range" in failed_closed:
         result["fee_range"] = None
     if "approval_timeline" in failed_closed:
@@ -1138,7 +1139,7 @@ def apply_evidence_pack_fail_closed(
         _suppress_pack_controlled_fields(result, failed_closed)
         _add_review_reason(result, "invalid_pack_contract")
         warnings = result.setdefault("quality_warnings", [])
-        warning = "Evidence pack contract is not valid; all pack-controlled fields were failed closed."
+        warning = "Official-source evidence contract is not valid; unconfirmed fields are hidden."
         if warning not in warnings:
             warnings.append(warning)
         result["_evidence_pack"] = _safe_meta(pack, matches={}, failed_closed=failed_closed, fresh_count=0, request_vertical=request_vertical, blocked_fields=blocked_fields)
@@ -1154,7 +1155,7 @@ def apply_evidence_pack_fail_closed(
         _add_review_reason(result, unsupported_reason)
         _add_review_reason(result, "unsupported_fields_failed_closed")
         warnings = result.setdefault("quality_warnings", [])
-        warning = "Official-source preview coverage is not available for this AHJ/vertical; pack-controlled fields were failed closed."
+        warning = "Official-source coverage is incomplete for this AHJ/vertical; unconfirmed fields are hidden."
         if warning not in warnings:
             warnings.append(warning)
         result.pop("_evidence_pack", None)
@@ -1224,7 +1225,7 @@ def apply_evidence_pack_fail_closed(
     if failed_closed:
         _add_review_reason(result, "unsupported_fields_failed_closed")
         warnings = result.setdefault("quality_warnings", [])
-        warning = "Evidence pack is enabled; fields without ingestion-ready matching evidence were failed closed."
+        warning = "Official-source coverage is incomplete for this AHJ/vertical; unconfirmed fields are hidden."
         if warning not in warnings:
             warnings.append(warning)
     return result
