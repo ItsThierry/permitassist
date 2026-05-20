@@ -33,6 +33,13 @@ from .event_writer import (
     write_connector_run_result,
 )
 from .gates import GateResult
+from .phase1_runner import (
+    PHASE1_M8_RUNNER_VERSION,
+    Phase1PipelineRunResult,
+    Phase1PipelineSummary,
+    Phase1RunnerSafetyError,
+    run_phase1_fixture_pipeline,
+)
 from .schema import PHASE1_SCHEMA_VERSION, REQUIRED_TABLES, get_table_contracts
 
 __all__ = [
@@ -48,7 +55,11 @@ __all__ = [
     "LiveFetchAttemptError",
     "PERMITASSIST_ADAPTER_ID",
     "PERSISTENCE_VERSION",
+    "PHASE1_M8_RUNNER_VERSION",
     "PHASE1_SCHEMA_VERSION",
+    "Phase1PipelineRunResult",
+    "Phase1PipelineSummary",
+    "Phase1RunnerSafetyError",
     "PermitAssistAdapterPolicy",
     "PersistenceSafetyError",
     "PromotionTier",
@@ -62,5 +73,6 @@ __all__ = [
     "get_table_contracts",
     "initialize_sqlite_schema",
     "run_fixture_connector",
+    "run_phase1_fixture_pipeline",
     "write_connector_run_result",
 ]

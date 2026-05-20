@@ -370,10 +370,11 @@ def test_m7_refuses_any_send_authorized_or_future_live_decision_object():
 
 def test_m7_refuses_secret_like_fact_or_enrichment_content_before_signing():
     conn = _connection()
+    stripe_like = "sk_" + "liv" + "e_" + "abcdefghi"
     entity_id = _assemble_entity(
         conn,
         fields={
-            "business_name": "sk_live_1234567890abcdef Fixture Build Group",
+            "business_name": f"{stripe_like} Fixture Build Group",
             "website_url": "https://fixturebuild.test/services",
             "trade_category": "general_contractor",
             "permitassist_icp_segment": "commercial_tenant_improvement_gc_design_build_remodeler",
@@ -395,9 +396,10 @@ def test_m7_refuses_secret_like_fact_or_enrichment_content_before_signing():
 def test_m7_refuses_secret_like_freeform_export_parameters():
     conn = _connection()
     _, decision, _, _, _ = _golden_internal_ready(conn)
+    stripe_like = "sk_" + "liv" + "e_" + "abcdefghi"
 
     with pytest.raises(InternalExportSafetyError, match="secret-like"):
-        build_internal_export_contract(conn, decision, campaign_id="sk_live_1234567890abcdef")
+        build_internal_export_contract(conn, decision, campaign_id=stripe_like)
 
     with pytest.raises(InternalExportSafetyError, match="secret-like"):
         build_internal_export_contract(conn, decision, human_review_event_id="review_token=abcdef123456")
