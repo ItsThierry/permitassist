@@ -1,14 +1,17 @@
-"""PermitAssist lead pipeline Phase 1 fixture-only schema contracts.
+"""PermitAssist lead pipeline Phase 1 fixture-only contracts and gates.
 
-Milestone 1 is intentionally limited to schema metadata, enums, docs, and
-fixture tests. This package performs no network, paid-provider, outreach,
-production, or customer-visible work.
+Phase 1 remains intentionally limited to schema metadata, enums, docs,
+fixture-only gate functions, and tests. This package performs no network,
+paid-provider, outreach, production, or customer-visible work.
 """
 
-from .contracts import PromotionTier, assert_phase1_promotion_allowed
+from .contracts import GateStatus, PromotionTier, assert_phase1_promotion_allowed
+from .gates import GateResult
 from .schema import PHASE1_SCHEMA_VERSION, REQUIRED_TABLES, get_table_contracts
 
 __all__ = [
+    "GateResult",
+    "GateStatus",
     "PHASE1_SCHEMA_VERSION",
     "PromotionTier",
     "REQUIRED_TABLES",
