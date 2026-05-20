@@ -25,6 +25,13 @@ from .connectors import (
     run_fixture_connector,
 )
 from .contracts import GateStatus, PromotionTier, assert_phase1_promotion_allowed
+from .event_writer import (
+    PERSISTENCE_VERSION,
+    PersistenceSafetyError,
+    WriteSummary,
+    initialize_sqlite_schema,
+    write_connector_run_result,
+)
 from .gates import GateResult
 from .schema import PHASE1_SCHEMA_VERSION, REQUIRED_TABLES, get_table_contracts
 
@@ -40,15 +47,20 @@ __all__ = [
     "GateStatus",
     "LiveFetchAttemptError",
     "PERMITASSIST_ADAPTER_ID",
+    "PERSISTENCE_VERSION",
     "PHASE1_SCHEMA_VERSION",
     "PermitAssistAdapterPolicy",
+    "PersistenceSafetyError",
     "PromotionTier",
     "REQUIRED_TABLES",
     "UnknownConnectorError",
+    "WriteSummary",
     "assert_phase1_promotion_allowed",
     "enforce_adapter_policy_for_connector",
     "get_connector_spec",
     "get_permitassist_adapter_policy",
     "get_table_contracts",
+    "initialize_sqlite_schema",
     "run_fixture_connector",
+    "write_connector_run_result",
 ]
