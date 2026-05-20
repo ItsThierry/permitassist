@@ -262,8 +262,12 @@ def _artifact_for_export(conn: sqlite3.Connection, export: Mapping[str, Any]) ->
 
     if any(str(row.get("entity_id")) != str(export["lead_entity_id"]) for row in facts):
         raise InternalReviewArtifactSafetyError("M9 fact lineage entity mismatch")
-    if any(str(row.get("source_observation_id")) not in set(observation_ids) for row in facts):
+    observation_id_set = set(observation_ids)
+    fact_observation_ids = {str(row.get("source_observation_id")) for row in facts}
+    if any(str(row.get("source_observation_id")) not in observation_id_set for row in facts):
         raise InternalReviewArtifactSafetyError("M9 fact source lineage mismatch")
+    if fact_observation_ids != observation_id_set:
+        raise InternalReviewArtifactSafetyError("M9 source observation lineage includes unreferenced rows")
     lead_entity_id = str(export["lead_entity_id"])
     fact_id_set = set(fact_ids)
     for row in verification_rows:
@@ -279,12 +283,20 @@ def _artifact_for_export(conn: sqlite3.Connection, export: Mapping[str, Any]) ->
         raise InternalReviewArtifactSafetyError("M9 refuses network-tainted verification events")
     if any(row.get("result_status") != GateStatus.PASS_.value for row in verification_rows):
         raise InternalReviewArtifactSafetyError("M9 refuses non-pass verification events")
-    if suppression.get("target_entity_id") != export.get("lead_entity_id"):
+    if str(suppression.get("target_entity_id")) != str(export.get("lead_entity_id")):
         raise InternalReviewArtifactSafetyError("M9 suppression lineage entity mismatch")
     if suppression.get("status") != "clear":
         raise InternalReviewArtifactSafetyError("M9 requires clear suppression status for rendered exports")
-    if enrichment.get("entity_id") != export.get("lead_entity_id"):
+    if str(enrichment.get("entity_id")) != str(export.get("lead_entity_id")):
         raise InternalReviewArtifactSafetyError("M9 enrichment lineage entity mismatch")
+    enrichment_fact_ids = set(_json_list(enrichment.get("input_fact_ids"), context="enrichment input_fact_ids"))
+    if enrichment_fact_ids != fact_id_set:
+        raise InternalReviewArtifactSafetyError("M9 enrichment fact lineage mismatch")
+    enrichment_observation_ids = set(
+        _json_list(enrichment.get("input_observation_ids"), context="enrichment input_observation_ids")
+    )
+    if enrichment_observation_ids != observation_id_set:
+        raise InternalReviewArtifactSafetyError("M9 enrichment observation lineage mismatch")
     if enrichment.get("validator_status") != GateStatus.PASS_.value:
         raise InternalReviewArtifactSafetyError("M9 requires pass enrichment status")
     if int(enrichment.get("unsupported_claim_count") or 0) != 0:

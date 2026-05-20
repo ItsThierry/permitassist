@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from lead_pipeline.contracts import ExportEligibility, GateStatus
+from lead_pipeline.contracts import ExportEligibility, GateStatus, SuppressionStatus
 from lead_pipeline.phase1_runner import run_phase1_fixture_pipeline
 from lead_pipeline.review_artifacts import (
     INTERNAL_REVIEW_BANNER,
@@ -43,6 +43,21 @@ NETWORK_IMPORTS = {
     "brave",
     "subprocess",
 }
+
+
+def _copy_source_observation(run, *, observation_id: str) -> None:
+    cursor = run.conn.execute("SELECT * FROM source_observations LIMIT 1")
+    source_row = dict(zip([column[0] for column in cursor.description], cursor.fetchone(), strict=True))
+    source_row["observation_id"] = observation_id
+    source_row["url_or_path"] = "fixture://golden/unreferenced-extra-observation"
+    source_row["payload_hash_sha256"] = "m9_extra_observation_hash"
+    source_row["snippet_or_excerpt"] = "Extra fixture observation not referenced by any exported fact."
+    columns = list(source_row)
+    placeholders = ", ".join("?" for _ in columns)
+    run.conn.execute(
+        "INSERT INTO source_observations (" + ", ".join(columns) + ") VALUES (" + placeholders + ")",
+        tuple(source_row[column] for column in columns),
+    )
 
 
 def test_m9_version_and_module_have_no_network_or_outreach_imports():
@@ -256,4 +271,119 @@ def test_m9_fails_closed_on_secret_like_content_before_rendering():
     run.conn.commit()
 
     with pytest.raises(InternalReviewArtifactSafetyError, match="secret-like"):
+        render_internal_review_artifacts(run.conn, batch_id=M8_BATCH_ID)
+
+
+def test_m9_fails_closed_on_unreferenced_source_observation_lineage():
+    run = run_phase1_fixture_pipeline(fixture_id="golden")
+    export_event_id, observation_ids_json = run.conn.execute(
+        "SELECT export_event_id, included_source_observation_ids FROM export_events LIMIT 1"
+    ).fetchone()
+    observation_ids = json.loads(observation_ids_json)
+    observation_ids.append("obs_m9_unreferenced_extra")
+    _copy_source_observation(run, observation_id="obs_m9_unreferenced_extra")
+    run.conn.execute("DROP TRIGGER export_events_append_only_no_update")
+    run.conn.execute(
+        "UPDATE export_events SET included_source_observation_ids = ? WHERE export_event_id = ?",
+        (json.dumps(observation_ids), export_event_id),
+    )
+    run.conn.commit()
+
+    with pytest.raises(InternalReviewArtifactSafetyError, match="source observation lineage"):
+        render_internal_review_artifacts(run.conn, batch_id=M8_BATCH_ID)
+
+
+def test_m9_fails_closed_on_enrichment_input_lineage_mismatch():
+    run = run_phase1_fixture_pipeline(fixture_id="golden")
+    enrichment_event_id = run.conn.execute("SELECT enrichment_event_id FROM export_events LIMIT 1").fetchone()[0]
+    _copy_source_observation(run, observation_id="obs_m9_enrichment_extra")
+    run.conn.execute("DROP TRIGGER enrichment_events_append_only_no_update")
+    run.conn.execute(
+        "UPDATE enrichment_events SET input_observation_ids = ? WHERE enrichment_event_id = ?",
+        (json.dumps(["obs_m9_enrichment_extra"]), enrichment_event_id),
+    )
+    run.conn.commit()
+
+    with pytest.raises(InternalReviewArtifactSafetyError, match="enrichment observation lineage"):
+        render_internal_review_artifacts(run.conn, batch_id=M8_BATCH_ID)
+
+
+def test_m9_fails_closed_on_non_internal_review_export_status():
+    run = run_phase1_fixture_pipeline(fixture_id="golden")
+    export_event_id = run.conn.execute("SELECT export_event_id FROM export_events LIMIT 1").fetchone()[0]
+    run.conn.execute("DROP TRIGGER export_events_append_only_no_update")
+    run.conn.execute(
+        "UPDATE export_events SET status = ? WHERE export_event_id = ?",
+        (ExportEligibility.REVIEW_REQUIRED.value, export_event_id),
+    )
+    run.conn.commit()
+
+    with pytest.raises(InternalReviewArtifactSafetyError, match="internal_review_only"):
+        render_internal_review_artifacts(run.conn, batch_id=M8_BATCH_ID)
+
+
+def test_m9_fails_closed_on_non_internal_review_export_target():
+    run = run_phase1_fixture_pipeline(fixture_id="golden")
+    export_event_id = run.conn.execute("SELECT export_event_id FROM export_events LIMIT 1").fetchone()[0]
+    run.conn.execute("DROP TRIGGER export_events_append_only_no_update")
+    run.conn.execute("UPDATE export_events SET export_target = ? WHERE export_event_id = ?", ("crm", export_event_id))
+    run.conn.commit()
+
+    with pytest.raises(InternalReviewArtifactSafetyError, match="internal_review_queue"):
+        render_internal_review_artifacts(run.conn, batch_id=M8_BATCH_ID)
+
+
+def test_m9_fails_closed_on_export_schema_version_drift():
+    run = run_phase1_fixture_pipeline(fixture_id="golden")
+    export_event_id = run.conn.execute("SELECT export_event_id FROM export_events LIMIT 1").fetchone()[0]
+    run.conn.execute("DROP TRIGGER export_events_append_only_no_update")
+    run.conn.execute(
+        "UPDATE export_events SET export_schema_version = ? WHERE export_event_id = ?",
+        ("future_export_schema", export_event_id),
+    )
+    run.conn.commit()
+
+    with pytest.raises(InternalReviewArtifactSafetyError, match="export_schema_version"):
+        render_internal_review_artifacts(run.conn, batch_id=M8_BATCH_ID)
+
+
+def test_m9_fails_closed_on_non_clear_suppression_status():
+    run = run_phase1_fixture_pipeline(fixture_id="golden")
+    suppression_event_id = run.conn.execute("SELECT suppression_event_id FROM export_events LIMIT 1").fetchone()[0]
+    run.conn.execute("DROP TRIGGER suppression_events_append_only_no_update")
+    run.conn.execute(
+        "UPDATE suppression_events SET status = ? WHERE suppression_event_id = ?",
+        (SuppressionStatus.SUPPRESSED_EMAIL.value, suppression_event_id),
+    )
+    run.conn.commit()
+
+    with pytest.raises(InternalReviewArtifactSafetyError, match="suppression status"):
+        render_internal_review_artifacts(run.conn, batch_id=M8_BATCH_ID)
+
+
+def test_m9_fails_closed_on_non_pass_enrichment_status():
+    run = run_phase1_fixture_pipeline(fixture_id="golden")
+    enrichment_event_id = run.conn.execute("SELECT enrichment_event_id FROM export_events LIMIT 1").fetchone()[0]
+    run.conn.execute("DROP TRIGGER enrichment_events_append_only_no_update")
+    run.conn.execute(
+        "UPDATE enrichment_events SET validator_status = ? WHERE enrichment_event_id = ?",
+        (GateStatus.REVIEW_REQUIRED.value, enrichment_event_id),
+    )
+    run.conn.commit()
+
+    with pytest.raises(InternalReviewArtifactSafetyError, match="enrichment status"):
+        render_internal_review_artifacts(run.conn, batch_id=M8_BATCH_ID)
+
+
+def test_m9_fails_closed_on_enrichment_unsupported_claims():
+    run = run_phase1_fixture_pipeline(fixture_id="golden")
+    enrichment_event_id = run.conn.execute("SELECT enrichment_event_id FROM export_events LIMIT 1").fetchone()[0]
+    run.conn.execute("DROP TRIGGER enrichment_events_append_only_no_update")
+    run.conn.execute(
+        "UPDATE enrichment_events SET unsupported_claim_count = 1 WHERE enrichment_event_id = ?",
+        (enrichment_event_id,),
+    )
+    run.conn.commit()
+
+    with pytest.raises(InternalReviewArtifactSafetyError, match="unsupported claims"):
         render_internal_review_artifacts(run.conn, batch_id=M8_BATCH_ID)
