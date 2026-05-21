@@ -42,6 +42,60 @@ class Phase1RunnerSafetyError(RuntimeError):
 
 
 @dataclass(frozen=True)
+class BatchCreditCeiling:
+    """Per-batch live-provider spend ceiling; fixture mode defaults to zero."""
+
+    batch_id: str
+    max_live_provider_credits: int = 0
+    kill_switch_engaged: bool = False
+
+
+@dataclass(frozen=True)
+class BatchCreditDecision:
+    """Machine-readable credit gate result for fixture/local tests."""
+
+    batch_id: str
+    allowed: bool
+    live_provider_credits_authorized: int
+    reason_code: str
+
+
+def enforce_batch_credit_ceiling(
+    policy: BatchCreditCeiling,
+    *,
+    requested_live_provider_credits: int,
+) -> BatchCreditDecision:
+    """Fail closed unless requested live-provider credits fit the batch ceiling.
+
+    M10 fixture mode uses a zero-credit ceiling. This primitive performs no
+    provider call and reads no environment keys; it only validates integers.
+    """
+
+    if policy.kill_switch_engaged:
+        raise Phase1RunnerSafetyError(
+            f"batch {policy.batch_id!r} kill switch engaged; live provider spend is blocked"
+        )
+    if requested_live_provider_credits < 0 or policy.max_live_provider_credits < 0:
+        raise Phase1RunnerSafetyError("credit ceiling values must be non-negative")
+    if requested_live_provider_credits > policy.max_live_provider_credits:
+        raise Phase1RunnerSafetyError(
+            f"batch {policy.batch_id!r} requested {requested_live_provider_credits} live provider credits "
+            f"but credit ceiling is {policy.max_live_provider_credits}"
+        )
+    reason = (
+        "fixture_zero_live_spend_allowed"
+        if policy.max_live_provider_credits == 0 and requested_live_provider_credits == 0
+        else "within_batch_credit_ceiling"
+    )
+    return BatchCreditDecision(
+        batch_id=policy.batch_id,
+        allowed=True,
+        live_provider_credits_authorized=requested_live_provider_credits,
+        reason_code=reason,
+    )
+
+
+@dataclass(frozen=True)
 class LeadPipelineResult:
     """Per-lead M8 review result with exact lineage IDs."""
 
@@ -603,6 +657,11 @@ def run_phase1_fixture_pipeline(
 
     if fixture_id != M8_FIXTURE_ID:
         raise Phase1RunnerSafetyError(f"unknown fixture_id {fixture_id!r}; only {M8_FIXTURE_ID!r} is approved")
+
+    enforce_batch_credit_ceiling(
+        BatchCreditCeiling(batch_id=M8_BATCH_ID, max_live_provider_credits=0, kill_switch_engaged=False),
+        requested_live_provider_credits=0,
+    )
 
     if conn is None:
         conn = sqlite3.connect(":memory:")

@@ -23,6 +23,23 @@ class SourceClass(ContractEnum):
     USER_IMPORT = "user_import"
 
 
+class PageType(ContractEnum):
+    FIRST_PARTY_HOMEPAGE = "first_party_homepage"
+    FIRST_PARTY_SERVICES = "first_party_services"
+    FIRST_PARTY_CONTACT = "first_party_contact"
+    OFFICIAL_REGISTRY = "official_registry"
+    SEARCH_RESULT = "search_result"
+    AGGREGATOR_DIRECTORY = "aggregator_directory"
+    BLOCKED_UNKNOWN = "blocked_unknown"
+
+
+class RobotsTermsPrefetchStatus(ContractEnum):
+    ALLOWED_FIXTURE_ONLY = "allowed_fixture_only"
+    ALLOWED_PUBLIC = "allowed_public"
+    CONDITIONAL_REVIEW_REQUIRED = "conditional_review_required"
+    BLOCKED = "blocked"
+
+
 class EntityKind(ContractEnum):
     BUSINESS = "business"
     PERSON = "person"
@@ -101,6 +118,22 @@ class CostStage(ContractEnum):
     HUMAN_REVIEW = "human_review"
     EXPORT_PREPARATION = "export_preparation"
     WASTE_ALLOCATION = "waste_allocation"
+
+
+IDENTITY_MERGE_KEY_ORDER: tuple[str, ...] = (
+    "license",
+    "secretary_of_state_entity_id",
+    "domain",
+    "phone",
+    "address",
+    "business_name",
+)
+
+
+def identity_merge_key_order() -> tuple[str, ...]:
+    """Return the approved M10 strongest-to-weakest identity merge key order."""
+
+    return IDENTITY_MERGE_KEY_ORDER
 
 
 PHASE1_ALLOWED_PROMOTION_TIERS = frozenset(

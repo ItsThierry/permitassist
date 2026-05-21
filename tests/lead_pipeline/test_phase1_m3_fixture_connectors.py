@@ -13,11 +13,12 @@ import hashlib
 
 import pytest
 
-from lead_pipeline.contracts import ExportEligibility, SourceClass
+from lead_pipeline.contracts import ExportEligibility, PageType, SourceClass
 from lead_pipeline.schema import PHASE1_SCHEMA_VERSION, get_table_contract
 
 from lead_pipeline.connectors import (
     FIXTURE_CONNECTOR_REGISTRY,
+    FIXTURE_ROBOTS_OR_TERMS_CLASSIFICATION,
     ConnectorPolicyStatus,
     ConnectorRunResult,
     ConnectorSpec,
@@ -42,6 +43,7 @@ EXPECTED_ALLOWED_CONNECTOR_IDS = {
     "secretary_of_state_business_registry",
     "municipal_permit_portal_public_search",
     "contractor_first_party_website",
+    "fixture_search_discovery",
     "user_uploaded_company_list_csv",
 }
 
@@ -66,6 +68,7 @@ EXPECTED_BLOCKED_STATUSES = {
 EXPECTED_ALLOWED_SOURCE_CLASSES = {
     SourceClass.OFFICIAL_LICENSING,
     SourceClass.FIRST_PARTY_WEBSITE,
+    SourceClass.SEARCH_OR_PLACES,
     SourceClass.USER_IMPORT,
 }
 
@@ -74,6 +77,7 @@ EXPECTED_OFFICIAL_OR_FIRST_PARTY_FLAGS = {
     "secretary_of_state_business_registry": True,
     "municipal_permit_portal_public_search": True,
     "contractor_first_party_website": True,
+    "fixture_search_discovery": False,
     "user_uploaded_company_list_csv": False,
 }
 
@@ -182,6 +186,13 @@ def test_fixture_connector_run_emits_deterministic_sha256_payload_hashes_and_no_
         assert obs["observed_at_utc"] == doc.fetched_at_utc
         assert obs["snippet_or_excerpt"] == doc.snippet
         assert obs["blocked_or_captcha_flag"] == 0
+        assert obs["page_type"] in {
+            PageType.FIRST_PARTY_HOMEPAGE.value,
+            PageType.FIRST_PARTY_SERVICES.value,
+            PageType.FIRST_PARTY_CONTACT.value,
+        }
+        assert obs["page_type"] != PageType.BLOCKED_UNKNOWN.value
+        assert obs["robots_or_terms_classification"] == FIXTURE_ROBOTS_OR_TERMS_CLASSIFICATION
 
 
 def test_fixture_connector_run_payload_keys_are_subset_of_m1_table_contracts():
@@ -318,8 +329,36 @@ def test_permitassist_adapter_policy_names_icp_allowed_blocked_export_ceiling_an
     assert set(policy.allowed_connector_ids) == EXPECTED_ALLOWED_CONNECTOR_IDS
     assert set(policy.blocked_connector_ids) == EXPECTED_BLOCKED_CONNECTOR_IDS
 
-    # The two sets must be disjoint and exhaustive over the registry.
+    # Connector ids must stay disjoint even when a source class is valid in one
+    # fixture-only connector and blocked in a live/paid connector.
     assert set(policy.allowed_connector_ids).isdisjoint(policy.blocked_connector_ids)
+
+
+def test_search_or_places_policy_depends_on_connector_id_not_source_class_alone():
+    policy = get_permitassist_adapter_policy()
+
+    assert SourceClass.SEARCH_OR_PLACES in policy.allowed_source_classes
+    assert SourceClass.SEARCH_OR_PLACES in policy.blocked_source_classes
+
+    fixture_search = get_connector_spec("fixture_search_discovery")
+    live_serper = get_connector_spec("serper_google_search_api")
+
+    assert fixture_search.source_class is SourceClass.SEARCH_OR_PLACES
+    assert fixture_search.policy_status == ConnectorPolicyStatus.ALLOWED_FIXTURE_PHASE1
+    assert fixture_search.paid_flag is False
+    assert fixture_search.requires_api_key is False
+    assert (
+        enforce_adapter_policy_for_connector("fixture_search_discovery")
+        == ConnectorPolicyStatus.ALLOWED_FIXTURE_PHASE1
+    )
+
+    assert live_serper.source_class is SourceClass.SEARCH_OR_PLACES
+    assert live_serper.policy_status == ConnectorPolicyStatus.BLOCKED_PAID_API_PHASE1
+    assert live_serper.paid_flag is True
+    assert live_serper.requires_api_key is True
+    with pytest.raises(AdapterPolicyError) as excinfo:
+        enforce_adapter_policy_for_connector("serper_google_search_api")
+    assert ConnectorPolicyStatus.BLOCKED_PAID_API_PHASE1.value in str(excinfo.value)
 
 
 def test_adapter_policy_enforcement_blocks_paid_login_api_scrape_with_exact_status():

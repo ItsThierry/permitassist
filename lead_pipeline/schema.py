@@ -18,7 +18,9 @@ from .contracts import (
     ExportEligibility,
     FactField,
     GateStatus,
+    PageType,
     PromotionTier,
+    RobotsTermsPrefetchStatus,
     SourceClass,
     SuppressionStatus,
 )
@@ -143,6 +145,8 @@ _SOURCE_CLASS_VALUES = tuple(item.value for item in SourceClass)
 _ENTITY_KIND_VALUES = tuple(item.value for item in EntityKind)
 _FACT_FIELD_VALUES = tuple(item.value for item in FactField)
 _GATE_STATUS_VALUES = tuple(item.value for item in GateStatus)
+_PAGE_TYPE_VALUES = tuple(item.value for item in PageType)
+_PREFETCH_STATUS_VALUES = tuple(item.value for item in RobotsTermsPrefetchStatus)
 _SUPPRESSION_VALUES = tuple(item.value for item in SuppressionStatus)
 _EXPORT_VALUES = tuple(item.value for item in ExportEligibility)
 _COST_STAGE_VALUES = tuple(item.value for item in CostStage)
@@ -176,6 +180,16 @@ _SCHEMA_CONTRACTS = MappingProxyType(
                 _c("official_or_first_party_flag", "INTEGER", required=True, default=False),
                 _c("terms_notes"),
                 _c("robots_notes"),
+                _c(
+                    "terms_prefetch_status",
+                    enum_values=_PREFETCH_STATUS_VALUES,
+                    default=RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY.value,
+                ),
+                _c(
+                    "robots_prefetch_status",
+                    enum_values=_PREFETCH_STATUS_VALUES,
+                    default=RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY.value,
+                ),
                 _c("requires_login", "INTEGER", required=True, default=False),
                 _c("paid_flag", "INTEGER", required=True, default=False),
                 _c("allowed_phase", required=True, default="phase1_fixture_only"),
@@ -200,9 +214,25 @@ _SCHEMA_CONTRACTS = MappingProxyType(
                 _c("payload_hash_sha256", required=True),
                 _c("snapshot_ref"),
                 _c("raw_payload_ref"),
+                _c("raw_result_ref"),
                 _c("snippet_or_excerpt", required=True),
                 _c("extractor_version"),
+                _c(
+                    "page_type",
+                    enum_values=_PAGE_TYPE_VALUES,
+                    default=PageType.BLOCKED_UNKNOWN.value,
+                ),
                 _c("robots_or_terms_classification"),
+                _c(
+                    "terms_prefetch_status",
+                    enum_values=_PREFETCH_STATUS_VALUES,
+                    default=RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY.value,
+                ),
+                _c(
+                    "robots_prefetch_status",
+                    enum_values=_PREFETCH_STATUS_VALUES,
+                    default=RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY.value,
+                ),
                 _c("blocked_or_captcha_flag", "INTEGER", required=True, default=False),
                 _c("cost_event_id", references=("cost_events", "cost_event_id")),
                 _c("schema_version", required=True, default=PHASE1_SCHEMA_VERSION),

@@ -45,6 +45,8 @@ from .schema import PHASE1_SCHEMA_VERSION, get_table_contract
 PROMOTION_VERSION = "lead_pipeline_phase1_m6_promotion_gate_v1"
 PROMOTION_GATE_NAME = "phase1_m6_promotion_eligibility_gate"
 PROMOTION_OBSERVED_AT_UTC = "2026-05-20T00:00:00Z"
+SEARCH_ONLY_HOLD_SCORE = 0.4
+UNTRUSTED_OFFICIAL_OR_FIRST_PARTY_HOLD_SCORE = 0.45
 
 _IDENTITY_FACT_TYPES = {
     FactField.BUSINESS_NAME.value,
@@ -550,19 +552,54 @@ def evaluate_entity_promotion(
         )
 
     source_classes = {str(row.get("source_class")) for row in source_rows}
-    first_party_or_official = any(int(row.get("official_or_first_party_flag") or 0) for row in source_rows)
-    if source_classes == {SourceClass.AGGREGATOR_DIRECTORY.value} and not first_party_or_official:
+    authoritative_evidence_present = any(
+        str(row.get("source_class")) in {SourceClass.OFFICIAL_LICENSING.value, SourceClass.FIRST_PARTY_WEBSITE.value}
+        and int(row.get("official_or_first_party_flag") or 0)
+        for row in source_rows
+    )
+    raw_discovery_only_classes = {
+        SourceClass.SEARCH_OR_PLACES.value,
+        SourceClass.AGGREGATOR_DIRECTORY.value,
+    }
+    raw_or_untrusted_first_party_classes = raw_discovery_only_classes | {
+        SourceClass.OFFICIAL_LICENSING.value,
+        SourceClass.FIRST_PARTY_WEBSITE.value,
+    }
+    # Use subset, not intersection: user imports and other approved seed inputs have separate
+    # review gates; this branch only handles raw discovery plus untrusted official/first-party-shaped evidence.
+    if source_classes and source_classes <= raw_or_untrusted_first_party_classes and not authoritative_evidence_present:
+        if SourceClass.SEARCH_OR_PLACES.value in source_classes:
+            reason_codes = ["search_only_evidence_not_promotable"]
+            if not source_classes <= raw_discovery_only_classes:
+                reason_codes.append("untrusted_official_or_first_party_evidence_requires_corroboration")
+            return _decision(
+                batch_id=batch_id,
+                entity_id=entity_id,
+                promotion_tier=PromotionTier.QUALIFIED_LEAD_REVIEW_REQUIRED,
+                status=GateStatus.REVIEW_REQUIRED,
+                export_eligibility=ExportEligibility.REVIEW_REQUIRED,
+                reason_codes=tuple(reason_codes),
+                facts=facts,
+                source_rows=source_rows,
+                verification_rows=verification_rows,
+                score=SEARCH_ONLY_HOLD_SCORE,
+            )
+        reason_codes = []
+        if SourceClass.AGGREGATOR_DIRECTORY.value in source_classes:
+            reason_codes.append("aggregator_only_evidence_requires_corroboration")
+        if not source_classes <= raw_discovery_only_classes:
+            reason_codes.append("untrusted_official_or_first_party_evidence_requires_corroboration")
         return _decision(
             batch_id=batch_id,
             entity_id=entity_id,
             promotion_tier=PromotionTier.QUALIFIED_LEAD_REVIEW_REQUIRED,
             status=GateStatus.REVIEW_REQUIRED,
             export_eligibility=ExportEligibility.REVIEW_REQUIRED,
-            reason_codes=("aggregator_only_evidence_requires_corroboration",),
+            reason_codes=tuple(reason_codes),
             facts=facts,
             source_rows=source_rows,
             verification_rows=verification_rows,
-            score=0.45,
+            score=UNTRUSTED_OFFICIAL_OR_FIRST_PARTY_HOLD_SCORE,
         )
 
     if not _has_fact_type(facts, _IDENTITY_FACT_TYPES):

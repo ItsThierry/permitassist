@@ -55,15 +55,21 @@ _PERMITASSIST_ICP_SEGMENTS: tuple[str, ...] = (
     "commercial_tenant_improvement_gc_design_build_remodeling",
 )
 
-_ALLOWED_SOURCE_CLASSES: frozenset[SourceClass] = frozenset(
+# Advisory source-class lists for connector registry validation, not authorization gates.
+# Phase 1 allow/block is decided by connector id + ConnectorPolicyStatus. SEARCH_OR_PLACES
+# appears in both lists intentionally: the fixture-only discovery connector is allowed as
+# synthetic raw candidate metadata; live/paid search APIs such as Serper stay blocked.
+# Do not convert this overlap into a class-only authorization gate.
+_REGISTRY_ALLOWED_SOURCE_CLASSES: frozenset[SourceClass] = frozenset(
     {
         SourceClass.OFFICIAL_LICENSING,
         SourceClass.FIRST_PARTY_WEBSITE,
+        SourceClass.SEARCH_OR_PLACES,
         SourceClass.USER_IMPORT,
     }
 )
 
-_BLOCKED_SOURCE_CLASSES: frozenset[SourceClass] = frozenset(
+_REGISTRY_BLOCKED_SOURCE_CLASSES: frozenset[SourceClass] = frozenset(
     {
         SourceClass.PURCHASED_VENDOR,
         SourceClass.SOCIAL_PROFILE,
@@ -80,7 +86,7 @@ def _build_policy_from_registry(registry: Mapping[str, ConnectorSpec]) -> Permit
     blocked_reasons: dict[str, str] = {}
     for connector_id, spec in registry.items():
         if spec.policy_status == ConnectorPolicyStatus.ALLOWED_FIXTURE_PHASE1:
-            if spec.source_class not in _ALLOWED_SOURCE_CLASSES:
+            if spec.source_class not in _REGISTRY_ALLOWED_SOURCE_CLASSES:
                 raise AdapterPolicyError(
                     f"Allowed connector {connector_id!r} has disallowed source class "
                     f"{spec.source_class.value!r} for PermitAssist Phase 1."
@@ -94,8 +100,8 @@ def _build_policy_from_registry(registry: Mapping[str, ConnectorSpec]) -> Permit
     return PermitAssistAdapterPolicy(
         adapter_id=PERMITASSIST_ADAPTER_ID,
         icp_segments=_PERMITASSIST_ICP_SEGMENTS,
-        allowed_source_classes=_ALLOWED_SOURCE_CLASSES,
-        blocked_source_classes=_BLOCKED_SOURCE_CLASSES,
+        allowed_source_classes=_REGISTRY_ALLOWED_SOURCE_CLASSES,
+        blocked_source_classes=_REGISTRY_BLOCKED_SOURCE_CLASSES,
         allowed_connector_ids=tuple(sorted(allowed_ids)),
         blocked_connector_ids=tuple(sorted(blocked_ids)),
         blocked_connector_reasons=MappingProxyType(blocked_reasons),

@@ -55,6 +55,11 @@ Allowed fixture-only connector ids:
    - official/first-party flag: `0`
    - allowed phase: `phase1_fixture_only`
    - note: allowed seed lineage, but not official/first-party evidence.
+6. `fixture_search_discovery`
+   - source class: `search_or_places_discovery`
+   - official/first-party flag: `0`
+   - allowed phase: `phase1_fixture_only`
+   - note: synthetic fixture search candidate metadata only; no Serper/Brave/live query permitted.
 
 Blocked connector ids and exact statuses:
 
@@ -140,13 +145,20 @@ ICP slice:
 
 - `commercial_tenant_improvement_gc_design_build_remodeling`
 
-Allowed source classes:
+## Connector source-class policy lists
+
+These lists are **advisory registry validation lists**, not standalone authorization gates. Runtime allow/block status is decided by connector id plus exact `ConnectorPolicyStatus`. This prevents a broad class such as `search_or_places_discovery` from accidentally authorizing a paid/live search API.
+
+`search_or_places_discovery` intentionally appears in both lists: `fixture_search_discovery` is allowed only as fixture-only raw candidate metadata, while live/paid search connectors such as `serper_google_search_api` remain blocked and cannot be run. Do not decide allow/block status from source class alone.
+
+Allowed connector source classes:
 
 - `official_licensing_registry`
 - `first_party_website`
+- `search_or_places_discovery`
 - `user_import`
 
-Blocked source classes:
+Blocked connector source classes:
 
 - `purchased_vendor_raw_seed`
 - `social_profile`
@@ -174,3 +186,11 @@ The connector layer raises before producing payloads when:
 ## Boundary confirmation
 
 M3 is still a local fixture contract. It imports no HTTP, DNS, SMTP, browser, subprocess, or paid-provider clients. It performs no network, no filesystem write, no DB write, no outreach, no remote GitHub action, no Railway action, and no production/customer-visible action.
+
+## Local verification command
+
+From the repository root, run pytest with the local package on `PYTHONPATH`:
+
+```bash
+PYTHONPATH=. uv run --with pytest pytest tests/lead_pipeline
+```

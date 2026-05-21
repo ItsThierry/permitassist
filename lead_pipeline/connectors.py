@@ -20,9 +20,9 @@ import hashlib
 import json
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Iterable, Mapping, Protocol, Sequence
 
-from .contracts import ContractEnum, SourceClass
+from .contracts import ContractEnum, PageType, RobotsTermsPrefetchStatus, SourceClass
 from .schema import PHASE1_SCHEMA_VERSION
 
 CONNECTOR_VERSION = "lead_pipeline_phase1_m3_fixture_connectors_v1"
@@ -83,6 +83,44 @@ class FixtureDocument:
     payload_text: str
     snippet: str
     content_type: str = "text/plain"
+    page_type: PageType | str = PageType.BLOCKED_UNKNOWN
+    terms_prefetch_status: RobotsTermsPrefetchStatus | str = RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY
+    robots_prefetch_status: RobotsTermsPrefetchStatus | str = RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY
+
+
+@dataclass(frozen=True)
+class FixtureSearchCandidate:
+    """Synthetic search result candidate; raw discovery only, never promotable alone."""
+
+    title: str
+    url_or_path: str
+    snippet: str
+    page_type: PageType | str = PageType.SEARCH_RESULT
+
+
+@dataclass(frozen=True)
+class SearchDiscoveryFixtureQuery:
+    """Deterministic fixture search query and candidate bundle."""
+
+    query: str
+    fetched_at_utc: str
+    candidates: tuple[FixtureSearchCandidate, ...]
+
+
+class SearchDiscoveryConnector(Protocol):
+    """Fixture-only interface for future live-extensible search discovery connectors."""
+
+    connector_id: str
+
+    def run_fixture_search(
+        self,
+        *,
+        query: SearchDiscoveryFixtureQuery,
+        batch_id: str,
+        mode: FetchMode | str = FetchMode.FIXTURE_ONLY,
+    ) -> "ConnectorRunResult":
+        """Return search-discovery lineage without network, paid API, or send authorization."""
+        ...
 
 
 @dataclass(frozen=True)
@@ -134,6 +172,7 @@ def _cost_event_id_for(connector_run_id: str, observation_id: str) -> str:
 
 _ALLOWED_PHASE = "phase1_fixture_only"
 _BLOCKED_PHASE = "blocked_future_phase_requires_separate_approval"
+FIXTURE_ROBOTS_OR_TERMS_CLASSIFICATION = "fixture_only_no_fetch"
 
 
 def _allowed(
@@ -244,6 +283,15 @@ _REGISTRY_ITEMS: tuple[ConnectorSpec, ...] = (
         robots_notes="No external fetch; lineage recorded against import.",
         official_or_first_party_flag=False,
     ),
+    _allowed(
+        "fixture_search_discovery",
+        source_class=SourceClass.SEARCH_OR_PLACES,
+        source_name="Fixture search discovery candidates (raw discovery only)",
+        base_url_or_path="fixture://search-discovery/",
+        terms_notes="Synthetic fixture search results only; no Serper/Brave/live query permitted.",
+        robots_notes="Fixture-only candidate metadata; no live pre-fetch performed.",
+        official_or_first_party_flag=False,
+    ),
     # Blocked — paid / login / API / scrape.
     _blocked(
         "apollo_io_b2b_database",
@@ -325,6 +373,18 @@ def _bool_to_int(value: bool) -> int:
     return 1 if value else 0
 
 
+def _coerce_page_type(value: PageType | str) -> PageType:
+    if isinstance(value, PageType):
+        return value
+    return PageType(str(value))
+
+
+def _coerce_prefetch_status(value: RobotsTermsPrefetchStatus | str) -> RobotsTermsPrefetchStatus:
+    if isinstance(value, RobotsTermsPrefetchStatus):
+        return value
+    return RobotsTermsPrefetchStatus(str(value))
+
+
 def _coerce_fetch_mode(mode: FetchMode | str) -> FetchMode:
     if isinstance(mode, FetchMode):
         return mode
@@ -333,6 +393,31 @@ def _coerce_fetch_mode(mode: FetchMode | str) -> FetchMode:
     raise LiveFetchAttemptError(
         f"Phase 1 M3 connectors only support FetchMode.FIXTURE_ONLY; got {mode!r}"
     )
+
+
+def _default_page_type_for_spec(spec: ConnectorSpec, doc: FixtureDocument) -> PageType:
+    """Infer a safe fixture page_type from connector policy when one was not supplied."""
+
+    explicit = _coerce_page_type(doc.page_type)
+    if explicit is not PageType.BLOCKED_UNKNOWN:
+        return explicit
+    if spec.source_class is SourceClass.OFFICIAL_LICENSING:
+        return PageType.OFFICIAL_REGISTRY
+    if spec.source_class is SourceClass.FIRST_PARTY_WEBSITE:
+        # Fixture inference is intentionally coarse: classify by explicit path segment,
+        # not substring, so `/serviceareas/` does not become a services page. When a
+        # fixture needs exact semantics, prefer FixtureDocument.page_type over inference.
+        segments = {segment for segment in doc.url_or_path.lower().replace("://", "/").split("/") if segment}
+        if segments & {"contact", "contacts"}:
+            return PageType.FIRST_PARTY_CONTACT
+        if segments & {"services", "commercial-ti", "tenant-improvement"}:
+            return PageType.FIRST_PARTY_SERVICES
+        return PageType.FIRST_PARTY_HOMEPAGE
+    if spec.source_class is SourceClass.SEARCH_OR_PLACES:
+        return PageType.SEARCH_RESULT
+    if spec.source_class is SourceClass.AGGREGATOR_DIRECTORY:
+        return PageType.AGGREGATOR_DIRECTORY
+    return PageType.BLOCKED_UNKNOWN
 
 
 def _validate_documents(documents: Sequence[FixtureDocument]) -> None:
@@ -357,6 +442,8 @@ def _source_payload(spec: ConnectorSpec) -> dict[str, Any]:
         "official_or_first_party_flag": _bool_to_int(spec.official_or_first_party_flag),
         "terms_notes": spec.terms_notes,
         "robots_notes": spec.robots_notes,
+        "terms_prefetch_status": RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY.value,
+        "robots_prefetch_status": RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY.value,
         "requires_login": _bool_to_int(spec.requires_login),
         "paid_flag": _bool_to_int(spec.paid_flag),
         "allowed_phase": spec.allowed_phase,
@@ -374,7 +461,12 @@ def _observation_payload(
     connector_run_id: str,
     doc: FixtureDocument,
     cost_event_id: str,
+    raw_result_ref: str | None = None,
+    page_type_override: PageType | None = None,
 ) -> dict[str, Any]:
+    page_type = page_type_override or _coerce_page_type(doc.page_type)
+    terms_status = _coerce_prefetch_status(doc.terms_prefetch_status)
+    robots_status = _coerce_prefetch_status(doc.robots_prefetch_status)
     return {
         "observation_id": observation_id,
         "source_id": source_id,
@@ -387,9 +479,13 @@ def _observation_payload(
         "payload_hash_sha256": _payload_hash(doc.payload_text),
         "snapshot_ref": None,
         "raw_payload_ref": None,
+        "raw_result_ref": raw_result_ref,
         "snippet_or_excerpt": doc.snippet,
         "extractor_version": CONNECTOR_VERSION,
-        "robots_or_terms_classification": "fixture_only_no_fetch",
+        "page_type": page_type.value,
+        "robots_or_terms_classification": FIXTURE_ROBOTS_OR_TERMS_CLASSIFICATION,
+        "terms_prefetch_status": terms_status.value,
+        "robots_prefetch_status": robots_status.value,
         "blocked_or_captcha_flag": 0,
         "cost_event_id": cost_event_id,
         "schema_version": PHASE1_SCHEMA_VERSION,
@@ -436,7 +532,7 @@ def run_fixture_connector(
 
     fetch_mode = _coerce_fetch_mode(mode)
 
-    # Late import to avoid module-import cycle between connectors and adapters.
+    # Late import avoids connectors -> adapters -> connectors registry initialization cycle.
     from .adapters import enforce_adapter_policy_for_connector
 
     enforce_adapter_policy_for_connector(connector_id)
@@ -469,6 +565,7 @@ def run_fixture_connector(
                 connector_run_id=connector_run_id,
                 doc=doc,
                 cost_event_id=cost_event_id,
+                page_type_override=_default_page_type_for_spec(spec, doc),
             )
         )
 
@@ -482,6 +579,124 @@ def run_fixture_connector(
         observations=tuple(MappingProxyType(payload) for payload in observation_payloads),
         cost_events=tuple(MappingProxyType(payload) for payload in cost_event_payloads),
     )
+
+
+class FixtureSearchDiscoveryConnector:
+    """Fixture-only search discovery connector; never calls Serper/Brave/live search."""
+
+    connector_id = "fixture_search_discovery"
+
+    def run_fixture_search(
+        self,
+        *,
+        query: SearchDiscoveryFixtureQuery,
+        batch_id: str,
+        mode: FetchMode | str = FetchMode.FIXTURE_ONLY,
+    ) -> ConnectorRunResult:
+        fetch_mode = _coerce_fetch_mode(mode)
+        if not query.query.strip():
+            raise ValueError("fixture search discovery requires a non-empty query")
+        if not query.candidates:
+            raise ValueError("fixture search discovery requires at least one candidate")
+        documents: list[FixtureDocument] = []
+        for candidate in query.candidates:
+            if not candidate.url_or_path.startswith(FIXTURE_URL_PREFIX):
+                raise LiveFetchAttemptError(
+                    f"Fixture search discovery refused non-fixture candidate URL {candidate.url_or_path!r}; "
+                    "M10 requires fixture:// lineage only."
+                )
+            page_type = _coerce_page_type(candidate.page_type)
+            documents.append(
+                FixtureDocument(
+                    url_or_path=candidate.url_or_path,
+                    fetched_at_utc=query.fetched_at_utc,
+                    payload_text=json.dumps(
+                        {
+                            "query": query.query,
+                            "title": candidate.title,
+                            "url_or_path": candidate.url_or_path,
+                            "snippet": candidate.snippet,
+                            "page_type": page_type.value,
+                        },
+                        sort_keys=True,
+                    ),
+                    snippet=candidate.snippet,
+                    content_type="application/json",
+                    page_type=page_type,
+                    terms_prefetch_status=RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY,
+                    robots_prefetch_status=RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY,
+                )
+            )
+
+        # Late import avoids connectors -> adapters -> connectors registry initialization cycle.
+        from .adapters import enforce_adapter_policy_for_connector
+
+        enforce_adapter_policy_for_connector(self.connector_id)
+        spec = get_connector_spec(self.connector_id)
+        connector_run_id = _connector_run_id_for(self.connector_id, batch_id, documents)
+        source_payload = _source_payload(spec)
+        observations: list[Mapping[str, Any]] = []
+        cost_events: list[Mapping[str, Any]] = []
+        for index, (candidate, doc) in enumerate(zip(query.candidates, documents, strict=True)):
+            observation_id = _observation_id_for(connector_run_id, index, doc)
+            cost_event_id = _cost_event_id_for(connector_run_id, observation_id)
+            cost_events.append(
+                _cost_event_payload(
+                    cost_event_id=cost_event_id,
+                    batch_id=batch_id,
+                    connector_run_id=connector_run_id,
+                    provider_or_tool="fixture_connector::fixture_search_discovery",
+                    observed_at_utc=query.fetched_at_utc,
+                )
+            )
+            page_type = _coerce_page_type(candidate.page_type)
+            raw_result_ref = json.dumps(
+                {
+                    "search_discovery_only": True,
+                    "query": query.query,
+                    "page_type": page_type.value,
+                    "terms_prefetch_status": RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY.value,
+                    "robots_prefetch_status": RobotsTermsPrefetchStatus.ALLOWED_FIXTURE_ONLY.value,
+                    "candidate": {
+                        "title": candidate.title,
+                        "url_or_path": candidate.url_or_path,
+                        "snippet": candidate.snippet,
+                    },
+                },
+                sort_keys=True,
+            )
+            observations.append(
+                _observation_payload(
+                    observation_id=observation_id,
+                    source_id=source_payload["source_id"],
+                    batch_id=batch_id,
+                    connector_run_id=connector_run_id,
+                    doc=doc,
+                    cost_event_id=cost_event_id,
+                    raw_result_ref=raw_result_ref,
+                )
+            )
+        return ConnectorRunResult(
+            connector_run_id=connector_run_id,
+            connector_id=self.connector_id,
+            mode=fetch_mode.value,
+            network_used=False,
+            send_authorized=False,
+            source=MappingProxyType(source_payload),
+            observations=tuple(MappingProxyType(payload) for payload in observations),
+            cost_events=tuple(MappingProxyType(payload) for payload in cost_events),
+        )
+
+
+def run_fixture_search_discovery(
+    query: SearchDiscoveryFixtureQuery,
+    *,
+    batch_id: str,
+    mode: FetchMode | str = FetchMode.FIXTURE_ONLY,
+) -> ConnectorRunResult:
+    """Convenience wrapper for the fixture-only M10 search discovery interface."""
+
+    return FixtureSearchDiscoveryConnector().run_fixture_search(query=query, batch_id=batch_id, mode=mode)
 
 
 def iter_allowed_connector_ids() -> Iterable[str]:

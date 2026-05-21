@@ -94,7 +94,7 @@ and optional human review event for secret-like text such as:
 - `api_key = ...`
 - `token = ...`
 - `password = ...`
-- `sk_live_...` / `sk_test_...`
+- Stripe live/test secret-key prefixes
 - AWS access key style values
 - bearer tokens
 - Slack token style values

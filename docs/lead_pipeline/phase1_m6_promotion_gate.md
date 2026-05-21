@@ -38,7 +38,9 @@ Fail/review rules:
 - missing field-level snippet → `fail_closed`, `blocked_uncited`;
 - paid/login source → `blocked_source_policy`;
 - duplicate identity edge → `review_required`;
-- aggregator-only evidence → `review_required`;
+- search-only evidence → `review_required`; search plus untrusted official/first-party-shaped evidence emits both review reason codes;
+- aggregator-only evidence → `review_required`; aggregator plus untrusted official/first-party-shaped evidence emits both review reason codes;
+- untrusted official/first-party-shaped evidence without the official/first-party flag → `review_required`;
 - missing ICP proof → `unknown_not_promoted`;
 - guessed/unverified contact → `blocked_unverified_contact`;
 - invalid/no-reply/placeholder email → `fail_closed`;
@@ -54,7 +56,7 @@ Pass states:
 
 ## Test coverage
 
-`tests/lead_pipeline/test_phase1_m6_promotion.py` asserts:
+`tests/lead_pipeline/test_phase1_m6_promotion.py` and `tests/lead_pipeline/test_phase1_m10_live_extensible_contracts.py` assert:
 
 - no network/outreach imports;
 - exact version string;
@@ -64,7 +66,9 @@ Pass states:
 - verified contacts remain not exportable without enrichment;
 - suppression conflict fails closed;
 - placeholder/no-reply emails are blocked;
+- search-only evidence, search plus aggregator-only evidence, search plus untrusted official/first-party-shaped evidence, and aggregator plus untrusted official/first-party-shaped evidence require review;
 - aggregator-only leads require review;
+- untrusted official/first-party-shaped evidence requires review;
 - uncited enrichment cannot promote;
 - duplicate identity edges require human review without destructive merge;
 - golden path reaches internal-review-only and writes no export rows;
