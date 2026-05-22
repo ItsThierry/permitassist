@@ -144,11 +144,13 @@ def test_finalize_pipeline_does_not_reintroduce_fallback_text_after_quality_gate
     )
 
     assert finalized["_rendering_context"]["template_family"] == "commercial"
-    statement = "Permit required — exact permit type needs AHJ verification"
+    statement = "Manual filing path confirmation in progress"
     assert finalized["_permit_display_name"] == statement
     names = [finalized.get("permit_name"), finalized.get("permit_type")]
     names.extend(p.get("permit_type") for p in finalized.get("permits_required", []) if isinstance(p, dict))
     assert all(name == statement for name in names)
     assert finalized["permit_type_verified"] is False
-    assert "not official-source verified" in " ".join(finalized.get("warnings") or [])
+    warnings_blob = " ".join(finalized.get("warnings") or [])
+    assert "Manual filing path check is in progress" in warnings_blob
+    assert "not official-source verified" not in warnings_blob
     assert finalized["_rendered_lint"]["passed"] is True

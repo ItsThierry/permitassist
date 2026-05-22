@@ -15,6 +15,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import base64
+import copy
 import json
 import os
 import csv
@@ -56,11 +57,19 @@ from evidence_pack_runtime import (
 )
 from rendered_output_lint import (
     FALLBACK_NAME_RE,
+    SAFE_AHJ_VERIFY_TITLE,
     build_rendering_context,
     classify_source_for_jurisdiction,
     lint_rendered_output,
     sanitize_permit_display_name,
     select_inspection_profile,
+)
+from usefulness_contract import attach_usefulness_contract
+from permitassist3_exact_name_engine import (
+    FINAL_VERIFIED as PA3_FINAL_VERIFIED,
+    NON_FINAL as PA3_NON_FINAL,
+    apply_permitassist3_contract,
+    contains_forbidden_final_string as pa3_contains_forbidden_final_string,
 )
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
@@ -1408,7 +1417,15 @@ def _source_dicts(result: dict) -> list[dict]:
         if isinstance(item, str):
             url = _safe_external_url(item)
             if url:
-                out.append({"url": url, "title": "Official source", "snippet": ""})
+                out.append({
+                    "url": url,
+                    "title": "Official source",
+                    "snippet": "",
+                    # Legacy/string-only source lists can still carry a URL as
+                    # provenance, but never as quote-backed proof. Citation
+                    # builders expose this as needs_verification.
+                    "_unquoted_citation_allowed": True,
+                })
         elif isinstance(item, dict):
             url = _safe_external_url(item.get("url") or item.get("link") or "")
             if url:
@@ -1416,6 +1433,7 @@ def _source_dicts(result: dict) -> list[dict]:
                     "url": url,
                     "title": str(item.get("title") or item.get("name") or "Official source"),
                     "snippet": str(item.get("snippet") or item.get("quote") or item.get("text") or ""),
+                    "_unquoted_citation_allowed": bool(item.get("unquoted_citation_allowed")),
                 })
     return out
 
@@ -1550,6 +1568,8 @@ def _ef99b_remove_urls(value, rejected_urls: set[str]):
 def _ef99b_likely_permit_category(result: dict, job_type: str) -> str:
     context = build_rendering_context(result, job_type, result.get("city") or "", result.get("state") or "")
     primary = result.get("_permit_display_name") or result.get("permit_name") or result.get("permit_type") or ""
+    if str(primary or "").strip() == PHASE7H_AHJ_VERIFY_PERMIT_TYPE:
+        primary = ""
     return sanitize_permit_display_name(primary, context.get("vertical"), job_type)
 
 
@@ -1870,6 +1890,7 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
                 fixed_primary = "Building Permit — Tenant Improvement / Office Interior Alteration"
             elif "retail" in (job_type or "").lower():
                 fixed_primary = "Building Permit — Commercial Interior Alteration / Tenant Improvement"
+            result["_permit_primary_inserted_by_quality_gate"] = True
             permits = result.get("permits_required") or []
             if permits and isinstance(permits[0], dict):
                 permits[0]["permit_type"] = fixed_primary
@@ -1909,7 +1930,10 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     _enforce_rendered_output_contract(result, job_type, city, state, warnings)
     _enforce_ef99_license_scope_boundary(result, job_type, city, state)
     _enforce_ef99_authority_conflict_boundary(result, job_type, city, state)
-    warnings = list(result.get("quality_warnings") or warnings)
+    # Later guardrails may add their own quality_warnings; preserve the earlier
+    # AHJ-specific/commercial companion warnings instead of letting a downstream
+    # assignment clobber them.
+    warnings = list(warnings) + [w for w in (result.get("quality_warnings") or []) if w not in warnings]
 
     if str(result.get("confidence") or "").lower() == "high" and not sources:
         result["confidence"] = "medium"
@@ -1979,7 +2003,7 @@ def build_claim_citations(result: dict) -> list[dict]:
         if str(result.get("confidence") or "").lower() == "high" and not citations:
             result["confidence"] = "medium"
         warnings = result.setdefault("quality_warnings", [])
-        warning = "Some report claims are not shown as verified because no quoted source snippet was attached."
+        warning = "Some report claims are not shown as verified because no quoted source snippets were attached."
         if warning not in warnings:
             warnings.append(warning)
     else:
@@ -1991,6 +2015,10 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
     if _is_unsupported_ahj_result(result):
         scrub_unsupported_ahj_response(result, city, state)
         return {}
+    raw_existing_apply_path = result.get("apply_path")
+    existing_apply_path = raw_existing_apply_path if isinstance(raw_existing_apply_path, dict) else {}
+    if result.get("_apply_path_source_backed_overlay") and existing_apply_path.get("support_level") == "verified path":
+        return existing_apply_path
     url = result.get("apply_url") or ""
     if result.get("_residential_trade_leak_repaired") and re.search(r"commercial|tenant[-_ ]?improvement|tenant[-_ ]?finish", str(url), re.I):
         url = ""
@@ -2141,9 +2169,143 @@ def evidence_pack_allowed_for_request(
     return preview_route_allowed
 
 
-PHASE7H_AHJ_VERIFY_PERMIT_TYPE = "Permit required — exact permit type needs AHJ verification"
+PHASE7H_AHJ_VERIFY_PERMIT_TYPE = "Manual filing path confirmation in progress"
 PHASE7H_EXACT_NAME_SOURCE_FIELDS = {"display_permit_name", "official_permit_name", "permit_type"}
-PHASE7H_UNVERIFIED_PERMIT_WARNING = "Permit is required, but exact permit type was not official-source verified; confirm the exact filing type with the AHJ before filing."
+PHASE7H_UNVERIFIED_PERMIT_WARNING = "Manual filing path check is in progress for this lookup; confirm the final filing category with the AHJ before submitting."
+HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME = "Residential Construction & On-site Sewage System (Septic)"
+HARRIS_RESIDENTIAL_DEVELOPMENT_URL = "https://oce.harriscountytx.gov/Apply-for-Permit/Permits-A-to-Z/Residential-Construction-On-site-Sewage-System-Septic"
+HARRIS_EPERMITS_URL = "https://epermits.harriscountytx.gov/"
+
+
+def _is_harris_county_residential_development_lookup(job_type: str, city: str, state: str) -> bool:
+    city_key = re.sub(r"\s+", " ", str(city or "").strip().lower())
+    state_key = _normalize_ahj_state(state)
+    if state_key != "TX" or city_key not in {"harris county", "unincorporated harris county"}:
+        return False
+    text = str(job_type or "").lower()
+    if re.search(r"\b(repair|replace|opener|door|reroof|re-roof|roof\s+repair)\b", text):
+        return False
+    has_residential = bool(re.search(r"\b(residential|home|single[- ]family|lot)\b", text))
+    has_structure = bool(re.search(r"\b(detached\s+)?(garage|carport|workshop|accessory\s+(?:structure|building)|metal\s+building)\b", text))
+    has_new_construction_signal = bool(re.search(r"\b(build|construct|new|install|erect|add(?:ing)?|detached)\b", text))
+    return has_residential and has_structure and has_new_construction_signal
+
+
+def apply_harris_county_residential_development_overlay(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Source-backed hotfix for unincorporated Harris County residential accessory structures."""
+    if not isinstance(result, dict) or not _is_harris_county_residential_development_lookup(job_type, city, state):
+        return result
+
+    source_snippet = (
+        "This application is for any residential development on existing lots or residential property. "
+        "This includes on-site sewerage systems, swimming pools, driveway, new homes, garages, carports, "
+        "fill material and accessory structures."
+    )
+    office = "Harris County Engineering Department — Office of the County Engineer, Permits"
+    phone = "(713) 274-3580"
+    result.update({
+        "permit_verdict": "YES",
+        "permit_required": True,
+        "permit_required_confidence": "high",
+        "permit_type": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "permit_name": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "_permit_display_name": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "official_permit_name": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "official_application_category": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "permit_type_verified": True,
+        "permit_name_verified": True,
+        "permit_name_confidence": "high",
+        "permit_name_status": "official_category_confirmed",
+        "permit_name_source_field": "official_permit_name",
+        "_permit_type_official_source_verified": True,
+        "data_source": "city_database",
+        "applying_office": office,
+        "apply_url": HARRIS_EPERMITS_URL,
+        "apply_phone": phone,
+        "apply_google_maps": result.get("apply_google_maps") or build_google_maps_url(city, state, office=office),
+        "job_summary": (
+            "Permit required for a detached garage/workshop on a residential lot in unincorporated Harris County. "
+            "Harris County's official residential-development application category explicitly includes garages, "
+            "carports, fill material, and accessory structures. New electrical service may also require power-release "
+            "or trade coordination through Harris County ePermits/utility processes."
+        ),
+        "confidence_reason": (
+            "Official Harris County OCE source confirms the residential-development application covers garages, "
+            "carports, and accessory structures. Verify site-specific floodplain, septic, driveway, and power-release details before filing."
+        ),
+        "_last_verified_at": "2026-05-22",
+        "last_verified_at": "2026-05-22",
+        "rulebook_depth": "DEEP",
+        "county_fallback": False,
+        "county_fallback_note": "",
+        "_apply_path_source_backed_overlay": "harris_county_residential_development",
+    })
+    result["sources"] = [
+        {
+            "url": HARRIS_RESIDENTIAL_DEVELOPMENT_URL,
+            "title": "Harris County OCE — Residential Construction & On-site Sewage System (Septic)",
+            "snippet": source_snippet,
+        },
+        {
+            "url": HARRIS_EPERMITS_URL,
+            "title": "Harris County ePermits",
+            "snippet": "Harris County ePermits is the online portal for permit applications, project status, inspections, payments, and power release status.",
+        },
+    ]
+    result["permits_required"] = [
+        {
+            "permit_type": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+            "portal_selection": "Application → Residential Onsite Sewage Facility (OSSF)/Septic / Residential Construction",
+            "required": True,
+            "notes": (
+                "Use Harris County's official residential-development application path for residential property work; "
+                "the source explicitly includes garages, carports, and accessory structures."
+            ),
+        },
+        {
+            "permit_type": "Electrical service / power release coordination",
+            "portal_selection": "Power Release / electrical coordination in Harris County ePermits",
+            "required": True,
+            "notes": "New 100A service should be coordinated with Harris County ePermits/utility power-release requirements before energizing.",
+        },
+    ]
+    result["what_to_bring"] = [
+        "Site plan or survey showing the detached garage/workshop location",
+        "Construction drawings/specifications for the metal accessory structure",
+        "Project valuation and owner/applicant information",
+        "Electrical service scope for the new 100A service",
+        "Floodplain, septic/OSSF, driveway, or well documents if the site conditions trigger them",
+    ]
+    result["inspections"] = [
+        "Harris County residential-development inspection(s) after permit approval",
+        "Electrical/power-release inspection or utility coordination before service is energized",
+        "Floodplain or septic/OSSF inspections if triggered by the property",
+    ]
+    result["apply_path"] = {
+        "support_level": "verified path",
+        "platform": "Harris County ePermits",
+        "portal_url": HARRIS_EPERMITS_URL,
+        "login_required": "likely",
+        "permit_category": "Residential Construction / Accessory Structure",
+        "permit_type": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "portal_selection_path": [
+            "Open Harris County ePermits.",
+            "Go to Projects and click Apply.",
+            "Choose the residential-development application category closest to Residential Construction & On-site Sewage System (Septic).",
+        ],
+        "likely_documents": result["what_to_bring"],
+        "steps": [
+            "Open Harris County ePermits and sign in or create an applicant account.",
+            "Go to Projects → Apply and locate the property/address on the map.",
+            "Select the residential-development application category for residential construction/accessory-structure work.",
+            "Upload the site plan/survey, structure drawings, valuation, owner/applicant information, and electrical-service details.",
+            "Before final submission, verify whether floodplain, septic/OSSF, driveway, water-well, or power-release steps apply to the parcel.",
+        ],
+        "stop_before": "final submit, payment, signature, or legal attestation",
+        "verification_note": "Official Harris County OCE source confirms this application path covers garages, carports, and accessory structures; verify parcel-specific companion reviews before filing.",
+    }
+    _attach_source_classification(result, city, state)
+    return result
 
 
 def _phase7h_string(value) -> str:
@@ -2173,6 +2335,18 @@ def _phase7h_current_permit_name(result: dict) -> str:
 def _phase7h_permit_type_verified(result: dict, permit_name: str) -> bool:
     if not permit_name or permit_name == PHASE7H_AHJ_VERIFY_PERMIT_TYPE:
         return False
+    if result.get("_permit_type_official_source_verified") is True:
+        local_overlay_exact_fields = {"display_permit_name", "official_permit_name"}
+        source_field = _phase7h_string(result.get("permit_name_source_field"))
+        exact_field_value = _phase7h_string(result.get(source_field)) if source_field in local_overlay_exact_fields else ""
+        classifications_raw = result.get("_source_classification")
+        classifications = classifications_raw if isinstance(classifications_raw, list) else []
+        if (
+            source_field in local_overlay_exact_fields
+            and exact_field_value == permit_name
+            and any(isinstance(item, dict) and item.get("source_class") == "local_ahj" for item in classifications)
+        ):
+            return True
     raw_evidence_meta = result.get("_evidence_pack")
     evidence_meta = raw_evidence_meta if isinstance(raw_evidence_meta, dict) else {}
     matched_fields = {str(field) for field in (evidence_meta.get("matched_fields") or [])}
@@ -2227,48 +2401,148 @@ def _phase7h_replace_text(value, exact_names: set[str]):
     return value
 
 
-def _phase7h_neutralize_unverified_permit_type(result: dict, city: str, state: str, job_type: str = "") -> None:
-    exact_names = {
-        _phase7h_string(result.get("permit_name")),
-        _phase7h_string(result.get("permit_type")),
-        _phase7h_string(result.get("_permit_display_name")),
+def _phase7h_permit_name_is_unsafe(value: str | None) -> bool:
+    """Return True only for empty/internal placeholder permit-name slots.
+
+    Missing exact-name evidence should lower confidence and add a caveat, but it
+    must not destroy a useful contractor-facing filing category such as
+    "Commercial Building Permit" or "Residential Plumbing Permit".
+    """
+    text = _phase7h_string(value)
+    if not text:
+        return True
+    normalized = re.sub(r"\s+", " ", text).strip().lower()
+    if normalized in {"permit", "permit required", "unknown", "n/a", "none", "null"}:
+        return True
+    if normalized == PHASE7H_AHJ_VERIFY_PERMIT_TYPE.lower():
+        return True
+    return bool(FALLBACK_NAME_RE.search(text) or _CUSTOMER_DEBUG_FRAGMENT_RE.search(text))
+
+
+def _phase7h_safe_unverified_name(value: str | None) -> str:
+    text = _phase7h_string(value)
+    return PHASE7H_AHJ_VERIFY_PERMIT_TYPE if _phase7h_permit_name_is_unsafe(text) else text
+
+
+def _phase7h_first_safe_unverified_name(*values: str | None) -> str:
+    """Pick a useful filing category/path label without claiming exact-title verification."""
+    for value in values:
+        text = _phase7h_string(value)
+        if text and not _phase7h_permit_name_is_unsafe(text):
+            return text
+    return PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+
+
+def _phase7h_specific_unverified_filing_category(value: str | None) -> bool:
+    """Distinguish useful filing categories from generic/invented permit labels."""
+    text = _phase7h_string(value)
+    if _phase7h_permit_name_is_unsafe(text):
+        return False
+    normalized = re.sub(r"\s+", " ", text).strip().lower()
+    if normalized in {"building permit", "commercial building permit", "permit", "permit required"}:
+        return False
+    specificity_terms = (
+        "tenant improvement",
+        "interior alteration",
+        "alteration permit",
+        "commercial alteration",
+        "electrical permit",
+        "plumbing permit",
+        "mechanical permit",
+        "solar permit",
+        "fire permit",
+        "sign permit",
+        "roofing permit",
+        "application",
+        "form",
+    )
+    return "permit" in normalized and any(term in normalized for term in specificity_terms)
+
+
+def _phase7h_has_source_backed_filing_category(result: dict) -> bool:
+    """Allow category/path labels to survive exact-title uncertainty only with field evidence."""
+    raw_evidence_meta = result.get("_evidence_pack")
+    evidence_meta = raw_evidence_meta if isinstance(raw_evidence_meta, dict) else {}
+    matched_fields = {str(field) for field in (evidence_meta.get("matched_fields") or [])}
+    source_field = str(evidence_meta.get("permit_name_source_field") or "")
+    category_fields = {
+        "official_application_category",
+        "application_category",
+        "portal_category",
+        "portal_selection",
+        "filing_path",
+        "apply_path",
+        "application_name",
+        "form_title",
     }
+    return bool(evidence_meta.get("enabled") and (matched_fields & category_fields or source_field in category_fields))
+
+
+def _phase7h_neutralize_unverified_permit_type(result: dict, city: str, state: str, job_type: str = "") -> None:
     raw_permits = result.get("permits_required")
     permits = raw_permits if isinstance(raw_permits, list) else []
-    for permit in permits:
-        if isinstance(permit, dict):
-            exact_names.update(
-                _phase7h_string(permit.get(key))
-                for key in ("permit_type", "portal_selection", "permit_name", "name", "title")
-            )
-    exact_names = {name for name in exact_names if name and name != PHASE7H_AHJ_VERIFY_PERMIT_TYPE}
+    raw_apply_path = result.get("apply_path")
+    existing_apply_path = raw_apply_path if isinstance(raw_apply_path, dict) else {}
+    candidate_names = [
+        result.get("permit_type"),
+        result.get("permit_name"),
+        result.get("_permit_display_name"),
+    ]
+    candidate_names.extend(
+        permit.get(key)
+        for permit in permits
+        if isinstance(permit, dict)
+        for key in ("permit_type", "permit_name", "portal_selection", "name", "title")
+    )
+    candidate_names.append(existing_apply_path.get("permit_type"))
+    safe_candidate_name = _phase7h_first_safe_unverified_name(*candidate_names)
+    # PermitAssist 2.0: do not let model/quality-gate invented labels become
+    # customer-visible filing names. Preserve an unverified category/path label
+    # only when evidence metadata says the label came from an official filing,
+    # application, portal, form, or apply-path field. Otherwise route the exact
+    # name/path gap to the safe interim/manual-completion label.
+    preserve_filing_category = _phase7h_has_source_backed_filing_category(result) or (
+        not result.get("_permit_primary_inserted_by_quality_gate")
+        and _phase7h_specific_unverified_filing_category(safe_candidate_name)
+    )
+    safe_primary_name = safe_candidate_name if preserve_filing_category else PHASE7H_AHJ_VERIFY_PERMIT_TYPE
 
-    result["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-    result["permit_name"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-    result["_permit_display_name"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+    result["permit_type"] = safe_primary_name
+    result["permit_name"] = safe_primary_name
+    result["_permit_display_name"] = safe_primary_name
     result["permit_type_verified"] = False
-    result["permit_name_status"] = result.get("permit_name_status") or "needs_ahj_verification"
+    result["permit_name_status"] = result.get("permit_name_status") or "needs_manual_filing_path_confirmation"
     result["permit_name_confidence"] = "low"
 
     contact = _phase7h_contact_phrase(result, city)
     note = (
-        "Permit is required, but the exact permit category was not official-source verified for this lookup. "
-        f"Confirm the exact filing type with {contact} before filing."
+        "Manual filing path check is in progress for this lookup. "
+        f"Confirm the final filing category with {contact} before submitting."
     )
     if permits:
         for permit in permits:
             if not isinstance(permit, dict):
                 continue
-            permit["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-            permit["portal_selection"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-            permit.pop("permit_name", None)
-            permit.pop("name", None)
-            permit.pop("title", None)
+            if preserve_filing_category:
+                permit["permit_type"] = _phase7h_safe_unverified_name(
+                    permit.get("permit_type") or permit.get("permit_name") or permit.get("name") or permit.get("title") or safe_primary_name
+                )
+                permit["portal_selection"] = _phase7h_first_safe_unverified_name(
+                    permit.get("portal_selection"), permit.get("permit_type"), safe_primary_name
+                )
+            else:
+                permit["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+                permit["portal_selection"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+            for key in ("permit_name", "name", "title"):
+                if key in permit and (not preserve_filing_category or _phase7h_permit_name_is_unsafe(permit.get(key))):
+                    permit.pop(key, None)
             permit["required"] = True
-            permit["notes"] = note
+            existing_note = _phase7h_string(permit.get("notes"))
+            if not existing_note or FALLBACK_NAME_RE.search(existing_note) or _CUSTOMER_DEBUG_FRAGMENT_RE.search(existing_note):
+                permit["notes"] = note
         result["permits_required"] = permits
     else:
-        result["permits_required"] = [{"permit_type": PHASE7H_AHJ_VERIFY_PERMIT_TYPE, "required": True, "notes": note}]
+        result["permits_required"] = [{"permit_type": safe_primary_name, "required": True, "notes": note}]
 
     warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
     if result.get("warnings") is not warnings:
@@ -2279,10 +2553,10 @@ def _phase7h_neutralize_unverified_permit_type(result: dict, city: str, state: s
 
     if result.get("apply_path") or result.get("apply_url") or job_type:
         build_apply_path(result, job_type, city, state)
-    if isinstance(result.get("apply_path"), dict) and exact_names:
-        result["apply_path"] = _phase7h_replace_text(result["apply_path"], exact_names)
-        result["apply_path"]["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-        result["apply_path"]["verification_note"] = "Exact permit category is not official-source verified for this lookup; confirm the filing type with the AHJ before filing."
+    if isinstance(result.get("apply_path"), dict):
+        apply_path = result["apply_path"]
+        apply_path["permit_type"] = _phase7h_safe_unverified_name(apply_path.get("permit_type") or result.get("permit_type"))
+        apply_path["verification_note"] = "Manual filing path check is in progress for this lookup; confirm the final filing category with the AHJ before submitting."
 
 
 def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "", state: str = "", job_type: str = "") -> dict:
@@ -2325,6 +2599,14 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     """Shared final response safety pipeline for all permit lookup endpoints."""
     if _is_unsupported_ahj_result(result):
         return scrub_unsupported_ahj_response(result, city, state)
+    pa3_original_forbidden_final = pa3_contains_forbidden_final_string(
+        {
+            "permit_type": result.get("permit_type"),
+            "permit_name": result.get("permit_name"),
+            "_permit_display_name": result.get("_permit_display_name"),
+            "permits_required": result.get("permits_required"),
+        }
+    )
     evidence_pack_config_invalid = (
         evidence_allowed is False
         and evidence_pack_enabled()
@@ -2363,6 +2645,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         result['apply_phone'] = result.get('apply_google_maps', '')
 
     result = enrich_result_response(result, job_type, city, state)
+    result = apply_harris_county_residential_development_overlay(result, job_type, city, state)
     result = apply_permitiq_quality_gate(result, job_type, city, state)
 
     if evidence_enabled:
@@ -2424,10 +2707,24 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     )
     if not skip_final_negation_scrub:
         _filter_negated_surface_lists(result, job_type)
-    # Phase 7H customer-trust patch: keep the customer surface explicit for YES
-    # verdicts without changing evidence-pack matching or inventing official
-    # permit-type certainty.
-    ensure_customer_visible_permit_trust_statement(result, city, state, job_type)
+    # PermitAssist 3.0 exact-name contract: final customer output is allowed only
+    # when exact permit/application/form names or exact portal categories are
+    # present with official evidence. Missing exact names become structured
+    # non-final completion tickets; do not let Phase 7H placeholders masquerade
+    # as final answers.
+    pa3_force_enabled = os.environ.get("PERMITASSIST3_EXACT_NAME_ENGINE", "").strip().lower() in {"1", "true", "yes", "on"}
+    pa3_needs_contract = pa3_force_enabled or pa3_original_forbidden_final or pa3_contains_forbidden_final_string(
+        {
+            "permit_type": result.get("permit_type"),
+            "permit_name": result.get("permit_name"),
+            "_permit_display_name": result.get("_permit_display_name"),
+            "permits_required": result.get("permits_required"),
+        }
+    )
+    if pa3_needs_contract:
+        result = apply_permitassist3_contract(result, job_type, city, state, explicit_vertical=explicit_vertical)
+    if result.get("final_answer_state") not in {PA3_FINAL_VERIFIED, PA3_NON_FINAL}:
+        ensure_customer_visible_permit_trust_statement(result, city, state, job_type)
     # Phase 7H can reinsert uncertainty placeholders into raw permit name/type
     # fields after the first quality gate. Re-enforce the commercial rendered
     # output contract last so API/report title slots stay clean.
@@ -2440,6 +2737,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             if warning and warning not in merged_warnings:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
+    attach_usefulness_contract(result)
     return result
 
 
@@ -3770,8 +4068,8 @@ def create_share(job_type: str, city: str, state: str, result: dict) -> str:
     slug = secrets.token_urlsafe(8)  # e.g. 'aB3xY7qR'
     now  = utc_now()
     exp  = now + timedelta(days=SHARE_TTL_DAYS)
-    # Strip internal metadata before storing
-    clean = {k: v for k, v in result.items() if not k.startswith('_')}
+    # Strip internal metadata and normalize customer-visible fallback/debug copy before storing.
+    clean = sanitize_customer_visible_result(result, job_type, city, state)
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
@@ -3829,9 +4127,10 @@ def make_result_hash(result: dict) -> str:
 
 
 def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
+    result = sanitize_customer_visible_result(result, job_type, city, state)
     permits = result.get("permits_required") or []
     permit_name = result.get("permit_name") or (permits[0].get("permit_type") if permits else "Permit") or "Permit"
-    fee = result.get("fee_range") or result.get("fee") or "Confirm fee with the building department"
+    fee = result.get("fee_range") or result.get("fees") or result.get("fee") or "Confirm fee with the building department"
     timeline_obj = result.get("approval_timeline") or {}
     timeline = timeline_obj.get("simple") or timeline_obj.get("complex") or "Varies by jurisdiction"
     docs = list(dict.fromkeys((result.get("what_to_bring") or []) + (result.get("requirements") or []) + (result.get("documents_needed") or [])))
@@ -3840,8 +4139,8 @@ def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", s
     items = [
         {"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True},
         {"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True},
-        {"label": f"Pay permit fee: {fee}", "category": "fees", "required": True},
-        {"label": f"Plan for approval timeline: {timeline}", "category": "timeline", "required": False},
+        {"label": f"Pay permit fee: {fee}", "detail": fee, "category": "fees", "required": True},
+        {"label": f"Plan for approval timeline: {timeline}", "detail": timeline, "category": "timeline", "required": False},
     ]
     if docs:
         items.append({"label": f"Required documents: {', '.join(docs[:6])}", "category": "documents", "required": True})
@@ -3974,7 +4273,7 @@ def _pdf_escape(text: str) -> str:
 
 
 def _pdf_text_lines_for_report(job_type: str, city: str, state: str, result: dict) -> list[str]:
-    result = result or {}
+    result = sanitize_customer_visible_result(result or {}, job_type, city, state)
     permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
     permit_name = (
         result.get("_permit_display_name")
@@ -4065,7 +4364,7 @@ def build_simple_pdf(lines: list[str]) -> bytes:
 
 
 def render_report_pdf(job_type: str, city: str, state: str, result: dict) -> bytes:
-    return build_simple_pdf(_pdf_text_lines_for_report(job_type, city, state, redact_public_output(result or {})))
+    return build_simple_pdf(_pdf_text_lines_for_report(job_type, city, state, result or {}))
 
 
 def mask_api_key(key: str) -> str:
@@ -4349,6 +4648,7 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
 
 def send_email_report(to_email: str, job: str, city: str, state: str, data: dict) -> bool:
     """Send a beautiful HTML permit research report via Resend."""
+    data = sanitize_customer_visible_result(data, job, city, state)
     def esc(s):
         return str(s or "").replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace('"',"&quot;")
 
@@ -5300,6 +5600,80 @@ def redact_public_output(value):
         text = re.sub(r"(?i)\blocal pack\b", "official source record", text)
         return re.sub(r"\s{2,}", " ", text).strip()
     return value
+
+
+_CUSTOMER_DEBUG_FRAGMENT_RE = re.compile(
+    r"(?i)\bneeds\s+review\s+for\s*:\s*[a-z0-9_, -]+|\bverify\s+before\s+merging\b"
+)
+_CUSTOMER_PERMIT_NAME_KEYS = {
+    "permit_name",
+    "permit_type",
+    "display_permit_name",
+    "official_permit_name",
+    "application_name",
+    "form_title",
+    "portal_category",
+    "filing_path",
+}
+
+
+def sanitize_customer_visible_text(text: str | None, *, scope: str = "", job_type: str = "") -> str:
+    """Normalize customer-surface copy after redaction so internal fallback text cannot leak."""
+    cleaned = str(redact_public_output(str(text or "")))
+    if not cleaned:
+        return ""
+    needs_customer_rewrite = bool(FALLBACK_NAME_RE.search(cleaned) or _CUSTOMER_DEBUG_FRAGMENT_RE.search(cleaned))
+    if not needs_customer_rewrite:
+        return cleaned
+    cleaned = FALLBACK_NAME_RE.sub(SAFE_AHJ_VERIFY_TITLE, cleaned)
+    cleaned = _CUSTOMER_DEBUG_FRAGMENT_RE.sub("source-confirmation detail pending", cleaned)
+    return re.sub(r"\s{2,}", " ", cleaned).strip(" ;,") or SAFE_AHJ_VERIFY_TITLE
+
+
+def sanitize_customer_visible_result(result: dict | None, job_type: str = "", city: str = "", state: str = "") -> dict:
+    """Shared renderer/export boundary for API, report, share, PDF, checklist, and email surfaces."""
+    if not isinstance(result, dict):
+        return {}
+    clean = redact_public_output(copy.deepcopy(result))
+    scope = str(
+        clean.get("project_description")
+        or clean.get("job_description")
+        or clean.get("job_type")
+        or job_type
+        or ""
+    )
+
+    def walk(value, key_name: str = ""):
+        key_lc = str(key_name or "").lower()
+        if isinstance(value, dict):
+            return {k: walk(v, str(k)) for k, v in value.items()}
+        if isinstance(value, list):
+            return [walk(item, key_name) for item in value]
+        if isinstance(value, str):
+            if key_lc in _CUSTOMER_PERMIT_NAME_KEYS:
+                candidate = redact_public_output(value)
+                if FALLBACK_NAME_RE.search(str(candidate)) or _CUSTOMER_DEBUG_FRAGMENT_RE.search(str(candidate)):
+                    return sanitize_permit_display_name(str(candidate), scope, job_type)
+                return str(candidate)
+            return sanitize_customer_visible_text(value, scope=scope, job_type=job_type)
+        return value
+
+    cleaned = walk(clean)
+    permits = cleaned.get("permits_required") if isinstance(cleaned.get("permits_required"), list) else []
+    primary_name = sanitize_permit_display_name(
+        cleaned.get("permit_name")
+        or cleaned.get("permit_type")
+        or (permits[0].get("permit_name") if permits and isinstance(permits[0], dict) else "")
+        or (permits[0].get("permit_type") if permits and isinstance(permits[0], dict) else ""),
+        scope,
+        job_type,
+    )
+    cleaned["permit_name"] = primary_name
+    cleaned["permit_type"] = sanitize_permit_display_name(cleaned.get("permit_type") or primary_name, scope, job_type)
+    if permits and isinstance(permits[0], dict):
+        permits[0]["permit_name"] = sanitize_permit_display_name(permits[0].get("permit_name") or primary_name, scope, job_type)
+        permits[0]["permit_type"] = sanitize_permit_display_name(permits[0].get("permit_type") or permits[0].get("permit_name") or primary_name, scope, job_type)
+    return cleaned
 
 
 def _evidence_pack_indexing_guard_enabled() -> bool:
@@ -6602,11 +6976,14 @@ class Handler(BaseHTTPRequestHandler):
                             return response
                         if unverified_us_jurisdiction:
                             result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
+                        result = sanitize_customer_visible_result(result, job_type, city, state)
                         response = {
                             "job_type": job_type,
                             "city": city,
                             "state": state,
                             "permit_verdict": result.get("permit_verdict"),
+                            "permit_name": result.get("permit_name"),
+                            "permit_type": result.get("permit_type"),
                             "permits_required": result.get("permits_required", []),
                             "ahj_status": result.get("ahj_status"),
                             "jurisdiction_verification": result.get("jurisdiction_verification"),

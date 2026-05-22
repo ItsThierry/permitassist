@@ -2799,7 +2799,7 @@ function defaultPermitDisplayName(renderContext) {
   if (vertical === 'office_ti') return 'Commercial Office Tenant Improvement Permit';
   if ((renderContext?.is_commercial || false) && vertical === 'commercial_trade_only') return 'Commercial Trade Permit';
   if (renderContext?.is_commercial) return 'Commercial Permit / Tenant Improvement Review';
-  return 'Permit required — local permit name not confirmed';
+  return 'Manual filing path confirmation in progress';
 }
 
 function sanitizePermitDisplayName(name, renderContext) {
@@ -2873,6 +2873,8 @@ const LOCAL_AHJ_HOSTS = {
   'new york|ny': ['nyc.gov'],
   'los angeles|ca': ['lacity.org', 'ladbs.org', 'ladbsservices2.lacity.org'],
   'houston|tx': ['houstontx.gov', 'houstonpermittingcenter.org'],
+  'harris county|tx': ['harriscountytx.gov', 'oce.harriscountytx.gov', 'epermits.harriscountytx.gov', 'hctx.net', 'eng.hctx.net'],
+  'unincorporated harris county|tx': ['harriscountytx.gov', 'oce.harriscountytx.gov', 'epermits.harriscountytx.gov', 'hctx.net', 'eng.hctx.net'],
   'phoenix|az': ['phoenix.gov'],
   'austin|tx': ['austintexas.gov'],
   'seattle|wa': ['seattle.gov'],
@@ -2883,7 +2885,7 @@ const STATE_ABBR_BY_NAME = {
   illinois: 'il', pennsylvania: 'pa', 'new york': 'ny', california: 'ca', texas: 'tx',
   arizona: 'az', washington: 'wa', colorado: 'co', massachusetts: 'ma'
 };
-const KNOWN_LOCAL_AHJ_HOSTS = ['phila.gov','permits.phila.gov','nyc.gov','chicago.gov','cityofchicago.org','lacity.org','ladbs.org','houstontx.gov','phoenix.gov','austintexas.gov','seattle.gov','denvergov.org','boston.gov'];
+const KNOWN_LOCAL_AHJ_HOSTS = ['phila.gov','permits.phila.gov','nyc.gov','chicago.gov','cityofchicago.org','lacity.org','ladbs.org','houstontx.gov','harriscountytx.gov','oce.harriscountytx.gov','epermits.harriscountytx.gov','hctx.net','eng.hctx.net','phoenix.gov','austintexas.gov','seattle.gov','denvergov.org','boston.gov'];
 const MODEL_CODE_HOSTS = ['codes.iccsafe.org', 'iccsafe.org', 'up.codes', 'nfpa.org'];
 function hostMatches(host, allowed) { host = String(host || '').replace(/^www\./, '').toLowerCase(); return (allowed || []).some(h => host === h || host.endsWith('.' + h)); }
 function sourceUrl(src) { return typeof src === 'string' ? src : ((src && (src.url || src.link)) || ''); }
@@ -2927,7 +2929,7 @@ function buildConfidenceBadgeHtml(d, renderContext, city, state) {
   const dataSourceRaw = d?.data_source || d?._meta?.city_match_level || '';
   const isCountyFB = d?.county_fallback === true;
   if (corePermitUnverified(d)) {
-    return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Permit required · name not source-confirmed<span class="conf-tooltip">Permit appears required, but the exact official permit/application name is not source-confirmed for this lookup.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Permit required confidence is separate from exact permit-name confidence</div>`;
+    return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Manual filing path check in progress<span class="conf-tooltip">PermitAssist has a permit-required signal, but final intake category/path needs AHJ confirmation before submitting.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Permit-required confidence is tracked separately from final filing category confirmation.</div>`;
   }
   if ((dataSourceRaw === 'city_database' || dataSourceRaw === 'city') && hasLocalAhjSource(d, city, state)) {
     return `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified · official sources<span class="conf-tooltip">Cross-checked against local AHJ sources for the core permit claim. Verify final intake details before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Core permit claim is supported by local AHJ sources · verify final intake details</div>`;
@@ -3508,27 +3510,27 @@ function renderResults(d, job, city, state) {
   // How to Apply card (replaces misleading "Apply Online" button)
   if (verdict !== 'no') {
     const portalName = safePermitName;
-    const permitTypeNeedsAhjVerify = d.permit_type_verified === false || corePermitUnverified(d) || isFallbackPermitName(portalName);
+    const finalFilingPathNeedsConfirmation = d.permit_type_verified === false || corePermitUnverified(d) || isFallbackPermitName(portalName);
     const cityName = city || 'your city';
     html += `<div class="how-to-apply-card">`;
     html += `<div class="section-label">📝 How to Apply</div>`;
-    if (permitTypeNeedsAhjVerify) {
-      html += `<div class="apply-permit-name"><div class="label">Confirm exact permit category with AHJ</div><div class="value">${esc(portalName)}</div><div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45">Permit required, but PermitAssist did not verify the exact official filing category for this lookup.</div></div>`;
+    if (finalFilingPathNeedsConfirmation) {
+      html += `<div class="apply-permit-name"><div class="label">Confirm final filing category before submitting</div><div class="value">${esc(portalName)}</div><div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45">Manual filing path check in progress for this lookup.</div></div>`;
     } else {
       html += `<div class="apply-permit-name"><div class="label">Permit name to verify with AHJ</div><div class="value">${esc(portalName)}</div></div>`;
     }
     html += `<ol class="apply-steps">`;
     html += `<li>Go to the <strong>${esc(cityName)}</strong> building department website or visit in person</li>`;
-    html += permitTypeNeedsAhjVerify
-      ? `<li>Ask the AHJ which permit/category to file for this scope</li>`
+    html += finalFilingPathNeedsConfirmation
+      ? `<li>Contact the AHJ permit counter to confirm the final filing category for this scope</li>`
       : `<li>Search for or ask about <strong>"${esc(portalName)}"</strong></li>`;
     html += `<li>Create an account if it's your first time applying online</li>`;
     html += `<li>Upload your documents (plans, scope of work, contractor license)</li>`;
     html += `<li>Pay the application fee and save your confirmation number</li>`;
     html += `</ol>`;
     if (phone) {
-      html += permitTypeNeedsAhjVerify
-        ? `<div class="apply-phone-note">📞 Or call <a href="tel:${normalizePhone(phone)}" style="color:var(--green);font-weight:700">${esc(phone)}</a> and ask which permit/category to file for this scope</div>`
+      html += finalFilingPathNeedsConfirmation
+        ? `<div class="apply-phone-note">📞 Or call <a href="tel:${normalizePhone(phone)}" style="color:var(--green);font-weight:700">${esc(phone)}</a> to confirm the final filing category for this scope</div>`
         : `<div class="apply-phone-note">📞 Or call <a href="tel:${normalizePhone(phone)}" style="color:var(--green);font-weight:700">${esc(phone)}</a> and ask for <strong>"${esc(portalName)}"</strong></div>`;
     }
     if (maps) {

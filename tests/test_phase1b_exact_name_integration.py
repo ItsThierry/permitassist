@@ -169,10 +169,11 @@ def test_phase1b_residential_no_regression_no_commercial_ti_names(tmp_path, monk
         assert (result.get("_evidence_pack") or {}).get("request_vertical") == "residential"
         matched_fields = set((result.get("_evidence_pack") or {}).get("matched_fields", []))
         assert not ({"display_permit_name", "official_permit_name"} & matched_fields)
-        statement = "Permit required — exact permit type needs AHJ verification"
+        statement = "Manual filing path confirmation in progress"
         assert result.get("permit_name") == statement
         assert result.get("permit_type") == statement
         assert result.get("permit_type_verified") is False
+        assert "exact permit type needs AHJ verification" not in text
         assert not any(name in text for name in commercial_names)
 
 

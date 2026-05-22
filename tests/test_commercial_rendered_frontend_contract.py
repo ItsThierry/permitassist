@@ -40,7 +40,8 @@ def test_frontend_confidence_badge_is_core_claim_aware():
     assert "const confBadgeHtml = buildConfidenceBadgeHtml(d, renderContext, city, state)" in body
     badge_body = _function_body("buildConfidenceBadgeHtml")
     assert "corePermitUnverified(d)" in badge_body
-    assert "Permit required · name not source-confirmed" in badge_body
+    assert "Manual filing path check in progress" in badge_body
+    assert "name not source-confirmed" not in badge_body
     assert "Needs AHJ verification" not in badge_body
     assert "Verified · official sources" in badge_body
     assert "hasLocalAhjSource(d, city, state)" in badge_body
@@ -71,7 +72,8 @@ def test_frontend_trust_patch_hides_internal_evidence_field_names_and_uses_name_
 
 def test_frontend_residential_missing_name_uses_customer_safe_fallback():
     fallback_body = _function_body("defaultPermitDisplayName")
-    assert "Permit required — local permit name not confirmed" in fallback_body
+    assert "Manual filing path confirmation in progress" in fallback_body
+    assert "local permit name not confirmed" not in fallback_body
     assert "Permit -- verify exact AHJ title" not in HTML
     assert "Permit — verify exact AHJ title" not in HTML
 

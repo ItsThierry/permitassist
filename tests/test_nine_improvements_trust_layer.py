@@ -249,10 +249,11 @@ def test_claim_citations_never_invent_missing_quotes(tmp_path, monkeypatch):
 
     citations = server.build_claim_citations(result)
 
-    assert citations
-    assert citations[0]["source_url"] == "https://example.gov/permits"
-    assert citations[0]["quoted_snippet"] == ""
-    assert citations[0]["confidence"] == "needs_verification"
+    assert citations == []
+    assert result["claim_citations"] == []
+    assert result["unverified_claims"]
+    assert result["unverified_claims"][0]["source_url"] == "https://example.gov/permits"
+    assert result["unverified_claims"][0]["confidence"] == "needs_verification"
     assert any("quoted source snippets" in w for w in result["quality_warnings"])
 
 
