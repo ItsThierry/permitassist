@@ -184,7 +184,7 @@ def test_phase7h_frontend_does_not_call_unverified_placeholder_an_exact_permit()
     assert "Contact the AHJ permit counter to confirm the final filing category for this scope" in source
 
 
-def test_phase7h_official_category_alone_does_not_verify_exact_permit_name(tmp_path, monkeypatch):
+def test_phase7h_official_category_stays_visible_without_verifying_exact_permit_name(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     result = {
         "permit_verdict": "YES",
@@ -206,14 +206,13 @@ def test_phase7h_official_category_alone_does_not_verify_exact_permit_name(tmp_p
 
     server.ensure_customer_visible_permit_trust_statement(result, "Chicago", "IL", "restaurant tenant improvement")
 
-    statement = SAFE_INTERIM_PERMIT_LABEL
-    assert result["permit_type"] == statement
-    assert result["permit_name"] == statement
-    assert result["_permit_display_name"] == statement
+    assert result["permit_type"] == "Commercial Alteration Permit"
+    assert result["permit_name"] == "Commercial Alteration Permit"
+    assert result["_permit_display_name"] == "Commercial Alteration Permit"
     assert result["permit_type_verified"] is False
-    assert result["permits_required"][0]["permit_type"] == statement
-    assert result["apply_path"]["permit_type"] == statement
-    assert "Commercial Alteration Permit" not in json.dumps(result.get("apply_path"), sort_keys=True)
+    assert result["permits_required"][0]["permit_type"] == "Commercial Alteration Permit"
+    assert result["apply_path"]["permit_type"] == "Commercial Alteration Permit"
+    assert "Manual filing path check is in progress" in result["apply_path"]["verification_note"]
     _assert_no_placeholder_primary_fields(result)
     _assert_phase0_no_banned_customer_strings(json.dumps(result, sort_keys=True))
 
@@ -351,7 +350,8 @@ def test_phase0_category_only_lookup_has_no_banned_strings_across_public_and_rep
     })
     surface = json.dumps(public, sort_keys=True, default=str) + "\n" + html
 
-    assert SAFE_INTERIM_PERMIT_LABEL in surface
+    assert "Commercial Alteration Permit" in surface
+    assert "Manual filing path check is in progress" in surface
     assert "Chicago Department of Buildings" in surface
     _assert_no_placeholder_primary_fields(public)
     _assert_phase0_no_banned_customer_strings(surface)

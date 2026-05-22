@@ -120,12 +120,12 @@ def test_phase1_source_backed_category_keeps_filing_path_visible_without_claimin
 
     server.ensure_customer_visible_permit_trust_statement(result, "Chicago", "IL", "restaurant tenant improvement")
 
-    assert result["permit_type"] == SAFE_INTERIM_PERMIT_LABEL
-    assert result["permit_name"] == SAFE_INTERIM_PERMIT_LABEL
+    assert result["permit_type"] == "Commercial Alteration Permit"
+    assert result["permit_name"] == "Commercial Alteration Permit"
     assert result["permit_type_verified"] is False
-    assert result["apply_path"]["permit_type"] == SAFE_INTERIM_PERMIT_LABEL
-    assert result["permits_required"][0]["portal_selection"] == SAFE_INTERIM_PERMIT_LABEL
-    assert "Commercial Alteration Permit" not in json.dumps(result["apply_path"], sort_keys=True)
+    assert result["apply_path"]["permit_type"] == "Commercial Alteration Permit"
+    assert result["permits_required"][0]["portal_selection"] == "Commercial Alteration Permit"
+    assert "Manual filing path check is in progress" in result["apply_path"]["verification_note"]
 
 
 def test_phase1_caveat_only_answer_is_marked_low_usefulness(tmp_path, monkeypatch):
@@ -149,10 +149,41 @@ def test_phase1_caveat_only_answer_is_marked_low_usefulness(tmp_path, monkeypatc
     )
 
     usefulness = result["_usefulness"]
-    assert usefulness["score"] <= 2
+    assert usefulness["score"] <= 2, json.dumps(usefulness, sort_keys=True)
     assert usefulness["release_gate"] == "fail"
     usefulness_warnings = [w for w in result.get("warnings", []) if "contractor operating packet is incomplete" in str(w).lower()]
     assert len(usefulness_warnings) == 1
+
+
+def test_phase1_loose_apply_path_support_level_does_not_count_as_exact_filing_grade(tmp_path, monkeypatch):
+    server = _server(tmp_path, monkeypatch)
+
+    result = {
+        "permit_verdict": "YES",
+        "permit_required": True,
+        "permit_type_verified": False,
+        "permit_type": SAFE_INTERIM_PERMIT_LABEL,
+        "permit_name": SAFE_INTERIM_PERMIT_LABEL,
+        "apply_path": {
+            "permit_type": "Commercial Alteration Permit",
+            "support_level": "see notes",
+            "verification_note": "Manual filing path check is in progress for this lookup.",
+        },
+        "permits_required": [
+            {
+                "permit_type": "Commercial Alteration Permit",
+                "portal_selection": "Commercial Alteration Permit",
+                "required": True,
+            }
+        ],
+    }
+
+    from usefulness_contract import score_result
+
+    usefulness = score_result(result)
+    slots = {slot["key"]: slot for slot in usefulness["ordered_slots"]}
+    assert slots["exact_filing_path"]["status"] == "present_safe_interim"
+    assert slots["exact_filing_path"]["points"] == 0
 
 
 def test_phase1_no_permit_required_result_does_not_get_manual_completion_warning(tmp_path, monkeypatch):

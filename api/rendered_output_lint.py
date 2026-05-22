@@ -16,6 +16,10 @@ from urllib.parse import urlparse
 
 FALLBACK_NAME_RE = re.compile(
     r"permit\s+required\s*[-–—]+\s*exact\s+permit\s+type\s+needs\s+ahj\s+verification|"
+    r"permit\s+required\s*[-–—]+\s*local\s+permit\s+name\s+not\s+confirmed|"
+    r"permit\s+required\s*[·•\-–—]+\s*name\s+not\s+source-confirmed|"
+    r"local\s+permit\s+name\s+not\s+confirmed|"
+    r"name\s+not\s+source-confirmed|"
     r"permit\s*[-–—]+\s*verify\s+exact\s+ahj\s+title|"
     r"exact\s+permit\s+(?:type|category).*needs\s+ahj\s+verification|"
     r"needs\s+ahj\s+verification",

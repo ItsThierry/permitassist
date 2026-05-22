@@ -111,12 +111,30 @@ def _ruling_slot(result: dict[str, Any]) -> dict[str, Any]:
     return _status("missing")
 
 
+def _apply_path_is_supported(apply_path: dict[str, Any]) -> bool:
+    support = _text(apply_path.get("support_level")).lower()
+    return support == "verified path"
+
+
+def _permit_name_verified(result: dict[str, Any]) -> bool:
+    return result.get("permit_type_verified") is not False
+
+
 def _exact_filing_path_slot(result: dict[str, Any]) -> dict[str, Any]:
-    names = [result.get("permit_name"), result.get("permit_type"), result.get("_permit_display_name")]
     apply_path = _dict_value(result.get("apply_path"))
-    names.append(apply_path.get("permit_type"))
+    names = [result.get("permit_name"), result.get("permit_type")]
+    if _permit_name_verified(result):
+        names.extend([result.get("_permit_display_name"), apply_path.get("permit_type")])
+    elif _apply_path_is_supported(apply_path):
+        names.append(apply_path.get("permit_type"))
     for permit in _permit_items(result):
-        names.extend([permit.get("permit_type"), permit.get("portal_selection")])
+        if _permit_name_verified(result) or _apply_path_is_supported(apply_path):
+            names.append(permit.get("permit_type"))
+            names.append(permit.get("portal_selection"))
+        else:
+            names.extend(
+                item for item in (permit.get("permit_type"), permit.get("portal_selection")) if _is_safe_interim(item)
+            )
     exact_names = [name for name in names if _has_text(name) and not _is_safe_interim(name)]
     if exact_names:
         return _status("present_exact", exact_names[0])
@@ -127,16 +145,29 @@ def _exact_filing_path_slot(result: dict[str, Any]) -> dict[str, Any]:
 
 def _portal_selection_slot(result: dict[str, Any]) -> dict[str, Any]:
     apply_path = _dict_value(result.get("apply_path"))
-    candidates = [apply_path.get("portal"), apply_path.get("permit_type"), apply_path.get("verification_note")]
-    steps = apply_path.get("application_steps")
-    if isinstance(steps, list):
-        candidates.extend(steps)
-    for permit in _permit_items(result):
-        candidates.append(permit.get("portal_selection"))
-    exact = [item for item in candidates if _has_text(item) and not _is_safe_interim(item)]
+    candidates = [apply_path.get("portal"), apply_path.get("verification_note")]
+    if _permit_name_verified(result) or _apply_path_is_supported(apply_path):
+        candidates.append(apply_path.get("permit_type"))
+        steps = apply_path.get("application_steps")
+        if isinstance(steps, list):
+            candidates.extend(steps)
+        for permit in _permit_items(result):
+            candidates.append(permit.get("portal_selection"))
+    manual_confirmation = any(
+        "confirm" in _text(item).lower() or "manual filing path check" in _text(item).lower()
+        for item in candidates
+    )
+    exact = [
+        item
+        for item in candidates
+        if _has_text(item)
+        and not _is_safe_interim(item)
+        and "manual filing path check" not in _text(item).lower()
+        and "confirm the final filing category" not in _text(item).lower()
+    ]
     if exact:
         return _status("present_exact", exact[0])
-    if any(_is_safe_interim(item) for item in candidates) or any("confirm" in _text(item).lower() for item in candidates):
+    if any(_is_safe_interim(item) for item in candidates) or manual_confirmation:
         return _status("present_safe_interim", "confirm final filing category")
     return _status("missing")
 
@@ -161,10 +192,26 @@ def _companions_slot(result: dict[str, Any]) -> dict[str, Any]:
     return _status("missing")
 
 
+def _generated_inspection_notice(value: Any) -> bool:
+    text = _text(value).lower()
+    return bool(
+        text
+        and (
+            "google.com/maps/search" in text
+            or "advance notice may be required" in text
+            or "verify when booking" in text
+        )
+    )
+
+
 def _inspections_slot(result: dict[str, Any]) -> dict[str, Any]:
     for key in ("inspections", "inspection_sequence", "inspection_booking"):
-        if _list_has_items(result.get(key)):
-            return _status("present_exact", result.get(key))
+        value = result.get(key)
+        if _list_has_items(value):
+            items = value if isinstance(value, list) else [value]
+            if all(_generated_inspection_notice(item) for item in items):
+                return _status("present_safe_interim", value)
+            return _status("present_exact", value)
     return _status("missing")
 
 
@@ -205,9 +252,9 @@ def score_result(result: dict[str, Any]) -> dict[str, Any]:
         status = raw["status"]
         evidence = raw.get("evidence", "")
         points = 0 if key == "caveat" else (1 if status in {"present_exact", "present_safe_interim"} else 0)
-        if key == "exact_filing_path" and status == "present_safe_interim":
-            # The safe interim label is containment, not exact-name usefulness.
-            # It should not make a caveat-only YES look filing-grade.
+        if status == "present_safe_interim" and key in {"exact_filing_path", "inspections_sequence"}:
+            # Safe interim containment/generic booking hints are not filing-grade usefulness.
+            # They should not make a caveat-only YES look actionable.
             points = 0
         score += points
         if key != "caveat" and points == 0:

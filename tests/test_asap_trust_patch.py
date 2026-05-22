@@ -213,7 +213,7 @@ def test_display_permit_name_wins_main_permit_slot_when_source_backed(monkeypatc
     assert result["fee_range"] is None
 
 
-def test_missing_exact_name_fails_closed_without_placeholder_or_debug_language(monkeypatch, tmp_path):
+def test_category_only_exact_name_gap_preserves_filing_category_without_placeholder_or_debug_language(monkeypatch, tmp_path):
     pack_path = _write_exact_name_pack(
         tmp_path / "category-only-pack.json",
         [
@@ -235,14 +235,14 @@ def test_missing_exact_name_fails_closed_without_placeholder_or_debug_language(m
     html = server.render_white_label_report_html({"result": result, "job_type": "residential bathroom remodel", "city": "Dallas", "state": "TX"})
     surface = _customer_surface_blob(result, html)
 
-    statement = "Manual filing path confirmation in progress"
+    statement = "Building / Residential Remodel"
     assert result["_permit_display_name"] == statement
     assert result["permit_name"] == statement
     assert result["permit_type"] == statement
     assert result["permit_type_verified"] is False
     assert result["permit_name_status"] == "official_category_confirmed_exact_label_missing"
     assert result["permit_name_confidence"] == "low"
-    assert "Manual filing path confirmation in progress" in surface
+    assert "Building / Residential Remodel" in surface
     assert "Manual filing path check is in progress" in surface
     assert "exact permit type needs AHJ verification" not in surface
     assert "not official-source verified" not in surface
