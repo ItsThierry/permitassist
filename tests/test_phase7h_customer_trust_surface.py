@@ -357,7 +357,8 @@ def test_phase0_category_only_lookup_has_no_banned_strings_across_public_and_rep
     _assert_phase0_no_banned_customer_strings(surface)
 
 
-def test_phase0_phoenix_solar_battery_400a_placeholder_is_safe_across_customer_surfaces(tmp_path, monkeypatch):
+def test_phase0_phoenix_solar_battery_400a_requires_non_final_completion_across_customer_surfaces(tmp_path, monkeypatch):
+    monkeypatch.setenv("PERMITASSIST3_TICKET_PATH", str(tmp_path / "pa3_tickets.jsonl"))
     server = _import_server(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "validate_url", lambda url, timeout=4: True)
     job = "Install rooftop solar PV, battery storage, and a 400A service upgrade on a Phoenix commercial building"
@@ -390,8 +391,10 @@ def test_phase0_phoenix_solar_battery_400a_placeholder_is_safe_across_customer_s
     surface = json.dumps(public, sort_keys=True, default=str) + "\n" + html + "\n" + pdf_text
 
     assert result["permit_type_verified"] is False
-    assert SAFE_INTERIM_PERMIT_LABEL in surface
-    assert "Phoenix Planning and Development Department" in surface
+    assert result["final_answer_state"] == server.PA3_NON_FINAL
+    assert result["permit_verdict"] == "NON_FINAL"
+    assert result["completion_ticket"]["ticket_id"].startswith("pa3_")
+    assert SAFE_INTERIM_PERMIT_LABEL not in surface
     _assert_no_placeholder_primary_fields(public)
     _assert_phase0_no_banned_customer_strings(surface)
 
@@ -411,7 +414,8 @@ def test_phase0_harris_overlay_sets_explicit_local_ahj_source_classification(tmp
     assert server._phase7h_permit_type_verified(result, result["permit_type"]) is True
 
 
-def test_phase0_harris_non_overlay_scopes_stay_safe_interim_without_banned_strings(tmp_path, monkeypatch):
+def test_phase0_harris_non_overlay_scopes_require_non_final_completion_without_banned_strings(tmp_path, monkeypatch):
+    monkeypatch.setenv("PERMITASSIST3_TICKET_PATH", str(tmp_path / "pa3_tickets.jsonl"))
     server = _import_server(tmp_path, monkeypatch)
     for job in (
         "Build a swimming pool on a residential lot in unincorporated Harris County",
@@ -435,7 +439,9 @@ def test_phase0_harris_non_overlay_scopes_stay_safe_interim_without_banned_strin
         surface = json.dumps(public, sort_keys=True, default=str)
 
         assert result["permit_type_verified"] is False
-        assert SAFE_INTERIM_PERMIT_LABEL in surface
+        assert result["final_answer_state"] == server.PA3_NON_FINAL
+        assert result["completion_ticket"]["ticket_id"].startswith("pa3_")
+        assert SAFE_INTERIM_PERMIT_LABEL not in surface
         _assert_no_placeholder_primary_fields(public)
         _assert_phase0_no_banned_customer_strings(surface)
 

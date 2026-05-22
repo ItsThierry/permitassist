@@ -65,6 +65,12 @@ from rendered_output_lint import (
     select_inspection_profile,
 )
 from usefulness_contract import attach_usefulness_contract
+from permitassist3_exact_name_engine import (
+    FINAL_VERIFIED as PA3_FINAL_VERIFIED,
+    NON_FINAL as PA3_NON_FINAL,
+    apply_permitassist3_contract,
+    contains_forbidden_final_string as pa3_contains_forbidden_final_string,
+)
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -2593,6 +2599,14 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     """Shared final response safety pipeline for all permit lookup endpoints."""
     if _is_unsupported_ahj_result(result):
         return scrub_unsupported_ahj_response(result, city, state)
+    pa3_original_forbidden_final = pa3_contains_forbidden_final_string(
+        {
+            "permit_type": result.get("permit_type"),
+            "permit_name": result.get("permit_name"),
+            "_permit_display_name": result.get("_permit_display_name"),
+            "permits_required": result.get("permits_required"),
+        }
+    )
     evidence_pack_config_invalid = (
         evidence_allowed is False
         and evidence_pack_enabled()
@@ -2693,10 +2707,24 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     )
     if not skip_final_negation_scrub:
         _filter_negated_surface_lists(result, job_type)
-    # Phase 7H customer-trust patch: keep the customer surface explicit for YES
-    # verdicts without changing evidence-pack matching or inventing official
-    # permit-type certainty.
-    ensure_customer_visible_permit_trust_statement(result, city, state, job_type)
+    # PermitAssist 3.0 exact-name contract: final customer output is allowed only
+    # when exact permit/application/form names or exact portal categories are
+    # present with official evidence. Missing exact names become structured
+    # non-final completion tickets; do not let Phase 7H placeholders masquerade
+    # as final answers.
+    pa3_force_enabled = os.environ.get("PERMITASSIST3_EXACT_NAME_ENGINE", "").strip().lower() in {"1", "true", "yes", "on"}
+    pa3_needs_contract = pa3_force_enabled or pa3_original_forbidden_final or pa3_contains_forbidden_final_string(
+        {
+            "permit_type": result.get("permit_type"),
+            "permit_name": result.get("permit_name"),
+            "_permit_display_name": result.get("_permit_display_name"),
+            "permits_required": result.get("permits_required"),
+        }
+    )
+    if pa3_needs_contract:
+        result = apply_permitassist3_contract(result, job_type, city, state, explicit_vertical=explicit_vertical)
+    if result.get("final_answer_state") not in {PA3_FINAL_VERIFIED, PA3_NON_FINAL}:
+        ensure_customer_visible_permit_trust_statement(result, city, state, job_type)
     # Phase 7H can reinsert uncertainty placeholders into raw permit name/type
     # fields after the first quality gate. Re-enforce the commercial rendered
     # output contract last so API/report title slots stay clean.

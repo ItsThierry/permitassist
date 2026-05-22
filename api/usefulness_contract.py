@@ -282,6 +282,38 @@ def attach_usefulness_contract(result: dict[str, Any]) -> dict[str, Any]:
     """Attach render order/usefulness metadata and a customer-safe low-score warning."""
     if not isinstance(result, dict):
         return result
+    if result.get("final_answer_state") == "NON_FINAL_COMPLETION_REQUIRED":
+        result["_render_order"] = ["completion_ticket", "missing_exact_names", "source_research"]
+        result["_usefulness"] = {
+            "score": 0,
+            "max_score": len(RENDER_ORDER) - 1,
+            "release_gate": "non_final_completion_required",
+            "ordered_slots": [
+                {
+                    "key": "completion_ticket",
+                    "label": "completion ticket",
+                    "status": "present_exact",
+                    "points": 0,
+                    "evidence": (result.get("completion_ticket") or {}).get("ticket_id", ""),
+                },
+                {
+                    "key": "missing_exact_names",
+                    "label": "missing exact permit/application/form names",
+                    "status": "missing",
+                    "points": 0,
+                    "evidence": (result.get("completion_ticket") or {}).get("missing_exact_names_for_families", []),
+                },
+                {
+                    "key": "source_research",
+                    "label": "official source research/write-back required",
+                    "status": "completion_required",
+                    "points": 0,
+                    "evidence": "PermitAssist completion queue must resolve exact names before customer filing guidance is final.",
+                },
+            ],
+            "missing_slots": ["exact_filing_path", "office_or_portal", "docs_checklist", "sources"],
+        }
+        return result
     contract = score_result(result)
     result["_render_order"] = list(RENDER_ORDER)
     result["_usefulness"] = contract
