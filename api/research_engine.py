@@ -6256,11 +6256,56 @@ def enforce_commercial_primary_permit_guardrail(result: dict, job_type: str, cit
     return result
 
 
+_EF06_ADU_VERTICAL_RE = re.compile(
+    r"\b(?:adus?|jadus?|dadus?|accessory[-\s]?dwelling(?:\s+unit)?s?|granny\s+flat|"
+    r"single[-\s]?family|sfr|duplex(?:es)?)\b",
+    re.I,
+)
+
+
+def _ef06_note_public_text(value) -> str:
+    """Return searchable note text without matching dict key names.
+
+    Some future structured note key could contain a residential-looking token even
+    when the customer-facing value is commercial. EF-06 should filter visible note
+    text, not schema field names.
+    """
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        return " ".join(_ef06_note_public_text(v) for v in value.values())
+    if isinstance(value, (list, tuple, set)):
+        return " ".join(_ef06_note_public_text(v) for v in value)
+    return str(value)
+
+
+def _ef06_filter_commercial_expert_notes(notes: list, result: dict, job_type: str) -> list:
+    """Prevent residential/ADU state-pack residue from leaking into commercial lanes.
+
+    EF-06 is specifically about wrong-vertical leakage. State packs are broad by
+    design, but commercial restaurant/retail/office/clinic answers must not show
+    ADU/JADU/SFR guidance unless the current scope is actually residential ADU.
+    """
+    if not isinstance(notes, list):
+        return notes
+    primary_scope = str((result or {}).get("_primary_scope") or detect_primary_scope(job_type or "") or "")
+    if primary_scope not in _COMMERCIAL_PRIMARY_SCOPES:
+        return notes
+
+    filtered = []
+    for note in notes:
+        if _EF06_ADU_VERTICAL_RE.search(_ef06_note_public_text(note)):
+            continue
+        filtered.append(note)
+    return filtered
+
+
 def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str) -> dict:
     """Append deterministic state expert notes (currently California)."""
     if not isinstance(result, dict):
         return result
     notes = get_state_expert_notes(state, city, job_type)
+    notes = _ef06_filter_commercial_expert_notes(notes, result, job_type)
     if not notes:
         if "expert_notes" not in result:
             result["expert_notes"] = []

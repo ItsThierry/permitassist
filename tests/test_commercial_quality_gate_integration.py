@@ -17,7 +17,7 @@ FALLBACK_TITLE = "Permit required -- exact permit type needs AHJ verification"
 
 def test_finalize_pipeline_reenforces_rendered_contract_after_phase7h_statement():
     source = SERVER_PATH.read_text(encoding="utf-8")
-    tail = source.split("ensure_customer_visible_permit_trust_statement(result, city, state)", 1)[1].split("return result", 1)[0]
+    tail = source.split("ensure_customer_visible_permit_trust_statement(result, city, state, job_type)", 1)[1].split("return result", 1)[0]
     assert "_enforce_rendered_output_contract(result, job_type, city, state" in tail
 
 
@@ -144,9 +144,11 @@ def test_finalize_pipeline_does_not_reintroduce_fallback_text_after_quality_gate
     )
 
     assert finalized["_rendering_context"]["template_family"] == "commercial"
-    assert finalized["_permit_display_name"] == "Building Permit — Tenant Improvement / Restaurant Interior Alteration"
+    statement = "Permit required — exact permit type needs AHJ verification"
+    assert finalized["_permit_display_name"] == statement
     names = [finalized.get("permit_name"), finalized.get("permit_type")]
     names.extend(p.get("permit_type") for p in finalized.get("permits_required", []) if isinstance(p, dict))
-    assert all("needs AHJ verification" not in str(name) for name in names)
-    assert all("exact permit type" not in str(name).lower() for name in names)
+    assert all(name == statement for name in names)
+    assert finalized["permit_type_verified"] is False
+    assert "not official-source verified" in " ".join(finalized.get("warnings") or [])
     assert finalized["_rendered_lint"]["passed"] is True

@@ -1339,7 +1339,7 @@
             <label>Describe the job</label>
             <div class="autocomplete-wrap">
               <div class="query-wrap">
-                <textarea class="hero-input" id="query" placeholder="e.g. condenser changeout, panel upgrade, full tear-off, water heater swap, mini split install" autocomplete="off" rows="3"></textarea>
+                <textarea class="hero-input" id="query" placeholder="e.g. restaurant TI, medical clinic TI, office TI, grease interceptor, panel upgrade" autocomplete="off" rows="3"></textarea>
                 <button class="mic-btn" id="mic-btn" type="button" title="Speak your question" onclick="toggleVoice()">🎤</button>
               </div>
               <div class="autocomplete-dropdown" id="autocomplete-dropdown" style="display:none"></div>
@@ -1456,7 +1456,7 @@
           <div class="new-col">
             <h3 class="new-col-title">✅ With PermitAssist</h3>
             <div class="vs-item">Practical answer in about 60–90 seconds for supported lookups</div>
-            <div class="vs-item">AI-verified, jurisdiction-specific results</div>
+            <div class="vs-item">Evidence-labeled, jurisdiction-specific results</div>
             <div class="vs-item">Know fees &amp; timeline before you show up</div>
             <div class="vs-item">Permit name and AHJ wording to verify</div>
             <div class="vs-item">Back on the job in minutes</div>
@@ -1746,6 +1746,11 @@ let tradeWizardState={tradeKey:'',baseQuery:'',answers:{},dismissedTrade:'',supp
 
 // ── Job Types for Autocomplete ────────────────────────────────────────────────
 const JOB_TYPES_ALL = [
+  // Commercial tenant improvements
+  'Restaurant TI','Restaurant tenant improvement','Restaurant TI with grease interceptor',
+  'Restaurant TI with Type I hood','Grease interceptor installation',
+  'Medical clinic TI','Medical gas installation','Dental clinic tenant improvement',
+  'Office TI','Office tenant improvement','Commercial remodel','Commercial tenant improvement',
   // HVAC
   'HVAC system replacement','HVAC replacement residential','Air conditioner replacement',
   'Furnace replacement','Heat pump installation','Mini split installation',
@@ -1777,7 +1782,7 @@ const JOB_TYPES_ALL = [
   'Accessory dwelling unit','Basement finish','Basement remodel','Garage addition',
   'Pool installation','Inground pool','Hot tub installation','Kitchen remodel',
   'Bathroom remodel','Window replacement','Door replacement','Retaining wall construction',
-  'Commercial tenant improvement','Foundation repair','Load bearing wall removal',
+  'Foundation repair','Load bearing wall removal',
 ];
 
 const RESIDENTIAL_ONLY_JOB_TYPE_RE = /\b(tankless|Solar PV system)\b/i;
@@ -1813,7 +1818,7 @@ function setSearchMode(mode) {
     btnC.style.background = '#2563eb'; btnC.style.color = '#fff';
     if (label) label.textContent = 'What do you need a permit for?';
     if (title) title.textContent = '\uD83D\uDD0D Look Up Your Permit';
-    if (query) query.placeholder = 'e.g. condenser changeout, panel upgrade, full tear-off, water heater swap, mini split install';
+    if (query) query.placeholder = 'e.g. restaurant TI, medical clinic TI, office TI, grease interceptor, panel upgrade';
   }
 }
 const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
@@ -2075,7 +2080,7 @@ function generateCustomerPermitExplanation() {
   const permitName = getPermitDisplayName(result);
   const city = window._lastLookupCity || '';
   const state = window._lastLookupState || '';
-  const fee = result.fee_range || result.fee || result.cost || 'Call the city to confirm the exact fee';
+  const fee = feeBreakdownText(result) || 'Call the city to confirm the exact fee';
   const location = [city, state].filter(Boolean).join(', ') || 'your jurisdiction';
   const isCommercial = isCommercialPrimaryScope(primaryScope);
   // 2026-04-28: tier the justifier by occupancy. Earlier this was residential-
@@ -2478,6 +2483,38 @@ function skipPreLookupGate() {
   hidePreLookupGate();
   _preLookupPassed = true;
   doLookupWithOffline();
+}
+
+function requireEmailForDetail(actionName, callback) {
+  if (hasEmail() || isLoggedIn()) {
+    callback();
+    return;
+  }
+  const overlay = document.getElementById('detail-email-gate') || document.createElement('div');
+  overlay.id = 'detail-email-gate';
+  overlay.className = 'gate-overlay';
+  overlay.innerHTML = `
+    <div class="gate-sheet">
+      <div class="gate-icon">📋</div>
+      <div class="gate-title">Send the detailed ${esc(actionName)}</div>
+      <div class="gate-sub">The permit verdict is free. Enter your email to unlock the detailed checklist, report, PDF, and share tools.</div>
+      <input class="gate-input" type="email" id="detail-gate-email" placeholder="your@email.com" autocomplete="email" />
+      <button class="gate-submit" id="detail-gate-submit">Unlock Details →</button>
+      <span class="gate-skip" id="detail-gate-cancel">Back to free verdict</span>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.style.display = 'flex';
+  const input = document.getElementById('detail-gate-email');
+  const close = () => { overlay.style.display = 'none'; };
+  document.getElementById('detail-gate-cancel')?.addEventListener('click', close, { once: true });
+  document.getElementById('detail-gate-submit')?.addEventListener('click', () => {
+    const val = (input?.value || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { if (input) { input.style.borderColor = 'var(--red)'; input.focus(); } return; }
+    saveEmail(val);
+    close();
+    callback();
+  }, { once: true });
+  setTimeout(() => input?.focus(), 100);
 }
 
 function showGate(hardBlock){
@@ -2899,9 +2936,9 @@ function buildConfidenceBadgeHtml(d, renderContext, city, state) {
     return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
   }
   if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
-    return `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
+    return `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 Pending Verification<span class="conf-tooltip">County-level fallback. Confirm with building department.</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">County-level fallback · confirm with building dept</div>`;
   }
-  return `<span class="confidence-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🔴 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#b91c1c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
+  return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 State Code Default<span class="conf-tooltip">State/code default or incomplete local source match. Confirm with building department.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">State/code default · confirm with building dept</div>`;
 }
 
 const COMMERCIAL_INSPECTION_PROFILES = {
@@ -3028,7 +3065,7 @@ function getNextSteps(d, job, city, state, renderContext) {
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])].slice(0, 3);
   const steps = [
     `Ask for \"${permitName}\" with the ${d.applying_office || `${city} building department`}.`,
-    d.fee_range && !evidenceFieldFailed(d, 'fee_range') ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Fee information is not source-confirmed for this lookup; save the receipt / confirmation number once the permit office calculates it.',
+    d.fee_range && !evidenceFieldFailed(d, 'fee_range') ? `Budget for fees as itemized: ${feeBreakdownText(d)}. Save the receipt / confirmation number.` : 'Fee information is not source-confirmed for this lookup; save the receipt / confirmation number once the permit office calculates it.',
     docs.length ? `Bring or upload: ${docs.join(', ')}.` : 'Bring your scope of work, any required plans, and contractor/license details.',
   ];
   if (d.approval_timeline?.simple || d.approval_timeline?.complex) {
@@ -3038,6 +3075,41 @@ function getNextSteps(d, job, city, state, renderContext) {
     steps.push('Post the permit on site and schedule inspections in the right order.');
   }
   return steps.slice(0, 4);
+}
+
+function getFeeBreakdown(d) {
+  d = d || {};
+  const source = (d.fee_breakdown && typeof d.fee_breakdown === 'object') ? d.fee_breakdown : {};
+  const rawFee = d.fee_range || d.fee || d.cost || '';
+  const planCheck = source.plan_check_deposit || source.plan_check_upfront || source.upfront || '';
+  const issuance = source.permit_issuance_fee || source.issuance || source.permit_fee || '';
+  const combined = source.combined || rawFee || '';
+  const unknown = 'Pending verification with AHJ';
+  return {
+    planCheckDeposit: planCheck || (combined || unknown),
+    permitIssuanceFee: issuance || unknown,
+    combinedNote: combined || unknown,
+    hasSourceSplit: !!(planCheck || issuance),
+  };
+}
+
+function renderFeeBreakdownHtml(d, compact=false) {
+  const f = getFeeBreakdown(d);
+  const rowStyle = compact ? 'font-size:12px;line-height:1.45' : 'font-size:13px;line-height:1.55';
+  return `<div class="fee-breakdown" style="display:flex;flex-direction:column;gap:4px">
+    <div style="${rowStyle}"><strong>Plan Check Deposit / Upfront:</strong> ${esc(f.planCheckDeposit)}</div>
+    <div style="${rowStyle}"><strong>Permit Issuance Fee:</strong> ${esc(f.permitIssuanceFee)}</div>
+    ${!f.hasSourceSplit && f.combinedNote ? `<div style="font-size:11px;color:var(--muted);line-height:1.4">Source fee note: ${esc(f.combinedNote)}</div>` : ''}
+  </div>`;
+}
+
+function feeBreakdownText(d) {
+  const f = getFeeBreakdown(d);
+  return [
+    `Plan Check Deposit / Upfront: ${f.planCheckDeposit}`,
+    `Permit Issuance Fee: ${f.permitIssuanceFee}`,
+    !f.hasSourceSplit && f.combinedNote ? `Source fee note: ${f.combinedNote}` : ''
+  ].filter(Boolean).join('\n');
 }
 
 function buildEvidencePackCaveats(evidencePack, options = {}) {
@@ -3309,8 +3381,8 @@ function renderResults(d, job, city, state) {
       tier = 'county'; label = '🏛️ County estimate';
       tooltip = 'No city-level data available; using county-level fallback. Verify with the city building dept.';
     } else {
-      tier = 'ai'; label = '🧠 AI estimate';
-      tooltip = 'No verified source available — model estimate. Confirm with the building department before relying on this.';
+      tier = 'pending'; label = 'Pending Verification';
+      tooltip = 'No source-confirmed local value is available yet. Confirm with the building department before relying on this.';
     }
     return `<span class="field-source-tag tier-${tier}" title="${esc(tooltip)}">${label}</span>`;
   };
@@ -3336,7 +3408,7 @@ function renderResults(d, job, city, state) {
     <div class="result-loc">📍 ${esc(city || 'Unknown city')}, ${esc(state || '')} ${lastVerifiedBadge}</div>
     <div class="result-badges">
       <span class="badge ${verdict==='yes'?'badge-green':verdict==='no'?'badge-red':'badge-yellow'}">${verdict === 'yes' ? '✅ PERMIT REQUIRED' : verdict === 'no' ? '❌ NO PERMIT' : '⚠️ MAYBE'}</span>
-      ${fee && !d._fee_unverified ? `<span class="badge badge-blue" style="white-space:normal;max-width:100%">💰 ${esc(fee)}</span>` : ''}
+      ${fee && !d._fee_unverified ? `<span class="badge badge-blue" style="white-space:normal;max-width:100%">💰 Fees itemized below</span>` : ''}
       ${d._fee_unverified ? `<span class="badge badge-gray" style="background:#fef9c3;color:#854d0e;border-color:#fde68a">💰 Fee: Call to confirm</span>` : ''}
       ${timelineSimple ? `<span class="badge badge-gray" style="background:#fef3c7;color:#92400e;border-color:#fde68a;white-space:normal;max-width:100%">⏱️ ${esc(timelineSimple.split(',')[0].trim())}</span>` : ''}
       ${totalProjectCost ? `<span class="badge badge-gray" style="background:#f0fdf4;color:#166534;border-color:#dcfce7;white-space:normal;max-width:100%">📈 Est. Job: ${esc(totalProjectCost.split('(')[0].trim())}</span>` : ''}
@@ -3708,14 +3780,14 @@ function renderResults(d, job, city, state) {
   // Action buttons
   html += `
     <div class="action-row action-row-3" style="margin-top:14px">
-      <button class="action-btn" onclick="shareResult()">📋 Share Report</button>
-      <button class="action-btn" onclick="copyResult()">📋 Copy</button>
+      <button class="action-btn" onclick="requireEmailForDetail('report', () => shareResult())">📋 Share Report</button>
+      <button class="action-btn" onclick="requireEmailForDetail('copy', () => copyResult())">📋 Copy</button>
       <button class="action-btn" onclick="callPermitOffice()">📞 Call Permit Office</button>
     </div>
     <div class="action-row action-row-3">
-      <button class="action-btn" onclick="copyForQuote()">💰 Copy for Quote</button>
-      <button class="action-btn" onclick="emailToForeman()">📤 Email to Foreman</button>
-      <button class="action-btn" onclick="downloadReport()">📄 Print / Save PDF</button>
+      <button class="action-btn" onclick="requireEmailForDetail('quote copy', () => copyForQuote())">💰 Copy for Quote</button>
+      <button class="action-btn" onclick="requireEmailForDetail('foreman email', () => emailToForeman())">📤 Email to Foreman</button>
+      <button class="action-btn" onclick="requireEmailForDetail('PDF report', () => downloadReport())">📄 Download PDF</button>
     </div>
     <div class="action-row">
       <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
@@ -3733,7 +3805,7 @@ function renderResults(d, job, city, state) {
       <div class="section-label">📋 Pre-Construction Checklist</div>
       <div id="compliance-checklist-content" class="compliance-checklist-summary">Generating your action checklist…</div>
     </div>
-    <button class="action-btn no-print" style="width:100%;margin-bottom:8px" onclick="printChecklist()">📋 Print Checklist</button>
+    <button class="action-btn no-print" style="width:100%;margin-bottom:8px" onclick="requireEmailForDetail('checklist', () => printChecklist())">📋 Print Checklist</button>
     ${buildResultSavePrompt(job, city, state, getResultPermitName(d))}
     <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>
     <div class="feedback-row">
@@ -3890,7 +3962,7 @@ function renderResultAsReport(d, job, city, state) {
   // 8. Required documents
   html += row(8, 'Required documents', _list(reqs, 8));
   // 9. Fees
-  let feeBlock = _v(fee);
+  let feeBlock = fee ? renderFeeBreakdownHtml(d, true) : _missing;
   if (feeAdjusted && fee) feeBlock += `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">(structured floor — fee verified against per-scope/per-jurisdiction baseline)</div>`;
   html += row(9, 'Fees', feeBlock);
   // 10. Inspections
@@ -3951,14 +4023,15 @@ function renderResultAsReport(d, job, city, state) {
   // flag, and save as PDF without returning to standard view.
   html += `<div class="action-row action-row-3 no-print" style="margin-top:12px">`;
   html += `<button class="action-btn" onclick="renderStandardView()">📄 Standard view</button>`;
-  html += `<button class="action-btn" onclick="copyResult()">📋 Copy</button>`;
-  html += `<button class="action-btn" onclick="shareResult()">🔗 Share</button>`;
+  html += `<button class="action-btn" onclick="requireEmailForDetail('copy', () => copyResult())">📋 Copy</button>`;
+  html += `<button class="action-btn" onclick="requireEmailForDetail('report', () => shareResult())">🔗 Share</button>`;
   html += `</div>`;
   html += `<div class="action-row action-row-3 no-print">`;
-  html += `<button class="action-btn" onclick="emailToForeman()">📤 Email to Foreman</button>`;
-  html += `<button class="action-btn" onclick="window.print()">🖨️ Print / Save PDF</button>`;
-  html += `<button class="action-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button>`;
+  html += `<button class="action-btn" onclick="requireEmailForDetail('foreman email', () => emailToForeman())">📤 Email to Foreman</button>`;
+  html += `<button class="action-btn" onclick="requireEmailForDetail('PDF report', () => downloadReport())">📄 Download PDF</button>`;
+  html += `<button class="action-btn" onclick="window.print()">🖨️ Browser Print</button>`;
   html += `</div>`;
+  html += `<div class="action-row no-print"><button class="action-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button></div>`;
   html += `<div id="copy-feedback" class="copy-feedback no-print">✅ Copied to clipboard!</div>`;
   html += `<span class="flag-feedback-inline no-print" id="flag-feedback-inline">Thanks for flagging. We'll review this within 30 days.</span>`;
 
@@ -4082,14 +4155,14 @@ function copyResult() {
   const { job, city, state, data: d } = currentResult;
   const permits = d.permits_required || [];
   const permitName = permits.length > 0 ? permits[0].permit_type : 'See details';
-  const fee = d.fee_range || 'Contact building dept';
+  const fee = feeBreakdownText(d) || 'Contact building dept';
   const timeline = d.approval_timeline?.simple || d.approval_timeline?.complex || 'Varies';
   const office = d.applying_office || '';
   const phone = d.apply_phone || '';
   const uncertaintyWarnings = buildUncertaintyWarnings(d);
   let t = `PERMIT SUMMARY — ${job} in ${city}, ${state}\n`;
   t += `Permit needed: ${permitName}\n`;
-  t += `Fee: ${fee}\n`;
+  t += `Fees:\n${fee}\n`;
   t += `Timeline: ${timeline}\n`;
   if (office || phone) t += `Apply at: ${office}${office && phone ? ' — ' : ''}${phone}\n`;
   t += `\nPERMITASSIST GUIDANCE ONLY: Verify final permit type with the AHJ before quoting or starting work.\n`;
@@ -4429,9 +4502,8 @@ function emailToForeman() {
 function copyForQuote() {
   if (!currentResult) return;
   const { job, city, state, data: d } = currentResult;
-  const fee = d.fee_range || d.fee || '';
   const tl = d.approval_timeline?.simple || '';
-  let t = `Permit Fees — ${job}, ${city} ${state}: ~${fee || 'TBD (call building dept)'} est.`;
+  let t = `Permit Fees — ${job}, ${city} ${state}:\n${feeBreakdownText(d) || 'TBD (call building dept)'}`;
   if (tl) t += `\nPermit Timeline: ${tl}`;
   const permits = d.permits_required || [];
   if (permits.length > 1) t += `\nPermits required: ${permits.map(p => p.permit_type).join(', ')}`;
@@ -4444,10 +4516,37 @@ function copyForQuote() {
 function downloadReport() {
   if (!currentResult) return;
   const { job, city, state, address, data: d } = currentResult;
+  const btn = document.querySelector('.action-btn[onclick*="downloadReport"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating PDF...'; }
+  fetch('/api/report-pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ job_type: job, city, state, result: { ...d, inspections: normalizeInspectionItems(d.inspections || []) } })
+  })
+    .then(async res => {
+      if (!res.ok) throw new Error('PDF generation failed');
+      const blob = await res.blob();
+      if (blob.type && blob.type !== 'application/pdf') throw new Error('Server did not return a PDF');
+      const a = document.createElement('a');
+      const safeJob = (job || 'permit-report').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${safeJob || 'permit-report'}-${(city || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      showCopy('✅ PDF report downloaded');
+    })
+    .catch(() => {
+      showCopy('⚠️ Could not generate PDF. Use browser Print as a fallback.');
+      window.print();
+    })
+    .finally(() => {
+      if (btn) { btn.disabled = false; btn.textContent = '📄 Download PDF'; }
+    });
+  return;
   const permitName = getPermitDisplayName(d);
   const jurisdiction = getJurisdictionDisplay(d, city, state, address || '');
   const nextSteps = getNextSteps(d, job, city, state);
-  const fee = d.fee_range || '';
+  const fee = feeBreakdownText(d);
   const tl = d.approval_timeline || {};
   const tlText = tl.simple || tl.complex || '';
   const licenseNote = normalizeLicenseRequirementCopy(d.license_required || '');
@@ -4538,7 +4637,7 @@ function downloadReport() {
 <div class="page">
   <div class="header">
     <div class="logo-box">&#128203;</div>
-    <div class="header-text"><h1>Foreman Brief &mdash; PermitAssist</h1><div class="sub">permitassist.io &mdash; AI-powered permit research</div></div>
+  <div class="header-text"><h1>Foreman Brief &mdash; PermitAssist</h1><div class="sub">permitassist.io &mdash; source-backed permit research</div></div>
     <div class="header-date">${efn(generated)}</div>
   </div>
   <div class="hero">
@@ -4565,13 +4664,7 @@ function downloadReport() {
 </body>
 </html>`;
 
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const a = document.createElement('a');
-  const safeJob = (job || 'permit-report').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  a.href = URL.createObjectURL(blob);
-  a.download = `${safeJob || 'permit-report'}-${(city || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  window.print();
 }
 
 function printResult() {
@@ -4580,7 +4673,7 @@ function printResult() {
   const permitName = getPermitDisplayName(d);
   const jurisdiction = getJurisdictionDisplay(d, city, state, address || '');
   const nextSteps = getNextSteps(d, job, city, state);
-  const fee = d.fee_range || '';
+  const fee = feeBreakdownText(d);
   const tl = d.approval_timeline || {};
   const tlText = tl.simple || tl.complex || '';
   const licenseNote = normalizeLicenseRequirementCopy(d.license_required || '');
@@ -4666,7 +4759,7 @@ function printResult() {
 <div class="page">
   <div class="header">
     <div class="logo-box">&#128203;</div>
-    <div class="header-text"><h1>Permit Report &mdash; PermitAssist</h1><div class="sub">permitassist.io &mdash; AI-powered permit research</div></div>
+    <div class="header-text"><h1>Permit Report &mdash; PermitAssist</h1><div class="sub">permitassist.io &mdash; source-backed permit research</div></div>
     <div class="header-date">${efn(generated)}</div>
   </div>
   <div class="hero">
@@ -4782,10 +4875,6 @@ async function doLookup() {
   }
   if (!parsed.city || !parsed.state) { alert('Please add a city and state, a full address, or use your location.'); return; }
 
-  if (!_isSampleLookup && !_preLookupPassed && !hasEmail() && !localStorage.getItem(SESSION_KEY)) {
-    showPreLookupGate();
-    return;
-  }
   const used = getLookupCount();
   if (!_isSampleLookup && used >= FREE_LIMIT && !hasEmail()) {
     pendingResult = { data: null, job: parsed.job_type, city: parsed.city || '', state: parsed.state || '' };
@@ -5190,7 +5279,7 @@ function printChecklistSection(){
 <div class="page">
   <div class="header">
     <div class="logo-box">&#128203;</div>
-    <div class="header-text"><h1>Pre-Construction Checklist</h1><div class="sub">permitassist.io &mdash; AI-powered permit research</div></div>
+    <div class="header-text"><h1>Pre-Construction Checklist</h1><div class="sub">permitassist.io &mdash; source-backed permit research</div></div>
     <div class="header-date">${efn(generated)}</div>
   </div>
   <div class="job-label">${efn(job)}</div>

@@ -76,6 +76,134 @@ def test_tx_state_pack_added_without_california_rules():
     assert "title 24" not in text
 
 
+def test_ef06_commercial_restaurant_state_pack_does_not_leak_adu_notes():
+    result = _blank_result()
+    result["_primary_scope"] = "commercial_restaurant"
+
+    out = engine.apply_state_expert_pack(
+        result,
+        "Los Angeles",
+        "CA",
+        "commercial restaurant TI with Type I hood, grease interceptor, health review, and fire suppression",
+    )
+    text = _notes_text(out)
+
+    assert out.get("expert_notes")
+    assert "cal fire" in text
+    assert "ladwp" in text
+    assert "adu" not in text
+    assert "accessory dwelling" not in text
+    assert "single-family" not in text
+
+
+def test_ef06_negated_former_restaurant_retail_ti_does_not_inherit_adu_notes():
+    result = _blank_result()
+    result["_primary_scope"] = "commercial_retail_ti"
+
+    out = engine.apply_state_expert_pack(
+        result,
+        "Phoenix",
+        "AZ",
+        "former restaurant shell converted to dry retail boutique with no food service, no grease, and no commercial kitchen work",
+    )
+    text = _notes_text(out)
+
+    assert out.get("expert_notes")
+    assert "roc" in text
+    assert "adu" not in text
+    assert "accessory dwelling" not in text
+
+
+def test_ef06_all_historical_wrong_vertical_state_packs_are_adu_clean_for_commercial():
+    cases = [
+        ("Los Angeles", "CA", "commercial_restaurant"),
+        ("Cambridge", "MA", "commercial_restaurant"),
+        ("New Orleans", "LA", "commercial_restaurant"),
+        ("Phoenix", "AZ", "commercial_retail_ti"),
+        ("Dallas", "TX", "commercial_restaurant"),
+        ("New York", "NY", "commercial_restaurant"),
+        ("Chicago", "IL", "commercial_restaurant"),
+        ("Denver", "CO", "commercial_restaurant"),
+        ("Pittsburgh", "PA", "commercial_restaurant"),
+        ("Atlanta", "GA", "commercial_restaurant"),
+        ("Fairfax", "VA", "commercial_restaurant"),
+        ("Milwaukee", "WI", "commercial_restaurant"),
+        ("Portland", "OR", "commercial_restaurant"),
+        ("Seattle", "WA", "commercial_restaurant"),
+        ("Columbus", "OH", "commercial_restaurant"),
+    ]
+    for city, state, scope in cases:
+        result = _blank_result()
+        result["_primary_scope"] = scope
+        job = "commercial restaurant TI with hood, grease interceptor, health department review, and fire suppression"
+        if scope == "commercial_retail_ti":
+            job = "former restaurant shell converted to dry retail boutique with no food service, no grease, and no commercial kitchen work"
+        out = engine.apply_state_expert_pack(result, city, state, job)
+        text = _notes_text(out)
+        assert out.get("expert_notes"), (city, state, scope)
+        assert "adu" not in text, (city, state, scope, text)
+        assert "accessory dwelling" not in text, (city, state, scope, text)
+
+
+def test_ef06_residential_adu_state_pack_still_keeps_adu_guidance():
+    result = _blank_result()
+    result["_primary_scope"] = "residential_adu"
+
+    out = engine.apply_state_expert_pack(
+        result,
+        "Los Angeles",
+        "CA",
+        "ADU garage conversion with kitchen and bathroom",
+    )
+    text = _notes_text(out)
+
+    assert "california adu" in text
+    assert "60-day" in text
+    assert "impact-fee" in text
+
+
+def test_ef06_filter_drops_only_residential_note_from_mixed_commercial_notes():
+    result = _blank_result()
+    result["_primary_scope"] = "commercial_restaurant"
+    notes = [
+        {"title": "Commercial fire suppression review", "note": "Commercial hood fire suppression may need fire review."},
+        {"title": "California ADU 60-day shot clock", "note": "ADU permits have state ministerial timing."},
+    ]
+
+    filtered = engine._ef06_filter_commercial_expert_notes(notes, result, "commercial restaurant TI with hood")
+
+    assert filtered == [notes[0]]
+
+
+def test_ef06_filter_matches_customer_text_not_schema_keys():
+    result = _blank_result()
+    result["_primary_scope"] = "commercial_office_ti"
+    notes = [
+        {"single_family_exempt": "Commercial office TI electrical plan review note."},
+        {"title": "SFR rule", "note": "SFR rules do not apply to this commercial office scope."},
+    ]
+
+    filtered = engine._ef06_filter_commercial_expert_notes(notes, result, "commercial office TI breakroom")
+
+    assert filtered == [notes[0]]
+
+
+def test_ef06_filter_uses_detected_scope_when_primary_scope_missing():
+    result = _blank_result()
+
+    out = engine.apply_state_expert_pack(
+        result,
+        "Los Angeles",
+        "CA",
+        "commercial restaurant TI with Type I hood, grease interceptor, health review, and fire suppression",
+    )
+    text = _notes_text(out)
+
+    assert "cal fire" in text
+    assert "adu" not in text
+    assert "single-family" not in text
+
+
 # ── Scope-aware permit classification (5 tests) ──────────────────────────────
 
 def test_scope_hvac_condenser_changeout_is_one_mechanical_permit():

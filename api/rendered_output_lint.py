@@ -33,12 +33,14 @@ CUSTOMER_VISIBLE_DEBUG_RE = re.compile(
     r"\b(?:needs_review_reasons|quality_warnings|failed_closed_fields|source_golden_field_status)\b",
     re.I,
 )
+SAFE_AHJ_VERIFY_TITLE = "Permit required — exact permit type needs AHJ verification"
 
 
 LOCAL_HOST_BY_CITY = {
     "chicago": ("chicago.gov", "cityofchicago.org"),
     "philadelphia": ("phila.gov", "permits.phila.gov"),
     "new york": ("nyc.gov",),
+    "new york city": ("nyc.gov",),
     "los angeles": ("lacity.org", "ladbs.org", "ladbsservices2.lacity.org"),
     "houston": ("houstontx.gov", "houstonpermittingcenter.org"),
     "phoenix": ("phoenix.gov",),
@@ -46,6 +48,7 @@ LOCAL_HOST_BY_CITY = {
     "seattle": ("seattle.gov",),
     "denver": ("denvergov.org",),
     "boston": ("boston.gov", "bostonpermits.com"),
+    "miami": ("miami.gov",),
 }
 
 STATE_HOST_BY_STATE = {
@@ -93,6 +96,10 @@ WRONG_LOCAL_HOSTS = {
     "seattle.gov": "Seattle",
     "denvergov.org": "Denver",
     "boston.gov": "Boston",
+    "northmiamifl.gov": "North Miami",
+    "citynmb.com": "North Miami Beach",
+    "buffalony.gov": "Buffalo",
+    "cityofjohnstown.ny.gov": "Johnstown",
 }
 
 
@@ -395,7 +402,12 @@ def lint_rendered_output(result: dict[str, Any] | None, rendered_text: str, job_
         add("verified_badge_with_empty_permit_set", "Verified badge/claim appears with no concrete permit set.")
 
     names = _current_names(result)
-    if any(FALLBACK_NAME_RE.search(n) for n in names):
+    safe_ahj_placeholder_only = (
+        result.get("permit_type_verified") is False
+        and bool(names)
+        and all(n == SAFE_AHJ_VERIFY_TITLE for n in names if n)
+    )
+    if any(FALLBACK_NAME_RE.search(n) for n in names) and not safe_ahj_placeholder_only:
         add("fallback_text_in_permit_title", "Fallback/uncertainty text appears inside permit title/name slot.")
 
     if CUSTOMER_VISIBLE_DEBUG_RE.search(text):

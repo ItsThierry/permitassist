@@ -546,8 +546,9 @@ def test_disabled_default_behavior_preserves_legacy_source_apply_url_fallback(tm
 
     assert result["apply_url"] == "https://denvergov.org/generic-permits"
     assert "_evidence_pack" not in result
-    assert result["claim_citations"]
-    assert result["claim_citations"][0]["source_url"] == "https://denvergov.org/generic-permits"
+    assert result["claim_citations"] == []
+    assert [claim["field"] for claim in result["unverified_claims"]] == ["permit_type", "apply_url", "fee_range", "approval_timeline", "inspections"]
+    assert all(claim["confidence"] == "needs_verification" for claim in result["unverified_claims"])
     assert result["apply_path"]
 
 
@@ -1225,7 +1226,7 @@ def test_step7c_apply_path_support_label_uses_apply_url_field_confidence(tmp_pat
     assert result["_evidence_pack"]["matched_field_confidence"]["apply_url"] == "medium"
     assert result["apply_path"]["support_level"] == "partial evidence"
     assert result["apply_path"]["support_level"] != "verified path"
-    assert "not high-confidence local evidence" in result["apply_path"]["verification_note"]
+    assert "exact permit category is not official-source verified" in result["apply_path"]["verification_note"].lower()
 
 
 def test_step7c_claim_citations_use_exact_field_evidence_item_not_first_record_source(tmp_path, monkeypatch):
@@ -1515,7 +1516,7 @@ def test_ui_exposure_gate_adds_warnings_and_blocks_unverified_inspection_booking
     assert "queue estimate" in warnings
     assert "exact portal subcategory/filing path" in warnings
     assert "not a complete local specialty-trigger list" in warnings
-    assert "exact portal subcategory" in result["apply_path"]["verification_note"]
+    assert "exact permit category is not official-source verified" in result["apply_path"]["verification_note"].lower()
 
 
 def test_white_label_report_surfaces_evidence_pack_limits(tmp_path, monkeypatch):

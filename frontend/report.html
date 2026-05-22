@@ -51,6 +51,15 @@
     const inspections = (d.inspections || []).map(i => i.stage || i.title || i.name || i.description).filter(Boolean);
     const whereToApply = [d.applying_office, d.apply_address, d.apply_phone].filter(Boolean).join(' • ');
     const sources = d.sources || [];
+    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function feeBreakdownHtml(result) {
+      const source = result.fee_breakdown && typeof result.fee_breakdown === 'object' ? result.fee_breakdown : {};
+      const raw = result.fee_range || result.fee || result.cost || '';
+      const planCheck = source.plan_check_deposit || source.plan_check_upfront || source.upfront || raw || 'Pending verification with AHJ';
+      const issuance = source.permit_issuance_fee || source.issuance || source.permit_fee || 'Pending verification with AHJ';
+      const hasSplit = !!(source.plan_check_deposit || source.plan_check_upfront || source.upfront || source.permit_issuance_fee || source.issuance || source.permit_fee);
+      return `<span style="display:flex;flex-direction:column;gap:3px;text-align:right"><span><strong>Plan Check Deposit / Upfront:</strong> ${esc(planCheck)}</span><span><strong>Permit Issuance Fee:</strong> ${esc(issuance)}</span>${!hasSplit && raw ? `<span style="font-size:12px;color:var(--muted)">Source fee note: ${esc(raw)}</span>` : ''}</span>`;
+    }
     const app = document.getElementById('app');
     app.innerHTML = `
       <section class="hero">
@@ -70,7 +79,7 @@
           <div class="meta">
             <div class="meta-row"><strong>Jurisdiction</strong><span>${share.city || ''}, ${share.state || ''}</span></div>
             <div class="meta-row"><strong>Permit</strong><span>${permitName}</span></div>
-            <div class="meta-row"><strong>Fees</strong><span>${d.fee_range || 'Call to confirm'}</span></div>
+            <div class="meta-row"><strong>Fees</strong>${feeBreakdownHtml(d)}</div>
             <div class="meta-row"><strong>Timeline</strong><span>${timeline}</span></div>
             <div class="meta-row"><strong>Where to apply</strong><span>${whereToApply || 'Contact local building department'}</span></div>
           </div>

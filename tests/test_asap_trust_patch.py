@@ -129,6 +129,48 @@ def test_placeholder_title_and_internal_fee_field_are_linted_from_customer_text(
     assert "internal_debug_language_visible" in codes
 
 
+def test_enforce_rendered_output_contract_hides_lint_codes_from_customer_warnings(monkeypatch, tmp_path):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_verdict": "YES",
+        "permit_required": True,
+        "confidence": "high",
+        "confidence_reason": "Needs review for: fee_range; verify before merging.",
+        "_primary_scope": "commercial_office_ti",
+        "permit_name": "Building Permit — Tenant Improvement / Office Interior Alteration",
+        "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+        "permits_required": [
+            {
+                "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+                "required": True,
+            }
+        ],
+        "sources": [],
+    }
+    warnings = []
+
+    server._enforce_rendered_output_contract(
+        result,
+        "office tenant improvement with interior alteration",
+        "Dallas",
+        "TX",
+        warnings,
+    )
+    public_blob = json.dumps(
+        server.redact_public_output({"result": result, "warnings": warnings, "quality_warnings": warnings}),
+        sort_keys=True,
+        default=str,
+    )
+
+    assert result["_rendered_lint"]["violations"]
+    assert warnings == ["Some output details need source confirmation before customer use."]
+    assert "internal_debug_language_visible" not in public_blob
+    assert "fee_range" not in public_blob
+    assert "verify before merging" not in public_blob.lower()
+    assert "_rendered_lint" not in public_blob
+    assert "_rendering_context" not in public_blob
+
+
 def test_sanitize_missing_residential_permit_name_returns_customer_safe_fail_closed_copy():
     display = sanitize_permit_display_name("", scope="residential", job_type="residential bathroom remodel")
 
@@ -192,10 +234,15 @@ def test_missing_exact_name_fails_closed_without_placeholder_or_debug_language(m
     html = server.render_white_label_report_html({"result": result, "job_type": "residential bathroom remodel", "city": "Dallas", "state": "TX"})
     surface = _customer_surface_blob(result, html)
 
-    assert result["_permit_display_name"] == "Building / Residential Remodel"
+    statement = "Permit required — exact permit type needs AHJ verification"
+    assert result["_permit_display_name"] == statement
+    assert result["permit_name"] == statement
+    assert result["permit_type"] == statement
+    assert result["permit_type_verified"] is False
     assert result["permit_name_status"] == "official_category_confirmed_exact_label_missing"
-    assert result["permit_name_confidence"] == "medium"
-    assert "Official application category is source-confirmed; exact local permit label is not source-confirmed yet." in surface
+    assert result["permit_name_confidence"] == "low"
+    assert "exact permit type needs AHJ verification" in surface
+    assert "not official-source verified" in surface
     assert "Needs AHJ verification" not in surface
     assert "Needs review for:" not in surface
     assert "verify before merging" not in surface

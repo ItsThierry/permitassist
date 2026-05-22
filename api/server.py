@@ -30,6 +30,7 @@ import socket
 import threading
 import time
 import uuid
+import textwrap
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -101,6 +102,14 @@ _US_STATE_CODES = {
 }
 _AHJ_COVERAGE_CACHE: set[tuple[str, str]] | None = None
 _AHJ_CITY_TOKEN_RE = re.compile(r"^[A-Za-z][A-Za-z .'-]{1,98}[A-Za-z.]$")
+_OBVIOUS_FAKE_AHJ_CITIES = {
+    "faketown",
+    "fake town",
+    "nowhereville",
+    "testville",
+    "test city",
+    "example city",
+}
 _AHJ_CITY_STATE_ALIASES = {
     ("new york", "NY"): "New York City",
     ("new york city", "NY"): "New York City",
@@ -192,6 +201,14 @@ def classify_ahj_coverage(city: str | None, state: str | None) -> dict:
             "state": normalized_state,
             "reason": "invalid_state",
         }
+    if normalized_city.casefold() in _OBVIOUS_FAKE_AHJ_CITIES:
+        return {
+            "classification": "fake",
+            "status": "unsupported",
+            "city": normalized_city,
+            "state": normalized_state,
+            "reason": "obvious_fake_ahj",
+        }
     canonical_city = _canonicalize_ahj_city_for_state(normalized_city, normalized_state)
     pair = (canonical_city.casefold(), normalized_state)
     if pair in _ahj_coverage_pairs():
@@ -224,8 +241,8 @@ def build_unsupported_ahj_response(city: str | None, state: str | None, classifi
         message = "This AHJ is not supported by PermitAssist because the city or state is invalid. Check the city/state and try again."
         error = "invalid_ahj"
     else:
-        message = "PermitAssist could not verify this city/state as a launch-covered AHJ. Check the city/state or verify directly with the local building department."
-        error = "unverified_ahj"
+        message = "PermitAssist cannot verify this AHJ as real/supported. Check the city/state or verify directly with the local building department."
+        error = "unsupported_ahj"
     return scrub_unsupported_ahj_response({
         "error": error,
         "ahj_status": status,
@@ -1440,6 +1457,21 @@ def _ensure_vertical_inspection_profile(result: dict, context: dict, job_type: s
 def _sanitize_commercial_display_names(result: dict, context: dict, job_type: str) -> None:
     scope = context.get("vertical") or result.get("_primary_scope") or ""
     primary = _primary_permit_text(result) or result.get("permit_name") or result.get("permit_type") or ""
+    if result.get("permit_type_verified") is False and FALLBACK_NAME_RE.search(str(primary or "")):
+        result["_permit_display_name"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+        for key in ("permit_name", "permit_type"):
+            if result.get(key) and FALLBACK_NAME_RE.search(str(result.get(key))):
+                result[key] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+        permits = result.get("permits_required") or []
+        for permit in permits:
+            if not isinstance(permit, dict):
+                continue
+            for key in ("permit_type", "portal_selection", "name", "title"):
+                if permit.get(key) and FALLBACK_NAME_RE.search(str(permit.get(key))):
+                    permit[key] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+            if not permit.get("portal_selection"):
+                permit["portal_selection"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+        return
     safe = sanitize_permit_display_name(primary, scope, job_type)
     result["_permit_display_name"] = safe
     for key in ("permit_name", "permit_type"):
@@ -1463,6 +1495,275 @@ def _attach_source_classification(result: dict, city: str, state: str) -> None:
         s["url"] for s in classified
         if s.get("allowed_as_official_support") and s.get("source_class") != "wrong_local_ahj"
     ]
+
+
+_EF99B_USER_SOURCE_RISK_RE = re.compile(
+    r"\b(?:fake|invent(?:ed|s)?|universal\s+approval|old\s+portal|stale\s+portal|"
+    r"user[-\s]+supplied\s+fake\s+url|exact\s+fee|exact\s+timeline)\b",
+    re.I,
+)
+_EF99B_ADU_VERTICAL_RE = re.compile(
+    r"\b(?:adus?|jadus?|dadus?|accessory[-\s]?dwelling(?:\s+unit)?s?|granny\s+flat|"
+    r"single[-\s]?family|sfr|duplex(?:es)?)\b",
+    re.I,
+)
+_EF99B_SOURCE_ALLOWED_CLASSES = {"local_ahj", "state", "model_code"}
+_EF99_LICENSE_BOUNDARY_RE = re.compile(
+    r"\b(?:license|licensed|contractor)\b.*\b(?:pull|file|apply|submit|obtain)\b.*\bpermit\b|"
+    r"\b(?:pull|file|apply|submit|obtain)\b.*\b(?:electrical|plumbing|mechanical|hvac)\b.*\bpermit\b",
+    re.I,
+)
+_EF99_AUTHORITY_CONFLICT_RE = re.compile(
+    r"\b(?:fire\s+marshal|fire\s+department|fire\s+code|fire\s+review)\b.*\b(?:separate|conflict|omits?|missing|checklist)\b|"
+    r"\b(?:building\s+checklist|building\s+permit)\b.*\b(?:omits?|missing|conflict|separate)\b.*\b(?:fire|sprinkler|alarm|suppression)\b|"
+    r"\b(?:fire|sprinkler|alarm|suppression)\b.*\b(?:separate|conflict)\b.*\b(?:building\s+checklist|building\s+permit)\b",
+    re.I,
+)
+
+
+def _ef99b_public_text(value) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        return " ".join(_ef99b_public_text(v) for v in value.values())
+    if isinstance(value, (list, tuple, set)):
+        return " ".join(_ef99b_public_text(v) for v in value)
+    return str(value)
+
+
+def _ef99b_remove_urls(value, rejected_urls: set[str]):
+    if isinstance(value, str):
+        return "" if value in rejected_urls else value
+    if isinstance(value, list):
+        cleaned = [_ef99b_remove_urls(item, rejected_urls) for item in value]
+        return [item for item in cleaned if item not in ("", None, [], {})]
+    if isinstance(value, dict):
+        cleaned = {}
+        for key, item in value.items():
+            new_item = _ef99b_remove_urls(item, rejected_urls)
+            if new_item not in ("", None, [], {}):
+                cleaned[key] = new_item
+        return cleaned
+    return value
+
+
+def _ef99b_likely_permit_category(result: dict, job_type: str) -> str:
+    context = build_rendering_context(result, job_type, result.get("city") or "", result.get("state") or "")
+    primary = result.get("_permit_display_name") or result.get("permit_name") or result.get("permit_type") or ""
+    return sanitize_permit_display_name(primary, context.get("vertical"), job_type)
+
+
+def _enforce_ef99_license_scope_boundary(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Keep trade-license questions from becoming supported-looking permit answers.
+
+    A supported AHJ source can prove a permit pathway exists without proving that
+    a specific trade license holder may pull the permit. Treat those as an AHJ
+    authorization boundary, not a generic commercial TI filing path.
+    """
+    if not isinstance(result, dict) or not _EF99_LICENSE_BOUNDARY_RE.search(str(job_type or "")):
+        return result
+
+    job_l = str(job_type or "").lower()
+    if "electrical" in job_l:
+        likely_category = "Electrical Permit / trade-license authorization review"
+        trade_holder = "electrical contractor or AHJ-authorized permit holder"
+        trade_article = "an"
+    elif "plumbing" in job_l:
+        likely_category = "Plumbing Permit / trade-license authorization review"
+        trade_holder = "plumbing contractor or AHJ-authorized permit holder"
+        trade_article = "a"
+    elif "mechanical" in job_l or "hvac" in job_l:
+        likely_category = "Mechanical Permit / trade-license authorization review"
+        trade_holder = "mechanical/HVAC contractor or AHJ-authorized permit holder"
+        trade_article = "a"
+    else:
+        likely_category = "Trade Permit / license-scope authorization review"
+        trade_holder = "properly licensed contractor or AHJ-authorized permit holder"
+        trade_article = "a"
+
+    target = f"{city}, {state}".strip(" ,") or "the target AHJ"
+    result["needs_review"] = True
+    result["permit_type_verified"] = False
+    result["source_support_status"] = "target_ahj_source_unverified"
+    result["likely_permit_category"] = likely_category
+    result["_license_scope_boundary"] = True
+    if str(result.get("confidence") or "").lower() == "high":
+        result["confidence"] = "medium"
+
+    warning = (
+        f"PermitAssist cannot verify that this license holder is authorized to pull the trade permit in {target}. "
+        f"Use the likely permit category ({likely_category}) as the planning path, then confirm with the target AHJ whether the permit must be filed by {trade_article} {trade_holder} before filing."
+    )
+    warnings = result.setdefault("quality_warnings", []) if isinstance(result.get("quality_warnings"), list) else []
+    if result.get("quality_warnings") is not warnings:
+        result["quality_warnings"] = warnings
+    if warning not in warnings:
+        warnings.insert(0, warning)
+    public_warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
+    if result.get("warnings") is not public_warnings:
+        result["warnings"] = public_warnings
+    if warning not in public_warnings:
+        public_warnings.insert(0, warning)
+
+    permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+    if permits and isinstance(permits[0], dict):
+        permits[0]["notes"] = warning
+    return result
+
+
+def _enforce_ef99_authority_conflict_boundary(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Do not present a fire/building authority conflict as ready-to-file.
+
+    Official local URLs can prove possible pathways, but they do not resolve a
+    prompt-level conflict where one authority says a fire permit is separate and
+    the building checklist omits it.
+    """
+    if not isinstance(result, dict) or not _EF99_AUTHORITY_CONFLICT_RE.search(str(job_type or "")):
+        return result
+
+    job_l = str(job_type or "").lower()
+    if "sprinkler" in job_l:
+        likely_category = "Fire Sprinkler Permit / authority-conflict review"
+    elif "alarm" in job_l:
+        likely_category = "Fire Alarm Permit / authority-conflict review"
+    elif "suppression" in job_l:
+        likely_category = "Fire Suppression Permit / authority-conflict review"
+    else:
+        likely_category = "Fire Permit / building-authority coordination review"
+
+    target = f"{city}, {state}".strip(" ,") or "the target AHJ"
+    result["needs_review"] = True
+    result["permit_type_verified"] = False
+    result["source_support_status"] = "target_ahj_source_unverified"
+    result["likely_permit_category"] = likely_category
+    result["permit_ready_label"] = "Needs AHJ verification"
+    result["permit_ready_score"] = min(int(result.get("permit_ready_score") or 100), 65)
+    result["badge_state"] = "needs_review"
+    result["_authority_conflict_boundary"] = True
+    if str(result.get("confidence") or "").lower() == "high":
+        result["confidence"] = "medium"
+
+    warning = (
+        f"PermitAssist cannot verify the controlling authority order for this fire/building conflict in {target}. "
+        f"Use the likely permit category ({likely_category}) as the planning path, then confirm with the target AHJ whether the fire permit must be filed separately, before, with, or after the building permit before filing."
+    )
+    warnings = result.setdefault("quality_warnings", []) if isinstance(result.get("quality_warnings"), list) else []
+    if result.get("quality_warnings") is not warnings:
+        result["quality_warnings"] = warnings
+    if warning not in warnings:
+        warnings.insert(0, warning)
+    public_warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
+    if result.get("warnings") is not public_warnings:
+        result["warnings"] = public_warnings
+    if warning not in public_warnings:
+        public_warnings.insert(0, warning)
+
+    permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+    if permits and isinstance(permits[0], dict):
+        permits[0]["notes"] = warning
+    return result
+
+
+def _enforce_ef99b_ahj_source_hierarchy(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Quarantine wrong-AHJ/user-supplied sources before customer JSON leaves the API.
+
+    This is not a generic-name escape hatch. It preserves likely permit-category
+    value, but refuses to let North Miami/Buffalo/Johnstown-style sources support
+    Miami/NYC answers or user-invented/stale permit-source claims.
+    """
+    if not isinstance(result, dict):
+        return result
+    source_items = list(result.get("sources") or []) if isinstance(result.get("sources"), list) else []
+    kept_sources = []
+    kept_classifications = []
+    rejected_classifications = []
+    rejected_urls: set[str] = set()
+    rejected_jurisdictions = []
+
+    for item in source_items:
+        url = ""
+        if isinstance(item, str):
+            url = _safe_external_url(item)
+        elif isinstance(item, dict):
+            url = _safe_external_url(item.get("url") or item.get("link") or "")
+        if not url:
+            continue
+        cls = classify_source_for_jurisdiction(url, city, state)
+        if cls.get("source_class") in _EF99B_SOURCE_ALLOWED_CLASSES and cls.get("source_class") != "wrong_local_ahj":
+            kept_sources.append(item)
+            kept_classifications.append(cls)
+        else:
+            rejected_urls.add(url)
+            rejected_classifications.append(cls)
+            if cls.get("jurisdiction"):
+                rejected_jurisdictions.append(str(cls.get("jurisdiction")))
+
+    if rejected_urls:
+        result["sources"] = kept_sources
+        if result.get("apply_url") in rejected_urls:
+            result["apply_url"] = ""
+        if isinstance(result.get("apply_path"), dict):
+            result["apply_path"] = _ef99b_remove_urls(result["apply_path"], rejected_urls)
+        for key in list(result.keys()):
+            key_text = str(key or "")
+            value = result.get(key)
+            if not key_text.endswith("_source") or not isinstance(value, dict):
+                continue
+            source_url = str(value.get("url") or value.get("source_url") or "").strip()
+            if source_url and source_url in rejected_urls:
+                result.pop(key, None)
+        result["_source_classification"] = kept_classifications + rejected_classifications
+        result["_official_sources"] = [s["url"] for s in kept_classifications if s.get("allowed_as_official_support")]
+    else:
+        kept_classifications = result.get("_source_classification") if isinstance(result.get("_source_classification"), list) else kept_classifications
+
+    has_local_target_source = any(
+        isinstance(cls, dict) and cls.get("source_class") == "local_ahj"
+        for cls in kept_classifications
+    )
+    source_risk = bool(_EF99B_USER_SOURCE_RISK_RE.search(str(job_type or "")))
+    supported_ahj = classify_ahj_coverage(city, state).get("classification") == "supported"
+    needs_source_review = bool(rejected_urls) or source_risk or (supported_ahj and source_items and not has_local_target_source)
+
+    if needs_source_review:
+        result["source_support_status"] = "target_ahj_source_unverified"
+        result["needs_review"] = True
+        if str(result.get("confidence") or "").lower() in {"high", "medium"}:
+            result["confidence"] = "low" if source_risk else "medium"
+        result["likely_permit_category"] = _ef99b_likely_permit_category(result, job_type)
+        warnings = result.setdefault("quality_warnings", []) if isinstance(result.get("quality_warnings"), list) else []
+        if result.get("quality_warnings") is not warnings:
+            result["quality_warnings"] = warnings
+        target = f"{city}, {state}".strip(" ,")
+        rejected = ", ".join(dict.fromkeys(rejected_jurisdictions))
+        warning = (
+            f"PermitAssist cannot verify the user-supplied permit/source against {target} official AHJ sources. "
+            f"Use the likely permit category ({result['likely_permit_category']}) as the planning path, then confirm the exact filing name, portal subcategory, fee, and timeline with the target AHJ before filing."
+        )
+        if rejected:
+            warning += f" Rejected source jurisdiction(s): {rejected}."
+        if warning not in warnings:
+            warnings.append(warning)
+    return result
+
+
+def _filter_ef99b_commercial_residential_leaks(result: dict, job_type: str) -> dict:
+    if not isinstance(result, dict):
+        return result
+    context = build_rendering_context(result, job_type, result.get("city") or "", result.get("state") or "")
+    if not context.get("is_commercial"):
+        return result
+    list_fields = (
+        "expert_notes", "state_expert_notes", "quality_warnings", "warnings", "permits_required_logic",
+        "hidden_triggers", "companion_permits", "claim_citations", "unverified_claims", "requirements",
+        "documents_needed", "permit_notes", "notes", "next_steps", "checklist", "permit_checklist",
+    )
+    for field in list_fields:
+        value = result.get(field)
+        if not isinstance(value, list):
+            continue
+        result[field] = [item for item in value if not _EF99B_ADU_VERTICAL_RE.search(_ef99b_public_text(item))]
+    return result
 
 
 def _render_lint_proxy_text(result: dict) -> str:
@@ -1518,10 +1819,14 @@ def _enforce_rendered_output_contract(result: dict, job_type: str, city: str, st
     _sanitize_commercial_display_names(result, context, job_type)
     _ensure_vertical_inspection_profile(result, context, job_type)
     _attach_source_classification(result, city, state)
+    _enforce_ef99b_ahj_source_hierarchy(result, job_type, city, state)
+    _filter_ef99b_commercial_residential_leaks(result, job_type)
     lint = lint_rendered_output(result, _render_lint_proxy_text(result), job_type, city, state)
     result["_rendered_lint"] = lint
     if warnings is not None and not lint.get("passed"):
-        warnings.append("Rendered output lint requires customer-visible verification/fixes: " + ", ".join(v.get("code", "unknown") for v in lint.get("violations", [])[:5]) + ".")
+        safe_warning = "Some output details need source confirmation before customer use."
+        if safe_warning not in warnings:
+            warnings.append(safe_warning)
 
     if not context.get("is_commercial"):
         result.pop("_rendering_context", None)
@@ -1602,6 +1907,9 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     # permit repair above, then enforce the customer-visible contract before
     # the frontend can render a polished but misleading report.
     _enforce_rendered_output_contract(result, job_type, city, state, warnings)
+    _enforce_ef99_license_scope_boundary(result, job_type, city, state)
+    _enforce_ef99_authority_conflict_boundary(result, job_type, city, state)
+    warnings = list(result.get("quality_warnings") or warnings)
 
     if str(result.get("confidence") or "").lower() == "high" and not sources:
         result["confidence"] = "medium"
@@ -1617,25 +1925,16 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
 
     _filter_negated_surface_lists(result, job_type)
     _neutralize_commercial_permit_residential_contrast(result, job_type)
+    _filter_ef99b_commercial_residential_leaks(result, job_type)
     return result
 
 
 def build_claim_citations(result: dict) -> list[dict]:
-    """Attach field-level provenance without inventing quotes.
-
-    If retrieved snippets are unavailable, the claim is labeled needs_verification
-    rather than pretending a quote exists.
-    """
+    """Attach quote-backed field provenance without treating empty snippets as proof."""
     sources = _source_dicts(result)
     first = sources[0] if sources else {}
+    quoted_source = next((source for source in sources if str(source.get("snippet") or "").strip()), None)
     checked = utc_now().date().isoformat()
-
-    def confidence_for(field: str) -> str:
-        if not sources:
-            return "needs_verification"
-        if first.get("snippet"):
-            return str(result.get("confidence") or "medium").lower()
-        return "needs_verification"
 
     fields = [
         ("permit_type", _primary_permit_text(result), "Likely primary permit type"),
@@ -1645,30 +1944,46 @@ def build_claim_citations(result: dict) -> list[dict]:
         ("inspections", result.get("inspections") or result.get("inspect_checklist"), "Likely inspections"),
     ]
     citations = []
+    unverified_claims = []
     for idx, (field, value, label) in enumerate(fields, 1):
         if value in (None, "", [], {}):
             continue
-        snippet = first.get("snippet", "")
+        value_text = str(value) if not isinstance(value, str) else value
+        if not quoted_source:
+            unverified_claims.append({
+                "field": field,
+                "claim": label,
+                "value": value_text,
+                "reason": "No quoted source text was attached for this field.",
+                "source_url": first.get("url", ""),
+                "source_title": first.get("title", ""),
+                "checked_at": checked,
+                "confidence": "needs_verification",
+            })
+            continue
         citations.append({
             "id": f"C{idx}",
             "field": field,
             "claim": label,
-            "value": str(value) if not isinstance(value, str) else value,
-            # Keep the source URL attached even when no quoted snippet exists so
-            # users can verify the claim themselves. Missing snippets still force
-            # needs_verification; we just do not pretend the URL proves the field.
-            "source_url": first.get("url", ""),
-            "source_title": first.get("title", ""),
-            "quoted_snippet": snippet,
+            "value": value_text,
+            "source_url": quoted_source.get("url", ""),
+            "source_title": quoted_source.get("title", ""),
+            "quoted_snippet": str(quoted_source.get("snippet") or "").strip(),
             "checked_at": checked,
-            "confidence": confidence_for(field),
+            "confidence": str(result.get("confidence") or "medium").lower(),
         })
     result["claim_citations"] = citations
-    if any(c["confidence"] == "needs_verification" for c in citations):
-        result.setdefault("quality_warnings", [])
-        warning = "Some report claims do not yet have quoted source snippets; verify with the AHJ before relying on them."
-        if warning not in result["quality_warnings"]:
-            result["quality_warnings"].append(warning)
+    if unverified_claims:
+        result["unverified_claims"] = unverified_claims
+        result["needs_review"] = True
+        if str(result.get("confidence") or "").lower() == "high" and not citations:
+            result["confidence"] = "medium"
+        warnings = result.setdefault("quality_warnings", [])
+        warning = "Some report claims are not shown as verified because no quoted source snippet was attached."
+        if warning not in warnings:
+            warnings.append(warning)
+    else:
+        result.pop("unverified_claims", None)
     return citations
 
 
@@ -1827,6 +2142,8 @@ def evidence_pack_allowed_for_request(
 
 
 PHASE7H_AHJ_VERIFY_PERMIT_TYPE = "Permit required — exact permit type needs AHJ verification"
+PHASE7H_EXACT_NAME_SOURCE_FIELDS = {"display_permit_name", "official_permit_name", "permit_type"}
+PHASE7H_UNVERIFIED_PERMIT_WARNING = "Permit is required, but exact permit type was not official-source verified; confirm the exact filing type with the AHJ before filing."
 
 
 def _phase7h_string(value) -> str:
@@ -1856,13 +2173,20 @@ def _phase7h_current_permit_name(result: dict) -> str:
 def _phase7h_permit_type_verified(result: dict, permit_name: str) -> bool:
     if not permit_name or permit_name == PHASE7H_AHJ_VERIFY_PERMIT_TYPE:
         return False
-    evidence_meta = result.get("_evidence_pack") if isinstance(result.get("_evidence_pack"), dict) else {}
+    raw_evidence_meta = result.get("_evidence_pack")
+    evidence_meta = raw_evidence_meta if isinstance(raw_evidence_meta, dict) else {}
     matched_fields = {str(field) for field in (evidence_meta.get("matched_fields") or [])}
     failed_fields = {str(field) for field in (evidence_meta.get("failed_closed_fields") or [])}
     if evidence_meta.get("enabled"):
-        return "permit_type" in matched_fields and "permit_type" not in failed_fields
-    source = _phase7h_string(result.get("data_source") or (result.get("_meta") or {}).get("city_match_level")).lower()
-    return source in {"city", "city_database", "accela_api", "auto_verified"}
+        source_field = _phase7h_string(
+            evidence_meta.get("permit_name_source_field") or result.get("permit_name_source_field")
+        )
+        has_verified_name_field = bool(PHASE7H_EXACT_NAME_SOURCE_FIELDS & matched_fields) or source_field in PHASE7H_EXACT_NAME_SOURCE_FIELDS
+        return has_verified_name_field and "permit_type" not in failed_fields
+    # EF-03: non-evidence/city-source/model output is not enough to prove the
+    # exact AHJ permit name. A future non-evidence verifier must set an explicit
+    # source-backed contract before this gate can preserve exact names.
+    return False
 
 
 def _phase7h_contact_phrase(result: dict, city: str) -> str:
@@ -1889,26 +2213,95 @@ def _phase7h_mark_coverage_truth_unverified(result: dict) -> None:
     coverage["not_confirmed_from_official_source"] = not_confirmed
 
 
-def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "", state: str = "") -> dict:
+def _phase7h_replace_text(value, exact_names: set[str]):
+    if isinstance(value, str):
+        cleaned = value
+        for name in sorted(exact_names, key=len, reverse=True):
+            if name:
+                cleaned = cleaned.replace(name, PHASE7H_AHJ_VERIFY_PERMIT_TYPE)
+        return cleaned
+    if isinstance(value, list):
+        return [_phase7h_replace_text(item, exact_names) for item in value]
+    if isinstance(value, dict):
+        return {key: _phase7h_replace_text(item, exact_names) for key, item in value.items()}
+    return value
+
+
+def _phase7h_neutralize_unverified_permit_type(result: dict, city: str, state: str, job_type: str = "") -> None:
+    exact_names = {
+        _phase7h_string(result.get("permit_name")),
+        _phase7h_string(result.get("permit_type")),
+        _phase7h_string(result.get("_permit_display_name")),
+    }
+    raw_permits = result.get("permits_required")
+    permits = raw_permits if isinstance(raw_permits, list) else []
+    for permit in permits:
+        if isinstance(permit, dict):
+            exact_names.update(
+                _phase7h_string(permit.get(key))
+                for key in ("permit_type", "portal_selection", "permit_name", "name", "title")
+            )
+    exact_names = {name for name in exact_names if name and name != PHASE7H_AHJ_VERIFY_PERMIT_TYPE}
+
+    result["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+    result["permit_name"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+    result["_permit_display_name"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+    result["permit_type_verified"] = False
+    result["permit_name_status"] = result.get("permit_name_status") or "needs_ahj_verification"
+    result["permit_name_confidence"] = "low"
+
+    contact = _phase7h_contact_phrase(result, city)
+    note = (
+        "Permit is required, but the exact permit category was not official-source verified for this lookup. "
+        f"Confirm the exact filing type with {contact} before filing."
+    )
+    if permits:
+        for permit in permits:
+            if not isinstance(permit, dict):
+                continue
+            permit["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+            permit["portal_selection"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+            permit.pop("permit_name", None)
+            permit.pop("name", None)
+            permit.pop("title", None)
+            permit["required"] = True
+            permit["notes"] = note
+        result["permits_required"] = permits
+    else:
+        result["permits_required"] = [{"permit_type": PHASE7H_AHJ_VERIFY_PERMIT_TYPE, "required": True, "notes": note}]
+
+    warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
+    if result.get("warnings") is not warnings:
+        result["warnings"] = warnings
+    if PHASE7H_UNVERIFIED_PERMIT_WARNING not in warnings:
+        warnings.append(PHASE7H_UNVERIFIED_PERMIT_WARNING)
+    _phase7h_mark_coverage_truth_unverified(result)
+
+    if result.get("apply_path") or result.get("apply_url") or job_type:
+        build_apply_path(result, job_type, city, state)
+    if isinstance(result.get("apply_path"), dict) and exact_names:
+        result["apply_path"] = _phase7h_replace_text(result["apply_path"], exact_names)
+        result["apply_path"]["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+        result["apply_path"]["verification_note"] = "Exact permit category is not official-source verified for this lookup; confirm the filing type with the AHJ before filing."
+
+
+def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "", state: str = "", job_type: str = "") -> dict:
     """Keep YES customer output explicit without inventing official permit-type certainty."""
     if not isinstance(result, dict) or not _phase7h_truthy_yes_verdict(result):
         return result
 
     permit_name = _phase7h_current_permit_name(result)
-    evidence_meta = result.get("_evidence_pack") if isinstance(result.get("_evidence_pack"), dict) else {}
-    evidence_enabled = bool(evidence_meta.get("enabled"))
-    permit_type_failed_closed = (
-        evidence_enabled
-        and "permit_type" in {str(field) for field in (evidence_meta.get("failed_closed_fields") or [])}
-        and "permit_type" not in {str(field) for field in (evidence_meta.get("matched_fields") or [])}
-    )
-    if permit_type_failed_closed and str(evidence_meta.get("mode") or "") == "solar_mep_controlled_preview":
-        result["permit_type_verified"] = False
+    raw_evidence_meta = result.get("_evidence_pack")
+    evidence_meta = raw_evidence_meta if isinstance(raw_evidence_meta, dict) else {}
+    matched_fields = {str(field) for field in (evidence_meta.get("matched_fields") or [])}
+    failed_fields = {str(field) for field in (evidence_meta.get("failed_closed_fields") or [])}
+    permit_type_failed_closed = bool(evidence_meta.get("enabled")) and "permit_type" in failed_fields and not (PHASE7H_EXACT_NAME_SOURCE_FIELDS & matched_fields)
+    verified = False if permit_type_failed_closed else _phase7h_permit_type_verified(result, permit_name)
+    result["permit_type_verified"] = bool(verified)
+
+    if not verified:
+        _phase7h_neutralize_unverified_permit_type(result, city, state, job_type)
         return result
-    verified = _phase7h_permit_type_verified(result, permit_name)
-    warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
-    if result.get("warnings") is not warnings:
-        result["warnings"] = warnings
 
     if permit_name:
         result.setdefault("permit_type", permit_name)
@@ -1917,31 +2310,14 @@ def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "",
             result["permit_type"] = permit_name
         if not result.get("permit_name"):
             result["permit_name"] = permit_name
-        permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+        raw_permits = result.get("permits_required")
+        permits = raw_permits if isinstance(raw_permits, list) else []
         if not permits:
-            note = (
-                "Official-source backed permit type. Verify final filing path with the AHJ before submitting."
-                if verified else
-                "Permit type is shown from the current lookup, but final filing path still needs AHJ verification before submitting."
-            )
-            result["permits_required"] = [{"permit_type": permit_name, "required": True, "notes": note}]
-        if evidence_enabled:
-            result["permit_type_verified"] = bool(verified)
-        return result
-
-    result["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-    result["permit_name"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-    result["permit_type_verified"] = False
-    contact = _phase7h_contact_phrase(result, city)
-    note = (
-        "Permit is required, but the exact permit category was not official-source verified for this lookup. "
-        f"Confirm the exact filing type with {contact} before filing."
-    )
-    result["permits_required"] = [{"permit_type": PHASE7H_AHJ_VERIFY_PERMIT_TYPE, "required": True, "notes": note}]
-    warning = "Permit is required, but exact permit type was not official-source verified; confirm the exact filing type with the AHJ before filing."
-    if warning not in warnings:
-        warnings.append(warning)
-    _phase7h_mark_coverage_truth_unverified(result)
+            result["permits_required"] = [{
+                "permit_type": permit_name,
+                "required": True,
+                "notes": "Official-source backed permit type. Verify final filing path with the AHJ before submitting.",
+            }]
     return result
 
 
@@ -2051,7 +2427,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     # Phase 7H customer-trust patch: keep the customer surface explicit for YES
     # verdicts without changing evidence-pack matching or inventing official
     # permit-type certainty.
-    ensure_customer_visible_permit_trust_statement(result, city, state)
+    ensure_customer_visible_permit_trust_statement(result, city, state, job_type)
     # Phase 7H can reinsert uncertainty placeholders into raw permit name/type
     # fields after the first quality gate. Re-enforce the commercial rendered
     # output contract last so API/report title slots stay clean.
@@ -2107,13 +2483,22 @@ def render_white_label_report_html(data: dict) -> str:
     job_type_raw = str(data.get("job_type") or result.get("job_summary") or "Permit research")
     job = html.escape(job_type_raw)
     location = html.escape(", ".join(x for x in [str(data.get("city") or ""), str(data.get("state") or "")] if x))
-    citations = result.get("claim_citations") or build_claim_citations(result)
+    citations: list[dict]
+    if "claim_citations" in result:
+        raw_citations = result.get("claim_citations")
+        citations = raw_citations if isinstance(raw_citations, list) else []
+    else:
+        citations = build_claim_citations(result)
     display_scope = result.get("_primary_scope") or result.get("primary_scope") or result.get("job_category") or ""
-    permit_display_name = sanitize_permit_display_name(
-        result.get("_permit_display_name") or result.get("permit_name") or result.get("permit_type"),
-        scope=display_scope,
-        job_type=job_type_raw,
-    )
+    raw_permit_display_name = result.get("_permit_display_name") or result.get("permit_name") or result.get("permit_type")
+    if result.get("permit_type_verified") is False and FALLBACK_NAME_RE.search(str(raw_permit_display_name or "")):
+        permit_display_name = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+    else:
+        permit_display_name = sanitize_permit_display_name(
+            raw_permit_display_name,
+            scope=display_scope,
+            job_type=job_type_raw,
+        )
     permits = result.get("permits_required") or []
 
     def _report_permit_item_text(permit_item):
@@ -2128,6 +2513,8 @@ def render_white_label_report_html(data: dict) -> str:
             )
         else:
             raw_name = permit_item
+        if result.get("permit_type_verified") is False and FALLBACK_NAME_RE.search(str(raw_name or "")):
+            return PHASE7H_AHJ_VERIFY_PERMIT_TYPE
         return sanitize_permit_display_name(raw_name, scope=display_scope, job_type=job_type_raw)
 
     permit_items = "".join(f"<li>{html.escape(_report_permit_item_text(p))}</li>" for p in permits) or f"<li>{html.escape(str(permit_display_name))}</li>"
@@ -3554,6 +3941,133 @@ def render_share_page(share: dict) -> str:
     return template.replace("__REPORT_DATA__", json.dumps(payload))
 
 
+def fee_breakdown_for_display(result: dict) -> dict:
+    """Render fees as customer-safe components without inventing precision."""
+    result = result or {}
+    fees = result.get("fee_breakdown") if isinstance(result.get("fee_breakdown"), dict) else {}
+    raw_fee = result.get("fee_range") or result.get("fee") or result.get("cost") or ""
+    plan_check = fees.get("plan_check_deposit") or fees.get("plan_check_upfront") or fees.get("upfront") or ""
+    issuance = fees.get("permit_issuance_fee") or fees.get("issuance") or fees.get("permit_fee") or ""
+    combined = fees.get("combined") or raw_fee
+    unknown = "Pending verification with AHJ"
+    return {
+        "plan_check_deposit": str(plan_check or (combined if combined else unknown)),
+        "permit_issuance_fee": str(issuance or unknown),
+        "combined_note": str(combined or unknown),
+        "has_source_split": bool(plan_check or issuance),
+    }
+
+
+def fee_breakdown_text(result: dict) -> str:
+    fees = fee_breakdown_for_display(result)
+    lines = [
+        f"Plan Check Deposit / Upfront: {fees['plan_check_deposit']}",
+        f"Permit Issuance Fee: {fees['permit_issuance_fee']}",
+    ]
+    if fees["combined_note"] and not fees["has_source_split"]:
+        lines.append(f"Source fee note: {fees['combined_note']}")
+    return "\n".join(lines)
+
+
+def _pdf_escape(text: str) -> str:
+    return str(text or "").replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def _pdf_text_lines_for_report(job_type: str, city: str, state: str, result: dict) -> list[str]:
+    result = result or {}
+    permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+    permit_name = (
+        result.get("_permit_display_name")
+        or result.get("permit_name")
+        or result.get("permit_type")
+        or (permits[0].get("permit_type") if permits and isinstance(permits[0], dict) else "")
+        or "Permit details"
+    )
+    timeline = result.get("approval_timeline") if isinstance(result.get("approval_timeline"), dict) else {}
+    docs = list(dict.fromkeys((result.get("what_to_bring") or []) + (result.get("requirements") or []) + (result.get("documents_needed") or [])))
+    inspections = result.get("inspections") or result.get("inspect_checklist") or []
+    inspection_lines = []
+    if isinstance(inspections, list):
+        for item in inspections[:8]:
+            if isinstance(item, dict):
+                inspection_lines.append(item.get("stage") or item.get("title") or item.get("name") or item.get("description") or "")
+            else:
+                inspection_lines.append(str(item or ""))
+    lines = [
+        "PermitAssist Permit Intelligence Report",
+        f"Job: {job_type or 'Permit lookup'}",
+        f"Jurisdiction: {city or ''}, {state or ''}".strip(),
+        f"Verdict: {str(result.get('permit_verdict') or 'VERIFY').upper()}",
+        f"Permit to ask for: {permit_name}",
+        "",
+        "Fee breakdown:",
+        *fee_breakdown_text(result).splitlines(),
+        "",
+        f"Timeline: {timeline.get('simple') or timeline.get('complex') or 'Pending verification with AHJ'}",
+        f"Where to apply: {result.get('applying_office') or 'Contact local building department'}",
+    ]
+    if result.get("apply_phone"):
+        lines.append(f"Phone: {result.get('apply_phone')}")
+    if result.get("apply_url"):
+        lines.append(f"Portal: {result.get('apply_url')}")
+    if docs:
+        lines.extend(["", "Required documents:"])
+        lines.extend(f"- {item}" for item in docs[:10])
+    if inspection_lines:
+        lines.extend(["", "Inspection checklist:"])
+        lines.extend(f"- {item}" for item in inspection_lines if item)
+    if result.get("permit_summary") or result.get("job_summary"):
+        lines.extend(["", "Summary:", str(result.get("permit_summary") or result.get("job_summary"))])
+    lines.extend(["", "PermitAssist is guidance only. Verify final permit type, fees, and filing path with the AHJ before quoting or starting work."])
+    return lines
+
+
+def build_simple_pdf(lines: list[str]) -> bytes:
+    """Small, dependency-free PDF writer for text reports."""
+    wrapped: list[str] = []
+    for line in lines:
+        if not line:
+            wrapped.append("")
+            continue
+        wrapped.extend(textwrap.wrap(str(line), width=92, break_long_words=False, replace_whitespace=False) or [""])
+    pages = [wrapped[i:i + 46] for i in range(0, len(wrapped), 46)] or [[]]
+    objects: list[bytes] = []
+    objects.append(b"<< /Type /Catalog /Pages 2 0 R >>")
+    kids = " ".join(f"{3 + i * 2} 0 R" for i in range(len(pages)))
+    objects.append(f"<< /Type /Pages /Kids [{kids}] /Count {len(pages)} >>".encode("ascii"))
+    for idx, page_lines in enumerate(pages):
+        page_obj = 3 + idx * 2
+        stream_obj = page_obj + 1
+        objects.append(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> >> >> /Contents {stream_obj} 0 R >>".encode("ascii"))
+        commands = ["BT", "/F2 16 Tf", "72 742 Td"]
+        for line_no, line in enumerate(page_lines):
+            if line_no == 1:
+                commands.append("/F1 10 Tf")
+            if line_no:
+                commands.append("0 -14 Td")
+            commands.append(f"({_pdf_escape(line)}) Tj")
+        commands.append("ET")
+        stream = "\n".join(commands).encode("latin-1", "replace")
+        objects.append(f"<< /Length {len(stream)} >>\nstream\n".encode("ascii") + stream + b"\nendstream")
+    out = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = [0]
+    for i, obj in enumerate(objects, start=1):
+        offsets.append(len(out))
+        out.extend(f"{i} 0 obj\n".encode("ascii"))
+        out.extend(obj)
+        out.extend(b"\nendobj\n")
+    xref = len(out)
+    out.extend(f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode("ascii"))
+    for offset in offsets[1:]:
+        out.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+    out.extend(f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode("ascii"))
+    return bytes(out)
+
+
+def render_report_pdf(job_type: str, city: str, state: str, result: dict) -> bytes:
+    return build_simple_pdf(_pdf_text_lines_for_report(job_type, city, state, redact_public_output(result or {})))
+
+
 def mask_api_key(key: str) -> str:
     if not key:
         return ""
@@ -3843,7 +4357,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     verdict_color = {"YES": "#10b981", "NO": "#ef4444", "MAYBE": "#f59e0b"}.get(pv, "#f59e0b")
     verdict_bg    = {"YES": "rgba(16,185,129,.12)", "NO": "rgba(239,68,68,.12)", "MAYBE": "rgba(245,158,11,.12)"}.get(pv, "rgba(245,158,11,.12)")
 
-    fee    = esc(data.get("fee_range", ""))
+    fee    = esc(fee_breakdown_text(data)).replace("\n", "<br>")
     office = esc(data.get("applying_office", ""))
     addr   = esc(data.get("apply_address", ""))
     phone  = esc(data.get("apply_phone", ""))
@@ -3894,7 +4408,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
         req = "YES" if p.get("required") is True else ("MAYBE" if p.get("required") == "maybe" else "NO")
         text_lines.append(f"[{req}] {p.get('permit_type','')}")
         if p.get("notes"): text_lines.append(f"  {p['notes']}")
-    if fee:      text_lines.append(f"\nFee: {data.get('fee_range','')}")
+    if fee:      text_lines.append(f"\nFees:\n{fee_breakdown_text(data)}")
     if timeline: text_lines.append(f"Timeline: {tl.get('simple','')}")
     if office:   text_lines.append(f"Where: {data.get('applying_office','')}")
     if portal:   text_lines.append(f"Online: {data.get('apply_url','')}")
@@ -4310,6 +4824,7 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
         "state": normalized_state,
         "required_permits": [p.get('permit_type', 'Permit') for p in (result.get("permits_required") or []) if isinstance(p, dict)][:8],
         "fee_range": result.get('fee_range') or result.get('fee') or 'Check with city',
+        "fees": fee_breakdown_text(result),
         "apply_url": result.get('apply_url') or '',
         "checked_at": utc_now().isoformat(),
     }
@@ -4329,7 +4844,7 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
         body_lines.extend([f"- {p.get('permit_type', 'Permit')}" for p in permits] or ["- Review latest result in PermitAssist"])
         body_lines.extend([
             "",
-            f"Fees: {result.get('fee_range') or result.get('fee') or 'Check with city'}",
+            f"Fees: {fee_breakdown_text(result)}",
         ])
         if requirements:
             body_lines.extend(["", "Key requirements:"])
@@ -4760,6 +5275,10 @@ def redact_public_output(value):
                 redacted[key] = "[REDACTED]"
             else:
                 redacted[key] = redact_public_output(item)
+        _filter_ef99b_commercial_residential_leaks(
+            redacted,
+            str(redacted.get("job_type") or redacted.get("project_description") or redacted.get("job_description") or ""),
+        )
         return redacted
     if isinstance(value, list):
         return [redact_public_output(item) for item in value]
@@ -4769,6 +5288,12 @@ def redact_public_output(value):
         text = re.sub(r"(?i)fingerprint", "checksum", text)
         text = re.sub(r"(?i)\bfee_range\b", "fees", text)
         text = re.sub(r"(?i)\s*\[verify[^\]]*before merging\]", "", text)
+        text = re.sub(r"(?i)\bverify\s+before\s+merging\b", "verify details with the AHJ", text)
+        text = re.sub(
+            r"(?i)\b(?:internal_debug_language_visible|fallback_text_in_permit_title|commercial_homeowner_language|wrong_local_source_jurisdiction|verified_badge_with_unverified_core_claim|verified_badge_with_empty_permit_set|restaurant_inspection_profile_missing|medical_clinic_inspection_profile_missing|office_inspection_profile_missing|string_assembly_artifact|official_claim_without_claim_specific_evidence)\b",
+            "source-confirmation detail",
+            text,
+        )
         text = re.sub(r"(?i)\bfailed closed\b", "not source-confirmed", text)
         text = re.sub(r"(?i)\bingestion-ready\b", "source-confirmed", text)
         text = re.sub(r"(?i)\bpack-controlled\b", "source-backed", text)
@@ -4825,6 +5350,18 @@ class Handler(BaseHTTPRequestHandler):
             # Client/edge already disconnected. Do not turn a late response write
             # into noisy traceback spam or a second 500 path.
             print(f"[response] client disconnected before JSON response completed: {type(e).__name__}")
+
+    def send_pdf(self, status: int, body: bytes, filename: str):
+        safe_name = re.sub(r"[^A-Za-z0-9._-]+", "-", filename or "permitassist-report.pdf").strip("-") or "permitassist-report.pdf"
+        if not safe_name.lower().endswith(".pdf"):
+            safe_name += ".pdf"
+        self.send_response(status)
+        self.send_header("Content-Type", "application/pdf")
+        self.send_header("Content-Disposition", f'attachment; filename="{safe_name}"')
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
 
     def send_file(self, path: str, content_type: str):
         try:
@@ -5846,9 +6383,10 @@ class Handler(BaseHTTPRequestHandler):
 
                 ahj_coverage = classify_ahj_coverage(city, state)
                 unverified_us_jurisdiction = ahj_coverage.get("classification") == "unsupported"
-                if ahj_coverage.get("classification") == "invalid":
+                if ahj_coverage.get("classification") in {"invalid", "fake"}:
                     response = build_unsupported_ahj_response(city, state, ahj_coverage)
-                    record_beta_event("lookup_invalid_ahj", {
+                    event_name = "lookup_invalid_ahj" if ahj_coverage.get("classification") == "invalid" else "lookup_unsupported_ahj"
+                    record_beta_event(event_name, {
                         "city": ahj_coverage.get("city", ""),
                         "state": ahj_coverage.get("state", ""),
                         "status": ahj_coverage.get("status", ""),
@@ -5980,6 +6518,7 @@ class Handler(BaseHTTPRequestHandler):
                         openai_reasoning_effort=openai_reasoning_effort,
                     )
                     is_cached = result.get("_cached", False)
+                    result["job_category"] = job_category
 
                     if not unlimited and not is_sample_demo:
                         used_after = max(*record_lookup_usage(ip, fingerprint))
@@ -5993,6 +6532,7 @@ class Handler(BaseHTTPRequestHandler):
                     result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
                     if unverified_us_jurisdiction:
                         result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
+                        _enforce_rendered_output_contract(result, job_type, city, state)
 
                     # Record stats and beta telemetry
                     record_lookup_stat(job_type, city, state, is_cached)
@@ -6045,20 +6585,35 @@ class Handler(BaseHTTPRequestHandler):
                     job_value = item.get("job_value")
                     explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
                     try:
+                        ahj_coverage = classify_ahj_coverage(city, state)
+                        unverified_us_jurisdiction = ahj_coverage.get("classification") == "unsupported"
+                        if ahj_coverage.get("classification") in {"invalid", "fake"}:
+                            response = build_unsupported_ahj_response(city, state, ahj_coverage)
+                            response.update({"job_type": job_type, "city": city, "state": state, "error": None})
+                            return response
                         evidence_allowed = batch_evidence_allowed
                         result = research_permit(job_type, city, state, zip_code, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
                         if evidence_allowed:
                             result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
+                            if unverified_us_jurisdiction:
+                                result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
                             response = dict(result)
                             response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                             return response
+                        if unverified_us_jurisdiction:
+                            result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
                         response = {
                             "job_type": job_type,
                             "city": city,
                             "state": state,
                             "permit_verdict": result.get("permit_verdict"),
                             "permits_required": result.get("permits_required", []),
+                            "ahj_status": result.get("ahj_status"),
+                            "jurisdiction_verification": result.get("jurisdiction_verification"),
+                            "coverage_truth": result.get("coverage_truth"),
+                            "quality_warnings": result.get("quality_warnings", []),
                             "fee_range": result.get("fee_range"),
+                            "fees": fee_breakdown_text(result),
                             "approval_timeline": result.get("approval_timeline"),
                             "apply_url": result.get("apply_url"),
                             "apply_phone": result.get("apply_phone"),
@@ -6151,6 +6706,23 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 print(f"[white-label-report] Error: {e}")
                 self.send_json(500, {"error": str(e)})
+
+        elif path == "/api/report-pdf":
+            try:
+                data = self.read_json_body()
+                job_type = data.get("job_type", "").strip()
+                city = data.get("city", "").strip()
+                state = data.get("state", "").strip()
+                result = data.get("result", {})
+                if not job_type or not city or not state or not isinstance(result, dict):
+                    self.send_json(400, {"error": "job_type, city, state, result required"})
+                    return
+                pdf = render_report_pdf(job_type, city, state, result)
+                base = "-".join(part for part in [job_type, city, state] if part)
+                self.send_pdf(200, pdf, f"{base[:90] or 'permitassist-report'}.pdf")
+            except Exception as e:
+                print(f"[report-pdf] Error: {type(e).__name__}")
+                self.send_json(500, {"error": "Could not generate PDF report"})
 
         # ── Feedback ──────────────────────────────────────────────────────
         elif path == "/api/feedback":
@@ -6366,7 +6938,7 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 ahj_coverage = classify_ahj_coverage(city, state)
                 unverified_us_jurisdiction = ahj_coverage.get("classification") == "unsupported"
-                if ahj_coverage.get("classification") == "invalid":
+                if ahj_coverage.get("classification") in {"invalid", "fake"}:
                     self.send_json(
                         _unsupported_ahj_http_status(ahj_coverage),
                         build_unsupported_ahj_response(city, state, ahj_coverage),

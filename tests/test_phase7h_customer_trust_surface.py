@@ -133,3 +133,133 @@ def test_phase7h_frontend_does_not_call_unverified_placeholder_an_exact_permit()
     assert "permitTypeNeedsAhjVerify" in source
     assert "Confirm exact permit category with AHJ" in source
     assert "Ask the AHJ which permit/category to file for this scope" in source
+
+
+def test_phase7h_official_category_alone_does_not_verify_exact_permit_name(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_verdict": "YES",
+        "permit_type": "Commercial Alteration Permit",
+        "permit_name": "Commercial Alteration Permit",
+        "_permit_display_name": "Commercial Alteration Permit",
+        "permits_required": [{"permit_type": "Commercial Alteration Permit", "required": True}],
+        "apply_path": {
+            "permit_type": "Commercial Alteration Permit",
+            "application_steps": ["Choose Commercial Alteration Permit in the portal."],
+        },
+        "_evidence_pack": {
+            "enabled": True,
+            "matched_fields": ["official_application_category", "apply_url"],
+            "failed_closed_fields": [],
+            "permit_name_source_field": "official_application_category",
+        },
+    }
+
+    server.ensure_customer_visible_permit_trust_statement(result, "Chicago", "IL", "restaurant tenant improvement")
+
+    statement = "Permit required — exact permit type needs AHJ verification"
+    assert result["permit_type"] == statement
+    assert result["permit_name"] == statement
+    assert result["_permit_display_name"] == statement
+    assert result["permit_type_verified"] is False
+    assert result["permits_required"][0]["permit_type"] == statement
+    assert result["apply_path"]["permit_type"] == statement
+    assert "Commercial Alteration Permit" not in json.dumps(result.get("apply_path"), sort_keys=True)
+
+
+def test_phase7h_non_evidence_city_source_exact_name_is_neutralized(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_verdict": "YES",
+        "permit_type": "Building Permit",
+        "permit_name": "Building Permit",
+        "data_source": "city",
+        "_meta": {"city_match_level": "city"},
+        "permits_required": [{"permit_type": "Building Permit", "portal_selection": "Building Permit", "required": True}],
+        "apply_path": {
+            "permit_type": "Building Permit",
+            "application_steps": ["Select Building Permit, then upload drawings."],
+        },
+    }
+
+    server.ensure_customer_visible_permit_trust_statement(result, "Austin", "TX", "office tenant improvement")
+
+    statement = "Permit required — exact permit type needs AHJ verification"
+    text = json.dumps(result, sort_keys=True)
+    assert result["permit_type"] == statement
+    assert result["permit_name"] == statement
+    assert result["permit_type_verified"] is False
+    assert result["permits_required"][0]["permit_type"] == statement
+    assert result["permits_required"][0]["portal_selection"] == statement
+    assert "Building Permit" not in text
+    assert "not official-source verified" in text
+
+
+def test_ef04_build_claim_citations_omits_claims_without_quoted_snippets(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_verdict": "YES",
+        "permit_type": "Commercial Alteration Permit",
+        "permits_required": [{"permit_type": "Commercial Alteration Permit", "required": True}],
+        "apply_url": "https://chicago.gov/permits",
+        "fee_range": "$500-$1,000",
+        "confidence": "high",
+        "sources": [{"url": "https://chicago.gov/permits", "title": "Chicago Permits", "snippet": ""}],
+    }
+
+    citations = server.build_claim_citations(result)
+
+    assert citations == []
+    assert result["claim_citations"] == []
+    assert [claim["field"] for claim in result["unverified_claims"]] == ["permit_type", "apply_url", "fee_range"]
+    assert all(claim["confidence"] == "needs_verification" for claim in result["unverified_claims"])
+    assert result["confidence"] == "medium"
+    assert result["needs_review"] is True
+    assert "not shown as verified" in " ".join(result["quality_warnings"])
+
+
+def test_ef04_build_claim_citations_keeps_only_nonempty_quoted_support(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_verdict": "YES",
+        "permit_type": "Commercial Alteration Permit",
+        "permits_required": [{"permit_type": "Commercial Alteration Permit", "required": True}],
+        "confidence": "medium",
+        "sources": [
+            {"url": "https://chicago.gov/empty", "title": "Empty", "snippet": "   "},
+            {"url": "https://chicago.gov/permit-type", "title": "Permit Type", "snippet": "Alteration work requires a building permit."},
+        ],
+    }
+
+    citations = server.build_claim_citations(result)
+
+    assert len(citations) == 1
+    assert citations[0]["field"] == "permit_type"
+    assert citations[0]["source_url"] == "https://chicago.gov/permit-type"
+    assert citations[0]["quoted_snippet"] == "Alteration work requires a building permit."
+    assert "unverified_claims" not in result
+
+
+def test_ef04_report_renderer_does_not_recreate_unverified_claim_citations(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_verdict": "YES",
+        "permit_type": "Permit required — exact permit type needs AHJ verification",
+        "permit_name": "Permit required — exact permit type needs AHJ verification",
+        "permit_type_verified": False,
+        "permits_required": [{"permit_type": "Permit required — exact permit type needs AHJ verification", "required": True}],
+        "claim_citations": [],
+        "unverified_claims": [{"field": "permit_type", "confidence": "needs_verification"}],
+        "sources": [{"url": "https://chicago.gov/permits", "title": "Chicago Permits", "snippet": ""}],
+    }
+
+    html = server.render_white_label_report_html({
+        "result": result,
+        "job_type": "restaurant tenant improvement",
+        "city": "Chicago",
+        "state": "IL",
+    })
+
+    assert result["claim_citations"] == []
+    assert "Source quote not attached for this field yet" not in html
+    assert "No citations attached yet" in html
