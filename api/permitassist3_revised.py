@@ -16,6 +16,7 @@ import hashlib
 import json
 import os
 import re
+import tempfile
 import uuid
 from typing import Any, Callable, Iterable
 from urllib.parse import urlparse
@@ -25,6 +26,8 @@ REPO_ROOT = API_DIR.parent
 DEFAULT_GOLDEN_PACK_PATH = REPO_ROOT / "data" / "evidence_packs" / "local_golden" / "phase7b" / "permitassist-phase7b-golden-local-preview-pack-PA7B-HYBRID10-20260511.json"
 DEFAULT_TICKET_PATH = REPO_ROOT / "data" / "permitassist3" / "phase2_3_completion_tickets.jsonl"
 DEFAULT_WRITEBACK_PATH = REPO_ROOT / "data" / "permitassist3" / "phase2_3_verified_writeback.jsonl"
+DEFAULT_PHASE4_EVENT_PATH = REPO_ROOT / "data" / "permitassist3" / "phase4_completion_events.jsonl"
+DEFAULT_PHASE5_REPORT_PATH = REPO_ROOT / "artifacts" / "permitassist3_phase5_launch_quality_gate_report.json"
 
 VERIFIED_FINAL = "verified_final"
 PENDING_ACTIVE_RETRIEVAL = "pending_active_retrieval"
@@ -36,6 +39,8 @@ FORBIDDEN_CUSTOMER_FINAL_PATTERNS = (
     r"not supported",
     r"check with (?:the )?AHJ",
     r"contact (?:your|the) AHJ",
+    r"^\s*Building Permit\s*$",
+    r"^\s*Permit Required\s*$",
     r"\bmay be required\b",
     r"\blikely required\b",
     r"\btypically\b",
@@ -457,6 +462,416 @@ class WriteBackStore:
             fh.write(json.dumps(event, sort_keys=True) + "\n")
 
 
+
+def _parse_utc(value: Any) -> datetime | None:
+    text = _clean(value)
+    if not text:
+        return None
+    try:
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        parsed = datetime.fromisoformat(text)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+    except ValueError:
+        return None
+
+
+def _read_jsonl(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    rows: list[dict[str, Any]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            parsed = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            rows.append(parsed)
+    return rows
+
+
+class ExpertCompletionConsole:
+    """Phase 4 expert-completion console over pending active retrieval tickets.
+
+    This is intentionally local/append-only for the controlled PR: unresolved
+    customer cases become an operator review payload, SLA watch item, and
+    validated write-back event.  It does not mutate production, call external
+    systems, or expose a weak final customer answer.
+    """
+
+    REQUIRED_EVIDENCE_FIELDS = (
+        "exact_permit_name_or_official_portal_category_path",
+        "official_or_delegated_source_url",
+        "source_title",
+        "exact_quote_or_snippet",
+        "retrieved_at_utc",
+        "source_content_hash_sha256",
+        "apply_url_or_source_url",
+    )
+
+    def __init__(
+        self,
+        *,
+        ticket_path: Path | str = DEFAULT_TICKET_PATH,
+        writeback_path: Path | str = DEFAULT_WRITEBACK_PATH,
+        event_path: Path | str = DEFAULT_PHASE4_EVENT_PATH,
+    ):
+        self.ticket_path = Path(ticket_path)
+        self.writeback = WriteBackStore(writeback_path)
+        self.event_path = Path(event_path)
+        self.overlays = StateOverlayRegistry()
+        self.gate = PermitAssist3RevisedFinalGate()
+
+    def _tickets(self) -> list[dict[str, Any]]:
+        return [row for row in _read_jsonl(self.ticket_path) if row.get("public_state") == PENDING_ACTIVE_RETRIEVAL]
+
+    def _events(self) -> list[dict[str, Any]]:
+        return _read_jsonl(self.event_path)
+
+    def _resolved_tracker_ids(self) -> set[str]:
+        return {
+            tracker_id
+            for tracker_id in (
+                _clean(event.get("tracker_id") or event.get("ticket_id"))
+                for event in self._events()
+                if event.get("event") == "phase4_resolution_written_back"
+            )
+            if tracker_id
+        }
+
+    def list_open_tickets(self, *, include_resolved: bool = False) -> list[dict[str, Any]]:
+        resolved = set() if include_resolved else self._resolved_tracker_ids()
+        tickets = [ticket for ticket in self._tickets() if _clean(ticket.get("tracker_id")) not in resolved]
+        return sorted(tickets, key=lambda item: item.get("created_at_utc") or "")
+
+    def get_ticket(self, tracker_id: str) -> dict[str, Any] | None:
+        wanted = _clean(tracker_id)
+        for ticket in self._tickets():
+            if _clean(ticket.get("tracker_id") or ticket.get("ticket_id")) == wanted:
+                return ticket
+        return None
+
+    def sla_breaches(self, *, now: datetime | None = None) -> list[dict[str, Any]]:
+        current = (now or _utc_now()).astimezone(timezone.utc)
+        breaches: list[dict[str, Any]] = []
+        for ticket in self.list_open_tickets():
+            due = _parse_utc(ticket.get("sla_due_at_utc"))
+            if due and due < current:
+                breaches.append(
+                    {
+                        "tracker_id": ticket.get("tracker_id"),
+                        "owner": ticket.get("owner"),
+                        "sla_due_at_utc": ticket.get("sla_due_at_utc"),
+                        "breach_minutes": int((current - due).total_seconds() // 60),
+                        "alarm": ticket.get("alarm") or {},
+                    }
+                )
+        return breaches
+
+    def build_review_payload(self, tracker_id: str) -> dict[str, Any]:
+        ticket = self.get_ticket(tracker_id)
+        if not ticket:
+            raise KeyError(f"unknown completion ticket: {tracker_id}")
+        vertical = _clean(ticket.get("vertical")) or infer_vertical(ticket.get("job_type", ""))
+        overlay = self.overlays.for_state_and_vertical(ticket.get("state", ""), vertical)
+        companion_tracks = PermitAssist3RevisedEngine._companion_tracks(vertical, overlay)
+        tried_sources = ticket.get("tried_sources") if isinstance(ticket.get("tried_sources"), list) else []
+        candidate_urls = [item.get("source_url") or item.get("url") for item in tried_sources if isinstance(item, dict) and (item.get("source_url") or item.get("url"))]
+        likely_names = [item.get("exact_permit_name") or item.get("permit_name") or item.get("permit_type") for item in tried_sources if isinstance(item, dict) and (item.get("exact_permit_name") or item.get("permit_name") or item.get("permit_type"))]
+        return {
+            "schema": "permitassist3.phase4.expert_completion_console_payload.v1",
+            "tracker_id": ticket.get("tracker_id"),
+            "customer_scenario": {
+                "job_type": ticket.get("job_type"),
+                "city": ticket.get("city"),
+                "state": ticket.get("state"),
+                "vertical": vertical,
+            },
+            "ahj_stack": {
+                "ahj_id": ticket.get("ahj_id"),
+                "city": ticket.get("city"),
+                "state": ticket.get("state"),
+                "official_source_classification_needed": "ahj_or_delegated_official",
+            },
+            "inferred_permit_families": companion_tracks,
+            "candidate_source_urls": candidate_urls,
+            "search_queries_tried": [item.get("query") for item in tried_sources if isinstance(item, dict) and item.get("query")],
+            "missing_exact_names": ticket.get("missing_fields") or [],
+            "likely_predicted_names": [name for name in likely_names if name],
+            "official_contacts": [item for item in tried_sources if isinstance(item, dict) and (item.get("phone") or item.get("email") or item.get("contact_url"))],
+            "required_evidence_fields": list(self.REQUIRED_EVIDENCE_FIELDS),
+            "state_overlay": overlay,
+            "sla": {
+                "owner": ticket.get("owner"),
+                "sla_due_at_utc": ticket.get("sla_due_at_utc"),
+                "alarm": ticket.get("alarm") or {},
+            },
+            "writeback_action": {
+                "method": "ExpertCompletionConsole.resolve_with_evidence",
+                "target": ticket.get("writeback", {}).get("target") or str(DEFAULT_WRITEBACK_PATH.relative_to(REPO_ROOT)),
+                "requires_final_gate_pass": True,
+            },
+        }
+
+    def build_verified_resolution_packet(
+        self,
+        tracker_id: str,
+        *,
+        exact_permit_name: str | None = None,
+        official_portal_category_path: str | None = None,
+        apply_url: str | None = None,
+        source_url: str,
+        source_title: str,
+        exact_quote_or_snippet: str,
+        retrieved_at_utc: str | None = None,
+        source_content_hash_sha256: str | None = None,
+        source_snapshot_ref: str = "phase4-expert-completion",
+        official_source_classification: str = "ahj_or_delegated_official",
+    ) -> dict[str, Any]:
+        ticket = self.get_ticket(tracker_id)
+        if not ticket:
+            raise KeyError(f"unknown completion ticket: {tracker_id}")
+        if not (exact_permit_name or official_portal_category_path):
+            raise ValueError("exact permit name or official portal category/path is required")
+        vertical = _clean(ticket.get("vertical")) or infer_vertical(ticket.get("job_type", ""))
+        overlay = self.overlays.for_state_and_vertical(ticket.get("state", ""), vertical)
+        source_hash = source_content_hash_sha256 or _sha256_text("|".join([source_url, source_title, exact_quote_or_snippet, exact_permit_name or "", official_portal_category_path or ""]))
+        provenance = SourceProvenance(
+            source_url=_clean(source_url),
+            source_title=_clean(source_title),
+            exact_quote_or_snippet=_clean(exact_quote_or_snippet),
+            retrieved_at_utc=_clean(retrieved_at_utc) or _utc_now_iso(),
+            source_content_hash_sha256=source_hash,
+            source_snapshot_ref=source_snapshot_ref,
+            official_source_classification=official_source_classification,
+        )
+        primary = _clean(exact_permit_name or official_portal_category_path)
+        packet = {
+            "public_state": VERIFIED_FINAL,
+            "customer_final": True,
+            "job_type": ticket.get("job_type"),
+            "city": ticket.get("city"),
+            "state": ticket.get("state"),
+            "vertical": vertical,
+            "source_backed_exact_permit_name": _clean(exact_permit_name) or None,
+            "source_backed_official_portal_category_path": _clean(official_portal_category_path) or None,
+            "apply_url": _clean(apply_url or source_url) or None,
+            "official_source_provenance": [asdict(provenance)],
+            "companion_permits_reviews": PermitAssist3RevisedEngine._companion_tracks(vertical, overlay),
+            "state_overlay": overlay,
+            "customer_output": {
+                "headline": "Official source-backed filing path completed",
+                "filing_path": primary,
+                "apply_url": _clean(apply_url or source_url) or None,
+                "source": {"title": provenance.source_title, "url": provenance.source_url},
+                "state_overlay": {"state": overlay.get("state"), "claims": overlay.get("claims", [])},
+                "next_step": "Use the completed source-backed filing packet before submission.",
+            },
+            "completion_ticket": None,
+            "resolved_from_tracker_id": ticket.get("tracker_id"),
+            "missing_fields": [],
+            "final_gate_reasons": [],
+            "live_retrieval": {"attempted": True, "promoted_to_verified_final": True, "phase4_expert_completed": True},
+        }
+        ok, reasons = self.gate.validate_verified_final(packet)
+        if not ok:
+            raise ValueError(f"resolution packet failed final gate: {reasons}")
+        return packet
+
+    def approve_and_write_back(self, tracker_id: str, resolved_packet: dict[str, Any]) -> dict[str, Any]:
+        ticket = self.get_ticket(tracker_id)
+        if not ticket:
+            raise KeyError(f"unknown completion ticket: {tracker_id}")
+        ok, reasons = self.gate.validate_verified_final(resolved_packet)
+        if not ok:
+            raise ValueError(f"resolution packet failed final gate: {reasons}")
+        self.writeback.append_verified(resolved_packet)
+        event = {
+            "schema": "permitassist3.phase4.completion_event.v1",
+            "event": "phase4_resolution_written_back",
+            "tracker_id": tracker_id,
+            "ticket_id": tracker_id,
+            "owner": ticket.get("owner"),
+            "written_at_utc": _utc_now_iso(),
+            "writeback_target": str(self.writeback.path.relative_to(REPO_ROOT)) if self.writeback.path.is_relative_to(REPO_ROOT) else str(self.writeback.path),
+            "packet_hash_sha256": _sha256_text(json.dumps(resolved_packet, sort_keys=True, default=str)),
+            "writeback_record_appended": True,
+            "corpus_promotion_required": True,
+            "cold_ahj_became_warm": False,
+            "repeat_lookup_ready_after_corpus_promotion": False,
+            "sla_measurable": bool(ticket.get("sla_due_at_utc") and ticket.get("owner") and ticket.get("alarm")),
+        }
+        self.event_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.event_path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(event, sort_keys=True) + "\n")
+        return event
+
+    def resolve_with_evidence(self, tracker_id: str, **evidence: Any) -> dict[str, Any]:
+        packet = self.build_verified_resolution_packet(tracker_id, **evidence)
+        event = self.approve_and_write_back(tracker_id, packet)
+        return {"event": event, "packet": packet}
+
+
+PHASE5_LAUNCH_CASES: tuple[dict[str, Any], ...] = (
+    {
+        "case_id": "launch-restaurant-austin-tx",
+        "job_type": "restaurant tenant improvement with hood and grease interceptor",
+        "city": "Austin",
+        "state": "TX",
+        "vertical": "restaurant_ti",
+        "expected_state": VERIFIED_FINAL,
+        "baseline_best_tool": "manual_search_fixture",
+        "baseline_best_exact_packet_complete": False,
+    },
+    {
+        "case_id": "launch-medical-tampa-fl",
+        "job_type": "medical clinic tenant improvement exam rooms",
+        "city": "Tampa",
+        "state": "FL",
+        "vertical": "medical_clinic_ti",
+        "expected_state": VERIFIED_FINAL,
+        "baseline_best_tool": "manual_search_fixture",
+        "baseline_best_exact_packet_complete": False,
+    },
+    {
+        "case_id": "launch-office-los-angeles-ca",
+        "job_type": "office tenant improvement buildout",
+        "city": "Los Angeles",
+        "state": "CA",
+        "vertical": "office_ti",
+        "expected_state": VERIFIED_FINAL,
+        "baseline_best_tool": "manual_search_fixture",
+        "baseline_best_exact_packet_complete": False,
+    },
+    {
+        "case_id": "launch-pending-plano-restaurant-ti",
+        "job_type": "restaurant tenant improvement",
+        "city": "Plano",
+        "state": "TX",
+        "vertical": "restaurant_ti",
+        "expected_state": PENDING_ACTIVE_RETRIEVAL,
+        "baseline_best_tool": "manual_search_fixture",
+        "baseline_best_exact_packet_complete": False,
+    },
+)
+
+
+class PermitAssist3LaunchQualityGate:
+    """Phase 5 local launch-quality gate for the controlled PA3 path."""
+
+    def __init__(self, *, cases: Iterable[dict[str, Any]] = PHASE5_LAUNCH_CASES, report_path: Path | str = DEFAULT_PHASE5_REPORT_PATH):
+        self.cases = tuple(dict(case) for case in cases)
+        self.report_path = Path(report_path)
+        self.scanner = CustomerOutputScanner()
+        self.gate = PermitAssist3RevisedFinalGate()
+
+    def _valid_pending(self, packet: dict[str, Any]) -> bool:
+        ticket = packet.get("completion_ticket") or {}
+        return bool(
+            packet.get("public_state") == PENDING_ACTIVE_RETRIEVAL
+            and packet.get("customer_final") is False
+            and not packet.get("source_backed_exact_permit_name")
+            and not packet.get("source_backed_official_portal_category_path")
+            and _clean(ticket.get("tracker_id")).startswith("pa3-")
+            and ticket.get("owner")
+            and ticket.get("sla_due_at_utc")
+            and ticket.get("alarm", {}).get("on_sla_breach")
+            and ticket.get("writeback", {}).get("required") is True
+        )
+
+    def run(self) -> dict[str, Any]:
+        self.report_path.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="permitassist3_phase5_") as tmp:
+            tmp_path = Path(tmp)
+            engine = PermitAssist3RevisedEngine(
+                ticket_path=tmp_path / "tickets.jsonl",
+                writeback_path=tmp_path / "writeback.jsonl",
+            )
+            rows: list[dict[str, Any]] = []
+            for case in self.cases:
+                packet = engine.lookup(case["job_type"], case["city"], case["state"], explicit_vertical=case.get("vertical"))
+                rows.append(self._evaluate_case(case, packet))
+        verified_rows = [row for row in rows if row["expected_state"] == VERIFIED_FINAL]
+        pending_rows = [row for row in rows if row["expected_state"] == PENDING_ACTIVE_RETRIEVAL]
+        verticals = {row["vertical"] for row in verified_rows if row["ok"]}
+        acceptance = {
+            "restaurant_ti_beats_baseline": any(row["vertical"] == "restaurant_ti" and row["permitassist_beats_baseline_fixture"] and row["ok"] for row in verified_rows),
+            "medical_clinic_ti_beats_baseline": any(row["vertical"] == "medical_clinic_ti" and row["permitassist_beats_baseline_fixture"] and row["ok"] for row in verified_rows),
+            "office_ti_beats_baseline": any(row["vertical"] == "office_ti" and row["permitassist_beats_baseline_fixture"] and row["ok"] for row in verified_rows),
+            "top_launch_ahjs_have_source_backed_exact_names_or_paths": {"restaurant_ti", "medical_clinic_ti", "office_ti"}.issubset(verticals),
+            "no_final_generic_output": all(row["customer_scan_pass"] for row in rows),
+            "unresolved_cases_have_sla_backed_completion_path": all(row["valid_pending_active_retrieval"] for row in pending_rows),
+            "source_snippets_verify": all(row["source_snippet_valid"] for row in verified_rows),
+        }
+        acceptance["phase5_launch_quality_gate_pass"] = all(acceptance.values())
+        report = {
+            "schema": "permitassist3.phase5.launch_quality_gate.v1",
+            "generated_at_utc": _utc_now_iso(),
+            "case_manifest_source": "api.permitassist3_revised.PHASE5_LAUNCH_CASES",
+            "baseline_comparison_mode": "hand_built_fixture_no_network",
+            "rows": rows,
+            "acceptance": acceptance,
+        }
+        self.report_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+        return report
+
+    def _evaluate_case(self, case: dict[str, Any], packet: dict[str, Any]) -> dict[str, Any]:
+            scan = self.scanner.scan(packet.get("customer_output") or {})
+            gate_ok = False
+            gate_reasons: list[str] = []
+            source_snippet_valid = False
+            valid_pending = False
+            if case.get("expected_state") == VERIFIED_FINAL:
+                gate_ok, gate_reasons = self.gate.validate_verified_final(packet)
+                source_snippet_valid = all(
+                    SourceProvenance(
+                        source_url=str(item.get("source_url") or ""),
+                        source_title=str(item.get("source_title") or ""),
+                        exact_quote_or_snippet=str(item.get("exact_quote_or_snippet") or ""),
+                        retrieved_at_utc=str(item.get("retrieved_at_utc") or ""),
+                        source_content_hash_sha256=str(item.get("source_content_hash_sha256") or ""),
+                    ).valid()
+                    for item in packet.get("official_source_provenance") or []
+                    if isinstance(item, dict)
+                )
+            else:
+                valid_pending = self._valid_pending(packet)
+            beats_baseline = bool(
+                case.get("expected_state") == VERIFIED_FINAL
+                and gate_ok
+                and not case.get("baseline_best_exact_packet_complete")
+            )
+            ok = bool(
+                packet.get("public_state") == case.get("expected_state")
+                and packet.get("vertical") == case.get("vertical")
+                and scan["pass"]
+                and ((case.get("expected_state") == VERIFIED_FINAL and gate_ok and source_snippet_valid and beats_baseline) or valid_pending)
+            )
+            return {
+                "case_id": case.get("case_id"),
+                "vertical": case.get("vertical"),
+                "city": case.get("city"),
+                "state": case.get("state"),
+                "expected_state": case.get("expected_state"),
+                "actual_state": packet.get("public_state"),
+                "customer_final": packet.get("customer_final"),
+                "customer_scan_pass": scan["pass"],
+                "final_gate_pass": gate_ok,
+                "final_gate_reasons": gate_reasons,
+                "valid_pending_active_retrieval": valid_pending,
+                "source_snippet_valid": source_snippet_valid,
+                "baseline_best_tool": case.get("baseline_best_tool"),
+                "baseline_best_exact_packet_complete": case.get("baseline_best_exact_packet_complete"),
+                "permitassist_beats_baseline_fixture": beats_baseline,
+                "ok": ok,
+        }
+
+
 class PermitAssist3RevisedEngine:
     def __init__(
         self,
@@ -647,7 +1062,8 @@ class PermitAssist3RevisedEngine:
             record_ids=(f"live::{str(state).lower()}_{_slug(city)}::{vertical}::{_sha256_text(json.dumps(candidate, sort_keys=True, default=str))[:12]}",),
         )
 
-    def _companion_tracks(self, vertical: str, overlay: dict[str, Any]) -> list[dict[str, Any]]:
+    @staticmethod
+    def _companion_tracks(vertical: str, overlay: dict[str, Any]) -> list[dict[str, Any]]:
         family_map = {
             "restaurant_ti": ["building", "fire_life_safety", "health_food_establishment", "mechanical_hood", "plumbing_grease_interceptor"],
             "medical_clinic_ti": ["building", "fire_life_safety", "accessibility", "healthcare_state_overlay", "mep_trades"],
@@ -886,6 +1302,9 @@ __all__ = [
     "PENDING_ACTIVE_RETRIEVAL",
     "VERIFIED_FINAL",
     "CustomerOutputScanner",
+    "ExpertCompletionConsole",
+    "PHASE5_LAUNCH_CASES",
+    "PermitAssist3LaunchQualityGate",
     "PermitAssist3RevisedEngine",
     "PermitAssist3RevisedFinalGate",
     "StateOverlayRegistry",

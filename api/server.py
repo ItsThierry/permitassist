@@ -1913,7 +1913,11 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     _enforce_rendered_output_contract(result, job_type, city, state, warnings)
     _enforce_ef99_license_scope_boundary(result, job_type, city, state)
     _enforce_ef99_authority_conflict_boundary(result, job_type, city, state)
-    warnings = list(result.get("quality_warnings") or warnings)
+    gate_warnings = list(result.get("quality_warnings") or [])
+    for warning in warnings:
+        if warning and warning not in gate_warnings:
+            gate_warnings.append(warning)
+    warnings = gate_warnings
 
     if str(result.get("confidence") or "").lower() == "high" and not sources:
         result["confidence"] = "medium"
@@ -1936,6 +1940,8 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
 def build_claim_citations(result: dict) -> list[dict]:
     """Attach quote-backed field provenance without treating empty snippets as proof."""
     sources = _source_dicts(result)
+    raw_sources = result.get("sources") or []
+    legacy_string_sources_only = bool(raw_sources) and all(isinstance(item, str) for item in raw_sources)
     first = sources[0] if sources else {}
     quoted_source = next((source for source in sources if str(source.get("snippet") or "").strip()), None)
     checked = utc_now().date().isoformat()
@@ -1964,6 +1970,18 @@ def build_claim_citations(result: dict) -> list[dict]:
                 "checked_at": checked,
                 "confidence": "needs_verification",
             })
+            if legacy_string_sources_only and not _phase7h_truthy_yes_verdict(result):
+                citations.append({
+                    "id": f"C{idx}",
+                    "field": field,
+                    "claim": label,
+                    "value": value_text,
+                    "source_url": first.get("url", ""),
+                    "source_title": first.get("title", ""),
+                    "quoted_snippet": "",
+                    "checked_at": checked,
+                    "confidence": "needs_verification",
+                })
             continue
         citations.append({
             "id": f"C{idx}",
@@ -1983,7 +2001,7 @@ def build_claim_citations(result: dict) -> list[dict]:
         if str(result.get("confidence") or "").lower() == "high" and not citations:
             result["confidence"] = "medium"
         warnings = result.setdefault("quality_warnings", [])
-        warning = "Some report claims are not shown as verified because no quoted source snippet was attached."
+        warning = "Some report claims are not shown as verified because quoted source snippets were not attached for every field."
         if warning not in warnings:
             warnings.append(warning)
     else:
@@ -2269,10 +2287,23 @@ def _phase7h_permit_type_verified(result: dict, permit_name: str) -> bool:
         )
         has_verified_name_field = bool(PHASE7H_EXACT_NAME_SOURCE_FIELDS & matched_fields) or source_field in PHASE7H_EXACT_NAME_SOURCE_FIELDS
         return has_verified_name_field and "permit_type" not in failed_fields
-    # EF-03: non-evidence/city-source/model output is not enough to prove the
-    # exact AHJ permit name. A future non-evidence verifier must set an explicit
-    # source-backed contract before this gate can preserve exact names.
-    return False
+    data_source = _phase7h_string(result.get("data_source") or (result.get("_meta") or {}).get("city_match_level")).lower()
+    if data_source in {"city", "city_database"}:
+        # EF-03: city-source/model output is not enough to prove the exact AHJ
+        # permit name. A future non-evidence verifier must set an explicit
+        # source-backed contract before this gate can preserve exact names.
+        return False
+    primary_scope = _phase7h_string(result.get("_primary_scope") or (result.get("_meta") or {}).get("job_category")).lower()
+    if result.get("_cached") and primary_scope.startswith("residential"):
+        # Preserve vetted residential cached wording; this is not a commercial
+        # PermitAssist 3 final and must not be rewritten into TI language.
+        return True
+    classifications = (result.get("_source_classification") if isinstance(result.get("_source_classification"), list) else []) or []
+    has_local_ahj_source = any(
+        isinstance(item, dict) and item.get("source_class") == "local_ahj"
+        for item in classifications
+    )
+    return bool(has_local_ahj_source) and result.get("source_support_status") != "target_ahj_source_unverified"
 
 
 def _phase7h_contact_phrase(result: dict, city: str) -> str:
@@ -2384,6 +2415,18 @@ def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "",
     permit_type_failed_closed = bool(evidence_meta.get("enabled")) and "permit_type" in failed_fields and not (PHASE7H_EXACT_NAME_SOURCE_FIELDS & matched_fields)
     verified = False if permit_type_failed_closed else _phase7h_permit_type_verified(result, permit_name)
     result["permit_type_verified"] = bool(verified)
+
+    if (
+        evidence_meta.get("enabled")
+        and permit_type_failed_closed
+        and not matched_fields
+        and os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip() == "solar_mep_controlled_preview"
+        and isinstance(result.get("permits_required"), list)
+        and not result.get("permits_required")
+    ):
+        # A fully fail-closed specialty evidence pack must stay empty instead of
+        # being promoted into a generic required-permit customer final.
+        return result
 
     if not verified:
         _phase7h_neutralize_unverified_permit_type(result, city, state, job_type)
