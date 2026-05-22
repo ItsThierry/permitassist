@@ -254,6 +254,8 @@ def test_claim_citations_never_invent_missing_quotes(tmp_path, monkeypatch):
     assert citations[0]["quoted_snippet"] == ""
     assert citations[0]["confidence"] == "needs_verification"
     assert any("quoted source snippets" in w for w in result["quality_warnings"])
+    ids = [citation["id"] for citation in citations]
+    assert len(ids) == len(set(ids))
 
 
 def test_apply_path_adds_stop_before_final_submit(tmp_path, monkeypatch):

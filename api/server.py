@@ -54,6 +54,10 @@ from evidence_pack_runtime import (
     evidence_pack_mode_requires_preview_route,
     get_local_evidence_pack,
 )
+try:
+    from permitassist3_revised import apply_permitassist3_revised_contract
+except Exception:  # Keep legacy server importable if the optional PA3 layer is unavailable.
+    apply_permitassist3_revised_contract = None
 from rendered_output_lint import (
     FALLBACK_NAME_RE,
     build_rendering_context,
@@ -1909,7 +1913,11 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     _enforce_rendered_output_contract(result, job_type, city, state, warnings)
     _enforce_ef99_license_scope_boundary(result, job_type, city, state)
     _enforce_ef99_authority_conflict_boundary(result, job_type, city, state)
-    warnings = list(result.get("quality_warnings") or warnings)
+    gate_warnings = list(result.get("quality_warnings") or [])
+    for warning in warnings:
+        if warning and warning not in gate_warnings:
+            gate_warnings.append(warning)
+    warnings = gate_warnings
 
     if str(result.get("confidence") or "").lower() == "high" and not sources:
         result["confidence"] = "medium"
@@ -1932,6 +1940,8 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
 def build_claim_citations(result: dict) -> list[dict]:
     """Attach quote-backed field provenance without treating empty snippets as proof."""
     sources = _source_dicts(result)
+    raw_sources = result.get("sources") or []
+    legacy_string_sources_only = bool(raw_sources) and all(isinstance(item, str) for item in raw_sources)
     first = sources[0] if sources else {}
     quoted_source = next((source for source in sources if str(source.get("snippet") or "").strip()), None)
     checked = utc_now().date().isoformat()
@@ -1960,6 +1970,18 @@ def build_claim_citations(result: dict) -> list[dict]:
                 "checked_at": checked,
                 "confidence": "needs_verification",
             })
+            if legacy_string_sources_only and not _phase7h_truthy_yes_verdict(result):
+                citations.append({
+                    "id": f"C{idx}",
+                    "field": field,
+                    "claim": label,
+                    "value": value_text,
+                    "source_url": first.get("url", ""),
+                    "source_title": first.get("title", ""),
+                    "quoted_snippet": "",
+                    "checked_at": checked,
+                    "confidence": "needs_verification",
+                })
             continue
         citations.append({
             "id": f"C{idx}",
@@ -1979,7 +2001,7 @@ def build_claim_citations(result: dict) -> list[dict]:
         if str(result.get("confidence") or "").lower() == "high" and not citations:
             result["confidence"] = "medium"
         warnings = result.setdefault("quality_warnings", [])
-        warning = "Some report claims are not shown as verified because no quoted source snippet was attached."
+        warning = "Some report claims are not shown as verified because quoted source snippets were not attached for every field."
         if warning not in warnings:
             warnings.append(warning)
     else:
@@ -2073,6 +2095,88 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
 
 def _env_flag_enabled(name: str) -> bool:
     return str(os.environ.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _permitassist3_phase23_enabled() -> bool:
+    return _env_flag_enabled("PERMITASSIST3_REVISED_PHASE23_ENABLED")
+
+
+def _permitassist3_first_source(raw: dict) -> dict:
+    sources = raw.get("sources") or raw.get("official_sources") or []
+    if isinstance(sources, dict):
+        sources = [sources]
+    if isinstance(sources, list):
+        for source in sources:
+            if isinstance(source, dict):
+                return source
+            if isinstance(source, str) and source.strip():
+                return {"url": source.strip(), "title": source.strip()}
+    return {}
+
+
+def _permitassist3_live_retriever(job_type: str, ahj: dict, vertical: str) -> list[dict]:
+    city = str((ahj or {}).get("city") or "").strip()
+    state = str((ahj or {}).get("state") or "").strip().upper()
+    if not city or not state:
+        return []
+    try:
+        raw = research_permit(
+            job_type,
+            city,
+            state,
+            "",
+            use_cache=False,
+            job_category="commercial",
+            suppress_cache_write=True,
+        )
+    except Exception as exc:
+        return [{"source": "research_permit", "status": "error", "error": str(exc)[:200]}]
+    if not isinstance(raw, dict):
+        return []
+    permit_name = _phase7h_string(raw.get("permit_name") or raw.get("permit_type"))
+    if not permit_name:
+        for item in raw.get("permits_required") or []:
+            if isinstance(item, dict):
+                permit_name = _phase7h_string(item.get("permit_name") or item.get("permit_type") or item.get("portal_selection"))
+                if permit_name:
+                    break
+    raw_apply_path = raw.get("apply_path")
+    apply_path = raw_apply_path if isinstance(raw_apply_path, dict) else {}
+    portal_path = _phase7h_string(
+        raw.get("official_portal_category_path")
+        or raw.get("portal_selection")
+        or apply_path.get("permit_category")
+        or apply_path.get("permit_type")
+    )
+    source = _permitassist3_first_source(raw)
+    source_url = _phase7h_string(source.get("url") or source.get("source_url") or raw.get("source_url") or raw.get("apply_url"))
+    source_title = _phase7h_string(source.get("title") or source.get("source_title") or raw.get("source_title") or "Official source")
+    snippet = _phase7h_string(
+        source.get("snippet")
+        or source.get("exact_quote_or_snippet")
+        or source.get("quoted_snippet")
+        or source.get("quote")
+        or raw.get("exact_quote_or_snippet")
+        or raw.get("quoted_snippet")
+    )
+    if not source_url or not snippet or not (permit_name or portal_path):
+        return []
+    source_hash = hashlib.sha256("\n".join([source_url, source_title, snippet, permit_name, portal_path]).encode("utf-8")).hexdigest()
+    return [
+        {
+            "exact_permit_name": permit_name,
+            "official_portal_category_path": portal_path,
+            "apply_url": _phase7h_string(raw.get("apply_url") or source_url),
+            "source_url": source_url,
+            "source_title": source_title,
+            "exact_quote_or_snippet": snippet,
+            "retrieved_at_utc": utc_now().replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+            "source_content_hash_sha256": source_hash,
+            "source_snapshot_ref": f"live-retrieval:{source_hash[:16]}",
+            "official_source_classification": _phase7h_string(source.get("official_source_classification") or "ahj_official"),
+            "live_raw_keys": sorted(str(k) for k in raw.keys())[:50],
+        }
+    ]
 
 
 PHASE7D_GOLDEN_BETA_GUARDED_MODE = "phase7b_golden_beta_guarded"
@@ -2183,10 +2287,23 @@ def _phase7h_permit_type_verified(result: dict, permit_name: str) -> bool:
         )
         has_verified_name_field = bool(PHASE7H_EXACT_NAME_SOURCE_FIELDS & matched_fields) or source_field in PHASE7H_EXACT_NAME_SOURCE_FIELDS
         return has_verified_name_field and "permit_type" not in failed_fields
-    # EF-03: non-evidence/city-source/model output is not enough to prove the
-    # exact AHJ permit name. A future non-evidence verifier must set an explicit
-    # source-backed contract before this gate can preserve exact names.
-    return False
+    data_source = _phase7h_string(result.get("data_source") or (result.get("_meta") or {}).get("city_match_level")).lower()
+    if data_source in {"city", "city_database"}:
+        # EF-03: city-source/model output is not enough to prove the exact AHJ
+        # permit name. A future non-evidence verifier must set an explicit
+        # source-backed contract before this gate can preserve exact names.
+        return False
+    primary_scope = _phase7h_string(result.get("_primary_scope") or (result.get("_meta") or {}).get("job_category")).lower()
+    if result.get("_cached") and primary_scope.startswith("residential"):
+        # Preserve vetted residential cached wording; this is not a commercial
+        # PermitAssist 3 final and must not be rewritten into TI language.
+        return True
+    classifications = (result.get("_source_classification") if isinstance(result.get("_source_classification"), list) else []) or []
+    has_local_ahj_source = any(
+        isinstance(item, dict) and item.get("source_class") == "local_ahj"
+        for item in classifications
+    )
+    return bool(has_local_ahj_source) and result.get("source_support_status") != "target_ahj_source_unverified"
 
 
 def _phase7h_contact_phrase(result: dict, city: str) -> str:
@@ -2298,6 +2415,18 @@ def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "",
     permit_type_failed_closed = bool(evidence_meta.get("enabled")) and "permit_type" in failed_fields and not (PHASE7H_EXACT_NAME_SOURCE_FIELDS & matched_fields)
     verified = False if permit_type_failed_closed else _phase7h_permit_type_verified(result, permit_name)
     result["permit_type_verified"] = bool(verified)
+
+    if (
+        evidence_meta.get("enabled")
+        and permit_type_failed_closed
+        and not matched_fields
+        and os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip() == "solar_mep_controlled_preview"
+        and isinstance(result.get("permits_required"), list)
+        and not result.get("permits_required")
+    ):
+        # A fully fail-closed specialty evidence pack must stay empty instead of
+        # being promoted into a generic required-permit customer final.
+        return result
 
     if not verified:
         _phase7h_neutralize_unverified_permit_type(result, city, state, job_type)
@@ -2440,6 +2569,18 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             if warning and warning not in merged_warnings:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
+    if (
+        apply_permitassist3_revised_contract is not None
+        and _permitassist3_phase23_enabled()
+    ):
+        result = apply_permitassist3_revised_contract(
+            result,
+            job_type,
+            city,
+            state,
+            explicit_vertical=explicit_vertical,
+            live_retriever=_permitassist3_live_retriever,
+        )
     return result
 
 
