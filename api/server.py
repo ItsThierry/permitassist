@@ -54,6 +54,10 @@ from evidence_pack_runtime import (
     evidence_pack_mode_requires_preview_route,
     get_local_evidence_pack,
 )
+try:
+    from permitassist3_revised import apply_permitassist3_revised_contract
+except Exception:  # Keep legacy server importable if the optional PA3 layer is unavailable.
+    apply_permitassist3_revised_contract = None
 from rendered_output_lint import (
     FALLBACK_NAME_RE,
     build_rendering_context,
@@ -2075,6 +2079,88 @@ def _env_flag_enabled(name: str) -> bool:
     return str(os.environ.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _permitassist3_phase23_enabled() -> bool:
+    return _env_flag_enabled("PERMITASSIST3_REVISED_PHASE23_ENABLED")
+
+
+def _permitassist3_first_source(raw: dict) -> dict:
+    sources = raw.get("sources") or raw.get("official_sources") or []
+    if isinstance(sources, dict):
+        sources = [sources]
+    if isinstance(sources, list):
+        for source in sources:
+            if isinstance(source, dict):
+                return source
+            if isinstance(source, str) and source.strip():
+                return {"url": source.strip(), "title": source.strip()}
+    return {}
+
+
+def _permitassist3_live_retriever(job_type: str, ahj: dict, vertical: str) -> list[dict]:
+    city = str((ahj or {}).get("city") or "").strip()
+    state = str((ahj or {}).get("state") or "").strip().upper()
+    if not city or not state:
+        return []
+    try:
+        raw = research_permit(
+            job_type,
+            city,
+            state,
+            "",
+            use_cache=False,
+            job_category="commercial",
+            suppress_cache_write=True,
+        )
+    except Exception as exc:
+        return [{"source": "research_permit", "status": "error", "error": str(exc)[:200]}]
+    if not isinstance(raw, dict):
+        return []
+    permit_name = _phase7h_string(raw.get("permit_name") or raw.get("permit_type"))
+    if not permit_name:
+        for item in raw.get("permits_required") or []:
+            if isinstance(item, dict):
+                permit_name = _phase7h_string(item.get("permit_name") or item.get("permit_type") or item.get("portal_selection"))
+                if permit_name:
+                    break
+    raw_apply_path = raw.get("apply_path")
+    apply_path = raw_apply_path if isinstance(raw_apply_path, dict) else {}
+    portal_path = _phase7h_string(
+        raw.get("official_portal_category_path")
+        or raw.get("portal_selection")
+        or apply_path.get("permit_category")
+        or apply_path.get("permit_type")
+    )
+    source = _permitassist3_first_source(raw)
+    source_url = _phase7h_string(source.get("url") or source.get("source_url") or raw.get("source_url") or raw.get("apply_url"))
+    source_title = _phase7h_string(source.get("title") or source.get("source_title") or raw.get("source_title") or "Official source")
+    snippet = _phase7h_string(
+        source.get("snippet")
+        or source.get("exact_quote_or_snippet")
+        or source.get("quoted_snippet")
+        or source.get("quote")
+        or raw.get("exact_quote_or_snippet")
+        or raw.get("quoted_snippet")
+    )
+    if not source_url or not snippet or not (permit_name or portal_path):
+        return []
+    source_hash = hashlib.sha256("\n".join([source_url, source_title, snippet, permit_name, portal_path]).encode("utf-8")).hexdigest()
+    return [
+        {
+            "exact_permit_name": permit_name,
+            "official_portal_category_path": portal_path,
+            "apply_url": _phase7h_string(raw.get("apply_url") or source_url),
+            "source_url": source_url,
+            "source_title": source_title,
+            "exact_quote_or_snippet": snippet,
+            "retrieved_at_utc": utc_now().replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+            "source_content_hash_sha256": source_hash,
+            "source_snapshot_ref": f"live-retrieval:{source_hash[:16]}",
+            "official_source_classification": _phase7h_string(source.get("official_source_classification") or "ahj_official"),
+            "live_raw_keys": sorted(str(k) for k in raw.keys())[:50],
+        }
+    ]
+
+
 PHASE7D_GOLDEN_BETA_GUARDED_MODE = "phase7b_golden_beta_guarded"
 
 
@@ -2440,6 +2526,18 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             if warning and warning not in merged_warnings:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
+    if (
+        apply_permitassist3_revised_contract is not None
+        and _permitassist3_phase23_enabled()
+    ):
+        result = apply_permitassist3_revised_contract(
+            result,
+            job_type,
+            city,
+            state,
+            explicit_vertical=explicit_vertical,
+            live_retriever=_permitassist3_live_retriever,
+        )
     return result
 
 
