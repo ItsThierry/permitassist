@@ -964,7 +964,7 @@ def _source_backed_permit_name(matches: dict[str, dict[str, Any]]) -> tuple[str,
         if field in {"display_permit_name", "official_permit_name"}:
             return value, field, "exact_official_name_confirmed", "high"
         return value, field, "official_category_confirmed_exact_label_missing", "medium"
-    return "Permit required — local permit name not confirmed", "", "needs_research", "low"
+    return "Manual filing path confirmation in progress", "", "needs_research", "low"
 
 
 def _apply_source_backed_permit_name(result: dict[str, Any], matches: dict[str, dict[str, Any]]) -> None:

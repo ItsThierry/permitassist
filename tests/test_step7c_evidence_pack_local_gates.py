@@ -1226,7 +1226,10 @@ def test_step7c_apply_path_support_label_uses_apply_url_field_confidence(tmp_pat
     assert result["_evidence_pack"]["matched_field_confidence"]["apply_url"] == "medium"
     assert result["apply_path"]["support_level"] == "partial evidence"
     assert result["apply_path"]["support_level"] != "verified path"
-    assert "exact permit category is not official-source verified" in result["apply_path"]["verification_note"].lower()
+    note = result["apply_path"]["verification_note"].lower()
+    assert "manual filing path check is in progress" in note
+    assert "confirm the final filing category" in note
+    assert "exact permit category is not official-source verified" not in note
 
 
 def test_step7c_claim_citations_use_exact_field_evidence_item_not_first_record_source(tmp_path, monkeypatch):
@@ -1516,7 +1519,10 @@ def test_ui_exposure_gate_adds_warnings_and_blocks_unverified_inspection_booking
     assert "queue estimate" in warnings
     assert "exact portal subcategory/filing path" in warnings
     assert "not a complete local specialty-trigger list" in warnings
-    assert "exact permit category is not official-source verified" in result["apply_path"]["verification_note"].lower()
+    note = result["apply_path"]["verification_note"].lower()
+    assert "manual filing path check is in progress" in note
+    assert "confirm the final filing category" in note
+    assert "exact permit category is not official-source verified" not in note
 
 
 def test_white_label_report_surfaces_evidence_pack_limits(tmp_path, monkeypatch):

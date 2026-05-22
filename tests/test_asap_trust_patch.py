@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from api.rendered_output_lint import (  # noqa: E402
     FALLBACK_NAME_RE,
+    classify_source_for_jurisdiction,
     lint_rendered_output,
     sanitize_permit_display_name,
 )
@@ -174,7 +175,7 @@ def test_enforce_rendered_output_contract_hides_lint_codes_from_customer_warning
 def test_sanitize_missing_residential_permit_name_returns_customer_safe_fail_closed_copy():
     display = sanitize_permit_display_name("", scope="residential", job_type="residential bathroom remodel")
 
-    assert display == "Permit required — local permit name not confirmed"
+    assert display == "Manual filing path confirmation in progress"
     for forbidden in FORBIDDEN_CUSTOMER_TEXT:
         assert forbidden not in display
     assert not FALLBACK_NAME_RE.search(display)
@@ -234,15 +235,17 @@ def test_missing_exact_name_fails_closed_without_placeholder_or_debug_language(m
     html = server.render_white_label_report_html({"result": result, "job_type": "residential bathroom remodel", "city": "Dallas", "state": "TX"})
     surface = _customer_surface_blob(result, html)
 
-    statement = "Permit required — exact permit type needs AHJ verification"
+    statement = "Manual filing path confirmation in progress"
     assert result["_permit_display_name"] == statement
     assert result["permit_name"] == statement
     assert result["permit_type"] == statement
     assert result["permit_type_verified"] is False
     assert result["permit_name_status"] == "official_category_confirmed_exact_label_missing"
     assert result["permit_name_confidence"] == "low"
-    assert "exact permit type needs AHJ verification" in surface
-    assert "not official-source verified" in surface
+    assert "Manual filing path confirmation in progress" in surface
+    assert "Manual filing path check is in progress" in surface
+    assert "exact permit type needs AHJ verification" not in surface
+    assert "not official-source verified" not in surface
     assert "Needs AHJ verification" not in surface
     assert "Needs review for:" not in surface
     assert "verify before merging" not in surface
@@ -288,7 +291,7 @@ def test_white_label_report_sanitizes_placeholder_permits_required_items(monkeyp
 
     html = server.render_white_label_report_html({"result": result, "job_type": "residential bathroom remodel", "city": "Dallas", "state": "TX"})
 
-    assert html.count("Permit required — local permit name not confirmed") == 2
+    assert html.count("Manual filing path confirmation in progress") == 2
     assert "Permit -- verify exact AHJ title" not in html
     assert "Permit — verify exact AHJ title" not in html
 
@@ -319,3 +322,40 @@ def test_hidden_trigger_public_payload_strips_internal_verify_before_merging_not
     assert triggers
     assert "verify before merging" not in payload
     assert "[verify" not in payload.lower()
+
+
+def test_harris_county_residential_garage_uses_official_residential_development_path(monkeypatch, tmp_path):
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "validate_url", lambda *_args, **_kwargs: True)
+
+    result = server.finalize_permit_lookup_result(
+        copy.deepcopy(_base_yes_result()),
+        "Build a detached metal garage/workshop with electrical service on a residential lot outside city limits. (100 amp)",
+        "Unincorporated Harris County",
+        "TX",
+        explicit_vertical="residential",
+    )
+
+    public_blob = json.dumps(server.redact_public_output(result), sort_keys=True, default=str)
+    assert result["permit_type"] == server.HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME
+    assert result["permit_name"] == server.HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME
+    assert result["_permit_display_name"] == server.HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME
+    assert result["permit_type_verified"] is True
+    assert result["permit_name_confidence"] == "high"
+    assert result["apply_url"] == server.HARRIS_EPERMITS_URL
+    assert result["apply_path"]["support_level"] == "verified path"
+    assert "garages" in result["confidence_reason"].lower()
+    assert "carports" in result["confidence_reason"].lower()
+    assert server.PHASE7H_AHJ_VERIFY_PERMIT_TYPE not in public_blob
+    assert "local permit name not confirmed" not in public_blob.lower()
+
+
+def test_harris_county_hosts_are_local_ahj_sources():
+    cls = classify_source_for_jurisdiction(
+        "https://oce.harriscountytx.gov/Apply-for-Permit/Permits-A-to-Z/Residential-Construction-On-site-Sewage-System-Septic",
+        "Unincorporated Harris County",
+        "TX",
+    )
+
+    assert cls["source_class"] == "local_ahj"
+    assert cls["allowed_as_local_ahj_support"] is True

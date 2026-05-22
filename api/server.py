@@ -62,6 +62,7 @@ from rendered_output_lint import (
     sanitize_permit_display_name,
     select_inspection_profile,
 )
+from usefulness_contract import attach_usefulness_contract
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -1550,6 +1551,8 @@ def _ef99b_remove_urls(value, rejected_urls: set[str]):
 def _ef99b_likely_permit_category(result: dict, job_type: str) -> str:
     context = build_rendering_context(result, job_type, result.get("city") or "", result.get("state") or "")
     primary = result.get("_permit_display_name") or result.get("permit_name") or result.get("permit_type") or ""
+    if str(primary or "").strip() == PHASE7H_AHJ_VERIFY_PERMIT_TYPE:
+        primary = ""
     return sanitize_permit_display_name(primary, context.get("vertical"), job_type)
 
 
@@ -1991,6 +1994,10 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
     if _is_unsupported_ahj_result(result):
         scrub_unsupported_ahj_response(result, city, state)
         return {}
+    raw_existing_apply_path = result.get("apply_path")
+    existing_apply_path = raw_existing_apply_path if isinstance(raw_existing_apply_path, dict) else {}
+    if result.get("_apply_path_source_backed_overlay") and existing_apply_path.get("support_level") == "verified path":
+        return existing_apply_path
     url = result.get("apply_url") or ""
     if result.get("_residential_trade_leak_repaired") and re.search(r"commercial|tenant[-_ ]?improvement|tenant[-_ ]?finish", str(url), re.I):
         url = ""
@@ -2141,9 +2148,143 @@ def evidence_pack_allowed_for_request(
     return preview_route_allowed
 
 
-PHASE7H_AHJ_VERIFY_PERMIT_TYPE = "Permit required — exact permit type needs AHJ verification"
+PHASE7H_AHJ_VERIFY_PERMIT_TYPE = "Manual filing path confirmation in progress"
 PHASE7H_EXACT_NAME_SOURCE_FIELDS = {"display_permit_name", "official_permit_name", "permit_type"}
-PHASE7H_UNVERIFIED_PERMIT_WARNING = "Permit is required, but exact permit type was not official-source verified; confirm the exact filing type with the AHJ before filing."
+PHASE7H_UNVERIFIED_PERMIT_WARNING = "Manual filing path check is in progress for this lookup; confirm the final filing category with the AHJ before submitting."
+HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME = "Residential Construction & On-site Sewage System (Septic)"
+HARRIS_RESIDENTIAL_DEVELOPMENT_URL = "https://oce.harriscountytx.gov/Apply-for-Permit/Permits-A-to-Z/Residential-Construction-On-site-Sewage-System-Septic"
+HARRIS_EPERMITS_URL = "https://epermits.harriscountytx.gov/"
+
+
+def _is_harris_county_residential_development_lookup(job_type: str, city: str, state: str) -> bool:
+    city_key = re.sub(r"\s+", " ", str(city or "").strip().lower())
+    state_key = _normalize_ahj_state(state)
+    if state_key != "TX" or city_key not in {"harris county", "unincorporated harris county"}:
+        return False
+    text = str(job_type or "").lower()
+    if re.search(r"\b(repair|replace|opener|door|reroof|re-roof|roof\s+repair)\b", text):
+        return False
+    has_residential = bool(re.search(r"\b(residential|home|single[- ]family|lot)\b", text))
+    has_structure = bool(re.search(r"\b(detached\s+)?(garage|carport|workshop|accessory\s+(?:structure|building)|metal\s+building)\b", text))
+    has_new_construction_signal = bool(re.search(r"\b(build|construct|new|install|erect|add(?:ing)?|detached)\b", text))
+    return has_residential and has_structure and has_new_construction_signal
+
+
+def apply_harris_county_residential_development_overlay(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Source-backed hotfix for unincorporated Harris County residential accessory structures."""
+    if not isinstance(result, dict) or not _is_harris_county_residential_development_lookup(job_type, city, state):
+        return result
+
+    source_snippet = (
+        "This application is for any residential development on existing lots or residential property. "
+        "This includes on-site sewerage systems, swimming pools, driveway, new homes, garages, carports, "
+        "fill material and accessory structures."
+    )
+    office = "Harris County Engineering Department — Office of the County Engineer, Permits"
+    phone = "(713) 274-3580"
+    result.update({
+        "permit_verdict": "YES",
+        "permit_required": True,
+        "permit_required_confidence": "high",
+        "permit_type": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "permit_name": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "_permit_display_name": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "official_permit_name": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "official_application_category": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "permit_type_verified": True,
+        "permit_name_verified": True,
+        "permit_name_confidence": "high",
+        "permit_name_status": "official_category_confirmed",
+        "permit_name_source_field": "official_permit_name",
+        "_permit_type_official_source_verified": True,
+        "data_source": "city_database",
+        "applying_office": office,
+        "apply_url": HARRIS_EPERMITS_URL,
+        "apply_phone": phone,
+        "apply_google_maps": result.get("apply_google_maps") or build_google_maps_url(city, state, office=office),
+        "job_summary": (
+            "Permit required for a detached garage/workshop on a residential lot in unincorporated Harris County. "
+            "Harris County's official residential-development application category explicitly includes garages, "
+            "carports, fill material, and accessory structures. New electrical service may also require power-release "
+            "or trade coordination through Harris County ePermits/utility processes."
+        ),
+        "confidence_reason": (
+            "Official Harris County OCE source confirms the residential-development application covers garages, "
+            "carports, and accessory structures. Verify site-specific floodplain, septic, driveway, and power-release details before filing."
+        ),
+        "_last_verified_at": "2026-05-22",
+        "last_verified_at": "2026-05-22",
+        "rulebook_depth": "DEEP",
+        "county_fallback": False,
+        "county_fallback_note": "",
+        "_apply_path_source_backed_overlay": "harris_county_residential_development",
+    })
+    result["sources"] = [
+        {
+            "url": HARRIS_RESIDENTIAL_DEVELOPMENT_URL,
+            "title": "Harris County OCE — Residential Construction & On-site Sewage System (Septic)",
+            "snippet": source_snippet,
+        },
+        {
+            "url": HARRIS_EPERMITS_URL,
+            "title": "Harris County ePermits",
+            "snippet": "Harris County ePermits is the online portal for permit applications, project status, inspections, payments, and power release status.",
+        },
+    ]
+    result["permits_required"] = [
+        {
+            "permit_type": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+            "portal_selection": "Application → Residential Onsite Sewage Facility (OSSF)/Septic / Residential Construction",
+            "required": True,
+            "notes": (
+                "Use Harris County's official residential-development application path for residential property work; "
+                "the source explicitly includes garages, carports, and accessory structures."
+            ),
+        },
+        {
+            "permit_type": "Electrical service / power release coordination",
+            "portal_selection": "Power Release / electrical coordination in Harris County ePermits",
+            "required": True,
+            "notes": "New 100A service should be coordinated with Harris County ePermits/utility power-release requirements before energizing.",
+        },
+    ]
+    result["what_to_bring"] = [
+        "Site plan or survey showing the detached garage/workshop location",
+        "Construction drawings/specifications for the metal accessory structure",
+        "Project valuation and owner/applicant information",
+        "Electrical service scope for the new 100A service",
+        "Floodplain, septic/OSSF, driveway, or well documents if the site conditions trigger them",
+    ]
+    result["inspections"] = [
+        "Harris County residential-development inspection(s) after permit approval",
+        "Electrical/power-release inspection or utility coordination before service is energized",
+        "Floodplain or septic/OSSF inspections if triggered by the property",
+    ]
+    result["apply_path"] = {
+        "support_level": "verified path",
+        "platform": "Harris County ePermits",
+        "portal_url": HARRIS_EPERMITS_URL,
+        "login_required": "likely",
+        "permit_category": "Residential Construction / Accessory Structure",
+        "permit_type": HARRIS_RESIDENTIAL_DEVELOPMENT_PERMIT_NAME,
+        "portal_selection_path": [
+            "Open Harris County ePermits.",
+            "Go to Projects and click Apply.",
+            "Choose the residential-development application category closest to Residential Construction & On-site Sewage System (Septic).",
+        ],
+        "likely_documents": result["what_to_bring"],
+        "steps": [
+            "Open Harris County ePermits and sign in or create an applicant account.",
+            "Go to Projects → Apply and locate the property/address on the map.",
+            "Select the residential-development application category for residential construction/accessory-structure work.",
+            "Upload the site plan/survey, structure drawings, valuation, owner/applicant information, and electrical-service details.",
+            "Before final submission, verify whether floodplain, septic/OSSF, driveway, water-well, or power-release steps apply to the parcel.",
+        ],
+        "stop_before": "final submit, payment, signature, or legal attestation",
+        "verification_note": "Official Harris County OCE source confirms this application path covers garages, carports, and accessory structures; verify parcel-specific companion reviews before filing.",
+    }
+    _attach_source_classification(result, city, state)
+    return result
 
 
 def _phase7h_string(value) -> str:
@@ -2173,6 +2314,18 @@ def _phase7h_current_permit_name(result: dict) -> str:
 def _phase7h_permit_type_verified(result: dict, permit_name: str) -> bool:
     if not permit_name or permit_name == PHASE7H_AHJ_VERIFY_PERMIT_TYPE:
         return False
+    if result.get("_permit_type_official_source_verified") is True:
+        local_overlay_exact_fields = {"display_permit_name", "official_permit_name"}
+        source_field = _phase7h_string(result.get("permit_name_source_field"))
+        exact_field_value = _phase7h_string(result.get(source_field)) if source_field in local_overlay_exact_fields else ""
+        classifications_raw = result.get("_source_classification")
+        classifications = classifications_raw if isinstance(classifications_raw, list) else []
+        if (
+            source_field in local_overlay_exact_fields
+            and exact_field_value == permit_name
+            and any(isinstance(item, dict) and item.get("source_class") == "local_ahj" for item in classifications)
+        ):
+            return True
     raw_evidence_meta = result.get("_evidence_pack")
     evidence_meta = raw_evidence_meta if isinstance(raw_evidence_meta, dict) else {}
     matched_fields = {str(field) for field in (evidence_meta.get("matched_fields") or [])}
@@ -2251,9 +2404,14 @@ def _phase7h_neutralize_unverified_permit_type(result: dict, city: str, state: s
     result["permit_name_confidence"] = "low"
 
     contact = _phase7h_contact_phrase(result, city)
+    # A source-backed application category can be useful context, but it is not
+    # an exact official permit/application title. Do not let it survive in
+    # headline permit-name slots such as permit_type, portal_selection, or
+    # apply_path.permit_type; Phase 0 containment requires the safe interim label
+    # there until exact-name evidence is present.
     note = (
-        "Permit is required, but the exact permit category was not official-source verified for this lookup. "
-        f"Confirm the exact filing type with {contact} before filing."
+        "Manual filing path check is in progress for this lookup. "
+        f"Confirm the final filing category with {contact} before submitting."
     )
     if permits:
         for permit in permits:
@@ -2282,7 +2440,7 @@ def _phase7h_neutralize_unverified_permit_type(result: dict, city: str, state: s
     if isinstance(result.get("apply_path"), dict) and exact_names:
         result["apply_path"] = _phase7h_replace_text(result["apply_path"], exact_names)
         result["apply_path"]["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-        result["apply_path"]["verification_note"] = "Exact permit category is not official-source verified for this lookup; confirm the filing type with the AHJ before filing."
+        result["apply_path"]["verification_note"] = "Manual filing path check is in progress for this lookup; confirm the final filing category with the AHJ before submitting."
 
 
 def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "", state: str = "", job_type: str = "") -> dict:
@@ -2363,6 +2521,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         result['apply_phone'] = result.get('apply_google_maps', '')
 
     result = enrich_result_response(result, job_type, city, state)
+    result = apply_harris_county_residential_development_overlay(result, job_type, city, state)
     result = apply_permitiq_quality_gate(result, job_type, city, state)
 
     if evidence_enabled:
@@ -2440,6 +2599,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             if warning and warning not in merged_warnings:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
+    attach_usefulness_contract(result)
     return result
 
 

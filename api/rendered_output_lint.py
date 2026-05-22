@@ -33,7 +33,7 @@ CUSTOMER_VISIBLE_DEBUG_RE = re.compile(
     r"\b(?:needs_review_reasons|quality_warnings|failed_closed_fields|source_golden_field_status)\b",
     re.I,
 )
-SAFE_AHJ_VERIFY_TITLE = "Permit required — exact permit type needs AHJ verification"
+SAFE_AHJ_VERIFY_TITLE = "Manual filing path confirmation in progress"
 
 
 LOCAL_HOST_BY_CITY = {
@@ -43,6 +43,8 @@ LOCAL_HOST_BY_CITY = {
     "new york city": ("nyc.gov",),
     "los angeles": ("lacity.org", "ladbs.org", "ladbsservices2.lacity.org"),
     "houston": ("houstontx.gov", "houstonpermittingcenter.org"),
+    "harris county": ("harriscountytx.gov", "oce.harriscountytx.gov", "epermits.harriscountytx.gov", "hctx.net", "eng.hctx.net"),
+    "unincorporated harris county": ("harriscountytx.gov", "oce.harriscountytx.gov", "epermits.harriscountytx.gov", "hctx.net", "eng.hctx.net"),
     "phoenix": ("phoenix.gov",),
     "austin": ("austintexas.gov",),
     "seattle": ("seattle.gov",),
@@ -91,6 +93,11 @@ WRONG_LOCAL_HOSTS = {
     "lacity.org": "Los Angeles",
     "ladbs.org": "Los Angeles",
     "houstontx.gov": "Houston",
+    "harriscountytx.gov": "Harris County",
+    "oce.harriscountytx.gov": "Harris County",
+    "epermits.harriscountytx.gov": "Harris County",
+    "hctx.net": "Harris County",
+    "eng.hctx.net": "Harris County",
     "phoenix.gov": "Phoenix",
     "austintexas.gov": "Austin",
     "seattle.gov": "Seattle",
@@ -294,7 +301,7 @@ def sanitize_permit_display_name(name: str | None, scope: str | None = None, job
             return "Commercial Office Tenant Improvement Permit"
         if vertical in {"commercial_unknown", "commercial_trade_only"}:
             return "Commercial Permit / Trade Permit"
-        return "Permit required — local permit name not confirmed"
+        return "Manual filing path confirmation in progress"
     return re.sub(r"\s+", " ", raw)
 
 
