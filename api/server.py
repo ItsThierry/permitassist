@@ -58,6 +58,26 @@ try:
     from permitassist3_revised import apply_permitassist3_revised_contract
 except Exception:  # Keep legacy server importable if the optional PA3 layer is unavailable.
     apply_permitassist3_revised_contract = None
+try:
+    from customer_view import (
+        build_customer_view,
+        CustomerOutputScanner,
+        CustomerView,
+        PendingView,
+        PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE,
+        NO_PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE,
+        OUT_OF_SCOPE,
+        SCHEMA_VERSION as CUSTOMER_VIEW_SCHEMA_VERSION,
+    )
+except Exception:  # Keep legacy server importable if the optional CustomerView layer is unavailable.
+    build_customer_view = None
+    CustomerOutputScanner = None
+    CustomerView = None
+    PendingView = None
+    CUSTOMER_VIEW_SCHEMA_VERSION = "permitassist.customer_view.v1"
+    PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE = "PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE"
+    NO_PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE = "NO_PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE"
+    OUT_OF_SCOPE = "OUT_OF_SCOPE"
 from rendered_output_lint import (
     FALLBACK_NAME_RE,
     build_rendering_context,
@@ -338,6 +358,28 @@ def parse_timestamp(value: str) -> datetime:
 # Telegram notification config (optional — set env vars to enable)
 TG_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TG_CHAT_ID   = os.environ.get("TELEGRAM_NOTIFY_CHAT_ID", "")
+
+
+def notify_telegram(message: str) -> bool:
+    """Best-effort Telegram notification; no-op when not configured."""
+    if not TG_BOT_TOKEN or not TG_CHAT_ID:
+        return False
+    threading.Thread(target=_notify_telegram_sync, args=(str(message or ""),), daemon=True).start()
+    return True
+
+
+def _notify_telegram_sync(message: str) -> bool:
+    """Synchronous Telegram send helper for the async public wrapper."""
+    try:
+        resp = requests.post(
+            f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage",
+            json={"chat_id": TG_CHAT_ID, "text": str(message or "")[:3900], "parse_mode": "HTML"},
+            timeout=5,
+        )
+        return 200 <= resp.status_code < 300
+    except Exception:
+        return False
+
 
 # ── Auth & plan constants ─────────────────────────────────────────────────────
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
@@ -2101,6 +2143,543 @@ def _permitassist3_phase23_enabled() -> bool:
     return _env_flag_enabled("PERMITASSIST3_REVISED_PHASE23_ENABLED")
 
 
+_PA3_CUSTOMER_VIEW_MEP_VERTICALS = frozenset(
+    {
+        "commercial_mechanical",
+        "commercial_electrical",
+        "commercial_plumbing",
+        "commercial_mep_ti",
+    }
+)
+
+
+def _pa3_customer_view_vertical_flag_values() -> frozenset[str]:
+    raw = str(os.environ.get("PA3_CUSTOMER_VIEW_VERTICALS", "")).strip()
+    # Production-safe default is empty. Stage 3 is active only when this
+    # explicit vertical allowlist is set.
+    if not raw:
+        return frozenset()
+
+    enabled: set[str] = set()
+    for item in re.split(r"[,\s]+", raw):
+        token = item.strip().lower().replace("-", "_")
+        if not token:
+            continue
+        if token in {"*", "all"}:
+            return frozenset({"*"})
+        if token in {"restaurant", "restaurants", "restaurant_ti"}:
+            enabled.add("restaurant_ti")
+            continue
+        if token in {"medical", "clinic", "medical_clinic", "medical_clinic_ti", "healthcare", "dental"}:
+            enabled.add("medical_clinic_ti")
+            continue
+        if token in {"office", "office_ti"}:
+            enabled.add("office_ti")
+            continue
+        if token in {"solar", "pv", "solar_pv", "solar_pv_battery"}:
+            enabled.add("solar_pv_battery")
+            continue
+        if token in {"mep", "trade", "trades", "commercial_mep"}:
+            enabled.update(_PA3_CUSTOMER_VIEW_MEP_VERTICALS)
+            continue
+        canonical = canonical_request_vertical(token)
+        if canonical:
+            enabled.add(canonical)
+    return frozenset(enabled)
+
+
+def _pa3_customer_view_vertical_enabled(vertical: str | None) -> bool:
+    enabled = _pa3_customer_view_vertical_flag_values()
+    if not enabled:
+        return False
+    if "*" in enabled:
+        return True
+    canonical = canonical_request_vertical(vertical) or str(vertical or "").strip().lower().replace("-", "_")
+    return canonical in enabled
+
+
+def maybe_build_pa3_customer_view_api_response(
+    result,
+    job_type: str,
+    city: str,
+    state: str,
+    *,
+    explicit_vertical: str | None = None,
+):
+    """Return (payload, applied) for the Stage 3 CustomerView API flag.
+
+    This is intentionally limited to the canonical lookup response path. When
+    the request vertical is enabled, the raw result is replaced by the pure
+    customer-safe CustomerView projection and should be sent without the legacy
+    deny-list redactor. PendingView is persisted only as internal retry/admin
+    state and is never returned to the customer API.
+    """
+    if build_customer_view is None or not _pa3_customer_view_vertical_flag_values():
+        return result, False
+    payload = project_customer_visible_view(
+        result,
+        job_type=job_type,
+        city=city,
+        state=state,
+        explicit_vertical=explicit_vertical,
+        persist_pending=True,
+    )
+    if not _pa3_customer_view_vertical_enabled(payload.get("vertical")):
+        return result, False
+    return payload, True
+
+
+def build_pa3_customer_view_api_response(
+    result,
+    job_type: str,
+    city: str,
+    state: str,
+    *,
+    explicit_vertical: str | None = None,
+) -> dict:
+    payload, applied = maybe_build_pa3_customer_view_api_response(
+        result,
+        job_type,
+        city,
+        state,
+        explicit_vertical=explicit_vertical,
+    )
+    if applied and isinstance(payload, dict):
+        return payload
+    return payload if isinstance(payload, dict) else {}
+
+
+
+CUSTOMER_VIEW_PUBLIC_FIELDS_FALLBACK = frozenset({
+    "schema_version", "view_type", "final_answer_state", "customer_final",
+    "permit_required", "permit_name", "official_portal_category_path", "filing_path",
+    "job_type", "city", "state", "vertical", "ahj_name", "ahj_contact", "apply_url",
+    "submission_options", "approval_timeline", "official_source_provenance", "next_steps", "companion_permits_reviews",
+})
+PENDING_VIEW_PUBLIC_FIELDS_FALLBACK = frozenset({
+    "schema_version", "view_type", "final_answer_state", "customer_final",
+    "permit_required", "job_type", "city", "state", "vertical", "ahj_name",
+    "lookup_id", "pending_reason", "missing_fields", "next_steps",
+})
+
+
+def _customer_view_fields(view_type: str) -> frozenset[str]:
+    if view_type == "CustomerView" and CustomerView is not None:
+        return CustomerView.PUBLIC_FIELDS
+    if view_type == "PendingView" and PendingView is not None:
+        return PendingView.PUBLIC_FIELDS
+    return CUSTOMER_VIEW_PUBLIC_FIELDS_FALLBACK if view_type == "CustomerView" else PENDING_VIEW_PUBLIC_FIELDS_FALLBACK
+
+
+def is_customer_projection_payload(value) -> bool:
+    return isinstance(value, dict) and value.get("schema_version") == CUSTOMER_VIEW_SCHEMA_VERSION and value.get("view_type") in {"CustomerView", "PendingView"}
+
+
+def _internal_pending_view(job_type: str, city: str, state: str, *, reason: str = "customer_view_projection_unavailable", missing_fields: list[str] | None = None, explicit_vertical: str | None = None, permit_required: bool | None = None) -> dict:
+    vertical = canonical_request_vertical(explicit_vertical or job_type) or str(explicit_vertical or "unknown").strip().lower().replace(" ", "_") or "unknown"
+    seed = "|".join([str(job_type or ""), str(city or ""), str(state or ""), vertical, reason])
+    lookup_id = f"pa3-cv-{uuid.uuid5(uuid.NAMESPACE_URL, seed).hex[:16]}"
+    return {
+        "schema_version": CUSTOMER_VIEW_SCHEMA_VERSION,
+        "view_type": "PendingView",
+        "final_answer_state": "PENDING_MANUAL_COMPLETION",
+        "customer_final": False,
+        "permit_required": permit_required,
+        "job_type": str(job_type or "").strip(),
+        "city": str(city or "").strip(),
+        "state": str(state or "").strip().upper(),
+        "vertical": vertical,
+        "ahj_name": f"{str(city or '').strip()} {str(state or '').strip().upper()}".strip(),
+        "lookup_id": lookup_id,
+        "pending_reason": reason,
+        "missing_fields": missing_fields or ["source_backed_exact_permit_name_or_official_portal_category_path"],
+        "next_steps": ["Internal source-backed filing-path completion queued."],
+    }
+
+
+def _fallback_customer_view(job_type: str, city: str, state: str, *, explicit_vertical: str | None = None, permit_required: bool | None = True, unsupported: bool = False) -> dict:
+    vertical = canonical_request_vertical(explicit_vertical or job_type) or str(explicit_vertical or "unknown").strip().lower().replace(" ", "_") or "unknown"
+    state_code = str(state or "").strip().upper()
+    if unsupported:
+        final_state = OUT_OF_SCOPE
+        filing_path = "Invalid/Unsupported Jurisdiction — PermitAssist cannot issue a permit answer for this location."
+        next_steps = ["Check the city/state spelling or choose a supported jurisdiction before relying on this lookup."]
+        required_value = None
+    elif permit_required is False:
+        final_state = NO_PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE
+        filing_path = "No Permit Required — source-backed guidance; keep the cited source with the job record."
+        next_steps = ["Keep the cited official source with the project file before starting work."]
+        required_value = False
+    else:
+        final_state = PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE
+        filing_path = "Permit Required — source-backed guidance; exact application path needs permitting-office confirmation before filing."
+        next_steps = ["Use the official source links below and confirm the exact filing category with the permitting office before filing."]
+        required_value = True
+    return {
+        "schema_version": CUSTOMER_VIEW_SCHEMA_VERSION,
+        "view_type": "CustomerView",
+        "final_answer_state": final_state,
+        "customer_final": True,
+        "permit_required": required_value,
+        "permit_name": None,
+        "official_portal_category_path": None,
+        "filing_path": filing_path,
+        "job_type": str(job_type or "").strip(),
+        "city": str(city or "").strip(),
+        "state": state_code,
+        "vertical": vertical,
+        "ahj_name": f"{str(city or '').strip()} {state_code}".strip(),
+        "ahj_contact": {
+            "department": f"{str(city or '').strip()} {state_code}".strip(),
+            "phone": None,
+            "address": None,
+            "portal_url": None,
+            "verification_note": "Confirm final intake details with the permitting office before filing.",
+        },
+        "apply_url": None,
+        "submission_options": [{
+            "type": "paper_in_person_email_fallback",
+            "label": "Paper / in-person / email fallback",
+            "url": "",
+            "instructions": "Use the AHJ contact block as the fallback when the exact portal path is unclear.",
+        }],
+        "approval_timeline": None,
+        "official_source_provenance": [],
+        "next_steps": next_steps,
+        "companion_permits_reviews": [],
+    }
+
+
+def _customer_view_text(value) -> str:
+    return re.sub(r"\s+", " ", str(value or "").strip())
+
+
+_CUSTOMER_VIEW_UNSUPPORTED_STATUSES = {"unsupported", "invalid", "invalid_city", "invalid_state"}
+_CUSTOMER_VIEW_UNSUPPORTED_ERRORS = {"unsupported_ahj", "invalid_ahj"}
+
+
+def _customer_view_unsupported_payload(result) -> bool:
+    if not isinstance(result, dict):
+        return False
+    coverage_raw = result.get("coverage_truth")
+    coverage = coverage_raw if isinstance(coverage_raw, dict) else {}
+    status = _customer_view_text(result.get("ahj_status") or result.get("status")).lower()
+    coverage_status = _customer_view_text(coverage.get("status")).lower()
+    error = _customer_view_text(result.get("error")).lower()
+    return bool(
+        result.get("unsupported")
+        or result.get("final_answer_state") == OUT_OF_SCOPE
+        or status in _CUSTOMER_VIEW_UNSUPPORTED_STATUSES
+        or coverage_status == "ahj_not_supported"
+        or error in _CUSTOMER_VIEW_UNSUPPORTED_ERRORS
+    )
+
+
+def _customer_view_has_exact_source_backed_path(result: dict) -> bool:
+    if not isinstance(result, dict):
+        return False
+    has_path = any(
+        _customer_view_text(result.get(key))
+        for key in (
+            "source_backed_exact_permit_name",
+            "exact_permit_name",
+            "official_permit_name",
+            "source_backed_official_portal_category_path",
+            "official_portal_category_path",
+            "official_application_category",
+        )
+    )
+    if not has_path:
+        packet_raw = result.get("permitassist3_revised")
+        packet = packet_raw if isinstance(packet_raw, dict) else {}
+        has_path = any(
+            _customer_view_text(packet.get(key))
+            for key in (
+                "source_backed_exact_permit_name",
+                "source_backed_official_portal_category_path",
+            )
+        )
+    sources = result.get("official_source_provenance") or result.get("claim_citations") or result.get("sources") or []
+    if isinstance(sources, dict):
+        sources = [sources]
+    return bool(has_path and any(isinstance(source, dict) and _customer_view_text(source.get("source_url") or source.get("url")) for source in sources))
+
+
+def _default_cold_ahj_resolver(*, result, job_type: str, city: str, state: str, vertical: str) -> dict | None:
+    """Bounded, no-credit CustomerView cold-AHJ resolver.
+
+    Live Brave/Serper/Firecrawl/Gemini retrieval is deliberately not invoked from
+    the public projection path unless a caller supplies a resolver. This default
+    only promotes existing local/corpus/evidence output or source-backed AHJ
+    contact pages already present in the engine result, so provider-unavailable
+    paths remain safe and value-silent.
+    """
+    if not isinstance(result, dict):
+        return None
+    embedded = result.get("cold_ahj_resolution") or result.get("_cold_ahj_resolution")
+    if isinstance(embedded, dict):
+        return embedded
+    sources = result.get("official_source_provenance") or result.get("claim_citations") or result.get("sources") or []
+    if isinstance(sources, dict):
+        sources = [sources]
+    source = next((item for item in sources if isinstance(item, dict) and _customer_view_text(item.get("source_url") or item.get("url")) and _customer_view_text(item.get("exact_quote_or_snippet") or item.get("quoted_snippet") or item.get("snippet") or item.get("quote"))), None)
+    apply_url = _customer_view_text(result.get("apply_url"))
+    if source or apply_url:
+        return {
+            "resolution_status": "partial_source_backed_contact_fallback",
+            "permit_name": _customer_view_text(result.get("permit_name") or result.get("permit_type")),
+            "apply_url": apply_url or _customer_view_text((source or {}).get("source_url") or (source or {}).get("url")),
+            "official_source_provenance": sources if sources else [
+                {
+                    "source_url": apply_url,
+                    "source_title": _customer_view_text(result.get("applying_office")) or f"{city} {state} permitting office",
+                    "exact_quote_or_snippet": "Official permitting office page for application-path verification.",
+                    "retrieved_at_utc": utc_now().replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+                }
+            ],
+        }
+    return None
+
+
+def _normalize_cold_ahj_resolution_for_customer(result: dict, resolution: dict, *, job_type: str, city: str, state: str, vertical: str) -> dict | None:
+    if not isinstance(resolution, dict):
+        return None
+    status = _customer_view_text(resolution.get("resolution_status") or resolution.get("status")).lower()
+    if status in {"", "provider_unavailable", "unavailable", "not_configured", "no_result", "error"}:
+        return None
+    sources = resolution.get("official_source_provenance") or resolution.get("claim_citations") or resolution.get("sources") or []
+    if isinstance(sources, dict):
+        sources = [sources]
+    exact_name = _customer_view_text(
+        resolution.get("source_backed_exact_permit_name")
+        or resolution.get("exact_permit_name")
+        or resolution.get("official_permit_name")
+    )
+    portal_path = _customer_view_text(
+        resolution.get("source_backed_official_portal_category_path")
+        or resolution.get("official_portal_category_path")
+        or resolution.get("official_application_category")
+    )
+    permit_name = _customer_view_text(resolution.get("permit_name") or resolution.get("permit_type") or exact_name)
+    safe: dict = {
+        "permit_required": True if result.get("permit_required") is not False else False,
+        "job_type": job_type,
+        "city": city,
+        "state": state,
+        "permit_name": permit_name or _customer_view_text(result.get("permit_name") or result.get("permit_type")),
+        "permit_type": permit_name or _customer_view_text(result.get("permit_type") or result.get("permit_name")),
+        "apply_url": _customer_view_text(resolution.get("apply_url") or result.get("apply_url")),
+        "official_source_provenance": sources,
+    }
+    if exact_name:
+        safe["source_backed_exact_permit_name"] = exact_name
+        safe["permit_name_status"] = "exact_official_name_confirmed"
+        safe["permit_type_verified"] = True
+    if portal_path:
+        safe["source_backed_official_portal_category_path"] = portal_path
+        safe["official_portal_category_path"] = portal_path
+        safe["permit_name_status"] = "source_backed_official_path_confirmed"
+        safe["permit_type_verified"] = True
+    if not (safe.get("permit_name") or safe.get("permit_type") or exact_name or portal_path):
+        safe["permit_name"] = "Commercial Tenant Improvement / Alteration Building Permit" if vertical in {"restaurant_ti", "medical_clinic_ti", "office_ti"} else None
+    return safe
+
+
+def _apply_cold_ahj_resolver_for_customer(result, job_type: str, city: str, state: str, *, explicit_vertical: str | None, cold_resolver=None):
+    if not isinstance(result, dict) or _customer_view_unsupported_payload(result):
+        return result
+    if result.get("permit_required") is False or _customer_view_has_exact_source_backed_path(result):
+        return result
+    vertical = canonical_request_vertical(explicit_vertical or job_type) or _customer_view_text(explicit_vertical or "unknown").lower().replace(" ", "_") or "unknown"
+    resolver = cold_resolver or _default_cold_ahj_resolver
+    try:
+        resolution = resolver(result=result, job_type=job_type, city=city, state=state, vertical=vertical)
+    except Exception as exc:
+        print(f"[cold-ahj-resolver] resolver failed: {type(exc).__name__}")
+        return result
+    if not isinstance(resolution, dict):
+        return result
+    safe = _normalize_cold_ahj_resolution_for_customer(result, resolution, job_type=job_type, city=city, state=state, vertical=vertical)
+    return safe if safe else result
+
+
+def project_customer_visible_view(result, job_type: str = "", city: str = "", state: str = "", *, explicit_vertical: str | None = None, persist_pending: bool = False, cold_resolver=None) -> dict:
+    # Project any lookup/export payload to customer-safe CustomerView fields only.
+    result = _apply_cold_ahj_resolver_for_customer(
+        result,
+        job_type,
+        city,
+        state,
+        explicit_vertical=explicit_vertical,
+        cold_resolver=cold_resolver,
+    )
+    raw_required = result.get("permit_required") if isinstance(result, dict) else None
+    permit_required = raw_required if isinstance(raw_required, bool) else True
+    if is_customer_projection_payload(result) and result.get("view_type") == "CustomerView":
+        payload = {field: result.get(field) for field in _customer_view_fields("CustomerView")}
+    elif is_customer_projection_payload(result) and result.get("view_type") == "PendingView":
+        payload = _fallback_customer_view(
+            job_type or result.get("job_type", ""),
+            city or result.get("city", ""),
+            state or result.get("state", ""),
+            explicit_vertical=explicit_vertical or result.get("vertical"),
+            permit_required=result.get("permit_required") if isinstance(result.get("permit_required"), bool) else True,
+        )
+    elif build_customer_view is not None:
+        try:
+            view = build_customer_view(result if isinstance(result, dict) else {}, job_type=job_type, city=city, state=state, explicit_vertical=explicit_vertical)
+            payload = view.to_dict()
+            if payload.get("view_type") == "PendingView":
+                payload = _fallback_customer_view(job_type, city, state, explicit_vertical=explicit_vertical, permit_required=permit_required)
+        except Exception as exc:
+            print(f"[customer-view] projection failed: {type(exc).__name__}")
+            payload = _fallback_customer_view(job_type, city, state, explicit_vertical=explicit_vertical, permit_required=permit_required)
+    else:
+        payload = _fallback_customer_view(job_type, city, state, explicit_vertical=explicit_vertical, permit_required=permit_required)
+    if CustomerOutputScanner is not None:
+        findings = CustomerOutputScanner().scan(payload).get("findings") or []
+        if findings:
+            payload = _fallback_customer_view(job_type or payload.get("job_type", ""), city or payload.get("city", ""), state or payload.get("state", ""), explicit_vertical=explicit_vertical or payload.get("vertical"), permit_required=payload.get("permit_required") if isinstance(payload.get("permit_required"), bool) else True)
+    if persist_pending and isinstance(payload, dict) and payload.get("final_answer_state") in {PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE, NO_PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE}:
+        try:
+            persist_pending_lookup(_internal_pending_view(job_type or payload.get("job_type", ""), city or payload.get("city", ""), state or payload.get("state", ""), reason="customer_visible_guidance_exact_path_unconfirmed", explicit_vertical=explicit_vertical or payload.get("vertical"), permit_required=payload.get("permit_required") if isinstance(payload.get("permit_required"), bool) else None))
+        except Exception as exc:
+            print(f"[pending-lookups] persist failed: {type(exc).__name__}")
+    return payload
+
+
+def customer_view_source_links(view: dict) -> list[dict]:
+    sources = []
+    for source in view.get("official_source_provenance") or []:
+        if not isinstance(source, dict):
+            continue
+        url = source.get("source_url") or source.get("url") or ""
+        if url:
+            sources.append({"title": str(source.get("source_title") or source.get("title") or "Official source"), "url": str(url), "snippet": str(source.get("exact_quote_or_snippet") or source.get("quoted_snippet") or "")})
+    return sources
+
+
+def customer_report_title(view: dict) -> str:
+    return str(view.get("permit_name") or view.get("official_portal_category_path") or view.get("filing_path") or "Permit Required")
+
+
+def customer_report_status_label(view: dict) -> str:
+    if view.get("final_answer_state") == OUT_OF_SCOPE or view.get("permit_required") is None:
+        return "Invalid/Unsupported Jurisdiction"
+    return "No Permit Required" if view.get("permit_required") is False else "Permit Required"
+
+
+def customer_report_html(job_type: str, city: str, state: str, result: dict, *, contractor_name: str = "PermitAssist", client_name: str = "Client / Property") -> str:
+    view = project_customer_visible_view(result, job_type, city, state)
+    title = html.escape(customer_report_title(view))
+    status = html.escape(customer_report_status_label(view))
+    location = html.escape(", ".join(x for x in [view.get("city") or city, view.get("state") or state] if x))
+    job = html.escape(str(view.get("job_type") or job_type or "Permit lookup"))
+    contractor = html.escape(str(contractor_name or "PermitAssist"))
+    client = html.escape(str(client_name or "Client / Property"))
+    next_steps = "".join(f"<li>{html.escape(str(step))}</li>" for step in (view.get("next_steps") or [])) or "<li>Confirm the filing category with the permitting office before filing.</li>"
+    sources = customer_view_source_links(view)
+    source_items_parts = []
+    for src in sources:
+        safe_url = _safe_external_url(src.get("url") or "")
+        if not safe_url:
+            continue
+        snippet = f"<div class=\"muted\">{html.escape(src['snippet'])}</div>" if src.get("snippet") else ""
+        source_items_parts.append(f"<li><a href=\"{html.escape(safe_url, quote=True)}\" rel=\"noopener\">{html.escape(src['title'])}</a>{snippet}</li>")
+    source_items = "".join(source_items_parts) or "<li>No safe source URL attached; official-source retrieval is still in progress.</li>"
+    timeline = view.get("approval_timeline") if isinstance(view.get("approval_timeline"), dict) else {}
+    timeline_text = timeline.get("simple") or timeline.get("complex") or ""
+    companion_items = "".join(f"<li>{html.escape(str((item or {}).get('name') or (item or {}).get('review') or (item or {}).get('label') or item))}</li>" for item in (view.get("companion_permits_reviews") or []) if item)
+    if view.get("view_type") == "CustomerView":
+        detail_rows = [("Final answer", status), ("Required", "Yes" if view.get("permit_required") is True else "No"), ("Permit / application / form", html.escape(str(view.get("permit_name") or "")) or "-"), ("Official portal category/path", html.escape(str(view.get("official_portal_category_path") or "")) or "-"), ("Filing path", html.escape(str(view.get("filing_path") or "")))]
+        safe_apply_url = _safe_external_url(str(view.get("apply_url") or ""))
+        if safe_apply_url:
+            detail_rows.append(("Official portal", f"<a href=\"{html.escape(safe_apply_url, quote=True)}\" rel=\"noopener\">{html.escape(safe_apply_url)}</a>"))
+        if timeline_text:
+            detail_rows.append(("Timeline", html.escape(str(timeline_text))))
+        contact_raw = view.get("ahj_contact")
+        contact = contact_raw if isinstance(contact_raw, dict) else {}
+        contact_rows = [
+            ("Department / AHJ", html.escape(str(contact.get("department") or view.get("ahj_name") or "Permitting office"))),
+            ("Phone", html.escape(str(contact.get("phone") or "Confirm with AHJ"))),
+            ("Address", html.escape(str(contact.get("address") or "Confirm with AHJ"))),
+            ("Verification", html.escape(str(contact.get("verification_note") or "Confirm final intake details with the permitting office before filing."))),
+        ]
+        contact_portal = _safe_external_url(str(contact.get("portal_url") or view.get("apply_url") or ""))
+        if contact_portal:
+            contact_rows.append(("Portal / source", f"<a href=\"{html.escape(contact_portal, quote=True)}\" rel=\"noopener\">{html.escape(contact_portal)}</a>"))
+        ahj_contact_rows = "".join(f"<div class=\"row\"><strong>{html.escape(label)}</strong><span>{value}</span></div>" for label, value in contact_rows)
+        ahj_contact_section = f"<section class=\"card\"><h2>AHJ contact</h2>{ahj_contact_rows}</section>"
+        submission_items = []
+        for option in (view.get("submission_options") or []):
+            if not isinstance(option, dict):
+                continue
+            option_url = _safe_external_url(str(option.get("url") or ""))
+            label = html.escape(str(option.get("label") or option.get("type") or "Submission option"))
+            instructions = html.escape(str(option.get("instructions") or "Confirm submittal instructions with the AHJ before filing."))
+            link = f" <a href=\"{html.escape(option_url, quote=True)}\" rel=\"noopener\">Open link</a>" if option_url else ""
+            submission_items.append(f"<li><strong>{label}</strong>{link}<div class=\"muted\">{instructions}</div></li>")
+        if not submission_items:
+            submission_items.append("<li><strong>AHJ contact fallback</strong><div class=\"muted\">Ask the permitting office for online portal, PDF form, paper, in-person, or email submission instructions before filing.</div></li>")
+        submission_section = f"<section class=\"card\"><h2>Submission options</h2><ul>{''.join(submission_items)}</ul></section>"
+    else:
+        detail_rows = [("Final answer", status), ("Lookup ID", html.escape(str(view.get("lookup_id") or ""))), ("Pending reason", html.escape(str(view.get("pending_reason") or "official_source_completion_pending"))), ("Missing source-backed fields", html.escape(", ".join(view.get("missing_fields") or [])))]
+        ahj_contact_section = ""
+        submission_section = ""
+    rows = "".join(f"<div class=\"row\"><strong>{html.escape(label)}</strong><span>{value}</span></div>" for label, value in detail_rows)
+    companions = f"<section class=\"card\"><h2>Companion permits / reviews</h2><ul>{companion_items}</ul></section>" if companion_items else ""
+    coverage_scope = "<section class=\"card\"><h2>Coverage scope</h2><p>Fee information is not source-confirmed for this lookup unless it is included in the source-backed CustomerView fields above. PermitAssist is showing only customer-safe source-backed filing information here.</p></section>"
+    return f"""<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>{title} - PermitAssist</title><style>body{{margin:0;background:#f8fafc;color:#0f172a;font-family:Inter,system-ui,sans-serif}}.wrap{{max-width:920px;margin:0 auto;padding:32px 20px 72px}}.hero,.card{{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 8px 24px rgba(15,23,42,.05)}}.brand{{font-weight:900;color:#1a56db;margin-bottom:10px}}h1{{margin:0 0 8px;font-size:30px;line-height:1.1}}h2{{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:#1a56db;margin:0 0 12px}}.muted{{color:#64748b;font-size:13px;margin-top:4px}}.pill{{display:inline-flex;background:#eff6ff;color:#1a56db;border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px}}.action{{border:0;border-radius:999px;background:#1a56db;color:#fff;padding:9px 14px;font-weight:800;cursor:pointer}}.row{{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #e2e8f0;padding:10px 0}}.row:last-child{{border-bottom:0}}.row span{{text-align:right;max-width:60%}}a{{color:#1a56db;word-break:break-word}}li{{margin:8px 0}}@media(max-width:700px){{.row{{display:block}}.row span{{display:block;text-align:left;max-width:none;margin-top:4px}}}}</style></head><body><main class="wrap"><section class="hero"><div class="brand">{contractor}</div><h1>{title}</h1><div class="muted">{job} - {location} - {client}</div><p><span class="pill">{status}</span></p><button class="action" onclick="window.print()">Print / Save PDF</button></section><section class="card"><h2>Customer-visible result</h2>{rows}</section>{ahj_contact_section}{submission_section}<section class="card"><h2>Next steps</h2><ul>{next_steps}</ul></section>{coverage_scope}{companions}<section class="card"><h2>Official sources</h2><ul>{source_items}</ul></section></main></body></html>"""
+
+
+def persist_pending_lookup(view: dict) -> str:
+    if not isinstance(view, dict) or view.get("view_type") != "PendingView":
+        return ""
+    lookup_id = str(view.get("lookup_id") or "").strip()
+    if not lookup_id:
+        return ""
+    now = utc_now().isoformat()
+    conn = sqlite3.connect(CACHE_DB)
+    conn.execute("""
+        INSERT INTO pending_lookups (lookup_id, job_type, city, state, vertical, ahj_name, pending_reason, missing_fields_json, customer_view_json, status, created_at, updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,'open',?,?)
+        ON CONFLICT(lookup_id) DO UPDATE SET job_type=excluded.job_type, city=excluded.city, state=excluded.state, vertical=excluded.vertical, ahj_name=excluded.ahj_name, pending_reason=excluded.pending_reason, missing_fields_json=excluded.missing_fields_json, customer_view_json=excluded.customer_view_json, updated_at=excluded.updated_at
+    """, (lookup_id, str(view.get("job_type") or "")[:500], str(view.get("city") or "")[:120], str(view.get("state") or "")[:20], str(view.get("vertical") or "")[:80], str(view.get("ahj_name") or "")[:240], str(view.get("pending_reason") or "")[:240], json.dumps(view.get("missing_fields") or []), json.dumps({field: view.get(field) for field in _customer_view_fields("PendingView")}, sort_keys=True), now, now))
+    conn.commit(); conn.close(); return lookup_id
+
+
+def list_pending_lookups(limit: int = 50, status: str = "open") -> list[dict]:
+    limit = max(1, min(int(limit or 50), 200)); status = str(status or "open").strip().lower()
+    conn = sqlite3.connect(CACHE_DB)
+    if status == "all":
+        rows = conn.execute("SELECT lookup_id, job_type, city, state, vertical, ahj_name, pending_reason, missing_fields_json, status, created_at, updated_at, resolved_at FROM pending_lookups ORDER BY updated_at DESC LIMIT ?", [limit]).fetchall()
+    else:
+        rows = conn.execute("SELECT lookup_id, job_type, city, state, vertical, ahj_name, pending_reason, missing_fields_json, status, created_at, updated_at, resolved_at FROM pending_lookups WHERE status=? ORDER BY updated_at DESC LIMIT ?", [status, limit]).fetchall()
+    conn.close(); out = []
+    for row in rows:
+        try: missing = json.loads(row[7] or "[]")
+        except Exception: missing = []
+        out.append({"lookup_id": row[0], "job_type": row[1], "city": row[2], "state": row[3], "vertical": row[4], "ahj_name": row[5], "pending_reason": row[6], "missing_fields": missing, "status": row[8], "created_at": row[9], "updated_at": row[10], "resolved_at": row[11]})
+    return out
+
+
+def resolve_pending_lookup(lookup_id: str, raw_result: dict, *, resolved_by: str = "manual_ops") -> dict:
+    lookup_id = str(lookup_id or "").strip()
+    if not lookup_id:
+        raise ValueError("lookup_id required")
+    conn = sqlite3.connect(CACHE_DB)
+    row = conn.execute("SELECT job_type, city, state, vertical, status FROM pending_lookups WHERE lookup_id=?", [lookup_id]).fetchone(); conn.close()
+    if not row:
+        raise KeyError("pending lookup not found")
+    job_type, city, state, vertical, _status = row
+    view = project_customer_visible_view(raw_result if isinstance(raw_result, dict) else {}, job_type, city, state, explicit_vertical=vertical)
+    if view.get("view_type") != "CustomerView" or view.get("customer_final") is not True:
+        raise ValueError("manual resolution requires exact source-backed CustomerView")
+    now = utc_now().isoformat(); conn = sqlite3.connect(CACHE_DB)
+    conn.execute("UPDATE pending_lookups SET status='resolved', resolution_json=?, resolved_at=?, resolved_by=?, updated_at=? WHERE lookup_id=?", [json.dumps(view, sort_keys=True), now, str(resolved_by or "manual_ops")[:120], now, lookup_id])
+    conn.commit(); conn.close(); return view
+
+
 def _permitassist3_first_source(raw: dict) -> dict:
     sources = raw.get("sources") or raw.get("official_sources") or []
     if isinstance(sources, dict):
@@ -2287,6 +2866,14 @@ def _phase7h_permit_type_verified(result: dict, permit_name: str) -> bool:
         )
         has_verified_name_field = bool(PHASE7H_EXACT_NAME_SOURCE_FIELDS & matched_fields) or source_field in PHASE7H_EXACT_NAME_SOURCE_FIELDS
         return has_verified_name_field and "permit_type" not in failed_fields
+    source_backed_name = _phase7h_string(
+        result.get("source_backed_exact_permit_name")
+        or result.get("exact_permit_name")
+        or result.get("official_permit_name")
+    )
+    has_source_backed_provenance = bool(result.get("official_source_provenance") or result.get("claim_citations") or result.get("sources"))
+    if source_backed_name and permit_name == source_backed_name:
+        return True
     data_source = _phase7h_string(result.get("data_source") or (result.get("_meta") or {}).get("city_match_level")).lower()
     if data_source in {"city", "city_database"}:
         # EF-03: city-source/model output is not enough to prove the exact AHJ
@@ -2450,8 +3037,55 @@ def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "",
     return result
 
 
+def normalize_approval_timeline(value) -> dict | None:
+    """Normalize customer-visible approval timeline to the safe renderer shape.
+
+    Legacy paths and evidence-pack overlays may produce strings/lists; customer
+    renderers expect dict-or-None. Preserve useful text, but never return a bare
+    string/list that can crash `.get()` at report/share/email boundaries.
+    """
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        normalized = {}
+        for key in ("simple", "complex", "statutory", "notes"):
+            raw = value.get(key)
+            if raw is None:
+                continue
+            text = str(raw).strip()
+            if text:
+                normalized[key] = text
+        # Preserve non-standard dict keys as strings so upstream source-backed
+        # timelines do not disappear solely because they used a different label.
+        for key, raw in value.items():
+            if key in normalized or key in {"simple", "complex", "statutory", "notes"} or raw is None:
+                continue
+            text = str(raw).strip()
+            if text:
+                normalized[str(key)] = text
+        return normalized or None
+    if isinstance(value, str):
+        text = value.strip()
+        return {"simple": text} if text else None
+    if isinstance(value, (list, tuple)):
+        parts = [str(item).strip() for item in value if str(item or "").strip()]
+        return {"simple": "; ".join(parts)} if parts else None
+    text = str(value).strip()
+    return {"simple": text} if text else None
+
+
+def normalize_result_customer_shapes(result: dict) -> dict:
+    """Normalize known shape-drift fields at the source/customer boundary."""
+    if not isinstance(result, dict):
+        return {}
+    normalized = dict(result)
+    normalized["approval_timeline"] = normalize_approval_timeline(normalized.get("approval_timeline"))
+    return normalized
+
+
 def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
+    result = normalize_result_customer_shapes(result)
     if _is_unsupported_ahj_result(result):
         return scrub_unsupported_ahj_response(result, city, state)
     evidence_pack_config_invalid = (
@@ -2617,131 +3251,35 @@ def save_beta_feedback(email: str, job_type: str, city: str, state: str, useful:
     return {"id": feedback_id, "received": True}
 
 
+def _validate_white_label_report_payload(data: dict) -> tuple[bool, str]:
+    if not isinstance(data, dict):
+        return False, "white-label payload must be a JSON object with result, job_type, city, state"
+    missing = [key for key in ("result", "job_type", "city", "state") if key not in data]
+    if missing:
+        return False, "white-label payload requires result, job_type, city, state"
+    result = data.get("result")
+    if not isinstance(result, dict) or not result:
+        return False, "white-label payload requires non-empty result object"
+    for key in ("job_type", "city", "state"):
+        if not str(data.get(key) or "").strip():
+            return False, "white-label payload requires result, job_type, city, state"
+    return True, ""
+
+
 def render_white_label_report_html(data: dict) -> str:
-    result = data.get("result") or {}
-    contractor = html.escape(str(data.get("contractor_name") or "Contractor"))
-    client = html.escape(str(data.get("client_name") or "Client / Property"))
-    job_type_raw = str(data.get("job_type") or result.get("job_summary") or "Permit research")
-    job = html.escape(job_type_raw)
-    location = html.escape(", ".join(x for x in [str(data.get("city") or ""), str(data.get("state") or "")] if x))
-    citations: list[dict]
-    if "claim_citations" in result:
-        raw_citations = result.get("claim_citations")
-        citations = raw_citations if isinstance(raw_citations, list) else []
-    else:
-        citations = build_claim_citations(result)
-    display_scope = result.get("_primary_scope") or result.get("primary_scope") or result.get("job_category") or ""
-    raw_permit_display_name = result.get("_permit_display_name") or result.get("permit_name") or result.get("permit_type")
-    if result.get("permit_type_verified") is False and FALLBACK_NAME_RE.search(str(raw_permit_display_name or "")):
-        permit_display_name = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-    else:
-        permit_display_name = sanitize_permit_display_name(
-            raw_permit_display_name,
-            scope=display_scope,
-            job_type=job_type_raw,
-        )
-    permits = result.get("permits_required") or []
+    data = dict(data or {})
+    return customer_report_html(str(data.get("job_type") or ""), str(data.get("city") or ""), str(data.get("state") or ""), data.get("result") or {}, contractor_name=str(data.get("contractor_name") or "Contractor"), client_name=str(data.get("client_name") or "Client / Property"))
 
-    def _report_permit_item_text(permit_item):
-        if isinstance(permit_item, dict):
-            raw_name = (
-                permit_item.get("_permit_display_name")
-                or permit_item.get("permit_name")
-                or permit_item.get("permit_type")
-                or permit_item.get("name")
-                or permit_item.get("title")
-                or permit_item.get("portal_selection")
-            )
-        else:
-            raw_name = permit_item
-        if result.get("permit_type_verified") is False and FALLBACK_NAME_RE.search(str(raw_name or "")):
-            return PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-        return sanitize_permit_display_name(raw_name, scope=display_scope, job_type=job_type_raw)
 
-    permit_items = "".join(f"<li>{html.escape(_report_permit_item_text(p))}</li>" for p in permits) or f"<li>{html.escape(str(permit_display_name))}</li>"
-    safe_apply_url = _safe_external_url(result.get('apply_url') or '')
-    footnotes = "".join(
-        f"<li><strong>{html.escape(c.get('id',''))}</strong> {html.escape(c.get('claim',''))}: "
-        f"{html.escape(c.get('quoted_snippet') or 'Source quote not attached for this field yet.')} "
-        f"<br>{_render_safe_link(c.get('source_url','')) or 'No safe source URL attached'} "
-        f"<em>Checked {html.escape(c.get('checked_at',''))}; confidence {html.escape(c.get('confidence',''))}</em></li>"
-        for c in citations
-    ) or "<li>No citations attached yet.</li>"
-    warnings_list = list(result.get("quality_warnings") or [])
-    evidence_meta = result.get("_evidence_pack") or result.get("source_confirmation") or {}
-    evidence_failed = [str(field) for field in (evidence_meta.get("failed_closed_fields") or []) if field]
-    evidence_gap_labels = [str(field) for field in (evidence_meta.get("field_gap_labels") or []) if field]
-    evidence_matched = [str(field) for field in (evidence_meta.get("matched_fields") or []) if field]
-    if evidence_meta.get("enabled") and (evidence_failed or evidence_gap_labels):
-        field_labels = {
-            "fee_range": "fees",
-            "approval_timeline": "timelines",
-            "inspections": "inspections",
-            "apply_url": "application link",
-            "permit_type": "permit-name label",
-            "companion_reviews_triggers": "companion reviews",
-        }
-        safe_failed = evidence_gap_labels or [field_labels.get(field, "supporting detail") for field in evidence_failed]
-        if "fee_range" in evidence_failed or "fees" in evidence_gap_labels or evidence_meta.get("fee_unavailable"):
-            warnings_list.append("Fee information is not source-confirmed for this lookup.")
-        warnings_list.append("Some field-specific details are not source-confirmed yet: " + ", ".join(dict.fromkeys(safe_failed)) + ".")
-    if evidence_meta.get("enabled") and "approval_timeline" in evidence_matched:
-        warnings_list.append("Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate.")
-    if evidence_meta.get("enabled") and "companion_reviews_triggers" in evidence_matched:
-        warnings_list.append("Companion-review evidence is scope-limited; it is not a complete local specialty-trigger list. Verify specialty reviews with the AHJ before filing.")
-    warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in dict.fromkeys(warnings_list))
-    golden_coverage_box = ""
-    coverage_truth = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
-    is_golden_coverage = (
-        evidence_meta.get("enabled") and bool(coverage_truth)
-    ) or str(coverage_truth.get("heading") or "").lower() in {"coverage truth — golden local mode", "coverage scope"}
-    if is_golden_coverage:
-        official = coverage_truth.get("official_source_backed") or ["permit type", "apply URL / route"]
-        not_confirmed = coverage_truth.get("not_confirmed_from_official_source") or ["fees", "timelines", "inspections", "forms/checklists", "trade permits", "companion reviews", "specialty triggers"]
-        golden_coverage_box = f"""
-<div class='card'><h3>{html.escape(str(coverage_truth.get('heading') or 'Coverage scope'))}</h3>
-<p><strong>Official-source backed:</strong> {html.escape(', '.join(str(item) for item in official))}.</p>
-<p><strong>Not confirmed:</strong> {html.escape(', '.join(str(item) for item in not_confirmed))}.</p>
-</div>"""
-    warnings_box = f"<div class='card'><h3>Warnings</h3><ul>{warnings}</ul></div>" if warnings else ""
-    return f"""<!doctype html>
-<html><head><meta charset='utf-8'><title>Permit research report</title>
-<style>body{{font-family:Arial,sans-serif;max-width:820px;margin:32px auto;color:#172033;line-height:1.45}}.brand{{border-bottom:3px solid #0f766e;padding-bottom:12px;margin-bottom:24px}}.muted{{color:#64748b}}.card{{border:1px solid #dbe3ea;border-radius:12px;padding:16px;margin:16px 0}}@media print{{button{{display:none}}body{{margin:0.5in}}}}</style></head>
-<body><button onclick='window.print()'>Print / Save PDF</button><div class='brand'><h1>{contractor}</h1><div class='muted'>Permit research prepared for {client}</div></div>
-<h2>{job}</h2><p><strong>Location:</strong> {location}</p>
-{golden_coverage_box}
-{warnings_box}
-<div class='card'><h3>Likely permits</h3><ul>{permit_items}</ul></div>
-<div class='card'><h3>How to apply</h3><p>{html.escape(str((result.get('apply_path') or {}).get('verification_note') or 'Verify exact filing path with the AHJ.'))}</p><p><strong>Start URL:</strong> {_render_safe_link(safe_apply_url) or 'Not found'}</p></div>
-<div class='card'><h3>Source footnotes</h3><ol>{footnotes}</ol></div>
-<p class='muted'>PermitAssist is guidance only. Verify final permit type with the AHJ before quoting or starting work.</p></body></html>"""
-
-# ── Telegram notifications ────────────────────────────────────────────────────
-def notify_telegram(message: str):
-    """Fire-and-forget Telegram message. Non-blocking."""
-    if not TG_BOT_TOKEN or not TG_CHAT_ID:
-        return
-    def _send():
-        try:
-            requests.post(
-                f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage",
-                json={"chat_id": TG_CHAT_ID, "text": message, "parse_mode": "HTML"},
-                timeout=5,
-            )
-        except Exception:
-            pass
-    threading.Thread(target=_send, daemon=True).start()
-
-# ── Lookup stats (social proof counters) ─────────────────────────────────────
-def ensure_table_columns(conn: sqlite3.Connection, table_name: str, required_columns: dict[str, str]) -> list[str]:
-    """Safely add missing columns to an existing table via ALTER TABLE."""
+def ensure_table_columns(conn, table_name: str, expected_columns: dict[str, str]) -> list[str]:
+    """Add missing SQLite columns and return the names that were added."""
     existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table_name})").fetchall()}
     added = []
-    for column_name, column_sql in required_columns.items():
-        if column_name in existing:
+    for column, ddl in expected_columns.items():
+        if column in existing:
             continue
-        conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}")
-        added.append(column_name)
+        conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column} {ddl}")
+        added.append(column)
     return added
 
 
@@ -2972,6 +3510,25 @@ def init_db():
         )
     """)
     conn.execute("""
+        CREATE TABLE IF NOT EXISTS pending_lookups (
+            lookup_id            TEXT PRIMARY KEY,
+            job_type             TEXT,
+            city                 TEXT,
+            state                TEXT,
+            vertical             TEXT,
+            ahj_name             TEXT,
+            pending_reason       TEXT,
+            missing_fields_json  TEXT,
+            customer_view_json   TEXT,
+            status               TEXT DEFAULT 'open',
+            created_at           TEXT,
+            updated_at           TEXT,
+            resolved_at          TEXT,
+            resolved_by          TEXT,
+            resolution_json      TEXT
+        )
+    """)
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS city_watch (
             id               INTEGER PRIMARY KEY AUTOINCREMENT,
             email            TEXT NOT NULL,
@@ -3040,6 +3597,7 @@ def init_db():
         "permit_issued_reminders",
         "rate_limits",
         "checklist_cache",
+        "pending_lookups",
         "city_watch",
         "api_keys",
         "webhook_integrations",
@@ -3911,8 +4469,7 @@ def create_share(job_type: str, city: str, state: str, result: dict) -> str:
     slug = secrets.token_urlsafe(8)  # e.g. 'aB3xY7qR'
     now  = utc_now()
     exp  = now + timedelta(days=SHARE_TTL_DAYS)
-    # Strip internal metadata before storing
-    clean = {k: v for k, v in result.items() if not k.startswith('_')}
+    clean = project_customer_visible_view(result, job_type, city, state, persist_pending=True)
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
@@ -3950,7 +4507,7 @@ def get_share(slug: str) -> dict | None:
         conn.commit()
         conn.close()
         return {
-            "data": json.loads(result_json),
+            "data": project_customer_visible_view(json.loads(result_json), job_type, city, state, persist_pending=True),
             "job_type": job_type,
             "city": city,
             "state": state,
@@ -3970,34 +4527,24 @@ def make_result_hash(result: dict) -> str:
 
 
 def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
-    permits = result.get("permits_required") or []
-    permit_name = result.get("permit_name") or (permits[0].get("permit_type") if permits else "Permit") or "Permit"
-    fee = result.get("fee_range") or result.get("fee") or "Confirm fee with the building department"
-    timeline_obj = result.get("approval_timeline") or {}
-    timeline = timeline_obj.get("simple") or timeline_obj.get("complex") or "Varies by jurisdiction"
-    docs = list(dict.fromkeys((result.get("what_to_bring") or []) + (result.get("requirements") or []) + (result.get("documents_needed") or [])))
-    inspections = result.get("inspections") or []
-    special_notes = list(dict.fromkeys((result.get("pro_tips") or [])[:2] + (result.get("common_mistakes") or [])[:2]))
-    items = [
-        {"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True},
-        {"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True},
-        {"label": f"Pay permit fee: {fee}", "category": "fees", "required": True},
-        {"label": f"Plan for approval timeline: {timeline}", "category": "timeline", "required": False},
-    ]
-    if docs:
-        items.append({"label": f"Required documents: {', '.join(docs[:6])}", "category": "documents", "required": True})
-    for inspection in inspections[:6]:
-        label = inspection.get("stage") or inspection.get("title") or inspection.get("name") or "Inspection step"
-        timing = inspection.get("timing") or inspection.get("description") or ""
-        items.append({"label": f"Schedule inspection: {label}{' — ' + timing if timing else ''}", "category": "inspection", "required": False})
-    for note in special_notes[:4]:
-        items.append({"label": note, "category": "special", "required": False})
-    return {
-        "title": "Pre-Construction Compliance Checklist",
-        "summary": f"Action checklist for {job_type or permit_name} in {city}, {state}",
-        "items": items[:12],
-    }
-
+    view = project_customer_visible_view(result, job_type, city, state, persist_pending=True)
+    if view.get("view_type") == "CustomerView":
+        title = "Source-backed filing checklist"
+        summary = f"Customer-visible filing steps for {view.get('job_type') or job_type} in {view.get('city') or city}, {view.get('state') or state}"
+        items = [{"label": f"Use filing path: {view.get('filing_path')}", "category": "filing_path", "required": True}]
+        if view.get("permit_name"):
+            items.append({"label": f"Ask for: {view.get('permit_name')}", "category": "permit_name", "required": True})
+        if view.get("official_portal_category_path"):
+            items.append({"label": f"Select portal category/path: {view.get('official_portal_category_path')}", "category": "portal_path", "required": True})
+        if view.get("apply_url"):
+            items.append({"label": f"Open official portal: {view.get('apply_url')}", "category": "portal", "required": True})
+        for step in view.get("next_steps") or []:
+            items.append({"label": str(step), "category": "next_step", "required": True})
+    else:
+        title = "Manual source-backed completion pending"
+        summary = f"PermitAssist has not issued a customer-final answer for {job_type or view.get('job_type', 'this lookup')}."
+        items = [{"label": str(step), "category": "pending", "required": True} for step in (view.get("next_steps") or [])] or [{"label": "PermitAssist is completing official-source retrieval before a final answer is issued.", "category": "pending", "required": True}]
+    return {"title": title, "summary": summary, "items": items[:12]}
 
 def generate_checklist(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     fallback = build_checklist_fallback(result, job_type, city, state)
@@ -4072,15 +4619,8 @@ def load_report_template() -> str:
 
 
 def render_share_page(share: dict) -> str:
-    template = load_report_template()
-    payload = {
-        "share": share,
-        "app_base_url": APP_BASE_URL,
-        "generated_at": utc_now().isoformat(),
-        "checklist": get_or_create_checklist(share.get("data") or {}, share.get("job_type", ""), share.get("city", ""), share.get("state", "")),
-    }
-    return template.replace("__REPORT_DATA__", json.dumps(payload))
-
+    data = project_customer_visible_view(share.get("data") or {}, share.get("job_type", ""), share.get("city", ""), share.get("state", ""), persist_pending=True)
+    return customer_report_html(share.get("job_type", ""), share.get("city", ""), share.get("state", ""), data)
 
 def fee_breakdown_for_display(result: dict) -> dict:
     """Render fees as customer-safe components without inventing precision."""
@@ -4115,53 +4655,28 @@ def _pdf_escape(text: str) -> str:
 
 
 def _pdf_text_lines_for_report(job_type: str, city: str, state: str, result: dict) -> list[str]:
-    result = result or {}
-    permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
-    permit_name = (
-        result.get("_permit_display_name")
-        or result.get("permit_name")
-        or result.get("permit_type")
-        or (permits[0].get("permit_type") if permits and isinstance(permits[0], dict) else "")
-        or "Permit details"
-    )
-    timeline = result.get("approval_timeline") if isinstance(result.get("approval_timeline"), dict) else {}
-    docs = list(dict.fromkeys((result.get("what_to_bring") or []) + (result.get("requirements") or []) + (result.get("documents_needed") or [])))
-    inspections = result.get("inspections") or result.get("inspect_checklist") or []
-    inspection_lines = []
-    if isinstance(inspections, list):
-        for item in inspections[:8]:
-            if isinstance(item, dict):
-                inspection_lines.append(item.get("stage") or item.get("title") or item.get("name") or item.get("description") or "")
-            else:
-                inspection_lines.append(str(item or ""))
-    lines = [
-        "PermitAssist Permit Intelligence Report",
-        f"Job: {job_type or 'Permit lookup'}",
-        f"Jurisdiction: {city or ''}, {state or ''}".strip(),
-        f"Verdict: {str(result.get('permit_verdict') or 'VERIFY').upper()}",
-        f"Permit to ask for: {permit_name}",
-        "",
-        "Fee breakdown:",
-        *fee_breakdown_text(result).splitlines(),
-        "",
-        f"Timeline: {timeline.get('simple') or timeline.get('complex') or 'Pending verification with AHJ'}",
-        f"Where to apply: {result.get('applying_office') or 'Contact local building department'}",
-    ]
-    if result.get("apply_phone"):
-        lines.append(f"Phone: {result.get('apply_phone')}")
-    if result.get("apply_url"):
-        lines.append(f"Portal: {result.get('apply_url')}")
-    if docs:
-        lines.extend(["", "Required documents:"])
-        lines.extend(f"- {item}" for item in docs[:10])
-    if inspection_lines:
-        lines.extend(["", "Inspection checklist:"])
-        lines.extend(f"- {item}" for item in inspection_lines if item)
-    if result.get("permit_summary") or result.get("job_summary"):
-        lines.extend(["", "Summary:", str(result.get("permit_summary") or result.get("job_summary"))])
-    lines.extend(["", "PermitAssist is guidance only. Verify final permit type, fees, and filing path with the AHJ before quoting or starting work."])
+    view = project_customer_visible_view(result or {}, job_type, city, state, persist_pending=True)
+    lines = ["PermitAssist Permit Intelligence Report", f"Job: {view.get('job_type') or job_type or 'Permit lookup'}", f"Jurisdiction: {view.get('city') or city}, {view.get('state') or state}".strip(), f"Customer status: {customer_report_status_label(view)}"]
+    if view.get("view_type") == "CustomerView":
+        lines.extend([f"Permit required: {'Yes' if view.get('permit_required') is True else 'No'}", f"Permit / application / form: {view.get('permit_name') or 'Not separately named by source'}", f"Official portal category/path: {view.get('official_portal_category_path') or 'Not separately named by source'}", f"Filing path: {view.get('filing_path') or ''}"])
+        if view.get("apply_url"):
+            lines.append(f"Official portal: {view.get('apply_url')}")
+        timeline = view.get("approval_timeline") if isinstance(view.get("approval_timeline"), dict) else {}
+        if timeline.get("simple") or timeline.get("complex"):
+            lines.append(f"Timeline: {timeline.get('simple') or timeline.get('complex')}")
+        companions = view.get("companion_permits_reviews") or []
+        if companions:
+            lines.extend(["", "Companion permits / reviews:"])
+            for item in companions[:8]: lines.append(f"- {item.get('name') or item.get('review') or item.get('label') or item}" if isinstance(item, dict) else f"- {item}")
+        sources = customer_view_source_links(view)
+        if sources:
+            lines.extend(["", "Official sources:"])
+            for source in sources[:8]: lines.append(f"- {source.get('title')}: {source.get('url')}")
+    else:
+        lines.extend(["Final answer: No customer-final answer yet", f"Lookup ID: {view.get('lookup_id') or ''}", f"Pending reason: {view.get('pending_reason') or 'official_source_completion_pending'}", f"Missing source-backed fields: {', '.join(view.get('missing_fields') or [])}"])
+    if view.get("next_steps"):
+        lines.extend(["", "Next steps:"]); lines.extend(f"- {step}" for step in view.get("next_steps") or [])
     return lines
-
 
 def build_simple_pdf(lines: list[str]) -> bytes:
     """Small, dependency-free PDF writer for text reports."""
@@ -4206,7 +4721,7 @@ def build_simple_pdf(lines: list[str]) -> bytes:
 
 
 def render_report_pdf(job_type: str, city: str, state: str, result: dict) -> bytes:
-    return build_simple_pdf(_pdf_text_lines_for_report(job_type, city, state, redact_public_output(result or {})))
+    return build_simple_pdf(_pdf_text_lines_for_report(job_type, city, state, result or {}))
 
 
 def mask_api_key(key: str) -> str:
@@ -4462,13 +4977,14 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
             if not (job_type and city and state):
                 raise ValueError("Webhook requires job_type, city, and state")
             result = research_permit(job_type, city, state, zip_code)
+            customer_result = project_customer_visible_view(result, job_type, city, state, persist_pending=True)
             body = {
                 "ok": True,
                 "job_type": job_type,
                 "city": city,
                 "state": state,
                 "integration": integration.get("name") or "Webhook",
-                "result": result,
+                "result": customer_result,
             }
             body_json = canonical_customer_webhook_body(body)
             headers = build_customer_webhook_signature_headers(integration.get("integration_key") or "", body)
@@ -4489,123 +5005,12 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
     threading.Thread(target=_worker, daemon=True).start()
 
 def send_email_report(to_email: str, job: str, city: str, state: str, data: dict) -> bool:
-    """Send a beautiful HTML permit research report via Resend."""
-    def esc(s):
-        return str(s or "").replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace('"',"&quot;")
-
-    subject = f"Permit Research: {job} in {city}, {state}"
-    pv  = data.get("permit_verdict", "MAYBE")
-    verdict_color = {"YES": "#10b981", "NO": "#ef4444", "MAYBE": "#f59e0b"}.get(pv, "#f59e0b")
-    verdict_bg    = {"YES": "rgba(16,185,129,.12)", "NO": "rgba(239,68,68,.12)", "MAYBE": "rgba(245,158,11,.12)"}.get(pv, "rgba(245,158,11,.12)")
-
-    fee    = esc(fee_breakdown_text(data)).replace("\n", "<br>")
-    office = esc(data.get("applying_office", ""))
-    addr   = esc(data.get("apply_address", ""))
-    phone  = esc(data.get("apply_phone", ""))
-    portal = esc(data.get("apply_url", ""))
-    maps   = esc(data.get("apply_google_maps", ""))
-    tl     = data.get("approval_timeline", {})
-    timeline = esc(tl.get("simple", ""))
-    permits  = data.get("permits_required", [])
-    tips     = data.get("pro_tips", [])[:4]
-    bring    = data.get("what_to_bring", [])[:5]
-    sources  = [s for s in (data.get("sources") or [])[:4] if s]
-    license_r = esc(data.get("license_required", ""))
-
-    # Build permit rows
-    permit_rows = ""
-    for p in permits:
-        req = "YES" if p.get("required") is True else ("MAYBE" if p.get("required") == "maybe" else "NO")
-        req_color = {"YES": "#10b981", "MAYBE": "#f59e0b", "NO": "#ef4444"}.get(req, "#94a3b8")
-        permit_rows += f"""
-        <tr>
-          <td style="padding:10px 0;border-bottom:1px solid #e2e8f0;vertical-align:top;width:60px">
-            <span style="display:inline-block;background:{req_color}22;color:{req_color};border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700">{req}</span>
-          </td>
-          <td style="padding:10px 0 10px 12px;border-bottom:1px solid #e2e8f0;vertical-align:top">
-            <strong style="color:#0f172a;font-size:14px">{esc(p.get('permit_type',''))}</strong>
-            {('<br><span style="font-size:12px;color:#64748b;margin-top:3px;display:block">' + esc(p.get('notes','')) + '</span>') if p.get('notes') else ''}
-          </td>
-        </tr>"""
-
-    tips_html    = "".join(f'<li style="padding:3px 0;color:#475569;font-size:13px">{esc(t)}</li>' for t in tips)
-    bring_html   = "".join(f'<li style="padding:3px 0;color:#475569;font-size:13px">{esc(b)}</li>' for b in bring)
-    sources_html = "".join(f'<li style="padding:3px 0"><a href="{esc(s)}" style="color:#1a56db;font-size:12px">{esc(s)}</a></li>' for s in sources)
-
-    contact_section = ""
-    if office or phone or addr:
-        contact_section = f"""
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 18px;margin-bottom:12px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:10px">📞 Contact</div>
-          {('<a href="tel:' + ''.join(c for c in phone if c.isdigit() or c == '+') + '" style="font-size:22px;font-weight:900;color:#1a56db;text-decoration:none;display:block;margin-bottom:5px">' + phone + '</a>') if phone else ''}
-          {('<div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:3px">' + office + '</div>') if office else ''}
-          {('<div style="font-size:13px;color:#64748b;margin-bottom:8px">' + addr + '</div>') if addr else ''}
-          {('<a href="' + maps + '" style="display:inline-flex;align-items:center;gap:5px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 12px;font-size:13px;color:#1a56db;font-weight:700;text-decoration:none">📍 Open in Google Maps</a>') if maps else ''}
-        </div>"""
-
-    # Plain text fallback
-    text_lines = [f"PERMIT RESEARCH REPORT\nJob: {job}\nLocation: {city}, {state}\n"]
-    for p in permits:
-        req = "YES" if p.get("required") is True else ("MAYBE" if p.get("required") == "maybe" else "NO")
-        text_lines.append(f"[{req}] {p.get('permit_type','')}")
-        if p.get("notes"): text_lines.append(f"  {p['notes']}")
-    if fee:      text_lines.append(f"\nFees:\n{fee_breakdown_text(data)}")
-    if timeline: text_lines.append(f"Timeline: {tl.get('simple','')}")
-    if office:   text_lines.append(f"Where: {data.get('applying_office','')}")
-    if portal:   text_lines.append(f"Online: {data.get('apply_url','')}")
-    if maps:     text_lines.append(f"Maps: {data.get('apply_google_maps','')}")
-    text_lines.append("\n---\nPermitAssist — permitassist.io")
-
-    html = f"""<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
-  <div style="max-width:600px;margin:32px auto;padding:0 16px 48px">
-    <!-- Header -->
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-bottom:12px">
-      <div style="background:#1a56db;padding:20px 24px;display:flex;align-items:center;gap:10px">
-        <span style="font-size:22px">📋</span>
-        <span style="font-size:18px;font-weight:800;color:#ffffff">Permit<span style="opacity:.8">Assist</span></span>
-      </div>
-      <div style="padding:20px 24px">
-        <div style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:4px">{esc(job)}</div>
-        <div style="font-size:13px;color:#64748b;margin-bottom:12px">📍 {esc(city)}, {esc(state)}</div>
-        <span style="display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:800;background:{verdict_bg};color:{verdict_color}">{pv}</span>
-      </div>
-    </div>
-
-    <!-- Permits Required -->
-    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:10px">Permits Required</div><table style="width:100%;border-collapse:collapse">' + permit_rows + '</table></div>') if permits else ''}
-
-    <!-- Key Info -->
-    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:10px">💰 Cost · ⏱ Timeline</div><table style="width:100%;border-collapse:collapse">' + (f'<tr><td style="padding:9px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#94a3b8;font-weight:600;width:120px">Fee</td><td style="padding:9px 0;border-bottom:1px solid #e2e8f0;font-size:14px;color:#10b981;font-weight:700">' + fee + '</td></tr>' if fee else '') + (f'<tr><td style="padding:9px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#94a3b8;font-weight:600">Timeline</td><td style="padding:9px 0;border-bottom:1px solid #e2e8f0;font-size:14px;color:#475569">' + timeline + '</td></tr>' if timeline else '') + (f'<tr><td style="padding:9px 0;font-size:12px;color:#94a3b8;font-weight:600">Who Pulls It</td><td style="padding:9px 0;font-size:14px;color:#475569">' + license_r + '</td></tr>' if license_r else '') + '</table></div>') if fee or timeline or license_r else ''}
-
-    <!-- Contact / Maps -->
-    {contact_section}
-
-    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:10px">🌐 Online Portal</div><a href="' + data.get('apply_url','') + '" style="color:#1a56db;font-size:13px;font-weight:600;word-break:break-all">' + portal + '</a></div>') if portal else ''}
-
-    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:8px">📎 What to Bring</div><ul style="margin-left:18px;padding:0">' + bring_html + '</ul></div>') if bring_html else ''}
-
-    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:8px">💡 Pro Tips</div><ul style="margin-left:18px;padding:0">' + tips_html + '</ul></div>') if tips_html else ''}
-
-    {('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:8px">🔗 Sources</div><ul style="margin-left:18px;padding:0">' + sources_html + '</ul></div>') if sources_html else ''}
-
-    <!-- CTA -->
-    <div style="background:#1a56db;border-radius:12px;padding:20px;text-align:center;margin-top:8px">
-      <p style="font-size:13px;color:rgba(255,255,255,.75);margin:0 0 12px">Look up more permits — free, no signup needed.</p>
-      <a href="https://permitassist.io" style="background:#ffffff;color:#1a56db;font-weight:800;font-size:15px;padding:12px 28px;border-radius:8px;text-decoration:none;display:inline-block">Open PermitAssist →</a>
-    </div>
-
-    <p style="font-size:11px;color:#94a3b8;text-align:center;margin-top:20px;line-height:1.6">
-      📌 Always verify requirements with your local building department before starting work.<br>
-      You're receiving this because you requested it at <a href="https://permitassist.io" style="color:#1a56db">permitassist.io</a>
-    </p>
-  </div>
-</body>
-</html>"""
-
-    return resend_send(to_email, subject, "\n".join(text_lines), html)
+    """Send a CustomerView/PendingView-only permit report via Resend."""
+    view = project_customer_visible_view(data or {}, job, city, state, persist_pending=True)
+    subject = f"PermitAssist report: {job} in {city}, {state}"
+    text_body = "\n".join(_pdf_text_lines_for_report(job, city, state, view) + ["", "---", "PermitAssist - permitassist.io"])
+    html_body = customer_report_html(job, city, state, view)
+    return resend_send(to_email, subject, text_body, html_body)
 
 # ── Job Tracker helpers ──────────────────────────────────────────────────────
 
@@ -6399,6 +6804,16 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(500, {"error": str(e)})
             return True
 
+        if path == "/api/admin/pending-lookups":
+            try:
+                params = parse_qs(urlparse(self.path).query)
+                limit = int((params.get("limit", ["50"])[0] or "50").strip() or "50")
+                status = (params.get("status", ["open"])[0] or "open").strip().lower()
+                self.send_json(200, {"pending_lookups": list_pending_lookups(limit=limit, status=status)})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
+            return True
+
         if path == "/api/admin/referral-credits":
             try:
                 import sqlite3 as _sqlite3
@@ -6417,8 +6832,36 @@ class Handler(BaseHTTPRequestHandler):
 
         return False  # not handled
 
+    def do_POST_admin(self, path):
+        """Handle POST requests for admin API endpoints."""
+        admin_token = self.headers.get("X-Admin-Token", "")
+        if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+            self.send_json(401, {"error": "Admin token required"})
+            return True
+        if path == "/api/admin/pending-lookups/resolve":
+            try:
+                data = self.read_json_body()
+                lookup_id = str(data.get("lookup_id") or "").strip()
+                result = data.get("result") if isinstance(data.get("result"), dict) else {}
+                resolved_by = str(data.get("resolved_by") or "manual_ops")
+                view = resolve_pending_lookup(lookup_id, result, resolved_by=resolved_by)
+                self.send_json(200, {"resolved": True, "customer_view": view})
+            except KeyError as exc:
+                self.send_json(404, {"error": str(exc)})
+            except ValueError as exc:
+                self.send_json(422, {"error": str(exc)})
+            except Exception as exc:
+                self.send_json(500, {"error": str(exc)})
+            return True
+        self.send_json(404, {"error": "Admin endpoint not found"})
+        return True
+
     def do_POST(self):
         path = urlparse(self.path).path
+
+        if path.startswith("/api/admin/"):
+            self.do_POST_admin(path)
+            return
 
         # ── Facebook Webhook events (POST) ─────────────────────────────
         if path == "/api/fb-webhook":
@@ -6533,7 +6976,14 @@ class Handler(BaseHTTPRequestHandler):
                         "status": ahj_coverage.get("status", ""),
                         "reason": ahj_coverage.get("reason", ""),
                     }, "")
-                    self.send_json(_unsupported_ahj_http_status(ahj_coverage), response)
+                    response, used_customer_view = maybe_build_pa3_customer_view_api_response(
+                        response,
+                        job_type,
+                        city,
+                        state,
+                        explicit_vertical=explicit_vertical,
+                    )
+                    self.send_json(_unsupported_ahj_http_status(ahj_coverage), response, redact=not used_customer_view)
                     return
 
                 ip = self.client_ip()
@@ -6692,7 +7142,17 @@ class Handler(BaseHTTPRequestHandler):
                     # No Telegram on lookups — only notify on paying customers
 
                     expose_evidence_meta = evidence_allowed and evidence_pack_response_allows_internal_metadata()
-                    self.send_json(200, result, extra_headers=response_headers, redact=not expose_evidence_meta)
+                    result, used_customer_view = maybe_build_pa3_customer_view_api_response(
+                        result,
+                        job_type,
+                        city,
+                        state,
+                        explicit_vertical=explicit_vertical,
+                    )
+                    if used_customer_view:
+                        self.send_json(200, result, extra_headers=response_headers, redact=False)
+                    else:
+                        self.send_json(200, result, extra_headers=response_headers, redact=not expose_evidence_meta)
                 finally:
                     PERMIT_LOOKUP_SEMAPHORE.release()
 
@@ -6741,6 +7201,7 @@ class Handler(BaseHTTPRequestHandler):
                             response = dict(result)
                             response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                             return response
+                        result = normalize_result_customer_shapes(result)
                         if unverified_us_jurisdiction:
                             result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
                         response = {
@@ -6838,7 +7299,13 @@ class Handler(BaseHTTPRequestHandler):
                 if not user_email:
                     self.send_json(401, {"error": "login_required"})
                     return
-                html_doc = _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", render_white_label_report_html(redact_public_output(data)))
+                valid_payload, validation_error = _validate_white_label_report_payload(data)
+                if not valid_payload:
+                    self.send_json(422, {"error": validation_error})
+                    return
+                safe_payload = dict(data)
+                safe_payload["result"] = project_customer_visible_view(safe_payload.get("result") or {}, safe_payload.get("job_type", ""), safe_payload.get("city", ""), safe_payload.get("state", ""), persist_pending=True)
+                html_doc = _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", render_white_label_report_html(safe_payload))
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Cache-Control", "no-store")
@@ -6854,10 +7321,11 @@ class Handler(BaseHTTPRequestHandler):
                 job_type = data.get("job_type", "").strip()
                 city = data.get("city", "").strip()
                 state = data.get("state", "").strip()
-                result = data.get("result", {})
-                if not job_type or not city or not state or not isinstance(result, dict):
+                raw_result = data.get("result", {})
+                if not job_type or not city or not state or not isinstance(raw_result, dict) or not raw_result:
                     self.send_json(400, {"error": "job_type, city, state, result required"})
                     return
+                result = project_customer_visible_view(raw_result, job_type, city, state, persist_pending=True)
                 pdf = render_report_pdf(job_type, city, state, result)
                 base = "-".join(part for part in [job_type, city, state] if part)
                 self.send_pdf(200, pdf, f"{base[:90] or 'permitassist-report'}.pdf")
@@ -6976,8 +7444,9 @@ class Handler(BaseHTTPRequestHandler):
                 job_type = data.get("job_type", "").strip()
                 city     = data.get("city", "").strip()
                 state    = data.get("state", "").strip()
-                result   = data.get("result", {})
-                if not job_type or not city or not state or not result:
+                raw_result = data.get("result", {})
+                result   = project_customer_visible_view(raw_result, job_type, city, state, persist_pending=True)
+                if not job_type or not city or not state or not raw_result:
                     self.send_json(400, {"error": "job_type, city, state, result required"})
                     return
                 slug = create_share(job_type, city, state, result)
@@ -7089,6 +7558,8 @@ class Handler(BaseHTTPRequestHandler):
                 result = research_permit(job_type, city, state, zip_code, job_category=job_category, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
                 if evidence_allowed:
                     result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
+                else:
+                    result = normalize_result_customer_shapes(result)
                 if unverified_us_jurisdiction:
                     result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
                 expose_evidence_meta = evidence_allowed and evidence_pack_response_allows_internal_metadata()

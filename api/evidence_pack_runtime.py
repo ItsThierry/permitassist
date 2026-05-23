@@ -1075,22 +1075,31 @@ def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]],
     return meta
 
 
-def _customer_facing_timeline(value: Any, *, city: str, state: str, pack: EvidencePackRuntime) -> str:
-    """Return short contractor-facing timeline copy while preserving source detail separately."""
+def _customer_facing_timeline(value: Any, *, city: str, state: str, pack: EvidencePackRuntime) -> dict[str, str] | None:
+    """Return safe customer timeline shape while preserving source detail separately.
+
+    Evidence-pack records historically promoted bare strings into
+    result["approval_timeline"]. Customer renderers expect dict-or-None, so this
+    constructor is part of the source/boundary normalization for Stage 1.
+    """
     text = str(value or "").strip()
+    if not text:
+        return None
     if (
         pack.mode == "dallas_step7u_production_preview"
         and _canonical_ahj_name(city) == "dallas"
         and str(state or "").upper().strip() == "TX"
         and "214.904" in text
     ):
-        return (
-            "Dallas local queue time still needs AHJ/portal confirmation. "
-            "Texas law gives a municipal building-permit outer action deadline: "
-            "act by the 45th day after submission, or issue written inability-to-act/deadline notice; "
-            "if notice is issued, grant/deny is due within 30 days after notice is received."
-        )
-    return text
+        return {
+            "simple": (
+                "Dallas local queue time still needs AHJ/portal confirmation. "
+                "Texas law gives a municipal building-permit outer action deadline: "
+                "act by the 45th day after submission, or issue written inability-to-act/deadline notice; "
+                "if notice is issued, grant/deny is due within 30 days after notice is received."
+            )
+        }
+    return {"simple": text}
 
 
 def apply_evidence_pack_fail_closed(

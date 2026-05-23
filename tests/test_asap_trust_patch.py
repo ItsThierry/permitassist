@@ -241,8 +241,9 @@ def test_missing_exact_name_fails_closed_without_placeholder_or_debug_language(m
     assert result["permit_type_verified"] is False
     assert result["permit_name_status"] == "official_category_confirmed_exact_label_missing"
     assert result["permit_name_confidence"] == "low"
-    assert "exact permit type needs AHJ verification" in surface
-    assert "not official-source verified" in surface
+    assert "Building / Residential Remodel" in surface
+    assert "https://dallascityhall.com/permits" in surface
+    assert "Permit / application / form</strong><span>-</span>" in surface
     assert "Needs AHJ verification" not in surface
     assert "Needs review for:" not in surface
     assert "verify before merging" not in surface
@@ -288,7 +289,12 @@ def test_white_label_report_sanitizes_placeholder_permits_required_items(monkeyp
 
     html = server.render_white_label_report_html({"result": result, "job_type": "residential bathroom remodel", "city": "Dallas", "state": "TX"})
 
-    assert html.count("Permit required — local permit name not confirmed") == 2
+    assert "Residential Building Permit" in html
+    assert "Verify the exact local application/form path with the permitting office before filing" in html
+    assert "No safe source URL attached; official-source retrieval is still in progress." in html
+    assert "PendingView" not in html
+    assert "Pending reason" not in html
+    assert "Missing source-backed fields" not in html
     assert "Permit -- verify exact AHJ title" not in html
     assert "Permit — verify exact AHJ title" not in html
 

@@ -418,14 +418,12 @@ def test_beta_feedback_and_white_label_report_endpoints(tmp_path, monkeypatch):
                 "state": "CO",
                 "result": {
                     "apply_url": "https://denvergov.org/permits",
-                    "permits_required": [{"permit_type": "Building Permit — Tenant Improvement"}],
-                    "claim_citations": [{
-                        "id": "C1",
-                        "claim": "Permit type",
-                        "quoted_snippet": "Tenant finish permits are required.",
+                    "source_backed_exact_permit_name": "Building Permit — Tenant Improvement",
+                    "official_source_provenance": [{
+                        "source_title": "Denver permits",
+                        "exact_quote_or_snippet": "Tenant finish permits are required.",
                         "source_url": "https://denvergov.org/permits",
-                        "checked_at": "2026-05-01",
-                        "confidence": "high",
+                        "retrieved_at_utc": "2026-05-01T00:00:00Z",
                     }],
                 },
             },
@@ -455,6 +453,8 @@ def test_white_label_report_blocks_unsafe_urls(tmp_path, monkeypatch):
             {
                 "contractor_name": "<script>alert(1)</script>",
                 "job_type": "office TI",
+                "city": "Denver",
+                "state": "CO",
                 "result": {
                     "apply_url": "javascript:alert(1)",
                     "permits_required": [{"permit_type": "Building Permit"}],

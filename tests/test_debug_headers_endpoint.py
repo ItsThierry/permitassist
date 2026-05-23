@@ -12,11 +12,20 @@ def _install_server_import_stubs():
     requests_stub = types.ModuleType("requests")
     requests_stub.post = lambda *a, **k: None
     requests_stub.get = lambda *a, **k: None
+    requests_stub.head = lambda *a, **k: types.SimpleNamespace(status_code=200, url=(a[0] if a else ""), headers={})
+    requests_stub.exceptions = types.SimpleNamespace(
+        Timeout=TimeoutError,
+        RequestException=Exception,
+        SSLError=Exception,
+        ConnectionError=ConnectionError,
+    )
     sys.modules.setdefault("requests", requests_stub)
 
     openai_stub = types.ModuleType("openai")
     openai_stub.OpenAI = lambda *a, **k: object()
-    sys.modules.setdefault("openai", openai_stub)
+    # Several suites import the real OpenAI package before these server tests.
+    # Force the stub so importing api.server never depends on local credentials.
+    sys.modules["openai"] = openai_stub
 
     google_stub = types.ModuleType("google")
     genai_stub = types.ModuleType("google.generativeai")
