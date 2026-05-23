@@ -186,7 +186,7 @@ def test_stage5_pending_queue_and_manual_resolve_path(tmp_path, monkeypatch):
     monkeypatch.setenv("PA3_CUSTOMER_VIEW_VERTICALS", "all")
     monkeypatch.setenv("PERMITASSIST_ADMIN_TOKEN", "admin-test-token")
     server = _import_server(tmp_path, monkeypatch)
-    server.ADMIN_TOKEN = "admin-test-token"
+    setattr(server, "ADMIN_TOKEN", "admin-test-token")
     public = server.build_pa3_customer_view_api_response(_generic_raw_result(), "restaurant tenant improvement", "Austin", "TX", explicit_vertical="restaurant_ti")
     assert public["view_type"] == "CustomerView"
     assert public["customer_final"] is True

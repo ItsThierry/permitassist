@@ -919,7 +919,7 @@ def test_enabled_pack_fails_closed_when_cutoff_equals_now_boundary(tmp_path, mon
 def test_enabled_pack_rechecks_freshness_after_cached_pack_cutoff_passes(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     data = json.loads(pack_path.read_text(encoding="utf-8"))
-    cutoff = (datetime.now(timezone.utc) + timedelta(seconds=1)).isoformat().replace("+00:00", "Z")
+    cutoff = (datetime.now(timezone.utc) + timedelta(seconds=3)).isoformat().replace("+00:00", "Z")
     data["records"][0]["stale_after_utc"] = cutoff
     pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
     _enable_pack(monkeypatch, pack_path)
@@ -928,7 +928,7 @@ def test_enabled_pack_rechecks_freshness_after_cached_pack_cutoff_passes(tmp_pat
     first = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
     assert "companion_reviews_triggers" in first["_evidence_pack"]["matched_fields"]
 
-    time.sleep(1.2)
+    time.sleep(3.2)
     second = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
     assert second["_evidence_pack"]["matched_fields"] == ["approval_timeline"]
     assert second["companion_reviews_triggers"] is None
