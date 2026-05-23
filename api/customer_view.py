@@ -329,10 +329,10 @@ def _guidance_filing_path(
     clean_name = _clean(permit_name)
     if clean_name and not _is_generic_final(clean_name):
         if not has_provenance:
-            return f"Permit Required — {clean_name}. Official filing category/path requires active retrieval before customer release."
+            return f"Permit Required — {clean_name}. Use the listed official intake details before filing."
         return f"Permit Required — {clean_name}. Use the official source-backed application/form path before filing."
     if not has_provenance:
-        return "Official filing category/path requires active retrieval before customer release."
+        return "Permit Required — use the listed official intake details before filing."
     return "Permit Required — source-backed official filing category/path."
 
 
@@ -402,7 +402,46 @@ def _candidate_text(value: Any) -> str:
     return ""
 
 
+def _usable_permit_candidate(value: Any) -> str | None:
+    candidate = _candidate_text(value)
+    if candidate and not _is_generic_final(candidate):
+        return candidate
+    return None
+
+
 def _first_required_permit_candidate(raw: dict[str, Any]) -> str | None:
+    packet = _nested_packet(raw)
+    direct_candidates = (
+        raw.get("likely_permit_category"),
+        raw.get("primary_permit_category"),
+        raw.get("required_permit_category"),
+        packet.get("likely_permit_category"),
+        packet.get("primary_permit_category"),
+    )
+    for value in direct_candidates:
+        candidate = _usable_permit_candidate(value)
+        if candidate:
+            return candidate
+
+    logic_items = raw.get("permits_required_logic") or packet.get("permits_required_logic")
+    if isinstance(logic_items, dict):
+        logic_items = [logic_items]
+    if isinstance(logic_items, list):
+        for item in logic_items:
+            if not isinstance(item, dict):
+                continue
+            if item.get("required") is False:
+                continue
+            candidate = _clean(
+                item.get("permit_name")
+                or item.get("permit_type")
+                or item.get("name")
+                or item.get("type")
+                or item.get("category")
+            )
+            if candidate and not _is_generic_final(candidate):
+                return candidate
+
     for list_key in ("permits_required", "required_permits", "permits", "permit_types"):
         items = raw.get(list_key)
         if not isinstance(items, list):
@@ -433,6 +472,10 @@ def _derived_permit_name_from_job(job_type: str, vertical: str) -> str:
     text = f"{job_type} {vertical}".lower()
     if any(term in text for term in ("restaurant", "medical", "clinic", "office", "tenant improvement", " ti", "interior alteration", "buildout", "build-out")):
         return "Commercial Tenant Improvement / Alteration Building Permit"
+    if "solar" in text or "photovoltaic" in text or " pv" in f" {text}":
+        return "Solar / Photovoltaic Permit"
+    if any(term in text for term in ("roof", "reroof", "re-roof")):
+        return "Roofing Permit"
     if any(term in text for term in ("water heater", "plumbing")):
         return "Plumbing Permit"
     if any(term in text for term in ("electrical", "panel", "wiring")):
@@ -454,12 +497,18 @@ def _best_available_permit_name(raw: dict[str, Any], *, job_type: str, vertical:
         raw.get("display_permit_name"),
         raw.get("official_permit_name"),
         raw.get("official_application_category"),
+        raw.get("source_backed_official_portal_category_path"),
+        raw.get("likely_permit_category"),
+        raw.get("primary_permit_category"),
+        raw.get("required_permit_category"),
         raw.get("permit_name"),
         raw.get("permit_type"),
         raw.get("_permit_display_name"),
         packet.get("display_permit_name"),
         packet.get("permit_name"),
         packet.get("permit_type"),
+        packet.get("likely_permit_category"),
+        packet.get("primary_permit_category"),
     )
     for value in direct_candidates:
         candidate = _candidate_text(value)
@@ -468,7 +517,8 @@ def _best_available_permit_name(raw: dict[str, Any], *, job_type: str, vertical:
     candidate = _first_required_permit_candidate(raw)
     if candidate:
         return candidate
-    return _derived_permit_name_from_job(job_type, vertical)
+    derived = _derived_permit_name_from_job(job_type, vertical)
+    return derived if not _is_generic_final(derived) else None
 
 
 def _guidance_next_steps(permit_required: bool | None, *, unsupported: bool = False) -> list[str]:
@@ -685,11 +735,22 @@ def build_customer_view(
             unsupported=True,
         )
 
-    if internal_result.get("customer_final") is False or internal_result.get("final_answer_state") in {
+    permit_name, portal_path, provenance = _extract_exact_support(internal_result)
+    raw_required = internal_result.get("permit_required")
+    permit_required = raw_required if isinstance(raw_required, bool) else True
+    fallback_permit_name = _best_available_permit_name(
+        internal_result,
+        job_type=job_type,
+        vertical=vertical,
+        permit_required=permit_required,
+    )
+
+    is_pending_like = internal_result.get("customer_final") is False or internal_result.get("final_answer_state") in {
         PENDING_ACTIVE_RETRIEVAL,
         PENDING_MANUAL_COMPLETION,
         "OFFICIAL_SOURCE_RETRIEVAL_REQUIRED",
-    }:
+    }
+    if is_pending_like and not (permit_name or portal_path or fallback_permit_name):
         return _customer_guidance_view(
             final_answer_state="OFFICIAL_SOURCE_RETRIEVAL_REQUIRED",
             permit_required=None,
@@ -703,16 +764,7 @@ def build_customer_view(
             customer_final=False,
         )
 
-    permit_name, portal_path, provenance = _extract_exact_support(internal_result)
-    raw_required = internal_result.get("permit_required")
-    permit_required = raw_required if isinstance(raw_required, bool) else True
-    fallback_permit_name = _best_available_permit_name(
-        internal_result,
-        job_type=job_type,
-        vertical=vertical,
-        permit_required=permit_required,
-    )
-    if not (permit_name or portal_path) or not provenance:
+    if not (permit_name or portal_path):
         return _customer_guidance_view(
             final_answer_state=NO_PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE if permit_required is False else PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE,
             permit_required=permit_required,

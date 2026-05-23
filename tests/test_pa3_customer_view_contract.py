@@ -221,7 +221,7 @@ def test_unsupported_out_of_scope_is_fail_closed_allowlisted_view():
     assert public["view_type"] == "CustomerView"
     assert public["customer_final"] is True
     assert public["permit_required"] is None
-    assert public["filing_path"].startswith("Invalid/Unsupported Jurisdiction")
+    assert public["filing_path"].startswith("Invalid jurisdiction")
     assert "lookup_id" not in public
     assert "pending_reason" not in public
     assert "missing_fields" not in public
@@ -243,7 +243,7 @@ def test_unsupported_ahj_status_and_coverage_truth_fail_closed_not_required_guid
     assert public["final_answer_state"] == OUT_OF_SCOPE
     assert public["customer_final"] is True
     assert public["permit_required"] is None
-    assert public["filing_path"].startswith("Invalid/Unsupported Jurisdiction")
+    assert public["filing_path"].startswith("Invalid jurisdiction")
     assert "Permit Required" not in public["filing_path"]
     assert "lookup_id" not in public
     assert "pending_reason" not in public
