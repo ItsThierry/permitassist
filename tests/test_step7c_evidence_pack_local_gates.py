@@ -31,6 +31,12 @@ def _post_json_response(url, body, headers=None):
         return resp.status, json.loads(resp.read().decode("utf-8"))
 
 
+def _timeline_simple(value):
+    if isinstance(value, dict):
+        return value.get("simple", "")
+    return value or ""
+
+
 def _base_engine_result():
     return {
         "permit_verdict": "YES",
@@ -194,9 +200,11 @@ def test_step7u_production_preview_response_surfaces_contractor_safe_fields(monk
     assert result["warnings"] == result["quality_warnings"]
     assert any("fee range" in warning.lower() for warning in result["warnings"])
     assert any("statutory" in warning.lower() for warning in result["warnings"])
-    assert len(result["approval_timeline"]) <= 300
-    assert result["approval_timeline"].startswith("Dallas local queue time still needs AHJ/portal confirmation")
-    assert "45th day" in result["approval_timeline"]
+    timeline = _timeline_simple(result["approval_timeline"])
+    assert isinstance(result["approval_timeline"], dict)
+    assert len(timeline) <= 300
+    assert timeline.startswith("Dallas local queue time still needs AHJ/portal confirmation")
+    assert "45th day" in timeline
     assert "_approval_timeline_evidence_detail" not in result
 
 
@@ -569,7 +577,7 @@ def test_enabled_local_pack_fails_closed_missing_field_evidence_and_blocks_sourc
     assert result["apply_url"] is None
     assert result["inspection_booking"] is None
     assert result["fee_range"] is None
-    assert result["approval_timeline"].startswith("Denver building-permit review")
+    assert _timeline_simple(result["approval_timeline"]).startswith("Denver building-permit review")
     assert result["inspections"] is None
     assert result["companion_reviews_triggers"].startswith("Office TI may require")
     assert [c["field"] for c in result["claim_citations"]] == ["companion_reviews_triggers", "approval_timeline"]
@@ -737,7 +745,7 @@ def test_enabled_local_pack_endpoint_parity_for_permit_batch_and_v1(tmp_path, mo
     for body in (permit_body, batch_result, v1_body):
         assert body["apply_url"] is None
         assert body["fee_range"] is None
-        assert body["approval_timeline"].startswith("Denver building-permit review")
+        assert _timeline_simple(body["approval_timeline"]).startswith("Denver building-permit review")
         assert body["companion_reviews_triggers"].startswith("Office TI may require")
         assert [c["field"] for c in body["claim_citations"]] == ["companion_reviews_triggers", "approval_timeline"]
         assert body["_evidence_pack"]["matched_fields"] == ["approval_timeline", "companion_reviews_triggers"]
@@ -779,7 +787,7 @@ def test_preview_only_batch_and_v1_remain_normal_without_evidence_pack(tmp_path,
     for body in (batch_result, v1_body):
         assert body["apply_url"] == ""
         assert body["fee_range"] == "$500-$1,000"
-        assert body["approval_timeline"] == "2-4 weeks"
+        assert body["approval_timeline"] == {"simple": "2-4 weeks"}
         assert "_evidence_pack" not in body
     assert len(calls) == 2
     assert all(call.get("use_cache") is True for call in calls)
@@ -911,7 +919,7 @@ def test_enabled_pack_fails_closed_when_cutoff_equals_now_boundary(tmp_path, mon
 def test_enabled_pack_rechecks_freshness_after_cached_pack_cutoff_passes(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     data = json.loads(pack_path.read_text(encoding="utf-8"))
-    cutoff = (datetime.now(timezone.utc) + timedelta(seconds=1)).isoformat().replace("+00:00", "Z")
+    cutoff = (datetime.now(timezone.utc) + timedelta(seconds=3)).isoformat().replace("+00:00", "Z")
     data["records"][0]["stale_after_utc"] = cutoff
     pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
     _enable_pack(monkeypatch, pack_path)
@@ -920,7 +928,7 @@ def test_enabled_pack_rechecks_freshness_after_cached_pack_cutoff_passes(tmp_pat
     first = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
     assert "companion_reviews_triggers" in first["_evidence_pack"]["matched_fields"]
 
-    time.sleep(1.2)
+    time.sleep(3.2)
     second = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
     assert second["_evidence_pack"]["matched_fields"] == ["approval_timeline"]
     assert second["companion_reviews_triggers"] is None
@@ -975,7 +983,7 @@ def test_enabled_pack_accepts_official_ahj_suffix_variants_without_substring_lea
 
     assert result["_evidence_pack"]["matched_fields"] == ["approval_timeline", "companion_reviews_triggers"]
     assert result["companion_reviews_triggers"].startswith("Office TI may require")
-    assert result["approval_timeline"].startswith("Denver building-permit review")
+    assert _timeline_simple(result["approval_timeline"]).startswith("Denver building-permit review")
 
 
 def test_enabled_pack_accepts_city_county_borough_parish_township_municipality_variants(tmp_path, monkeypatch):
@@ -1543,12 +1551,19 @@ def test_white_label_report_surfaces_evidence_pack_limits(tmp_path, monkeypatch)
         }
     )
 
+    assert "Permit Required" in html
+    assert "No customer-final answer yet" not in html
+    assert "Missing source-backed fields" not in html
+    assert "PendingView" not in html
+    assert "pending_reason" not in html
+    assert "lookup_id" not in html
     assert "Fee information is not source-confirmed for this lookup" in html
-    assert "Some field-specific details are not source-confirmed yet: fees, inspections" in html
+    assert "Some field-specific details are not source-confirmed yet: fees, inspections" not in html
     assert "fee_range" not in html
-    assert "Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate" in html
-    assert "not a complete local specialty-trigger list" in html
-    assert "exact portal subcategory requires AHJ verification" in html
+    assert "failed_closed_fields" not in html
+    assert "Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate" not in html
+    assert "not a complete local specialty-trigger list" not in html
+    assert "exact portal subcategory requires AHJ verification" not in html
 
 
 

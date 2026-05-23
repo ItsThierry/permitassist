@@ -48,6 +48,12 @@ def _base_engine_result():
     }
 
 
+def _timeline_simple(value):
+    if isinstance(value, dict):
+        return value.get("simple", "")
+    return value or ""
+
+
 def _source_rows():
     assert SOURCE_ARTIFACT.exists()
     assert hashlib.sha256(SOURCE_ARTIFACT.read_bytes()).hexdigest() == SOURCE_SHA256
@@ -185,11 +191,17 @@ def test_phase7c_all_30_golden_rows_match_and_suppress_unsupported_fields(monkey
                 "state": source_row["state"],
             })
             assert "Coverage scope" in html
-            assert "Official-source backed" in html
-            assert "Not confirmed" in html
-            assert "Warnings" in html
-            assert "Coverage caveat" in html
-            assert html.index("Warnings") < html.index("Likely permits") < html.index("How to apply")
+            assert "Customer-visible result" in html
+            assert ("Permit Required" in html) or ("No Permit Required" in html) or ("Invalid/Unsupported Jurisdiction" in html)
+            assert "No customer-final answer yet" not in html
+            assert "PendingView" not in html
+            assert "pending_reason" not in html
+            assert "lookup_id" not in html
+            assert "Official sources" in html
+            assert "Likely permits" not in html
+            assert "How to apply" not in html
+            assert "_evidence_pack" not in html
+            assert "Coverage caveat" not in html
 
 
 def test_phase7c_golden_http_gate_requires_preview_and_non_public_token(monkeypatch, tmp_path):
@@ -585,7 +597,7 @@ def test_phase7c_non_golden_regression_when_env_unset(monkeypatch, tmp_path):
 
     assert "_evidence_pack" not in result
     assert result["fee_range"] == "$500-$1,000"
-    assert result["approval_timeline"] == "2-4 weeks"
+    assert result["approval_timeline"] == {"simple": "2-4 weeks"}
     assert result["inspections"] == ["final building"]
     assert result["companion_reviews_triggers"] == "generic companion review copy"
 

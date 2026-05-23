@@ -2,117 +2,76 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>PermitAssist Report</title>
   <style>
-    :root { --bg:#f8fafc; --card:#fff; --text:#0f172a; --muted:#64748b; --brand:#2563eb; --border:#e2e8f0; --green:#059669; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); }
-    .wrap { max-width:980px; margin:0 auto; padding:32px 20px 80px; }
-    .hero { background:linear-gradient(135deg, rgba(37,99,235,.09), rgba(255,255,255,.96)); border:1px solid rgba(37,99,235,.15); border-radius:24px; padding:28px; margin-bottom:18px; }
-    .brand { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
-    .mark { width:44px; height:44px; border-radius:14px; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; }
-    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
-    .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px; box-shadow:0 10px 30px rgba(15,23,42,.05); }
-    .label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--brand); margin-bottom:10px; }
-    .headline { font-size:32px; line-height:1.08; font-weight:900; margin:0 0 6px; }
-    .sub { color:var(--muted); font-size:15px; }
-    .pill { display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:8px 14px; border-radius:999px; background:rgba(5,150,105,.12); color:var(--green); font-weight:800; }
-    .meta { display:grid; gap:12px; }
-    .meta-row { display:flex; justify-content:space-between; gap:16px; padding-bottom:12px; border-bottom:1px solid var(--border); font-size:14px; }
-    .meta-row:last-child { border-bottom:none; padding-bottom:0; }
-    ul { margin:0; padding-left:18px; }
-    li { margin:8px 0; color:#334155; }
-    .cta { margin-top:18px; background:#0f172a; color:#fff; border-radius:20px; padding:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-    .cta a, .print-btn { background:#fff; color:#0f172a; text-decoration:none; border:none; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer; }
-    .source-list a { color:var(--brand); word-break:break-all; }
-    @media (max-width: 760px) { .grid { grid-template-columns:1fr; } .headline { font-size:26px; } .cta { flex-direction:column; align-items:flex-start; } }
-    @media print {
-      body { background:#fff; }
-      .wrap { max-width:none; padding:0; }
-      .cta, .print-actions { display:none !important; }
-      .card, .hero { box-shadow:none; break-inside:avoid; }
-      a { color:#000; text-decoration:none; }
-    }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
+    main { max-width: 840px; margin: 0 auto; padding: 32px 20px 56px; }
+    section { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px; margin: 16px 0; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+    h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+    h2 { font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: #475569; margin: 0 0 12px; }
+    .meta { color: #475569; margin: 0 0 20px; }
+    .badge { display: inline-block; border-radius: 999px; padding: 5px 10px; background: #dbeafe; color: #1e40af; font-weight: 700; font-size: 13px; }
+    .badge.no { background: #dcfce7; color: #166534; }
+    .badge.invalid { background: #fee2e2; color: #991b1b; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; vertical-align: top; border-top: 1px solid #e2e8f0; padding: 10px 0; }
+    th { width: 34%; color: #475569; font-weight: 600; padding-right: 16px; }
+    a { color: #2563eb; overflow-wrap: anywhere; }
+    button { border: 0; border-radius: 10px; padding: 10px 14px; background: #0f172a; color: #fff; font-weight: 700; cursor: pointer; }
   </style>
 </head>
 <body>
-  <div class="wrap" id="app"></div>
+  <main id="app"></main>
   <script id="report-data" type="application/json">__REPORT_DATA__</script>
   <script>
-    const payload = JSON.parse(document.getElementById('report-data').textContent);
+    const rawText = document.getElementById('report-data').textContent || '{}';
+    let payload = {};
+    try { payload = JSON.parse(rawText); } catch (_) { payload = {}; }
     const share = payload.share || {};
-    const d = share.data || {};
-    const checklist = payload.checklist || {};
-    const permitName = d.permit_name || (d.permits_required && d.permits_required[0] && d.permits_required[0].permit_type) || 'Permit details';
-    const verdict = (d.permit_verdict || 'MAYBE').toUpperCase();
-    const timeline = (d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || 'Varies by jurisdiction';
-    const docs = [...new Set([...(d.what_to_bring || []), ...(d.requirements || []), ...(d.documents_needed || [])])];
-    const inspections = (d.inspections || []).map(i => i.stage || i.title || i.name || i.description).filter(Boolean);
-    const whereToApply = [d.applying_office, d.apply_address, d.apply_phone].filter(Boolean).join(' • ');
-    const sources = d.sources || [];
-    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-    function feeBreakdownHtml(result) {
-      const source = result.fee_breakdown && typeof result.fee_breakdown === 'object' ? result.fee_breakdown : {};
-      const raw = result.fee_range || result.fee || result.cost || '';
-      const planCheck = source.plan_check_deposit || source.plan_check_upfront || source.upfront || raw || 'Pending verification with AHJ';
-      const issuance = source.permit_issuance_fee || source.issuance || source.permit_fee || 'Pending verification with AHJ';
-      const hasSplit = !!(source.plan_check_deposit || source.plan_check_upfront || source.upfront || source.permit_issuance_fee || source.issuance || source.permit_fee);
-      return `<span style="display:flex;flex-direction:column;gap:3px;text-align:right"><span><strong>Plan Check Deposit / Upfront:</strong> ${esc(planCheck)}</span><span><strong>Permit Issuance Fee:</strong> ${esc(issuance)}</span>${!hasSplit && raw ? `<span style="font-size:12px;color:var(--muted)">Source fee note: ${esc(raw)}</span>` : ''}</span>`;
-    }
-    const app = document.getElementById('app');
-    app.innerHTML = `
-      <section class="hero">
-        <div class="brand"><div class="mark">PA</div><div><div style="font-weight:900;font-size:20px">PermitAssist</div><div class="sub">Permit Intelligence Report</div></div></div>
-        <div class="print-actions" style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
-          <div>
-            <h1 class="headline">${permitName}</h1>
-            <div class="sub">${share.job_type || ''} in ${share.city || ''}, ${share.state || ''}</div>
-            <div class="pill">${verdict} permit status</div>
-          </div>
-          <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
-        </div>
-      </section>
-      <section class="grid">
-        <div class="card">
-          <div class="label">Core details</div>
-          <div class="meta">
-            <div class="meta-row"><strong>Jurisdiction</strong><span>${share.city || ''}, ${share.state || ''}</span></div>
-            <div class="meta-row"><strong>Permit</strong><span>${permitName}</span></div>
-            <div class="meta-row"><strong>Fees</strong>${feeBreakdownHtml(d)}</div>
-            <div class="meta-row"><strong>Timeline</strong><span>${timeline}</span></div>
-            <div class="meta-row"><strong>Where to apply</strong><span>${whereToApply || 'Contact local building department'}</span></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="label">Summary</div>
-          <div class="sub" style="color:#334155">${d.job_summary || d.permit_summary || 'Permit requirements generated from PermitAssist research.'}</div>
-        </div>
-        <div class="card">
-          <div class="label">Required documents</div>
-          <ul>${(docs.length ? docs : ['Scope of work','Any plans or sketches required by the city','Contractor/license details']).map(x => `<li>${x}</li>`).join('')}</ul>
-        </div>
-        <div class="card">
-          <div class="label">Inspection checklist</div>
-          <ul>${(inspections.length ? inspections : (checklist.items || []).filter(i => i.category === 'inspection').map(i => i.label)).slice(0,8).map(x => `<li>${x}</li>`).join('') || '<li>Confirm inspection phases with the jurisdiction.</li>'}</ul>
-        </div>
-        <div class="card">
-          <div class="label">Pre-construction checklist</div>
-          <ul>${((checklist.items || []).length ? checklist.items : [{label:'Pull permit before starting work'}]).map(item => `<li>${item.label}</li>`).join('')}</ul>
-        </div>
-        <div class="card">
-          <div class="label">Official sources</div>
-          <ul class="source-list">${sources.length ? sources.map(src => `<li><a href="${src}" target="_blank" rel="noopener">${src}</a></li>`).join('') : '<li>No source links stored in this share.</li>'}</ul>
-        </div>
-      </section>
-      <section class="cta">
-        <div>
-          <div style="font-size:20px;font-weight:900;margin-bottom:6px">Get your own permits instantly at permitassist.io</div>
-          <div style="color:rgba(255,255,255,.78)">Shareable permit reports, contractor checklists, and faster office handoffs.</div>
-        </div>
-        <a href="${payload.app_base_url || 'https://permitassist.io'}">Try PermitAssist</a>
-      </section>`;
-    document.title = `${permitName} | PermitAssist Report`;
+    const view = share.data || payload.result || {};
+    const esc = value => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    const isCustomerView = view.view_type === 'CustomerView';
+    const isInvalid = view.final_answer_state === 'OUT_OF_SCOPE' || view.permit_required === null;
+    const isNoPermit = view.permit_required === false;
+    const status = isInvalid ? 'Invalid/Unsupported Jurisdiction' : (isNoPermit ? 'No Permit Required' : 'Permit Required');
+    const badgeClass = isInvalid ? 'invalid' : (isNoPermit ? 'no' : '');
+    const defaultPath = isInvalid
+      ? 'Invalid/Unsupported Jurisdiction — PermitAssist cannot issue a permit answer for this location.'
+      : (isNoPermit
+        ? 'No Permit Required — source-backed guidance; keep the cited source with the job record.'
+        : 'Permit Required — source-backed guidance; exact application path needs permitting-office confirmation before filing.');
+    const title = isCustomerView
+      ? (view.filing_path || view.permit_name || view.official_portal_category_path || defaultPath)
+      : defaultPath;
+    const safeRows = [
+      ['Final answer', status],
+      ['Required', isInvalid ? 'Not applicable' : (isNoPermit ? 'No' : 'Yes')],
+      ['Permit / application / form', view.permit_name || 'Not separately named by source'],
+      ['Official portal category/path', view.official_portal_category_path || 'Not separately named by source'],
+      ['Filing path', view.filing_path || defaultPath],
+      ['Official portal', view.apply_url ? `<a href="${esc(view.apply_url)}">${esc(view.apply_url)}</a>` : 'Not shown']
+    ];
+    const sources = (Array.isArray(view.official_source_provenance) ? view.official_source_provenance : [])
+      .map(src => `<li><a href="${esc(src.source_url || src.url)}">${esc(src.source_title || src.title || 'Official source')}</a></li>`)
+      .join('') || '<li>No safe source URL attached; official-source retrieval is still in progress.</li>';
+    const steps = (Array.isArray(view.next_steps) && view.next_steps.length ? view.next_steps : ['Use the customer-safe filing guidance above before preparing the submittal.'])
+      .map(step => `<li>${esc(step)}</li>`)
+      .join('');
+    document.getElementById('app').innerHTML = `
+      <h1>${esc(title)}</h1>
+      <p class="meta">${esc(share.job_type || view.job_type || '')} — ${esc(share.city || view.city || '')}, ${esc(share.state || view.state || '')}</p>
+      <p><span class="badge ${badgeClass}">${esc(status)}</span></p>
+      <p><button onclick="window.print()">Print / Save PDF</button></p>
+      <section><h2>Customer-visible result</h2><table>${safeRows.map(([k,v]) => `<tr><th>${esc(k)}</th><td>${typeof v === 'string' && v.includes('<a ') ? v : esc(v)}</td></tr>`).join('')}</table></section>
+      <section><h2>Next steps</h2><ul>${steps}</ul></section>
+      <section><h2>Coverage scope</h2><p>Fee, timeline, inspection, and companion-review details are shown only when they are safe for the customer-visible report. Plan Check Deposit / Upfront and Permit Issuance Fee components stay separate when shown.</p></section>
+      <section><h2>Official sources</h2><ul>${sources}</ul></section>
+    `;
   </script>
 </body>
 </html>

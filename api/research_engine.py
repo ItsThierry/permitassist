@@ -19,12 +19,34 @@ import io
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
 from copy import deepcopy
 from urllib.parse import urljoin, urlparse
-import requests
 from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
-from openai import OpenAI
-import google.generativeai as genai
-import pdfplumber
+from typing import Any
+
+requests: Any
+BeautifulSoup: Any
+OpenAI: Any
+genai: Any
+pdfplumber: Any
+try:
+    import requests
+except ImportError:  # Optional at import time for classifier-only tests.
+    requests = None
+try:
+    from bs4 import BeautifulSoup
+except ImportError:  # Optional until HTML parsing paths are used.
+    BeautifulSoup = None
+try:
+    from openai import OpenAI
+except ImportError:  # Optional until OpenAI fallback is used.
+    OpenAI = None
+try:
+    import google.generativeai as genai
+except ImportError:  # Optional until Gemini fallback is used.
+    genai = None
+try:
+    import pdfplumber
+except ImportError:  # Optional until PDF extraction paths are used.
+    pdfplumber = None
 
 try:
     from .state_packs import get_state_expert_notes
@@ -47,12 +69,14 @@ except Exception:
 
 client = None
 
-def _get_openai_client() -> OpenAI:
+def _get_openai_client() -> Any:
     """Create the OpenAI fallback client lazily so importing tests never needs a key."""
     global client
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set — OpenAI fallback unavailable")
+    if OpenAI is None:
+        raise RuntimeError("openai package unavailable — OpenAI fallback unavailable")
     if client is None or getattr(client, "api_key", None) != api_key:
         client = OpenAI(api_key=api_key)
     return client
@@ -83,7 +107,7 @@ def get_cache_hit_rate() -> dict:
 # Variable names retained for backwards-compat across the file; the
 # *_fallback_model name now refers to the PRIMARY model. Rename pending.
 _GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-if _GEMINI_API_KEY:
+if _GEMINI_API_KEY and genai is not None:
     genai.configure(api_key=_GEMINI_API_KEY)
 _gemini_primary_model = "gemini-3-flash-preview"
 _openai_fallback_model = "gpt-5.4-mini"

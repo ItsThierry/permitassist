@@ -195,6 +195,41 @@ def test_phase7h_non_evidence_city_source_exact_name_is_neutralized(tmp_path, mo
     assert "not official-source verified" in text
 
 
+def test_phase7h_non_evidence_legacy_cache_without_local_ahj_source_is_neutralized(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_verdict": "YES",
+        "permit_type": "Commercial Alteration Permit",
+        "permit_name": "Commercial Alteration Permit",
+        "permits_required": [{"permit_type": "Commercial Alteration Permit", "required": True}],
+        "sources": ["https://example.com/permits"],
+        "_source_classification": [{"source_class": "government_other"}],
+    }
+
+    server.ensure_customer_visible_permit_trust_statement(result, "Chicago", "IL", "office tenant improvement")
+
+    statement = "Permit required — exact permit type needs AHJ verification"
+    assert result["permit_type_verified"] is False
+    assert result["permit_name"] == statement
+
+
+def test_phase7h_local_ahj_classified_legacy_result_preserves_label(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_verdict": "YES",
+        "permit_type": "Commercial Building Permit",
+        "permit_name": "Commercial Building Permit",
+        "permits_required": [{"permit_type": "Commercial Building Permit", "required": True}],
+        "sources": ["https://ladbs.org/services/core-services/plan-check-permit"],
+        "_source_classification": [{"source_class": "local_ahj"}],
+    }
+
+    server.ensure_customer_visible_permit_trust_statement(result, "Los Angeles", "CA", "office tenant improvement")
+
+    assert result["permit_type_verified"] is True
+    assert result["permit_name"] == "Commercial Building Permit"
+
+
 def test_ef04_build_claim_citations_omits_claims_without_quoted_snippets(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     result = {
@@ -262,4 +297,7 @@ def test_ef04_report_renderer_does_not_recreate_unverified_claim_citations(tmp_p
 
     assert result["claim_citations"] == []
     assert "Source quote not attached for this field yet" not in html
-    assert "No citations attached yet" in html
+    assert "No safe source URL attached; official-source retrieval is still in progress." in html
+    assert "PendingView" not in html
+    assert "Pending reason" not in html
+    assert "Missing source-backed fields" not in html
