@@ -291,7 +291,8 @@ def test_ef04_report_renderer_does_not_recreate_unverified_claim_citations(tmp_p
 
     assert result["claim_citations"] == []
     assert "Source quote not attached for this field yet" not in html
-    assert "No safe source URL attached; official-source retrieval is still in progress." in html
+    assert "https://chicago.gov/permits" in html
+    assert "Chicago Permits" in html
     assert "PendingView" not in html
     assert "Pending reason" not in html
     assert "Missing source-backed fields" not in html

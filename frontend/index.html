@@ -2938,9 +2938,9 @@ function buildConfidenceBadgeHtml(d, renderContext, city, state) {
     return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
   }
   if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
-    return `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 Pending Verification<span class="conf-tooltip">County-level fallback. Confirm with building department.</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">County-level fallback · confirm with building dept</div>`;
+    return `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 County-level evidence<span class="conf-tooltip">PermitAssist is using county-level source evidence for this lookup.</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">County-level source evidence</div>`;
   }
-  return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 State Code Default<span class="conf-tooltip">State/code default or incomplete local source match. Confirm with building department.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">State/code default · confirm with building dept</div>`;
+  return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Official-source completion needed<span class="conf-tooltip">PermitAssist is completing official local-source support for this lookup.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Official local-source completion needed</div>`;
 }
 
 const COMMERCIAL_INSPECTION_PROFILES = {
@@ -3057,7 +3057,7 @@ function getJurisdictionDisplay(d, city, state, jobAddress) {
     badge,
     matchedTo,
     why,
-    lookupBasis: jobAddress ? `Used job address: ${jobAddress}` : 'Used city/state lookup only',
+    lookupBasis: jobAddress ? `Used job address: ${jobAddress}` : 'Using city/state jurisdiction lookup',
   };
 }
 
@@ -3086,7 +3086,7 @@ function getFeeBreakdown(d) {
   const planCheck = source.plan_check_deposit || source.plan_check_upfront || source.upfront || '';
   const issuance = source.permit_issuance_fee || source.issuance || source.permit_fee || '';
   const combined = source.combined || rawFee || '';
-  const unknown = 'Pending verification with AHJ';
+  const unknown = 'Official fee source not attached yet';
   return {
     planCheckDeposit: planCheck || (combined || unknown),
     permitIssuanceFee: issuance || unknown,
@@ -3237,6 +3237,24 @@ function renderResults(d, job, city, state) {
   window._lastLookupJob = job || '';
   window._lastLookupCity = city || '';
   window._lastLookupState = state || '';
+  if (d && d.view_type === 'CustomerView') {
+    const contact = (d.ahj_contact && typeof d.ahj_contact === 'object') ? d.ahj_contact : {};
+    d.permits_required = Array.isArray(d.permits_required) && d.permits_required.length ? d.permits_required : [{ permit_type: d.permit_name || d.official_portal_category_path || d.filing_path || 'Permit/application path', required: d.permit_required === false ? false : true }];
+    d.sources = Array.isArray(d.sources) && d.sources.length ? d.sources : (d.official_source_provenance || []).map(s => ({ url: s.source_url, title: s.source_title, snippet: s.exact_quote_or_snippet }));
+    d.fee_range = d.fee_range || (d.fees && d.fees.summary) || '';
+    d.fee_breakdown = d.fee_breakdown || d.fees || {};
+    d.what_to_bring = Array.isArray(d.what_to_bring) && d.what_to_bring.length ? d.what_to_bring : (d.application_steps || []);
+    d.inspections = Array.isArray(d.inspections) && d.inspections.length ? d.inspections : (d.inspection_checklist || []);
+    d.common_mistakes = Array.isArray(d.common_mistakes) && d.common_mistakes.length ? d.common_mistakes : (d.rejection_risks || []);
+    d.job_summary = d.job_summary || d.customer_explanation || d.filing_path || '';
+    d.applying_office = d.applying_office || contact.department || d.ahj_name || '';
+    d.apply_phone = d.apply_phone || contact.phone || '';
+    d.apply_address = d.apply_address || contact.address || '';
+    d.apply_google_maps = d.apply_google_maps || contact.maps_url || '';
+    d.apply_url = d.apply_url || contact.portal_url || '';
+    d.companion_permits = Array.isArray(d.companion_permits) && d.companion_permits.length ? d.companion_permits : (d.companion_permits_reviews || []).map(cp => ({ permit_type: cp.name || cp.review || cp.label || 'Companion permit/review', reason: cp.trigger || cp.description || cp.requirement_label || '', certainty: 'likely' }));
+    d.last_verified_at = d.last_verified_at || d.last_updated || '';
+  }
   const renderContext = getRenderingContext(d, job, city, state);
   const verdict = verdictState(d);
   const permits = normalizePermitDisplayData(d, renderContext);
@@ -3346,7 +3364,7 @@ function renderResults(d, job, city, state) {
   const confBadgeHtml = buildConfidenceBadgeHtml(d, renderContext, city, state);
   const sourceLinks = getOfficialSourceLinks(d, city, state);
   const heroUpdatedRaw = d.last_verified_at || d._meta?.generated_at || '';
-  const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown';
+  const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
   const rulebookDepth = String(d.rulebook_depth || '').toUpperCase();
   const lastVerifiedRaw = d._last_verified_at || (rulebookDepth === 'DEEP' ? '2026-04-28' : (rulebookDepth === 'MEDIUM' ? '2026-04-29' : ''));
   const lastVerifiedLabel = /^\d{4}-\d{2}-\d{2}$/.test(String(lastVerifiedRaw))
@@ -3383,8 +3401,8 @@ function renderResults(d, job, city, state) {
       tier = 'county'; label = '🏛️ County estimate';
       tooltip = 'No city-level data available; using county-level fallback. Verify with the city building dept.';
     } else {
-      tier = 'pending'; label = 'Pending Verification';
-      tooltip = 'No source-confirmed local value is available yet. Confirm with the building department before relying on this.';
+      tier = 'pending'; label = 'Official-source completion needed';
+      tooltip = 'No source-confirmed local value is attached yet. Use the cited official source before relying on this field.';
     }
     return `<span class="field-source-tag tier-${tier}" title="${esc(tooltip)}">${label}</span>`;
   };
@@ -3421,7 +3439,7 @@ function renderResults(d, job, city, state) {
 
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span style="font-size:11px;color:var(--muted)">Last updated: ${heroUpdatedLabel}</span>
+      ${heroUpdatedLabel ? `<span style="font-size:11px;color:var(--muted)">Last updated: ${heroUpdatedLabel}</span>` : ''}
       <button class="flag-wrong-btn" onclick="renderReportView()" style="border-color:var(--brand);color:var(--brand);">📋 Report view</button>
       <button class="flag-wrong-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button>
       <span class="flag-feedback-inline" id="flag-feedback-inline">Thanks for flagging. We'll review this within 30 days.</span>

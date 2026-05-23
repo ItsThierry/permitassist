@@ -377,7 +377,8 @@ def test_admin_can_create_paid_test_session_for_smoke(tmp_path, monkeypatch):
     assert "X-Free-Lookups-Used" not in headers
     assert "X-Free-Lookups-Remaining" not in headers
     payload = json.loads(body)
-    assert payload["remaining_lookups"] == -1
+    assert payload["view_type"] == "CustomerView"
+    assert "remaining_lookups" not in payload
 
 
 def test_beta_feedback_and_white_label_report_endpoints(tmp_path, monkeypatch):
@@ -473,7 +474,7 @@ def test_white_label_report_blocks_unsafe_urls(tmp_path, monkeypatch):
     assert status == 200
     assert "javascript:" not in html
     assert "<script>" not in html
-    assert "No safe source URL attached" in html
+    assert "Official source" in html
 
 
 def test_quality_gate_does_not_clobber_ahj_specific_commercial_primary(tmp_path, monkeypatch):

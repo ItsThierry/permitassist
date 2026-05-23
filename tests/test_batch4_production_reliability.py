@@ -118,7 +118,9 @@ def test_paid_permit_lookup_does_not_emit_free_lookup_headers(tmp_path, monkeypa
     assert status == 200
     assert "X-Free-Lookups-Used" not in headers
     assert "X-Free-Lookups-Remaining" not in headers
-    assert json.loads(body)["remaining_lookups"] == -1
+    payload = json.loads(body)
+    assert payload["view_type"] == "CustomerView"
+    assert "remaining_lookups" not in payload
 
 
 def test_feedback_telegram_message_escapes_user_supplied_html(tmp_path, monkeypatch):

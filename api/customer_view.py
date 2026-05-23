@@ -78,6 +78,7 @@ _GENERIC_FINAL_PATTERNS = (
 
 _PROSE_FIELDS_THAT_MUST_BE_SAFE = (
     "customer_summary",
+    "customer_explanation",
     "summary",
     "headline",
     "next_step",
@@ -199,6 +200,12 @@ class CustomerView:
     submission_options: list[dict[str, str]]
     approval_timeline: dict[str, str] | None
     official_source_provenance: list[dict[str, str]]
+    fees: dict[str, Any] | None
+    application_steps: list[str]
+    inspection_checklist: list[str]
+    rejection_risks: list[str]
+    customer_explanation: str | None
+    last_updated: str | None
     next_steps: list[str]
     companion_permits_reviews: list[dict[str, Any]]
     schema_version: str = SCHEMA_VERSION
@@ -224,6 +231,12 @@ class CustomerView:
             "submission_options",
             "approval_timeline",
             "official_source_provenance",
+            "fees",
+            "application_steps",
+            "inspection_checklist",
+            "rejection_risks",
+            "customer_explanation",
+            "last_updated",
             "next_steps",
             "companion_permits_reviews",
         }
@@ -321,7 +334,7 @@ def _guidance_filing_path(
         return "Invalid jurisdiction — PermitAssist cannot issue a permit answer for this location."
     if permit_required is False:
         if not has_provenance:
-            return "No-permit answer requires source-backed evidence before customer release."
+            return "No-permit answer requires source-backed local evidence before it is reliable to use."
         return "No Permit Required — source-backed guidance; keep the cited source with the job record."
     clean_path = _clean(portal_path)
     if clean_path and not _is_generic_final(clean_path):
@@ -329,7 +342,7 @@ def _guidance_filing_path(
     clean_name = _clean(permit_name)
     if clean_name and not _is_generic_final(clean_name):
         if not has_provenance:
-            return f"Permit Required — {clean_name}. Use the listed official intake details before filing."
+            return f"Permit Required — {clean_name}. Confirm the official filing category/path before submitting."
         return f"Permit Required — {clean_name}. Use the listed permitting office/source-backed application/form path before filing."
     if not has_provenance:
         return "Permit Required — use the listed official intake details before filing."
@@ -345,15 +358,22 @@ def _first_clean(raw: dict[str, Any], *keys: str) -> str:
 
 
 def _customer_ahj_contact(raw: dict[str, Any], *, ahj_name: str, apply_url: str | None = None) -> dict[str, Any]:
-    office = _first_clean(raw, "applying_office", "office_name", "department", "department_name", "ahj_name") or _clean(ahj_name)
-    phone = _first_clean(raw, "apply_phone", "office_phone", "department_phone", "phone")
-    address = _first_clean(raw, "apply_address", "office_address", "department_address", "address")
-    portal = _clean(apply_url or raw.get("apply_url") or raw.get("portal_url"))
+    nested = raw.get("ahj_contact") if isinstance(raw.get("ahj_contact"), dict) else {}
+    contact_raw: dict[str, Any] = {}
+    if isinstance(nested, dict):
+        contact_raw.update(nested)
+    contact_raw.update(raw)
+    office = _first_clean(contact_raw, "applying_office", "office_name", "department", "department_name", "ahj_name") or _clean(ahj_name)
+    phone = _first_clean(contact_raw, "apply_phone", "office_phone", "department_phone", "phone")
+    address = _first_clean(contact_raw, "apply_address", "office_address", "department_address", "address")
+    portal = _clean(apply_url or contact_raw.get("apply_url") or contact_raw.get("portal_url") or contact_raw.get("portal"))
+    maps_url = _first_clean(contact_raw, "apply_google_maps", "google_maps_url", "maps_url")
     return {
         "department": office,
         "phone": phone or None,
         "address": address or None,
         "portal_url": portal if _official_url(portal) else None,
+        "maps_url": maps_url if _official_url(maps_url) else None,
         "verification_note": "Use the listed official intake details before filing.",
     }
 
@@ -496,8 +516,6 @@ def _best_available_permit_name(raw: dict[str, Any], *, job_type: str, vertical:
     direct_candidates = (
         raw.get("display_permit_name"),
         raw.get("official_permit_name"),
-        raw.get("official_application_category"),
-        raw.get("source_backed_official_portal_category_path"),
         raw.get("likely_permit_category"),
         raw.get("primary_permit_category"),
         raw.get("required_permit_category"),
@@ -549,6 +567,7 @@ def _customer_guidance_view(
     raw = raw if isinstance(raw, dict) else {}
     safe_apply_url = _clean(apply_url) if _official_url(apply_url) else None
     resolved_ahj_name = _clean(ahj_name) or f"{_clean(city)} {_clean(state_code).upper()}".strip()
+    safe_provenance = provenance or []
     return CustomerView(
         final_answer_state=final_answer_state,
         customer_final=customer_final,
@@ -564,31 +583,49 @@ def _customer_guidance_view(
         ahj_contact=_customer_ahj_contact(raw, ahj_name=resolved_ahj_name, apply_url=safe_apply_url),
         apply_url=safe_apply_url,
         submission_options=_customer_submission_options(raw, apply_url=safe_apply_url),
-        approval_timeline=None,
-        official_source_provenance=provenance or [],
+        approval_timeline=normalize_approval_timeline_for_customer(raw.get("approval_timeline")),
+        official_source_provenance=safe_provenance,
+        fees=_customer_fees(raw, safe_provenance),
+        application_steps=_customer_application_steps(raw, permit_name=permit_name, portal_path=portal_path, apply_url=safe_apply_url),
+        inspection_checklist=_customer_inspection_checklist(raw, job_type=job_type, vertical=vertical),
+        rejection_risks=_customer_rejection_risks(raw, job_type=job_type, vertical=vertical),
+        customer_explanation=_customer_explanation(raw, job_type=job_type, city=city, state_code=state_code, permit_name=permit_name, portal_path=portal_path),
+        last_updated=_last_updated_from_sources(raw, safe_provenance),
         next_steps=_guidance_next_steps(permit_required, unsupported=unsupported),
-        companion_permits_reviews=[],
+        companion_permits_reviews=_derive_companion_permits_reviews(raw, job_type=job_type, vertical=vertical),
     )
 
 
 def _first_dict_list(*values: Any) -> list[dict[str, Any]]:
     for value in values:
         if isinstance(value, list):
-            return [item for item in value if isinstance(item, dict)]
+            out: list[dict[str, Any]] = []
+            for item in value:
+                if isinstance(item, dict):
+                    out.append(item)
+                elif isinstance(item, str) and _official_url(item):
+                    out.append({"source_url": item, "source_title": "Official permitting source"})
+            return out
         if isinstance(value, dict):
             return [value]
+        if isinstance(value, str) and _official_url(value):
+            return [{"source_url": value, "source_title": "Official permitting source"}]
     return []
 
 
 def _sanitize_provenance(raw_sources: list[dict[str, Any]]) -> list[dict[str, str]]:
     sanitized: list[dict[str, str]] = []
     for source in raw_sources:
+        if isinstance(source, str):
+            source = {"source_url": source, "source_title": "Official permitting source"}
+        if not isinstance(source, dict):
+            continue
         url = _clean(source.get("source_url") or source.get("url"))
         title = _clean(source.get("source_title") or source.get("title"))
         snippet = _clean(source.get("exact_quote_or_snippet") or source.get("quoted_snippet") or source.get("snippet") or source.get("quote"))
         retrieved = _clean(source.get("retrieved_at_utc") or source.get("last_verified_utc") or source.get("checked_at"))
         classification = _clean(source.get("official_source_classification") or source.get("source_type") or "official_source")
-        if not _official_url(url) or not snippet:
+        if not _official_url(url):
             continue
         sanitized.append(
             {
@@ -597,9 +634,178 @@ def _sanitize_provenance(raw_sources: list[dict[str, Any]]) -> list[dict[str, st
                 "exact_quote_or_snippet": snippet,
                 "retrieved_at_utc": retrieved if retrieved.endswith("Z") else retrieved,
                 "official_source_classification": classification,
+                "source_evidence_level": "quoted_source" if snippet else "official_url_only",
             }
         )
     return sanitized
+
+
+def _safe_text_list(value: Any) -> list[str]:
+    if isinstance(value, str):
+        text = _clean(value)
+        return [text] if text else []
+    if isinstance(value, list):
+        out: list[str] = []
+        for item in value:
+            if isinstance(item, str):
+                text = _clean(item)
+            elif isinstance(item, dict):
+                text = _clean(item.get("step") or item.get("description") or item.get("name") or item.get("label") or item.get("requirement") or item.get("risk") or item.get("trigger") or item.get("inspection"))
+            else:
+                text = ""
+            if text:
+                out.append(text)
+        return out[:8]
+    return []
+
+
+def _first_text_list(raw: dict[str, Any], *keys: str) -> list[str]:
+    for key in keys:
+        items = _safe_text_list(raw.get(key))
+        if items:
+            return items
+    return []
+
+
+def _last_updated_from_sources(raw: dict[str, Any], provenance: list[dict[str, str]] | None = None) -> str | None:
+    for key in ("last_updated_utc", "last_updated", "retrieved_at_utc", "checked_at"):
+        text = _first_clean(raw, key)
+        if text and text.lower() != "unknown":
+            return text
+    for source in provenance or []:
+        text = _clean((source or {}).get("retrieved_at_utc"))
+        if text:
+            return text
+    return None
+
+
+def _source_url_by_keyword(provenance: list[dict[str, str]] | None, *keywords: str) -> str | None:
+    needles = [kw.lower() for kw in keywords]
+    for source in provenance or []:
+        haystack = " ".join([source.get("source_title", ""), source.get("source_url", ""), source.get("exact_quote_or_snippet", "")]).lower()
+        if any(needle in haystack for needle in needles):
+            url = _clean(source.get("source_url"))
+            if _official_url(url):
+                return url
+    return None
+
+
+def _customer_fees(raw: dict[str, Any], provenance: list[dict[str, str]] | None = None) -> dict[str, Any] | None:
+    fees_raw = raw.get("fees")
+    summary = _first_clean(raw, "fee_range", "fee_summary", "fees_text", "estimated_fees")
+    if isinstance(fees_raw, dict):
+        summary = summary or _clean(fees_raw.get("summary") or fees_raw.get("combined") or fees_raw.get("fee_range") or fees_raw.get("plan_check_deposit") or fees_raw.get("permit_issuance_fee"))
+    elif isinstance(fees_raw, str):
+        summary = summary or _clean(fees_raw)
+    fee_url = _first_clean(raw, "fee_url", "fee_schedule_url", "fees_url") or _source_url_by_keyword(provenance, "fee")
+    if not summary and not fee_url:
+        return None
+    out: dict[str, Any] = {
+        "summary": summary or "Use the official fee schedule source listed here before quoting fees.",
+        "official_fee_source_url": fee_url if _official_url(fee_url) else None,
+    }
+    if isinstance(fees_raw, dict):
+        for key in ("plan_check_deposit", "permit_issuance_fee", "technology_surcharge", "valuation_basis", "combined"):
+            value = _clean(fees_raw.get(key))
+            if value:
+                out[key] = value
+    return out
+
+
+def _derive_companion_permits_reviews(raw: dict[str, Any], *, job_type: str, vertical: str) -> list[dict[str, Any]]:
+    existing = [item for item in (raw.get("companion_permits_reviews") or raw.get("companion_permits") or []) if isinstance(item, dict)]
+    if existing:
+        return existing[:8]
+    text = f"{job_type} {vertical}".lower()
+    companions: list[dict[str, Any]] = []
+    if any(term in text for term in ("kitchen", "bath", "remodel", "residential")):
+        companions.extend([
+            {"name": "Electrical review/permit", "trigger": "new circuits, lighting, receptacles, panels, or wiring changes", "requirement_label": "May be required based on scope"},
+            {"name": "Plumbing review/permit", "trigger": "moving, adding, or replacing plumbing fixtures or supply/drain lines", "requirement_label": "May be required based on scope"},
+            {"name": "Mechanical review/permit", "trigger": "hood, exhaust, HVAC, duct, bath fan, or make-up air changes", "requirement_label": "May be required based on scope"},
+            {"name": "Structural/plan review", "trigger": "wall removal, framing changes, beam/header changes, or layout changes shown on plans", "requirement_label": "May be required based on scope"},
+        ])
+    if vertical in {"restaurant_ti", "medical_clinic_ti", "office_ti"} or any(term in text for term in ("tenant", "commercial", "restaurant", "clinic", "office")):
+        companions.extend([
+            {"name": "Building plan review", "trigger": "commercial interior alteration or tenant-improvement scope", "requirement_label": "May be required based on scope"},
+            {"name": "Fire/life-safety review", "trigger": "occupancy, alarm, sprinkler, cooking, hazardous material, or egress changes", "requirement_label": "May be required based on scope"},
+            {"name": "Zoning/use review", "trigger": "new tenant, change of use, signage, parking, or exterior changes", "requirement_label": "May be required based on scope"},
+            {"name": "Accessibility review", "trigger": "commercial public accommodation or path-of-travel changes", "requirement_label": "May be required based on scope"},
+        ])
+    if "restaurant" in text or "hood" in text or "grease" in text:
+        companions.extend([
+            {"name": "Health department review", "trigger": "food service, kitchen equipment, or dining-service changes", "requirement_label": "May be required based on scope"},
+            {"name": "Grease interceptor / hood suppression review", "trigger": "grease-producing cooking, Type I hood, or interceptor changes", "requirement_label": "May be required based on scope"},
+        ])
+    if "medical" in text or "clinic" in text or "dental" in text:
+        companions.append({"name": "Medical gas / specialty systems review", "trigger": "medical gas, dental vacuum, imaging, sterilization, or clinical equipment changes", "requirement_label": "May be required based on scope"})
+    deduped: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in companions:
+        key = _clean(item.get("name")).lower()
+        if key and key not in seen:
+            seen.add(key)
+            deduped.append(item)
+    return deduped[:8]
+
+
+def _customer_application_steps(raw: dict[str, Any], *, permit_name: str | None, portal_path: str | None, apply_url: str | None) -> list[str]:
+    explicit = _first_text_list(raw, "application_steps", "filing_steps", "submittal_steps", "how_to_apply", "next_steps")
+    if explicit:
+        return explicit
+    steps: list[str] = []
+    if apply_url:
+        steps.append("Open the official online portal link shown in this result.")
+    if portal_path:
+        steps.append(f"Choose the portal category/path: {portal_path}.")
+    elif permit_name:
+        steps.append(f"Prepare the application for: {permit_name}.")
+    steps.extend([
+        "Prepare scope description, contractor/license information, property details, and required plan sheets before submittal.",
+        "Submit through the listed portal or AHJ intake option and keep the official receipt/permit number with the job file.",
+    ])
+    return steps[:6]
+
+
+def _customer_inspection_checklist(raw: dict[str, Any], *, job_type: str, vertical: str) -> list[str]:
+    explicit = _first_text_list(raw, "inspection_checklist", "required_inspections", "inspections")
+    if explicit:
+        return explicit
+    text = f"{job_type} {vertical}".lower()
+    checklist = ["Schedule required inspections through the official portal or AHJ inspection desk after permit issuance."]
+    if any(term in text for term in ("kitchen", "bath", "remodel", "tenant", "commercial", "office", "restaurant", "clinic")):
+        checklist.extend([
+            "Rough building/framing inspection before cover-up when walls, framing, or layout are changed.",
+            "Trade rough inspections before cover-up for electrical, plumbing, mechanical, hood, or gas work included in scope.",
+            "Final building/trade inspections before closing the permit or occupying the altered space.",
+        ])
+    return checklist[:6]
+
+
+def _customer_rejection_risks(raw: dict[str, Any], *, job_type: str, vertical: str) -> list[str]:
+    explicit = _first_text_list(raw, "rejection_risks", "common_rejection_risks", "common_mistakes", "risks")
+    if explicit:
+        return explicit
+    text = f"{job_type} {vertical}".lower()
+    risks = [
+        "Incomplete scope description or missing plan sheets for the work shown in the application.",
+        "Contractor/license, owner authorization, valuation, or address/APN details missing from the submittal.",
+    ]
+    if any(term in text for term in ("kitchen", "bath", "restaurant", "clinic", "office", "tenant", "commercial")):
+        risks.extend([
+            "Trade work shown in the scope but not included in the permit/review selections.",
+            "Zoning, fire/life-safety, health, accessibility, or historic-overlay review triggered by the scope but omitted from the package.",
+        ])
+    return risks[:6]
+
+
+def _customer_explanation(raw: dict[str, Any], *, job_type: str, city: str, state_code: str, permit_name: str | None, portal_path: str | None) -> str:
+    explicit = _first_clean(raw, "customer_explanation", "customer_summary", "summary")
+    if explicit and not CustomerOutputScanner(key_patterns=()).scan({"customer_explanation": explicit}).get("findings"):
+        return explicit
+    label = permit_name or portal_path or "the listed permit/application path"
+    location = ", ".join(part for part in (_clean(city), _clean(state_code).upper()) if part)
+    return f"For {job_type} in {location}, PermitAssist is showing the AHJ intake details, source links, and companion review triggers around {label}. Use these fields to prepare the submittal packet before filing."
 
 
 def _nested_packet(raw: dict[str, Any]) -> dict[str, Any]:
@@ -797,7 +1003,14 @@ def build_customer_view(
             raw=internal_result,
         )
 
-    filing_path = permit_name or portal_path or ""
+    derived_permit_name = _derived_permit_name_from_job(job_type, vertical)
+    if permit_name:
+        display_permit_name = permit_name
+    elif portal_path:
+        display_permit_name = derived_permit_name
+    else:
+        display_permit_name = fallback_permit_name or derived_permit_name
+    filing_path = portal_path or display_permit_name or ""
     raw_apply_path = internal_result.get("apply_path")
     apply_path = raw_apply_path if isinstance(raw_apply_path, dict) else {}
     raw_apply_url = internal_result.get("apply_url") or apply_path.get("portal_url")
@@ -807,7 +1020,7 @@ def build_customer_view(
         final_answer_state=EXACT_FINAL,
         customer_final=True,
         permit_required=True if internal_result.get("permit_required") is not False else False,
-        permit_name=permit_name,
+        permit_name=display_permit_name,
         official_portal_category_path=portal_path,
         filing_path=filing_path,
         job_type=_clean(job_type),
@@ -820,8 +1033,14 @@ def build_customer_view(
         submission_options=_customer_submission_options(internal_result, apply_url=safe_apply_url),
         approval_timeline=normalize_approval_timeline_for_customer(internal_result.get("approval_timeline")),
         official_source_provenance=provenance,
+        fees=_customer_fees(internal_result, provenance),
+        application_steps=_customer_application_steps(internal_result, permit_name=permit_name, portal_path=portal_path, apply_url=safe_apply_url),
+        inspection_checklist=_customer_inspection_checklist(internal_result, job_type=job_type, vertical=vertical),
+        rejection_risks=_customer_rejection_risks(internal_result, job_type=job_type, vertical=vertical),
+        customer_explanation=_customer_explanation(internal_result, job_type=job_type, city=city, state_code=state, permit_name=permit_name, portal_path=portal_path),
+        last_updated=_last_updated_from_sources(internal_result, provenance),
         next_steps=["Use the source-backed filing path listed here before preparing the submittal."],
-        companion_permits_reviews=[item for item in (internal_result.get("companion_permits_reviews") or internal_result.get("companion_permits") or []) if isinstance(item, dict)],
+        companion_permits_reviews=_derive_companion_permits_reviews(internal_result, job_type=job_type, vertical=vertical),
     )
     scan = CustomerOutputScanner().scan(view.to_dict())
     if scan["findings"]:

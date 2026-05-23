@@ -47,7 +47,86 @@ def test_exact_source_backed_portal_path_builds_allowlisted_customer_view():
     assert public["customer_final"] is True
     assert public["official_portal_category_path"] == "Commercial Building Permit > Tenant Improvement / Restaurant Interior Alteration"
     assert public["approval_timeline"] == {"simple": "Plan review route shown in official portal"}
+    assert public["last_updated"] == "2026-05-22T00:00:00Z"
     assert set(public) == CustomerView.PUBLIC_FIELDS
+    assert CustomerOutputScanner().scan(public)["findings"] == []
+
+
+def test_official_url_without_snippet_is_preserved_with_lower_provenance_tier():
+    raw = {
+        "permit_required": True,
+        "source_backed_exact_permit_name": "Residential Alteration Permit",
+        "apply_url": "https://aca-prod.accela.com/PHOENIX",
+        "official_source_provenance": [
+            {"source_url": "https://aca-prod.accela.com/PHOENIX", "source_title": "Phoenix SHAPE PHX Portal"}
+        ],
+    }
+
+    view = build_customer_view(raw, job_type="residential kitchen and bathroom remodel", city="Phoenix", state="AZ")
+    public = view.to_dict()
+
+    assert public["official_source_provenance"] == [{
+        "source_url": "https://aca-prod.accela.com/PHOENIX",
+        "source_title": "Phoenix SHAPE PHX Portal",
+        "exact_quote_or_snippet": "",
+        "retrieved_at_utc": "",
+        "official_source_classification": "official_source",
+        "source_evidence_level": "official_url_only",
+    }]
+    assert public["apply_url"] == "https://aca-prod.accela.com/PHOENIX"
+    assert CustomerOutputScanner().scan(public)["findings"] == []
+
+
+def test_phoenix_kitchen_bath_customer_view_keeps_rich_permit_snapshot_fields():
+    raw = {
+        "permit_required": True,
+        "permit_name": "Residential Alteration Permit",
+        "source_backed_official_portal_category_path": "Residential > Alteration / Remodel",
+        "apply_url": "https://aca-prod.accela.com/PHOENIX",
+        "applying_office": "City of Phoenix Planning & Development Department (PDD)",
+        "apply_phone": "(602) 262-7811",
+        "apply_address": "200 W. Washington Street, 2nd Floor, Phoenix, AZ 85003",
+        "apply_google_maps": "https://www.google.com/maps?q=200+W.+Washington+Street,+Phoenix,+AZ+85003",
+        "fee_range": "Use the Phoenix Planning & Development fee schedule for residential alteration/remodel permit and plan-review fees.",
+        "approval_timeline": {"plan_review": "Plan review timing is determined by Phoenix PDD based on scope and completeness."},
+        "official_source_provenance": [
+            {
+                "source_url": "https://www.phoenix.gov/pdd",
+                "source_title": "Phoenix Planning & Development Department",
+                "exact_quote_or_snippet": "Planning and Development provides permitting services for construction projects.",
+                "retrieved_at_utc": "2026-05-22T00:00:00Z",
+            },
+            {"source_url": "https://aca-prod.accela.com/PHOENIX", "source_title": "Phoenix SHAPE PHX Portal"},
+            {"source_url": "https://www.phoenix.gov/pddsite/Pages/fees.aspx", "source_title": "Phoenix PDD Fees"},
+        ],
+        "companion_permits_reviews": [
+            {"name": "Electrical review/permit", "trigger": "new circuits, lighting, receptacles, or panel work"},
+            {"name": "Plumbing review/permit", "trigger": "moving or adding plumbing fixtures"},
+        ],
+        "application_steps": ["Open SHAPE PHX", "Select the residential alteration/remodel application path", "Upload plans and contractor information"],
+        "inspection_checklist": ["Rough framing/trade inspections", "Final building inspection"],
+        "rejection_risks": ["Missing plan sheets", "Unregistered Phoenix contractor"],
+        "customer_explanation": "Kitchen and bathroom remodels in Phoenix usually go through Phoenix PDD as a residential alteration/remodel building-permit workflow, with trade reviews added when the scope touches electrical, plumbing, or mechanical systems.",
+    }
+
+    public = build_customer_view(raw, job_type="residential kitchen and bathroom remodel", city="Phoenix", state="AZ").to_dict()
+    blob = "\n".join(str(v) for v in public.values())
+
+    assert public["final_answer_state"] == EXACT_FINAL
+    assert public["apply_url"] == "https://aca-prod.accela.com/PHOENIX"
+    assert public["ahj_contact"]["phone"] == "(602) 262-7811"
+    assert public["ahj_contact"]["maps_url"].startswith("https://www.google.com/maps")
+    assert public["fees"]["summary"].startswith("Use the Phoenix Planning & Development fee schedule")
+    assert public["fees"]["official_fee_source_url"] == "https://www.phoenix.gov/pddsite/Pages/fees.aspx"
+    assert public["approval_timeline"]["plan_review"].startswith("Plan review timing")
+    assert len(public["official_source_provenance"]) == 3
+    assert len(public["companion_permits_reviews"]) >= 2
+    assert public["application_steps"]
+    assert public["inspection_checklist"]
+    assert public["rejection_risks"]
+    assert "Phoenix PDD" in public["customer_explanation"]
+    for forbidden in ("State Code Default", "Used city/state lookup only", "Last updated: Unknown", "Pending verification with AHJ"):
+        assert forbidden not in blob
     assert CustomerOutputScanner().scan(public)["findings"] == []
 
 
@@ -154,7 +233,7 @@ def test_source_backed_official_application_category_can_be_exact_final_path():
     public = view.to_dict()
     assert public["final_answer_state"] == EXACT_FINAL
     assert public["official_portal_category_path"] == "Commercial Building > Tenant Improvement"
-    assert public["permit_name"] is None
+    assert public["permit_name"] == "Commercial Tenant Improvement / Alteration Building Permit"
     assert CustomerOutputScanner().scan(public)["findings"] == []
 
 

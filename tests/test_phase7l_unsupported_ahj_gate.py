@@ -109,9 +109,9 @@ def test_phase7m_api_permit_allows_new_york_alias_to_existing_lookup_path(tmp_pa
     payload = json.loads(body)
     assert status == 200
     assert called == {"research": True, "city": "New York", "state": "NY"}
-    assert payload.get("ahj_status") != "unsupported"
-    assert "apply_path" in payload
-    assert payload["permits_required"]
+    assert payload["view_type"] == "CustomerView"
+    assert payload["apply_url"].startswith("https://www.nyc.gov/")
+    assert payload["permit_required"] is not None
 
 
 def test_ef02_api_permit_blocks_fake_unsupported_ahj_before_research(tmp_path, monkeypatch):
@@ -293,10 +293,11 @@ def test_ef02_real_unverified_us_city_still_gets_lookup_with_warning_not_not_sup
     assert called["acquire"] is True
     assert called["research"] is True
     assert called["released"] is True
-    assert payload["ahj_status"] == "unverified"
-    assert payload["coverage_truth"]["status"] == "jurisdiction_unverified"
-    assert payload["jurisdiction_verification"] == "unverified_us_jurisdiction"
-    assert payload["permits_required"]
+    assert payload["view_type"] == "CustomerView"
+    assert "ahj_status" not in payload
+    assert "coverage_truth" not in payload
+    assert "jurisdiction_verification" not in payload
+    assert payload["permit_required"] is not None
     assert "not supported" not in json.dumps(payload).lower()
 
 
@@ -328,9 +329,9 @@ def test_phase7l_supported_city_still_follows_existing_lookup_path(tmp_path, mon
     payload = json.loads(body)
     assert status == 200
     assert called["research"] is True
-    assert payload.get("ahj_status") != "unsupported"
-    assert "apply_path" in payload
-    assert payload["permits_required"]
+    assert payload["view_type"] == "CustomerView"
+    assert payload["apply_url"].startswith("https://www.lacity.org/")
+    assert payload["permit_required"] is not None
 
 
 def test_ef02_batch_permit_item_blocks_unsupported_ahj_before_research(tmp_path, monkeypatch):

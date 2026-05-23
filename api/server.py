@@ -2116,7 +2116,7 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
             verification_note = f"{city or 'jurisdiction'} start portal has field evidence, but it is not high-confidence local evidence; use the source-backed portal choice and filing path before filing."
         else:
             verification_note = "PermitAssist guides the application pathway; use the source-backed portal choice before filing."
-        login_required = "likely" if platform != "PDF / paper form" else "not_applicable_or_unknown"
+        login_required = "account_required_unknown" if platform != "PDF / paper form" else "not_applicable_or_unknown"
     else:
         steps = [
             "No verified online filing path is available from current field evidence; use the source-backed intake category/path before filing.",
@@ -2276,7 +2276,8 @@ CUSTOMER_VIEW_PUBLIC_FIELDS_FALLBACK = frozenset({
     "schema_version", "view_type", "final_answer_state", "customer_final",
     "permit_required", "permit_name", "official_portal_category_path", "filing_path",
     "job_type", "city", "state", "vertical", "ahj_name", "ahj_contact", "apply_url",
-    "submission_options", "approval_timeline", "official_source_provenance", "next_steps", "companion_permits_reviews",
+    "submission_options", "approval_timeline", "official_source_provenance", "fees", "application_steps",
+    "inspection_checklist", "rejection_risks", "customer_explanation", "last_updated", "next_steps", "companion_permits_reviews",
 })
 PENDING_VIEW_PUBLIC_FIELDS_FALLBACK = frozenset({
     "schema_version", "view_type", "final_answer_state", "customer_final",
@@ -2367,6 +2368,12 @@ def _fallback_customer_view(job_type: str, city: str, state: str, *, explicit_ve
         }],
         "approval_timeline": None,
         "official_source_provenance": [],
+        "fees": None,
+        "application_steps": [],
+        "inspection_checklist": [],
+        "rejection_risks": [],
+        "customer_explanation": None,
+        "last_updated": None,
         "next_steps": next_steps,
         "companion_permits_reviews": [],
     }
@@ -2444,14 +2451,20 @@ def _default_cold_ahj_resolver(*, result, job_type: str, city: str, state: str, 
     sources = result.get("official_source_provenance") or result.get("claim_citations") or result.get("sources") or []
     if isinstance(sources, dict):
         sources = [sources]
-    source = next((item for item in sources if isinstance(item, dict) and _customer_view_text(item.get("source_url") or item.get("url")) and _customer_view_text(item.get("exact_quote_or_snippet") or item.get("quoted_snippet") or item.get("snippet") or item.get("quote"))), None)
+    normalized_sources = []
+    for item in sources:
+        if isinstance(item, dict):
+            normalized_sources.append(item)
+        elif isinstance(item, str) and _customer_view_text(item):
+            normalized_sources.append({"source_url": item, "source_title": "Official permitting source"})
+    source = next((item for item in normalized_sources if isinstance(item, dict) and _customer_view_text(item.get("source_url") or item.get("url"))), None)
     apply_url = _customer_view_text(result.get("apply_url"))
     if source or apply_url:
         return {
             "resolution_status": "partial_source_backed_contact_fallback",
             "permit_name": _customer_view_text(result.get("permit_name") or result.get("permit_type")),
             "apply_url": apply_url or _customer_view_text((source or {}).get("source_url") or (source or {}).get("url")),
-            "official_source_provenance": sources if sources else [
+            "official_source_provenance": normalized_sources if normalized_sources else [
                 {
                     "source_url": apply_url,
                     "source_title": _customer_view_text(result.get("applying_office")) or f"{city} {state} permitting office",
@@ -2491,6 +2504,19 @@ def _normalize_cold_ahj_resolution_for_customer(result: dict, resolution: dict, 
         "permit_name": permit_name or _customer_view_text(result.get("permit_name") or result.get("permit_type")),
         "permit_type": permit_name or _customer_view_text(result.get("permit_type") or result.get("permit_name")),
         "apply_url": _customer_view_text(resolution.get("apply_url") or result.get("apply_url")),
+        "applying_office": _customer_view_text(resolution.get("applying_office") or result.get("applying_office") or resolution.get("department") or result.get("department")),
+        "apply_phone": _customer_view_text(resolution.get("apply_phone") or result.get("apply_phone") or resolution.get("phone") or result.get("phone")),
+        "apply_address": _customer_view_text(resolution.get("apply_address") or result.get("apply_address") or resolution.get("address") or result.get("address")),
+        "apply_google_maps": _customer_view_text(resolution.get("apply_google_maps") or result.get("apply_google_maps") or resolution.get("maps_url") or result.get("maps_url")),
+        "fee_range": _customer_view_text(resolution.get("fee_range") or result.get("fee_range") or resolution.get("fee_summary") or result.get("fee_summary")),
+        "fee_schedule_url": _customer_view_text(resolution.get("fee_schedule_url") or result.get("fee_schedule_url") or resolution.get("fee_url") or result.get("fee_url")),
+        "approval_timeline": resolution.get("approval_timeline") or result.get("approval_timeline"),
+        "fees": resolution.get("fees") or result.get("fees"),
+        "application_steps": resolution.get("application_steps") or result.get("application_steps"),
+        "inspection_checklist": resolution.get("inspection_checklist") or result.get("inspection_checklist"),
+        "rejection_risks": resolution.get("rejection_risks") or result.get("rejection_risks"),
+        "customer_explanation": _customer_view_text(resolution.get("customer_explanation") or result.get("customer_explanation")),
+        "companion_permits_reviews": resolution.get("companion_permits_reviews") or result.get("companion_permits_reviews"),
         "official_source_provenance": sources,
     }
     if exact_name:
@@ -2616,6 +2642,19 @@ def customer_report_html(job_type: str, city: str, state: str, result: dict, *, 
     timeline = view.get("approval_timeline") if isinstance(view.get("approval_timeline"), dict) else {}
     timeline_text = timeline.get("simple") or timeline.get("complex") or ""
     companion_items = "".join(f"<li>{html.escape(str((item or {}).get('name') or (item or {}).get('review') or (item or {}).get('label') or item))}</li>" for item in (view.get("companion_permits_reviews") or []) if item)
+    fee_raw = view.get("fees") if isinstance(view.get("fees"), dict) else {}
+    fee_source_url = _safe_external_url(str(fee_raw.get("official_fee_source_url") or ""))
+    fee_text = html.escape(str(fee_raw.get("summary") or ""))
+    fee_link = f'<p><a href="{html.escape(fee_source_url, quote=True)}" rel="noopener">Official fee source</a></p>' if fee_source_url else ""
+    fees_section = f'<section class="card"><h2>Fees / official fee source</h2><p>{fee_text}</p>{fee_link}</section>' if fee_text or fee_source_url else ""
+    application_items = "".join(f"<li>{html.escape(str(item))}</li>" for item in (view.get("application_steps") or []) if item)
+    application_section = f'<section class="card"><h2>Application steps</h2><ul>{application_items}</ul></section>' if application_items else ""
+    inspection_items = "".join(f"<li>{html.escape(str(item))}</li>" for item in (view.get("inspection_checklist") or []) if item)
+    inspection_section = f'<section class="card"><h2>Inspection checklist</h2><ul>{inspection_items}</ul></section>' if inspection_items else ""
+    rejection_items = "".join(f"<li>{html.escape(str(item))}</li>" for item in (view.get("rejection_risks") or []) if item)
+    rejection_section = f'<section class="card"><h2>Common rejection risks</h2><ul>{rejection_items}</ul></section>' if rejection_items else ""
+    explanation = html.escape(str(view.get("customer_explanation") or ""))
+    explanation_section = f'<section class="card"><h2>Customer explanation</h2><p>{explanation}</p></section>' if explanation else ""
     if view.get("view_type") == "CustomerView":
         detail_rows = [("Final answer", status), ("Required", "Yes" if view.get("permit_required") is True else "No"), ("Permit / application / form", html.escape(str(view.get("permit_name") or "")) or "-"), ("Official portal category/path", html.escape(str(view.get("official_portal_category_path") or "")) or "-"), ("Filing path", html.escape(str(view.get("filing_path") or "")))]
         safe_apply_url = _safe_external_url(str(view.get("apply_url") or ""))
@@ -2655,7 +2694,7 @@ def customer_report_html(job_type: str, city: str, state: str, result: dict, *, 
     rows = "".join(f"<div class=\"row\"><strong>{html.escape(label)}</strong><span>{value}</span></div>" for label, value in detail_rows)
     companions = f"<section class=\"card\"><h2>Companion permits / reviews</h2><ul>{companion_items}</ul></section>" if companion_items else ""
     coverage_scope = "<section class=\"card\"><h2>Coverage scope</h2><p>Fee information is not source-confirmed for this lookup unless it is included in the source-backed CustomerView fields above. PermitAssist is showing only customer-safe source-backed filing information here.</p></section>"
-    return f"""<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>{title} - PermitAssist</title><style>body{{margin:0;background:#f8fafc;color:#0f172a;font-family:Inter,system-ui,sans-serif}}.wrap{{max-width:920px;margin:0 auto;padding:32px 20px 72px}}.hero,.card{{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 8px 24px rgba(15,23,42,.05)}}.brand{{font-weight:900;color:#1a56db;margin-bottom:10px}}h1{{margin:0 0 8px;font-size:30px;line-height:1.1}}h2{{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:#1a56db;margin:0 0 12px}}.muted{{color:#64748b;font-size:13px;margin-top:4px}}.pill{{display:inline-flex;background:#eff6ff;color:#1a56db;border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px}}.action{{border:0;border-radius:999px;background:#1a56db;color:#fff;padding:9px 14px;font-weight:800;cursor:pointer}}.row{{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #e2e8f0;padding:10px 0}}.row:last-child{{border-bottom:0}}.row span{{text-align:right;max-width:60%}}a{{color:#1a56db;word-break:break-word}}li{{margin:8px 0}}@media(max-width:700px){{.row{{display:block}}.row span{{display:block;text-align:left;max-width:none;margin-top:4px}}}}</style></head><body><main class="wrap"><section class="hero"><div class="brand">{contractor}</div><h1>{title}</h1><div class="muted">{job} - {location} - {client}</div><p><span class="pill">{status}</span></p><button class="action" onclick="window.print()">Print / Save PDF</button></section><section class="card"><h2>Customer-visible result</h2>{rows}</section>{ahj_contact_section}{submission_section}<section class="card"><h2>Next steps</h2><ul>{next_steps}</ul></section>{coverage_scope}{companions}<section class="card"><h2>Official sources</h2><ul>{source_items}</ul></section></main></body></html>"""
+    return f"""<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>{title} - PermitAssist</title><style>body{{margin:0;background:#f8fafc;color:#0f172a;font-family:Inter,system-ui,sans-serif}}.wrap{{max-width:920px;margin:0 auto;padding:32px 20px 72px}}.hero,.card{{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 8px 24px rgba(15,23,42,.05)}}.brand{{font-weight:900;color:#1a56db;margin-bottom:10px}}h1{{margin:0 0 8px;font-size:30px;line-height:1.1}}h2{{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:#1a56db;margin:0 0 12px}}.muted{{color:#64748b;font-size:13px;margin-top:4px}}.pill{{display:inline-flex;background:#eff6ff;color:#1a56db;border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px}}.action{{border:0;border-radius:999px;background:#1a56db;color:#fff;padding:9px 14px;font-weight:800;cursor:pointer}}.row{{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #e2e8f0;padding:10px 0}}.row:last-child{{border-bottom:0}}.row span{{text-align:right;max-width:60%}}a{{color:#1a56db;word-break:break-word}}li{{margin:8px 0}}@media(max-width:700px){{.row{{display:block}}.row span{{display:block;text-align:left;max-width:none;margin-top:4px}}}}</style></head><body><main class="wrap"><section class="hero"><div class="brand">{contractor}</div><h1>{title}</h1><div class="muted">{job} - {location} - {client}</div><p><span class="pill">{status}</span></p><button class="action" onclick="window.print()">Print / Save PDF</button></section><section class="card"><h2>Customer-visible result</h2>{rows}</section>{ahj_contact_section}{submission_section}{explanation_section}{fees_section}{application_section}{inspection_section}{rejection_section}<section class="card"><h2>Next steps</h2><ul>{next_steps}</ul></section>{coverage_scope}{companions}<section class="card"><h2>Official sources</h2><ul>{source_items}</ul></section></main></body></html>"""
 
 
 def persist_pending_lookup(view: dict) -> str:
@@ -3051,7 +3090,7 @@ def _phase7h_neutralize_unverified_permit_type(result: dict, city: str, state: s
     result["permit_name_status"] = "pending_official_source_retrieval"
     result["permit_name_confidence"] = None
     result["permits_required"] = []
-    result["apply_path"] = None
+    build_apply_path(result, job_type, city, state)
 
     warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
     if result.get("warnings") is not warnings:
@@ -4707,7 +4746,7 @@ def fee_breakdown_for_display(result: dict) -> dict:
     plan_check = fees.get("plan_check_deposit") or fees.get("plan_check_upfront") or fees.get("upfront") or ""
     issuance = fees.get("permit_issuance_fee") or fees.get("issuance") or fees.get("permit_fee") or ""
     combined = fees.get("combined") or raw_fee
-    unknown = "Pending verification with AHJ"
+    unknown = "Official fee source not attached yet"
     return {
         "plan_check_deposit": str(plan_check or (combined if combined else unknown)),
         "permit_issuance_fee": str(issuance or unknown),
@@ -7053,14 +7092,7 @@ class Handler(BaseHTTPRequestHandler):
                         "status": ahj_coverage.get("status", ""),
                         "reason": ahj_coverage.get("reason", ""),
                     }, "")
-                    response, used_customer_view = maybe_build_pa3_customer_view_api_response(
-                        response,
-                        job_type,
-                        city,
-                        state,
-                        explicit_vertical=explicit_vertical,
-                    )
-                    self.send_json(_unsupported_ahj_http_status(ahj_coverage), response, redact=not used_customer_view)
+                    self.send_json(_unsupported_ahj_http_status(ahj_coverage), response, redact=True)
                     return
 
                 ip = self.client_ip()
@@ -7219,13 +7251,17 @@ class Handler(BaseHTTPRequestHandler):
                     # No Telegram on lookups — only notify on paying customers
 
                     expose_evidence_meta = evidence_allowed and evidence_pack_response_allows_internal_metadata()
-                    result, used_customer_view = maybe_build_pa3_customer_view_api_response(
-                        result,
-                        job_type,
-                        city,
-                        state,
-                        explicit_vertical=explicit_vertical,
-                    )
+                    if expose_evidence_meta:
+                        used_customer_view = False
+                    else:
+                        raw_result_for_customer_view = result
+                        result, used_customer_view = maybe_build_pa3_customer_view_api_response(
+                            raw_result_for_customer_view,
+                            job_type,
+                            city,
+                            state,
+                            explicit_vertical=explicit_vertical,
+                        )
                     if used_customer_view:
                         self.send_json(200, result, extra_headers=response_headers, redact=False)
                     else:

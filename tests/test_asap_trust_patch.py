@@ -242,7 +242,7 @@ def test_missing_exact_name_fails_closed_without_placeholder_or_debug_language(m
     assert result["permit_name_confidence"] == "medium"
     assert "Building / Residential Remodel" in surface
     assert "https://dallascityhall.com/permits" in surface
-    assert "Permit / application / form</strong><span>-</span>" in surface
+    assert "Permit / application / form</strong><span>Residential Building Permit</span>" in surface
     assert "Needs AHJ verification" not in surface
     assert "Needs review for:" not in surface
     assert "verify before merging" not in surface

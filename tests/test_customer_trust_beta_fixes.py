@@ -35,10 +35,12 @@ def test_first_lookup_is_not_blocked_by_email_gate():
     assert "The permit verdict is free" in FRONTEND
 
 
-def test_customer_badges_do_not_use_ai_estimate_wording():
+def test_customer_badges_do_not_use_thin_fallback_wording():
     assert "AI estimate" not in FRONTEND
-    assert "Pending Verification" in FRONTEND
-    assert "State Code Default" in FRONTEND
+    assert "Pending Verification" not in FRONTEND
+    assert "State Code Default" not in FRONTEND
+    assert "Used city/state lookup only" not in FRONTEND
+    assert "Pending verification with AHJ" not in FRONTEND
 
 
 def test_fee_surfaces_are_split_into_customer_safe_components():

@@ -361,7 +361,7 @@ def test_missing_source_path_does_not_claim_source_backed_customer_final(monkeyp
         "TX",
         explicit_vertical="office_ti",
     )
-    assert view["filing_path"] == "Permit Required — Commercial Tenant Improvement / Alteration Building Permit. Official filing category/path requires active retrieval before customer release."
+    assert view["filing_path"] == "Permit Required — Commercial Tenant Improvement / Alteration Building Permit. Confirm the official filing category/path before submitting."
     assert "source-backed" not in view["filing_path"].lower()
 
 
