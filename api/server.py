@@ -1682,7 +1682,7 @@ def _enforce_ef99_authority_conflict_boundary(result: dict, job_type: str, city:
     result["permit_type_verified"] = False
     result["source_support_status"] = "target_ahj_source_unverified"
     result["likely_permit_category"] = likely_category
-    result["permit_ready_label"] = "Needs AHJ verification"
+    result["permit_ready_label"] = "Needs source-backed authority-order review"
     result["permit_ready_score"] = min(int(result.get("permit_ready_score") or 100), 65)
     result["badge_state"] = "needs_review"
     result["_authority_conflict_boundary"] = True
@@ -1691,7 +1691,7 @@ def _enforce_ef99_authority_conflict_boundary(result: dict, job_type: str, city:
 
     warning = (
         f"PermitAssist cannot verify the controlling authority order for this fire/building conflict in {target}. "
-        f"Use the likely permit category ({likely_category}) as the planning path, then confirm with the target AHJ whether the fire permit must be filed separately, before, with, or after the building permit before filing."
+        f"Use the likely permit category ({likely_category}) as the planning path, then resolve the target jurisdiction authority order from official source instructions before filing."
     )
     warnings = result.setdefault("quality_warnings", []) if isinstance(result.get("quality_warnings"), list) else []
     if result.get("quality_warnings") is not warnings:
@@ -2095,14 +2095,14 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
         platform = "city portal / AHJ website"
 
     commercial = _is_commercial_scope(job_type, result)
-    permit_type = _primary_permit_text(result) or "Permit type needs AHJ verification"
+    permit_type = _primary_permit_text(result) or "official source-backed filing category/path"
     if url:
         steps = [
             f"Open the {platform} start URL.",
             "Create or sign into the contractor/applicant account if required.",
             f"Look for the closest permit category to: {permit_type}.",
             "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission.",
-            "Stop before final submit, payment, signature, or legal attestation until the AHJ details are verified.",
+            "Stop before final submit, payment, signature, or legal attestation until the source-backed filing packet is complete.",
         ]
         support_level = "needs verification"
         evidence_meta = result.get("_evidence_pack") or {}
@@ -2110,22 +2110,22 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
         evidence_confidence = evidence_meta.get("matched_field_confidence") or {}
         if evidence_meta.get("enabled") and "apply_url" in evidence_matched and evidence_confidence.get("apply_url") == "high":
             support_level = "verified path"
-            verification_note = f"{city or 'AHJ'} start portal is verified only as the application entry point; exact portal subcategory and filing path still require AHJ/portal verification before filing."
+            verification_note = f"{city or 'jurisdiction'} start portal is verified only as the application entry point; use the source-backed portal subcategory and filing path before filing."
         elif evidence_meta.get("enabled") and "apply_url" in evidence_matched:
             support_level = "partial evidence"
-            verification_note = f"{city or 'AHJ'} start portal has field evidence, but it is not high-confidence local evidence; exact portal choice and filing path require AHJ/portal verification before filing."
+            verification_note = f"{city or 'jurisdiction'} start portal has field evidence, but it is not high-confidence local evidence; use the source-backed portal choice and filing path before filing."
         else:
-            verification_note = "PermitAssist guides the application pathway; verify exact portal choice with the AHJ before filing."
+            verification_note = "PermitAssist guides the application pathway; use the source-backed portal choice before filing."
         login_required = "likely" if platform != "PDF / paper form" else "not_applicable_or_unknown"
     else:
         steps = [
-            "No verified online filing path is available from current field evidence; contact the AHJ or verify the correct portal before filing.",
-            f"Ask the AHJ which permit category best matches: {permit_type}.",
+            "No verified online filing path is available from current field evidence; use the source-backed intake category/path before filing.",
+            f"Use the permit category that matches: {permit_type}.",
             "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission.",
-            "Stop before final submit, payment, signature, or legal attestation until the AHJ details are verified.",
+            "Stop before final submit, payment, signature, or legal attestation until the source-backed filing packet is complete.",
         ]
         support_level = "not available"
-        verification_note = "No verified online filing path is available from current sources; verify the exact filing path with the AHJ."
+        verification_note = "No verified online filing path is available from current sources; complete official-source retrieval before filing."
         login_required = "unknown"
     if commercial:
         scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
@@ -2324,8 +2324,8 @@ def _fallback_customer_view(job_type: str, city: str, state: str, *, explicit_ve
     state_code = str(state or "").strip().upper()
     if unsupported:
         final_state = OUT_OF_SCOPE
-        filing_path = "Invalid/Unsupported Jurisdiction — PermitAssist cannot issue a permit answer for this location."
-        next_steps = ["Check the city/state spelling or choose a supported jurisdiction before relying on this lookup."]
+        filing_path = "Invalid jurisdiction — PermitAssist cannot issue a permit answer for this location."
+        next_steps = ["Check the city/state spelling before relying on this lookup."]
         required_value = None
     elif permit_required is False:
         final_state = NO_PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE
@@ -2334,8 +2334,8 @@ def _fallback_customer_view(job_type: str, city: str, state: str, *, explicit_ve
         required_value = False
     else:
         final_state = PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE
-        filing_path = "Permit Required — source-backed guidance; exact application path needs permitting-office confirmation before filing."
-        next_steps = ["Use the official source links below and confirm the exact filing category with the permitting office before filing."]
+        filing_path = "Permit Required — source-backed official filing category/path."
+        next_steps = ["Use the official source-backed filing category/path before filing."]
         required_value = True
     return {
         "schema_version": CUSTOMER_VIEW_SCHEMA_VERSION,
@@ -2356,14 +2356,14 @@ def _fallback_customer_view(job_type: str, city: str, state: str, *, explicit_ve
             "phone": None,
             "address": None,
             "portal_url": None,
-            "verification_note": "Confirm final intake details with the permitting office before filing.",
+            "verification_note": "Use the listed official intake details before filing.",
         },
         "apply_url": None,
         "submission_options": [{
             "type": "paper_in_person_email_fallback",
             "label": "Paper / in-person / email fallback",
             "url": "",
-            "instructions": "Use the AHJ contact block as the fallback when the exact portal path is unclear.",
+            "instructions": "Use the listed official intake details when the exact portal path is unclear.",
         }],
         "approval_timeline": None,
         "official_source_provenance": [],
@@ -2586,8 +2586,12 @@ def customer_report_title(view: dict) -> str:
 
 
 def customer_report_status_label(view: dict) -> str:
-    if view.get("final_answer_state") == OUT_OF_SCOPE or view.get("permit_required") is None:
+    if view.get("final_answer_state") == OUT_OF_SCOPE:
         return "Invalid/Unsupported Jurisdiction"
+    if view.get("final_answer_state") == PHASE7H_INTERNAL_RETRIEVAL_STATE:
+        return "Official Source Review In Progress"
+    if view.get("permit_required") is None:
+        return "Official Source Review In Progress"
     return "No Permit Required" if view.get("permit_required") is False else "Permit Required"
 
 
@@ -2599,7 +2603,7 @@ def customer_report_html(job_type: str, city: str, state: str, result: dict, *, 
     job = html.escape(str(view.get("job_type") or job_type or "Permit lookup"))
     contractor = html.escape(str(contractor_name or "PermitAssist"))
     client = html.escape(str(client_name or "Client / Property"))
-    next_steps = "".join(f"<li>{html.escape(str(step))}</li>" for step in (view.get("next_steps") or [])) or "<li>Confirm the filing category with the permitting office before filing.</li>"
+    next_steps = "".join(f"<li>{html.escape(str(step))}</li>" for step in (view.get("next_steps") or [])) or "<li>Use the official source-backed filing category/path before filing.</li>"
     sources = customer_view_source_links(view)
     source_items_parts = []
     for src in sources:
@@ -2623,9 +2627,9 @@ def customer_report_html(job_type: str, city: str, state: str, result: dict, *, 
         contact = contact_raw if isinstance(contact_raw, dict) else {}
         contact_rows = [
             ("Department / AHJ", html.escape(str(contact.get("department") or view.get("ahj_name") or "Permitting office"))),
-            ("Phone", html.escape(str(contact.get("phone") or "Confirm with AHJ"))),
-            ("Address", html.escape(str(contact.get("address") or "Confirm with AHJ"))),
-            ("Verification", html.escape(str(contact.get("verification_note") or "Confirm final intake details with the permitting office before filing."))),
+            ("Phone", html.escape(str(contact.get("phone") or "Not listed"))),
+            ("Address", html.escape(str(contact.get("address") or "Not listed"))),
+            ("Verification", html.escape(str(contact.get("verification_note") or "Use the listed official intake details before filing."))),
         ]
         contact_portal = _safe_external_url(str(contact.get("portal_url") or view.get("apply_url") or ""))
         if contact_portal:
@@ -2638,11 +2642,11 @@ def customer_report_html(job_type: str, city: str, state: str, result: dict, *, 
                 continue
             option_url = _safe_external_url(str(option.get("url") or ""))
             label = html.escape(str(option.get("label") or option.get("type") or "Submission option"))
-            instructions = html.escape(str(option.get("instructions") or "Confirm submittal instructions with the AHJ before filing."))
+            instructions = html.escape(str(option.get("instructions") or "Use the listed official submittal instructions before filing."))
             link = f" <a href=\"{html.escape(option_url, quote=True)}\" rel=\"noopener\">Open link</a>" if option_url else ""
             submission_items.append(f"<li><strong>{label}</strong>{link}<div class=\"muted\">{instructions}</div></li>")
         if not submission_items:
-            submission_items.append("<li><strong>AHJ contact fallback</strong><div class=\"muted\">Ask the permitting office for online portal, PDF form, paper, in-person, or email submission instructions before filing.</div></li>")
+            submission_items.append("<li><strong>Official source intake options</strong><div class=\"muted\">Use the official portal, PDF form, paper, in-person, or email submission instructions listed by the source-backed filing packet before filing.</div></li>")
         submission_section = f"<section class=\"card\"><h2>Submission options</h2><ul>{''.join(submission_items)}</ul></section>"
     else:
         detail_rows = [("Final answer", status), ("Lookup ID", html.escape(str(view.get("lookup_id") or ""))), ("Pending reason", html.escape(str(view.get("pending_reason") or "official_source_completion_pending"))), ("Missing source-backed fields", html.escape(", ".join(view.get("missing_fields") or [])))]
@@ -2846,9 +2850,11 @@ def evidence_pack_allowed_for_request(
     return preview_route_allowed
 
 
-PHASE7H_AHJ_VERIFY_PERMIT_TYPE = "Permit required — exact permit type needs AHJ verification"
+PHASE7H_AHJ_VERIFY_PERMIT_TYPE = "Official source retrieval required"
 PHASE7H_EXACT_NAME_SOURCE_FIELDS = {"display_permit_name", "official_permit_name", "permit_type"}
-PHASE7H_UNVERIFIED_PERMIT_WARNING = "Permit is required, but exact permit type was not official-source verified; confirm the exact filing type with the AHJ before filing."
+PHASE7H_SOURCE_BACKED_CATEGORY_FIELDS = {"official_application_category"}
+PHASE7H_INTERNAL_RETRIEVAL_STATE = "OFFICIAL_SOURCE_RETRIEVAL_REQUIRED"
+PHASE7H_UNVERIFIED_PERMIT_WARNING = "PermitAssist needs a source-backed permit category/path before releasing a customer-final answer."
 
 
 def _phase7h_string(value) -> str:
@@ -2915,6 +2921,71 @@ def _phase7h_permit_type_verified(result: dict, permit_name: str) -> bool:
     return bool(has_local_ahj_source) and result.get("source_support_status") != "target_ahj_source_unverified"
 
 
+def _phase7h_source_backed_category_display(result: dict, evidence_meta: dict, matched_fields: set[str]) -> str:
+    source_field = _phase7h_string(
+        evidence_meta.get("permit_name_source_field")
+        or result.get("permit_name_source_field")
+    )
+    source_field_backed = source_field in PHASE7H_SOURCE_BACKED_CATEGORY_FIELDS or bool(PHASE7H_SOURCE_BACKED_CATEGORY_FIELDS & matched_fields)
+    provenance = result.get("official_source_provenance") or result.get("claim_citations") or result.get("sources") or []
+    if isinstance(provenance, dict):
+        provenance = [provenance]
+    has_source_provenance = any(
+        isinstance(item, dict)
+        and _phase7h_string(item.get("source_url") or item.get("url"))
+        and _phase7h_string(item.get("exact_quote_or_snippet") or item.get("snippet") or item.get("quote"))
+        for item in provenance
+    )
+    if not source_field_backed and not has_source_provenance:
+        return ""
+    category_keys = (
+        "source_backed_official_portal_category_path",
+        "official_portal_category_path",
+        "official_application_category",
+    )
+    if source_field_backed:
+        category_keys = (*category_keys, "permit_name", "permit_type", "_permit_display_name")
+    for key in category_keys:
+        candidate = _phase7h_string(result.get(key))
+        if candidate and candidate != PHASE7H_AHJ_VERIFY_PERMIT_TYPE and not FALLBACK_NAME_RE.search(candidate):
+            return candidate
+    return ""
+
+
+def _phase7h_preserve_source_backed_category(result: dict, display: str, city: str, state: str, job_type: str = "") -> None:
+    result["permit_type"] = display
+    result["permit_name"] = display
+    result["_permit_display_name"] = display
+    result["permit_type_verified"] = False
+    result["permit_name_verified"] = False
+    result["permit_name_status"] = "official_category_confirmed_exact_label_missing"
+    result["permit_name_confidence"] = "medium"
+    result["permit_required"] = True
+    result["customer_final"] = True
+
+    note = "Official application category is source-confirmed; exact local permit/form title is not published in the source-backed packet."
+    permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+    if permits:
+        for permit in permits:
+            if not isinstance(permit, dict):
+                continue
+            permit["permit_type"] = display
+            permit["portal_selection"] = display
+            permit.pop("permit_name", None)
+            permit["required"] = True
+            permit["notes"] = note
+        result["permits_required"] = permits
+    else:
+        result["permits_required"] = [{"permit_type": display, "portal_selection": display, "required": True, "notes": note}]
+    warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
+    if result.get("warnings") is not warnings:
+        result["warnings"] = warnings
+    if note not in warnings:
+        warnings.append(note)
+    if result.get("apply_path") or result.get("apply_url") or job_type:
+        build_apply_path(result, job_type, city, state)
+
+
 def _phase7h_contact_phrase(result: dict, city: str) -> str:
     office = _phase7h_string(result.get("applying_office") or result.get("office_name"))
     phone = _phase7h_string(result.get("apply_phone") or result.get("office_phone"))
@@ -2969,32 +3040,18 @@ def _phase7h_neutralize_unverified_permit_type(result: dict, city: str, state: s
             )
     exact_names = {name for name in exact_names if name and name != PHASE7H_AHJ_VERIFY_PERMIT_TYPE}
 
-    result["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-    result["permit_name"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-    result["_permit_display_name"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+    result["final_answer_state"] = PHASE7H_INTERNAL_RETRIEVAL_STATE
+    result["permit_verdict"] = PHASE7H_INTERNAL_RETRIEVAL_STATE
+    result["permit_required"] = None
+    result["permit_type"] = None
+    result["permit_name"] = None
+    result["_permit_display_name"] = None
     result["permit_type_verified"] = False
-    result["permit_name_status"] = result.get("permit_name_status") or "needs_ahj_verification"
-    result["permit_name_confidence"] = "low"
-
-    contact = _phase7h_contact_phrase(result, city)
-    note = (
-        "Permit is required, but the exact permit category was not official-source verified for this lookup. "
-        f"Confirm the exact filing type with {contact} before filing."
-    )
-    if permits:
-        for permit in permits:
-            if not isinstance(permit, dict):
-                continue
-            permit["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-            permit["portal_selection"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-            permit.pop("permit_name", None)
-            permit.pop("name", None)
-            permit.pop("title", None)
-            permit["required"] = True
-            permit["notes"] = note
-        result["permits_required"] = permits
-    else:
-        result["permits_required"] = [{"permit_type": PHASE7H_AHJ_VERIFY_PERMIT_TYPE, "required": True, "notes": note}]
+    result["permit_name_verified"] = False
+    result["permit_name_status"] = "pending_official_source_retrieval"
+    result["permit_name_confidence"] = None
+    result["permits_required"] = []
+    result["apply_path"] = None
 
     warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
     if result.get("warnings") is not warnings:
@@ -3002,13 +3059,6 @@ def _phase7h_neutralize_unverified_permit_type(result: dict, city: str, state: s
     if PHASE7H_UNVERIFIED_PERMIT_WARNING not in warnings:
         warnings.append(PHASE7H_UNVERIFIED_PERMIT_WARNING)
     _phase7h_mark_coverage_truth_unverified(result)
-
-    if result.get("apply_path") or result.get("apply_url") or job_type:
-        build_apply_path(result, job_type, city, state)
-    if isinstance(result.get("apply_path"), dict) and exact_names:
-        result["apply_path"] = _phase7h_replace_text(result["apply_path"], exact_names)
-        result["apply_path"]["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
-        result["apply_path"]["verification_note"] = "Exact permit category is not official-source verified for this lookup; confirm the filing type with the AHJ before filing."
 
 
 def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "", state: str = "", job_type: str = "") -> dict:
@@ -3023,7 +3073,12 @@ def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "",
     failed_fields = {str(field) for field in (evidence_meta.get("failed_closed_fields") or [])}
     permit_type_failed_closed = bool(evidence_meta.get("enabled")) and "permit_type" in failed_fields and not (PHASE7H_EXACT_NAME_SOURCE_FIELDS & matched_fields)
     verified = False if permit_type_failed_closed else _phase7h_permit_type_verified(result, permit_name)
+    source_backed_category_display = _phase7h_source_backed_category_display(result, evidence_meta, matched_fields)
     result["permit_type_verified"] = bool(verified)
+
+    if source_backed_category_display and not verified:
+        _phase7h_preserve_source_backed_category(result, source_backed_category_display, city, state, job_type)
+        return result
 
     if (
         evidence_meta.get("enabled")
@@ -3054,7 +3109,7 @@ def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "",
             result["permits_required"] = [{
                 "permit_type": permit_name,
                 "required": True,
-                "notes": "Official-source backed permit type. Verify final filing path with the AHJ before submitting.",
+                "notes": "Official-source backed permit type. Use the source-backed filing path before submitting.",
             }]
     return result
 
@@ -4126,7 +4181,7 @@ ONBOARDING_SCHEDULE = [
 ONBOARDING_BODIES = {
     0: (
         "Welcome to PermitAssist! Here are 3 quick tips to get the most out of it:\n\n"
-        "1. 🔍 BE SPECIFIC with your job description. Instead of 'HVAC work', try 'restaurant tenant improvement with kitchen hood, grease interceptor, plumbing, electrical, and ADA restroom upgrades'. You'll get a more useful permit name and fee estimate to verify with the AHJ.\n\n"
+        "1. 🔍 BE SPECIFIC with your job description. Instead of 'HVAC work', try 'restaurant tenant improvement with kitchen hood, grease interceptor, plumbing, electrical, and ADA restroom upgrades'. You'll get a more useful permit name and fee estimate to compare against official source-backed filing details.\n\n"
         "2. 📌 ADD THE CITY + STATE. Every jurisdiction has different rules. The building department in one city may require a permit that the next city over doesn't.\n\n"
         "3. 📁 SAVE YOUR LOOKUPS. After your first lookup, check the History tab (📋) to find past results instantly — no need to look up the same job twice.\n\n"
         "Start your first lookup now: https://permitassist.io\n\n"

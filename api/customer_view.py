@@ -42,6 +42,13 @@ _BANNED_VALUE_PATTERNS = (
     r"^\s*Permit Required\s*$",
     r"^\s*Building Permit\s*$",
     r"^\s*Residential Remodel Permit\s*$",
+    r"\bnot supported\b",
+    r"\bunsupported jurisdiction\b",
+    r"\bpermit name not confirmed\b",
+    r"\bexact permit type needs AHJ verification\b",
+    r"\bmanual filing path confirmation(?: in progress)?\b",
+    r"\bAHJ not covered\b",
+    r"\bwe don['’]?t know\b",
     r"\blikely\b",
     r"\btypically\b",
     r"\bgenerally\b",
@@ -64,6 +71,8 @@ _GENERIC_FINAL_PATTERNS = (
     r"\bverify exact\b",
     r"\bexact permit type needs AHJ verification\b",
     r"\bneeds AHJ verification\b",
+    r"\bsource-backed filing category (?:required|unavailable)\b",
+    r"\bofficial source retrieval required\b",
     r"\bunknown\b",
 )
 
@@ -305,15 +314,26 @@ def _guidance_filing_path(
     *,
     unsupported: bool = False,
     permit_name: str | None = None,
+    portal_path: str | None = None,
+    has_provenance: bool = False,
 ) -> str:
     if unsupported:
-        return "Invalid/Unsupported Jurisdiction — PermitAssist cannot issue a permit answer for this location."
+        return "Invalid jurisdiction — PermitAssist cannot issue a permit answer for this location."
     if permit_required is False:
+        if not has_provenance:
+            return "No-permit answer requires source-backed evidence before customer release."
         return "No Permit Required — source-backed guidance; keep the cited source with the job record."
+    clean_path = _clean(portal_path)
+    if clean_path and not _is_generic_final(clean_path):
+        return clean_path
     clean_name = _clean(permit_name)
     if clean_name and not _is_generic_final(clean_name):
-        return f"Permit Required — {clean_name}. Verify the exact local application/form path with the permitting office before filing."
-    return "Permit Required — Building Permit. Verify the exact local application/form path with the permitting office before filing."
+        if not has_provenance:
+            return f"Permit Required — {clean_name}. Official filing category/path requires active retrieval before customer release."
+        return f"Permit Required — {clean_name}. Use the official source-backed application/form path before filing."
+    if not has_provenance:
+        return "Official filing category/path requires active retrieval before customer release."
+    return "Permit Required — source-backed official filing category/path."
 
 
 def _first_clean(raw: dict[str, Any], *keys: str) -> str:
@@ -334,7 +354,7 @@ def _customer_ahj_contact(raw: dict[str, Any], *, ahj_name: str, apply_url: str 
         "phone": phone or None,
         "address": address or None,
         "portal_url": portal if _official_url(portal) else None,
-        "verification_note": "Confirm final intake details with the permitting office before filing.",
+        "verification_note": "Use the listed official intake details before filing.",
     }
 
 
@@ -453,10 +473,10 @@ def _best_available_permit_name(raw: dict[str, Any], *, job_type: str, vertical:
 
 def _guidance_next_steps(permit_required: bool | None, *, unsupported: bool = False) -> list[str]:
     if unsupported:
-        return ["Check the city/state spelling or choose a supported jurisdiction before relying on this lookup."]
+        return ["Check the city/state spelling before relying on this lookup."]
     if permit_required is False:
         return ["Keep the cited official source with the project file before starting work."]
-    return ["Use the official source links below and confirm the exact filing category with the permitting office before filing."]
+    return ["Use the official source-backed filing category/path before filing."]
 
 
 def _customer_guidance_view(
@@ -471,19 +491,21 @@ def _customer_guidance_view(
     provenance: list[dict[str, str]] | None = None,
     unsupported: bool = False,
     permit_name: str | None = None,
+    portal_path: str | None = None,
     apply_url: str | None = None,
     raw: dict[str, Any] | None = None,
+    customer_final: bool = True,
 ) -> CustomerView:
     raw = raw if isinstance(raw, dict) else {}
     safe_apply_url = _clean(apply_url) if _official_url(apply_url) else None
     resolved_ahj_name = _clean(ahj_name) or f"{_clean(city)} {_clean(state_code).upper()}".strip()
     return CustomerView(
         final_answer_state=final_answer_state,
-        customer_final=True,
+        customer_final=customer_final,
         permit_required=permit_required,
         permit_name=_clean(permit_name) or None,
-        official_portal_category_path=None,
-        filing_path=_guidance_filing_path(permit_required, unsupported=unsupported, permit_name=permit_name),
+        official_portal_category_path=_clean(portal_path) or None,
+        filing_path=_guidance_filing_path(permit_required, unsupported=unsupported, permit_name=permit_name, portal_path=portal_path, has_provenance=bool(provenance)),
         job_type=_clean(job_type),
         city=_clean(city),
         state=_clean(state_code).upper(),
@@ -663,6 +685,24 @@ def build_customer_view(
             unsupported=True,
         )
 
+    if internal_result.get("customer_final") is False or internal_result.get("final_answer_state") in {
+        PENDING_ACTIVE_RETRIEVAL,
+        PENDING_MANUAL_COMPLETION,
+        "OFFICIAL_SOURCE_RETRIEVAL_REQUIRED",
+    }:
+        return _customer_guidance_view(
+            final_answer_state="OFFICIAL_SOURCE_RETRIEVAL_REQUIRED",
+            permit_required=None,
+            job_type=job_type,
+            city=city,
+            state_code=state,
+            vertical=vertical,
+            ahj_name=ahj_name,
+            apply_url=_clean(internal_result.get("apply_url")),
+            raw=internal_result,
+            customer_final=False,
+        )
+
     permit_name, portal_path, provenance = _extract_exact_support(internal_result)
     raw_required = internal_result.get("permit_required")
     permit_required = raw_required if isinstance(raw_required, bool) else True
@@ -683,6 +723,7 @@ def build_customer_view(
             ahj_name=ahj_name,
             provenance=provenance,
             permit_name=fallback_permit_name,
+            portal_path=portal_path,
             apply_url=_clean(internal_result.get("apply_url")),
             raw=internal_result,
         )
@@ -699,6 +740,7 @@ def build_customer_view(
             ahj_name=ahj_name,
             provenance=provenance,
             permit_name=permit_name or fallback_permit_name,
+            portal_path=portal_path,
             apply_url=_clean(internal_result.get("apply_url")),
             raw=internal_result,
         )
@@ -741,6 +783,7 @@ def build_customer_view(
             ahj_name=ahj_name,
             provenance=provenance,
             permit_name=permit_name or fallback_permit_name,
+            portal_path=portal_path,
             apply_url=_clean(internal_result.get("apply_url")),
             raw=internal_result,
         )

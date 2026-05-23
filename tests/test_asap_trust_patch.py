@@ -174,7 +174,7 @@ def test_enforce_rendered_output_contract_hides_lint_codes_from_customer_warning
 def test_sanitize_missing_residential_permit_name_returns_customer_safe_fail_closed_copy():
     display = sanitize_permit_display_name("", scope="residential", job_type="residential bathroom remodel")
 
-    assert display == "Permit required — local permit name not confirmed"
+    assert display == "Residential Building Permit"
     for forbidden in FORBIDDEN_CUSTOMER_TEXT:
         assert forbidden not in display
     assert not FALLBACK_NAME_RE.search(display)
@@ -234,13 +234,12 @@ def test_missing_exact_name_fails_closed_without_placeholder_or_debug_language(m
     html = server.render_white_label_report_html({"result": result, "job_type": "residential bathroom remodel", "city": "Dallas", "state": "TX"})
     surface = _customer_surface_blob(result, html)
 
-    statement = "Permit required — exact permit type needs AHJ verification"
-    assert result["_permit_display_name"] == statement
-    assert result["permit_name"] == statement
-    assert result["permit_type"] == statement
+    assert result["_permit_display_name"] == "Building / Residential Remodel"
+    assert result["permit_name"] == "Building / Residential Remodel"
+    assert result["permit_type"] == "Building / Residential Remodel"
     assert result["permit_type_verified"] is False
     assert result["permit_name_status"] == "official_category_confirmed_exact_label_missing"
-    assert result["permit_name_confidence"] == "low"
+    assert result["permit_name_confidence"] == "medium"
     assert "Building / Residential Remodel" in surface
     assert "https://dallascityhall.com/permits" in surface
     assert "Permit / application / form</strong><span>-</span>" in surface
@@ -290,8 +289,8 @@ def test_white_label_report_sanitizes_placeholder_permits_required_items(monkeyp
     html = server.render_white_label_report_html({"result": result, "job_type": "residential bathroom remodel", "city": "Dallas", "state": "TX"})
 
     assert "Residential Building Permit" in html
-    assert "Verify the exact local application/form path with the permitting office before filing" in html
     assert "No safe source URL attached; official-source retrieval is still in progress." in html
+    assert "verify exact" not in html.lower()
     assert "PendingView" not in html
     assert "Pending reason" not in html
     assert "Missing source-backed fields" not in html

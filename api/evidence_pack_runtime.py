@@ -964,16 +964,16 @@ def _source_backed_permit_name(matches: dict[str, dict[str, Any]]) -> tuple[str,
         if field in {"display_permit_name", "official_permit_name"}:
             return value, field, "exact_official_name_confirmed", "high"
         return value, field, "official_category_confirmed_exact_label_missing", "medium"
-    return "Permit required — local permit name not confirmed", "", "needs_research", "low"
+    return "", "", "pending_official_source_retrieval", "low"
 
 
 def _apply_source_backed_permit_name(result: dict[str, Any], matches: dict[str, dict[str, Any]]) -> None:
     display, source_field, status, confidence = _source_backed_permit_name(matches)
-    result["_permit_display_name"] = display
     result["permit_name_status"] = status
     result["permit_name_confidence"] = confidence
     result["permit_required_confidence"] = "high" if source_field else str(result.get("confidence") or "medium").lower()
     if source_field:
+        result["_permit_display_name"] = display
         result["permit_name_source_field"] = source_field
         result["permit_name"] = display
         result["permit_type"] = display
@@ -998,7 +998,7 @@ def _suppress_pack_controlled_fields(result: dict[str, Any], failed_closed: list
     if "apply_url" in failed_closed:
         result["apply_url"] = None
         result["inspection_booking"] = None
-        result["_url_warning"] = "Official-source apply route is not confirmed for this AHJ/vertical yet; verify the application route with the AHJ."
+        result["_url_warning"] = "Official-source apply route is still under internal source review for this location/vertical."
     if "fee_range" in failed_closed:
         result["fee_range"] = None
     if "approval_timeline" in failed_closed:

@@ -743,7 +743,7 @@ def _build_schema(state: str) -> dict[str, Any]:
         },
         "contractor_warning": (
             f"{state_name} state overlay schema is ready, but rules are not populated yet. "
-            "Use this as a checklist only; verify with AHJ and cited state/local sources before quoting."
+            "Use this as a checklist only; cross-check cited state/local sources before quoting."
         ),
     }
 

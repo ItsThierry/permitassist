@@ -921,12 +921,12 @@ _URL_IN_TEXT_RE = re.compile(r'https?://[^\s\)\]\}\,]+', re.IGNORECASE)
 def strip_junk_urls_from_text(text: str, ahj_name: str = "city building dept") -> str:
     """Remove URLs from a free-text field if their host is EXCLUDED.
 
-    Replaces matched URLs with `[verify with ahj_name]` so the sentence stays
+    Replaces matched URLs with `[official-source placeholder for ahj_name]` so the sentence stays
     readable. Returns the text unchanged if no junk URLs are present.
     """
     if not isinstance(text, str) or not text:
         return text
-    placeholder = f"[verify with {ahj_name}]"
+    placeholder = f"[official-source placeholder for {ahj_name}]"
 
     def _replace(match):
         url = match.group(0).rstrip('.,;:')
@@ -1692,7 +1692,7 @@ CHECKLIST_SCOPE = {
         "items": [
             "Type I commercial exhaust hood listed/labeled per UL 710 with NFPA 96 compliance and AHJ-approved capture velocity per IMC 507",
             "ANSUL R-102 (or equivalent UL 300) hood suppression: post-install discharge test certificate + every-6-month cleaning + annual inspection per NFPA 96 §11",
-            "ANSUL discharge auto-shutoffs all hood gas + electric fuel sources per IMC 507.7 — verify with AHJ during witness test",
+            "ANSUL discharge auto-shutoffs all hood gas + electric fuel sources per IMC 507.7 — coordinate during witness test",
             "Grease interceptor sized per IPC 1003.3.4 by drainage fixture units (4-comp + mop typically 50+ GPM hydromechanical OR 750–1,500 gal exterior gravity); located ≤25 ft developed length from fixtures",
             "Makeup air system balanced to ±10% of hood exhaust per IMC 506.3.4; tempered if > 35°F differential to prevent backdraft",
             "Indirect waste with air gap on dishwasher, ice maker, prep sink, and steam kettle per IPC 802; commercial dishwasher backflow prevention (RPZ) per IPC 608.13.2",

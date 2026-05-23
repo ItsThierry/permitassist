@@ -68,7 +68,7 @@ SCOPE_FEE_FLOORS: Dict[str, Dict[str, Any]] = {
     "commercial": {
         "per_sf": 2.5,
         "min_floor": 5000,
-        "note": "generic commercial — verify with AHJ",
+        "note": "generic commercial — source-backed fee review required",
     },
     "residential_adu": {
         "per_sf": 12.0,

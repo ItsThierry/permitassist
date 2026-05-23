@@ -18,7 +18,9 @@ FALLBACK_NAME_RE = re.compile(
     r"permit\s+required\s*[-–—]+\s*exact\s+permit\s+type\s+needs\s+ahj\s+verification|"
     r"permit\s*[-–—]+\s*verify\s+exact\s+ahj\s+title|"
     r"exact\s+permit\s+(?:type|category).*needs\s+ahj\s+verification|"
-    r"needs\s+ahj\s+verification",
+    r"needs\s+ahj\s+verification|"
+    r"source-backed\s+filing\s+category\s+(?:required|unavailable)|"
+    r"official\s+source\s+retrieval\s+required",
     re.I,
 )
 UNCERTAINTY_RE = re.compile(r"\b(unknown|unverified|needs?\s+AHJ\s+verification|verify\s+with\s+(?:the\s+)?AHJ|human\s+review)\b", re.I)
@@ -33,7 +35,7 @@ CUSTOMER_VISIBLE_DEBUG_RE = re.compile(
     r"\b(?:needs_review_reasons|quality_warnings|failed_closed_fields|source_golden_field_status)\b",
     re.I,
 )
-SAFE_AHJ_VERIFY_TITLE = "Permit required — exact permit type needs AHJ verification"
+SAFE_AHJ_VERIFY_TITLE = "Official source retrieval required"
 
 
 LOCAL_HOST_BY_CITY = {
@@ -286,6 +288,7 @@ def sanitize_permit_display_name(name: str | None, scope: str | None = None, job
     raw = str(name or "").strip()
     vertical = canonical_vertical(scope, job_type)
     if not raw or FALLBACK_NAME_RE.search(raw):
+        job_l = str(job_type or "").lower()
         if vertical == "commercial_restaurant":
             return "Commercial Alteration / Tenant Improvement Permit"
         if vertical == "medical_clinic_ti":
@@ -294,7 +297,17 @@ def sanitize_permit_display_name(name: str | None, scope: str | None = None, job
             return "Commercial Office Tenant Improvement Permit"
         if vertical in {"commercial_unknown", "commercial_trade_only"}:
             return "Commercial Permit / Trade Permit"
-        return "Permit required — local permit name not confirmed"
+        if "solar" in job_l or "photovoltaic" in job_l:
+            return "Residential Solar Permit"
+        if "roof" in job_l:
+            return "Residential Roofing Permit"
+        if "plumb" in job_l or "water heater" in job_l:
+            return "Plumbing Permit"
+        if "electric" in job_l or "panel" in job_l or "wiring" in job_l:
+            return "Electrical Permit"
+        if "mechanical" in job_l or "hvac" in job_l:
+            return "Mechanical Permit"
+        return "Residential Building Permit" if vertical == "residential" else "Building Permit"
     return re.sub(r"\s+", " ", raw)
 
 

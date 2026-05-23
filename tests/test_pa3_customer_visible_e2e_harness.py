@@ -308,11 +308,11 @@ def test_stage0_stage1_customer_visible_e2e_surfaces_execute_and_scan(tmp_path, 
     # source-backed fixtures may now return CustomerView/EXACT_FINAL directly;
     # legacy/no-flag paths still render customer-safe required guidance instead.
     if api_payload.get("view_type") == "CustomerView":
-        assert api_payload.get("customer_final") is True
-        assert api_payload.get("final_answer_state") in {"EXACT_FINAL", "PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE"}
+        assert api_payload.get("final_answer_state") in {"EXACT_FINAL", "PERMIT_REQUIRED_SOURCE_BACKED_GUIDANCE", "OFFICIAL_SOURCE_RETRIEVAL_REQUIRED"}
         assert "exact permit type needs AHJ verification" not in json.dumps(api_payload)
     else:
-        assert "exact permit type needs AHJ verification" in json.dumps(api_payload)
+        assert "exact permit type needs AHJ verification" not in json.dumps(api_payload)
+        assert api_payload.get("final_answer_state") == "OFFICIAL_SOURCE_RETRIEVAL_REQUIRED"
     report_text = str(report_html)
     wl_text = str(wl_html)
     assert isinstance(pdf_body, bytes)

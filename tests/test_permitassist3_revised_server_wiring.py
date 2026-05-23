@@ -1,6 +1,8 @@
 import importlib
 # pyright: reportMissingImports=false
+import json
 import os
+import re
 import sys
 import types
 from pathlib import Path
@@ -41,6 +43,7 @@ def _install_server_import_stubs():
 
 def _import_server(monkeypatch, tmp_path, phase23_env="1"):
     _install_server_import_stubs()
+    monkeypatch.setenv("CACHE_DIR", str(tmp_path / "cache"))
     monkeypatch.setenv("FREE_LOOKUP_DB", str(tmp_path / "ip_lookups.db"))
     monkeypatch.setenv("PERMITASSIST_NO_BACKGROUND_WORKERS", "1")
     if phase23_env is None:
@@ -90,6 +93,45 @@ def _assert_customer_response_scan_clean(value):
 
     scan = CustomerOutputScanner().scan(value)
     assert scan["pass"], scan
+
+
+REAL_AHJ_CUSTOMER_SURRENDER_PATTERNS = tuple(
+    re.compile(pattern, re.I)
+    for pattern in (
+        r"permit name not confirmed",
+        r"exact permit type needs AHJ verification",
+        r"manual filing path confirmation(?: in progress)?",
+        r"AHJ not covered",
+        r"we don['’]?t know",
+        r"AHJ unsupported",
+        r"\bnot supported\b",
+        r"\bunsupported jurisdiction\b",
+        r"check with (?:the )?AHJ",
+        r"contact (?:your|the) AHJ",
+        r"verify with (?:the )?AHJ",
+        r"needs AHJ verification",
+        r"PendingView",
+        r"PENDING_(?:ACTIVE_RETRIEVAL|MANUAL_COMPLETION)",
+        r"quality_warnings|source_golden_field_status|needs_review_reasons|fee_range",
+    )
+)
+
+
+def _flatten_strings(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from _flatten_strings(item)
+    elif isinstance(value, (list, tuple, set)):
+        for item in value:
+            yield from _flatten_strings(item)
+
+
+def _assert_real_ahj_surface_has_no_customer_surrender_copy(value):
+    text = "\n".join(_flatten_strings(value))
+    hits = [(pattern.pattern, match.group(0)) for pattern in REAL_AHJ_CUSTOMER_SURRENDER_PATTERNS for match in pattern.finditer(text)]
+    assert hits == []
 
 
 def test_revised_phase2_3_contract_is_wired_into_finalize_customer_path(monkeypatch, tmp_path):
@@ -237,3 +279,119 @@ def test_revised_phase2_3_can_be_explicitly_disabled(monkeypatch, tmp_path):
     )
 
     assert "permitassist3_revised" not in result
+
+
+def test_customer_view_report_pdf_and_share_surfaces_strip_real_ahj_surrender_copy(monkeypatch, tmp_path):
+    server = _import_server(monkeypatch, tmp_path)
+    server.init_db()
+    raw = {
+        "permit_verdict": "YES",
+        "permit_required": True,
+        "permit_name": "Permit required — exact permit type needs AHJ verification",
+        "permit_type": "Permit Required",
+        "source_backed_official_portal_category_path": "Commercial Building > Tenant Improvement",
+        "official_portal_category_path": "Commercial Building > Tenant Improvement",
+        "apply_url": "https://www.sandiego.gov/development-services/permits",
+        "official_source_provenance": [
+            {
+                "source_url": "https://www.sandiego.gov/development-services/permits",
+                "source_title": "City of San Diego Development Services Permits",
+                "exact_quote_or_snippet": "Commercial Building > Tenant Improvement applications are submitted through the City permitting portal.",
+                "retrieved_at_utc": "2026-05-22T00:00:00Z",
+                "official_source_classification": "ahj_official",
+            }
+        ],
+        "sources": [
+            {
+                "url": "https://www.sandiego.gov/development-services/permits",
+                "title": "City of San Diego Development Services Permits",
+                "snippet": "Commercial Building > Tenant Improvement applications are submitted through the City permitting portal.",
+                "official_source_classification": "ahj_official",
+            }
+        ],
+        "customer_summary": "manual filing path confirmation in progress; AHJ not covered; we don't know",
+        "quality_warnings": ["needs_review_reasons should never leak"],
+        "fee_range": "$1-$2",
+    }
+
+    view = server.project_customer_visible_view(raw, "office tenant improvement", "San Diego", "CA", explicit_vertical="office_ti")
+    assert view["view_type"] == "CustomerView"
+    assert view["customer_final"] is True
+    assert view["official_portal_category_path"] == "Commercial Building > Tenant Improvement"
+    assert view["filing_path"] == "Commercial Building > Tenant Improvement"
+    assert view.get("permit_name") == "Commercial Tenant Improvement / Alteration Building Permit"
+    _assert_real_ahj_surface_has_no_customer_surrender_copy(view)
+
+    report_html = server.customer_report_html("office tenant improvement", "San Diego", "CA", raw)
+    _assert_real_ahj_surface_has_no_customer_surrender_copy(report_html)
+    assert "Commercial Building &gt; Tenant Improvement" in report_html
+    assert "Print / Save PDF" in report_html
+
+    white_label_pdf_html = server.render_white_label_report_html(
+        {"job_type": "office tenant improvement", "city": "San Diego", "state": "CA", "result": raw}
+    )
+    _assert_real_ahj_surface_has_no_customer_surrender_copy(white_label_pdf_html)
+
+    checklist = server.build_checklist_fallback(raw, "office tenant improvement", "San Diego", "CA")
+    _assert_real_ahj_surface_has_no_customer_surrender_copy(checklist)
+    assert any("Commercial Building > Tenant Improvement" in item["label"] for item in checklist["items"])
+
+    slug = server.create_share("office tenant improvement", "San Diego", "CA", raw)
+    shared = server.get_share(slug)
+    assert shared and shared["data"]["view_type"] == "CustomerView"
+    _assert_real_ahj_surface_has_no_customer_surrender_copy(shared)
+
+
+def test_fake_invalid_ahj_still_fails_closed_as_invalid(monkeypatch, tmp_path):
+    server = _import_server(monkeypatch, tmp_path)
+    invalid = server.build_unsupported_ahj_response("Faketown", "ZZ", {"classification": "invalid", "city": "Faketown", "state": "ZZ"})
+    assert invalid["error"] == "invalid_ahj"
+    view = server.project_customer_visible_view(invalid, "restaurant tenant improvement", "Faketown", "ZZ", explicit_vertical="restaurant_ti")
+    assert view["final_answer_state"] == "OUT_OF_SCOPE"
+    assert view["permit_required"] is None
+    assert "Invalid jurisdiction" in view["filing_path"]
+
+
+def test_missing_source_path_does_not_claim_source_backed_customer_final(monkeypatch, tmp_path):
+    server = _import_server(monkeypatch, tmp_path)
+    view = server.project_customer_visible_view(
+        {"permit_required": True, "permit_name": "Permit Required", "permit_type": "Building Permit"},
+        "office tenant improvement",
+        "Dallas",
+        "TX",
+        explicit_vertical="office_ti",
+    )
+    assert view["filing_path"] == "Permit Required — Commercial Tenant Improvement / Alteration Building Permit. Official filing category/path requires active retrieval before customer release."
+    assert "source-backed" not in view["filing_path"].lower()
+
+
+def test_source_backed_status_without_provenance_does_not_become_exact_final(monkeypatch, tmp_path):
+    server = _import_server(monkeypatch, tmp_path)
+    raw = {
+        "permit_verdict": "YES",
+        "permit_required": True,
+        "permit_name": "Commercial Building > Tenant Improvement",
+        "permit_type": "Commercial Building > Tenant Improvement",
+        "permit_name_status": "official_category_confirmed_exact_label_missing",
+        "permit_name_source_field": "official_application_category",
+        "source_backed_official_portal_category_path": "Commercial Building > Tenant Improvement",
+        "official_portal_category_path": "Commercial Building > Tenant Improvement",
+        "official_source_provenance": [],
+        "claim_citations": [],
+        "sources": [],
+    }
+
+    result = server.finalize_permit_lookup_result(
+        raw,
+        "office tenant improvement",
+        "Dallas",
+        "TX",
+        explicit_vertical="office_ti",
+        evidence_allowed=False,
+    )
+
+    assert result.get("final_answer_state") != "EXACT_FINAL"
+    assert result.get("permit_name_status") != "official_category_confirmed_exact_label_missing"
+    view = server.project_customer_visible_view(result, "office tenant improvement", "Dallas", "TX", explicit_vertical="office_ti")
+    assert view.get("official_source_provenance") == []
+    assert view.get("permit_name") != "Commercial Building > Tenant Improvement"

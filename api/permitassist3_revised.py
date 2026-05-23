@@ -37,8 +37,16 @@ FORBIDDEN_CUSTOMER_FINAL_PATTERNS = (
     r"NO_VERIFIED_SOURCE",
     r"AHJ unsupported",
     r"not supported",
+    r"unsupported jurisdiction",
+    r"permit name not confirmed",
+    r"exact permit type needs AHJ verification",
+    r"manual filing path confirmation(?: in progress)?",
+    r"AHJ not covered",
+    r"we don['’]?t know",
     r"check with (?:the )?AHJ",
     r"contact (?:your|the) AHJ",
+    r"verify with (?:the )?AHJ",
+    r"needs AHJ verification",
     r"^\s*Building Permit\s*$",
     r"^\s*Permit Required\s*$",
     r"\bmay be required\b",
@@ -1135,12 +1143,32 @@ def _clear_legacy_customer_surface(result: dict[str, Any]) -> None:
 
 
 def _already_source_backed_exact_final(result: dict[str, Any]) -> bool:
-    if result.get("permit_name_status") != "exact_official_name_confirmed":
+    """Do not overwrite an upstream source-backed exact name or filing category/path.
+
+    PermitIQ 3.0 can accept either an exact official permit/form title or a
+    source-backed official portal/application category as the customer-useful
+    final answer. The revised engine should fill weak/generic commercial gaps;
+    it should not replace an already source-backed contractor answer with a
+    pending state merely because the local revised corpus lacks that AHJ.
+    """
+    status = _clean(result.get("permit_name_status"))
+    if status not in {
+        "exact_official_name_confirmed",
+        "source_backed_official_path_confirmed",
+        "official_category_confirmed_exact_label_missing",
+    }:
         return False
-    name = _clean(result.get("permit_name") or result.get("permit_type"))
+    name = _clean(
+        result.get("source_backed_exact_permit_name")
+        or result.get("source_backed_official_portal_category_path")
+        or result.get("official_portal_category_path")
+        or result.get("official_application_category")
+        or result.get("permit_name")
+        or result.get("permit_type")
+    )
     if not name or re.search(r"\b(generic|fallback|verify exact|unknown|permit required)\b", name, flags=re.I):
         return False
-    citations = result.get("claim_citations") or result.get("sources") or []
+    citations = result.get("official_source_provenance") or result.get("claim_citations") or result.get("sources") or []
     if isinstance(citations, dict):
         citations = [citations]
     return any(

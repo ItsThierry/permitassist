@@ -195,9 +195,9 @@ def test_ef99_fire_building_authority_conflict_is_not_ready_to_apply(tmp_path, m
     text = json.dumps(server.redact_public_output(result), sort_keys=True).lower()
     assert result["needs_review"] is True
     assert result["badge_state"] == "needs_review"
-    assert result["permit_ready_label"] == "Needs AHJ verification"
+    assert result["permit_ready_label"] == "Needs source-backed authority-order review"
     assert result["source_support_status"] == "target_ahj_source_unverified"
     assert result["likely_permit_category"] == "Fire Sprinkler Permit / authority-conflict review"
     assert "cannot verify" in text
     assert "planning path" in text
-    assert "fire permit must be filed separately" in text
+    assert "resolve the target jurisdiction authority order" in text

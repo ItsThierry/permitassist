@@ -41,7 +41,7 @@ def test_phase7h_verified_permit_type_populates_visible_required_permits(tmp_pat
         {
             "permit_type": "Commercial Alteration Permit",
             "required": True,
-            "notes": "Official-source backed permit type. Verify final filing path with the AHJ before submitting.",
+            "notes": "Official-source backed permit type. Use the source-backed filing path before submitting.",
         }
     ]
     assert result.get("permit_type_verified") is True
@@ -71,23 +71,17 @@ def test_phase7h_yes_verdict_without_verified_permit_type_gets_safe_customer_sta
 
     server.ensure_customer_visible_permit_trust_statement(result, "Chicago", "IL")
 
-    statement = "Permit required — exact permit type needs AHJ verification"
-    assert result["permit_type"] == statement
-    assert result["permit_name"] == statement
+    assert result["final_answer_state"] == "OFFICIAL_SOURCE_RETRIEVAL_REQUIRED"
+    assert result["permit_type"] is None
+    assert result["permit_name"] is None
     assert result["permit_type_verified"] is False
-    assert result["permits_required"] == [
-        {
-            "permit_type": statement,
-            "required": True,
-            "notes": "Permit is required, but the exact permit category was not official-source verified for this lookup. Confirm the exact filing type with Chicago Department of Buildings or call (312) 744-3449 before filing.",
-        }
-    ]
+    assert result["permits_required"] == []
     assert "permit type" not in result["coverage_truth"]["official_source_backed"]
     assert "exact permit type" in result["coverage_truth"]["not_confirmed_from_official_source"]
     text = json.dumps(result, sort_keys=True)
-    assert "exact permit type needs AHJ verification" in text
-    assert "not official-source verified" in text
-    assert "Chicago Department of Buildings" in text
+    assert "exact permit type needs AHJ verification" not in text
+    assert "Source-backed filing category required" not in text
+    assert "source-backed permit category/path" in text
 
 
 def test_phase7h_public_redaction_keeps_trust_statement_but_drops_internal_evidence_fields(tmp_path, monkeypatch):
@@ -114,8 +108,9 @@ def test_phase7h_public_redaction_keeps_trust_statement_but_drops_internal_evide
     public = server.redact_public_output(result)
     text = json.dumps(public, sort_keys=True)
 
-    assert public["permit_type"] == "Permit required — exact permit type needs AHJ verification"
-    assert public["permits_required"][0]["required"] is True
+    assert public["final_answer_state"] == "OFFICIAL_SOURCE_RETRIEVAL_REQUIRED"
+    assert public["permit_type"] is None
+    assert public["permits_required"] == []
     for forbidden in (
         "_evidence_pack",
         "field_evidence_confidence",
@@ -157,14 +152,14 @@ def test_phase7h_official_category_alone_does_not_verify_exact_permit_name(tmp_p
 
     server.ensure_customer_visible_permit_trust_statement(result, "Chicago", "IL", "restaurant tenant improvement")
 
-    statement = "Permit required — exact permit type needs AHJ verification"
-    assert result["permit_type"] == statement
-    assert result["permit_name"] == statement
-    assert result["_permit_display_name"] == statement
+    assert result["permit_type"] == "Commercial Alteration Permit"
+    assert result["permit_name"] == "Commercial Alteration Permit"
+    assert result["_permit_display_name"] == "Commercial Alteration Permit"
     assert result["permit_type_verified"] is False
-    assert result["permits_required"][0]["permit_type"] == statement
-    assert result["apply_path"]["permit_type"] == statement
-    assert "Commercial Alteration Permit" not in json.dumps(result.get("apply_path"), sort_keys=True)
+    assert result["permit_name_status"] == "official_category_confirmed_exact_label_missing"
+    assert result["permits_required"][0]["permit_type"] == "Commercial Alteration Permit"
+    assert result["apply_path"]["permit_type"] == "Commercial Alteration Permit"
+    assert "exact permit type needs AHJ verification" not in json.dumps(result, sort_keys=True)
 
 
 def test_phase7h_non_evidence_city_source_exact_name_is_neutralized(tmp_path, monkeypatch):
@@ -184,15 +179,14 @@ def test_phase7h_non_evidence_city_source_exact_name_is_neutralized(tmp_path, mo
 
     server.ensure_customer_visible_permit_trust_statement(result, "Austin", "TX", "office tenant improvement")
 
-    statement = "Permit required — exact permit type needs AHJ verification"
     text = json.dumps(result, sort_keys=True)
-    assert result["permit_type"] == statement
-    assert result["permit_name"] == statement
+    assert result["final_answer_state"] == "OFFICIAL_SOURCE_RETRIEVAL_REQUIRED"
+    assert result["permit_type"] is None
+    assert result["permit_name"] is None
     assert result["permit_type_verified"] is False
-    assert result["permits_required"][0]["permit_type"] == statement
-    assert result["permits_required"][0]["portal_selection"] == statement
+    assert result["permits_required"] == []
     assert "Building Permit" not in text
-    assert "not official-source verified" in text
+    assert "exact permit type needs AHJ verification" not in text
 
 
 def test_phase7h_non_evidence_legacy_cache_without_local_ahj_source_is_neutralized(tmp_path, monkeypatch):
@@ -208,9 +202,9 @@ def test_phase7h_non_evidence_legacy_cache_without_local_ahj_source_is_neutraliz
 
     server.ensure_customer_visible_permit_trust_statement(result, "Chicago", "IL", "office tenant improvement")
 
-    statement = "Permit required — exact permit type needs AHJ verification"
     assert result["permit_type_verified"] is False
-    assert result["permit_name"] == statement
+    assert result["final_answer_state"] == "OFFICIAL_SOURCE_RETRIEVAL_REQUIRED"
+    assert result["permit_name"] is None
 
 
 def test_phase7h_local_ahj_classified_legacy_result_preserves_label(tmp_path, monkeypatch):

@@ -505,7 +505,7 @@ STATE_PACKS = {
             },
             {
                 "title": "Illinois Stretch Energy Code \u2014 only mandatory in opt-in jurisdictions",
-                "note": "The Illinois Stretch Energy Code (20 ILCS 3125/55), based on the 2021 IECC with site-energy-index amendments, took effect 1/1/2025 but only applies in municipalities and counties that have formally adopted it. The base Illinois Energy Conservation Code applies elsewhere. Verify with the AHJ which code path applies before pricing \u2014 the Stretch Code's lower site-energy-index targets typically force higher-performance envelopes, heat pumps, or PV.",
+                "note": "The Illinois Stretch Energy Code (20 ILCS 3125/55), based on the 2021 IECC with site-energy-index amendments, took effect 1/1/2025 but only applies in municipalities and counties that have formally adopted it. The base Illinois Energy Conservation Code applies elsewhere. Check the official local code-adoption source path before pricing \u2014 the Stretch Code's lower site-energy-index targets typically force higher-performance envelopes, heat pumps, or PV.",
                 "applies_to": "Residential projects in Stretch-Code-adopting municipalities (Chicago, Evanston, Oak Park, etc.)",
                 "source": "https://www.buildinghub.energy/2023-il-residential-stretch-code-guide"
             },
