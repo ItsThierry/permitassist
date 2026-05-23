@@ -2176,9 +2176,9 @@ _PA3_CUSTOMER_VIEW_MEP_VERTICALS = frozenset(
 
 
 def _pa3_customer_view_vertical_flag_values() -> frozenset[str]:
-    raw = str(os.environ.get("PA3_CUSTOMER_VIEW_VERTICALS", "")).strip()
-    # Production-safe default is empty. Stage 3 is active only when this
-    # explicit vertical allowlist is set.
+    raw = str(os.environ.get("PA3_CUSTOMER_VIEW_VERTICALS", "all")).strip()
+    # PermitIQ 3.0 is now the production customer-surface path by default.
+    # PA3_CUSTOMER_VIEW_VERTICALS can still narrow/disable it explicitly.
     if not raw:
         return frozenset()
 

@@ -330,7 +330,7 @@ def _guidance_filing_path(
     if clean_name and not _is_generic_final(clean_name):
         if not has_provenance:
             return f"Permit Required — {clean_name}. Use the listed official intake details before filing."
-        return f"Permit Required — {clean_name}. Use the official source-backed application/form path before filing."
+        return f"Permit Required — {clean_name}. Use the listed permitting office/source-backed application/form path before filing."
     if not has_provenance:
         return "Permit Required — use the listed official intake details before filing."
     return "Permit Required — source-backed official filing category/path."

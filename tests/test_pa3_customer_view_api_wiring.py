@@ -232,7 +232,7 @@ def test_pa3_customer_view_builder_projects_unsupported_ahj_as_invalid_unsupport
     assert payload["customer_final"] is True
     assert payload["final_answer_state"] == OUT_OF_SCOPE
     assert payload["permit_required"] is None
-    assert payload["filing_path"].startswith("Invalid/Unsupported Jurisdiction")
+    assert payload["filing_path"].startswith("Invalid jurisdiction")
     assert "Permit Required" not in payload["filing_path"]
     assert "pending_reason" not in payload
     assert "lookup_id" not in payload
