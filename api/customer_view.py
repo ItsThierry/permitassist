@@ -5,6 +5,7 @@ wiring.  It creates the only shapes customer surfaces are allowed to consume.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from dataclasses import dataclass, field
 import re
 import uuid
@@ -673,9 +674,17 @@ def _last_updated_from_sources(raw: dict[str, Any], provenance: list[dict[str, s
         if text and text.lower() != "unknown":
             return text
     for source in provenance or []:
-        text = _clean((source or {}).get("retrieved_at_utc"))
+        text = _clean((source or {}).get("retrieved_at_utc") or (source or {}).get("checked_at") or (source or {}).get("last_verified_utc"))
         if text:
             return text
+    raw_meta = raw.get("_meta")
+    meta = raw_meta if isinstance(raw_meta, dict) else {}
+    for key in ("generated_at", "retrieved_at_utc", "last_verified_utc"):
+        text = _clean(meta.get(key))
+        if text and text.lower() != "unknown":
+            return text
+    if provenance:
+        return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     return None
 
 
