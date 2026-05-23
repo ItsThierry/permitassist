@@ -28,6 +28,7 @@ INTERNAL_MARKERS = (
     "No customer-final answer yet",
     "manual completion pending",
     "Missing source-backed fields",
+    "[REDACTED]",
     "Traceback",
 )
 
@@ -75,13 +76,13 @@ def _fixture_result(permit_name, *, marker):
         "permit_type": permit_name,
         "_permit_display_name": permit_name,
         "permits_required": [{"permit_type": permit_name, "required": True}],
-        "apply_url": "https://example.gov/permits/tenant-finish",
+        "apply_url": "https://abc.austintexas.gov/citizenportal/app/landing",
         "apply_path": {"verification_note": f"Portal category: {permit_name} — {marker}"},
         "claim_citations": [{
             "id": "C1",
             "claim": "Permit type",
             "quoted_snippet": f"Apply using {permit_name}.",
-            "source_url": "https://example.gov/permits/tenant-finish",
+            "source_url": "https://abc.austintexas.gov/citizenportal/app/landing",
             "checked_at": "2026-05-22",
             "confidence": "high",
         }],
@@ -103,6 +104,45 @@ def _surface_findings(name, content):
         for marker in (*INTERNAL_MARKERS, *WEAK_FINAL_MARKERS)
         if marker.lower() in text.lower()
     ]
+
+
+def test_customer_visible_redaction_preserves_public_portal_app_urls(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    payload = {
+        "apply_url": "https://abc.austintexas.gov/citizenportal/app/landing",
+        "sources": [{"url": "https://abc.austintexas.gov/citizenportal/app/landing", "title": "Austin portal"}],
+        "debug_path": "/app/data/internal-cache.json",
+    }
+
+    redacted = server.redact_public_output(payload)
+    serialized = json.dumps(redacted)
+
+    assert "https://abc.austintexas.gov/citizenportal/app/landing" in serialized
+    assert "[REDACTED]" not in redacted["apply_url"]
+    assert redacted["debug_path"] == "[REDACTED]"
+
+
+def test_quality_gate_preserves_commercial_no_permit_consistency(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_verdict": "NO",
+        "permit_required": False,
+        "job_category": "commercial",
+        "permits_required": [],
+        "confidence": "medium",
+        "fee_range": "No permit fee expected for cosmetic painting only.",
+    }
+
+    out = server.apply_permitiq_quality_gate(
+        result,
+        "cosmetic painting only, no electrical, no plumbing, no structural, no occupancy change",
+        "Denver",
+        "CO",
+    )
+
+    assert out["permit_verdict"] == "NO"
+    assert out.get("permit_required") is False
+    assert out.get("permits_required") == []
 
 
 def test_stage0_white_label_uses_real_payload_shape_and_rejects_raw_api_response(tmp_path, monkeypatch):

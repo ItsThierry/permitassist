@@ -1902,6 +1902,28 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     _attach_source_classification(result, city, state)
 
     if commercial:
+        no_permit_verdicts = {"NO", "NOT REQUIRED", "NONE", "EXEMPT", "NOT NEEDED"}
+        verdict = str(result.get("permit_verdict") or "").upper().strip()
+        permits_value = result.get("permits_required")
+        permits = permits_value if isinstance(permits_value, list) else []
+        explicit_no_permit = verdict in no_permit_verdicts and (
+            result.get("permit_required") is False
+            or not permits
+            or not any(isinstance(p, dict) and p.get("required") is True for p in permits)
+        )
+        if explicit_no_permit:
+            result["permit_verdict"] = "NO"
+            result["permit_required"] = False
+            result["permits_required"] = [
+                p for p in permits
+                if isinstance(p, dict) and p.get("required") is False
+            ]
+            _enforce_rendered_output_contract(result, job_type, city, state, warnings)
+            _filter_negated_surface_lists(result, job_type)
+            _neutralize_commercial_permit_residential_contrast(result, job_type)
+            _filter_ef99b_commercial_residential_leaks(result, job_type)
+            return result
+
         has_commercial_primary = any(token in primary_l for token in _COMMERCIAL_PRIMARY_TOKENS)
         has_residential_leak = any(token in primary_l for token in _RESIDENTIAL_PRIMARY_TOKENS) and not has_commercial_primary
         if has_residential_leak or not primary:
@@ -5763,7 +5785,7 @@ def observability_head_snippet() -> str:
 
 
 _SENSITIVE_OUTPUT_RE = re.compile(
-    r"(?i)(/home/[^/\s\"'<>]+/[^\s\"'<>]+|/app/[^\s\"'<>]+|PERMITASSIST_[A-Z0-9_]+|RAILWAY_[A-Z0-9_]+|sk-[A-Za-z0-9_-]{16,}|whsec_[A-Za-z0-9_-]{16,}|[A-Fa-f0-9]{64})"
+    r"(?i)((?<![A-Za-z0-9:/._-])(?:/home/[^/\s\"'<>]+/[^\s\"'<>]+|/app/[^\s\"'<>]+)|PERMITASSIST_[A-Z0-9_]+|RAILWAY_[A-Z0-9_]+|sk-[A-Za-z0-9_-]{16,}|whsec_[A-Za-z0-9_-]{16,}|[A-Fa-f0-9]{64})"
 )
 
 
