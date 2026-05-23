@@ -2301,6 +2301,8 @@ refreshUpgradeModal();
 function verdictState(d){
   const top=d.permit_verdict||d.verdict||d.requirement||'';
   if(top){const t=top.toString().toUpperCase().trim();if(t==='NO'||t==='NOT REQUIRED') return 'no';if(t==='YES'||t==='REQUIRED') return 'yes';if(t==='MAYBE') return 'maybe';}
+  if(d.permit_required===true) return 'yes';
+  if(d.permit_required===false) return 'no';
   const permits=d.permits_required||[];
   if(permits.length===0){const hint=(d.fee_range||'')+(d.job_summary||'')+(d.permit_summary||'');if(/no permit/i.test(hint)||/not required/i.test(hint)) return 'no';return 'no';}
   const req=permits[0].required;
