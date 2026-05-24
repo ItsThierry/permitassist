@@ -845,6 +845,78 @@ def test_hidden_trigger_public_payload_excludes_internal_fired_by_regexes():
     assert all("regions" not in trigger and "not_regions" not in trigger for trigger in triggers)
 
 
+def test_public_json_redaction_drops_internal_state_schema_context():
+    payload = {
+        "permit_verdict": "YES",
+        "state_schema_context": {
+            "active_vertical": "office_ti",
+            "coverage_level": "phase4b_ca_medical_clinic_ti",
+            "contractor_warning": "Medical clinic overlay should not be public.",
+        },
+        "nested": {
+            "state_schema_context": {
+                "contractor_warning": "Nested medical clinic overlay should not be public."
+            }
+        },
+    }
+
+    redacted = server.redact_public_output(payload)
+    blob = str(redacted).lower()
+
+    assert "state_schema_context" not in redacted
+    assert "state_schema_context" not in redacted["nested"]
+    assert "medical" not in blob
+    assert "clinic" not in blob
+    assert "dental" not in blob
+
+
+def test_final_scrub_removes_negated_wrong_vertical_terms_from_post_evidence_surfaces():
+    job = (
+        "Office tenant improvement with employee kitchenette only: sink, microwave, refrigerator, "
+        "coffee station, cabinets, no restaurant, no food service, no public dining, "
+        "no cooking equipment, no hood, no grease interceptor."
+    )
+    result = {
+        "_primary_scope": "commercial_office_ti",
+        "permit_verdict": "YES",
+        "confidence": "medium",
+        "permit_type": "Commercial Building Permit — Tenant Improvement / Interior Alteration",
+        "permits_required": [
+            {"permit_type": "Building Permit — Tenant Improvement / Interior Alteration", "notes": "Office TI path."},
+            {"permit_type": "Plumbing Permit — Commercial Tenant Improvement", "notes": "Sink plumbing only; no restaurant hood or grease scope."},
+        ],
+        "coverage_truth": {
+            "heading": "Coverage scope",
+            "not_confirmed_from_official_source": ["No restaurant, no hood, no grease, no clinic specialty trigger."],
+        },
+        "quality_warnings": ["No restaurant/hood/grease review is included for this office kitchenette."],
+        "warnings": ["Verify office TI path; no food service or health department scope is stated."],
+        "apply_path": {
+            "steps": ["Use commercial TI path; do not file as restaurant, hood, grease, or clinic scope."],
+            "verification_note": "Office kitchenette only; no restaurant/hood/grease trigger stated.",
+        },
+        "job_summary": "Office TI with employee kitchenette only; no restaurant, no hood, no grease interceptor.",
+        "sources": [{"url": "https://www.ladbs.org/services/core-services/plan-check-permit/plan-check-permit-special-assistance/eplanla", "title": "LADBS ePlanLA"}],
+    }
+
+    finalized = server.finalize_permit_lookup_result(
+        result,
+        job,
+        "Los Angeles",
+        "CA",
+        is_cached=False,
+        explicit_vertical="office_ti",
+        evidence_allowed=False,
+    )
+    blob = str(finalized).lower()
+
+    assert "commercial building permit" in blob
+    assert "office" in blob
+    for forbidden in ("restaurant", "hood", "grease", "food service", "health department", "clinic"):
+        assert forbidden not in blob
+
+
+
 def test_cached_hidden_trigger_payload_scrubs_internal_matcher_metadata():
     cached = {
         "hidden_triggers": [

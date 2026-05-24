@@ -16,30 +16,37 @@ def _function_body(source: str, function_name: str) -> str:
     return source[start:next_function]
 
 
-def test_standard_result_view_surfaces_uncertainty_above_the_fold():
+def test_standard_result_view_keeps_small_ahj_caveat_without_loud_uncertainty_card():
     source = _frontend_source()
+    render_body = _function_body(source, "renderResults")
 
     assert "function buildUncertaintyWarnings" in source
-    assert "const uncertaintyWarnings = buildUncertaintyWarnings(d);" in source
-    assert "uncertainty-warning-card" in source
-    assert "Verify before relying on this result" in source
+    assert "const uncertaintyWarnings = buildUncertaintyWarnings(d);" in render_body
+    assert "PermitAssist is guidance only" in render_body
+    assert "Verify final permit type with the AHJ before quoting or starting work" in render_body
+    assert "uncertainty-warning-card" not in render_body
+    assert "Verify before relying on this result" not in render_body
 
-    hero_pos = source.index('html += `<div class="result-hero">')
-    warning_pos = source.index("uncertainty-warning-card")
-    assert warning_pos < hero_pos
+    caveat_pos = render_body.index("PermitAssist is guidance only")
+    hero_pos = render_body.index('html += `<div class="result-hero">')
+    assert caveat_pos < hero_pos
 
 
-def test_report_view_uses_same_loud_uncertainty_rollup():
+def test_report_view_keeps_only_small_ahj_caveat_without_loud_uncertainty_rollup():
     source = _frontend_source()
+    report_body = _function_body(source, "renderResultAsReport")
 
-    assert "const reportUncertaintyWarnings = buildUncertaintyWarnings(d);" in source
-    assert "Report needs verification" in source
-    assert "This warning is intentionally shown in report/print view" in source
+    assert "PermitAssist is guidance only" in report_body
+    assert "Verify final permit type with the AHJ before quoting or starting work" in report_body
+    assert "const reportUncertaintyWarnings = buildUncertaintyWarnings(d);" not in report_body
+    assert "Report needs verification" not in source
+    assert "This warning is intentionally shown in report/print view" not in source
+    assert "reportUncertaintyWarnings.map" not in report_body
 
     report_header_pos = source.index("PermitAssist Report v1.0")
-    report_warning_pos = source.index("Report needs verification")
+    small_warning_pos = source.index("PermitAssist is guidance only", report_header_pos)
     first_field_pos = source.index("// The 18 fields — locked order")
-    assert report_header_pos < report_warning_pos < first_field_pos
+    assert report_header_pos < small_warning_pos < first_field_pos
 
 
 def test_copy_result_preserves_uncertainty_warning():
@@ -56,13 +63,13 @@ def test_dallas_evidence_exposure_limits_are_visible_in_standard_report_and_copy
 
     required = [
         "Evidence-pack exposure limits",
-        "Failed-closed evidence fields:",
-        "fee_range",
+        "Some field-specific details are not source-confirmed yet:",
+        "fees",
         "inspections",
+        "Fee information is not source-confirmed for this lookup",
         "statutory/AHJ outer deadline only — not a local queue or plan-review estimate",
         "not a complete local specialty-trigger list",
         "Exact portal subcategory and filing path still need AHJ/portal verification before filing",
-        "Failed-closed evidence fields:",
     ]
     for text in required:
         assert text in source
@@ -71,9 +78,10 @@ def test_dallas_evidence_exposure_limits_are_visible_in_standard_report_and_copy
     hero_pos = source.index('html += `<div class="result-hero">')
     assert standard_warning_pos < hero_pos
 
-    report_warning_pos = source.index("Report needs verification")
-    missing_rollup_pos = source.index("failed closed: ${field}")
-    assert report_warning_pos < missing_rollup_pos
+    report_body = _function_body(source, "renderResultAsReport")
+    small_warning_pos = report_body.index("PermitAssist is guidance only")
+    missing_rollup_pos = report_body.index("...reportEvidenceFailedFields.map(customerFieldLabel)")
+    assert small_warning_pos < missing_rollup_pos
 
 
 def test_dallas_evidence_caveats_are_surface_scoped_to_copy_and_report():
@@ -83,8 +91,8 @@ def test_dallas_evidence_caveats_are_surface_scoped_to_copy_and_report():
     warning_builder_body = _function_body(source, "buildUncertaintyWarnings")
 
     assert "const uncertaintyWarnings = buildUncertaintyWarnings(d);" in copy_body
-    assert "reportUncertaintyWarnings.map" in report_body
-    assert "const reportUncertaintyWarnings = buildUncertaintyWarnings(d);" in report_body
+    assert "reportUncertaintyWarnings.map" not in report_body
+    assert "const reportUncertaintyWarnings = buildUncertaintyWarnings(d);" not in report_body
     assert "buildEvidencePackCaveats(evidencePack)" in warning_builder_body
     assert "buildEvidencePackCaveats(evidencePack)" in warning_builder_body.split("qualityWarnings.slice", 1)[0]
     assert "slice(0, 14)" in warning_builder_body

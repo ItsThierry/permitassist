@@ -110,10 +110,17 @@ def test_solar_pv_install_with_battery_keeps_full_guidance():
     assert "Solar PV" in _combined_checked_text(out)
 
 
-def test_hidden_trigger_solar_id_keeps_guidance():
+def test_hidden_trigger_solar_id_alone_does_not_block_cleanup():
     before = _leaky_result()
     before["hidden_triggers"] = [{"id": "battery_ess_clearance"}]
     out = engine.purge_solar_ess_residue(deepcopy(before), "residential panel work")
+    _assert_no_leaks(out)
+
+
+def test_hidden_trigger_solar_id_with_unnegated_battery_job_keeps_guidance():
+    before = _leaky_result()
+    before["hidden_triggers"] = [{"id": "battery_ess_clearance"}]
+    out = engine.purge_solar_ess_residue(deepcopy(before), "residential panel work with battery backup")
     assert out == before
 
 

@@ -95,7 +95,7 @@ def test_inspection_items_are_normalized_and_empty_placeholders_hidden():
     assert "stage:'Inspection'" in body
     assert "/^inspection\\s*\\d*$/i.test(title)" in body
     render_body = _function_body("renderResults")
-    assert "const insps = normalizeInspectionItems(d.inspections || [])" in render_body
-    assert "normalizeInspectionItems(d.inspections || []).length" in HTML
+    assert "const insps = normalizeInspectionItems(resolveInspectionItems(d, renderContext, job))" in render_body
+    assert "normalizeInspectionItems(resolveInspectionItems(d, renderContext, job)).length" in HTML
     assert "normalizeInspectionItems(Array.isArray(d.inspect_checklist)" in HTML
     assert ".map(ins => ins.title || ins.stage || ins.description || ins.notes || '')" in HTML

@@ -144,6 +144,30 @@ def test_public_json_redaction_drops_internal_fee_floor_components(tmp_path, mon
     assert "restaurant" not in json.dumps(response).lower()
 
 
+def test_public_json_redaction_drops_evidence_pack_metadata_key(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    response = server.redact_public_output({
+        "permit_verdict": "YES",
+        "coverage_truth": {"official_source_backed": ["apply URL / route"]},
+        "_evidence_pack": {
+            "enabled": True,
+            "mode": "local_golden",
+            "matched_fields": ["permit_type"],
+        },
+        "nested": {
+            "field_evidence_confidence": {"permit_type": "verified"},
+            "evidence_pack_record_id": "internal-row",
+        },
+    })
+    text = json.dumps(response).lower()
+    assert response["permit_verdict"] == "YES"
+    assert response["coverage_truth"]["official_source_backed"] == ["apply URL / route"]
+    assert "_evidence_pack" not in text
+    assert "evidence_pack" not in text
+    assert "field_evidence_confidence" not in text
+    assert "evidence_pack_record_id" not in text
+
+
 def test_negated_former_restaurant_license_required_is_scrubbed(tmp_path, monkeypatch):
     job = (
         "Retail tenant improvement in former restaurant space: convert to dry retail store, "

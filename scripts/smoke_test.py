@@ -62,7 +62,7 @@ def check_frontend_content() -> None:
 
     required_index = [
         "Official Sources",
-        "Print / PDF",
+        "Print / Save PDF",
         "downloadReport()",
         "Job Address",
         "Jurisdiction Match",
@@ -70,7 +70,7 @@ def check_frontend_content() -> None:
         "Foreman Brief",
         "cosmetic cabinets/counters only, no plumbing/electrical/walls",
         "Log in to use Job Tracker",
-        "See a sample result",
+        "See a restaurant TI sample",
         "/pricing",
     ]
     for needle in required_index:
@@ -85,6 +85,28 @@ def check_frontend_content() -> None:
 
     assert "Help" in help_page and "How It Works" in help_page
     assert "PermitAssist Review Queue" in review_page
+
+
+def check_pricing_billing_consistency() -> None:
+    pricing = (FRONTEND_DIR / "pricing.html").read_text()
+
+    required_pricing_markers = [
+        'id="solo-cta"',
+        'id="team-cta"',
+        "soloLink: 'https://buy.stripe.com/eVqcMYehZfIo3BPbyl3VC0g'",
+        "teamLink: 'https://buy.stripe.com/6oU4gsb5N53Kfkxbyl3VC0h'",
+        "teamCta.href = prices.teamLink",
+        "Annual plans show exact savings below.",
+    ]
+    for needle in required_pricing_markers:
+        assert needle in pricing, f"Missing pricing billing marker: {needle}"
+
+    stale_pricing_copy = [
+        "Save $100/year — 2 months free!",
+        "Save $100/year",
+    ]
+    for needle in stale_pricing_copy:
+        assert needle not in pricing, f"Stale/inconsistent pricing copy remains: {needle}"
 
 
 def http_request(
@@ -188,6 +210,7 @@ def check_backend_helpers() -> None:
             "permits_required": [{"permit_type": "Building Permit", "required": True}],
             "sources": ["https://city.example/permit"],
         }
+        server.get_or_create_checklist = lambda *args, **kwargs: {"items": [], "source": "smoke_stub"}
         shared_html = server.render_share_page(
             {
                 "job_type": "Roof replacement",
@@ -196,7 +219,7 @@ def check_backend_helpers() -> None:
                 "data": share_payload,
             }
         )
-        assert "🔗 Sources" in shared_html and "city.example/permit" in shared_html
+        assert "__REPORT_DATA__" not in shared_html and "city.example/permit" in shared_html and "Roof replacement" in shared_html
 
         clean = research.clean_summary_text(
             'Minimum fee. * Facebook "Click to share with Facebook"). Print; "Click to print this page") Useful info.'
@@ -220,7 +243,7 @@ def check_backend_helpers() -> None:
         conn.close()
         owner_session = server.create_session_token("owner@example.com")
 
-        httpd = server.HTTPServer(("127.0.0.1", 0), server.Handler)
+        httpd = server.ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
         port = httpd.server_address[1]
         thread = threading.Thread(target=httpd.serve_forever, daemon=True)
         thread.start()
@@ -236,7 +259,7 @@ def check_backend_helpers() -> None:
             status, body = http_get(f"http://127.0.0.1:{port}/account")
             assert status == 200 and "Manage Subscription" in body
             status, body = http_get(f"http://127.0.0.1:{port}/pricing")
-            assert status == 200 and "$19" in body and "$49" in body
+            assert status == 200 and "$39.99" in body and "$79.99" in body and "Annual plans show exact savings below" in body
             status, body = http_get(f"http://127.0.0.1:{port}/review")
             assert status == 200
 
@@ -263,7 +286,7 @@ def check_backend_helpers() -> None:
                 },
             )
             share_data = json.loads(body)
-            assert status == 200 and share_data["expires_days"] == 30 and share_data["slug"]
+            assert status == 200 and share_data["expires_days"] == server.SHARE_TTL_DAYS and share_data["slug"]
             status, body = http_get(f"http://127.0.0.1:{port}/s/{share_data['slug']}")
             assert status == 200 and "city.example/permit" in body and "Roof replacement" in body
             conn = sqlite3.connect(db_path)
@@ -350,8 +373,9 @@ def check_backend_helpers() -> None:
 def main() -> int:
     check_frontend_js()
     check_frontend_content()
+    check_pricing_billing_consistency()
     check_backend_helpers()
-    print(json.dumps({"ok": True, "checks": ["frontend_js", "frontend_content", "backend_helpers"]}, indent=2))
+    print(json.dumps({"ok": True, "checks": ["frontend_js", "frontend_content", "pricing_billing_consistency", "backend_helpers"]}, indent=2))
     return 0
 
 

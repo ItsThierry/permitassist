@@ -802,7 +802,7 @@ def test_enabled_pack_rejects_malformed_evidence_records(tmp_path, monkeypatch):
     assert "companion_reviews_triggers" in result["_evidence_pack"]["failed_closed_fields"]
 
 
-def test_enabled_pack_apply_url_is_sanitized_after_overlay(tmp_path, monkeypatch):
+def test_enabled_pack_invalid_apply_url_fails_closed_before_overlay(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     data = json.loads(pack_path.read_text(encoding="utf-8"))
     data["records"].append({
@@ -832,9 +832,11 @@ def test_enabled_pack_apply_url_is_sanitized_after_overlay(tmp_path, monkeypatch
 
     result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
 
-    assert "apply_url" in result["_evidence_pack"]["matched_fields"]
+    assert "apply_url" not in result["_evidence_pack"]["matched_fields"]
+    assert "apply_url" in result["_evidence_pack"]["failed_closed_fields"]
     assert result["apply_url"] is None
     assert result["apply_path"]["portal_url"] in (None, "")
+    assert not any(c["field"] == "apply_url" for c in result["claim_citations"])
     assert "javascript:" not in json.dumps(result)
 
 
@@ -1540,7 +1542,9 @@ def test_white_label_report_surfaces_evidence_pack_limits(tmp_path, monkeypatch)
         }
     )
 
-    assert "Local evidence pack failed closed for: fee_range, inspections" in html
+    assert "Fee information is not source-confirmed for this lookup" in html
+    assert "Some field-specific details are not source-confirmed yet: fees, inspections" in html
+    assert "fee_range" not in html
     assert "Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate" in html
     assert "not a complete local specialty-trigger list" in html
     assert "exact portal subcategory requires AHJ verification" in html
@@ -1637,6 +1641,7 @@ def test_step7p_public_redaction_removes_paths_env_railway_tokens_and_hashes(tmp
     token_like = "sk-" + "testtokenvalue1234567890"
     payload = {
         "_evidence_pack": {
+            "public_redaction": "drop_evidence_pack",
             "path": sensitive_home,
             "fingerprint_sha256": "a" * 64,
             "nested": f"PERMITASSIST_EVIDENCE_PACK_PATH={sensitive_home} {token_like} RAILWAY_PRIVATE_DOMAIN",
@@ -1657,10 +1662,12 @@ def test_step7p_public_redaction_removes_paths_env_railway_tokens_and_hashes(tmp
     assert token_like not in dumped
     assert "a" * 64 not in dumped
     assert "b" * 64 not in dumped
-    assert dumped.count("[REDACTED]") >= 5
+    assert dumped.count("[REDACTED]") >= 2
+    assert "evidence_pack" not in dumped
+    assert "fingerprint" not in dumped
 
 
-def test_step7p_preview_indexing_guards_for_robots_sitemap_and_json(tmp_path, monkeypatch):
+def test_step7p_public_launch_crawlability_preserves_evidence_pack_runtime(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     _enable_pack(monkeypatch, pack_path)
     server = _import_server(tmp_path, monkeypatch)
@@ -1669,25 +1676,26 @@ def test_step7p_preview_indexing_guards_for_robots_sitemap_and_json(tmp_path, mo
         root_req = urllib.request.Request(f"{live.base}/")
         with urllib.request.urlopen(root_req, timeout=5) as resp:
             resp.read()
-            assert resp.headers.get("X-Robots-Tag") == "noindex, nofollow"
+            assert resp.headers.get("X-Robots-Tag") is None
         robots_req = urllib.request.Request(f"{live.base}/robots.txt")
         with urllib.request.urlopen(robots_req, timeout=5) as resp:
             robots_body = resp.read().decode("utf-8")
-            assert resp.headers.get("X-Robots-Tag") == "noindex, nofollow"
-            assert resp.headers.get("Cache-Control") == "no-store"
+            assert resp.headers.get("X-Robots-Tag") is None
         sitemap_req = urllib.request.Request(f"{live.base}/sitemap.xml")
         with urllib.request.urlopen(sitemap_req, timeout=5) as resp:
             sitemap_body = resp.read().decode("utf-8")
-            assert resp.headers.get("X-Robots-Tag") == "noindex, nofollow"
-            assert resp.headers.get("Cache-Control") == "no-store"
-        status, body = _post_json_response(
-            f"{live.base}/api/batch-permit",
-            {"lookups": [{"job_type": "office tenant improvement", "city": "Denver", "state": "CO", "job_category": "commercial"}]},
-        )
+            assert resp.headers.get("X-Robots-Tag") is None
 
-    assert "User-agent: *" in robots_body
-    assert "Disallow: /" in robots_body
+    assert server.evidence_pack_enabled() is True
+    robot_lines = {line.strip() for line in robots_body.splitlines()}
+    assert "User-agent: *" in robot_lines
+    assert "Allow: /" in robot_lines
+    assert "Disallow: /" not in robot_lines
+    assert "Disallow: /permits/" in robot_lines
+    assert "Disallow: /trades/" in robot_lines
+    assert "Sitemap: https://permitassist.io/sitemap.xml" in robot_lines
     assert "<urlset" in sitemap_body
-    assert "<url>" not in sitemap_body
-    assert status == 200
-    assert body["results"][0]["_evidence_pack"]["cache_bypassed"] is True
+    assert "https://permitassist.io/" in sitemap_body
+    assert "https://permitassist.io/pricing" in sitemap_body
+    assert "https://permitassist.io/cities" in sitemap_body
+    assert "/permits/" not in sitemap_body

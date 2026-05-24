@@ -42,7 +42,25 @@ from research_engine import (
     detect_primary_scope,
     classify_scope_required_permits,
 )
-from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
+from evidence_pack_runtime import (
+    ALLOWED_EVIDENCE_PACK_MODES,
+    apply_evidence_pack_fail_closed,
+    canonical_request_vertical,
+    evidence_pack_enabled,
+    evidence_pack_mode_preview_token_config,
+    evidence_pack_mode_request_gate_valid,
+    evidence_pack_mode_requires_preview_only,
+    evidence_pack_mode_requires_preview_route,
+    get_local_evidence_pack,
+)
+from rendered_output_lint import (
+    FALLBACK_NAME_RE,
+    build_rendering_context,
+    classify_source_for_jurisdiction,
+    lint_rendered_output,
+    sanitize_permit_display_name,
+    select_inspection_profile,
+)
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -73,10 +91,223 @@ PERMIT_LOOKUP_SEMAPHORE = threading.BoundedSemaphore(PERMIT_LOOKUP_CONCURRENCY_L
 EMAILS_CSV     = os.path.join(DATA_DIR, "captured_emails.csv")
 CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
 SHARE_TTL_DAYS = 90  # shareable links expire after 90 days
+_OPENAI_REASONING_EFFORTS = {"low", "medium", "high"}
+
+_US_STATE_CODES = {
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+    "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+    "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT",
+    "VA", "WA", "WV", "WI", "WY", "DC", "PR",
+}
+_AHJ_COVERAGE_CACHE: set[tuple[str, str]] | None = None
+_AHJ_CITY_TOKEN_RE = re.compile(r"^[A-Za-z][A-Za-z .'-]{1,98}[A-Za-z.]$")
+_AHJ_CITY_STATE_ALIASES = {
+    ("new york", "NY"): "New York City",
+    ("new york city", "NY"): "New York City",
+}
+_UNSUPPORTED_AHJ_STATUSES = {"unsupported", "invalid", "invalid_city", "invalid_state"}
+_UNSUPPORTED_AHJ_FORBIDDEN_KEYS = {
+    "apply_path",
+    "apply_url",
+    "apply_phone",
+    "apply_google_maps",
+    "permits_required",
+    "permit_type",
+    "permit_name",
+    "inspections",
+    "approval_timeline",
+    "fee_range",
+    "companion_reviews_triggers",
+    "_evidence_pack",
+    "field_evidence_confidence",
+    "claim_citations",
+}
+
+
+def _sanitize_openai_reasoning_effort(value: str | None) -> str | None:
+    effort = (value or "").strip().lower()
+    if effort in {"", "none", "off", "false", "0"}:
+        return None
+    return effort if effort in _OPENAI_REASONING_EFFORTS else None
 
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _normalize_ahj_city(city: str | None) -> str:
+    return " ".join(str(city or "").strip().split())
+
+
+def _normalize_ahj_state(state: str | None) -> str:
+    return str(state or "").strip().upper()
+
+
+def _canonicalize_ahj_city_for_state(city: str, state: str) -> str:
+    return _AHJ_CITY_STATE_ALIASES.get((city.casefold(), state), city)
+
+
+def _ahj_coverage_pairs() -> set[tuple[str, str]]:
+    """Return the launch-supported AHJ city/state pairs from code-owned coverage data."""
+    global _AHJ_COVERAGE_CACHE
+    if _AHJ_COVERAGE_CACHE is not None:
+        return _AHJ_COVERAGE_CACHE
+
+    pairs: set[tuple[str, str]] = set()
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "knowledge", "verified_cities.json"))
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        if isinstance(data, dict):
+            for record in data.values():
+                if not isinstance(record, dict):
+                    continue
+                city = _normalize_ahj_city(record.get("city"))
+                state = _normalize_ahj_state(record.get("state"))
+                if city and state:
+                    pairs.add((city.casefold(), state))
+    except Exception as exc:
+        print(f"[ahj-coverage] failed to load code-owned verified city coverage: {type(exc).__name__}")
+    _AHJ_COVERAGE_CACHE = pairs
+    return pairs
+
+
+def classify_ahj_coverage(city: str | None, state: str | None) -> dict:
+    """Classify an AHJ request as supported, unsupported, or invalid before lookup work."""
+    normalized_city = _normalize_ahj_city(city)
+    normalized_state = _normalize_ahj_state(state)
+    if not normalized_city or len(normalized_city) > 100 or not _AHJ_CITY_TOKEN_RE.match(normalized_city):
+        return {
+            "classification": "invalid",
+            "status": "invalid_city",
+            "city": normalized_city,
+            "state": normalized_state,
+            "reason": "invalid_city",
+        }
+    if normalized_state not in _US_STATE_CODES:
+        return {
+            "classification": "invalid",
+            "status": "invalid_state",
+            "city": normalized_city,
+            "state": normalized_state,
+            "reason": "invalid_state",
+        }
+    canonical_city = _canonicalize_ahj_city_for_state(normalized_city, normalized_state)
+    pair = (canonical_city.casefold(), normalized_state)
+    if pair in _ahj_coverage_pairs():
+        return {
+            "classification": "supported",
+            "status": "supported",
+            "city": canonical_city,
+            "state": normalized_state,
+            "reason": "city_state_supported",
+        }
+    return {
+        "classification": "unsupported",
+        "status": "unsupported",
+        "city": normalized_city,
+        "state": normalized_state,
+        "reason": "city_not_in_supported_coverage",
+    }
+
+
+def _unsupported_ahj_http_status(classification: dict) -> int:
+    return 400 if classification.get("classification") == "invalid" else 422
+
+
+def build_unsupported_ahj_response(city: str | None, state: str | None, classification: dict) -> dict:
+    normalized_city = classification.get("city") or _normalize_ahj_city(city)
+    normalized_state = classification.get("state") or _normalize_ahj_state(state)
+    status = classification.get("status") or "unsupported"
+    reason = classification.get("reason") or status
+    if classification.get("classification") == "invalid":
+        message = "This AHJ is not supported by PermitAssist because the city or state is invalid. Check the city/state and try again."
+        error = "invalid_ahj"
+    else:
+        message = "PermitAssist could not verify this city/state as a launch-covered AHJ. Check the city/state or verify directly with the local building department."
+        error = "unverified_ahj"
+    return scrub_unsupported_ahj_response({
+        "error": error,
+        "ahj_status": status,
+        "message": message,
+        "location": {"city": normalized_city, "state": normalized_state},
+        "coverage_truth": {
+            "status": "ahj_not_supported",
+            "classification": classification.get("classification") or status,
+            "reason": reason,
+        },
+    }, normalized_city, normalized_state)
+
+
+def _is_unsupported_ahj_result(result: dict | None) -> bool:
+    if not isinstance(result, dict):
+        return False
+    status = str(result.get("ahj_status") or "").strip().lower()
+    coverage = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
+    coverage_status = str(coverage.get("status") or "").strip().lower()
+    return status in _UNSUPPORTED_AHJ_STATUSES or coverage_status == "ahj_not_supported"
+
+
+def scrub_unsupported_ahj_response(result, city: str | None = None, state: str | None = None):
+    """Remove any supported-looking fields from invalid AHJ responses."""
+    def _scrub(value):
+        if isinstance(value, list):
+            return [_scrub(item) for item in value]
+        if not isinstance(value, dict):
+            return value
+        for key in list(value.keys()):
+            if key in _UNSUPPORTED_AHJ_FORBIDDEN_KEYS:
+                value.pop(key, None)
+                continue
+            value[key] = _scrub(value[key])
+        return value
+
+    if not isinstance(result, dict):
+        return result
+    result = _scrub(result)
+    result.setdefault("ahj_status", "unsupported")
+    result.setdefault("error", "unsupported_ahj")
+    result.setdefault("message", "This AHJ is not supported by PermitAssist because the city or state is invalid. Check the city/state and try again.")
+    result.setdefault("location", {"city": _normalize_ahj_city(city), "state": _normalize_ahj_state(state)})
+    coverage = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
+    coverage["status"] = "ahj_not_supported"
+    result["coverage_truth"] = coverage
+    return result
+
+
+def annotate_unverified_us_jurisdiction_result(result: dict, city: str | None, state: str | None, classification: dict | None = None) -> dict:
+    """Mark best-effort results for valid-looking US AHJs outside verified launch coverage.
+
+    These are not treated as unsupported/fatal. They keep the lookup useful while
+    making the launch-coverage caveat explicit and review-worthy.
+    """
+    if not isinstance(result, dict):
+        return result
+    normalized_city = (classification or {}).get("city") or _normalize_ahj_city(city)
+    normalized_state = (classification or {}).get("state") or _normalize_ahj_state(state)
+    location_label = f"{normalized_city}, {normalized_state}".strip(" ,")
+    warning = (
+        f"PermitAssist has not verified launch coverage for {location_label} yet. "
+        "This is a best-effort official-source lookup; verify details with the local building department before filing."
+    )
+    result["ahj_status"] = "unverified"
+    result["jurisdiction_verification"] = "unverified_us_jurisdiction"
+    result["needs_review"] = True
+    result.setdefault("location", {"city": normalized_city, "state": normalized_state})
+    coverage = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
+    coverage.update({
+        "status": "jurisdiction_unverified",
+        "classification": "unverified_us_jurisdiction",
+        "reason": (classification or {}).get("reason") or "city_not_in_verified_launch_coverage",
+        "verified_launch_coverage": False,
+    })
+    result["coverage_truth"] = coverage
+    warnings = result.get("quality_warnings") if isinstance(result.get("quality_warnings"), list) else []
+    if warning not in warnings:
+        result["quality_warnings"] = [warning, *warnings]
+    else:
+        result["quality_warnings"] = warnings
+    return result
 
 
 def parse_timestamp(value: str) -> datetime:
@@ -450,33 +681,17 @@ _COMMERCIAL_PRIMARY_TOKENS = (
 
 
 def _looks_like_residential_home_office_noncommercial(job_type: str) -> bool:
-    """True for private residential workspace wording with explicit no-commercial-use markers."""
+    """True for private residential workspace wording that should not become commercial office TI.
+
+    Normal homeowners rarely say "no employees / no customer visits" when asking
+    about a garage or bedroom converted to a private office. Treat explicit
+    residential + private-workspace language as residential unless there is a
+    strong unnegated commercial/TI signal.
+    """
     text = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
     if not text:
         return False
-    has_residential_marker = bool(re.search(r"\b(?:single[- ]family|residential|dwelling|house|home)\b", text))
-    has_private_workspace_marker = bool(
-        re.search(r"\bhome[- ]office\b", text)
-        or re.search(r"\bspare\s+bedroom\b.{0,80}\b(?:office|studio)\b", text)
-        or re.search(r"\bbedroom\b.{0,80}\bhome[- ]office\b", text)
-        or re.search(r"\bgarage\b.{0,80}\bhobby\s+workshop\b", text)
-        or re.search(r"\bhobby\s+workshop\b.{0,80}\bgarage\b", text)
-    )
-    if not (has_residential_marker and has_private_workspace_marker):
-        return False
-    noncommercial_markers = (
-        r"\bno\s+commercial\s+business\b",
-        r"\bno\s+employees\b",
-        r"\bno\s+customer\s+visits\b",
-        r"\bno\s+tenant\s+improvement\b",
-        r"\bno\s+commercial\s+tenant\s+improvement\b",
-        r"\bno\s+office\s+tenant\s+improvement\b",
-        r"\bno\s+office\s+ti\b",
-        r"\bno\s+medical(?:\s+(?:clinic|office|use))?\b(?=[,.;]|\s+(?:and|or|nor|no)\b|$)",
-        r"\bno\s+restaurant\b",
-    )
-    if sum(1 for pattern in noncommercial_markers if re.search(pattern, text, flags=re.I)) < 2:
-        return False
+
     positive_commercial = _has_unnegated_any(text, (
         "commercial tenant improvement",
         "office tenant improvement",
@@ -489,10 +704,45 @@ def _looks_like_residential_home_office_noncommercial(job_type: str) -> bool:
         "co-working",
         "tenant finish",
         "tenant buildout",
-        "change of occupancy",
-        "change of use",
+        "retail tenant improvement",
+        "medical clinic tenant improvement",
+        "restaurant tenant improvement",
     ))
-    return not positive_commercial
+    if positive_commercial:
+        return False
+
+    has_residential_marker = bool(re.search(r"\b(?:single[- ]family|residential|dwelling|house|home|adu|accessory\s+(?:structure|building|dwelling)|detached\s+garage)\b", text))
+    has_private_workspace_marker = bool(
+        re.search(r"\bhome[- ]office\b", text)
+        or re.search(r"\bspare\s+bedroom\b.{0,80}\b(?:office|studio|workspace)\b", text)
+        or re.search(r"\bbedroom\b.{0,80}\b(?:home[- ]office|office|studio|workspace)\b", text)
+        or re.search(r"\bgarage\b.{0,100}\b(?:hobby\s+workshop|office|studio|workspace|conditioned\s+office)\b", text)
+        or re.search(r"\b(?:hobby\s+workshop|office|studio|workspace)\b.{0,100}\bgarage\b", text)
+        or re.search(r"\b(?:adu|accessory\s+(?:structure|building|dwelling))\b.{0,100}\b(?:office|studio|workspace)\b", text)
+    )
+    if not (has_residential_marker and has_private_workspace_marker):
+        return False
+
+    noncommercial_markers = (
+        r"\bno\s+commercial\s+business\b",
+        r"\bno\s+employees\b",
+        r"\bno\s+customer\s+visits\b",
+        r"\bno\s+tenant\s+improvement\b",
+        r"\bno\s+commercial\s+tenant\s+improvement\b",
+        r"\bno\s+office\s+tenant\s+improvement\b",
+        r"\bno\s+office\s+ti\b",
+        r"\bno\s+medical(?:\s+(?:clinic|office|use))?\b(?=[,.;]|\s+(?:and|or|nor|no)\b|$)",
+        r"\bno\s+restaurant\b",
+    )
+    if sum(1 for pattern in noncommercial_markers if re.search(pattern, text, flags=re.I)) >= 2:
+        return True
+
+    unambiguous_residential_private_space = bool(
+        re.search(r"\b(?:residential|single[- ]family|house|home|dwelling)\b", text)
+        and re.search(r"\b(?:garage|detached\s+garage|spare\s+bedroom|bedroom|adu|accessory\s+(?:structure|building|dwelling))\b", text)
+        and re.search(r"\b(?:office|studio|workspace|hobby\s+workshop)\b", text)
+    )
+    return unambiguous_residential_private_space
 
 
 def _job_has_unnegated_commercial_scope(job_type: str) -> bool:
@@ -895,7 +1145,9 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
             out = {}
             for k, item in value.items():
                 cleaned = scrub_value(item) if k in {"notes", "note", "description", "summary", "included_because", "reason", "required_if", "scope_trigger", "steps", "portal_selection_path", "likely_documents", "verification_note", "stage", "title", "value", "claim", "text", "message", "details", "source_title", "quoted_snippet", "source_excerpt", "snippet", "simple", "complex", "timeline"} or isinstance(item, (list, dict)) or (isinstance(item, str) and has_forbidden(item)) else item
-                if cleaned not in ("", [], {}):
+                if k == "portal_url" and cleaned == "":
+                    out[k] = ""
+                elif cleaned not in ("", [], {}):
                     out[k] = cleaned
             return out
         return value
@@ -910,6 +1162,7 @@ def _filter_negated_surface_lists(result: dict, job_type: str) -> None:
         "companion_permits", "hidden_triggers", "fee_source", "fee_sources", "fee_calculator",
         "fee_estimate", "total_cost_estimate", "code_section_source", "required_documents_source",
         "inspection_process_source", "ahj_contact_source", "license_required", "approval_timeline",
+        "warnings", "coverage_truth",
     ):
         if key not in result:
             continue
@@ -1150,6 +1403,133 @@ def _source_dicts(result: dict) -> list[dict]:
     return out
 
 
+def _source_urls_for_gate(result: dict) -> list[str]:
+    return [s.get("url", "") for s in _source_dicts(result) if s.get("url")]
+
+
+def _inspection_text_for_gate(items) -> str:
+    bits = []
+    for item in items or []:
+        if isinstance(item, dict):
+            bits.append(" ".join(str(item.get(k) or "") for k in ("title", "stage", "description", "notes")))
+        else:
+            bits.append(str(item))
+    return "\n".join(bits).lower()
+
+
+def _ensure_vertical_inspection_profile(result: dict, context: dict, job_type: str) -> None:
+    """Keep commercial verticals from rendering sparse/residential inspection lists."""
+    explicit_commercial_context = bool(
+        str((result or {}).get("_primary_scope") or "").strip()
+        or str((result or {}).get("job_category") or "").strip().lower() == "commercial"
+    )
+    if not explicit_commercial_context:
+        return
+    profile = select_inspection_profile(context.get("vertical"), job_type)
+    name = profile.get("profile")
+    if name not in {"commercial_restaurant", "medical_clinic_ti", "office_ti"}:
+        return
+    text = _inspection_text_for_gate(result.get("inspections") or result.get("inspect_checklist") or [])
+    required = [str(x).lower() for x in profile.get("required_concepts") or []]
+    missing_required = any(token and token not in text for token in required)
+    if missing_required:
+        result["inspections"] = list(profile.get("default_items") or [])
+        result["_inspection_profile_applied"] = name
+
+
+def _sanitize_commercial_display_names(result: dict, context: dict, job_type: str) -> None:
+    scope = context.get("vertical") or result.get("_primary_scope") or ""
+    primary = _primary_permit_text(result) or result.get("permit_name") or result.get("permit_type") or ""
+    safe = sanitize_permit_display_name(primary, scope, job_type)
+    result["_permit_display_name"] = safe
+    for key in ("permit_name", "permit_type"):
+        if result.get(key) and FALLBACK_NAME_RE.search(str(result.get(key))):
+            result[key] = safe
+    permits = result.get("permits_required") or []
+    for permit in permits:
+        if not isinstance(permit, dict):
+            continue
+        for key in ("permit_type", "portal_selection", "name", "title"):
+            if permit.get(key) and FALLBACK_NAME_RE.search(str(permit.get(key))):
+                permit[key] = safe
+        if not permit.get("portal_selection"):
+            permit["portal_selection"] = sanitize_permit_display_name(permit.get("permit_type") or safe, scope, job_type)
+
+
+def _attach_source_classification(result: dict, city: str, state: str) -> None:
+    classified = [classify_source_for_jurisdiction(url, city, state) for url in _source_urls_for_gate(result)]
+    result["_source_classification"] = classified
+    result["_official_sources"] = [
+        s["url"] for s in classified
+        if s.get("allowed_as_official_support") and s.get("source_class") != "wrong_local_ahj"
+    ]
+
+
+def _render_lint_proxy_text(result: dict) -> str:
+    """Small deterministic proxy for pre-render lint until full browser render runs.
+
+    Keep this aligned with frontend badge behavior: high confidence alone is not
+    rendered as a Verified claim when the core permit category/name is uncertain.
+    """
+    bits = [str(result.get("_permit_display_name") or "")]
+    bits.extend(str(x) for x in result.get("inspections") or [])
+    bits.extend(str(x) for x in result.get("_official_sources") or [])
+    names = " ".join(
+        str(x or "")
+        for x in [
+            result.get("permit_name"),
+            result.get("permit_type"),
+            *[
+                p.get(k)
+                for p in (result.get("permits_required") or [])
+                if isinstance(p, dict)
+                for k in ("permit_type", "portal_selection", "name", "title")
+            ],
+        ]
+    )
+    uncertain_core = bool(result.get("needs_review")) or FALLBACK_NAME_RE.search(names) or re.search(
+        r"unknown|unverified|needs?\s+AHJ\s+verification|verify\s+with\s+(?:the\s+)?AHJ|human\s+review",
+        f"{result.get('confidence_reason') or ''} {names}",
+        re.I,
+    )
+    has_local_ahj_source = any(
+        s.get("source_class") == "local_ahj"
+        for s in (result.get("_source_classification") or [])
+        if isinstance(s, dict)
+    )
+    data_source = str(result.get("data_source") or result.get("_meta", {}).get("city_match_level") or "").lower()
+    if data_source in {"city_database", "city"} and has_local_ahj_source and str(result.get("confidence") or "").lower() == "high" and not uncertain_core:
+        bits.append("Verified · official sources")
+    if result.get("needs_review") or result.get("confidence_reason"):
+        bits.append(str(result.get("confidence_reason") or "Some fields need source confirmation."))
+    return "\n".join(bits)
+
+
+def _enforce_rendered_output_contract(result: dict, job_type: str, city: str, state: str, warnings: list | None = None) -> dict:
+    """Re-apply the customer-visible rendering contract after every overlay.
+
+    Later overlays such as evidence-pack fail-closed handling and Phase 7H trust
+    statements can intentionally reintroduce uncertainty placeholders in raw
+    permit fields. Commercial customer surfaces still need clean title/name
+    slots, with uncertainty kept in notes/warnings only.
+    """
+    context = build_rendering_context(result, job_type, city, state)
+    result["_rendering_context"] = context
+    _sanitize_commercial_display_names(result, context, job_type)
+    _ensure_vertical_inspection_profile(result, context, job_type)
+    _attach_source_classification(result, city, state)
+    lint = lint_rendered_output(result, _render_lint_proxy_text(result), job_type, city, state)
+    result["_rendered_lint"] = lint
+    if warnings is not None and not lint.get("passed"):
+        warnings.append("Rendered output lint requires customer-visible verification/fixes: " + ", ".join(v.get("code", "unknown") for v in lint.get("violations", [])[:5]) + ".")
+
+    if not context.get("is_commercial"):
+        result.pop("_rendering_context", None)
+        result.pop("_rendered_lint", None)
+        result.pop("_inspection_profile_applied", None)
+    return result
+
+
 def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: str) -> dict:
     """Final safety gate before a PermitIQ result is shown to users.
 
@@ -1166,6 +1546,9 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     primary_l = primary.lower()
     commercial = _is_commercial_scope(job_type, result)
     sources = _source_dicts(result)
+    context = build_rendering_context(result, job_type, city, state)
+    result["_rendering_context"] = context
+    _attach_source_classification(result, city, state)
 
     if commercial:
         has_commercial_primary = any(token in primary_l for token in _COMMERCIAL_PRIMARY_TOKENS)
@@ -1214,6 +1597,11 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
         missing = [token for token in required_companions if token not in companion_text]
         if missing:
             warnings.append("Commercial scope may require companion reviews/permits not fully proven here: " + ", ".join(missing[:5]) + ".")
+
+    # Re-establish the canonical rendering context after any primary-scope or
+    # permit repair above, then enforce the customer-visible contract before
+    # the frontend can render a polished but misleading report.
+    _enforce_rendered_output_contract(result, job_type, city, state, warnings)
 
     if str(result.get("confidence") or "").lower() == "high" and not sources:
         result["confidence"] = "medium"
@@ -1285,6 +1673,9 @@ def build_claim_citations(result: dict) -> list[dict]:
 
 
 def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict:
+    if _is_unsupported_ahj_result(result):
+        scrub_unsupported_ahj_response(result, city, state)
+        return {}
     url = result.get("apply_url") or ""
     if result.get("_residential_trade_leak_repaired") and re.search(r"commercial|tenant[-_ ]?improvement|tenant[-_ ]?finish", str(url), re.I):
         url = ""
@@ -1369,30 +1760,201 @@ def _env_flag_enabled(name: str) -> bool:
     return str(os.environ.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
 
 
-def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: bool = False) -> bool:
+PHASE7D_GOLDEN_BETA_GUARDED_MODE = "phase7b_golden_beta_guarded"
+
+
+def _env_list_values(name: str) -> set[str]:
+    raw = os.environ.get(name, "")
+    values = re.split(r"[,;\s]+", raw)
+    return {value.strip().lower() for value in values if value.strip()}
+
+
+def _evidence_pack_beta_email_allowed(user_email: str | None) -> bool:
+    email = str(user_email or "").strip().lower()
+    if not email:
+        return False
+    return email in _env_list_values("PERMITASSIST_EVIDENCE_PACK_BETA_EMAIL_ALLOWLIST")
+
+
+def evidence_pack_response_allows_internal_metadata() -> bool:
+    """Expose evidence-pack internals only for local/preview QA contracts, never guarded beta customer JSON."""
+    mode = os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip()
+    return bool(mode and mode != PHASE7D_GOLDEN_BETA_GUARDED_MODE)
+
+
+def evidence_pack_allowed_for_request(
+    path: str,
+    headers,
+    *,
+    is_sample_demo: bool = False,
+    user_email: str | None = None,
+    paid: bool = False,
+) -> bool:
     """Return whether this request may use the local evidence-pack overlay."""
+    del paid  # Stage 0 beta/customer exposure is governed by the dedicated allowlist.
     if not evidence_pack_enabled():
         return False
     preview_only = _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
     mode = os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip()
-    if mode == "solar_mep_controlled_preview" and not preview_only:
+    if mode not in ALLOWED_EVIDENCE_PACK_MODES or not evidence_pack_mode_request_gate_valid(mode):
+        return False
+    if mode == PHASE7D_GOLDEN_BETA_GUARDED_MODE:
+        return (
+            path == "/api/permit"
+            and not preview_only
+            and not is_sample_demo
+            and bool(str(headers.get("X-Session-Token") or "").strip())
+            and _evidence_pack_beta_email_allowed(user_email)
+        )
+    if evidence_pack_mode_requires_preview_only(mode) and not preview_only:
         return False
     preview_header = os.environ.get("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo").strip() or "X-Sample-Demo"
     preview_route_allowed = path == "/api/permit" and is_sample_demo and headers.get(preview_header) == "1"
-    if mode == "solar_mep_controlled_preview":
+    token_config = evidence_pack_mode_preview_token_config(mode)
+    if token_config:
         if not preview_route_allowed:
             return False
-        token = os.environ.get("PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_TOKEN", "").strip()
-        token_header = os.environ.get("PERMITASSIST_SOLAR_MEP_CONTROLLED_PREVIEW_HEADER", "X-Evidence-Pack-Preview-Token").strip() or "X-Evidence-Pack-Preview-Token"
-        return bool(token) and headers.get(token_header) == token
+        token = os.environ.get(token_config.get("token_env", ""), "").strip()
+        token_header_default = token_config.get("token_header_default") or "X-Evidence-Pack-Preview-Token"
+        token_header_env = token_config.get("token_header_env") or ""
+        token_header = os.environ.get(token_header_env, token_header_default).strip() or token_header_default
+        return bool(token) and hmac.compare_digest(str(headers.get(token_header) or ""), token)
+    if evidence_pack_mode_requires_preview_route(mode):
+        return preview_route_allowed
     if not preview_only:
         return True
     return preview_route_allowed
 
 
+PHASE7H_AHJ_VERIFY_PERMIT_TYPE = "Permit required — exact permit type needs AHJ verification"
+
+
+def _phase7h_string(value) -> str:
+    return str(value or "").strip()
+
+
+def _phase7h_truthy_yes_verdict(result: dict) -> bool:
+    verdict = _phase7h_string(result.get("permit_verdict") or result.get("verdict") or result.get("requirement")).upper()
+    return verdict in {"YES", "REQUIRED"} or result.get("permit_required") is True
+
+
+def _phase7h_current_permit_name(result: dict) -> str:
+    permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+    for value in (result.get("permit_type"), result.get("permit_name")):
+        text = _phase7h_string(value)
+        if text and text.lower() not in {"none", "null", "n/a"}:
+            return text
+    for permit in permits:
+        if isinstance(permit, dict):
+            for key in ("portal_selection", "permit_type"):
+                text = _phase7h_string(permit.get(key))
+                if text and text.lower() not in {"none", "null", "n/a"}:
+                    return text
+    return ""
+
+
+def _phase7h_permit_type_verified(result: dict, permit_name: str) -> bool:
+    if not permit_name or permit_name == PHASE7H_AHJ_VERIFY_PERMIT_TYPE:
+        return False
+    evidence_meta = result.get("_evidence_pack") if isinstance(result.get("_evidence_pack"), dict) else {}
+    matched_fields = {str(field) for field in (evidence_meta.get("matched_fields") or [])}
+    failed_fields = {str(field) for field in (evidence_meta.get("failed_closed_fields") or [])}
+    if evidence_meta.get("enabled"):
+        return "permit_type" in matched_fields and "permit_type" not in failed_fields
+    source = _phase7h_string(result.get("data_source") or (result.get("_meta") or {}).get("city_match_level")).lower()
+    return source in {"city", "city_database", "accela_api", "auto_verified"}
+
+
+def _phase7h_contact_phrase(result: dict, city: str) -> str:
+    office = _phase7h_string(result.get("applying_office") or result.get("office_name"))
+    phone = _phase7h_string(result.get("apply_phone") or result.get("office_phone"))
+    if office and phone:
+        return f"{office} or call {phone}"
+    if office:
+        return office
+    if phone:
+        return f"the AHJ at {phone}"
+    return f"the {city} AHJ" if _phase7h_string(city) else "the AHJ"
+
+
+def _phase7h_mark_coverage_truth_unverified(result: dict) -> None:
+    coverage = result.get("coverage_truth")
+    if not isinstance(coverage, dict):
+        return
+    official = [str(item) for item in (coverage.get("official_source_backed") or [])]
+    coverage["official_source_backed"] = [item for item in official if "permit type" not in item.lower()]
+    not_confirmed = [str(item) for item in (coverage.get("not_confirmed_from_official_source") or [])]
+    if "exact permit type" not in {item.lower() for item in not_confirmed}:
+        not_confirmed.insert(0, "exact permit type")
+    coverage["not_confirmed_from_official_source"] = not_confirmed
+
+
+def ensure_customer_visible_permit_trust_statement(result: dict, city: str = "", state: str = "") -> dict:
+    """Keep YES customer output explicit without inventing official permit-type certainty."""
+    if not isinstance(result, dict) or not _phase7h_truthy_yes_verdict(result):
+        return result
+
+    permit_name = _phase7h_current_permit_name(result)
+    evidence_meta = result.get("_evidence_pack") if isinstance(result.get("_evidence_pack"), dict) else {}
+    evidence_enabled = bool(evidence_meta.get("enabled"))
+    permit_type_failed_closed = (
+        evidence_enabled
+        and "permit_type" in {str(field) for field in (evidence_meta.get("failed_closed_fields") or [])}
+        and "permit_type" not in {str(field) for field in (evidence_meta.get("matched_fields") or [])}
+    )
+    if permit_type_failed_closed and str(evidence_meta.get("mode") or "") == "solar_mep_controlled_preview":
+        result["permit_type_verified"] = False
+        return result
+    verified = _phase7h_permit_type_verified(result, permit_name)
+    warnings = result.setdefault("warnings", []) if isinstance(result.get("warnings"), list) else []
+    if result.get("warnings") is not warnings:
+        result["warnings"] = warnings
+
+    if permit_name:
+        result.setdefault("permit_type", permit_name)
+        result.setdefault("permit_name", permit_name)
+        if not result.get("permit_type"):
+            result["permit_type"] = permit_name
+        if not result.get("permit_name"):
+            result["permit_name"] = permit_name
+        permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+        if not permits:
+            note = (
+                "Official-source backed permit type. Verify final filing path with the AHJ before submitting."
+                if verified else
+                "Permit type is shown from the current lookup, but final filing path still needs AHJ verification before submitting."
+            )
+            result["permits_required"] = [{"permit_type": permit_name, "required": True, "notes": note}]
+        if evidence_enabled:
+            result["permit_type_verified"] = bool(verified)
+        return result
+
+    result["permit_type"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+    result["permit_name"] = PHASE7H_AHJ_VERIFY_PERMIT_TYPE
+    result["permit_type_verified"] = False
+    contact = _phase7h_contact_phrase(result, city)
+    note = (
+        "Permit is required, but the exact permit category was not official-source verified for this lookup. "
+        f"Confirm the exact filing type with {contact} before filing."
+    )
+    result["permits_required"] = [{"permit_type": PHASE7H_AHJ_VERIFY_PERMIT_TYPE, "required": True, "notes": note}]
+    warning = "Permit is required, but exact permit type was not official-source verified; confirm the exact filing type with the AHJ before filing."
+    if warning not in warnings:
+        warnings.append(warning)
+    _phase7h_mark_coverage_truth_unverified(result)
+    return result
+
+
 def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
-    evidence_pack = get_local_evidence_pack() if evidence_allowed is not False else None
+    if _is_unsupported_ahj_result(result):
+        return scrub_unsupported_ahj_response(result, city, state)
+    evidence_pack_config_invalid = (
+        evidence_allowed is False
+        and evidence_pack_enabled()
+        and not evidence_pack_mode_request_gate_valid(os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip())
+    )
+    evidence_pack = get_local_evidence_pack() if evidence_allowed is not False or evidence_pack_config_invalid else None
     evidence_enabled = evidence_pack is not None
     unexpected_evidence_cache = evidence_enabled and (is_cached or bool(result.get("_cached")))
 
@@ -1436,7 +1998,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         warnings = result.setdefault("quality_warnings", [])
         if "inspections" in evidence_failed:
             result["inspection_booking"] = None
-            warning = "Inspection booking steps are not shown because local evidence-pack inspections failed closed; verify required inspections and booking with the AHJ."
+            warning = "Inspection booking steps are not shown because official-source inspection evidence is not confirmed yet; verify required inspections and booking with the AHJ."
             if warning not in warnings:
                 warnings.append(warning)
         if "fee_range" in evidence_failed:
@@ -1462,8 +2024,9 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         # Evidence pack mode bypasses permit_cache reads and writes by design;
         # make that visible and testable so stale non-evidence rows cannot leak
         # into local trials.
-        meta = result.setdefault('_evidence_pack', {})
-        meta['cache_bypassed'] = True
+        if "_evidence_pack" in result:
+            meta = result.setdefault('_evidence_pack', {})
+            meta['cache_bypassed'] = True
     else:
         build_claim_citations(result)
 
@@ -1471,6 +2034,33 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     if result.get("quality_warnings"):
         merged_warnings = []
         for warning in list(result.get("warnings") or []) + list(result.get("quality_warnings") or []):
+            if warning and warning not in merged_warnings:
+                merged_warnings.append(warning)
+        result["warnings"] = merged_warnings
+    # Evidence-pack overlays, merged warnings, and apply-path rendering happen
+    # after the first quality gate. Run the absent-subsystem scrub one final
+    # time so negated customer input such as "no restaurant/no hood/no grease"
+    # does not echo into authenticated beta customer JSON as wrong-vertical copy.
+    evidence_meta = result.get("_evidence_pack") if isinstance(result.get("_evidence_pack"), dict) else {}
+    skip_final_negation_scrub = (
+        evidence_meta.get("mode") == "phase7b_golden_local_preview"
+        and evidence_meta.get("contract_status") == "valid"
+    )
+    if not skip_final_negation_scrub:
+        _filter_negated_surface_lists(result, job_type)
+    # Phase 7H customer-trust patch: keep the customer surface explicit for YES
+    # verdicts without changing evidence-pack matching or inventing official
+    # permit-type certainty.
+    ensure_customer_visible_permit_trust_statement(result, city, state)
+    # Phase 7H can reinsert uncertainty placeholders into raw permit name/type
+    # fields after the first quality gate. Re-enforce the commercial rendered
+    # output contract last so API/report title slots stay clean.
+    final_warnings = result.get("quality_warnings") if isinstance(result.get("quality_warnings"), list) else []
+    _enforce_rendered_output_contract(result, job_type, city, state)
+    if final_warnings:
+        result["quality_warnings"] = final_warnings
+        merged_warnings = []
+        for warning in list(result.get("warnings") or []) + list(final_warnings):
             if warning and warning not in merged_warnings:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
@@ -1514,40 +2104,89 @@ def render_white_label_report_html(data: dict) -> str:
     result = data.get("result") or {}
     contractor = html.escape(str(data.get("contractor_name") or "Contractor"))
     client = html.escape(str(data.get("client_name") or "Client / Property"))
-    job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
+    job_type_raw = str(data.get("job_type") or result.get("job_summary") or "Permit research")
+    job = html.escape(job_type_raw)
     location = html.escape(", ".join(x for x in [str(data.get("city") or ""), str(data.get("state") or "")] if x))
     citations = result.get("claim_citations") or build_claim_citations(result)
+    display_scope = result.get("_primary_scope") or result.get("primary_scope") or result.get("job_category") or ""
+    permit_display_name = sanitize_permit_display_name(
+        result.get("_permit_display_name") or result.get("permit_name") or result.get("permit_type"),
+        scope=display_scope,
+        job_type=job_type_raw,
+    )
     permits = result.get("permits_required") or []
-    permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or "<li>Permit type needs AHJ verification.</li>"
+
+    def _report_permit_item_text(permit_item):
+        if isinstance(permit_item, dict):
+            raw_name = (
+                permit_item.get("_permit_display_name")
+                or permit_item.get("permit_name")
+                or permit_item.get("permit_type")
+                or permit_item.get("name")
+                or permit_item.get("title")
+                or permit_item.get("portal_selection")
+            )
+        else:
+            raw_name = permit_item
+        return sanitize_permit_display_name(raw_name, scope=display_scope, job_type=job_type_raw)
+
+    permit_items = "".join(f"<li>{html.escape(_report_permit_item_text(p))}</li>" for p in permits) or f"<li>{html.escape(str(permit_display_name))}</li>"
     safe_apply_url = _safe_external_url(result.get('apply_url') or '')
     footnotes = "".join(
         f"<li><strong>{html.escape(c.get('id',''))}</strong> {html.escape(c.get('claim',''))}: "
-        f"{html.escape(c.get('quoted_snippet') or 'No quoted snippet available yet — verify with AHJ.')} "
+        f"{html.escape(c.get('quoted_snippet') or 'Source quote not attached for this field yet.')} "
         f"<br>{_render_safe_link(c.get('source_url','')) or 'No safe source URL attached'} "
         f"<em>Checked {html.escape(c.get('checked_at',''))}; confidence {html.escape(c.get('confidence',''))}</em></li>"
         for c in citations
-    ) or "<li>No citations attached yet; verify with AHJ.</li>"
+    ) or "<li>No citations attached yet.</li>"
     warnings_list = list(result.get("quality_warnings") or [])
-    evidence_meta = result.get("_evidence_pack") or {}
+    evidence_meta = result.get("_evidence_pack") or result.get("source_confirmation") or {}
     evidence_failed = [str(field) for field in (evidence_meta.get("failed_closed_fields") or []) if field]
+    evidence_gap_labels = [str(field) for field in (evidence_meta.get("field_gap_labels") or []) if field]
     evidence_matched = [str(field) for field in (evidence_meta.get("matched_fields") or []) if field]
-    if evidence_meta.get("enabled") and evidence_failed:
-        warnings_list.append("Local evidence pack failed closed for: " + ", ".join(evidence_failed) + ". Do not quote or file from those fields until AHJ-confirmed.")
+    if evidence_meta.get("enabled") and (evidence_failed or evidence_gap_labels):
+        field_labels = {
+            "fee_range": "fees",
+            "approval_timeline": "timelines",
+            "inspections": "inspections",
+            "apply_url": "application link",
+            "permit_type": "permit-name label",
+            "companion_reviews_triggers": "companion reviews",
+        }
+        safe_failed = evidence_gap_labels or [field_labels.get(field, "supporting detail") for field in evidence_failed]
+        if "fee_range" in evidence_failed or "fees" in evidence_gap_labels or evidence_meta.get("fee_unavailable"):
+            warnings_list.append("Fee information is not source-confirmed for this lookup.")
+        warnings_list.append("Some field-specific details are not source-confirmed yet: " + ", ".join(dict.fromkeys(safe_failed)) + ".")
     if evidence_meta.get("enabled") and "approval_timeline" in evidence_matched:
         warnings_list.append("Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate.")
     if evidence_meta.get("enabled") and "companion_reviews_triggers" in evidence_matched:
         warnings_list.append("Companion-review evidence is scope-limited; it is not a complete local specialty-trigger list. Verify specialty reviews with the AHJ before filing.")
     warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in dict.fromkeys(warnings_list))
+    golden_coverage_box = ""
+    coverage_truth = result.get("coverage_truth") if isinstance(result.get("coverage_truth"), dict) else {}
+    is_golden_coverage = (
+        evidence_meta.get("enabled") and bool(coverage_truth)
+    ) or str(coverage_truth.get("heading") or "").lower() in {"coverage truth — golden local mode", "coverage scope"}
+    if is_golden_coverage:
+        official = coverage_truth.get("official_source_backed") or ["permit type", "apply URL / route"]
+        not_confirmed = coverage_truth.get("not_confirmed_from_official_source") or ["fees", "timelines", "inspections", "forms/checklists", "trade permits", "companion reviews", "specialty triggers"]
+        golden_coverage_box = f"""
+<div class='card'><h3>{html.escape(str(coverage_truth.get('heading') or 'Coverage scope'))}</h3>
+<p><strong>Official-source backed:</strong> {html.escape(', '.join(str(item) for item in official))}.</p>
+<p><strong>Not confirmed:</strong> {html.escape(', '.join(str(item) for item in not_confirmed))}.</p>
+</div>"""
+    warnings_box = f"<div class='card'><h3>Warnings</h3><ul>{warnings}</ul></div>" if warnings else ""
     return f"""<!doctype html>
 <html><head><meta charset='utf-8'><title>Permit research report</title>
 <style>body{{font-family:Arial,sans-serif;max-width:820px;margin:32px auto;color:#172033;line-height:1.45}}.brand{{border-bottom:3px solid #0f766e;padding-bottom:12px;margin-bottom:24px}}.muted{{color:#64748b}}.card{{border:1px solid #dbe3ea;border-radius:12px;padding:16px;margin:16px 0}}@media print{{button{{display:none}}body{{margin:0.5in}}}}</style></head>
 <body><button onclick='window.print()'>Print / Save PDF</button><div class='brand'><h1>{contractor}</h1><div class='muted'>Permit research prepared for {client}</div></div>
 <h2>{job}</h2><p><strong>Location:</strong> {location}</p>
+{golden_coverage_box}
+{warnings_box}
 <div class='card'><h3>Likely permits</h3><ul>{permit_items}</ul></div>
 <div class='card'><h3>How to apply</h3><p>{html.escape(str((result.get('apply_path') or {}).get('verification_note') or 'Verify exact filing path with the AHJ.'))}</p><p><strong>Start URL:</strong> {_render_safe_link(safe_apply_url) or 'Not found'}</p></div>
-{f"<div class='card'><h3>Warnings</h3><ul>{warnings}</ul></div>" if warnings else ""}
 <div class='card'><h3>Source footnotes</h3><ol>{footnotes}</ol></div>
-<p class='muted'>PermitAssist is guidance only. Verify exact permit type with the AHJ before quoting or starting work.</p></body></html>"""
+<p class='muted'>PermitAssist is guidance only. Verify final permit type with the AHJ before quoting or starting work.</p></body></html>"""
 
 # ── Telegram notifications ────────────────────────────────────────────────────
 def notify_telegram(message: str):
@@ -2335,14 +2974,14 @@ def send_confirmation_email(to_email: str, plan: str) -> bool:
     plan_name = "Team" if plan == "team" else "Solo"
     team_line_text = "\n\u2022 Up to 3 team seats — invite your crew at no extra cost" if plan == "team" else ""
     team_line_html = "<li>Up to 3 team seats — invite your crew at no extra cost</li>" if plan == "team" else ""
-    subject = f"You're now on PermitAssist {plan_name} — unlimited lookups unlocked"
+    subject = f"You're now on PermitAssist {plan_name} — unlimited launch-scope lookups unlocked"
     text_body = (
         f"Hi,\n\n"
         f"You're now on PermitAssist {plan_name}! 🎉{team_line_text}\n\n"
-        f"Unlimited permit lookups are now active on your account.\n\n"
+        f"Unlimited launch-scope permit lookups are now active on your account.\n\n"
         f"What you have now:\n"
-        f"\u2022 Unlimited lookups every month, any job, any city\n"
-        f"\u2022 Exact permit names, current fees, and office contacts\n"
+        f"\u2022 Unlimited launch-scope lookups every month in supported jurisdictions\n"
+        f"\u2022 Permit names to verify, current fee estimates, and office contacts\n"
         f"\u2022 Job tracker to manage all your permits in one place\n\n"
         f"Go look up your permits: https://permitassist.io\n\n"
         f"Questions? Just reply to this email.\n\n"
@@ -2352,10 +2991,10 @@ def send_confirmation_email(to_email: str, plan: str) -> bool:
     html_body = f"""
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
       <h2 style="color:#1e3a5f;">You're on PermitAssist {plan_name}! 🎉</h2>
-      <p style="color:#374151;">Unlimited permit lookups are now active on your account.</p>
+      <p style="color:#374151;">Unlimited launch-scope permit lookups are now active on your account.</p>
       <ul style="color:#374151;line-height:1.8;">
-        <li>Unlimited lookups every month, any job, any city</li>
-        <li>Exact permit names, current fees, and office contacts</li>
+        <li>Unlimited launch-scope lookups every month in supported jurisdictions</li>
+        <li>Permit names to verify, current fee estimates, and office contacts</li>
         <li>Job tracker to manage all your permits in one place</li>
         {team_line_html}
       </ul>
@@ -2379,7 +3018,7 @@ ONBOARDING_SCHEDULE = [
 ONBOARDING_BODIES = {
     0: (
         "Welcome to PermitAssist! Here are 3 quick tips to get the most out of it:\n\n"
-        "1. 🔍 BE SPECIFIC with your job description. Instead of 'HVAC work', try 'Residential furnace replacement, gas, 3-ton unit'. You'll get a more exact permit name and fee.\n\n"
+        "1. 🔍 BE SPECIFIC with your job description. Instead of 'HVAC work', try 'restaurant tenant improvement with kitchen hood, grease interceptor, plumbing, electrical, and ADA restroom upgrades'. You'll get a more useful permit name and fee estimate to verify with the AHJ.\n\n"
         "2. 📌 ADD THE CITY + STATE. Every jurisdiction has different rules. The building department in one city may require a permit that the next city over doesn't.\n\n"
         "3. 📁 SAVE YOUR LOOKUPS. After your first lookup, check the History tab (📋) to find past results instantly — no need to look up the same job twice.\n\n"
         "Start your first lookup now: https://permitassist.io\n\n"
@@ -3841,10 +4480,9 @@ def get_rejection_fix_plan(job_id: str, rejection_text: str, city: str, state: s
 
 # ── Cities page SSR (Fix 10) ──────────────────────────────────────────────────
 # Render frontend/cities.html with real city counts injected so crawlers and
-# pre-JS visitors see "5,260 Total / 5,000 Cities / 260 Counties / 50 States"
-# instead of the "Loading verified cities..." placeholder. Falls back to
-# stable hardcoded numbers if the SQLite read fails — never the legacy 263
-# fallback. The /api/verified-cities JSON path is unchanged and is what
+# pre-JS visitors see current jurisdiction counts plus launch-scope caveats
+# instead of a loading placeholder. Falls back to stable hardcoded numbers if
+# the SQLite read fails — never the legacy 263 count.
 # powers the interactive grid once JS hydrates.
 
 _CITIES_PAGE_CACHE: dict = {"ts": 0.0, "html": None}
@@ -3900,7 +4538,7 @@ def _format_count(n: int) -> str:
 
 
 def render_cities_page_ssr(html_path: str) -> bytes:
-    """Read cities.html and inject real counts into the hero stats placeholders.
+    """Read cities.html and inject current jurisdiction counts into placeholders.
 
     Uses a 5-minute in-process cache so repeat hits don't touch SQLite. Crawlers
     that don't run JS now see real numbers instead of em-dashes; the JS still
@@ -3926,20 +4564,21 @@ def render_cities_page_ssr(html_path: str) -> bytes:
         html = html.replace(old, new)
 
     # Replace the loading div with a noscript-friendly summary so non-JS
-    # crawlers see real content instead of "Loading verified cities...".
+    # crawlers see launch-scope caveats instead of stale nationwide certainty.
     noscript_summary = (
-        f'<div class="loading">Loading verified cities…</div>'
+        f'<div class="loading">Loading supported jurisdictions…</div>'
         f'<noscript><div style="padding:24px 0;color:var(--text2);font-size:14px;line-height:1.7">'
-        f'PermitAssist verifies permit requirements across <strong>{_format_count(counts["total"])}'
-        f'</strong> US jurisdictions — '
+        f'PermitAssist lists <strong>{_format_count(counts["total"])}'
+        f'</strong> jurisdictions for lookup/routing, with launch support strongest for '
+        f'restaurant, medical clinic, and office tenant improvements. Current list includes '
         f'{_format_count(counts["city"])} cities and {_format_count(counts["county"])} counties '
-        f'covering all {_format_count(counts["state"])} states. '
-        f'Enable JavaScript to browse the full searchable list, or visit '
+        f'across {_format_count(counts["state"])} states. Unsupported cities/scopes should be requested or verified with the AHJ. '
+        f'Enable JavaScript to browse the searchable list, or visit '
         f'<a href="/">PermitAssist</a> to look up a permit directly.'
         f'</div></noscript>'
     )
     html = html.replace(
-        '<div class="loading">Loading verified cities...</div>',
+        '<div class="loading">Loading supported jurisdictions...</div>',
         noscript_summary,
     )
 
@@ -4068,13 +4707,56 @@ _SENSITIVE_OUTPUT_RE = re.compile(
 
 
 def redact_public_output(value):
-    """Redact filesystem/env/Railway/token-like strings from API JSON."""
+    """Redact secrets and customer-private evidence/debug markers from API JSON."""
     if isinstance(value, dict):
         redacted = {}
+        internal_keys = {
+            "local_golden",
+            "golden_row_id",
+            "matched_row_ids",
+            "batch_id",
+            "contract",
+            "needs_review_reasons",
+            "field_evidence_confidence",
+            "evidence_pack_record_id",
+            "record_fingerprint_sha256",
+            "permit_name_source_field",
+            "display_source_field",
+            "name_source_precedence",
+            # Internal state-overlay routing/debug payload. Customer JSON should
+            # expose only the final contractor guidance, not inactive/wrong-
+            # vertical schema metadata such as CA medical-clinic overlays inside
+            # an office TI response.
+            "state_schema_context",
+        }
         for key, item in value.items():
-            if key in {"_fee_floor_components", "_rulebook_depth_disclaimer", "_residential_home_office_leak_repaired"}:
+            key_text = str(key or "")
+            key_lc = key_text.lower()
+            if key_text in {"_fee_floor_components", "_rulebook_depth_disclaimer", "_residential_home_office_leak_repaired"}:
                 continue
-            if key in {"path", "fingerprint_sha256", "evidence_pack_fingerprint"}:
+            if key_text == "_evidence_pack":
+                failed = item.get("failed_closed_fields") if isinstance(item, dict) else []
+                field_labels = {
+                    "fee_range": "fees",
+                    "approval_timeline": "timelines",
+                    "inspections": "inspections",
+                    "apply_url": "application link",
+                    "permit_type": "permit-name label",
+                    "companion_reviews_triggers": "companion reviews",
+                }
+                redacted["source_confirmation"] = {
+                    "enabled": bool(item.get("enabled")) if isinstance(item, dict) else False,
+                    "field_gap_labels": list(dict.fromkeys(field_labels.get(str(field), "supporting detail") for field in (failed or []))),
+                    "fee_unavailable": "fee_range" in set(str(field) for field in (failed or [])),
+                }
+                continue
+            if "evidence_pack" in key_lc or "fingerprint" in key_lc:
+                continue
+            if key_text in internal_keys:
+                continue
+            if key_text.startswith("_") and key_text not in {"_cached"}:
+                continue
+            if key_text in {"path"}:
                 redacted[key] = "[REDACTED]"
             else:
                 redacted[key] = redact_public_output(item)
@@ -4082,12 +4764,30 @@ def redact_public_output(value):
     if isinstance(value, list):
         return [redact_public_output(item) for item in value]
     if isinstance(value, str):
-        return _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", value)
+        text = _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", value)
+        text = re.sub(r"(?i)evidence[-_ ]pack", "official source record", text)
+        text = re.sub(r"(?i)fingerprint", "checksum", text)
+        text = re.sub(r"(?i)\bfee_range\b", "fees", text)
+        text = re.sub(r"(?i)\s*\[verify[^\]]*before merging\]", "", text)
+        text = re.sub(r"(?i)\bfailed closed\b", "not source-confirmed", text)
+        text = re.sub(r"(?i)\bingestion-ready\b", "source-confirmed", text)
+        text = re.sub(r"(?i)\bpack-controlled\b", "source-backed", text)
+        text = re.sub(r"(?i)\blocal pack\b", "official source record", text)
+        return re.sub(r"\s{2,}", " ", text).strip()
     return value
 
 
 def _evidence_pack_indexing_guard_enabled() -> bool:
     return evidence_pack_enabled()
+
+
+def health_commit_prefix() -> str:
+    """Return a safe short deploy commit marker for /health."""
+    for env_name in ("RAILWAY_GIT_COMMIT_SHA", "GIT_COMMIT_SHA", "SOURCE_VERSION"):
+        candidate = str(os.environ.get(env_name) or "").strip()
+        if re.fullmatch(r"[A-Fa-f0-9]{40}", candidate):
+            return candidate[:12].lower()
+    return "unknown"
 
 
 # ── Request handler ───────────────────────────────────────────────────────────
@@ -4107,8 +4807,9 @@ class Handler(BaseHTTPRequestHandler):
             return real_ip
         return _normalize_ip(self.client_address[0])
 
-    def send_json(self, status: int, data: dict, extra_headers: dict | None = None):
-        data = redact_public_output(data)
+    def send_json(self, status: int, data: dict, extra_headers: dict | None = None, *, redact: bool = True):
+        if redact:
+            data = redact_public_output(data)
         body = json.dumps(data, indent=2).encode()
         try:
             self.send_response(status)
@@ -4116,9 +4817,6 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Access-Control-Expose-Headers", "X-Free-Lookups-Used, X-Free-Lookups-Remaining")
-            if _evidence_pack_indexing_guard_enabled():
-                self.send_header("X-Robots-Tag", "noindex, nofollow")
-                self.send_header("Cache-Control", "no-store")
             for key, value in (extra_headers or {}).items():
                 self.send_header(key, value)
             self.end_headers()
@@ -4143,8 +4841,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
-            if _evidence_pack_indexing_guard_enabled() and ("text/html" in content_type or "xml" in content_type or "text/plain" in content_type):
-                self.send_header("X-Robots-Tag", "noindex, nofollow")
+            # Public launch: do not emit the former launch noindex header on
+            # HTML/XML/plaintext routes. Crawl scope is controlled by robots.txt
+            # and a launch-scope sitemap instead of a global X-Robots block.
             # Prevent browser caching for HTML — always serve fresh version
             if "text/html" in content_type:
                 self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -4419,7 +5118,7 @@ class Handler(BaseHTTPRequestHandler):
         elif path in ("/admin", "/admin.html", "/admin/"):
             self.send_file(os.path.join(FRONTEND_DIR, "admin.html"), "text/html; charset=utf-8")
         elif path == "/health":
-            self.send_json(200, {"status": "ok", "service": "PermitAssist"})
+            self.send_json(200, {"status": "ok", "service": "PermitAssist", "commit_prefix": health_commit_prefix()})
 
         # ── Facebook Webhook verification (GET) ───────────────────────────────
         elif path == "/api/fb-webhook":
@@ -4778,12 +5477,31 @@ class Handler(BaseHTTPRequestHandler):
         # ── SEO: sitemap.xml ──────────────────────────────────────────────
         elif path == "/sitemap.xml":
             if _evidence_pack_indexing_guard_enabled():
-                body = b'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>\n'
+                # Public launch sitemap is intentionally narrow. Legacy SEO and
+                # trade pages still need copy cleanup before they should be
+                # promoted for indexing.
+                launch_urls = [
+                    "https://permitassist.io/",
+                    "https://permitassist.io/pricing",
+                    "https://permitassist.io/help",
+                    "https://permitassist.io/cities",
+                    "https://permitassist.io/login",
+                    "https://permitassist.io/terms",
+                    "https://permitassist.io/privacy",
+                ]
+                url_entries = "\n".join(
+                    f"  <url><loc>{url}</loc></url>" for url in launch_urls
+                )
+                body = (
+                    '<?xml version="1.0" encoding="UTF-8"?>\n'
+                    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                    f"{url_entries}\n"
+                    "</urlset>\n"
+                ).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/xml")
                 self.send_header("Content-Length", str(len(body)))
-                self.send_header("X-Robots-Tag", "noindex, nofollow")
-                self.send_header("Cache-Control", "no-store")
+                self.send_header("Cache-Control", "public, max-age=3600")
                 self.end_headers()
                 self.wfile.write(body)
                 return
@@ -4793,12 +5511,20 @@ class Handler(BaseHTTPRequestHandler):
         # ── SEO: robots.txt ───────────────────────────────────────────────
         elif path == "/robots.txt":
             if _evidence_pack_indexing_guard_enabled():
-                body = b"User-agent: *\nDisallow: /\n"
+                body = (
+                    "User-agent: *\n"
+                    "Allow: /\n"
+                    "Disallow: /permits/\n"
+                    "Disallow: /trades/\n"
+                    "Disallow: /blog/\n"
+                    "Disallow: /preview\n"
+                    "\n"
+                    "Sitemap: https://permitassist.io/sitemap.xml\n"
+                ).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "text/plain")
                 self.send_header("Content-Length", str(len(body)))
-                self.send_header("X-Robots-Tag", "noindex, nofollow")
-                self.send_header("Cache-Control", "no-store")
+                self.send_header("Cache-Control", "public, max-age=3600")
                 self.end_headers()
                 self.wfile.write(body)
                 return
@@ -5118,6 +5844,19 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
 
+                ahj_coverage = classify_ahj_coverage(city, state)
+                unverified_us_jurisdiction = ahj_coverage.get("classification") == "unsupported"
+                if ahj_coverage.get("classification") == "invalid":
+                    response = build_unsupported_ahj_response(city, state, ahj_coverage)
+                    record_beta_event("lookup_invalid_ahj", {
+                        "city": ahj_coverage.get("city", ""),
+                        "state": ahj_coverage.get("state", ""),
+                        "status": ahj_coverage.get("status", ""),
+                        "reason": ahj_coverage.get("reason", ""),
+                    }, "")
+                    self.send_json(_unsupported_ahj_http_status(ahj_coverage), response)
+                    return
+
                 ip = self.client_ip()
                 fingerprint = _normalize_fingerprint(self.headers.get("X-Client-Fingerprint", ""))
 
@@ -5139,6 +5878,10 @@ class Handler(BaseHTTPRequestHandler):
                     and hmac.compare_digest(_benchmark_token, _BENCHMARK_SECRET)
                 )
                 force_model = self.headers.get("X-PermitIQ-Engine", "").strip() if is_benchmark else None
+                openai_reasoning_effort = (
+                    _sanitize_openai_reasoning_effort(self.headers.get("X-PermitIQ-Reasoning-Effort", ""))
+                    if is_benchmark else None
+                )
 
                 session_token = self.headers.get("X-Session-Token", "")
                 user_email = validate_session_token(session_token) if session_token else None
@@ -5171,7 +5914,7 @@ class Handler(BaseHTTPRequestHandler):
                                 threading.Thread(target=send_free_limit_email_once, args=(user["email"],), daemon=True).start()
                             self.send_json(403, {
                                 "error": "free_limit_reached",
-                                "message": "You've used your 3 free lookups. Subscribe to continue.",
+                                "message": "Server-side free limit reached for this browser, account, or network. Subscribe to continue.",
                                 "upgrade_url": FREE_LOOKUP_UPGRADE_URL,
                             }, extra_headers=response_headers)
                             return
@@ -5194,7 +5937,13 @@ class Handler(BaseHTTPRequestHandler):
                     "sample_demo": is_sample_demo,
                     "benchmark": is_benchmark,
                 }, user_email or "")
-                evidence_allowed = evidence_pack_allowed_for_request(path, self.headers, is_sample_demo=is_sample_demo)
+                evidence_allowed = evidence_pack_allowed_for_request(
+                    path,
+                    self.headers,
+                    is_sample_demo=is_sample_demo,
+                    user_email=user_email,
+                    paid=paid,
+                )
                 acquired_lookup_slot = PERMIT_LOOKUP_SEMAPHORE.acquire(timeout=PERMIT_LOOKUP_QUEUE_TIMEOUT_SECONDS)
                 if not acquired_lookup_slot:
                     print(
@@ -5217,7 +5966,7 @@ class Handler(BaseHTTPRequestHandler):
                             response_headers = build_free_lookup_headers(used_now)
                             self.send_json(403, {
                                 "error": "free_limit_reached",
-                                "message": "You've used your 3 free lookups. Subscribe to continue.",
+                                "message": "Server-side free limit reached for this browser, account, or network. Subscribe to continue.",
                                 "upgrade_url": FREE_LOOKUP_UPGRADE_URL,
                             }, extra_headers=response_headers)
                             return
@@ -5228,6 +5977,7 @@ class Handler(BaseHTTPRequestHandler):
                         use_cache=_use_cache,
                         force_model=force_model,
                         suppress_cache_write=evidence_allowed,
+                        openai_reasoning_effort=openai_reasoning_effort,
                     )
                     is_cached = result.get("_cached", False)
 
@@ -5241,6 +5991,8 @@ class Handler(BaseHTTPRequestHandler):
                         result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
                     result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
+                    if unverified_us_jurisdiction:
+                        result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
 
                     # Record stats and beta telemetry
                     record_lookup_stat(job_type, city, state, is_cached)
@@ -5258,7 +6010,8 @@ class Handler(BaseHTTPRequestHandler):
 
                     # No Telegram on lookups — only notify on paying customers
 
-                    self.send_json(200, result, extra_headers=response_headers)
+                    expose_evidence_meta = evidence_allowed and evidence_pack_response_allows_internal_metadata()
+                    self.send_json(200, result, extra_headers=response_headers, redact=not expose_evidence_meta)
                 finally:
                     PERMIT_LOOKUP_SEMAPHORE.release()
 
@@ -5282,6 +6035,7 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "Max 20 lookups per batch"})
                     return
                 from concurrent.futures import ThreadPoolExecutor, as_completed
+                batch_evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
 
                 def run_lookup(item):
                     job_type = item.get("job_type", "")
@@ -5291,7 +6045,7 @@ class Handler(BaseHTTPRequestHandler):
                     job_value = item.get("job_value")
                     explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
                     try:
-                        evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
+                        evidence_allowed = batch_evidence_allowed
                         result = research_permit(job_type, city, state, zip_code, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
                         if evidence_allowed:
                             result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
@@ -5335,7 +6089,7 @@ class Handler(BaseHTTPRequestHandler):
                         "no_permit": sum(1 for r in results if r.get("permit_verdict") == "NO"),
                         "verify": sum(1 for r in results if r.get("permit_verdict") == "MAYBE"),
                     }
-                })
+                }, redact=not (batch_evidence_allowed and evidence_pack_response_allows_internal_metadata()))
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
@@ -5610,14 +6364,25 @@ class Handler(BaseHTTPRequestHandler):
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
+                ahj_coverage = classify_ahj_coverage(city, state)
+                unverified_us_jurisdiction = ahj_coverage.get("classification") == "unsupported"
+                if ahj_coverage.get("classification") == "invalid":
+                    self.send_json(
+                        _unsupported_ahj_http_status(ahj_coverage),
+                        build_unsupported_ahj_response(city, state, ahj_coverage),
+                    )
+                    return
                 evidence_allowed = evidence_pack_allowed_for_request(path, self.headers)
                 result = research_permit(job_type, city, state, zip_code, job_category=job_category, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
                 if evidence_allowed:
                     result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
-                self.send_json(200, result)
+                if unverified_us_jurisdiction:
+                    result = annotate_unverified_us_jurisdiction_result(result, city, state, ahj_coverage)
+                expose_evidence_meta = evidence_allowed and evidence_pack_response_allows_internal_metadata()
+                self.send_json(200, result, redact=not expose_evidence_meta)
             except Exception as e:
-                print(f"[api-v1-permit] Error: {e}")
-                self.send_json(500, {"error": str(e)})
+                print(f"[api-v1-permit] Error: {type(e).__name__}")
+                self.send_json(500, {"error": "internal_error", "message": "Internal error while processing permit lookup"})
 
         elif path == "/api/email-report":
             try:

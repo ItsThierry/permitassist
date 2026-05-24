@@ -36,14 +36,39 @@ def test_plan_names_are_solo_and_team_not_mixed_with_pro_plan_copy():
     assert "Upgrade to Pro" not in combined
 
 
+def test_homepage_uses_customer_friendly_real_lookup_cta_and_no_launch_focus_block():
+    source = _read(INDEX)
+    pricing = _read(PRICING)
+    help_page = _read(HELP)
+    cities = _read(ROOT / "frontend" / "cities.html")
+    login = _read(ROOT / "frontend" / "login.html")
+    public_pages = "\n".join([source, pricing, help_page, cities, login])
+
+    assert "See a real permit lookup" in source
+    assert "See a restaurant TI sample" not in source
+    assert "restaurant TI sample" not in source
+    assert "launch-scope-card" not in source
+    assert "Launch focus:" not in source
+    assert "Strongest today for restaurant TI" not in source
+    assert "Launch focus:" not in public_pages
+    assert "Current Launch Scope" not in public_pages
+    assert "Strongest today" not in public_pages
+    assert "strongest today" not in public_pages
+    assert "Launch-scope support" not in public_pages
+    assert "launch-scope" not in public_pages
+    assert "Launch-scope" not in public_pages
+    assert "restaurant, medical clinic" not in public_pages
+    assert "restaurant tenant improvements, medical clinic tenant improvements, and office tenant improvements" not in public_pages
+
+
 def test_result_and_report_views_show_beta_safe_guidance_warning():
     source = _read(INDEX)
 
     warning = "PermitAssist is guidance only."
-    verify = "Verify exact permit type with the AHJ before quoting or starting work."
+    verify = "Verify final permit type with the AHJ before quoting or starting work."
     assert source.count(warning) >= 2
     assert verify in source
-    assert "PERMITASSIST GUIDANCE ONLY: Verify exact permit type with the AHJ before quoting or starting work." in source
+    assert "PERMITASSIST GUIDANCE ONLY: Verify final permit type with the AHJ before quoting or starting work." in source
 
     standard_warning_pos = source.index('class="disclaimer-box"')
     hero_pos = source.index('html += `<div class="result-hero">')

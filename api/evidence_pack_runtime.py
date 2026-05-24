@@ -20,49 +20,233 @@ import re
 from typing import Any
 from urllib.parse import urlparse
 
-SUPPORTED_FIELDS = {
-    "permit_type",
-    "apply_url",
-    "fee_range",
-    "approval_timeline",
-    "inspections",
-    "companion_reviews_triggers",
+DEFAULT_EVIDENCE_PACK_REGISTRY_PATH = Path(__file__).resolve().with_name("evidence_pack_registry.v1.json")
+CODE_OWNED_EVIDENCE_PACK_ROOT = Path(__file__).resolve().parent
+CONSERVATIVE_PACK_CONTROLLED_FIELDS = frozenset(
+    {
+        "apply_url",
+        "approval_timeline",
+        "companion_reviews_triggers",
+        "fee_range",
+        "inspections",
+        "permit_type",
+    }
+)
+PERMIT_NAME_SOURCE_FIELDS = ("display_permit_name", "official_permit_name", "official_application_category")
+PERMIT_NAME_TEMPLATE_FIELDS = frozenset(
+    {
+        "display_permit_name",
+        "official_permit_name",
+        "official_application_category",
+        "display_source_field",
+        "name_source_precedence",
+        "residential_project_type",
+        "trade_permit_names",
+        "septic_or_sewer_review",
+        "customer_visibility_tier",
+    }
+)
+PACK_FAIL_CLOSED_FIELDS = CONSERVATIVE_PACK_CONTROLLED_FIELDS
+PROTECTED_PREVIEW_EVIDENCE_PACK_MODES = frozenset(
+    {
+        "phase7b_golden_local_preview",
+        "phase1b_commercial_ti_exact_names_preview",
+        "solar_mep_controlled_preview",
+    }
+)
+_EMPTY_EVIDENCE_PACK_REGISTRY: dict[str, Any] = {
+    "schema": "permitassist.evidence_pack.registry.v1",
+    "runtime_contract_schema": "permitassist.evidence_pack.runtime.v1",
+    "runtime_contract_version": "step7l_runtime_contract_v1",
+    "supported_fields": sorted(CONSERVATIVE_PACK_CONTROLLED_FIELDS),
+    "pack_versions": {},
+    "modes": {},
 }
 
-RUNTIME_CONTRACT_SCHEMA = "permitassist.evidence_pack.runtime.v1"
-RUNTIME_CONTRACT_VERSION = "step7l_runtime_contract_v1"
-SUPPORTED_EVIDENCE_PACK_VERSIONS = (
-    "step7b_offline_v1",
-    "step7b_offline_v1_test",
-    "step7h_dallas_only_staging_v1",
-    "step7u_dallas_only_production_preview_v1",
-)
-ALLOWED_EVIDENCE_PACK_MODES = {
-    "dallas_step7h_preview",
-    "dallas_step7u_production_preview",
-    "solar_mep_controlled_preview",
-}
-SOLAR_MEP_CONTROLLED_PACK_FAMILY = "solar_commercial_mep_offline_v1"
-SOLAR_MEP_CONTROLLED_PROMOTION = {
-    "path_suffix": "evidence_packs/offline/solar_mep/permitassist-step7b-solar-commercial-mep-offline-evidence-pack-20260507.json",
-    "raw_sha256": "678d1ad5b8ed04dc4350d26d133bc52f382c868bda3e407ca7e6b0fc642c3875",
-    "fingerprint_sha256": "02fea6c42faee64c5ab1dd9cec2319a819b53f7f10e5abd58e1ae0fbbfe0116b",
-    "evidence_pack_version": "step7b_offline_v1",
-    "record_count": 9,
-    "pack_family": SOLAR_MEP_CONTROLLED_PACK_FAMILY,
-    "eligibility": "controlled_preview_only",
-}
+
+def _registry_file() -> Path:
+    override = os.environ.get("PERMITASSIST_EVIDENCE_PACK_REGISTRY_PATH", "").strip()
+    return Path(override) if override else DEFAULT_EVIDENCE_PACK_REGISTRY_PATH
+
+
+@lru_cache(maxsize=4)
+def _load_registry(path_text: str, mtime_ns: int, size: int) -> dict[str, Any]:
+    data = json.loads(Path(path_text).read_text(encoding="utf-8"))
+    if not isinstance(data, dict) or data.get("schema") != "permitassist.evidence_pack.registry.v1":
+        raise ValueError("invalid evidence-pack registry schema")
+    return data
+
+
+def _evidence_pack_registry() -> dict[str, Any]:
+    path = _registry_file()
+    try:
+        stat = path.stat()
+        return _load_registry(str(path), stat.st_mtime_ns, stat.st_size)
+    except (OSError, json.JSONDecodeError, ValueError):
+        # Registry config is startup-critical metadata. If it is missing or
+        # invalid, keep the app online and let evidence-pack behavior fail
+        # closed through empty modes/versions instead of crashing import.
+        return dict(_EMPTY_EVIDENCE_PACK_REGISTRY)
+
+
+def _registry_modes() -> dict[str, dict[str, Any]]:
+    modes = _evidence_pack_registry().get("modes") or {}
+    if not isinstance(modes, dict):
+        return {}
+    return {str(k): v for k, v in modes.items() if isinstance(v, dict)}
+
+
+def _code_owned_pack_fallback_path(configured_path: Path, mode: str) -> Path | None:
+    """Resolve approved bundled packs when Railway's data volume hides repo data/.
+
+    This is intentionally narrow: only registry-declared `data/evidence_packs/...`
+    suffixes are eligible, and the caller still performs fingerprint/contract
+    validation after the fallback path is selected.
+    """
+    promotion = _promotion_config(mode)
+    suffix = str(promotion.get("path_suffix") or "").strip()
+    if not suffix.startswith("data/evidence_packs/"):
+        return None
+    configured_text = configured_path.as_posix()
+    if not configured_text.endswith(suffix):
+        return None
+    candidate = CODE_OWNED_EVIDENCE_PACK_ROOT / suffix
+    if candidate.exists() and candidate.is_file():
+        return candidate
+    return None
+
+
+def _mode_config(mode: str) -> dict[str, Any]:
+    return dict(_registry_modes().get(str(mode or ""), {}))
+
+
+def _promotion_config(mode: str) -> dict[str, Any]:
+    promotion = _mode_config(mode).get("promotion") or {}
+    return dict(promotion) if isinstance(promotion, dict) else {}
+
+
+def _as_dict(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {}
+
+
+def _as_list(value: Any) -> list[Any]:
+    return list(value) if isinstance(value, list) else []
+
+
+def _as_int(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _mode_has_valid_protected_preview_activation(mode: str) -> bool:
+    if mode not in PROTECTED_PREVIEW_EVIDENCE_PACK_MODES:
+        return True
+    activation = _mode_config(mode).get("activation") or {}
+    if not isinstance(activation, dict):
+        return False
+    token_env = str(activation.get("token_env") or "").strip()
+    return bool(
+        activation.get("preview_only_required")
+        and activation.get("preview_route_required")
+        and token_env
+    )
+
+
+def evidence_pack_mode_request_gate_valid(mode: str) -> bool:
+    return str(mode or "") in ALLOWED_EVIDENCE_PACK_MODES and _mode_has_valid_protected_preview_activation(str(mode or ""))
+
+def evidence_pack_mode_public_redaction(mode: str) -> str:
+    return str(_mode_config(mode).get("public_redaction") or "redact_internal_fields")
+
+
+def evidence_pack_mode_requires_preview_only(mode: str) -> bool:
+    activation = _mode_config(mode).get("activation") or {}
+    return bool(isinstance(activation, dict) and activation.get("preview_only_required"))
+
+
+def evidence_pack_mode_requires_loader_preview_only(mode: str) -> bool:
+    activation = _mode_config(mode).get("activation") or {}
+    return bool(isinstance(activation, dict) and activation.get("loader_preview_only_required"))
+
+
+def evidence_pack_mode_requires_preview_route(mode: str) -> bool:
+    activation = _mode_config(mode).get("activation") or {}
+    return bool(isinstance(activation, dict) and activation.get("preview_route_required"))
+
+
+def evidence_pack_mode_preview_token_config(mode: str) -> dict[str, str]:
+    activation = _mode_config(mode).get("activation") or {}
+    if not isinstance(activation, dict):
+        return {}
+    token_env = str(activation.get("token_env") or "").strip()
+    if not token_env:
+        return {}
+    return {
+        "token_env": token_env,
+        "token_header_env": str(activation.get("token_header_env") or "").strip(),
+        "token_header_default": str(activation.get("token_header_default") or "").strip(),
+    }
+
+
+def evidence_pack_mode_coverage_truth(mode: str) -> dict[str, Any]:
+    coverage = _mode_config(mode).get("coverage_truth") or {}
+    return dict(coverage) if isinstance(coverage, dict) else {}
+
+
+def _registry_supported_fields() -> set[str]:
+    fields = _evidence_pack_registry().get("supported_fields") or []
+    if not isinstance(fields, list):
+        return set(CONSERVATIVE_PACK_CONTROLLED_FIELDS)
+    parsed = {str(field) for field in fields if field}
+    return parsed or set(CONSERVATIVE_PACK_CONTROLLED_FIELDS)
+
+
+def _registry_pack_versions() -> dict[str, dict[str, Any]]:
+    pack_versions = _evidence_pack_registry().get("pack_versions") or {}
+    if not isinstance(pack_versions, dict):
+        return {}
+    return {
+        str(version): config
+        for version, config in pack_versions.items()
+        if isinstance(config, dict)
+    }
+
+
+def _compat_promotion(mode: str) -> dict[str, Any]:
+    promotion = _promotion_config(mode)
+    metadata_equals = _as_dict(promotion.get("metadata_equals"))
+    record_field_exact = _as_dict(promotion.get("record_field_exact"))
+    compat = dict(promotion)
+    if "fingerprint_sha256" in metadata_equals:
+        compat["fingerprint_sha256"] = metadata_equals["fingerprint_sha256"]
+    if "evidence_pack_version" in metadata_equals:
+        compat["evidence_pack_version"] = metadata_equals["evidence_pack_version"]
+    if "pack_family" in record_field_exact:
+        compat["pack_family"] = record_field_exact["pack_family"]
+    return compat
+
+
+SUPPORTED_FIELDS = _registry_supported_fields()
+RUNTIME_CONTRACT_SCHEMA = str(_evidence_pack_registry().get("runtime_contract_schema") or "permitassist.evidence_pack.runtime.v1")
+RUNTIME_CONTRACT_VERSION = str(_evidence_pack_registry().get("runtime_contract_version") or "step7l_runtime_contract_v1")
+SUPPORTED_EVIDENCE_PACK_VERSIONS = tuple(sorted(_registry_pack_versions()))
+ALLOWED_EVIDENCE_PACK_MODES = set(_registry_modes())
 PRODUCTION_WIRING_ALLOWED_BY_VERSION = {
-    "step7b_offline_v1": False,
-    "step7b_offline_v1_test": False,
-    "step7h_dallas_only_staging_v1": False,
-    "step7u_dallas_only_production_preview_v1": True,
+    version: bool(config.get("production_wiring_allowed"))
+    for version, config in _registry_pack_versions().items()
 }
 EVIDENCE_PACK_VERSION_BY_MODE = {
-    "dallas_step7h_preview": "step7h_dallas_only_staging_v1",
-    "dallas_step7u_production_preview": "step7u_dallas_only_production_preview_v1",
-    "solar_mep_controlled_preview": "step7b_offline_v1",
+    mode: str(config.get("expected_version") or "")
+    for mode, config in _registry_modes().items()
+    if config.get("expected_version")
 }
+PHASE7B_GOLDEN_LOCAL_MODE = "phase7b_golden_local_preview"  # Compatibility alias; contract values live in registry.
+PHASE7B_GOLDEN_LOCAL_VERSION = EVIDENCE_PACK_VERSION_BY_MODE.get(PHASE7B_GOLDEN_LOCAL_MODE, "")
+PHASE7B_GOLDEN_LOCAL_PROMOTION = _compat_promotion(PHASE7B_GOLDEN_LOCAL_MODE)
+SOLAR_MEP_CONTROLLED_PACK_FAMILY = str((_compat_promotion("solar_mep_controlled_preview").get("pack_family") or ""))
+SOLAR_MEP_CONTROLLED_PROMOTION = _compat_promotion("solar_mep_controlled_preview")
 VALID_CONTRACT_STATUSES = {
     "valid",
     "disabled",
@@ -75,6 +259,7 @@ VALID_CONTRACT_STATUSES = {
 }
 
 ALLOWED_REQUEST_VERTICALS = {
+    "residential",
     "restaurant_ti",
     "medical_clinic_ti",
     "office_ti",
@@ -121,6 +306,12 @@ def _norm(value: Any) -> str:
 
 def _env_truthy(name: str) -> bool:
     return str(os.environ.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def canonical_json_sha256(value: Any) -> str:
+    """Shared canonical SHA-256 helper for builder/runtime fingerprints."""
+    canonical = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def evidence_pack_enabled() -> bool:
@@ -183,6 +374,11 @@ def _canonical_vertical(value: Any) -> str:
         "commercial mep tenant improvement": "commercial_mep_ti",
         "cross trade commercial mep": "commercial_mep_ti",
         "cross trade mep": "commercial_mep_ti",
+        "residential": "residential",
+        "residential remodel": "residential",
+        "residential bathroom remodel": "residential",
+        "single family": "residential",
+        "single family residential": "residential",
         "ahj level": "ahj_level",
     }
     if text in aliases:
@@ -299,6 +495,8 @@ def _vertical_for_job(job_type: str, *, explicit_vertical: Any = None, result: d
         return "commercial_electrical"
     if commercial_signal and trade_hits["plumbing"]:
         return "commercial_plumbing"
+    if re.search(r"\b(residential|single family|single family home|dwelling|home remodel|bathroom remodel|kitchen remodel)\b", text):
+        return "residential"
     return "unknown"
 
 
@@ -427,9 +625,10 @@ def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprin
     if version not in SUPPORTED_EVIDENCE_PACK_VERSIONS:
         warnings.append("unsupported_evidence_pack_version")
         status = "invalid_version"
+    mode_config = _mode_config(mode)
     expected_version = EVIDENCE_PACK_VERSION_BY_MODE.get(mode)
     mode_locked_versions = set(EVIDENCE_PACK_VERSION_BY_MODE.values())
-    strict_mode = mode in {"dallas_step7u_production_preview", "solar_mep_controlled_preview"}
+    strict_mode = bool(mode_config.get("strict_version"))
     if expected_version and version != expected_version and (strict_mode or version in mode_locked_versions):
         warnings.append("evidence_pack_version_not_allowed_for_mode")
         if status == "valid":
@@ -453,26 +652,129 @@ def _validate_metadata_contract(metadata: dict[str, Any], *, expected_fingerprin
 
 
 def _validate_solar_mep_controlled_promotion(path: Path, raw_bytes: bytes, data: dict[str, Any], metadata: dict[str, Any]) -> tuple[str, ...]:
-    """Pin solar/MEP controlled-preview eligibility to one reviewed offline pack."""
+    """Validate the solar/MEP controlled-preview pack through the registry manifest."""
+    return _validate_manifest_promotion("solar_mep_controlled_preview", path, raw_bytes, data, metadata)
+
+
+def _phase7b_golden_pack_fingerprint(data: dict[str, Any]) -> str:
+    """Recompute a generated local-golden pack fingerprint."""
+    metadata = dict(data.get("metadata") or {})
+    metadata.pop("fingerprint_sha256", None)
+    payload = {"metadata": metadata, "records": data.get("records") or []}
+    return canonical_json_sha256(payload)
+
+
+def _warning(prefix: str, suffix: str) -> str:
+    return f"{prefix}_{suffix}" if prefix else suffix
+
+
+def _validate_manifest_promotion(mode: str, path: Path, raw_bytes: bytes | None, data: dict[str, Any], metadata: dict[str, Any]) -> tuple[str, ...]:
+    """Validate pack-specific pinned runtime-contract rules from the registry manifest."""
+    promotion = _promotion_config(mode)
+    if not promotion:
+        return ()
+    prefix = str(promotion.get("warning_prefix") or mode).strip()
     warnings: list[str] = []
-    promotion = SOLAR_MEP_CONTROLLED_PROMOTION
     normalized_path = str(path).replace("\\", "/")
-    if not normalized_path.endswith(str(promotion["path_suffix"])):
-        warnings.append("solar_mep_promoted_pack_path_mismatch")
-    raw_sha = hashlib.sha256(raw_bytes).hexdigest()
-    if raw_sha != promotion["raw_sha256"]:
-        warnings.append("solar_mep_promoted_pack_raw_sha_mismatch")
-    if str(metadata.get("evidence_pack_version") or "").strip() != promotion["evidence_pack_version"]:
-        warnings.append("solar_mep_promoted_pack_version_mismatch")
-    if str(metadata.get("fingerprint_sha256") or "").strip() != promotion["fingerprint_sha256"]:
-        warnings.append("solar_mep_promoted_pack_fingerprint_mismatch")
+    path_suffix = str(promotion.get("path_suffix") or "").strip()
+    if path_suffix and not normalized_path.endswith(path_suffix):
+        warnings.append(_warning(prefix, "path_mismatch"))
+    raw_sha = str(promotion.get("raw_sha256") or "").strip()
+    if raw_sha and raw_bytes is not None and hashlib.sha256(raw_bytes).hexdigest() != raw_sha:
+        warnings.append(_warning(prefix, "raw_sha_mismatch"))
+    for key, expected in _as_dict(promotion.get("metadata_equals")).items():
+        actual = str(metadata.get(key) or "").strip()
+        if actual != str(expected):
+            suffix = {
+                "evidence_pack_version": "version_mismatch",
+                "fingerprint_sha256": "fingerprint_mismatch",
+            }.get(key, f"{key}_mismatch")
+            warnings.append(_warning(prefix, suffix))
+    for key, expected in _as_dict(promotion.get("metadata_int_equals")).items():
+        try:
+            actual = int(metadata.get(key) or -1)
+        except (TypeError, ValueError):
+            actual = -1
+        expected_int = _as_int(expected)
+        if expected_int is None or actual != expected_int:
+            warnings.append(_warning(prefix, f"{key}_mismatch"))
+    for key, expected in _as_dict(promotion.get("metadata_set_equals")).items():
+        if set(_as_list(metadata.get(key))) != set(_as_list(expected)):
+            warnings.append(_warning(prefix, f"{key}_mismatch"))
+    for key, expected in _as_dict(promotion.get("metadata_dict_equals")).items():
+        if _as_dict(metadata.get(key)) != _as_dict(expected):
+            warnings.append(_warning(prefix, f"{key}_mismatch"))
     records = data.get("records") or []
-    if not isinstance(records, list) or len(records) != promotion["record_count"]:
-        warnings.append("solar_mep_promoted_pack_record_count_mismatch")
-    families = {str(record.get("pack_family") or "").strip() for record in records if isinstance(record, dict)}
-    if families != {promotion["pack_family"]}:
-        warnings.append("solar_mep_promoted_pack_family_mismatch")
+    if not isinstance(records, list):
+        warnings.append(_warning(prefix, "record_count_mismatch"))
+        records = []
+    expected_count = promotion.get("record_count")
+    expected_count_int = _as_int(expected_count)
+    if expected_count is not None and (expected_count_int is None or len(records) != expected_count_int):
+        warnings.append(_warning(prefix, "record_count_mismatch"))
+    for field_name, expected_value in _as_dict(promotion.get("record_field_exact")).items():
+        values = {str(record.get(field_name) or "").strip() for record in records if isinstance(record, dict)}
+        if values != {str(expected_value)}:
+            warnings.append(_warning(prefix, f"{field_name}_mismatch"))
+    unique_row_field = str(promotion.get("unique_row_id_field") or "").strip()
+    if unique_row_field:
+        row_ids = {str(record.get(unique_row_field) or "").strip() for record in records if isinstance(record, dict)}
+        expected_rows = _as_int(promotion.get("unique_row_count")) or 0
+        if len(row_ids) != expected_rows:
+            warnings.append(_warning(prefix, "row_count_mismatch"))
+        expected_fields = sorted(str(field) for field in _as_list(promotion.get("exact_fields_per_row")))
+        if expected_fields:
+            row_fields: dict[str, list[str]] = {}
+            seen_pairs: set[tuple[str, str]] = set()
+            duplicate_pairs: set[tuple[str, str]] = set()
+            for record in records:
+                if not isinstance(record, dict):
+                    warnings.append(_warning(prefix, "invalid_record_shape"))
+                    continue
+                row_id = str(record.get(unique_row_field) or "").strip()
+                field = str(record.get("field") or "").strip()
+                pair = (row_id, field)
+                if pair in seen_pairs:
+                    duplicate_pairs.add(pair)
+                seen_pairs.add(pair)
+                row_fields.setdefault(row_id, []).append(field)
+                value = str(record.get("claim_value") or "").strip()
+                if field == "permit_type" and not value:
+                    warnings.append(_warning(prefix, "empty_promoted_claim"))
+                if field == "apply_url" and urlparse(value).scheme not in {"http", "https"}:
+                    warnings.append(_warning(prefix, "invalid_apply_url"))
+            if expected_rows and (len(records) != expected_rows * len(expected_fields) or len(seen_pairs) != expected_rows * len(expected_fields)):
+                warnings.append(_warning(prefix, "duplicate_or_missing_row_field"))
+            if duplicate_pairs:
+                warnings.append(_warning(prefix, "duplicate_row_field"))
+            for _row_id, fields in row_fields.items():
+                if sorted(fields) != expected_fields:
+                    warnings.append(_warning(prefix, "exact_field_set_mismatch"))
+                    break
+    expected_record_fields = set(str(field) for field in _as_list(promotion.get("record_fields_exact")))
+    if expected_record_fields:
+        fields = {str(record.get("field") or "").strip() for record in records if isinstance(record, dict)}
+        if fields != expected_record_fields:
+            warnings.append(_warning(prefix, "runtime_fields_mismatch"))
+    expected_verticals = set(str(vertical) for vertical in _as_list(promotion.get("record_verticals_exact")))
+    if expected_verticals:
+        verticals = {str(record.get("vertical") or "").strip() for record in records if isinstance(record, dict)}
+        if verticals != expected_verticals:
+            warnings.append(_warning(prefix, "record_verticals_mismatch"))
+    allowed_statuses = set(str(status) for status in _as_list(promotion.get("source_golden_field_status_allowed")))
+    if allowed_statuses:
+        statuses = {str(record.get("source_golden_field_status") or "").strip() for record in records if isinstance(record, dict)}
+        if not statuses or not statuses <= allowed_statuses:
+            warnings.append(_warning(prefix, "unpromoted_status_present"))
+    if promotion.get("fingerprint_algorithm") == "metadata_without_fingerprint_and_records_canonical_sha256":
+        if str(metadata.get("fingerprint_sha256") or "").strip() != _phase7b_golden_pack_fingerprint(data):
+            warnings.append(_warning(prefix, "fingerprint_mismatch"))
     return tuple(sorted(set(warnings)))
+
+
+def _validate_phase7b_golden_local_promotion(path: Path, data: dict[str, Any], metadata: dict[str, Any]) -> tuple[str, ...]:
+    """Validate Phase 7B/7C Golden local-preview eligibility through the registry manifest."""
+    return _validate_manifest_promotion(PHASE7B_GOLDEN_LOCAL_MODE, path, None, data, metadata)
 
 
 @lru_cache(maxsize=4)
@@ -488,18 +790,16 @@ def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fin
     )
     records = []
     source_records = data.get("records") or [] if contract_status == "valid" else []
-    if contract_status == "valid" and mode == "solar_mep_controlled_preview":
-        promotion_warnings = _validate_solar_mep_controlled_promotion(path, raw_bytes, data, metadata)
-        if promotion_warnings:
-            contract_status = "invalid_contract"
-            contract_warnings = tuple(sorted(set(contract_warnings + promotion_warnings)))
-            source_records = []
-        else:
-            families = {str(record.get("pack_family") or "").strip() for record in source_records if isinstance(record, dict)}
-            if families != {SOLAR_MEP_CONTROLLED_PACK_FAMILY}:
-                contract_status = "invalid_contract"
-                contract_warnings = tuple(sorted(set(contract_warnings + ("solar_mep_pack_family_required_for_mode",))))
-                source_records = []
+    promotion_warnings = _validate_manifest_promotion(mode, path, raw_bytes, data, metadata)
+    if promotion_warnings:
+        if contract_status != "valid":
+            promotion_prefix = str(_promotion_config(mode).get("warning_prefix") or mode).strip()
+            promotion_warnings = tuple(sorted(set(promotion_warnings + (_warning(promotion_prefix, "metadata_contract_invalid"),))))
+        contract_status = "invalid_contract"
+        contract_warnings = tuple(sorted(set(contract_warnings + promotion_warnings)))
+        source_records = []
+    elif _promotion_config(mode):
+        source_records = data.get("records") or []
     stale_candidate_count = 0
     for record in source_records:
         if not isinstance(record, dict):
@@ -511,6 +811,11 @@ def _load_pack(path_text: str, mtime_ns: int, size: int, mode: str, expected_fin
             continue
         if not _record_is_fresh(record):
             stale_candidate_count += 1
+            continue
+        value_text = str(record.get("claim_value") or "").strip()
+        if not value_text:
+            continue
+        if field == "apply_url" and urlparse(value_text).scheme not in {"http", "https"}:
             continue
         first = _primary_field_evidence(record)
         if not first:
@@ -546,6 +851,17 @@ def get_local_evidence_pack() -> EvidencePackRuntime | None:
     mode = os.environ.get("PERMITASSIST_EVIDENCE_PACK_MODE", "").strip()
     if mode not in ALLOWED_EVIDENCE_PACK_MODES:
         return _invalid_runtime("invalid_contract", mode=mode, warnings=("invalid_evidence_pack_mode",))
+    if not evidence_pack_mode_request_gate_valid(mode):
+        return _invalid_runtime(
+            "invalid_contract",
+            mode=mode,
+            version=EVIDENCE_PACK_VERSION_BY_MODE.get(mode, "unknown"),
+            warnings=("invalid_evidence_pack_mode_activation",),
+        )
+    if evidence_pack_mode_requires_loader_preview_only(mode) and not _env_truthy("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY"):
+        activation = _mode_config(mode).get("activation") or {}
+        warning = str(activation.get("missing_preview_only_warning") or "preview_only_required")
+        return _invalid_runtime("invalid_contract", mode=mode, version=EVIDENCE_PACK_VERSION_BY_MODE.get(mode, "unknown"), warnings=(warning,))
     expected = os.environ.get("PERMITASSIST_EVIDENCE_PACK_EXPECTED_FINGERPRINT", "").strip()
     if not re.fullmatch(r"[0-9a-fA-F]{64}", expected or ""):
         return _invalid_runtime("invalid_fingerprint", mode=mode, warnings=("missing_or_invalid_expected_fingerprint",))
@@ -554,7 +870,10 @@ def get_local_evidence_pack() -> EvidencePackRuntime | None:
         return _invalid_runtime("invalid_path", mode=mode, warnings=("missing_evidence_pack_path",))
     path = Path(path_text)
     if not path.exists() or not path.is_file():
-        return _invalid_runtime("invalid_path", mode=mode, warnings=("evidence_pack_path_missing_or_not_file",))
+        fallback_path = _code_owned_pack_fallback_path(path, mode)
+        if fallback_path is None:
+            return _invalid_runtime("invalid_path", mode=mode, warnings=("evidence_pack_path_missing_or_not_file",))
+        path = fallback_path
     try:
         stat = path.stat()
         return _load_pack(str(path), stat.st_mtime_ns, stat.st_size, mode, expected)
@@ -622,7 +941,7 @@ def _citation_from_record(field: str, record: dict[str, Any], checked_at: str) -
         value = ""
     return {
         "field": field,
-        "claim": "Evidence-pack field evidence",
+        "claim": "Official source field evidence",
         "value": value,
         "source_url": str(first.get("source_url") or ""),
         "source_title": str(first.get("source_title") or ""),
@@ -631,10 +950,46 @@ def _citation_from_record(field: str, record: dict[str, Any], checked_at: str) -
         "confidence": str(record.get("confidence") or "needs_verification").lower(),
         "field_evidence_confidence": _field_evidence_confidence(record),
         "field_status": str(record.get("field_status") or "needs_verification").lower(),
-        "evidence_pack_record_id": record.get("record_id"),
-        "evidence_pack_fingerprint": record.get("record_fingerprint_sha256"),
         "source_scope_limit": record.get("source_scope_limit") or "",
     }
+
+
+def _source_backed_permit_name(matches: dict[str, dict[str, Any]]) -> tuple[str, str, str, str]:
+    """Return (display name, source field, status, confidence) using official-source precedence."""
+    for field in PERMIT_NAME_SOURCE_FIELDS:
+        record = matches.get(field)
+        value = str((record or {}).get("claim_value") or "").strip()
+        if not value:
+            continue
+        if field in {"display_permit_name", "official_permit_name"}:
+            return value, field, "exact_official_name_confirmed", "high"
+        return value, field, "official_category_confirmed_exact_label_missing", "medium"
+    return "Permit required — local permit name not confirmed", "", "needs_research", "low"
+
+
+def _apply_source_backed_permit_name(result: dict[str, Any], matches: dict[str, dict[str, Any]]) -> None:
+    display, source_field, status, confidence = _source_backed_permit_name(matches)
+    result["_permit_display_name"] = display
+    result["permit_name_status"] = status
+    result["permit_name_confidence"] = confidence
+    result["permit_required_confidence"] = "high" if source_field else str(result.get("confidence") or "medium").lower()
+    if source_field:
+        result["permit_name_source_field"] = source_field
+        result["permit_name"] = display
+        result["permit_type"] = display
+        if status == "official_category_confirmed_exact_label_missing":
+            warnings = result.setdefault("quality_warnings", [])
+            caveat = "Official application category is source-confirmed; exact local permit label is not source-confirmed yet."
+            if caveat not in warnings:
+                warnings.append(caveat)
+        result["permit_required"] = True
+        permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+        if permits and isinstance(permits[0], dict):
+            permits[0]["permit_type"] = display
+            permits[0]["portal_selection"] = display
+            permits[0]["required"] = True
+        else:
+            result["permits_required"] = [{"permit_type": display, "portal_selection": display, "required": True}]
 
 
 def _suppress_pack_controlled_fields(result: dict[str, Any], failed_closed: list[str]) -> None:
@@ -643,7 +998,7 @@ def _suppress_pack_controlled_fields(result: dict[str, Any], failed_closed: list
     if "apply_url" in failed_closed:
         result["apply_url"] = None
         result["inspection_booking"] = None
-        result["_url_warning"] = "Evidence pack is enabled, but no valid matching apply URL evidence is active. Failing closed; verify with the AHJ."
+        result["_url_warning"] = "Official-source apply route is not confirmed for this AHJ/vertical yet; verify the application route with the AHJ."
     if "fee_range" in failed_closed:
         result["fee_range"] = None
     if "approval_timeline" in failed_closed:
@@ -655,8 +1010,30 @@ def _suppress_pack_controlled_fields(result: dict[str, Any], failed_closed: list
     result["claim_citations"] = []
 
 
+def _add_review_reason(result: dict[str, Any], reason: str) -> None:
+    allowed = {
+        "unsupported_ahj",
+        "unsupported_vertical",
+        "caveated_row",
+        "unsupported_fields_failed_closed",
+        "invalid_pack_contract",
+        "empty_promoted_claim",
+    }
+    if reason not in allowed:
+        return
+    reasons = result.setdefault("needs_review_reasons", [])
+    if reason not in reasons:
+        reasons.append(reason)
+    result["needs_review"] = True
+
+
+def _coverage_truth_for_mode(mode: str) -> dict[str, Any]:
+    """Public-safe coverage disclosure configured by evidence-pack mode."""
+    return evidence_pack_mode_coverage_truth(mode)
+
+
 def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]], failed_closed: list[str], fresh_count: int, request_vertical: str, blocked_fields: dict[str, tuple[str, ...]] | None = None) -> dict[str, Any]:
-    return {
+    meta = {
         "enabled": True,
         "contract_schema": RUNTIME_CONTRACT_SCHEMA,
         "runtime_contract_version": RUNTIME_CONTRACT_VERSION,
@@ -672,7 +1049,30 @@ def _safe_meta(pack: EvidencePackRuntime, *, matches: dict[str, dict[str, Any]],
         "blocked_fields": {field: list(reasons) for field, reasons in sorted((blocked_fields or {}).items())},
         "request_vertical": request_vertical,
         "cache_bypassed": True,
+        "public_redaction": evidence_pack_mode_public_redaction(pack.mode),
     }
+    name_value, name_source_field, name_status, name_confidence = _source_backed_permit_name(matches)
+    meta.update({
+        "permit_name_source_field": name_source_field,
+        "permit_name_status": name_status,
+        "permit_name_confidence": name_confidence,
+    })
+    if name_source_field:
+        meta["permit_name_display_value"] = name_value
+    if evidence_pack_mode_public_redaction(pack.mode) == "drop_evidence_pack" and matches:
+        matched_records = [record for _field, record in sorted(matches.items())]
+        row_ids = sorted({str(record.get("golden_row_id") or "") for record in matched_records if record.get("golden_row_id")})
+        classifications = sorted({str(record.get("row_level_classification") or "") for record in matched_records if record.get("row_level_classification")})
+        batches = sorted({str(record.get("batch_id") or "") for record in matched_records if record.get("batch_id")})
+        meta["local_golden"] = {
+            "row_id": row_ids[0] if len(row_ids) == 1 else "",
+            "matched_row_ids": row_ids,
+            "row_level_classification": classifications[0] if len(classifications) == 1 else "",
+            "batch_id": batches[0] if len(batches) == 1 else "",
+            "source_field_statuses": {field: record.get("source_golden_field_status") for field, record in sorted(matches.items())},
+            "contract": "phase7b_golden_local_preview_internal_only_v1",
+        }
+    return meta
 
 
 def _customer_facing_timeline(value: Any, *, city: str, state: str, pack: EvidencePackRuntime) -> str:
@@ -730,22 +1130,46 @@ def apply_evidence_pack_fail_closed(
 
     matches, current_fresh_records_loaded, blocked_fields = _match_records_with_fresh_count(pack, job_type, city, state, explicit_vertical=explicit_vertical, result=result)
     request_vertical = _vertical_for_job(job_type, explicit_vertical=explicit_vertical, result=result)
-    failed_closed = sorted(SUPPORTED_FIELDS - set(matches))
+    failed_closed = sorted(PACK_FAIL_CLOSED_FIELDS - set(matches))
+    if any(field in matches for field in PERMIT_NAME_SOURCE_FIELDS) and "permit_type" in failed_closed:
+        failed_closed.remove("permit_type")
 
     if pack.contract_status != "valid":
-        failed_closed = sorted(SUPPORTED_FIELDS)
+        failed_closed = sorted(PACK_FAIL_CLOSED_FIELDS)
         _suppress_pack_controlled_fields(result, failed_closed)
-        result["needs_review"] = True
+        _add_review_reason(result, "invalid_pack_contract")
         warnings = result.setdefault("quality_warnings", [])
-        warning = "Evidence pack contract is not valid; all pack-controlled fields were failed closed."
+        warning = "Official-source evidence contract is not valid; unconfirmed fields are hidden."
         if warning not in warnings:
             warnings.append(warning)
         result["_evidence_pack"] = _safe_meta(pack, matches={}, failed_closed=failed_closed, fresh_count=0, request_vertical=request_vertical, blocked_fields=blocked_fields)
         return result
 
+    if pack.mode == PHASE7B_GOLDEN_LOCAL_MODE and not matches:
+        # Golden preview is locked to the approved 30 AHJ×vertical rows only. For
+        # unsupported AHJs/verticals, fail pack-controlled fields closed but do
+        # not leak local-golden metadata into the response.
+        _suppress_pack_controlled_fields(result, sorted(PACK_FAIL_CLOSED_FIELDS))
+        supported_verticals = set(_promotion_config(pack.mode).get("record_verticals_exact") or _promotion_config(pack.mode).get("locked_verticals") or [])
+        unsupported_reason = "unsupported_vertical" if supported_verticals and request_vertical not in supported_verticals else "unsupported_ahj"
+        _add_review_reason(result, unsupported_reason)
+        _add_review_reason(result, "unsupported_fields_failed_closed")
+        warnings = result.setdefault("quality_warnings", [])
+        warning = "Official-source coverage is incomplete for this AHJ/vertical; unconfirmed fields are hidden."
+        if warning not in warnings:
+            warnings.append(warning)
+        result.pop("_evidence_pack", None)
+        return result
+
     citations = []
     for field, record in matches.items():
         value = record.get("claim_value")
+        value_text = str(value or "").strip()
+        is_empty_promoted_claim = not value_text
+        if is_empty_promoted_claim:
+            failed_closed.append((field, "empty_promoted_claim"))
+            _add_review_reason(result, "empty_promoted_claim")
+            continue
         if field == "approval_timeline":
             result["approval_timeline"] = _customer_facing_timeline(value, city=city, state=state, pack=pack)
         elif field == "permit_type":
@@ -775,15 +1199,33 @@ def apply_evidence_pack_fail_closed(
             warnings = result.setdefault("quality_warnings", [])
             if scope_limit not in warnings:
                 warnings.append(scope_limit)
+        field_caveat = str(record.get("customer_facing_caveat") or "").strip()
+        if field_caveat:
+            warnings = result.setdefault("quality_warnings", [])
+            if field_caveat not in warnings:
+                warnings.append(field_caveat)
+        row_caveat = str(record.get("row_level_caveat") or "").strip()
+        if row_caveat:
+            _add_review_reason(result, "caveated_row")
+            warnings = result.setdefault("quality_warnings", [])
+            caveat_warning = f"Coverage caveat: {row_caveat}"
+            if caveat_warning not in warnings:
+                warnings.append(caveat_warning)
+
+    if any(field in matches for field in PERMIT_NAME_SOURCE_FIELDS):
+        _apply_source_backed_permit_name(result, matches)
 
     _suppress_pack_controlled_fields(result, failed_closed)
     if citations:
         result["claim_citations"] = citations
     result["_evidence_pack"] = _safe_meta(pack, matches=matches, failed_closed=failed_closed, fresh_count=current_fresh_records_loaded, request_vertical=request_vertical, blocked_fields=blocked_fields)
+    coverage_truth = _coverage_truth_for_mode(pack.mode)
+    if coverage_truth:
+        result["coverage_truth"] = coverage_truth
     if failed_closed:
-        result["needs_review"] = True
+        _add_review_reason(result, "unsupported_fields_failed_closed")
         warnings = result.setdefault("quality_warnings", [])
-        warning = "Evidence pack is enabled; fields without ingestion-ready matching evidence were failed closed."
+        warning = "Official-source coverage is incomplete for this AHJ/vertical; unconfirmed fields are hidden."
         if warning not in warnings:
             warnings.append(warning)
     return result

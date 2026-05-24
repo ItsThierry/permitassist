@@ -10,19 +10,19 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PermitAssist" />
   <meta name="theme-color" content="#2563EB" />
-  <meta name="description" content="PermitAssist — AI-powered permit research for contractors. Get exact requirements, fees, and contact details in seconds. No demo calls, no sales team." />
+  <meta name="description" content="PermitAssist — permit research for contractors in supported jurisdictions. Get practical permit guidance before you dispatch." />
   <link rel="canonical" href="https://permitassist.io/" />
   <!-- Open Graph -->
-  <meta property="og:title" content="PermitAssist — Know Your Permits Before You Start" />
-  <meta property="og:description" content="AI-powered permit research for contractors. Exact requirements, fees, and contacts in 30 seconds. $39.99/mo unlimited." />
+  <meta property="og:title" content="PermitAssist — Commercial Tenant Improvement Permit Guidance" />
+  <meta property="og:description" content="Permit research for commercial tenant improvements. Guidance, fees, apply paths, and AHJ contacts for supported launch jurisdictions. $39.99/mo unlimited." />
   <meta property="og:url" content="https://permitassist.io/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PermitAssist" />
   <meta property="og:image" content="https://permitassist.io/icons/icon-512.png" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="PermitAssist — Know Your Permits Before You Start" />
-  <meta name="twitter:description" content="AI-powered permit research for contractors. Exact fees, requirements, and contacts in 30 seconds. $39.99/mo unlimited." />
+  <meta name="twitter:title" content="PermitAssist — Commercial Tenant Improvement Permit Guidance" />
+  <meta name="twitter:description" content="Permit research for commercial tenant improvements. Guidance, fees, apply paths, and AHJ contacts for supported launch jurisdictions. $39.99/mo unlimited." />
   <meta name="twitter:image" content="https://permitassist.io/icons/icon-512.png" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -45,7 +45,7 @@
           "width": 512,
           "height": 512
         },
-        "description": "AI-powered permit research for contractors. Get exact permit requirements, fees, and contacts in 30 seconds.",
+        "description": "Permit research for contractors in supported jurisdictions.",
         "sameAs": []
       },
       {
@@ -67,10 +67,10 @@
         "@type": "WebPage",
         "@id": "https://permitassist.io/#webpage",
         "url": "https://permitassist.io/",
-        "name": "PermitAssist — Know Your Permits Before You Start",
+        "name": "PermitAssist — Commercial Tenant Improvement Permit Guidance",
         "isPartOf": { "@id": "https://permitassist.io/#website" },
         "about": { "@id": "https://permitassist.io/#organization" },
-        "description": "AI-powered permit research for contractors. Get exact requirements, fees, and contact details in seconds."
+        "description": "Permit research for commercial tenant improvements with guidance, fees, apply paths, and AHJ contacts in supported jurisdictions."
       }
     ]
   }
@@ -283,7 +283,6 @@
     .counter-progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #2563EB, #3B82F6); transition: width .4s ease; }
     .counter-text { color: var(--text2); font-weight: 600; }
     .counter-upgrade { color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-
     /* Cards */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow-sm); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.15s ease; animation: slideIn 0.4s ease forwards; max-width: 100%; overflow-x: hidden; overflow-y: visible; box-sizing: border-box; }
     .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: rgba(37,99,235,0.15); }
@@ -1281,16 +1280,16 @@
       <!-- Hero -->
       <div class="hero" style="padding:32px 0 16px">
         <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
-        <h2 class="hero-sub" style="max-width:460px">Know exactly what permit to pull, before you dispatch.</h2>
+        <h2 class="hero-sub" style="max-width:460px">Get practical permit guidance before you dispatch.</h2>
       </div>
 
 
 
       <!-- Free/Paid clarity line -->
       <div class="free-paid-bar">
-        <span>✅ <strong>3 free lookups</strong> — no credit card, takes 30 seconds</span>
+        <span>✅ <strong>3 free permit lookups</strong> — no credit card, checked server-side</span>
         <span class="free-paid-divider">·</span>
-        <span>Then <strong>$39.99/mo</strong> for unlimited</span>
+        <span>Then <strong>$39.99/mo</strong> for unlimited supported lookups</span>
         <span class="free-paid-divider">·</span>
         <span>Cancel anytime</span>
       </div>
@@ -1298,7 +1297,7 @@
       <!-- Counter bar -->
       <div class="counter-bar" id="counter-bar">
         <div class="counter-bar-top">
-          <span class="counter-text" id="counter-text">3 free lookups — no reset</span>
+          <span class="counter-text" id="counter-text">Free lookup usage is checked server-side when you search</span>
         <span class="counter-upgrade" onclick="openUpgrade()">Upgrade $39.99/mo →</span>
       </div>
       <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
@@ -1313,7 +1312,7 @@
         </div>
         <div class="search-section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span id="search-section-title">🔍 Look Up Your Permit</span>
-          <a href="#" onclick="event.preventDefault();runSampleLookup()" style="font-size:13px;color:var(--brand);text-decoration:none;font-weight:700;letter-spacing:0;text-transform:none;background:transparent;border:2px solid var(--brand);border-radius:20px;padding:6px 16px;transition:all .15s" onmouseover="this.style.background='var(--brand)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--brand)'">👀 See a real permit result →</a>
+          <a href="#" onclick="event.preventDefault();runSampleLookup()" style="font-size:13px;color:var(--brand);text-decoration:none;font-weight:700;letter-spacing:0;text-transform:none;background:transparent;border:2px solid var(--brand);border-radius:20px;padding:6px 16px;transition:all .15s" onmouseover="this.style.background='var(--brand)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--brand)'">👀 See a real permit lookup →</a>
         </div>
               <div class="card">
           <div class="card-label" id="search-card-label">What do you need a permit for?</div>
@@ -1368,7 +1367,7 @@
           </div>
         </div>
 
-        <div class="trust-note">🧠 Not a chatbot. A permit expert. PermitAssist indexes <strong>5,000+ verified cities and counties across all 50 states</strong> with portal links, fee schedules, and the exact code sections your inspector will cite — purpose-built for contractors, not a generic AI wrapper.</div>
+        <div class="trust-note">🧠 Not a generic chatbot. PermitAssist combines official-source research with verified jurisdiction records and fails closed instead of pretending every city or trade is verified.</div>
         <button class="lookup-btn" id="lookup-btn" type="submit">🔍 &nbsp;Find Permit Requirements</button>
       </div>
 
@@ -1385,13 +1384,13 @@
           <div class="how-step">
             <div class="how-step-icon">🔍</div>
             <div class="how-step-num">Step 2</div>
-            <h3 class="how-step-label">AI researches your exact jurisdiction</h3>
+            <h3 class="how-step-label">Researches your local jurisdiction</h3>
           </div>
           <div class="how-connector"></div>
           <div class="how-step">
             <div class="how-step-icon">✅</div>
             <div class="how-step-num">Step 3</div>
-            <h3 class="how-step-label">Get permit name, fees, timeline &amp; where to apply</h3>
+            <h3 class="how-step-label">Get permit guidance, fees, timeline &amp; where to apply</h3>
           </div>
         </div>
       </div>
@@ -1401,15 +1400,15 @@
         <div style="max-width:480px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 22px;text-align:center">
           <div style="font-size:28px;margin-bottom:12px">🎯</div>
           <h2 style="font-size:17px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:10px">Our goal: you walk into the permit office once, get it right, and never go back.</h2>
-          <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px">No calling around. No guessing on fees. No rejected applications. Just the exact permit name, requirements, and checklist — before you leave the truck.</div>
+          <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px">Less calling around and less guessing on fees. Get permit-name guidance, requirements, apply path, and checklist — then verify final requirements with the AHJ before you submit.</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;align-items:center;gap:10px;text-align:left">
               <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">✓</div>
-              <div style="font-size:13px;color:var(--text2)">3 free lookups — no credit card, takes 30 seconds</div>
+              <div style="font-size:13px;color:var(--text2)">3 free permit lookups — usage checked server-side</div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;text-align:left">
               <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">✓</div>
-              <div style="font-size:13px;color:var(--text2)">Results in under 30 seconds</div>
+              <div style="font-size:13px;color:var(--text2)">Most supported results in about 60–90 seconds</div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;text-align:left">
               <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">✓</div>
@@ -1456,10 +1455,10 @@
           </div>
           <div class="new-col">
             <h3 class="new-col-title">✅ With PermitAssist</h3>
-            <div class="vs-item">Instant answer in under 60 seconds</div>
+            <div class="vs-item">Practical answer in about 60–90 seconds for supported lookups</div>
             <div class="vs-item">AI-verified, jurisdiction-specific results</div>
             <div class="vs-item">Know fees &amp; timeline before you show up</div>
-            <div class="vs-item">Exact permit name the clerk recognizes</div>
+            <div class="vs-item">Permit name and AHJ wording to verify</div>
             <div class="vs-item">Back on the job in minutes</div>
           </div>
         </div>
@@ -1489,12 +1488,12 @@
         <div class="compare-strip-cols">
           <div class="compare-col compare-col-winner">
             <h3 class="compare-col-name">✅ PermitAssist</h3>
-            <div class="compare-col-price">$39.99/mo · unlimited</div>
+            <div class="compare-col-price">$39.99/mo · unlimited supported lookups</div>
             <ul class="compare-col-features">
-              <li>⚡ Instant — 30 seconds</li>
+              <li>⚡ Usually about 60–90 seconds for supported lookups</li>
               <li>🔍 100% self-serve</li>
               <li>📋 No demo call needed</li>
-              <li>✓ Checklists &amp; exact fees</li>
+              <li>✓ Checklists &amp; fee guidance</li>
             </ul>
           </div>
           <div class="compare-col">
@@ -1571,14 +1570,14 @@
 
       <!-- Feature pills -->
       <div class="trust-badges">
-        <div class="trust-badge">✅ Exact Permit Names</div>
+        <div class="trust-badge">✅ Permit Name Guidance</div>
         <div class="trust-badge">📋 Inspector Checklists</div>
-        <div class="trust-badge">🎯 No Guessing</div>
+        <div class="trust-badge">🎯 AHJ Verification Built In</div>
       </div>
 
       <!-- Stats strip: cities link + lifetime + today (single source of truth) -->
       <div class="stats-strip">
-        <a href="/cities" class="stats-link" target="_blank">📍 <strong id="stat-verified">5,260</strong> cities &amp; counties · all 50 states →</a>
+        <a href="/cities" class="stats-link" target="_blank">📍 View supported jurisdictions →</a>
         <span class="stats-sep">·</span>
         <span><strong id="stat-lookups">1,847</strong> total lookups</span>
         <span id="lookups-today-bar" class="stats-today" style="display:none"><span class="stats-sep">·</span>🔥 <strong id="stat-today">0</strong> today</span>
@@ -1615,7 +1614,7 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <p>⚠️ <strong>Disclaimer:</strong> PermitAssist provides AI-generated guidance based on publicly available data. Permit requirements change frequently, and fees shown are estimates. The contractor is strictly responsible for verifying all exact requirements, fees, and timelines directly with the local building department (Authority Having Jurisdiction) prior to starting any work.</p>
+    <p>⚠️ <strong>Disclaimer:</strong> PermitAssist provides AI-generated guidance based on publicly available data. Permit requirements change frequently, and fees shown are estimates. The contractor is strictly responsible for verifying final requirements, fees, and timelines directly with the local building department (Authority Having Jurisdiction) prior to starting any work.</p>
     <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved. &nbsp;·&nbsp; <a href="/help" style="color:var(--brand)">Help</a> &nbsp;·&nbsp; <a href="/terms" style="color:var(--brand)">Terms</a> &nbsp;·&nbsp; <a href="/privacy" style="color:var(--brand)">Privacy</a></p>
     <div style="font-size:11px;color:#94a3b8;margin-top:6px">PermitAssist is operated by an Indiana LLC. Information is AI-assisted research, not legal advice — verify final requirements with the AHJ before submitting.</div>
   </footer>
@@ -1638,7 +1637,7 @@
     <button class="upgrade-modal-close" type="button" aria-label="Close upgrade modal" onclick="closeUpgrade()">×</button>
     <div class="upgrade-modal-title" id="upgrade-modal-title">Upgrade to Solo</div>
     <div class="upgrade-modal-accent"></div>
-    <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
+    <div class="upgrade-modal-sub" id="upgrade-modal-sub">Unlimited supported permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.</div>
 
     <div class="upgrade-plan-toggle" role="tablist" aria-label="Choose a plan">
       <button class="upgrade-plan-btn active" id="upgrade-plan-pro" type="button" onclick="setUpgradePlan('pro')">Solo — $39.99/mo</button>
@@ -1646,7 +1645,7 @@
     </div>
 
     <ul class="upgrade-feature-list" id="upgrade-features-pro">
-      <li><span class="upgrade-feature-check">✓</span><span>Unlimited lookups</span></li>
+      <li><span class="upgrade-feature-check">✓</span><span>Unlimited supported lookups</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Foreman Brief PDF export</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Job tracking &amp; reminders</span></li>
       <li><span class="upgrade-feature-check">✓</span><span>Priority city requests</span></li>
@@ -2302,7 +2301,7 @@ function updateCounterBarFromServer(used, remaining, plan){
   const bar=document.getElementById('counter-bar'),text=document.getElementById('counter-text');
   if(!bar)return;
   const total=FREE_LIMIT,pct=Math.max(0,Math.min(100,Math.round(normalizedUsed/total*100)));
-  text.textContent=normalizedRemaining===0?'3 free lookups — no reset. Upgrade for unlimited':`${Math.min(normalizedUsed,total)} of ${total} free lookups used, no reset`;
+  text.textContent=normalizedRemaining===0?'Server-side free limit reached. Upgrade for unlimited supported lookups':`${Math.min(normalizedUsed,total)} of ${total} free lookups used, no reset (server-side)`;
   const fill=bar.querySelector('.counter-progress-fill');
   if(fill)requestAnimationFrame(()=>fill.style.width=pct+'%');
   bar.style.borderColor=normalizedRemaining===0?'rgba(239,68,68,0.4)':'';
@@ -2356,7 +2355,7 @@ function refreshUpgradeModal(){
   if(cta) cta.href=getUpgradeUrl(plan, upgradeModalState.couponApplied);
   if(sub) sub.textContent=plan==='team'
     ? 'Bring your office and field crew onto one shared permit workflow with faster city-request turnaround.'
-    : 'Unlimited permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.';
+    : 'Unlimited supported permit lookups, cleaner job handoffs, and faster answers when deadlines are tight.';
 }
 
 function setUpgradePlan(plan){
@@ -2483,7 +2482,7 @@ function skipPreLookupGate() {
 
 function showGate(hardBlock){
   const title=document.getElementById('gate-title'),sub=document.getElementById('gate-sub'),skip=document.getElementById('gate-skip-link');
-  if(hardBlock){title.textContent='You\'ve used your 3 free lookups';sub.textContent='Upgrade to Solo for unlimited lookups — $39.99/mo, cancel anytime. Enter your email to log in or create an account.';if(skip)skip.style.display='none';}
+  if(hardBlock){title.textContent='Server-side free limit reached';sub.textContent='This browser, account, or network has already used the 3 free lookups. Upgrade to Solo for unlimited supported lookups — $39.99/mo, cancel anytime.';if(skip)skip.style.display='none';}
   else{title.textContent='Save your results';sub.textContent='Enter your email to save your lookup history and get your results by email. Completely free.';if(skip)skip.style.display='block';}
   // Reset to step 1
   document.getElementById('magic-step1').style.display='block';
@@ -2719,11 +2718,226 @@ function verdictState(d){
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
 
 // ── Render Results ───────────────────────────────────────────────────────────
-function getPermitDisplayName(d) {
-  const permits = d.permits_required || [];
-  return (permits.length > 0 && permits[0].portal_selection)
-    ? permits[0].portal_selection
-    : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
+function getRenderingContext(d, job, city, state) {
+  d = d || {};
+  const existing = d._rendering_context || d.rendering_context || {};
+  const joined = `${existing.vertical || ''} ${existing.scope || ''} ${d._primary_scope || ''} ${d.primary_scope || ''} ${d.project_scope || ''} ${d.job_category || ''} ${job || ''}`.toLowerCase();
+  let vertical = existing.vertical || '';
+  if (!vertical) {
+    if (/restaurant|food service|commercial kitchen|type\s*i\s*hood|grease duct|grease interceptor/.test(joined)) vertical = 'commercial_restaurant';
+    else if (/medical|clinic|dental|exam room|imaging|x-ray|medical gas|office-to-clinic/.test(joined)) vertical = 'medical_clinic_ti';
+    else if (/office\s*ti|office tenant|office build(?:out|-out)|demising|multi-tenant office|high-rise office/.test(joined)) vertical = 'office_ti';
+    else if (/commercial/.test(joined) && /(hvac|rtu|rooftop unit|electrical|plumbing|trade-only|trade only)/.test(joined) && !/(tenant improvement|buildout|build-out|change of use|change of occupancy)/.test(joined)) vertical = 'commercial_trade_only';
+    else if (/commercial|tenant improvement|buildout|build-out|change of use|change of occupancy/.test(joined)) vertical = 'commercial_unknown';
+    else if (/residential|single-family|single family|homeowner|dwelling/.test(joined)) vertical = 'residential';
+    else vertical = 'unknown';
+  }
+  const isCommercial = existing.is_commercial === true || /^commercial_/.test(vertical) || ['medical_clinic_ti', 'office_ti'].includes(vertical);
+  const inspectionProfile = existing.inspection_profile || ({
+    commercial_restaurant: 'commercial_restaurant',
+    medical_clinic_ti: 'medical_clinic_ti',
+    office_ti: 'office_ti',
+    commercial_trade_only: 'commercial_trade_only',
+    residential: 'residential'
+  }[vertical] || (isCommercial ? 'commercial_trade_only' : 'residential'));
+  return {
+    city: city || d.city || existing.city || '',
+    state: state || d.state || existing.state || '',
+    vertical,
+    is_commercial: isCommercial,
+    template_family: isCommercial ? 'commercial' : (searchMode === 'homeowner' ? 'residential' : 'contractor'),
+    allow_homeowner_template: !isCommercial && searchMode === 'homeowner',
+    inspection_profile: inspectionProfile,
+  };
+}
+
+function isFallbackPermitName(name) {
+  return /permit\s+required\s*[-–—]+\s*exact\s+permit\s+type\s+needs\s+ahj\s+verification|permit\s*[-–—]+\s*verify\s+exact\s+ahj\s+title|exact\s+permit\s+(?:type|category).*needs\s+ahj\s+verification|needs\s+ahj\s+verification/i.test(String(name || ''));
+}
+
+function defaultPermitDisplayName(renderContext) {
+  const vertical = renderContext?.vertical || '';
+  if (vertical === 'commercial_restaurant') return 'Commercial Alteration / Tenant Improvement Permit';
+  if (vertical === 'medical_clinic_ti') return 'Medical Clinic Tenant Improvement Permit';
+  if (vertical === 'office_ti') return 'Commercial Office Tenant Improvement Permit';
+  if ((renderContext?.is_commercial || false) && vertical === 'commercial_trade_only') return 'Commercial Trade Permit';
+  if (renderContext?.is_commercial) return 'Commercial Permit / Tenant Improvement Review';
+  return 'Permit required — local permit name not confirmed';
+}
+
+function sanitizePermitDisplayName(name, renderContext) {
+  const raw = String(name || '').trim();
+  if (!raw || isFallbackPermitName(raw)) return defaultPermitDisplayName(renderContext);
+  return raw.replace(/\s+/g, ' ');
+}
+
+function normalizePermitDisplayData(d, renderContext) {
+  const rawPermits = Array.isArray(d?.permits_required) ? d.permits_required : [];
+  const fallback = defaultPermitDisplayName(renderContext);
+  if (!rawPermits.length && renderContext?.is_commercial) {
+    return [{ permit_type: fallback, portal_selection: fallback, required: true, notes: 'Exact AHJ intake category needs verification before quoting.' }];
+  }
+  return rawPermits.map(p => {
+    if (!p || typeof p !== 'object') return p;
+    const display = sanitizePermitDisplayName(p.portal_selection || p.permit_type || p.name || p.title, renderContext);
+    return { ...p, permit_type: sanitizePermitDisplayName(p.permit_type || display, renderContext), portal_selection: display };
+  });
+}
+
+function getPermitDisplayName(d, renderContext) {
+  renderContext = renderContext || getRenderingContext(d, window._lastLookupJob || '', window._lastLookupCity || '', window._lastLookupState || '');
+  for (const field of ['display_permit_name', 'official_permit_name', 'official_application_category', '_permit_display_name']) {
+    if (d?.[field]) return sanitizePermitDisplayName(d[field], renderContext);
+  }
+  const permits = normalizePermitDisplayData(d || {}, renderContext);
+  return sanitizePermitDisplayName((permits.length > 0 && permits[0].portal_selection) || d?.permit_name || d?.permit_type || permits[0]?.permit_type || '', renderContext);
+}
+
+function evidenceFieldFailed(d, fieldName) {
+  const evidencePack = d?.[`_${'evidence'}_${'pack'}`] || {};
+  return Array.isArray(evidencePack.failed_closed_fields) && evidencePack.failed_closed_fields.includes(fieldName);
+}
+
+function customerSafeText(value) {
+  return String(value == null ? '' : value)
+    .replace(/\s*\[verify[^\]]*before merging\]/gi, '')
+    .replace(/\bfailed closed\b/gi, 'not source-confirmed')
+    .replace(/\bingestion-ready\b/gi, 'source-confirmed')
+    .replace(/\bpack-controlled\b/gi, 'source-backed')
+    .replace(/\blocal pack\b/gi, 'official source record')
+    .replace(/\bfee_range\b/g, 'fees')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function customerFieldLabel(field) {
+  const labels = {
+    fee_range: 'fees',
+    approval_timeline: 'timelines',
+    inspections: 'inspections',
+    apply_url: 'application link',
+    permit_type: 'permit-name label',
+    display_permit_name: 'permit-name label',
+    official_permit_name: 'official permit name',
+    official_application_category: 'official application category',
+    companion_reviews_triggers: 'companion reviews',
+  };
+  return labels[field] || 'supporting detail';
+}
+
+function corePermitUnverified(d) {
+  const names = [d?.permit_name, d?.permit_type, ...((d?.permits_required || []).flatMap(p => p ? [p.permit_type, p.portal_selection, p.name, p.title] : []))].filter(Boolean).join(' ');
+  return d?.permit_name_confidence === 'low' || d?.permit_name_confidence === 'medium' || d?.permit_name_status === 'official_category_confirmed_exact_label_missing' || d?.permit_name_verified === false || d?.permit_type_verified === false || isFallbackPermitName(names) || /unknown|unverified|needs?\s+AHJ\s+verification|verify\s+with\s+(?:the\s+)?AHJ|human\s+review/i.test(`${d?.confidence_reason || ''} ${names}`);
+}
+
+const LOCAL_AHJ_HOSTS = {
+  'chicago|il': ['chicago.gov', 'cityofchicago.org'],
+  'philadelphia|pa': ['phila.gov', 'permits.phila.gov'],
+  'new york|ny': ['nyc.gov'],
+  'los angeles|ca': ['lacity.org', 'ladbs.org', 'ladbsservices2.lacity.org'],
+  'houston|tx': ['houstontx.gov', 'houstonpermittingcenter.org'],
+  'phoenix|az': ['phoenix.gov'],
+  'austin|tx': ['austintexas.gov'],
+  'seattle|wa': ['seattle.gov'],
+  'denver|co': ['denvergov.org'],
+  'boston|ma': ['boston.gov', 'bostonpermits.com'],
+};
+const STATE_ABBR_BY_NAME = {
+  illinois: 'il', pennsylvania: 'pa', 'new york': 'ny', california: 'ca', texas: 'tx',
+  arizona: 'az', washington: 'wa', colorado: 'co', massachusetts: 'ma'
+};
+const KNOWN_LOCAL_AHJ_HOSTS = ['phila.gov','permits.phila.gov','nyc.gov','chicago.gov','cityofchicago.org','lacity.org','ladbs.org','houstontx.gov','phoenix.gov','austintexas.gov','seattle.gov','denvergov.org','boston.gov'];
+const MODEL_CODE_HOSTS = ['codes.iccsafe.org', 'iccsafe.org', 'up.codes', 'nfpa.org'];
+function hostMatches(host, allowed) { host = String(host || '').replace(/^www\./, '').toLowerCase(); return (allowed || []).some(h => host === h || host.endsWith('.' + h)); }
+function sourceUrl(src) { return typeof src === 'string' ? src : ((src && (src.url || src.link)) || ''); }
+function normalizeStateForAhjKey(state) {
+  const raw = String(state || '').trim().toLowerCase();
+  return STATE_ABBR_BY_NAME[raw] || raw;
+}
+function classifySourceForJurisdiction(src, city, state) {
+  const url = sourceUrl(src);
+  let host = '';
+  try { host = new URL(url).hostname.replace(/^www\./, '').toLowerCase(); } catch { return { url, host:'', source_class:'invalid', allowed_as_official_support:false, allowed_as_local_ahj_support:false }; }
+  const key = `${String(city || '').trim().toLowerCase()}|${normalizeStateForAhjKey(state)}`;
+  const localHosts = LOCAL_AHJ_HOSTS[key] || [];
+  if (hostMatches(host, localHosts)) return { url, host, source_class:'local_ahj', allowed_as_official_support:true, allowed_as_local_ahj_support:true };
+  if (hostMatches(host, KNOWN_LOCAL_AHJ_HOSTS)) return { url, host, source_class:'wrong_local_ahj', allowed_as_official_support:false, allowed_as_local_ahj_support:false };
+  if (hostMatches(host, MODEL_CODE_HOSTS)) return { url, host, source_class:'model_code', allowed_as_official_support:true, allowed_as_local_ahj_support:false };
+  if (/\.(gov|gov\.us|us)$/.test(host)) return { url, host, source_class:'government_other', allowed_as_official_support:false, allowed_as_local_ahj_support:false };
+  if (/accela\.com$|citizenaccess/i.test(host)) return { url, host, source_class:'permit_portal', allowed_as_official_support:true, allowed_as_local_ahj_support:false };
+  return { url, host, source_class:'other', allowed_as_official_support:false, allowed_as_local_ahj_support:false };
+}
+
+function getOfficialSourceLinks(d, city, state) {
+  if (Array.isArray(d?._official_sources) && d._official_sources.length) {
+    return d._official_sources.map(sourceUrl).filter(Boolean).slice(0, 5);
+  }
+  return (Array.isArray(d?.sources) ? d.sources : [])
+    .map(s => classifySourceForJurisdiction(s, city, state))
+    .filter(s => s.allowed_as_official_support && s.source_class !== 'wrong_local_ahj')
+    .map(s => s.url)
+    .filter(Boolean)
+    .filter((u, i, arr) => arr.indexOf(u) === i)
+    .slice(0, 5);
+}
+
+function hasLocalAhjSource(d, city, state) {
+  return (Array.isArray(d?.sources) ? d.sources : []).some(s => classifySourceForJurisdiction(s, city, state).source_class === 'local_ahj')
+    || (Array.isArray(d?._source_classification) && d._source_classification.some(s => s.source_class === 'local_ahj'));
+}
+
+function buildConfidenceBadgeHtml(d, renderContext, city, state) {
+  const dataSourceRaw = d?.data_source || d?._meta?.city_match_level || '';
+  const isCountyFB = d?.county_fallback === true;
+  if (corePermitUnverified(d)) {
+    return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Permit required · name not source-confirmed<span class="conf-tooltip">Permit appears required, but the exact official permit/application name is not source-confirmed for this lookup.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Permit required confidence is separate from exact permit-name confidence</div>`;
+  }
+  if ((dataSourceRaw === 'city_database' || dataSourceRaw === 'city') && hasLocalAhjSource(d, city, state)) {
+    return `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified · official sources<span class="conf-tooltip">Cross-checked against local AHJ sources for the core permit claim. Verify final intake details before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Core permit claim is supported by local AHJ sources · verify final intake details</div>`;
+  }
+  if (dataSourceRaw === 'web_search') {
+    return `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
+  }
+  if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
+    return `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
+  }
+  return `<span class="confidence-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🔴 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#b91c1c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
+}
+
+const COMMERCIAL_INSPECTION_PROFILES = {
+  commercial_restaurant: [
+    'Building rough inspection for framing, rated assemblies, exits, accessibility path-of-travel, and commercial alteration work',
+    'Building final inspection before opening or Certificate of Occupancy / occupancy final approval',
+    'Hood and grease duct inspection for Type I hood, shaft/rated duct, and kitchen exhaust where applicable',
+    'Fire suppression acceptance test for hood/Ansul or sprinkler modifications where applicable',
+    'Fire alarm inspection where alarm devices, monitoring, or occupant notification are affected',
+    'Health department / food establishment inspection before opening where applicable',
+    'Egress and occupancy final inspection for exits, occupant load, emergency lighting, and final sign-off',
+  ],
+  medical_clinic_ti: [
+    'Building rough/final inspection for clinic layout, rated corridors/rooms, and tenant-improvement work',
+    'Accessibility inspection for accessible route, restrooms, exam rooms, reception, and path-of-travel where applicable',
+    'Fire/life-safety inspection for alarm, sprinkler, egress, and occupancy features',
+    'Mechanical/electrical/plumbing inspections for exam rooms, hand sinks, ventilation, equipment loads, and dedicated circuits',
+    'Medical gas, imaging/shielding, or special-equipment inspection/review where oxygen, vacuum, x-ray, CT, or similar equipment is included',
+    'Health/licensing or clinic operational inspection where the AHJ or state program requires it',
+  ],
+  office_ti: [
+    'Commercial alteration / tenant-improvement building rough inspection for partitions, rated assemblies, and ceiling grid',
+    'Egress and life-safety inspection for exits, travel distance, exit signs, emergency lighting, and occupant load',
+    'Accessibility inspection for path-of-travel, doors/hardware, restrooms, reception counters, and accessible routes where applicable',
+    'Trade rough/final inspections for electrical, mechanical, plumbing, and low-voltage work included in the TI',
+    'Final building inspection and occupancy/tenant authorization before use of the space',
+  ],
+};
+function resolveInspectionItems(d, renderContext, job) {
+  const raw = d?.inspections || d?.inspect_checklist || [];
+  const text = raw.map(x => typeof x === 'string' ? x : `${x?.title || ''} ${x?.stage || ''} ${x?.description || ''} ${x?.notes || ''}`).join(' ').toLowerCase();
+  const profile = renderContext?.inspection_profile;
+  if (profile === 'commercial_restaurant' && (!/hood/.test(text) || !/grease duct/.test(text) || !/fire suppression/.test(text) || !/health/.test(text) || !/egress/.test(text))) return COMMERCIAL_INSPECTION_PROFILES.commercial_restaurant;
+  if (profile === 'medical_clinic_ti' && (!/clinic/.test(text) || !/health/.test(text) || !/life/.test(text) || !/accessibility/.test(text) || !/equipment|medical gas|imaging|x-ray/.test(text))) return COMMERCIAL_INSPECTION_PROFILES.medical_clinic_ti;
+  if (profile === 'office_ti' && (!/commercial alteration/.test(text) || !/egress/.test(text) || !/accessibility/.test(text))) return COMMERCIAL_INSPECTION_PROFILES.office_ti;
+  return raw;
 }
 
 // Known historic / HPC districts. Keyed by `${city}|${state}` (state is the
@@ -2808,18 +3022,19 @@ function getJurisdictionDisplay(d, city, state, jobAddress) {
   };
 }
 
-function getNextSteps(d, job, city, state) {
-  const permitName = getPermitDisplayName(d);
+function getNextSteps(d, job, city, state, renderContext) {
+  renderContext = renderContext || getRenderingContext(d, job, city, state);
+  const permitName = getPermitDisplayName(d, renderContext);
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])].slice(0, 3);
   const steps = [
     `Ask for \"${permitName}\" with the ${d.applying_office || `${city} building department`}.`,
-    d.fee_range ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Confirm the fee and save the receipt / confirmation number.',
+    d.fee_range && !evidenceFieldFailed(d, 'fee_range') ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Fee information is not source-confirmed for this lookup; save the receipt / confirmation number once the permit office calculates it.',
     docs.length ? `Bring or upload: ${docs.join(', ')}.` : 'Bring your scope of work, any required plans, and contractor/license details.',
   ];
   if (d.approval_timeline?.simple || d.approval_timeline?.complex) {
     steps.push(`Plan around the approval timeline: ${d.approval_timeline.simple || d.approval_timeline.complex}.`);
   }
-  if (normalizeInspectionItems(d.inspections || []).length) {
+  if (normalizeInspectionItems(resolveInspectionItems(d, renderContext, job)).length) {
     steps.push('Post the permit on site and schedule inspections in the right order.');
   }
   return steps.slice(0, 4);
@@ -2835,12 +3050,13 @@ function buildEvidencePackCaveats(evidencePack, options = {}) {
   const evidenceMatchedFields = Array.isArray(evidencePack.matched_fields) ? evidencePack.matched_fields.filter(Boolean) : [];
 
   if (evidenceFailedFields.length) {
-    caveats.push(`Failed-closed evidence fields: ${evidenceFailedFields.slice(0, 6).join(', ')}. These fields were not shown as verified because no fresh matching evidence was loaded. Do not quote or file from those fields until AHJ-confirmed.`);
+    const safeLabels = [...new Set(evidenceFailedFields.slice(0, 6).map(customerFieldLabel))];
+    caveats.push(`Some field-specific details are not source-confirmed yet: ${safeLabels.join(', ')}. These details are kept separate from the permit-required answer.`);
   } else if (includeFailedClosedNone) {
-    caveats.push('Failed closed: none flagged by the local pack.');
+    caveats.push('No field-specific source-confirmation gaps were flagged.');
   }
   if (evidenceFailedFields.includes('fee_range')) {
-    caveats.push('Fee range is not verified in this evidence pack. Confirm fees with the AHJ before quoting.');
+    caveats.push('Fee information is not source-confirmed for this lookup.');
   }
   if (evidenceFailedFields.includes('inspections')) {
     caveats.push('Inspections are not verified in this evidence pack. Confirm required inspections and booking steps with the AHJ before scheduling work.');
@@ -2885,14 +3101,14 @@ function buildUncertaintyWarnings(d) {
     warnings.push('No city-level official-source match is confirmed for this lookup.');
   }
   if (missingFields.length) {
-    warnings.push(`Missing fields: ${missingFields.slice(0, 6).join(', ')}.`);
+    warnings.push(`Some fields need more source confirmation: ${[...new Set(missingFields.slice(0, 6).map(customerFieldLabel))].join(', ')}.`);
   }
   buildEvidencePackCaveats(evidencePack).forEach(caveat => warnings.push(caveat));
-  qualityWarnings.slice(0, 5).forEach(w => warnings.push(String(w)));
+  qualityWarnings.slice(0, 5).map(customerSafeText).filter(Boolean).forEach(w => warnings.push(w));
   validationIssues.slice(0, 4).forEach(issue => {
     const field = issue && (issue.field || issue.kind || issue.name);
     const message = issue && (issue.message || issue.reason || issue.detail);
-    warnings.push([field, message].filter(Boolean).join(': ') || 'Validation issue needs review.');
+    warnings.push([field ? customerFieldLabel(field) : '', message].filter(Boolean).join(': ') || 'Validation issue needs review.');
   });
   if (d._fee_unverified || /call|confirm|varies|estimate/i.test(String(d.fee_range || d.fee || ''))) {
     warnings.push('Fee is not firm. Confirm with the permit office before quoting the customer.');
@@ -2916,7 +3132,9 @@ function normalizeLicenseRequirementCopy(value) {
 }
 
 function isCommercialPrimaryScope(primaryScope) {
-  return String(primaryScope || '').startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial' || primaryScope === 'change_of_occupancy';
+  const scope = String(primaryScope || '');
+  return scope.startsWith('commercial_')
+    || ['multifamily', 'commercial', 'change_of_occupancy', 'medical_clinic_ti', 'office_ti'].includes(scope);
 }
 
 function normalizeInspectionItems(items) {
@@ -2945,9 +3163,11 @@ function renderResults(d, job, city, state) {
   window._lastLookupJob = job || '';
   window._lastLookupCity = city || '';
   window._lastLookupState = state || '';
+  const renderContext = getRenderingContext(d, job, city, state);
   const verdict = verdictState(d);
-  const permits = d.permits_required || [];
-  const insps = normalizeInspectionItems(d.inspections || []);
+  const permits = normalizePermitDisplayData(d, renderContext);
+  const safePermitName = getPermitDisplayName(d, renderContext);
+  const insps = normalizeInspectionItems(resolveInspectionItems(d, renderContext, job));
   const tips = d.pro_tips || [];
   const mistakes = d.common_mistakes || [];
   const checklist = d.what_to_bring || d.checklist || [];
@@ -2957,7 +3177,7 @@ function renderResults(d, job, city, state) {
   const officeAddress = d.apply_address || d.office_address || '';
   const jobAddress = currentResult?.address || '';
   const maps = d.apply_google_maps || d.maps_url || '';
-  const fee = d.fee_range || d.fee || d.cost || '';
+  const fee = evidenceFieldFailed(d, 'fee_range') ? '' : (d.fee_range || d.fee || d.cost || '');
   const applyUrl = d.apply_url || '';
   const applyPdf = d.apply_pdf || '';
   const countyNote = d.county_fallback_note || '';
@@ -2987,17 +3207,9 @@ function renderResults(d, job, city, state) {
     html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
   }
 
-  html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
+  html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify final permit type with the AHJ before quoting or starting work.</div>`;
 
   const uncertaintyWarnings = buildUncertaintyWarnings(d);
-  if (uncertaintyWarnings.length) {
-    html += `<div class="uncertainty-warning-card" style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:0 10px 20px rgba(220,38,38,0.08)">
-      <div style="font-size:13px;font-weight:900;color:#991b1b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⚠️ Verify before relying on this result</div>
-      <div style="font-size:14px;color:#7f1d1d;line-height:1.55;margin-bottom:10px;font-weight:650">This result has uncertainty that can affect bid price, permit intake, or final inspection. Confirm these items with the AHJ before quoting or starting work.</div>
-      <ul class="bullet-list" style="margin-top:8px;color:#7f1d1d">${uncertaintyWarnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
-    </div>`;
-  }
-
   const evidencePack = d[`_${'evidence'}_${'pack'}`] || {};
   const evidenceCaveats = buildEvidencePackCaveats(evidencePack, { includeFailedClosedNone: true });
   if (evidencePack.enabled) {
@@ -3010,9 +3222,9 @@ function renderResults(d, job, city, state) {
   }
 
   // Homeowner mode — special "Did they pull the permit?" section
-  if (searchMode === 'homeowner') {
+  if (renderContext.allow_homeowner_template && searchMode === 'homeowner') {
     const permitRequired = (verdict === 'yes' || verdict === 'maybe');
-    const permitName = (d.permits_required && d.permits_required[0] && d.permits_required[0].permit_type) || d.permit_name || 'a permit';
+    const permitName = safePermitName;
     const officeLink = maps ? `<a href="${esc(maps)}" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">Find the Permit Office →</a>` : '';
     const onlineLink = applyUrl ? `<a href="${esc(applyUrl)}" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">Search Permit Records Online →</a>` : '';
     if (permitRequired) {
@@ -3055,19 +3267,10 @@ function renderResults(d, job, city, state) {
     }
   }
 
-  // Data confidence badge
-  const dataSourceRaw = d.data_source || d._meta?.city_match_level || '';
-  const isCountyFB = d.county_fallback === true;
-  let confBadgeHtml = '';
-  if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified · official sources<span class="conf-tooltip">Cross-checked against official building-department sources. Verify final requirements with the AHJ before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Cross-checked against official sources · verify with AHJ before submitting</div>`;
-  } else if (dataSourceRaw === 'web_search') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
-  } else if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
-  } else {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🔴 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#b91c1c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
-  }
+  // Claim-specific confidence badge. Never show global Verified while the core
+  // permit type/category is unknown, unverified, or needs AHJ confirmation.
+  const confBadgeHtml = buildConfidenceBadgeHtml(d, renderContext, city, state);
+  const sourceLinks = getOfficialSourceLinks(d, city, state);
   const heroUpdatedRaw = d.last_verified_at || d._meta?.generated_at || '';
   const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown';
   const rulebookDepth = String(d.rulebook_depth || '').toUpperCase();
@@ -3116,7 +3319,7 @@ function renderResults(d, job, city, state) {
   // above-the-fold so the contractor sees WHERE the data came from before
   // scrolling. Filters to .gov / .us / known portal hosts; drops junk.
   const _PORTAL_HOSTS_OK = /(\.gov(\.us)?$|\.us$|\.edu$|\.mil$|accela\.com$|ladbs\.org$|ladbsservices2?\.lacity\.org$|austintexas\.gov$|phoenix\.gov$|cityofchicago\.org$|nyc\.gov$|sfgov\.org$|seattle\.gov$|denvergov\.org$|bostonpermits\.com$)/i;
-  const sourceHostChips = (Array.isArray(d.sources) ? d.sources : [])
+  const sourceHostChips = sourceLinks
     .map(s => typeof s === 'string' ? s : (s && s.url) || '')
     .filter(Boolean)
     .map(u => { try { const h = new URL(u).hostname.replace(/^www\./, ''); return _PORTAL_HOSTS_OK.test(h) ? { url: u, host: h } : null; } catch { return null; } })
@@ -3160,14 +3363,17 @@ function renderResults(d, job, city, state) {
 
   // Summary card (for YES/MAYBE)
   if (verdict !== 'no') {
-    const portalSel = permits.length > 0 ? permits[0].portal_selection : null;
-    const exactPermitName = portalSel || d.permit_name || d.permit_type || permits[0]?.permit_type || 'Permit details';
+    const portalSel = safePermitName;
+    const exactPermitName = safePermitName;
     html += `<div class="summary-card">
       <div class="section-label">📋 Permit Details</div>
       <div class="verdict-pill ${verdict==='yes'?'verdict-yes':'verdict-maybe'}">${verdict==='yes'?'✅ YES — Permit Required':'⚠️ MAYBE — Check With Building Dept'}</div>
       <div class="permit-name-big">${esc(exactPermitName)}</div>`;
-    if (portalSel && (d.permit_name || d.permit_type || permits[0]?.permit_type) && portalSel !== (d.permit_name || d.permit_type || permits[0]?.permit_type)) {
-      html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">Also known as: ${esc(d.permit_name || d.permit_type || permits[0]?.permit_type)}</div>`;
+    const aliasPermitName = [d.official_permit_name, d.official_application_category]
+      .map(name => sanitizePermitDisplayName(name, renderContext))
+      .find(name => name && name !== exactPermitName) || '';
+    if (portalSel && aliasPermitName && aliasPermitName !== exactPermitName) {
+      html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">Also known as: ${esc(aliasPermitName)}</div>`;
     }
     html += `<div class="big-meta">${esc(d.job_summary || d.permit_summary || d.summary || d.notes || 'Review the details below before starting the job.')}</div>`;
     if (fee) {
@@ -3175,7 +3381,7 @@ function renderResults(d, job, city, state) {
     }
     if (portalSel) {
       html += `<div class="portal-select-box">
-        <div class="portal-select-label">🎯 Exact permit name to ask for</div>
+        <div class="portal-select-label">🎯 Permit name to verify with AHJ</div>
         <div class="portal-select-value">${esc(portalSel)}</div>
       </div>`;
     }
@@ -3229,20 +3435,29 @@ function renderResults(d, job, city, state) {
 
   // How to Apply card (replaces misleading "Apply Online" button)
   if (verdict !== 'no') {
-    const portalName = (permits.length > 0 && permits[0].portal_selection) ? permits[0].portal_selection : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
+    const portalName = safePermitName;
+    const permitTypeNeedsAhjVerify = d.permit_type_verified === false || corePermitUnverified(d) || isFallbackPermitName(portalName);
     const cityName = city || 'your city';
     html += `<div class="how-to-apply-card">`;
     html += `<div class="section-label">📝 How to Apply</div>`;
-    html += `<div class="apply-permit-name"><div class="label">Ask for this exact permit</div><div class="value">${esc(portalName)}</div></div>`;
+    if (permitTypeNeedsAhjVerify) {
+      html += `<div class="apply-permit-name"><div class="label">Confirm exact permit category with AHJ</div><div class="value">${esc(portalName)}</div><div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45">Permit required, but PermitAssist did not verify the exact official filing category for this lookup.</div></div>`;
+    } else {
+      html += `<div class="apply-permit-name"><div class="label">Permit name to verify with AHJ</div><div class="value">${esc(portalName)}</div></div>`;
+    }
     html += `<ol class="apply-steps">`;
     html += `<li>Go to the <strong>${esc(cityName)}</strong> building department website or visit in person</li>`;
-    html += `<li>Search for or ask about <strong>"${esc(portalName)}"</strong></li>`;
+    html += permitTypeNeedsAhjVerify
+      ? `<li>Ask the AHJ which permit/category to file for this scope</li>`
+      : `<li>Search for or ask about <strong>"${esc(portalName)}"</strong></li>`;
     html += `<li>Create an account if it's your first time applying online</li>`;
     html += `<li>Upload your documents (plans, scope of work, contractor license)</li>`;
     html += `<li>Pay the application fee and save your confirmation number</li>`;
     html += `</ol>`;
     if (phone) {
-      html += `<div class="apply-phone-note">📞 Or call <a href="tel:${normalizePhone(phone)}" style="color:var(--green);font-weight:700">${esc(phone)}</a> and ask for <strong>"${esc(portalName)}"</strong></div>`;
+      html += permitTypeNeedsAhjVerify
+        ? `<div class="apply-phone-note">📞 Or call <a href="tel:${normalizePhone(phone)}" style="color:var(--green);font-weight:700">${esc(phone)}</a> and ask which permit/category to file for this scope</div>`
+        : `<div class="apply-phone-note">📞 Or call <a href="tel:${normalizePhone(phone)}" style="color:var(--green);font-weight:700">${esc(phone)}</a> and ask for <strong>"${esc(portalName)}"</strong></div>`;
     }
     if (maps) {
       html += `<a class="find-office-btn" href="${esc(maps)}" target="_blank" rel="noopener">🗺️ Find the Office</a>`;
@@ -3415,8 +3630,6 @@ function renderResults(d, job, city, state) {
   const isCached = d._cached || d._meta?.cached;
   const freshDate = genAt ? new Date(genAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const isStale = genAt && (Date.now() - new Date(genAt).getTime()) > 30 * 24 * 60 * 60 * 1000;
-  const sourceLinks = Array.isArray(d.sources) ? d.sources.filter(Boolean).slice(0, 5) : [];
-
   if (freshDate) {
     html += `<div class="cache-disclaimer">Data current as of ${freshDate}. Always verify fees with your local building department.</div>`;
     html += `<div class="freshness-row">
@@ -3556,7 +3769,8 @@ function renderResultAsReport(d, job, city, state) {
                      : '<span class="badge badge-gray">— verdict pending</span>';
 
   const permits = Array.isArray(d.permits_required) ? d.permits_required : [];
-  const permitName = d.permit_name || d.permit_type || (permits[0] && permits[0].permit_type) || '';
+  const renderContext = getRenderingContext(d, job, city, state);
+  const permitName = getPermitDisplayName(d, renderContext);
   const office = d.applying_office || '';
   const phone = d.apply_phone || '';
   const address = d.apply_address || '';
@@ -3564,7 +3778,7 @@ function renderResultAsReport(d, job, city, state) {
   const applyPdf = d.apply_pdf || '';
   const license = d.license_required || '';
   const cityReg = d.city_contractor_registration || '';
-  const fee = d.fee_range || '';
+  const fee = evidenceFieldFailed(d, 'fee_range') ? '' : (d.fee_range || '');
   const feeAdjusted = !!d._fee_adjusted;
   const tl = d.approval_timeline || {};
   const reqs = (Array.isArray(d.requirements) && d.requirements.length) ? d.requirements
@@ -3585,7 +3799,6 @@ function renderResultAsReport(d, job, city, state) {
   const confidenceReason = d.confidence_reason || '';
   const needsReview = !!d.needs_review;
   const hiddenTriggers = Array.isArray(d.hidden_triggers) ? d.hidden_triggers : [];
-  const reportUncertaintyWarnings = buildUncertaintyWarnings(d);
 
   // Field renderer helper — returns "<value>" or _missing marker
   const _v = (s) => {
@@ -3623,15 +3836,7 @@ function renderResultAsReport(d, job, city, state) {
   }
   html += `</div>`;
 
-  html += `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.5">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
-
-  if (reportUncertaintyWarnings.length) {
-    html += `<div style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:14px 18px;margin-bottom:14px;color:#7f1d1d">
-      <div style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#991b1b;margin-bottom:6px">⚠️ Report needs verification</div>
-      <div style="font-size:13px;line-height:1.5;margin-bottom:8px;font-weight:650">This warning is intentionally shown in report/print view so uncertainty is not hidden when the result is copied, shared, or saved as PDF.</div>
-      <ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.55">${reportUncertaintyWarnings.map(w => `<li>${_esc(w)}</li>`).join('')}</ul>
-    </div>`;
-  }
+  html += `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.5">⚠️ <strong>PermitAssist is guidance only.</strong> Verify final permit type with the AHJ before quoting or starting work.</div>`;
 
   // Hidden triggers — render BEFORE field 1 (per spec)
   if (hiddenTriggers.length > 0) {
@@ -3648,7 +3853,7 @@ function renderResultAsReport(d, job, city, state) {
         html += `<div style="font-size:11px;color:var(--text2);margin-top:4px"><strong>Action:</strong> ${_esc(t.likely_required_actions.join(' · '))}</div>`;
       }
       if (Array.isArray(t.citations) && t.citations.length) {
-        html += `<div style="font-size:11px;color:var(--muted);margin-top:2px"><strong>Code:</strong> ${_esc(t.citations.join(' · '))}</div>`;
+        html += `<div style="font-size:11px;color:var(--muted);margin-top:2px"><strong>Code:</strong> ${_esc(t.citations.map(customerSafeText).filter(Boolean).join(' · '))}</div>`;
       }
       html += `</div>`;
     });
@@ -3713,7 +3918,11 @@ function renderResultAsReport(d, job, city, state) {
   let missingBlock = '';
   const reportEvidencePack = d[`_${'evidence'}_${'pack'}`] || {};
   const reportEvidenceFailedFields = Array.isArray(reportEvidencePack.failed_closed_fields) ? reportEvidencePack.failed_closed_fields : [];
-  const missingRollup = [...missingFields, ...validationIssues.map(v => v.field || v.kind || ''), ...reportEvidenceFailedFields.map(field => `failed closed: ${field}`)].filter(Boolean);
+  const missingRollup = [
+    ...missingFields.map(customerFieldLabel),
+    ...validationIssues.map(v => customerFieldLabel(v.field || v.kind || '')),
+    ...reportEvidenceFailedFields.map(customerFieldLabel),
+  ].filter(Boolean);
   if (missingRollup.length === 0) {
     missingBlock = '✅ None flagged';
   } else {
@@ -3883,7 +4092,7 @@ function copyResult() {
   t += `Fee: ${fee}\n`;
   t += `Timeline: ${timeline}\n`;
   if (office || phone) t += `Apply at: ${office}${office && phone ? ' — ' : ''}${phone}\n`;
-  t += `\nPERMITASSIST GUIDANCE ONLY: Verify exact permit type with the AHJ before quoting or starting work.\n`;
+  t += `\nPERMITASSIST GUIDANCE ONLY: Verify final permit type with the AHJ before quoting or starting work.\n`;
   if (uncertaintyWarnings.length) {
     t += `\nVERIFY BEFORE RELYING:\n`;
     t += `Uncertainty / verification warnings:\n`;
@@ -4526,6 +4735,29 @@ function reloadResult(i) {
 }
 
 // ── Main lookup ──────────────────────────────────────────────────────────────
+function showLookupError(message, title = 'We could not finish that lookup') {
+  const safeMessage = message || 'Please check the details and try again.';
+  stopProgress();
+  const loading = document.getElementById('loading');
+  const form = document.getElementById('search-form');
+  const results = document.getElementById('results');
+  const inner = document.getElementById('results-inner');
+  if (loading) loading.style.display = 'none';
+  if (form) form.style.display = 'block';
+  if (results) results.style.display = 'block';
+  if (inner) {
+    inner.innerHTML = `
+      <section class="result-card" role="alert" aria-live="polite">
+        <div class="section-label">Lookup issue</div>
+        <h2>${esc(title)}</h2>
+        <p>${esc(safeMessage)}</p>
+        <p class="small-note">You can edit the job or location above and run it again.</p>
+      </section>
+    `;
+  }
+  document.getElementById('page-search').scrollTop = 0;
+}
+
 async function doLookup() {
   const raw = document.getElementById('query').value.trim();
   const address = document.getElementById('address')?.value.trim() || '';
@@ -4576,9 +4808,8 @@ async function doLookup() {
     const data = await res.json();
     syncLookupCounterFromResponse(res,data);
     if (res.status === 429) {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('search-form').style.display = 'block';
-      alert(data.message||"Too many requests. Please wait a minute and try again."); return;
+      showLookupError(data.message||"Too many requests. Please wait a minute and try again.", 'PermitAssist is busy');
+      return;
     }
     if (res.status === 403 && data.error==='free_limit_reached') {
       document.getElementById('loading').style.display = 'none';
@@ -4595,10 +4826,7 @@ async function doLookup() {
     renderResults(data, parsed.job_type, parsed.city, parsed.state);
     document.getElementById('page-search').scrollTop = 0;
   } catch (err) {
-    stopProgress();
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('search-form').style.display = 'block';
-    alert('Error: ' + err.message);
+    showLookupError(err.message, 'Lookup needs attention');
   }
 }
 
@@ -4631,9 +4859,10 @@ function stopVoice() {
 function runSampleLookup() {
   document.getElementById('city').value = 'Austin';
   document.getElementById('state').value = 'TX';
-  // Use a query that won't trigger any disambiguation rules
-  document.getElementById('query').value = 'HVAC replacement, residential AC unit swap, 3-ton split system';
-  setJobCategory('residential');
+  document.getElementById('zip').value = '78701';
+  // Commercial sample: restaurant tenant improvement.
+  document.getElementById('query').value = 'restaurant tenant improvement with commercial kitchen hood, grease interceptor, dining area, plumbing, electrical, and ADA restroom upgrades';
+  setJobCategory('commercial');
   checkShimmer();
   // Skip disambiguation and don't count as a free lookup
   _skipDisambig = true;

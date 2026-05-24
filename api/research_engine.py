@@ -109,6 +109,39 @@ _PERMIT_CACHE_ETAG_CHECK_FRACTION = 0.50  # at 50% of TTL, check ETag
 # requests' 5-minute timeout, which would freeze the whole pipeline.
 _OPENAI_REQUEST_TIMEOUT_S = 30
 _GEMINI_REQUEST_TIMEOUT_S = 30
+_OPENAI_REASONING_EFFORTS = {"low", "medium", "high"}
+_OPENAI_DEFAULT_TEMPERATURE_ONLY_PREFIXES = ("gpt-5", "o1", "o3", "o4", "o5")
+
+
+def _sanitize_openai_reasoning_effort(value: str | None) -> str | None:
+    """Allow reasoning A/B only for supported OpenAI reasoning-effort values."""
+    effort = (value or "").strip().lower()
+    if effort in {"", "none", "off", "false", "0"}:
+        return None
+    return effort if effort in _OPENAI_REASONING_EFFORTS else None
+
+
+def _openai_reasoning_effort_kwargs(value: str | None = None) -> dict:
+    effort = _sanitize_openai_reasoning_effort(
+        value if value is not None else os.environ.get("PERMITASSIST_OPENAI_REASONING_EFFORT")
+    )
+    return {"reasoning_effort": effort} if effort else {}
+
+
+def _openai_temperature_kwargs(model_name: str | None) -> dict:
+    """Return temperature only for OpenAI chat models that accept custom values.
+
+    Newer reasoning/default-temperature-only models reject non-default
+    temperature values. Keep the deterministic 0.1 setting for older chat
+    models, but omit it for gpt-5/o-series models so benchmark reasoning
+    requests do not fail before the model answers.
+    """
+    model = (model_name or "").strip().lower()
+    if model.startswith(_OPENAI_DEFAULT_TEMPERATURE_ONLY_PREFIXES):
+        return {}
+    return {"temperature": 0.1}
+
+
 ACCELA_BASE_URL = "https://apis.accela.com"
 ACCELA_DOCS_BASE_URL = "https://developer.accela.com/docs/api_reference"
 _accela_token = ""
@@ -2950,21 +2983,26 @@ _A4_SOLAR_ESS_TEXT_RE = re.compile(
     r")\b",
     re.I,
 )
+_A4_SOLAR_ESS_SCOPE_TERMS = (
+    "solar", "pv", "photovoltaic", "battery", "batteries", "ess",
+    "bess", "energy storage", "powerwall", "panel_with_storage",
+)
 
 
 def _a4_solar_ess_in_scope(result: dict, job_type: str) -> bool:
     """Return True only when solar/PV/battery/ESS is actually in scope."""
-    parts = [job_type or "", str((result or {}).get("_primary_scope") or "")]
-    if any(_A4_SOLAR_ESS_SCOPE_RE.search(p) for p in parts):
+    job_text = job_type or ""
+    primary_scope = str((result or {}).get("_primary_scope") or "")
+    if _has_unnegated_any(job_text, _A4_SOLAR_ESS_SCOPE_TERMS):
         return True
-    for trig in (result or {}).get("hidden_triggers") or []:
-        trig_id = ""
-        if isinstance(trig, dict):
-            trig_id = str(trig.get("id") or trig.get("trigger_id") or "")
-        else:
-            trig_id = str(trig or "")
-        if _A4_SOLAR_ESS_SCOPE_RE.search(trig_id):
-            return True
+    if _A4_SOLAR_ESS_SCOPE_RE.search(primary_scope):
+        return True
+    # Do not treat downstream hidden-trigger/advisory residue as proof that
+    # solar/ESS is in scope. PA30_020 showed that a plain panel/service upgrade
+    # can inherit a battery/ESS advisory trigger after assembly; using that
+    # residue here makes the cleanup skip the exact leak it is meant to remove.
+    # Actual solar/ESS positives are preserved by the original job text and
+    # primary-scope checks above.
     return False
 
 
@@ -3036,11 +3074,15 @@ def purge_solar_ess_residue(result: dict, job_type: str) -> dict:
     for key in ("pro_tips", "common_mistakes", "watch_out", "what_to_bring", "requirements", "checklist"):
         if key in result:
             result[key] = clean_list(result.get(key))
-    if "expert_notes" in result:
-        result["expert_notes"] = clean_list(result.get("expert_notes"), drop_keyword_dicts=True)
-    for key in ("inspections", "permits_required"):
+    for key in ("expert_notes", "hidden_triggers", "claim_citations", "code_citation"):
+        if key in result:
+            result[key] = clean_list(result.get(key), drop_keyword_dicts=True)
+    for key in ("inspections",):
         if isinstance(result.get(key), list):
             result[key] = [clean_dict(item) if isinstance(item, dict) else item for item in result[key]]
+    for key in ("permits_required", "permits_required_logic", "companion_permits"):
+        if isinstance(result.get(key), list):
+            result[key] = clean_list(result.get(key), drop_keyword_dicts=True)
     for key in ("sources", "state_expert_notes"):
         if isinstance(result.get(key), list):
             result[key] = clean_list(result[key], drop_keyword_dicts=True)
@@ -5043,8 +5085,8 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
     has_panel = _scope_has_any(job, ["panel upgrade", "service upgrade", "new panel", "subpanel", "sub-panel", "200 amp", "200amp", "400 amp", "400amp"])
     has_gas_line = _scope_has_any(job, ["gas line", "gas piping", "new gas", "relocate gas", "gas modification"])
     has_new_fixtures = _scope_has_any(job, ["new fixture", "new fixtures", "add fixture", "add fixtures", "fixture relocation", "new bathroom", "new kitchen"])
-    has_solar = _scope_has_any(job, ["solar", " pv", "photovoltaic"])
-    has_battery = _scope_has_any(job, ["battery", "ess", "energy storage", "powerwall"])
+    has_solar = _has_unnegated_any(job, ("solar", "pv", "photovoltaic"))
+    has_battery = _has_unnegated_any(job, ("battery", "ess", "energy storage", "powerwall"))
 
     logic: list[dict] = []
 
@@ -5129,6 +5171,30 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
                 "required_if": "grid-tied PV export, net metering, battery backup, meter changes, or utility PTO is included",
                 "certainty": "conditional",
                 "requirement_label": "May be required based on scope",
+            }],
+        }
+
+    if has_panel and not _scope_has_any(job, ["hvac", "condenser", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler", "water heater"]):
+        permits = [_scope_permit(
+            "Electrical Permit — Panel / Service Upgrade",
+            "Electrical - Panel Upgrade / Service Change",
+            "Required for panel/service upgrade work, utility coordination, load calculation, meter/main equipment changes, and service reconnect approval.",
+        )]
+        add_logic(
+            permits[0]["permit_type"],
+            "Panel/service upgrade is explicit electrical service equipment work; unrelated specialty permits are excluded when not stated as positive scope.",
+            "panel/service upgrade stated",
+        )
+        return {
+            "scope_classification": "residential_panel_upgrade",
+            "permits_required": permits,
+            "permits_required_logic": logic,
+            "companion_permits": [{
+                "permit_type": "Utility Disconnect/Reconnect / Service Release Coordination",
+                "reason": "Usually coordinated with the utility for service cutover and meter/main reconnection; AHJ may require final inspection/service release before utility re-energizes.",
+                "required_if": "utility disconnect/reconnect or service release is required by the AHJ/utility",
+                "certainty": "conditional",
+                "requirement_label": "Coordinate before work window",
             }],
         }
 
@@ -8110,7 +8176,7 @@ def scrub_hidden_trigger_internal_metadata(result: dict) -> dict:
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
-def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False) -> dict:
+def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False, openai_reasoning_effort: str | None = None) -> dict:
     """
     Research permit requirements for a job + location.
     v3: Better advice depth, small city fallback, PDF stripping, Google Maps fallback.
@@ -8362,12 +8428,13 @@ Return ONLY the JSON object."""
                 {"role": "system",  "content": SYSTEM_PROMPT},
                 {"role": "user",    "content": user_prompt},
             ],
-            temperature=0.1,
+            **_openai_temperature_kwargs(_openai_fallback_model),
             # 2026-04-27 evening: bumped 8000→16000 after Boban hit "Lookup failed"
             # on complex ADU/basement-conversion payloads. The model was producing
             # valid-but-truncated JSON when output approached the cap.
             max_completion_tokens=16000,
             response_format={"type": "json_object"},
+            **_openai_reasoning_effort_kwargs(openai_reasoning_effort),
         )
         return response.choices[0].message.content
 
@@ -9114,6 +9181,9 @@ Return ONLY the JSON object."""
     scrub_hidden_trigger_internal_metadata(result)
     apply_rulebook_depth(result, job_type, city, state)
     sanitize_non_food_office_breakroom_text(result, job_type)
+    # Final pass after validators/rulebook layers, which can add public notes,
+    # citations, or hidden-trigger summaries after the first cleanup.
+    purge_solar_ess_residue(result, job_type)
 
     if not suppress_cache_write:
         save_cache(key, job_type, job_category, city, state, zip_code, result)
