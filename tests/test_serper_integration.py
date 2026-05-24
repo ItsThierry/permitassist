@@ -112,6 +112,33 @@ def test_fee_verify_caveat_keeps_number_and_adds_source(monkeypatch):
     assert "verify in https://example.gov/fees before quoting" in result["fee_range"]
 
 
+def test_fee_verify_caveat_preserves_planning_estimate_label_without_double_prefix():
+    result = {
+        "fee_range": "Fee planning estimate: $16,500-$26,000+ (based on commercial TI complexity, not a quoted AHJ fee schedule). Confirm final fees with the AHJ before bidding or payment.",
+        "fee_source": {"url": "https://example.gov/fees"},
+    }
+
+    result = engine.apply_fee_verify_caveat(result)
+
+    assert result["fee_range"].startswith("Fee planning estimate:")
+    assert not result["fee_range"].startswith("Fee Estimate: Fee planning estimate:")
+    assert "verify in https://example.gov/fees before quoting" in result["fee_range"]
+    assert "**" not in result["fee_range"]
+
+
+def test_fee_verify_caveat_strips_markdown_from_cached_verified_fee_text():
+    result = {
+        "fee_range": "Fee Estimate: **$17,000-$25,000+** (planning estimate — not a quoted AHJ fee schedule). **Confirm final fees with the AHJ before bidding or payment.** — verify in old portal before quoting",
+        "fee_source": {"url": "https://example.gov/current-fees"},
+    }
+
+    result = engine.apply_fee_verify_caveat(result)
+
+    assert result["fee_range"].startswith("Fee Estimate: $17,000-$25,000+")
+    assert "**" not in result["fee_range"]
+    assert "verify in https://example.gov/current-fees before quoting" in result["fee_range"]
+
+
 @pytest.mark.parametrize(
     "failure",
     ["timeout", "401", "empty"],

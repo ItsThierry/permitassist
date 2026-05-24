@@ -6363,22 +6363,27 @@ def apply_fee_verify_caveat(result: dict) -> dict:
         fee_text = ", ".join(str(x) for x in fee if x)
     else:
         fee_text = str(fee or "").strip()
+    fee_text = fee_text.replace("**", "").strip()
     if not fee_text:
         return result
     fee_source = result.get("fee_source") if isinstance(result.get("fee_source"), dict) else {}
     source_url = fee_source.get("url") or ""
     if "verify in" in fee_text.lower() or "verify at" in fee_text.lower():
-        # Cached results may have an older verify URL. Keep the fee number but
-        # align inline caveat with the current fee_source when available.
-        if source_url and source_url not in fee_text:
-            result["fee_range"] = re.sub(
+        # Cached results may have an older verify URL or older Markdown emphasis.
+        # Keep the fee number, strip customer-visible Markdown, and align inline
+        # caveat with the current fee_source when available.
+        updated_fee_text = fee_text
+        if source_url and source_url not in updated_fee_text:
+            updated_fee_text = re.sub(
                 r"\s+—\s+verify\s+(?:in|at)\s+.+?(?:\s+before quoting)?$",
                 f" — verify in {source_url} before quoting",
-                fee_text,
+                updated_fee_text,
                 flags=re.I,
             )
+        result["fee_range"] = updated_fee_text
         return result
-    if fee_text.lower().startswith("fee estimate:"):
+    fee_lower = fee_text.lower()
+    if fee_lower.startswith("fee estimate:") or fee_lower.startswith("fee planning estimate:"):
         base = fee_text
     else:
         base = f"Fee Estimate: {fee_text}"

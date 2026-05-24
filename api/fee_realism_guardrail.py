@@ -554,10 +554,10 @@ def _build_fee_text(
         components.append(f"+ {_format_usd(midpoint)} {label} adder")
 
     return (
-        f"Fee Estimate: **{_format_usd(low_total)}-{_format_usd(high_total)}+** "
-        f"(planning estimate — based on commercial TI complexity, not a quoted AHJ fee schedule). Components: "
+        f"Fee planning estimate: {_format_usd(low_total)}-{_format_usd(high_total)}+ "
+        f"(based on commercial TI complexity, not a quoted AHJ fee schedule). Components: "
         f"{' '.join(components)}. "
-        f"**Confirm final fees with the AHJ before bidding or payment.**"
+        f"Confirm final fees with the AHJ before bidding or payment."
     )
 
 
