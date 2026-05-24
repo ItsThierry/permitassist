@@ -1819,6 +1819,9 @@ function setSearchMode(mode) {
 }
 const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function sourceUrl(src){return typeof src==='string'?src:((src&&src.url)||'')}
+function sourceTitle(src){return (src&&typeof src==='object'&&(src.title||src.name))||'Source'}
+function sourceHostname(src){try{return new URL(sourceUrl(src)).hostname}catch(_){return sourceUrl(src)}}
 
 const TRADE_QUESTIONS = {
   'hvac': [
@@ -2813,7 +2816,7 @@ function getNextSteps(d, job, city, state) {
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])].slice(0, 3);
   const steps = [
     `Ask for \"${permitName}\" with the ${d.applying_office || `${city} building department`}.`,
-    d.fee_range ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Confirm the fee and save the receipt / confirmation number.',
+    d._fee_adjusted ? 'Fee shown is a planning estimate only — confirm exact amounts with the AHJ before bidding or payment.' : (d.fee_range ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Confirm the fee and save the receipt / confirmation number.'),
     docs.length ? `Bring or upload: ${docs.join(', ')}.` : 'Bring your scope of work, any required plans, and contractor/license details.',
   ];
   if (d.approval_timeline?.simple || d.approval_timeline?.complex) {
@@ -2989,26 +2992,6 @@ function renderResults(d, job, city, state) {
 
   html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
 
-  const uncertaintyWarnings = buildUncertaintyWarnings(d);
-  if (uncertaintyWarnings.length) {
-    html += `<div class="uncertainty-warning-card" style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:0 10px 20px rgba(220,38,38,0.08)">
-      <div style="font-size:13px;font-weight:900;color:#991b1b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⚠️ Verify before relying on this result</div>
-      <div style="font-size:14px;color:#7f1d1d;line-height:1.55;margin-bottom:10px;font-weight:650">This result has uncertainty that can affect bid price, permit intake, or final inspection. Confirm these items with the AHJ before quoting or starting work.</div>
-      <ul class="bullet-list" style="margin-top:8px;color:#7f1d1d">${uncertaintyWarnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
-    </div>`;
-  }
-
-  const evidencePack = d[`_${'evidence'}_${'pack'}`] || {};
-  const evidenceCaveats = buildEvidencePackCaveats(evidencePack, { includeFailedClosedNone: true });
-  if (evidencePack.enabled) {
-    html += `<div class="evidence-exposure-card" style="background:#fff7ed;border:2px solid #ea580c;border-radius:12px;padding:16px 18px;margin-bottom:14px;color:#7c2d12">
-      <div style="font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Evidence-pack exposure limits</div>
-      <ul class="bullet-list" style="margin-top:8px;line-height:1.55">
-        ${evidenceCaveats.map(caveat => `<li>${esc(caveat)}</li>`).join('')}
-      </ul>
-    </div>`;
-  }
-
   // Homeowner mode — special "Did they pull the permit?" section
   if (searchMode === 'homeowner') {
     const permitRequired = (verdict === 'yes' || verdict === 'maybe');
@@ -3175,7 +3158,7 @@ function renderResults(d, job, city, state) {
     }
     if (portalSel) {
       html += `<div class="portal-select-box">
-        <div class="portal-select-label">🎯 Exact permit name to ask for</div>
+        <div class="portal-select-label">🎯 Permit name to ask for</div>
         <div class="portal-select-value">${esc(portalSel)}</div>
       </div>`;
     }
@@ -3233,7 +3216,7 @@ function renderResults(d, job, city, state) {
     const cityName = city || 'your city';
     html += `<div class="how-to-apply-card">`;
     html += `<div class="section-label">📝 How to Apply</div>`;
-    html += `<div class="apply-permit-name"><div class="label">Ask for this exact permit</div><div class="value">${esc(portalName)}</div></div>`;
+    html += `<div class="apply-permit-name"><div class="label">Ask for this permit</div><div class="value">${esc(portalName)}</div></div>`;
     html += `<ol class="apply-steps">`;
     html += `<li>Go to the <strong>${esc(cityName)}</strong> building department website or visit in person</li>`;
     html += `<li>Search for or ask about <strong>"${esc(portalName)}"</strong></li>`;
@@ -3415,7 +3398,7 @@ function renderResults(d, job, city, state) {
   const isCached = d._cached || d._meta?.cached;
   const freshDate = genAt ? new Date(genAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const isStale = genAt && (Date.now() - new Date(genAt).getTime()) > 30 * 24 * 60 * 60 * 1000;
-  const sourceLinks = Array.isArray(d.sources) ? d.sources.filter(Boolean).slice(0, 5) : [];
+  const sourceLinks = Array.isArray(d.sources) ? d.sources.filter(src => sourceUrl(src)).slice(0, 5) : [];
 
   if (freshDate) {
     html += `<div class="cache-disclaimer">Data current as of ${freshDate}. Always verify fees with your local building department.</div>`;
@@ -3427,7 +3410,10 @@ function renderResults(d, job, city, state) {
     </div>`;
   }
   if (sourceLinks.length) {
-    html += `<div class="card"><div class="section-label">🔗 Official Sources</div><ul class="bullet-list">${sourceLinks.map(src => `<li><a href="${esc(src)}" target="_blank" rel="noopener">${esc(src)}</a></li>`).join('')}</ul></div>`;
+    html += `<div class="card"><div class="section-label">🔗 Sources Checked</div><ul class="bullet-list">${sourceLinks.map(src => {
+      const url = sourceUrl(src);
+      return `<li><strong>${esc(sourceTitle(src))}</strong> — <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></li>`;
+    }).join('')}</ul></div>`;
   }
 
   // Enhanced citation badges (Feature 3) — evidence-first for all verdicts
@@ -3441,7 +3427,7 @@ function renderResults(d, job, city, state) {
       html += `<div style="margin-top:8px;font-size:12px;color:var(--muted);font-style:italic">💬 Show this section to your building department if they question the requirement.</div>`;
       if (sourceLinks.length) {
         html += `<div class="source-links">`;
-        sourceLinks.forEach(src => { html += `<a class="source-link" href="${esc(src)}" target="_blank" rel="noopener">🔗 ${esc(new URL(src).hostname)}</a>`; });
+        sourceLinks.forEach(src => { const url = sourceUrl(src); html += `<a class="source-link" href="${esc(url)}" target="_blank" rel="noopener">🔗 ${esc(sourceTitle(src))}: ${esc(sourceHostname(src))}</a>`; });
         html += `</div>`;
       }
       html += `</div>`;
@@ -3625,14 +3611,6 @@ function renderResultAsReport(d, job, city, state) {
 
   html += `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.5">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
 
-  if (reportUncertaintyWarnings.length) {
-    html += `<div style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:14px 18px;margin-bottom:14px;color:#7f1d1d">
-      <div style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#991b1b;margin-bottom:6px">⚠️ Report needs verification</div>
-      <div style="font-size:13px;line-height:1.5;margin-bottom:8px;font-weight:650">This warning is intentionally shown in report/print view so uncertainty is not hidden when the result is copied, shared, or saved as PDF.</div>
-      <ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.55">${reportUncertaintyWarnings.map(w => `<li>${_esc(w)}</li>`).join('')}</ul>
-    </div>`;
-  }
-
   // Hidden triggers — render BEFORE field 1 (per spec)
   if (hiddenTriggers.length > 0) {
     html += `<div style="background:#fef9f9;border:2px solid #fca5a5;border-radius:12px;padding:16px 20px;margin-bottom:14px">`;
@@ -3686,7 +3664,7 @@ function renderResultAsReport(d, job, city, state) {
   html += row(8, 'Required documents', _list(reqs, 8));
   // 9. Fees
   let feeBlock = _v(fee);
-  if (feeAdjusted && fee) feeBlock += `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">(structured floor — fee verified against per-scope/per-jurisdiction baseline)</div>`;
+  if (feeAdjusted && fee) feeBlock += `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">Planning estimate only — based on commercial TI complexity, not a quoted AHJ fee schedule. Confirm final fees with the AHJ before bidding or payment.</div>`;
   html += row(9, 'Fees', feeBlock);
   // 10. Inspections
   html += row(10, 'Inspections', _list(inspections, 6));
@@ -3720,17 +3698,18 @@ function renderResultAsReport(d, job, city, state) {
     missingBlock = _list(missingRollup, 6);
   }
   html += row(16, 'Missing / uncertain items', missingBlock);
-  // 17. Official sources checked
+  // 17. Sources checked
   let sourcesBlock = '';
   if (sources.length === 0) {
     sourcesBlock = _missing;
   } else {
     sourcesBlock = '<ul style="margin:4px 0 0 18px;padding:0">' + sources.slice(0, 6).map(src => {
       const url = typeof src === 'string' ? src : (src && src.url) || '';
-      return url ? `<li style="margin:2px 0"><a href="${_esc(url)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(url)}</a></li>` : '';
+      const title = typeof src === 'string' ? '' : (src && (src.title || src.name)) || '';
+      return url ? `<li style="margin:2px 0"><strong>${_esc(title || 'Source')}</strong> — <a href="${_esc(url)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(url)}</a></li>` : '';
     }).filter(Boolean).join('') + '</ul>';
   }
-  html += row(17, 'Official sources checked', sourcesBlock);
+  html += row(17, 'Sources checked', sourcesBlock);
   // 18. Last checked + confidence
   const lastBlock = `<div style="display:flex;flex-direction:column;gap:3px"><span>${lastVerifiedLabel ? _esc(lastVerifiedLabel) : _missing}</span>${confidenceReason ? `<span style="font-size:12px;color:var(--text2)">${_esc(confidenceReason)}</span>` : ''}</div>`;
   html += row(18, 'Last checked + confidence', lastBlock);
@@ -3877,18 +3856,12 @@ function copyResult() {
   const timeline = d.approval_timeline?.simple || d.approval_timeline?.complex || 'Varies';
   const office = d.applying_office || '';
   const phone = d.apply_phone || '';
-  const uncertaintyWarnings = buildUncertaintyWarnings(d);
   let t = `PERMIT SUMMARY — ${job} in ${city}, ${state}\n`;
   t += `Permit needed: ${permitName}\n`;
   t += `Fee: ${fee}\n`;
   t += `Timeline: ${timeline}\n`;
   if (office || phone) t += `Apply at: ${office}${office && phone ? ' — ' : ''}${phone}\n`;
   t += `\nPERMITASSIST GUIDANCE ONLY: Verify exact permit type with the AHJ before quoting or starting work.\n`;
-  if (uncertaintyWarnings.length) {
-    t += `\nVERIFY BEFORE RELYING:\n`;
-    t += `Uncertainty / verification warnings:\n`;
-    t += uncertaintyWarnings.map(w => `- ${w}`).join('\n') + '\n';
-  }
   t += `Generated by PermitAssist (permitassist.io)`;
   navigator.clipboard.writeText(t).then(() => showCopy('✅ Copied!')).catch(() => alert(t));
 }
@@ -4249,7 +4222,7 @@ function downloadReport() {
   const tips = (d.pro_tips || []).slice(0, 4);
   const mistakes = (d.common_mistakes || []).slice(0, 4);
   const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
-  const sources = (d.sources || []).slice(0, 5);
+  const sources = (d.sources || []).filter(s => sourceUrl(s)).slice(0, 5);
   const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
@@ -4276,7 +4249,10 @@ function downloadReport() {
   const mistakeList = mistakes.map(m => `<li style="padding:3px 0;font-size:13px">${efn(m)}</li>`).join('');
   const inspList = inspections.map((ins, i) => `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:28px;font-size:12px;font-weight:700;color:#2563eb">${i+1}</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0"><strong style="font-size:13px">${efn(ins.stage||ins.title||'Inspection')}</strong>${ins.description ? `<div style="font-size:12px;color:#475569;margin-top:2px">${efn(ins.description)}</div>` : ''}${ins.timing ? `<div style="font-size:11px;color:#2563eb;font-weight:700;margin-top:2px">${efn(ins.timing)}</div>` : ''}</td></tr>`).join('');
   const stepsHtml = nextSteps.map((s,i) => `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:32px"><span style="background:#2563eb;color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${i+1}</span></td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:13px">${efn(s)}</td></tr>`).join('');
-  const sourceList = sources.map(s => `<li style="font-size:11px;padding:2px 0"><a href="${efn(s)}" style="color:#2563eb">${efn(s)}</a></li>`).join('');
+  const sourceList = sources.map(s => {
+    const url = sourceUrl(s);
+    return `<li style="font-size:11px;padding:2px 0"><strong>${efn(sourceTitle(s))}</strong> — <a href="${efn(url)}" style="color:#2563eb">${efn(url)}</a></li>`;
+  }).join('');
 
   const docSection = docItems ? `
   <div class="section">

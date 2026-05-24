@@ -1734,6 +1734,9 @@ function setSearchMode(mode) {
 }
 const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function sourceUrl(src){return typeof src==='string'?src:((src&&src.url)||'')}
+function sourceTitle(src){return (src&&typeof src==='object'&&(src.title||src.name))||'Source'}
+function sourceHostname(src){try{return new URL(sourceUrl(src)).hostname}catch(_){return sourceUrl(src)}}
 
 // ── Inspection Checklists (hardcoded by trade) ────────────────────────────────
 const INSPECTION_CHECKLISTS = {
@@ -2532,7 +2535,7 @@ function renderResults(d, job, city, state) {
     }
     if (portalSel) {
       html += `<div class="portal-select-box">
-        <div class="portal-select-label">🎯 Exact permit name to ask for</div>
+        <div class="portal-select-label">🎯 Permit name to ask for</div>
         <div class="portal-select-value">${esc(portalSel)}</div>
       </div>`;
     }
@@ -2558,7 +2561,7 @@ function renderResults(d, job, city, state) {
     const cityName = city || 'your city';
     html += `<div class="how-to-apply-card">`;
     html += `<div class="section-label">📝 How to Apply</div>`;
-    html += `<div class="apply-permit-name"><div class="label">Ask for this exact permit</div><div class="value">${esc(portalName)}</div></div>`;
+    html += `<div class="apply-permit-name"><div class="label">Ask for this permit</div><div class="value">${esc(portalName)}</div></div>`;
     html += `<ol class="apply-steps">`;
     html += `<li>Go to the <strong>${esc(cityName)}</strong> building department website or visit in person</li>`;
     html += `<li>Search for or ask about <strong>"${esc(portalName)}"</strong></li>`;
@@ -2723,7 +2726,7 @@ function renderResults(d, job, city, state) {
   const isCached = d._cached || d._meta?.cached;
   const freshDate = genAt ? new Date(genAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const isStale = genAt && (Date.now() - new Date(genAt).getTime()) > 30 * 24 * 60 * 60 * 1000;
-  const sourceLinks = Array.isArray(d.sources) ? d.sources.filter(Boolean).slice(0, 5) : [];
+  const sourceLinks = Array.isArray(d.sources) ? d.sources.filter(src => sourceUrl(src)).slice(0, 5) : [];
 
   if (freshDate) {
     html += `<div class="cache-disclaimer">Data current as of ${freshDate}. Always verify fees with your local building department.</div>`;
@@ -2735,7 +2738,10 @@ function renderResults(d, job, city, state) {
     </div>`;
   }
   if (sourceLinks.length) {
-    html += `<div class="card"><div class="section-label">🔗 Official Sources</div><ul class="bullet-list">${sourceLinks.map(src => `<li><a href="${esc(src)}" target="_blank" rel="noopener">${esc(src)}</a></li>`).join('')}</ul></div>`;
+    html += `<div class="card"><div class="section-label">🔗 Sources Checked</div><ul class="bullet-list">${sourceLinks.map(src => {
+      const url = sourceUrl(src);
+      return `<li><strong>${esc(sourceTitle(src))}</strong> — <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></li>`;
+    }).join('')}</ul></div>`;
   }
 
   // Enhanced citation badges (Feature 3) — evidence-first for all verdicts
@@ -2749,7 +2755,7 @@ function renderResults(d, job, city, state) {
       html += `<div style="margin-top:8px;font-size:12px;color:var(--muted);font-style:italic">💬 Show this section to your building department if they question the requirement.</div>`;
       if (sourceLinks.length) {
         html += `<div class="source-links">`;
-        sourceLinks.forEach(src => { html += `<a class="source-link" href="${esc(src)}" target="_blank" rel="noopener">🔗 ${esc(new URL(src).hostname)}</a>`; });
+        sourceLinks.forEach(src => { const url = sourceUrl(src); html += `<a class="source-link" href="${esc(url)}" target="_blank" rel="noopener">🔗 ${esc(sourceTitle(src))}: ${esc(sourceHostname(src))}</a>`; });
         html += `</div>`;
       }
       html += `</div>`;
@@ -3281,7 +3287,7 @@ function downloadReport() {
   const tips = (d.pro_tips || []).slice(0, 4);
   const mistakes = (d.common_mistakes || []).slice(0, 4);
   const inspections = (d.inspections || []).slice(0, 6);
-  const sources = (d.sources || []).slice(0, 5);
+  const sources = (d.sources || []).filter(s => sourceUrl(s)).slice(0, 5);
   const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
@@ -3308,7 +3314,10 @@ function downloadReport() {
   const mistakeList = mistakes.map(m => `<li style="padding:3px 0;font-size:13px">${efn(m)}</li>`).join('');
   const inspList = inspections.map((ins, i) => `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:28px;font-size:12px;font-weight:700;color:#2563eb">${i+1}</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0"><strong style="font-size:13px">${efn(ins.stage||ins.title||'Inspection')}</strong>${ins.description ? `<div style="font-size:12px;color:#475569;margin-top:2px">${efn(ins.description)}</div>` : ''}${ins.timing ? `<div style="font-size:11px;color:#2563eb;font-weight:700;margin-top:2px">${efn(ins.timing)}</div>` : ''}</td></tr>`).join('');
   const stepsHtml = nextSteps.map((s,i) => `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:32px"><span style="background:#2563eb;color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${i+1}</span></td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:13px">${efn(s)}</td></tr>`).join('');
-  const sourceList = sources.map(s => `<li style="font-size:11px;padding:2px 0"><a href="${efn(s)}" style="color:#2563eb">${efn(s)}</a></li>`).join('');
+  const sourceList = sources.map(s => {
+    const url = sourceUrl(s);
+    return `<li style="font-size:11px;padding:2px 0"><strong>${efn(sourceTitle(s))}</strong> — <a href="${efn(url)}" style="color:#2563eb">${efn(url)}</a></li>`;
+  }).join('');
 
   const docSection = docItems ? `
   <div class="section">

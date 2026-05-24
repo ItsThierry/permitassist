@@ -1132,21 +1132,75 @@ def _render_safe_link(url: str, label: str | None = None) -> str:
     return f"<a target='_blank' rel='noopener noreferrer' href='{href}'>{text}</a>"
 
 
-def _source_dicts(result: dict) -> list[dict]:
+_STATE_LABELS = {
+    "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
+    "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
+    "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+    "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+    "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi", "MO": "Missouri",
+    "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey",
+    "NM": "New Mexico", "NY": "New York", "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio",
+    "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina",
+    "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont",
+    "VA": "Virginia", "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming",
+    "DC": "District of Columbia", "PR": "Puerto Rico",
+}
+_GENERIC_SOURCE_TITLES = frozenset({"", "official", "official source", "source"})
+
+
+def _source_title_needs_tier_label(title: str, tier: str) -> bool:
+    normalized = (title or "").strip().lower()
+    if normalized in _GENERIC_SOURCE_TITLES:
+        return True
+    # Do not let an upstream title that says "Official ..." override a lower
+    # provenance tier. TDLR/ADA/NFPA can be useful references, but they are not
+    # the local AHJ source for the lookup.
+    return tier in {"state", "universal"} and "official" in normalized
+
+
+def _source_tier_label(tier: str, city: str | None, state: str | None) -> str:
+    if tier == "ahj":
+        return f"Official {city.strip()} source" if city and city.strip() else "Official local source"
+    if tier == "state":
+        state_key = (state or "").upper().strip()
+        label = _STATE_LABELS.get(state_key) or (state or "").strip() or "State"
+        return f"{label} state reference"
+    if tier == "universal":
+        return "National code reference"
+    return "Source"
+
+
+def _source_dicts(result: dict, city: str | None = None, state: str | None = None) -> list[dict]:
+    from research_engine import classify_source_tier
+
+    city = city or result.get("city") or result.get("jurisdiction_city") or ""
+    state = state or result.get("state") or result.get("jurisdiction_state") or ""
     out = []
     for item in result.get("sources") or []:
         if isinstance(item, str):
             url = _safe_external_url(item)
-            if url:
-                out.append({"url": url, "title": "Official source", "snippet": ""})
+            if not url:
+                continue
+            tier = classify_source_tier(url, city, state, result=result)
+            if tier == "wrong":
+                continue
+            out.append({"url": url, "title": _source_tier_label(tier, city, state), "snippet": ""})
         elif isinstance(item, dict):
             url = _safe_external_url(item.get("url") or item.get("link") or "")
-            if url:
-                out.append({
-                    "url": url,
-                    "title": str(item.get("title") or item.get("name") or "Official source"),
-                    "snippet": str(item.get("snippet") or item.get("quote") or item.get("text") or ""),
-                })
+            if not url:
+                continue
+            tier = classify_source_tier(url, city, state, result=result)
+            if tier == "wrong":
+                continue
+            upstream_title = str(item.get("title") or item.get("name") or "").strip()
+            title = upstream_title
+            if _source_title_needs_tier_label(upstream_title, tier):
+                title = _source_tier_label(tier, city, state)
+            out.append({
+                "url": url,
+                "title": title,
+                "snippet": str(item.get("snippet") or item.get("quote") or item.get("text") or ""),
+            })
     return out
 
 
@@ -1165,7 +1219,7 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     primary = _primary_permit_text(result)
     primary_l = primary.lower()
     commercial = _is_commercial_scope(job_type, result)
-    sources = _source_dicts(result)
+    sources = _source_dicts(result, city=city, state=state)
 
     if commercial:
         has_commercial_primary = any(token in primary_l for token in _COMMERCIAL_PRIMARY_TOKENS)
@@ -1232,13 +1286,32 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
     return result
 
 
-def build_claim_citations(result: dict) -> list[dict]:
+def build_claim_citations(result: dict, city: str | None = None, state: str | None = None) -> list[dict]:
     """Attach field-level provenance without inventing quotes.
 
     If retrieved snippets are unavailable, the claim is labeled needs_verification
     rather than pretending a quote exists.
     """
-    sources = _source_dicts(result)
+    sources = _source_dicts(result, city=city, state=state)
+    has_locality_context = bool(
+        (city or result.get("city") or result.get("jurisdiction_city") or "").strip()
+        or (state or result.get("state") or result.get("jurisdiction_state") or "").strip()
+    )
+    if not sources and not has_locality_context:
+        for item in result.get("sources") or []:
+            if isinstance(item, str):
+                url = _safe_external_url(item)
+                title = "Source"
+                snippet = ""
+            elif isinstance(item, dict):
+                url = _safe_external_url(item.get("url") or item.get("link") or "")
+                title = str(item.get("title") or item.get("name") or "Source")
+                snippet = str(item.get("snippet") or item.get("quote") or item.get("text") or "")
+            else:
+                continue
+            if url:
+                sources = [{"url": url, "title": title, "snippet": snippet}]
+                break
     first = sources[0] if sources else {}
     checked = utc_now().date().isoformat()
 
@@ -1516,7 +1589,7 @@ def render_white_label_report_html(data: dict) -> str:
     client = html.escape(str(data.get("client_name") or "Client / Property"))
     job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
     location = html.escape(", ".join(x for x in [str(data.get("city") or ""), str(data.get("state") or "")] if x))
-    citations = result.get("claim_citations") or build_claim_citations(result)
+    citations = result.get("claim_citations") or build_claim_citations(result, data.get("city"), data.get("state"))
     permits = result.get("permits_required") or []
     permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or "<li>Permit type needs AHJ verification.</li>"
     safe_apply_url = _safe_external_url(result.get('apply_url') or '')
@@ -3215,7 +3288,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     permits  = data.get("permits_required", [])
     tips     = data.get("pro_tips", [])[:4]
     bring    = data.get("what_to_bring", [])[:5]
-    sources  = [s for s in (data.get("sources") or [])[:4] if s]
+    source_entries = _source_dicts(data, city=city, state=state)[:4]
     license_r = esc(data.get("license_required", ""))
 
     # Build permit rows
@@ -3236,7 +3309,11 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
 
     tips_html    = "".join(f'<li style="padding:3px 0;color:#475569;font-size:13px">{esc(t)}</li>' for t in tips)
     bring_html   = "".join(f'<li style="padding:3px 0;color:#475569;font-size:13px">{esc(b)}</li>' for b in bring)
-    sources_html = "".join(f'<li style="padding:3px 0"><a href="{esc(s)}" style="color:#1a56db;font-size:12px">{esc(s)}</a></li>' for s in sources)
+    sources_html = "".join(
+        f'<li style="padding:3px 0"><strong style="font-size:12px;color:#334155">{esc(s.get("title") or "Source")}</strong> — '
+        f'<a href="{esc(s.get("url") or "")}" style="color:#1a56db;font-size:12px">{esc(s.get("url") or "")}</a></li>'
+        for s in source_entries
+    )
 
     contact_section = ""
     if office or phone or addr:
@@ -5241,6 +5318,23 @@ class Handler(BaseHTTPRequestHandler):
                         result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
                     result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
+                    existing_citations = result.get("claim_citations") if isinstance(result.get("claim_citations"), list) else []
+                    display_sources = _source_dicts(result, city=city, state=state)
+                    result["source_urls"] = [s.get("url") for s in display_sources if s.get("url")]
+                    result["sources"] = display_sources
+                    if existing_citations:
+                        from research_engine import is_url_allowed_for_locality
+                        filtered_citations = []
+                        for citation in existing_citations:
+                            if not isinstance(citation, dict):
+                                continue
+                            source_url = str(citation.get("source_url") or "")
+                            if source_url and not is_url_allowed_for_locality(source_url, city, state, result=result):
+                                continue
+                            filtered_citations.append(citation)
+                        result["claim_citations"] = filtered_citations
+                    elif not (isinstance(result.get("_evidence_pack"), dict) and result["_evidence_pack"].get("enabled")):
+                        build_claim_citations(result, city, state)
 
                     # Record stats and beta telemetry
                     record_lookup_stat(job_type, city, state, is_cached)

@@ -433,15 +433,27 @@ _PLATFORM_VENDOR_DOMAINS = frozenset({
 _PLATFORM_VENDOR_DOMAINS_BY_SPECIFICITY = tuple(sorted(_PLATFORM_VENDOR_DOMAINS, key=lambda d: (-len(d), d)))
 
 _AHJ_DOMAIN_ALLOWLIST: dict[tuple[str, str], set[str]] = {
-    ("phoenix", "az"): {"phoenix.gov", "az.gov", "azdeq.gov", "azroc.gov", "roc.az.gov"},
-    ("las vegas", "nv"): {"clarkcountynv.gov", "lasvegasnevada.gov", "nv.gov", "nvcontractorsboard.com"},
-    ("clark county", "nv"): {"clarkcountynv.gov", "nv.gov", "nvcontractorsboard.com"},
-    ("seattle", "wa"): {"seattle.gov", "kingcounty.gov", "wa.gov", "lni.wa.gov", "ecology.wa.gov"},
-    ("los angeles", "ca"): {"lacity.org", "ladbs.org", "ca.gov", "cslb.ca.gov"},
-    ("dallas", "tx"): {"dallascityhall.com", "dallascounty.org", "tx.gov", "tdlr.texas.gov", "texas.gov", "txdmv.gov"},
+    ("phoenix", "az"): {"phoenix.gov"},
+    ("las vegas", "nv"): {"clarkcountynv.gov", "lasvegasnevada.gov"},
+    ("clark county", "nv"): {"clarkcountynv.gov"},
+    ("seattle", "wa"): {"seattle.gov", "kingcounty.gov"},
+    ("los angeles", "ca"): {"lacity.org", "ladbs.org"},
+    ("dallas", "tx"): {"dallascityhall.com", "dallascounty.org"},
+    ("denver", "co"): {"denvergov.org"},
     # 2026-05-01 stress100 manual verification: City of Fredericksburg, TX uses fbgtx.org
     # as its official municipal domain; OpenClaw scorer correctly kept it flagged until verified.
     ("fredericksburg", "tx"): {"fbgtx.org"},
+}
+
+# State-level official references are useful sources, but they are not city/AHJ
+# proof. Keep them separate so renderers can label them truthfully and so a
+# Phoenix query never accepts a Texas state URL as local AHJ evidence.
+_STATE_OFFICIAL_DOMAINS: dict[str, set[str]] = {
+    "AZ": {"az.gov", "azdeq.gov", "azroc.gov", "roc.az.gov"},
+    "CA": {"ca.gov", "cslb.ca.gov"},
+    "NV": {"nv.gov", "nvcontractorsboard.com"},
+    "TX": {"tx.gov", "texas.gov", "tdlr.texas.gov", "txdmv.gov"},
+    "WA": {"wa.gov", "lni.wa.gov", "ecology.wa.gov"},
 }
 
 # Explicit wrong-AHJ regressions from cda4106/four-city review. Keep these ahead
@@ -450,6 +462,20 @@ _CITY_LOCALITY_EXCLUSIONS = {
     ("los angeles", "ca"): {"pw.lacounty.gov", "dpw.lacounty.gov", "lacounty.gov", "ldh.la.gov"},
     ("dallas", "tx"): {"lebanon.in.gov", "govinfo.gov"},
 }
+
+
+def _normalized_state_code(state: str) -> str:
+    s = (state or "").strip()
+    if not s:
+        return ""
+    upper = s.upper()
+    if upper in _US_STATE_NAMES:
+        return upper
+    compact = re.sub(r"[^a-z]", "", s.lower())
+    for code, name in _US_STATE_NAMES.items():
+        if compact == name or compact == name.replace(" ", ""):
+            return code
+    return upper
 
 
 def _city_match_tokens(city: str, state: str) -> set[str]:
@@ -464,12 +490,12 @@ def _city_match_tokens(city: str, state: str) -> set[str]:
         ("san francisco", "CA"): {"sfgov", "sfdbi"},
         ("phoenix", "AZ"): {"phoenix", "shapephx"},
     }
-    tokens.update(aliases.get((c, (state or "").upper().strip()), set()))
+    tokens.update(aliases.get((c, _normalized_state_code(state)), set()))
     return tokens
 
 
 def _state_match_tokens(state: str) -> set[str]:
-    s = (state or "").upper().strip()
+    s = _normalized_state_code(state)
     if not s or s not in _US_STATE_NAMES:
         return set()
     return {s.lower(), _US_STATE_NAMES[s], _US_STATE_NAMES[s].replace(" ", "")}
@@ -506,7 +532,7 @@ def _verified_city_domains(city: str, state: str) -> set[str]:
 
 def locality_allowed_domains(city: str, state: str) -> set[str]:
     city_key = (city or "").lower().strip()
-    state_key = (state or "").lower().strip()
+    state_key = (_normalized_state_code(state) or state or "").lower().strip()
     domains = set(_AHJ_DOMAIN_ALLOWLIST.get((city_key, state_key), set()))
     domains |= _verified_city_domains(city, state)
     # Shared SaaS permit portals must not become blanket AHJ proof from the DB/allowlist.
@@ -560,47 +586,87 @@ def _vendor_locality_text(domain: str, url: str) -> str:
     return " ".join(host_prefixes + [parsed.path or "", parsed.query or ""])
 
 
-def is_url_allowed_for_locality(url: str, city: str, state: str, result: dict | None = None) -> bool:
+SOURCE_TIER_AHJ = "ahj"
+SOURCE_TIER_STATE = "state"
+SOURCE_TIER_UNIVERSAL = "universal"
+SOURCE_TIER_WRONG = "wrong"
+
+
+def classify_source_tier(url: str, city: str, state: str, result: dict | None = None) -> str:
+    """Classify a source URL relative to the requested jurisdiction.
+
+    Returns one of: ``ahj``, ``state``, ``universal``, or ``wrong``.
+    ``wrong`` must not be rendered to the customer for this lookup.
+    """
     domain = _normalized_source_domain(url)
     if not domain:
-        return False
+        return SOURCE_TIER_WRONG
+
     city_key = (city or "").lower().strip()
-    state_key = (state or "").lower().strip()
+    state_upper = _normalized_state_code(state)
+    state_key = (state_upper or state or "").lower().strip()
+
+    # Explicit known wrong-AHJ exclusions always win.
     if _host_matches_any(domain, _CITY_LOCALITY_EXCLUSIONS.get((city_key, state_key), set())):
-        return False
-    if _host_matches_any(domain, _UNIVERSAL_LOCALITY_DOMAINS):
-        return True
-    allowed = locality_allowed_domains(city, state)
-    if _host_matches_any(domain, allowed):
-        return True
+        return SOURCE_TIER_WRONG
+
+    # City/local AHJ allowlist + verified city DB domains.
+    if _host_matches_any(domain, locality_allowed_domains(city, state)):
+        return SOURCE_TIER_AHJ
+
+    # Shared SaaS permit portals are AHJ evidence only when their tenant/path
+    # carries the requested locality token. The vendor host alone is not enough.
     if _host_matches_any(domain, _PLATFORM_VENDOR_DOMAINS):
-        # Vendor portals are legitimate permit infrastructure, but the shared
-        # vendor host alone does not prove jurisdiction. Require the URL account
-        # text itself (tenant subdomain, path, or query) to carry the queried AHJ
-        # token with token boundaries. Do not let applying_office/portal prose
-        # corroborate a wrong portal URL.
-        return _text_has_locality_token(_vendor_locality_text(domain, url), city, state)
+        if _text_has_locality_token(_vendor_locality_text(domain, url), city, state):
+            return SOURCE_TIER_AHJ
+        return SOURCE_TIER_WRONG
+
     if classify_source_url(url) == SOURCE_CLASS_EXCLUDED:
-        return False
-    # Conservative fallback for non-seeded cities: official host/path with city token AND same-state TLD.
+        return SOURCE_TIER_WRONG
+
+    # State-level official references for the requested state only.
+    state_domains = _STATE_OFFICIAL_DOMAINS.get(state_upper, set()) if state_upper else set()
+    if state_domains and _host_matches_any(domain, state_domains):
+        return SOURCE_TIER_STATE
+
+    # Universal/national/federal references are useful, but not local AHJ proof.
+    if _host_matches_any(domain, _UNIVERSAL_LOCALITY_DOMAINS):
+        return SOURCE_TIER_UNIVERSAL
+
+    # Conservative fallback for non-seeded cities: official host/path with city
+    # token AND same-state official host condition.
     parsed = urlparse(url)
     full = f"{domain} {(parsed.path or '').lower()}"
     if _text_has_locality_token(full, city, state):
         if state_key and (domain.endswith(f".{state_key}.gov") or domain.endswith(f".{state_key}.us")):
-            return True
+            return SOURCE_TIER_AHJ
         if domain.endswith((".gov", ".us")) and any(tok in full for tok in _state_match_tokens(state) if len(tok) >= 3):
-            return True
-    return False
+            return SOURCE_TIER_AHJ
+    return SOURCE_TIER_WRONG
 
 
-def filter_sources_by_locality(sources: list[str], city: str, state: str, result: dict | None = None) -> list[str]:
+def is_url_allowed_for_locality(url: str, city: str, state: str, result: dict | None = None) -> bool:
+    """Allow AHJ, same-state official, and universal references; drop wrong AHJs."""
+    return classify_source_tier(url, city, state, result=result) != SOURCE_TIER_WRONG
+
+
+def _source_item_url(src) -> str:
+    if isinstance(src, str):
+        return src
+    if isinstance(src, dict):
+        return str(src.get("url") or src.get("link") or "")
+    return ""
+
+
+def filter_sources_by_locality(sources: list, city: str, state: str, result: dict | None = None) -> list:
     if not isinstance(sources, list) or not sources:
         return sources or []
-    kept: list[str] = []
+    kept: list = []
     for src in sources:
-        if not isinstance(src, str) or not src.startswith("http"):
+        url = _source_item_url(src)
+        if not isinstance(url, str) or not url.startswith("http"):
             continue
-        if is_url_allowed_for_locality(src, city, state, result=result):
+        if is_url_allowed_for_locality(url, city, state, result=result):
             kept.append(src)
     return kept
 
@@ -632,16 +698,17 @@ def _source_url_incompatible_with_scope(src: str, scope_text: str) -> bool:
     return _source_incompatible_with_scope_text(item, scope_text, "sources")
 
 
-def filter_sources_by_scope(sources: list[str], scope_text: str) -> tuple[list[str], list[str]]:
+def filter_sources_by_scope(sources: list, scope_text: str) -> tuple[list, list[str]]:
     if not isinstance(sources, list) or not sources:
         return sources or [], []
-    kept: list[str] = []
+    kept: list = []
     dropped: list[str] = []
     for src in sources:
-        if not isinstance(src, str) or not src.startswith("http"):
+        url = _source_item_url(src)
+        if not isinstance(url, str) or not url.startswith("http"):
             continue
-        if _source_url_incompatible_with_scope(src, scope_text):
-            dropped.append(src)
+        if _source_url_incompatible_with_scope(url, scope_text):
+            dropped.append(url)
             continue
         kept.append(src)
     return kept, dropped
@@ -657,9 +724,11 @@ def apply_source_locality_hard_block(result: dict, city: str, state: str, job_ty
     locality_sources = filter_sources_by_locality(pre_sources, city, state, result=result)
     scoped_sources, scope_dropped = filter_sources_by_scope(locality_sources, job_type)
     result["sources"] = scoped_sources
+    kept_locality_urls = {_source_item_url(src) for src in locality_sources}
     for src in pre_sources:
-        if src not in locality_sources:
-            dropped.append({"field": "sources", "url": src, "kind": "source_locality"})
+        src_url = _source_item_url(src)
+        if src_url and src_url not in kept_locality_urls:
+            dropped.append({"field": "sources", "url": src_url, "kind": "source_locality"})
     for src in scope_dropped:
         dropped.append({"field": "sources", "url": src, "kind": "source_scope"})
 

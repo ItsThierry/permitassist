@@ -555,9 +555,9 @@ def _build_fee_text(
 
     return (
         f"Fee Estimate: **{_format_usd(low_total)}-{_format_usd(high_total)}+** "
-        f"(structured floor — see breakdown). Components: "
+        f"(planning estimate — based on commercial TI complexity, not a quoted AHJ fee schedule). Components: "
         f"{' '.join(components)}. "
-        f"**Verify against current fee schedule before quoting.**"
+        f"**Confirm final fees with the AHJ before bidding or payment.**"
     )
 
 
@@ -650,9 +650,11 @@ def apply_fee_realism_guardrail(result: dict, job_type: str, city: str, state: s
             adders=adders,
         )
         guarded["_fee_adjusted"] = True
+        guarded["_fee_source_backed"] = False
         guarded["_fee_floor_check"] = "llm_below_floor_adjusted"
     else:
         guarded["_fee_adjusted"] = False
+        guarded["_fee_source_backed"] = False
         guarded["_fee_floor_check"] = "llm_above_floor"
 
     return guarded

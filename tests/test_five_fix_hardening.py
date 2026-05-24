@@ -50,10 +50,39 @@ def test_bug5_commercial_restaurant_ti_fee_floor_overrides_residential_trade_anc
     )
 
     assert guarded["_fee_adjusted"] is True
+    assert guarded["_fee_source_backed"] is False
     assert guarded["_fee_floor_components"]["scope"] == "commercial_restaurant"
     assert guarded["_fee_floor_components"]["structured_low"] >= 15000
     assert "$219" not in guarded["fee_range"]
-    assert "structured floor" in guarded["fee_range"]
+    assert "planning estimate" in guarded["fee_range"]
+    assert "not a quoted AHJ fee schedule" in guarded["fee_range"]
+
+
+def test_bug5_heuristic_fee_not_presented_as_ahj_fee_schedule():
+    """Heuristic floor override must not look like an official/source-backed AHJ fee."""
+    result = {
+        "fee_range": "$219 electrical + $558 HVAC",
+        "hidden_triggers": [{"key": "change_of_occupancy"}],
+    }
+
+    guarded = apply_fee_realism_guardrail(
+        result,
+        "3,200 sf commercial restaurant tenant improvement",
+        "Dallas",
+        "TX",
+        "commercial_restaurant",
+    )
+
+    assert guarded["_fee_adjusted"] is True
+    assert guarded["_fee_source_backed"] is False
+    # Must clearly label as planning estimate, not AHJ authority
+    assert "planning estimate" in guarded["fee_range"].lower()
+    assert "not a quoted AHJ fee schedule" in guarded["fee_range"]
+    # Must not use misleading "verified" language
+    assert "fee verified" not in guarded["fee_range"].lower()
+    assert "structured floor" not in guarded["fee_range"]
+    # Must include call-to-action to confirm with AHJ
+    assert "AHJ" in guarded["fee_range"]
 
 
 def test_bug5_residential_trade_scope_remains_noop():

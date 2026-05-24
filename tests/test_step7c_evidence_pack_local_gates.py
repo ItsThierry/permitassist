@@ -611,6 +611,38 @@ def test_permit_endpoint_bypasses_cache_when_local_pack_enabled(tmp_path, monkey
     assert body["apply_url"] is None
 
 
+def test_permit_endpoint_preserves_empty_evidence_pack_citations_when_pack_fails_closed(tmp_path, monkeypatch):
+    pack_path = _write_pack(tmp_path / "pack.json")
+    data = json.loads(pack_path.read_text(encoding="utf-8"))
+    data["metadata"]["evidence_pack_version"] = "future_unreviewed_schema_v99"
+    pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _enable_pack(monkeypatch, pack_path)
+    server = _import_server(tmp_path, monkeypatch)
+    calls = []
+
+    def fake_research(*args, **kwargs):
+        calls.append(kwargs)
+        return copy.deepcopy(_base_engine_result())
+
+    server.research_permit = fake_research
+    token = server.create_session_token("paid@example.com")
+    server.is_paid_user = lambda email: True
+
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json_response(
+            f"{live.base}/api/permit",
+            {"job_type": "office tenant improvement", "city": "Denver", "state": "CO", "job_category": "commercial"},
+            {"X-Session-Token": token},
+        )
+
+    assert status == 200
+    assert calls and calls[0]["use_cache"] is False
+    assert body["_evidence_pack"]["enabled"] is True
+    assert body["_evidence_pack"]["contract_status"] == "invalid_version"
+    assert body["_evidence_pack"]["matched_fields"] == []
+    assert body["claim_citations"] == []
+
+
 def test_preview_only_permit_without_sample_header_stays_normal_no_cache_bypass(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     _enable_pack(monkeypatch, pack_path)
