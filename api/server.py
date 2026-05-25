@@ -362,6 +362,7 @@ def sanitize_customer_visible_result(result: dict) -> dict:
     )
     confidence_fields = {"confidence_reason", "warning", "warnings", "quality_warnings"}
     fee_fields = {"fee_range", "fee_estimate", "total_cost_estimate", "fee_calculator", "value", "claim"}
+    internal_keys = {"needs_review", "confidence_modifier", "complexity_modifier", "jurisdiction_multiplier"}
 
     def has_internal(text: str) -> bool:
         lowered = str(text or "").lower()
@@ -401,7 +402,10 @@ def sanitize_customer_visible_result(result: dict) -> dict:
         if isinstance(value, dict):
             cleaned = {}
             for child_key, child_value in value.items():
-                next_value = scrub(child_value, str(child_key))
+                key_name = str(child_key)
+                if key_name.lower() in internal_keys:
+                    continue
+                next_value = scrub(child_value, key_name)
                 if next_value not in ("", [], {}):
                     cleaned[child_key] = next_value
             return cleaned

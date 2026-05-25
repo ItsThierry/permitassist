@@ -72,6 +72,7 @@ def _assert_no_internal_customer_terms(value):
     forbidden = [
         "Engine flagged",
         "Needs review",
+        "needs_review",
         "Verified · official sources",
         "Hidden triggers",
         "Planning estimate only",
@@ -86,6 +87,7 @@ def _assert_no_internal_customer_terms(value):
 
 def _result_with_internal_engine_wording():
     return {
+        "needs_review": True,
         "permit_name": "Commercial Tenant Improvement Building Permit",
         "permit_verdict": "YES",
         "permit_required": True,
