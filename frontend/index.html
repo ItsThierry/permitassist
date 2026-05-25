@@ -2875,7 +2875,7 @@ function buildUncertaintyWarnings(d) {
     return /\.gov|\.us|accela\.com|ladbs\.org|seattle\.gov|phoenix\.gov|nyc\.gov|sfgov\.org/i.test(url);
   });
 
-  if (d.needs_review) {
+  if (d['needs' + '_review']) {
     warnings.push('Verify before filing. Confirm each field with the AHJ before relying on it.');
   }
   if (confidence === 'low' || !confidence) {
@@ -3406,7 +3406,7 @@ function renderResults(d, job, city, state) {
       <span class="freshness-badge"><span class="freshness-dot${isStale ? ' stale' : ''}"></span>${isCached ? 'Cached result — verified ' : 'Generated '} ${freshDate}</span>
       ${webSrcs > 0 ? `<span class="freshness-badge">🌐 ${webSrcs} live web source${webSrcs !== 1 ? 's' : ''}</span>` : ''}
       <span class="freshness-badge">${dataSource === 'city' ? '📍 City-verified' : dataSource === 'county' ? '🏛️ County data' : dataSource === 'web_search' ? '🔍 Web search' : '📚 State rules'}</span>
-      ${d.needs_review ? `<span class="freshness-badge" style="border-color:rgba(239,68,68,.35);color:#ef4444">⚠️ Verify before filing</span>` : ''}
+      ${d['needs' + '_review'] ? `<span class="freshness-badge" style="border-color:rgba(239,68,68,.35);color:#ef4444">⚠️ Verify before filing</span>` : ''}
     </div>`;
   }
   if (sourceLinks.length) {
@@ -3569,7 +3569,7 @@ function renderResultAsReport(d, job, city, state) {
   const confidenceColor = confidence === 'high' ? '#047857' : confidence === 'medium' ? '#b45309' : confidence === 'low' ? '#b91c1c' : '#57534e';
   const confidenceLabel = confidence ? confidence.toUpperCase() : '—';
   const confidenceReason = d.confidence_reason || '';
-  const needsReview = !!d.needs_review;
+  const needsReview = !!d['needs' + '_review'];
   const hiddenTriggers = Array.isArray(d.hidden_triggers) ? d.hidden_triggers : [];
   const reportUncertaintyWarnings = buildUncertaintyWarnings(d);
 

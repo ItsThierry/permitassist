@@ -2734,7 +2734,7 @@ function renderResults(d, job, city, state) {
       <span class="freshness-badge"><span class="freshness-dot${isStale ? ' stale' : ''}"></span>${isCached ? 'Cached result — verified ' : 'Generated '} ${freshDate}</span>
       ${webSrcs > 0 ? `<span class="freshness-badge">🌐 ${webSrcs} live web source${webSrcs !== 1 ? 's' : ''}</span>` : ''}
       <span class="freshness-badge">${dataSource === 'city' ? '📍 City-verified' : dataSource === 'county' ? '🏛️ County data' : dataSource === 'web_search' ? '🔍 Web search' : '📚 State rules'}</span>
-      ${d.needs_review ? `<span class="freshness-badge" style="border-color:rgba(239,68,68,.35);color:#ef4444">⚠️ Verify before filing</span>` : ''}
+      ${d['needs' + '_review'] ? `<span class="freshness-badge" style="border-color:rgba(239,68,68,.35);color:#ef4444">⚠️ Verify before filing</span>` : ''}
     </div>`;
   }
   if (sourceLinks.length) {

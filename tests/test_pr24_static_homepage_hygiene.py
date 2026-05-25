@@ -24,6 +24,7 @@ CUSTOMER_FORBIDDEN_COPY = [
     "Engine flagged this answer",
     "Verified · official sources",
     "Needs review</span>",
+    "needs_review",
     "Planning estimate only",
 ]
 
