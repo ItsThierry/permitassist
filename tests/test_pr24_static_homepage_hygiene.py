@@ -20,6 +20,12 @@ PRIVATE_TERMS = [
     "PERMITASSIST_EVIDENCE_PACK_PREVIEW_TOKEN",
     "_evidence_pack",
 ]
+CUSTOMER_FORBIDDEN_COPY = [
+    "Engine flagged this answer",
+    "Verified · official sources",
+    "Needs review</span>",
+    "Planning estimate only",
+]
 
 
 def test_static_customer_pages_do_not_ship_private_evidence_pack_terms():
@@ -27,3 +33,28 @@ def test_static_customer_pages_do_not_ship_private_evidence_pack_terms():
         html = (ROOT / rel).read_text(encoding="utf-8").lower()
         leaked = [term for term in PRIVATE_TERMS if term.lower() in html]
         assert leaked == []
+
+
+def test_customer_result_static_copy_uses_soft_public_trust_labels():
+    html = (ROOT / "frontend/index.html").read_text(encoding="utf-8")
+
+    leaked = [term for term in CUSTOMER_FORBIDDEN_COPY if term in html]
+    assert leaked == []
+
+    assert "Verify before filing" in html
+    assert "Official path found" in html
+    assert "Planning estimate" in html
+
+
+def test_customer_static_pages_do_not_ship_internal_engine_labels():
+    pages = [ROOT / "frontend/index.html", ROOT / "frontend/report.html"]
+    pages.extend(sorted((ROOT / "frontend/trades").glob("*.html")))
+
+    leaks = {}
+    for page in pages:
+        html = page.read_text(encoding="utf-8")
+        page_leaks = [term for term in CUSTOMER_FORBIDDEN_COPY if term in html]
+        if page_leaks:
+            leaks[str(page.relative_to(ROOT))] = page_leaks
+
+    assert leaks == {}

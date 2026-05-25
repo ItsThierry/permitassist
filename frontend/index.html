@@ -2876,7 +2876,7 @@ function buildUncertaintyWarnings(d) {
   });
 
   if (d.needs_review) {
-    warnings.push('Engine flagged this answer for human review. Verify each field with the AHJ before relying on it.');
+    warnings.push('Verify before filing. Confirm each field with the AHJ before relying on it.');
   }
   if (confidence === 'low' || !confidence) {
     warnings.push('Low or missing confidence. Do not quote or start work from this result until the building department confirms it.');
@@ -3043,9 +3043,9 @@ function renderResults(d, job, city, state) {
   const isCountyFB = d.county_fallback === true;
   let confBadgeHtml = '';
   if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Verified · official sources<span class="conf-tooltip">Cross-checked against official building-department sources. Verify final requirements with the AHJ before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Cross-checked against official sources · verify with AHJ before submitting</div>`;
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Official path found<span class="conf-tooltip">Official building-department path found. Verify final requirements with the AHJ before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Official path found · verify with AHJ before submitting</div>`;
   } else if (dataSourceRaw === 'web_search') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Based on local research<span class="conf-tooltip">Based on local research, verify fee before quoting</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Based on local research, verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Official path found<span class="conf-tooltip">Local source path found. Verify fee before quoting.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Official path found · verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
   } else if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
     confBadgeHtml = `<span class="confidence-badge" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟠 AI estimate<span class="conf-tooltip">AI estimate, confirm with building dept</span></span><div style="font-size:13px;color:#c2410c;margin-top:6px;font-weight:600">AI estimate, confirm with building dept</div>`;
   } else {
@@ -3165,20 +3165,20 @@ function renderResults(d, job, city, state) {
     html += `</div>`;
   }
 
-  // Companion permits warning
+  // Related permits warning
   const companionPermits = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
   if (companionPermits.length > 0) {
     html += `<div class="companion-card" style="background:#fffbeb; border:2px solid #f59e0b; border-radius:12px; padding:18px 20px; margin-bottom:16px;">
-      <div class="section-label" style="color:#92400e; margin-bottom:10px;">⚠️ This Job Requires Multiple Permits</div>
+      <div class="section-label" style="color:#92400e; margin-bottom:10px;">⚠️ Related permits</div>
       ${companionPermits.map(cp => `<div style="margin-bottom:12px;">
-        <div style="font-size:16px; font-weight:800; color:#92400e; margin-bottom:4px;">⚠️ Companion Permit Required: ${esc(cp.permit_type)}</div>
+        <div style="font-size:16px; font-weight:800; color:#92400e; margin-bottom:4px;">⚠️ Related permit: ${esc(cp.permit_type)}</div>
         <div style="font-size:14px; color:#b45309; font-weight:600;">Contractors are often cited for missing this.</div>
         <div style="font-size:13px; color:#78350f; margin-top:6px;">${esc(cp.reason)}</div>
       </div>`).join('')}
     </div>`;
   }
 
-  // 2026-04-28: Hidden Triggers card — the moat feature both Opus + GPT-5.5
+  // 2026-04-28: Scope triggers card — the moat feature both Opus + GPT-5.5
   // deep-thinks named as the unbeatable differentiator. Surfaces permit
   // blockers the contractor didn't ask about (hood→fire suppression, B→A-2
   // sprinkler retrofit, restroom→ADA path-of-travel 20%, hillside→geotech,
@@ -3194,8 +3194,8 @@ function renderResults(d, job, city, state) {
     const sevBorder = sev => sev === 'high' ? '#fecaca' : sev === 'medium' ? '#fde68a' : '#e2e8f0';
     const sevLabel = sev => sev === 'high' ? '🔴 High' : sev === 'medium' ? '🟡 Medium' : '⚪ Low';
     html += `<div class="card" style="border:2px solid #d97706; background:linear-gradient(135deg, rgba(217,119,6,0.06), rgba(255,255,255,0.98));padding:18px 20px;margin-bottom:16px;">
-      <div class="section-label" style="color:#92400e;margin-bottom:6px">⚠️ Triggers You Didn't Ask About</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">Hidden permit blockers contractors get rejected for. Each one is a separate review track or filing — missing any can block your final inspection or Certificate of Occupancy.</div>
+      <div class="section-label" style="color:#92400e;margin-bottom:6px">⚠️ Scope triggers</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">Scope items that can require separate review or filing. Missing one can block final inspection or Certificate of Occupancy.</div>
       ${sevSorted.map(t => `<div style="background:${sevBg(t.severity)};border:1px solid ${sevBorder(t.severity)};border-radius:8px;padding:12px 14px;margin-bottom:10px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">
           <div style="font-size:14px;font-weight:800;color:${sevColor(t.severity)};line-height:1.35">${esc(t.title || '')}</div>
@@ -3406,7 +3406,7 @@ function renderResults(d, job, city, state) {
       <span class="freshness-badge"><span class="freshness-dot${isStale ? ' stale' : ''}"></span>${isCached ? 'Cached result — verified ' : 'Generated '} ${freshDate}</span>
       ${webSrcs > 0 ? `<span class="freshness-badge">🌐 ${webSrcs} live web source${webSrcs !== 1 ? 's' : ''}</span>` : ''}
       <span class="freshness-badge">${dataSource === 'city' ? '📍 City-verified' : dataSource === 'county' ? '🏛️ County data' : dataSource === 'web_search' ? '🔍 Web search' : '📚 State rules'}</span>
-      ${d.needs_review ? `<span class="freshness-badge" style="border-color:rgba(239,68,68,.35);color:#ef4444">⚠️ Needs review</span>` : ''}
+      ${d.needs_review ? `<span class="freshness-badge" style="border-color:rgba(239,68,68,.35);color:#ef4444">⚠️ Verify before filing</span>` : ''}
     </div>`;
   }
   if (sourceLinks.length) {
@@ -3605,17 +3605,17 @@ function renderResultAsReport(d, job, city, state) {
   html += `<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">${_esc(job || 'Permit Lookup')}</div>`;
   html += `<div style="font-size:13px;color:var(--text2);margin-bottom:8px">📍 ${_esc(city || '')}${city && state ? ', ' : ''}${_esc(state || '')}${lastVerifiedLabel ? ` · Last verified ${_esc(lastVerifiedLabel)}` : ''}</div>`;
   if (needsReview) {
-    html += `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400e;margin-top:8px">⚠️ <strong>Engine flagged this answer for review</strong> — verify each field with the AHJ before relying on it.</div>`;
+    html += `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400e;margin-top:8px">⚠️ <strong>Verify before filing</strong> — confirm each field with the AHJ before relying on it.</div>`;
   }
   html += `</div>`;
 
   html += `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.5">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
 
-  // Hidden triggers — render BEFORE field 1 (per spec)
+  // Scope triggers — render BEFORE field 1 (per spec)
   if (hiddenTriggers.length > 0) {
     html += `<div style="background:#fef9f9;border:2px solid #fca5a5;border-radius:12px;padding:16px 20px;margin-bottom:14px">`;
-    html += `<div style="font-size:11px;font-weight:800;color:#991b1b;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">⚠️ Triggers You Didn't Ask About</div>`;
-    html += `<div style="font-size:13px;color:#7f1d1d;margin-bottom:10px;line-height:1.5">PermitAssist found ${hiddenTriggers.length} permit blocker${hiddenTriggers.length === 1 ? '' : 's'} hidden in your scope.</div>`;
+    html += `<div style="font-size:11px;font-weight:800;color:#991b1b;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">⚠️ Scope triggers</div>`;
+    html += `<div style="font-size:13px;color:#7f1d1d;margin-bottom:10px;line-height:1.5">PermitAssist found ${hiddenTriggers.length} scope trigger${hiddenTriggers.length === 1 ? '' : 's'} that may require separate review or filing.</div>`;
     hiddenTriggers.forEach(t => {
       const sev = (t.severity || '').toLowerCase();
       const sc = sev === 'high' ? { bg:'#fef2f2', tag:'#dc2626', label:'#991b1b' } : sev === 'medium' ? { bg:'#fffbeb', tag:'#d97706', label:'#92400e' } : { bg:'#eff6ff', tag:'#2563eb', label:'#1e40af' };
@@ -3632,7 +3632,7 @@ function renderResultAsReport(d, job, city, state) {
     });
     html += `</div>`;
   } else {
-    html += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#166534">✅ No hidden triggers detected for this scope.</div>`;
+    html += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#166534">✅ No scope triggers detected for this scope.</div>`;
   }
 
   // The 18 fields — locked order
@@ -3664,7 +3664,7 @@ function renderResultAsReport(d, job, city, state) {
   html += row(8, 'Required documents', _list(reqs, 8));
   // 9. Fees
   let feeBlock = _v(fee);
-  if (feeAdjusted && fee) feeBlock += `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">Planning estimate only — based on commercial TI complexity, not a quoted AHJ fee schedule. Confirm final fees with the AHJ before bidding or payment.</div>`;
+  if (feeAdjusted && fee) feeBlock += `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">Planning estimate — based on commercial TI complexity, not a quoted AHJ fee schedule. Confirm final fees with the AHJ before bidding or payment.</div>`;
   html += row(9, 'Fees', feeBlock);
   // 10. Inspections
   html += row(10, 'Inspections', _list(inspections, 6));
@@ -4315,7 +4315,7 @@ function downloadReport() {
     <div class="permit-name-box"><div class="permit-name-label">&#127919; Permit to Ask For</div><div class="permit-name-val">${efn(permitName)}</div></div>
     ${d.job_summary ? `<div style="font-size:13px;color:#475569;margin-top:10px;line-height:1.6">${efn(d.job_summary)}</div>` : ''}
   </div>
-  ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; This Job Requires Multiple Permits</div><table>${companionRows}</table><div style="font-size:12px;color:#78350f;margin-top:8px">&#128161; Pull companion permits at the same time to avoid stop-work orders.</div></div>` : ''}
+  ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; Related permits</div><table>${companionRows}</table><div style="font-size:12px;color:#78350f;margin-top:8px">&#128161; Pull related permits at the same time to avoid stop-work orders.</div></div>` : ''}
   ${cityRegNote ? `<div class="city-reg-alert"><div class="section-label" style="color:#92400e">&#127963;&#65039; City Contractor Registration Required</div><div style="font-size:13px;color:#78350f;line-height:1.6">${efn(cityRegNote)}</div></div>` : ''}
   ${fee || tlText || licenseNote ? `<div class="section"><div class="section-label">&#128176; Cost &middot; &#8987; Timeline &middot; &#129527; Who Pulls It</div><table class="kv">${fee ? `<tr><td>Fee</td><td><strong style="color:#059669;font-size:14px">${efn(fee)}</strong><div style="font-size:11px;color:#64748b;margin-top:4px">— typically added to job invoice</div></td></tr>` : ''}${tlText ? `<tr><td>Timeline</td><td>${efn(tlText)}</td></tr>` : ''}${tl.complex && tl.simple ? `<tr><td>Plan review</td><td>${efn(tl.complex)}</td></tr>` : ''}${licenseNote ? `<tr><td>Who pulls it</td><td>${efn(licenseNote)}</td></tr>` : ''}</table></div>` : ''}
   ${office || phone ? `<div class="section"><div class="section-label">&#128222; Where to Apply</div>${phone ? `<div style="font-size:19px;font-weight:900;color:#2563eb">${efn(phone)}</div>` : ''}${office ? `<div style="font-size:14px;font-weight:700;margin-top:4px">${efn(office)}</div>` : ''}${offAddr ? `<div style="font-size:13px;color:#475569;margin-top:2px">${efn(offAddr)}</div>` : ''}${maps ? `<div style="margin-top:6px;font-size:12px"><a href="${efn(maps)}" style="color:#2563eb">&#128506;&#65039; Maps: ${efn(maps)}</a></div>` : ''}${applyUrl ? `<div style="margin-top:4px;font-size:12px"><a href="${efn(applyUrl)}" style="color:#2563eb">&#127760; Online: ${efn(applyUrl)}</a></div>` : ''}</div>` : ''}
@@ -4443,7 +4443,7 @@ function printResult() {
     <div class="permit-name-box"><div class="permit-name-label">&#127919; Permit to Ask For</div><div class="permit-name-val">${efn(permitName)}</div></div>
     ${d.job_summary ? `<div style="font-size:13px;color:#475569;margin-top:10px;line-height:1.6">${efn(d.job_summary)}</div>` : ''}
   </div>
-  ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; This Job Requires Multiple Permits</div><table>${companionRows}</table></div>` : ''}
+  ${companions.length > 0 ? `<div class="companion-alert"><div class="section-label" style="color:#92400e">&#9888;&#65039; Related permits</div><table>${companionRows}</table></div>` : ''}
   ${fee || tlText || licenseNote ? `<div class="section"><div class="section-label">&#128176; Cost &middot; &#8987; Timeline &middot; &#129527; Who Pulls It</div><table class="kv">${fee ? `<tr><td>Fee</td><td><strong style="color:#059669;font-size:14px">${efn(fee)}</strong><div style="font-size:11px;color:#64748b;margin-top:4px">— typically added to job invoice</div></td></tr>` : ''}${tlText ? `<tr><td>Timeline</td><td>${efn(tlText)}</td></tr>` : ''}${tl.complex && tl.simple ? `<tr><td>Plan review</td><td>${efn(tl.complex)}</td></tr>` : ''}${licenseNote ? `<tr><td>Who pulls it</td><td>${efn(licenseNote)}</td></tr>` : ''}</table></div>` : ''}
   ${office || phone ? `<div class="section"><div class="section-label">&#128222; Where to Apply</div>${phone ? `<div style="font-size:19px;font-weight:900;color:#2563eb">${efn(phone)}</div>` : ''}${office ? `<div style="font-size:14px;font-weight:700;margin-top:4px">${efn(office)}</div>` : ''}${offAddr ? `<div style="font-size:13px;color:#475569;margin-top:2px">${efn(offAddr)}</div>` : ''}${maps ? `<div style="margin-top:6px;font-size:12px"><a href="${efn(maps)}">&#128506;&#65039; Maps: ${efn(maps)}</a></div>` : ''}${applyUrl ? `<div style="margin-top:4px;font-size:12px"><a href="${efn(applyUrl)}">&#127760; Online: ${efn(applyUrl)}</a></div>` : ''}</div>` : ''}
   ${permitRows ? `<div class="section"><div class="section-label">&#128203; Permits Required</div><table>${permitRows}</table></div>` : ''}

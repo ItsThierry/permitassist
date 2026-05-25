@@ -337,6 +337,80 @@ def validate_url(url: str, timeout: int = 4) -> bool:
     except Exception:
         return False
 
+def sanitize_customer_visible_result(result: dict) -> dict:
+    """Remove internal engine/review wording before any customer surface sees it."""
+    if not isinstance(result, dict):
+        return result
+
+    internal_terms = (
+        "engine flagged",
+        "needs review",
+        "verified · official sources",
+        "hidden triggers",
+        "planning estimate only",
+        "verify before merging",
+        "jurisdiction multiplier",
+        "ti floor",
+        "ada-path-of-travel adder",
+    )
+    fee_internal_terms = (
+        "jurisdiction multiplier",
+        "ti floor",
+        "structured ti floor",
+        "structured floor",
+        "ada-path-of-travel adder",
+    )
+    confidence_fields = {"confidence_reason", "warning", "warnings", "quality_warnings"}
+    fee_fields = {"fee_range", "fee_estimate", "total_cost_estimate", "fee_calculator", "value", "claim"}
+
+    def has_internal(text: str) -> bool:
+        lowered = str(text or "").lower()
+        return any(term in lowered for term in internal_terms)
+
+    def scrub_text(text: str, key: str = ""):
+        if not text:
+            return text
+        value = str(text)
+        lowered = value.lower()
+        if key in confidence_fields and has_internal(value):
+            return "Verify requirements with the building department before filing."
+        if key in fee_fields and any(term in lowered for term in fee_internal_terms):
+            return "Fee varies by exact scope; confirm current fees with the building department before quoting."
+        value = re.sub(r"\bVerified\s*·\s*official sources\b", "Official source path found", value, flags=re.I)
+        value = re.sub(r"\bPlanning estimate only\s*:?\s*", "", value, flags=re.I)
+        value = re.sub(r"\bHidden triggers?\s*:?\s*", "Scope triggers: ", value, flags=re.I)
+        value = re.sub(r"\bEngine flagged(?:\s+this\s+answer)?(?:\s+for\s+review)?\b\.?", "Verify requirements with the building department before filing.", value, flags=re.I)
+        value = re.sub(r"\bNeeds review(?:\s+for\s*:\s*[A-Za-z0-9_, ._/-]+)?\b\.?", "Verify requirements with the building department before filing.", value, flags=re.I)
+        value = re.sub(r"\[?\s*verify[^\]\[.;,]{0,100}?before merging\s*\]?", "confirm with the AHJ", value, flags=re.I)
+        value = re.sub(r"\bverify adopted edition before merging\b", "confirm adopted code edition with the AHJ", value, flags=re.I)
+        value = re.sub(r"\s{2,}", " ", value).strip()
+        if has_internal(value):
+            return ""
+        return value
+
+    def scrub(value, key: str = ""):
+        if isinstance(value, str):
+            return scrub_text(value, key)
+        if isinstance(value, list):
+            cleaned = []
+            for item in value:
+                next_item = scrub(item, key)
+                if next_item not in ("", [], {}):
+                    cleaned.append(next_item)
+            return cleaned
+        if isinstance(value, dict):
+            cleaned = {}
+            for child_key, child_value in value.items():
+                next_value = scrub(child_value, str(child_key))
+                if next_value not in ("", [], {}):
+                    cleaned[child_key] = next_value
+            return cleaned
+        return value
+
+    cleaned_result = scrub(result)
+    return cleaned_result if isinstance(cleaned_result, dict) else {}
+
+
 def sanitize_result_urls(result: dict) -> dict:
     """
     Validate apply_url in the result.
@@ -1547,6 +1621,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             if warning and warning not in merged_warnings:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
+    result = sanitize_customer_visible_result(result)
     return result
 
 
@@ -2875,15 +2950,65 @@ def make_result_hash(result: dict) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+def _checklist_list(value) -> list:
+    if value is None or value == "":
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    return [value]
+
+
+def _checklist_text(value) -> str:
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def _checklist_dict_text(value: dict, *keys: str) -> str:
+    for key in keys:
+        text = _checklist_text(value.get(key))
+        if text:
+            return text
+    return ""
+
+
 def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
-    permits = result.get("permits_required") or []
-    permit_name = result.get("permit_name") or (permits[0].get("permit_type") if permits else "Permit") or "Permit"
+    permits = _checklist_list(result.get("permits_required"))
+    first_permit = permits[0] if permits else {}
+    permit_name = result.get("permit_name")
+    if not permit_name and isinstance(first_permit, dict):
+        permit_name = first_permit.get("permit_type")
+    elif not permit_name:
+        permit_name = _checklist_text(first_permit)
+    permit_name = permit_name or "Permit"
     fee = result.get("fee_range") or result.get("fee") or "Confirm fee with the building department"
     timeline_obj = result.get("approval_timeline") or {}
-    timeline = timeline_obj.get("simple") or timeline_obj.get("complex") or "Varies by jurisdiction"
-    docs = list(dict.fromkeys((result.get("what_to_bring") or []) + (result.get("requirements") or []) + (result.get("documents_needed") or [])))
-    inspections = result.get("inspections") or []
-    special_notes = list(dict.fromkeys((result.get("pro_tips") or [])[:2] + (result.get("common_mistakes") or [])[:2]))
+    if isinstance(timeline_obj, dict):
+        timeline = timeline_obj.get("simple") or timeline_obj.get("complex") or "Varies by jurisdiction"
+    else:
+        timeline = _checklist_text(timeline_obj) or "Varies by jurisdiction"
+    docs = list(dict.fromkeys(
+        text for text in (
+            _checklist_text(item)
+            for item in (
+                _checklist_list(result.get("what_to_bring"))
+                + _checklist_list(result.get("requirements"))
+                + _checklist_list(result.get("documents_needed"))
+            )
+        ) if text
+    ))
+    inspections = _checklist_list(result.get("inspections"))
+    special_notes = list(dict.fromkeys(
+        text for text in (
+            _checklist_text(item)
+            for item in (
+                _checklist_list(result.get("pro_tips"))[:2]
+                + _checklist_list(result.get("common_mistakes"))[:2]
+            )
+        ) if text
+    ))
     items = [
         {"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True},
         {"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True},
@@ -2893,8 +3018,12 @@ def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", s
     if docs:
         items.append({"label": f"Required documents: {', '.join(docs[:6])}", "category": "documents", "required": True})
     for inspection in inspections[:6]:
-        label = inspection.get("stage") or inspection.get("title") or inspection.get("name") or "Inspection step"
-        timing = inspection.get("timing") or inspection.get("description") or ""
+        if isinstance(inspection, dict):
+            label = _checklist_dict_text(inspection, "stage", "title", "name", "label") or "Inspection step"
+            timing = _checklist_dict_text(inspection, "timing", "description", "notes")
+        else:
+            label = _checklist_text(inspection) or "Inspection step"
+            timing = ""
         items.append({"label": f"Schedule inspection: {label}{' — ' + timing if timing else ''}", "category": "inspection", "required": False})
     for note in special_notes[:4]:
         items.append({"label": note, "category": "special", "required": False})
@@ -2979,11 +3108,14 @@ def load_report_template() -> str:
 
 def render_share_page(share: dict) -> str:
     template = load_report_template()
+    safe_share = dict(share or {})
+    safe_data = sanitize_customer_visible_result(safe_share.get("data") or {})
+    safe_share["data"] = safe_data
     payload = {
-        "share": share,
+        "share": safe_share,
         "app_base_url": APP_BASE_URL,
         "generated_at": utc_now().isoformat(),
-        "checklist": get_or_create_checklist(share.get("data") or {}, share.get("job_type", ""), share.get("city", ""), share.get("state", "")),
+        "checklist": sanitize_customer_visible_result(get_or_create_checklist(safe_data, safe_share.get("job_type", ""), safe_share.get("city", ""), safe_share.get("state", ""))),
     }
     return template.replace("__REPORT_DATA__", json.dumps(payload))
 
@@ -4683,7 +4815,31 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(html_gone.encode())
                 return
-            html = render_share_page(share)
+            try:
+                html = render_share_page(share)
+            except Exception as e:
+                print(
+                    "[report] Render error "
+                    f"slug={slug} job_type={share.get('job_type', '')} "
+                    f"city={share.get('city', '')} state={share.get('state', '')}: "
+                    f"{type(e).__name__}: {e}"
+                )
+                import traceback as _traceback
+                _traceback.print_exc()
+                html_error = """<!DOCTYPE html><html><head><meta charset='UTF-8'/>
+<meta name='viewport' content='width=device-width,initial-scale=1'/>
+<title>Report Temporarily Unavailable — PermitAssist</title>
+<style>body{font-family:system-ui,sans-serif;background:#0b1220;color:#f0f4ff;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}.box{max-width:460px;padding:32px 20px}h1{font-size:24px;font-weight:800;margin-bottom:10px}p{color:#b8c5e0;line-height:1.6}a{color:#93c5fd}</style></head>
+<body><div class='box'><h1>Report temporarily unavailable</h1>
+<p>We could not open this saved report. Please retry, or run a fresh lookup from PermitAssist.</p>
+<p><a href='/'>Back to PermitAssist</a></p></div></body></html>"""
+                self.send_response(500)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(html_error.encode())))
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(html_error.encode())
+                return
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(html.encode())))

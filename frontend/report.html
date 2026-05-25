@@ -48,7 +48,12 @@
     const verdict = (d.permit_verdict || 'MAYBE').toUpperCase();
     const timeline = (d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || 'Varies by jurisdiction';
     const docs = [...new Set([...(d.what_to_bring || []), ...(d.requirements || []), ...(d.documents_needed || [])])];
-    const inspections = (d.inspections || []).map(i => i.stage || i.title || i.name || i.description).filter(Boolean);
+    const inspectionLabel = (item) => {
+      if (typeof item === 'string') return item;
+      if (!item || typeof item !== 'object') return '';
+      return item.stage || item.title || item.name || item.description || '';
+    };
+    const inspections = (d.inspections || d.inspections_required || d.inspection_checklist || []).map(inspectionLabel).filter(Boolean);
     const whereToApply = [d.applying_office, d.apply_address, d.apply_phone].filter(Boolean).join(' • ');
     const sources = d.sources || [];
     const sourceUrl = (src) => typeof src === 'string' ? src : ((src && src.url) || '');
