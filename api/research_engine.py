@@ -5232,6 +5232,48 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
             "companion_permits": [],
         }
 
+    has_residential_building_scope = _scope_has_any(job, [
+        "addition", "add bedroom", "add bathroom", "room addition", "home addition",
+        "residential remodel", "whole home remodel", "home remodel", "interior remodel",
+        "structural wall", "load bearing", "load-bearing", "wall removal", "wall changes",
+        "layout change", "layout changes", "new bathroom", "new kitchen",
+    ])
+    if has_residential_building_scope:
+        if _scope_has_any(job, ["addition", "add bedroom", "add bathroom", "room addition", "home addition", "sf addition", "sq ft addition", "square foot addition"]):
+            building_name = "Residential Building Permit — Addition / Remodel"
+            portal_label = "Building - Residential Addition / Alteration"
+            scope_classification = "residential_addition_remodel"
+            trigger = "addition/remodel building scope"
+        else:
+            building_name = "Residential Building Permit — Remodel / Alteration"
+            portal_label = "Building - Residential Alteration / Remodel"
+            scope_classification = "residential_remodel_alteration"
+            trigger = "remodel/structural/layout building scope"
+        permits = [_scope_permit(
+            building_name,
+            portal_label,
+            "Primary permit for residential addition/remodel plan review, structural scope, life-safety, energy compliance, and final building inspection.",
+        )]
+        add_logic(permits[0]["permit_type"], "Residential additions/remodels with structural, layout, or room-addition scope must lead with a building/alteration permit, not an isolated trade permit.", trigger)
+        if _scope_has_any(job, ["electrical", "circuit", "circuits", "panel", "wiring", "lighting", "receptacle"]):
+            ep = _scope_permit("Electrical Permit — Residential Remodel / Addition", "Electrical - Residential Alteration", "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition.")
+            permits.append(ep)
+            add_logic(ep["permit_type"], "Electrical scope is explicitly included as related trade work under the remodel/addition.", "electrical/circuit/panel scope stated")
+        if _scope_has_any(job, ["plumbing", "bathroom", "kitchen", "fixture", "fixtures", "dwv", "water line", "drain"]):
+            pp = _scope_permit("Plumbing Permit — Residential Remodel / Addition", "Plumbing - Residential Alteration", "Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition.")
+            permits.append(pp)
+            add_logic(pp["permit_type"], "Plumbing scope is explicitly included as related trade work under the remodel/addition.", "plumbing/fixture/bathroom/kitchen scope stated")
+        if _scope_has_any(job, ["hvac", "duct", "ducts", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mechanical", "ventilation"]):
+            mp = _scope_permit("Mechanical Permit — Residential Remodel / Addition", "Mechanical - Residential Alteration", "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition.")
+            permits.append(mp)
+            add_logic(mp["permit_type"], "Mechanical/HVAC scope is explicitly included as related trade work under the remodel/addition.", "hvac/duct/mechanical scope stated")
+        return {
+            "scope_classification": scope_classification,
+            "permits_required": permits,
+            "permits_required_logic": logic,
+            "companion_permits": [],
+        }
+
     is_hvac = _scope_has_any(job, ["hvac", "condenser", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler"])
     is_water_heater = "water heater" in job
     hvac_like_for_like = _scope_has_any(job, ["like for like", "like-for-like", "swap", "changeout", "change out", "condenser", "replacement", "replace", "mini split", "mini-split", "ductless"])

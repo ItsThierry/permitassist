@@ -27,6 +27,11 @@ CUSTOMER_FORBIDDEN_COPY = [
     "needs_review",
     "Planning estimate only",
 ]
+CUSTOMER_REPORT_FORBIDDEN_COPY = [
+    "${verdict} permit status",
+    "No source links stored in this share.",
+    "word-break:break-all",
+]
 
 
 def test_static_customer_pages_do_not_ship_private_evidence_pack_terms():
@@ -59,3 +64,20 @@ def test_customer_static_pages_do_not_ship_internal_engine_labels():
             leaks[str(page.relative_to(ROOT))] = page_leaks
 
     assert leaks == {}
+
+
+def test_shared_report_static_copy_uses_clean_labels_and_friendly_sources():
+    html = (ROOT / "frontend/report.html").read_text(encoding="utf-8")
+
+    leaked = [term for term in CUSTOMER_REPORT_FORBIDDEN_COPY if term in html]
+    assert leaked == []
+    assert "Permit required: Yes" in html
+    assert "sourceHost" in html
+
+
+def test_homepage_disambiguation_does_not_append_raw_choice_parentheses():
+    html = (ROOT / "frontend/index.html").read_text(encoding="utf-8")
+
+    assert "isBroadProjectScope" in html
+    assert "query + ' (' + choice + ')'" not in html
+    assert "disambiguation_hint" in html

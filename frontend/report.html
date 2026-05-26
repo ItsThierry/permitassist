@@ -25,7 +25,7 @@
     li { margin:8px 0; color:#334155; }
     .cta { margin-top:18px; background:#0f172a; color:#fff; border-radius:20px; padding:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
     .cta a, .print-btn { background:#fff; color:#0f172a; text-decoration:none; border:none; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer; }
-    .source-list a { color:var(--brand); word-break:break-all; }
+    .source-list a { color:var(--brand); overflow-wrap:anywhere; }
     @media (max-width: 760px) { .grid { grid-template-columns:1fr; } .headline { font-size:26px; } .cta { flex-direction:column; align-items:flex-start; } }
     @media print {
       body { background:#fff; }
@@ -44,24 +44,35 @@
     const share = payload.share || {};
     const d = share.data || {};
     const checklist = payload.checklist || {};
-    const permitName = d.permit_name || (d.permits_required && d.permits_required[0] && d.permits_required[0].permit_type) || 'Permit details';
-    const verdict = (d.permit_verdict || 'MAYBE').toUpperCase();
+    const primaryPermit = (d.primary_permit && typeof d.primary_permit === 'object') ? d.primary_permit : {};
+    const firstPermit = d.permits_required && d.permits_required[0] ? d.permits_required[0] : {};
+    const permitName = d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type || 'Permit details';
+    const rawVerdict = (d.permit_verdict || '').toUpperCase();
+    const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'MAYBE');
+    const verdictLabel = verdict === 'YES' ? 'Permit required: Yes' : (verdict === 'NO' ? 'Permit required: No' : 'Permit status: Verify');
     const timeline = (d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || 'Varies by jurisdiction';
-    const docs = [...new Set([...(d.what_to_bring || []), ...(d.requirements || []), ...(d.documents_needed || [])])];
+    const docs = [...new Set([...(d.what_to_bring || []), ...(d.requirements || []), ...(d.documents_needed || []), ...(d.checklist || [])])];
     const inspectionLabel = (item) => {
       if (typeof item === 'string') return item;
       if (!item || typeof item !== 'object') return '';
       return item.stage || item.title || item.name || item.description || '';
     };
     const inspections = (d.inspections || d.inspections_required || d.inspection_checklist || []).map(inspectionLabel).filter(Boolean);
-    const whereToApply = [d.applying_office, d.apply_address, d.apply_phone].filter(Boolean).join(' • ');
     const sources = d.sources || [];
     const sourceUrl = (src) => typeof src === 'string' ? src : ((src && src.url) || '');
-    const sourceTitle = (src) => (src && typeof src === 'object' && (src.title || src.name)) || 'Source';
+    const sourceHost = (url) => { try { return new URL(url).hostname.replace(/^www\./,''); } catch { return 'official source'; } };
+    const sourceTitle = (src) => (src && typeof src === 'object' && (src.title || src.name || src.label)) || sourceHost(sourceUrl(src));
     const esc = (value) => String(value || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const looksLikeRawUrl = (value) => /^https?:\/\//i.test(String(value || '').trim());
+    const applyPath = d.apply_path && typeof d.apply_path === 'object' ? d.apply_path : {};
+    const applyPathLabel = primaryPermit.portal_selection || firstPermit.portal_selection || applyPath.likely_path || applyPath.label || applyPath.permit_path || applyPath.permit_type || applyPath.permit_category;
+    const applyOffice = looksLikeRawUrl(d.applying_office) ? '' : d.applying_office;
+    const applyAddress = looksLikeRawUrl(d.apply_address) ? '' : d.apply_address;
+    const applyPhone = looksLikeRawUrl(d.apply_phone) ? '' : d.apply_phone;
+    const whereToApply = applyPathLabel || [applyOffice, applyAddress, applyPhone].filter(Boolean).join(' • ');
     const sourceRows = sources.filter(src => sourceUrl(src)).map(src => {
       const url = sourceUrl(src);
-      return `<li><strong>${esc(sourceTitle(src))}</strong> — <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></li>`;
+      return `<li><a href="${esc(url)}" target="_blank" rel="noopener"><strong>${esc(sourceTitle(src))}</strong></a></li>`;
     });
     const app = document.getElementById('app');
     app.innerHTML = `
@@ -71,7 +82,7 @@
           <div>
             <h1 class="headline">${permitName}</h1>
             <div class="sub">${share.job_type || ''} in ${share.city || ''}, ${share.state || ''}</div>
-            <div class="pill">${verdict} permit status</div>
+            <div class="pill">${verdictLabel}</div>
           </div>
           <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
         </div>
@@ -103,10 +114,10 @@
           <div class="label">Pre-construction checklist</div>
           <ul>${((checklist.items || []).length ? checklist.items : [{label:'Pull permit before starting work'}]).map(item => `<li>${item.label}</li>`).join('')}</ul>
         </div>
-        <div class="card">
+        ${sourceRows.length ? `<div class="card">
           <div class="label">Sources checked</div>
-          <ul class="source-list">${sourceRows.length ? sourceRows.join('') : '<li>No source links stored in this share.</li>'}</ul>
-        </div>
+          <ul class="source-list">${sourceRows.join('')}</ul>
+        </div>` : ''}
       </section>
       <section class="cta">
         <div>

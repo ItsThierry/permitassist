@@ -337,7 +337,7 @@ def validate_url(url: str, timeout: int = 4) -> bool:
     except Exception:
         return False
 
-def sanitize_customer_visible_result(result: dict) -> dict:
+def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool = True) -> dict:
     """Remove internal engine/review wording before any customer surface sees it."""
     if not isinstance(result, dict):
         return result
@@ -362,7 +362,18 @@ def sanitize_customer_visible_result(result: dict) -> dict:
     )
     confidence_fields = {"confidence_reason", "warning", "warnings", "quality_warnings"}
     fee_fields = {"fee_range", "fee_estimate", "total_cost_estimate", "fee_calculator", "value", "claim"}
-    internal_keys = {"needs_review", "confidence_modifier", "complexity_modifier", "jurisdiction_multiplier"}
+    internal_keys = {
+        "needs_review", "confidence_modifier", "complexity_modifier", "jurisdiction_multiplier",
+        "hidden_triggers", "claim_citations", "missing_fields", "_validation_issues",
+        "_commercial_primary_permit_guardrail", "_hidden_trigger_metadata_sanitized",
+    }
+    primary_scope = str(result.get("_primary_scope") or "").strip().lower()
+
+    def is_commercial_ti_result(value: dict) -> bool:
+        text = " ".join(str(value.get(k) or "") for k in ("permit_name", "permit_type", "job_summary")).lower()
+        if primary_scope.startswith("commercial") or primary_scope in {"multifamily", "change_of_occupancy"}:
+            return True
+        return any(term in text for term in ("commercial", "tenant improvement", "buildout", "build-out", "interior alteration"))
 
     def has_internal(text: str) -> bool:
         lowered = str(text or "").lower()
@@ -373,10 +384,22 @@ def sanitize_customer_visible_result(result: dict) -> dict:
             return text
         value = str(text)
         lowered = value.lower()
-        if key in confidence_fields and has_internal(value):
+        if key in confidence_fields and strip_internal_keys and has_internal(value):
             return "Verify requirements with the building department before filing."
-        if key in fee_fields and any(term in lowered for term in fee_internal_terms):
+        if key in fee_fields and strip_internal_keys and any(term in lowered for term in fee_internal_terms):
             return "Fee varies by exact scope; confirm current fees with the building department before quoting."
+        if key in fee_fields and strip_internal_keys and re.search(r"\b(?:fee\s*:\s*)?(?:call|contact)\s+(?:to\s+)?confirm\b", lowered):
+            return "Fee depends on declared valuation, trade scope, plan-review fees, and the current portal fee schedule; verify in the city portal before quoting."
+        if strip_internal_keys:
+            value = value.replace("**", "")
+            value = re.sub(r"\s*\((?:full replacement|minor repair|layout/plumbing/electrical/wall changes)\)\s*", " ", value, flags=re.I)
+            value = re.sub(r"\blayout/plumbing/electrical/wall changes\b", "layout, plumbing, electrical, or wall changes", value, flags=re.I)
+            if value.strip().lower().rstrip(".") == "connection points":
+                return ""
+            if value.strip().lower() == "fire marshal before permit intake.":
+                value = "Coordinate fire-marshal review before permit intake."
+            value = re.sub(r"\s+or\s+Verify\s+", "; verify ", value)
+            value = re.sub(r"\bAHJ\b", "building department", value)
         value = re.sub(r"\bVerified\s*·\s*official sources\b", "Official source path found", value, flags=re.I)
         value = re.sub(r"\bPlanning estimate only\s*:?\s*", "", value, flags=re.I)
         value = re.sub(r"\bHidden triggers?\s*:?\s*", "Scope triggers: ", value, flags=re.I)
@@ -385,7 +408,7 @@ def sanitize_customer_visible_result(result: dict) -> dict:
         value = re.sub(r"\[?\s*verify[^\]\[.;,]{0,100}?before merging\s*\]?", "confirm with the AHJ", value, flags=re.I)
         value = re.sub(r"\bverify adopted edition before merging\b", "confirm adopted code edition with the AHJ", value, flags=re.I)
         value = re.sub(r"\s{2,}", " ", value).strip()
-        if has_internal(value):
+        if strip_internal_keys and has_internal(value):
             return ""
         return value
 
@@ -396,23 +419,37 @@ def sanitize_customer_visible_result(result: dict) -> dict:
             cleaned = []
             for item in value:
                 next_item = scrub(item, key)
-                if next_item not in ("", [], {}):
+                if not strip_internal_keys or next_item not in ("", [], {}):
                     cleaned.append(next_item)
             return cleaned
         if isinstance(value, dict):
             cleaned = {}
             for child_key, child_value in value.items():
                 key_name = str(child_key)
-                if key_name.lower() in internal_keys:
+                key_lc = key_name.lower()
+                if strip_internal_keys and (key_lc.startswith("_") or key_lc in internal_keys):
                     continue
                 next_value = scrub(child_value, key_name)
-                if next_value not in ("", [], {}):
+                if not strip_internal_keys or next_value not in ("", [], {}):
                     cleaned[child_key] = next_value
             return cleaned
         return value
 
     cleaned_result = scrub(result)
-    return cleaned_result if isinstance(cleaned_result, dict) else {}
+    if isinstance(cleaned_result, dict):
+        if strip_internal_keys and is_commercial_ti_result(result):
+            timeline = cleaned_result.get("approval_timeline")
+            if isinstance(timeline, dict):
+                simple = str(timeline.get("simple") or "").strip()
+                simple_lc = simple.lower()
+                if not simple or "same day" in simple_lc or "otc" in simple_lc or "over-the-counter" in simple_lc:
+                    timeline["simple"] = "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+                complex_text = str(timeline.get("complex") or "").strip()
+                if not complex_text:
+                    timeline["complex"] = "Longer plan-review cycle if structural, accessibility, fire/life-safety, health, zoning, or trade-plan corrections are triggered."
+                cleaned_result["approval_timeline"] = timeline
+        return cleaned_result
+    return {}
 
 
 def sanitize_result_urls(result: dict) -> dict:
@@ -1625,7 +1662,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             if warning and warning not in merged_warnings:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
-    result = sanitize_customer_visible_result(result)
+    result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
 
@@ -5511,8 +5548,11 @@ class Handler(BaseHTTPRequestHandler):
                     }, user_email or "")
 
                     # No Telegram on lookups — only notify on paying customers
+                    # Evidence-pack preview endpoints intentionally expose pack diagnostics for gated QA/API parity.
+                    # Normal customer lookups send only sanitized, customer-visible fields.
+                    customer_result = result if evidence_allowed else sanitize_customer_visible_result(result)
 
-                    self.send_json(200, result, extra_headers=response_headers)
+                    self.send_json(200, customer_result, extra_headers=response_headers)
                 finally:
                     PERMIT_LOOKUP_SEMAPHORE.release()
 

@@ -315,3 +315,35 @@ def test_trade_only_detection_preserves_explicit_commercial_ti():
     job = "commercial retail TI buildout in strip mall with new storefront signage and HVAC diffuser relocation"
     assert engine._looks_like_commercial_trade_only_scope(job) is False
     assert engine.detect_primary_scope(job) == "commercial_retail_ti"
+
+
+def test_austin_residential_remodel_addition_keeps_building_primary_over_trade_keywords():
+    job = (
+        "Austin TX residential remodel and 450 sf addition with structural wall changes, "
+        "new bathroom plumbing, electrical circuits, and HVAC duct relocation"
+    )
+    result = {
+        "permit_verdict": "YES",
+        "confidence": "high",
+        "permits_required": [
+            {
+                "permit_type": "Mechanical Permit — HVAC System Replacement (Residential)",
+                "portal_selection": "Mechanical - HVAC Changeout / Replacement",
+                "required": True,
+                "notes": "stale trade-primary output",
+            }
+        ],
+        "permits_required_logic": [],
+        "companion_permits": [],
+    }
+
+    engine.apply_scope_aware_permit_classification(result, job)
+    engine.validate_and_sanitize_permit_result(result, job, "Austin", "TX")
+
+    primary = result["permits_required"][0]
+    primary_blob = " ".join(str(primary.get(k, "")) for k in ("permit_type", "portal_selection", "notes")).lower()
+    assert engine._permit_family(primary) == "building"
+    assert "addition" in primary_blob or "alteration" in primary_blob or "remodel" in primary_blob
+    assert "hvac system replacement" not in primary_blob
+    families = {engine._permit_family(p) for p in result["permits_required"]}
+    assert {"building", "mechanical", "electrical", "plumbing"}.issubset(families)

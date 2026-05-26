@@ -105,15 +105,17 @@ def test_bugs2_3_4_frontend_commercial_template_leaks_are_hardened():
 
     # Bug 2: commercial scopes must hard-gate away from residential deck/patio fail points.
     assert "const COMMERCIAL_FAIL_POINTS" in html
-    assert "primaryScope.startsWith('commercial_')" in html
-    assert "return COMMERCIAL_FAIL_POINTS[primaryScope]" in html
+    assert "function isCommercialPrimaryScope(primaryScope)" in html
+    assert "String(primaryScope || '').startsWith('commercial_')" in html
+    assert "inferCommercialPrimaryScopeFromCustomerResult(result)" in html
+    assert "return COMMERCIAL_FAIL_POINTS[commercialScope]" in html
     assert "outdoor patio" in html and "leaked into 4/4 commercial restaurant TIs" in html
 
     # Bug 3: residential electrical checklist card must be suppressed on commercial scopes.
     checklist_fn_start = html.index("function getInspectionChecklist")
     checklist_fn = html[checklist_fn_start: html.index("// ── Disambiguation Logic", checklist_fn_start)]
     assert "return null" in checklist_fn
-    assert "primaryScope.startsWith('commercial_')" in checklist_fn
+    assert "const commercialScope = inferCommercialPrimaryScopeFromCustomerResult(result)" in checklist_fn
     assert "GFCI/AFCI" in checklist_fn
 
     # Bug 4: commercial customer justifier must not use homeowner / home-sale copy.

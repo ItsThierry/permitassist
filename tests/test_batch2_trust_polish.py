@@ -40,10 +40,10 @@ def test_result_and_report_views_show_beta_safe_guidance_warning():
     source = _read(INDEX)
 
     warning = "PermitAssist is guidance only."
-    verify = "Verify exact permit type with the AHJ before quoting or starting work."
+    verify = "Verify exact permit type with the local building department before quoting or starting work."
     assert source.count(warning) >= 2
     assert verify in source
-    assert "PERMITASSIST GUIDANCE ONLY: Verify exact permit type with the AHJ before quoting or starting work." in source
+    assert "PERMITASSIST GUIDANCE ONLY: Verify exact permit type with the local building department before quoting or starting work." in source
 
     standard_warning_pos = source.index('class="disclaimer-box"')
     hero_pos = source.index('html += `<div class="result-hero">')

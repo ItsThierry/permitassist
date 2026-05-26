@@ -1617,7 +1617,7 @@
   <footer class="footer">
     <p>⚠️ <strong>Disclaimer:</strong> PermitAssist provides AI-generated guidance based on publicly available data. Permit requirements change frequently, and fees shown are estimates. The contractor is strictly responsible for verifying all exact requirements, fees, and timelines directly with the local building department (Authority Having Jurisdiction) prior to starting any work.</p>
     <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved. &nbsp;·&nbsp; <a href="/help" style="color:var(--brand)">Help</a> &nbsp;·&nbsp; <a href="/terms" style="color:var(--brand)">Terms</a> &nbsp;·&nbsp; <a href="/privacy" style="color:var(--brand)">Privacy</a></p>
-    <div style="font-size:11px;color:#94a3b8;margin-top:6px">PermitAssist is operated by an Indiana LLC. Information is AI-assisted research, not legal advice — verify final requirements with the AHJ before submitting.</div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:6px">PermitAssist is operated by an Indiana LLC. Information is AI-assisted research, not legal advice — verify final requirements with the local building department before submitting.</div>
   </footer>
 </div>
 
@@ -1742,6 +1742,7 @@ const IS_ADMIN=new URLSearchParams(window.location.search).get('_dev')==='pa_int
 let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential',upgradeModalState={plan:'pro',couponApplied:false},jobsCache=[],watchesCache=[];
 let _serverFreeLookupsUsed=0;
 let _skipDisambig=false;
+let _pendingDisambiguationHint='';
 let _isSampleLookup=false;
 let tradeWizardState={tradeKey:'',baseQuery:'',answers:{},dismissedTrade:'',suppressInput:false};
 
@@ -1998,7 +1999,7 @@ function handleTradeWizardInput() {
 const COMMERCIAL_FAIL_POINTS = {
   commercial_restaurant: [
     'Type I hood capture velocity not verified at final witness test (NFPA 96 §8)',
-    'Hood Ansul / UL-300 suppression: discharge test not witnessed by AHJ before CO',
+    'Hood Ansul / UL-300 suppression: discharge test not witnessed by the building/fire inspector before CO',
     'Grease interceptor installed but vent / trap configuration not per IPC 1003.3.4',
     'Health-department plan-review approval not on-site at building final inspection',
     'Walk-in cooler / freezer envelope not insulated to IECC 403.10.1 minimums',
@@ -2058,11 +2059,13 @@ const ADU_FAIL_POINTS = [
 
 function getInspectionFailPoints(jobType, result) {
   const primaryScope = result?._primary_scope || '';
+  const commercialScope = inferCommercialPrimaryScopeFromCustomerResult(result);
   // Commercial primary scopes — return commercial fail points instead of letting
   // the residential trade-keyed list (deck / HVAC residential / plumbing
-  // residential) leak through.
-  if (primaryScope.startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial') {
-    return COMMERCIAL_FAIL_POINTS[primaryScope] || COMMERCIAL_FAIL_POINTS.commercial || [];
+  // residential) leak through. Public customer payloads strip internal
+  // underscore-prefixed fields, so infer from sanitized permit/application text too.
+  if (commercialScope) {
+    return COMMERCIAL_FAIL_POINTS[commercialScope] || COMMERCIAL_FAIL_POINTS.commercial || [];
   }
   if (primaryScope === 'residential_adu') {
     return ADU_FAIL_POINTS;
@@ -2081,7 +2084,7 @@ function generateCustomerPermitExplanation() {
   const state = window._lastLookupState || '';
   const fee = result.fee_range || result.fee || result.cost || 'Call the city to confirm the exact fee';
   const location = [city, state].filter(Boolean).join(', ') || 'your jurisdiction';
-  const isCommercial = isCommercialPrimaryScope(primaryScope);
+  const isCommercial = isCommercialCustomerCopyScope(result);
   // 2026-04-28: tier the justifier by occupancy. Earlier this was residential-
   // only and shipped "homeowner's insurance" / "selling your home" language to
   // commercial restaurant + office + retail TI responses (4/4 commercial Opus
@@ -2126,7 +2129,8 @@ function getInspectionChecklist(jobType, result) {
   // responses across all 4 cities of Opus 4.7 reviews. The engine's own
   // inspect_checklist + scope-group items already cover commercial.
   const primaryScope = result?._primary_scope || '';
-  if (primaryScope.startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial' || primaryScope === 'change_of_occupancy') {
+  const commercialScope = inferCommercialPrimaryScopeFromCustomerResult(result);
+  if (commercialScope) {
     return null;
   }
   const j = (jobType || '').toLowerCase();
@@ -2139,9 +2143,14 @@ function getInspectionChecklist(jobType, result) {
 }
 
 // ── Disambiguation Logic ──────────────────────────────────────────────────────
+function isBroadProjectScope(q) {
+  const text = String(q || '').toLowerCase();
+  return /\b(?:tenant\s+improvement|\bti\b|build\s*-?out|buildout|change\s+of\s+use|change\s+of\s+occupancy|addition|remodel|renovation|alteration|structural|layout|wall\s+changes?|commercial\s+(?:restaurant|office|medical|clinic|retail))\b/i.test(text);
+}
+
 const DISAMBIG_RULES = [
   {
-    test: q => /\b(repair|fix|leak|patch|minor|small)\b/i.test(q),
+    test: q => /\b(repair|fix|leak|patch|minor|small)\b/i.test(q) && !isBroadProjectScope(q),
     title: '⚠️ Is this a minor repair or full replacement?',
     options: ['minor repair', 'full replacement']
   },
@@ -2187,7 +2196,8 @@ function checkDisambiguation() {
 
 function submitWithDisambig(choice) {
   const query = document.getElementById('query').value.trim();
-  document.getElementById('query').value = query + ' (' + choice + ')';
+  _pendingDisambiguationHint = choice;
+  document.getElementById('query').value = query;
   document.getElementById('disambig-box').classList.remove('show');
   _skipDisambig = true;
   doLookupWithOffline();
@@ -2816,7 +2826,7 @@ function getNextSteps(d, job, city, state) {
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])].slice(0, 3);
   const steps = [
     `Ask for \"${permitName}\" with the ${d.applying_office || `${city} building department`}.`,
-    d._fee_adjusted ? 'Fee shown is a planning estimate only — confirm exact amounts with the AHJ before bidding or payment.' : (d.fee_range ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Confirm the fee and save the receipt / confirmation number.'),
+    d._fee_adjusted ? 'Fee shown is a planning estimate only — confirm exact amounts with the local building department before bidding or payment.' : (d.fee_range ? `Budget ${d.fee_range} and save the receipt / confirmation number.` : 'Confirm the fee and save the receipt / confirmation number.'),
     docs.length ? `Bring or upload: ${docs.join(', ')}.` : 'Bring your scope of work, any required plans, and contractor/license details.',
   ];
   if (d.approval_timeline?.simple || d.approval_timeline?.complex) {
@@ -2838,24 +2848,24 @@ function buildEvidencePackCaveats(evidencePack, options = {}) {
   const evidenceMatchedFields = Array.isArray(evidencePack.matched_fields) ? evidencePack.matched_fields.filter(Boolean) : [];
 
   if (evidenceFailedFields.length) {
-    caveats.push(`Failed-closed evidence fields: ${evidenceFailedFields.slice(0, 6).join(', ')}. These fields were not shown as verified because no fresh matching evidence was loaded. Do not quote or file from those fields until AHJ-confirmed.`);
+    caveats.push(`Failed-closed evidence fields: ${evidenceFailedFields.slice(0, 6).join(', ')}. These fields were not shown as verified because no fresh matching evidence was loaded. Do not quote or file from those fields until the building department confirms them.`);
   } else if (includeFailedClosedNone) {
     caveats.push('Failed closed: none flagged by the local pack.');
   }
   if (evidenceFailedFields.includes('fee_range')) {
-    caveats.push('Fee range is not verified in this evidence pack. Confirm fees with the AHJ before quoting.');
+    caveats.push('Fee range is not verified in this evidence pack. Confirm fees with the local building department before quoting.');
   }
   if (evidenceFailedFields.includes('inspections')) {
-    caveats.push('Inspections are not verified in this evidence pack. Confirm required inspections and booking steps with the AHJ before scheduling work.');
+    caveats.push('Inspections are not verified in this evidence pack. Confirm required inspections and booking steps with the local building department before scheduling work.');
   }
   if (evidenceMatchedFields.includes('approval_timeline')) {
-    caveats.push('Timeline: statutory/AHJ outer deadline only — not a local queue or plan-review estimate. Confirm local review timing before promising dates.');
+    caveats.push('Timeline: statutory outer deadline only — not a local queue or plan-review estimate. Confirm local review timing before promising dates.');
   }
   if (evidenceMatchedFields.includes('companion_reviews_triggers')) {
-    caveats.push('Companion reviews are limited to the cited evidence scope. This is not a complete local specialty-trigger list. Verify specialty reviews with the AHJ before filing.');
+    caveats.push('Companion reviews are limited to the cited evidence scope. This is not a complete local specialty-trigger list. Verify specialty reviews with the local building department before filing.');
   }
   if (evidenceMatchedFields.includes('apply_url')) {
-    caveats.push('Apply portal is a verified start portal only. Exact portal subcategory and filing path still need AHJ/portal verification before filing.');
+    caveats.push('Apply portal is a verified start portal only. Exact portal subcategory and filing path still need building-department/portal verification before filing.');
   }
 
   return [...new Set(caveats)];
@@ -2876,7 +2886,7 @@ function buildUncertaintyWarnings(d) {
   });
 
   if (d['needs' + '_review']) {
-    warnings.push('Verify before filing. Confirm each field with the AHJ before relying on it.');
+    warnings.push('Verify before filing. Confirm each field with the local building department before relying on it.');
   }
   if (confidence === 'low' || !confidence) {
     warnings.push('Low or missing confidence. Do not quote or start work from this result until the building department confirms it.');
@@ -2920,6 +2930,34 @@ function normalizeLicenseRequirementCopy(value) {
 
 function isCommercialPrimaryScope(primaryScope) {
   return String(primaryScope || '').startsWith('commercial_') || primaryScope === 'multifamily' || primaryScope === 'commercial' || primaryScope === 'change_of_occupancy';
+}
+
+function inferCommercialPrimaryScopeFromCustomerResult(result) {
+  const primaryScope = result?._primary_scope || '';
+  if (isCommercialPrimaryScope(primaryScope)) return primaryScope;
+  const permits = Array.isArray(result?.permits_required) ? result.permits_required : [];
+  const related = Array.isArray(result?.related_permits) ? result.related_permits : [];
+  const text = [
+    result?.permit_type,
+    result?.permit_name,
+    result?.apply_url,
+    result?.apply_path?.likely_path,
+    result?.primary_permit?.permit_type,
+    result?.primary_permit?.portal_selection,
+    ...permits.flatMap(p => [p?.permit_type, p?.portal_selection, p?.notes]),
+    ...related.map(p => p?.permit_type),
+  ].filter(Boolean).join(' ').toLowerCase();
+  if (!text) return '';
+  if (text.includes('medical clinic')) return 'commercial_medical_clinic_ti';
+  if (text.includes('restaurant') || text.includes('kitchen buildout') || text.includes('hood') || text.includes('grease interceptor')) return 'commercial_restaurant';
+  if (text.includes('office tenant improvement') || text.includes('office ti') || text.includes('office finish-out')) return 'commercial_office_ti';
+  if (text.includes('tenant improvement') || text.includes('finish-out') || text.includes('buildout') || text.includes('commercial remodel') || text.includes('commercial building')) return 'commercial';
+  if (text.includes('commercial')) return 'commercial';
+  return '';
+}
+
+function isCommercialCustomerCopyScope(result) {
+  return Boolean(inferCommercialPrimaryScopeFromCustomerResult(result));
 }
 
 function normalizeInspectionItems(items) {
@@ -2990,7 +3028,7 @@ function renderResults(d, job, city, state) {
     html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
   }
 
-  html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
+  html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the local building department before quoting or starting work.</div>`;
 
   // Homeowner mode — special "Did they pull the permit?" section
   if (searchMode === 'homeowner') {
@@ -3043,7 +3081,7 @@ function renderResults(d, job, city, state) {
   const isCountyFB = d.county_fallback === true;
   let confBadgeHtml = '';
   if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
-    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Official path found<span class="conf-tooltip">Official building-department path found. Verify final requirements with the AHJ before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Official path found · verify with AHJ before submitting</div>`;
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Official path found<span class="conf-tooltip">Official building-department path found. Verify final requirements with the local building department before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Official path found · verify with building department before submitting</div>`;
   } else if (dataSourceRaw === 'web_search') {
     confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Official path found<span class="conf-tooltip">Local source path found. Verify fee before quoting.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Official path found · verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
   } else if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
@@ -3289,7 +3327,7 @@ function renderResults(d, job, city, state) {
   }
 
   if (verdict !== 'no') {
-    const justifierIntro = isCommercialPrimaryScope(d?._primary_scope)
+    const justifierIntro = isCommercialCustomerCopyScope(d)
       ? 'Need to explain the permit to the tenant, landlord, or owner fast? Open this and copy it into a text, email, or quote.'
       : 'Need to explain the permit to the homeowner fast? Open this and copy it into a text, email, or quote.';
     html += `<div class="card permit-explainer-card"><div class="section-label">📋 Customer Permit Justifier</div><div style="font-size:14px;color:var(--text2);line-height:1.6">${esc(justifierIntro)}</div><div class="permit-explainer-actions"><button class="action-btn" onclick="toggleCustomerExplanation()">📋 Get Customer Explanation</button><button class="action-btn" onclick="copyCustomerExplanation()">📋 Copy to Clipboard</button></div><div class="permit-explainer-copy" id="customer-explanation-box" style="display:none"></div></div>`;
@@ -3475,7 +3513,7 @@ function renderResults(d, job, city, state) {
   // AHJ Disclaimer (Fix 2)
   html += `<div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:12px; padding:16px 18px; margin-bottom:14px; display:flex; gap:10px; align-items:flex-start;">
     <div style="font-size:18px;">ℹ️</div>
-    <div style="font-size:13px; color:var(--text2); line-height:1.5;">Results are estimates based on publicly available data. Always verify requirements directly with your local Authority Having Jurisdiction (AHJ) before starting work.</div>
+    <div style="font-size:13px; color:var(--text2); line-height:1.5;">Results are estimates based on publicly available data. Always verify requirements directly with your local building department before starting work.</div>
   </div>`;
 
   // Action buttons
@@ -3532,21 +3570,28 @@ function renderResults(d, job, city, state) {
 // tool. Skill spec: ~/.openclaw/workspace/skills/permitassist-report-template/SKILL.md
 function renderResultAsReport(d, job, city, state) {
   d = d || {};
-  const _missing = '⚠️ <em>needs verification — call AHJ</em>';
+  const _missing = '⚠️ <em>needs verification — call the building department</em>';
   const _esc = (typeof esc === 'function') ? esc : (s => String(s == null ? '' : s).replace(/[<>&"']/g, m => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[m])));
 
-  const verdict = (d.permit_verdict || '').toString().toUpperCase();
+  const permits = Array.isArray(d.permits_required) ? d.permits_required : [];
+  const primaryPermit = (d.primary_permit && typeof d.primary_permit === 'object') ? d.primary_permit : {};
+  const applyPath = (d.apply_path && typeof d.apply_path === 'object') ? d.apply_path : {};
+  const applyPathSteps = Array.isArray(applyPath.portal_selection_path) ? applyPath.portal_selection_path
+                       : (Array.isArray(applyPath.steps) ? applyPath.steps : []);
+  const applyPathLabel = primaryPermit.portal_selection || applyPath.likely_path || applyPath.permit_type || applyPath.permit_category || (permits[0] && permits[0].portal_selection) || '';
+  const rawVerdict = (d.permit_verdict || '').toString().toUpperCase();
+  const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : '');
   const verdictBadge = verdict === 'YES' ? '<span class="badge badge-green">✅ PERMIT REQUIRED</span>'
                      : verdict === 'NO'  ? '<span class="badge badge-red">❌ NO PERMIT</span>'
-                     : verdict === 'MAYBE' ? '<span class="badge badge-yellow">⚠️ MAYBE — verify with AHJ</span>'
+                     : verdict === 'MAYBE' ? '<span class="badge badge-yellow">⚠️ MAYBE — verify with building department</span>'
                      : '<span class="badge badge-gray">— verdict pending</span>';
 
-  const permits = Array.isArray(d.permits_required) ? d.permits_required : [];
-  const permitName = d.permit_name || d.permit_type || (permits[0] && permits[0].permit_type) || '';
+  const permitName = d.permit_name || d.permit_type || primaryPermit.permit_type || (permits[0] && permits[0].permit_type) || applyPathLabel || '';
   const office = d.applying_office || '';
-  const phone = d.apply_phone || '';
+  const rawPhone = d.apply_phone || '';
+  const phone = /^https?:\/\//i.test(String(rawPhone || '')) ? '' : rawPhone;
   const address = d.apply_address || '';
-  const applyUrl = d.apply_url || '';
+  const applyUrl = d.apply_url || applyPath.portal_url || '';
   const applyPdf = d.apply_pdf || '';
   const license = d.license_required || '';
   const cityReg = d.city_contractor_registration || '';
@@ -3554,12 +3599,15 @@ function renderResultAsReport(d, job, city, state) {
   const feeAdjusted = !!d._fee_adjusted;
   const tl = d.approval_timeline || {};
   const reqs = (Array.isArray(d.requirements) && d.requirements.length) ? d.requirements
-             : (Array.isArray(d.documents_needed) ? d.documents_needed : []);
+             : (Array.isArray(d.documents_needed) && d.documents_needed.length) ? d.documents_needed
+             : (Array.isArray(d.what_to_bring) && d.what_to_bring.length) ? d.what_to_bring
+             : (Array.isArray(d.checklist) ? d.checklist : []);
   const inspections = normalizeInspectionItems(Array.isArray(d.inspect_checklist) ? d.inspect_checklist
                     : (Array.isArray(d.inspections) ? d.inspections : []))
                     .map(ins => ins.title || ins.stage || ins.description || ins.notes || '')
                     .filter(Boolean);
-  const failureRisks = Array.isArray(d.common_mistakes) ? d.common_mistakes : [];
+  const failureRisks = (Array.isArray(d.common_mistakes) && d.common_mistakes.length) ? d.common_mistakes
+                    : (Array.isArray(d.watch_out) ? d.watch_out : []);
   const sources = Array.isArray(d.sources) ? d.sources.filter(Boolean) : [];
   const validationIssues = Array.isArray(d._validation_issues) ? d._validation_issues : [];
   const missingFields = Array.isArray(d.missing_fields) ? d.missing_fields : [];
@@ -3590,6 +3638,7 @@ function renderResultAsReport(d, job, city, state) {
   let appMethod = _missing;
   if (applyUrl && /accela|portal|eplan|epermit|cosaccela|shapephx/i.test(applyUrl)) appMethod = 'Online portal — see field 6';
   else if (applyUrl) appMethod = 'Online — see field 6';
+  else if (applyPathLabel || applyPathSteps.length) appMethod = 'Portal/application path — see fields 6 / 14';
   else if (applyPdf) appMethod = 'PDF download + in-person submission — see field 14';
   else if (phone || address) appMethod = 'In-person or by phone — see fields 12 / 13';
 
@@ -3605,11 +3654,11 @@ function renderResultAsReport(d, job, city, state) {
   html += `<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">${_esc(job || 'Permit Lookup')}</div>`;
   html += `<div style="font-size:13px;color:var(--text2);margin-bottom:8px">📍 ${_esc(city || '')}${city && state ? ', ' : ''}${_esc(state || '')}${lastVerifiedLabel ? ` · Last verified ${_esc(lastVerifiedLabel)}` : ''}</div>`;
   if (needsReview) {
-    html += `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400e;margin-top:8px">⚠️ <strong>Verify before filing</strong> — confirm each field with the AHJ before relying on it.</div>`;
+    html += `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400e;margin-top:8px">⚠️ <strong>Verify before filing</strong> — confirm each field with the local building department before relying on it.</div>`;
   }
   html += `</div>`;
 
-  html += `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.5">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the AHJ before quoting or starting work.</div>`;
+  html += `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#92400e;line-height:1.5">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the local building department before quoting or starting work.</div>`;
 
   // Scope triggers — render BEFORE field 1 (per spec)
   if (hiddenTriggers.length > 0) {
@@ -3641,7 +3690,7 @@ function renderResultAsReport(d, job, city, state) {
   html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px 22px 18px;margin-bottom:14px">`;
 
   // 1. Bottom line
-  const bottomLine = (d.permit_summary || d.summary || '').split(/\.\s+/)[0] || (verdict === 'YES' ? 'Permit required for this scope of work.' : verdict === 'NO' ? 'No permit required.' : 'Permit may be required — verify with AHJ.');
+  const bottomLine = (d.permit_summary || d.summary || '').split(/\.\s+/)[0] || (verdict === 'YES' ? 'Permit required for this scope of work.' : verdict === 'NO' ? 'No permit required.' : 'Permit may be required — verify with the building department.');
   html += row(1, 'Bottom line', _esc(bottomLine));
   // 2. Permit required
   html += row(2, 'Permit required', verdictBadge);
@@ -3652,7 +3701,9 @@ function renderResultAsReport(d, job, city, state) {
   // 5. Application method
   html += row(5, 'Application method', appMethod);
   // 6. Portal / link
-  const portalLink = applyUrl ? `<a href="${_esc(applyUrl)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(applyUrl)}</a>` : _missing;
+  const portalLink = applyUrl ? `<a href="${_esc(applyUrl)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(applyUrl)}</a>`
+                   : applyPathLabel ? _esc(applyPathLabel)
+                   : _missing;
   html += row(6, 'Portal / link', portalLink);
   // 7. Who may apply
   let whoMay = '';
@@ -3664,7 +3715,7 @@ function renderResultAsReport(d, job, city, state) {
   html += row(8, 'Required documents', _list(reqs, 8));
   // 9. Fees
   let feeBlock = _v(fee);
-  if (feeAdjusted && fee) feeBlock += `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">Planning estimate — based on commercial TI complexity, not a quoted AHJ fee schedule. Confirm final fees with the AHJ before bidding or payment.</div>`;
+  if (feeAdjusted && fee) feeBlock += `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">Planning estimate — based on commercial TI complexity, not a quoted fee schedule. Confirm final fees with the local building department before bidding or payment.</div>`;
   html += row(9, 'Fees', feeBlock);
   // 10. Inspections
   html += row(10, 'Inspections', _list(inspections, 6));
@@ -3683,6 +3734,8 @@ function renderResultAsReport(d, job, city, state) {
   // 14. Online application
   let appBlock = '';
   if (applyUrl) appBlock += `<a href="${_esc(applyUrl)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">${_esc(applyUrl)}</a>`;
+  if (!appBlock && applyPathLabel) appBlock += _esc(applyPathLabel);
+  if (applyPathSteps.length) appBlock += (appBlock ? '<div style="margin-top:4px">' : '') + _list(applyPathSteps, 4) + (appBlock ? '</div>' : '');
   if (applyPdf) appBlock += (appBlock ? '<div style="margin-top:4px">' : '') + `<a href="${_esc(applyPdf)}" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">📄 PDF application: ${_esc(applyPdf)}</a>` + (appBlock ? '</div>' : '');
   html += row(14, 'Online application', appBlock || _missing);
   // 15. Failure risks
@@ -3861,7 +3914,7 @@ function copyResult() {
   t += `Fee: ${fee}\n`;
   t += `Timeline: ${timeline}\n`;
   if (office || phone) t += `Apply at: ${office}${office && phone ? ' — ' : ''}${phone}\n`;
-  t += `\nPERMITASSIST GUIDANCE ONLY: Verify exact permit type with the AHJ before quoting or starting work.\n`;
+  t += `\nPERMITASSIST GUIDANCE ONLY: Verify exact permit type with the local building department before quoting or starting work.\n`;
   t += `Generated by PermitAssist (permitassist.io)`;
   navigator.clipboard.writeText(t).then(() => showCopy('✅ Copied!')).catch(() => alert(t));
 }
@@ -4546,10 +4599,11 @@ async function doLookup() {
   try {
     const res = await fetch('/api/permit', {
       method: 'POST', headers: getAuthHeaders(),
-      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, address, job_category: jobCategory })
+      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, address, job_category: jobCategory, disambiguation_hint: _pendingDisambiguationHint || undefined })
     });
     stopProgress();
     const data = await res.json();
+    _pendingDisambiguationHint = '';
     syncLookupCounterFromResponse(res,data);
     if (res.status === 429) {
       document.getElementById('loading').style.display = 'none';

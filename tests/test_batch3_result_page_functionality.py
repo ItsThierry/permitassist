@@ -84,9 +84,30 @@ def test_commercial_justifier_header_is_scope_aware_not_homeowner_only():
     body = _function_body("renderResults")
     justifier_start = body.index("const justifierIntro")
     justifier_block = body[justifier_start: body.index("// City contractor registration alert", justifier_start)]
-    assert "isCommercialPrimaryScope(d?._primary_scope)" in justifier_block
+    assert "isCommercialCustomerCopyScope(d)" in justifier_block
     assert "tenant, landlord, or owner" in justifier_block
     assert "homeowner fast" in justifier_block
+
+
+def test_commercial_justifier_infers_commercial_from_sanitized_customer_result():
+    helper = _function_body("inferCommercialPrimaryScopeFromCustomerResult")
+    for token in [
+        "_primary_scope",
+        "permit_type",
+        "primary_permit",
+        "permits_required",
+        "tenant improvement",
+        "finish-out",
+        "commercial",
+    ]:
+        assert token in helper
+    assert "inferCommercialPrimaryScopeFromCustomerResult(result)" in _function_body("isCommercialCustomerCopyScope")
+
+
+def test_commercial_sanitized_customer_result_suppresses_residential_trade_checklist():
+    body = _function_body("getInspectionChecklist")
+    assert "inferCommercialPrimaryScopeFromCustomerResult(result)" in body
+    assert "return null" in body
 
 
 def test_inspection_items_are_normalized_and_empty_placeholders_hidden():

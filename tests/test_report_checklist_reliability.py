@@ -138,3 +138,47 @@ def test_render_share_page_sanitizes_internal_engine_wording(tmp_path, monkeypat
     payload = json.loads(html)
     _assert_no_internal_customer_terms(payload["share"]["data"])
     _assert_no_internal_customer_terms(payload["checklist"])
+
+
+def test_customer_sanitizer_removes_raw_disambiguation_labels_fragments_and_ahj(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+
+    cleaned = server.sanitize_customer_visible_result({
+        "permit_name": "Residential Building Permit — Addition (layout/plumbing/electrical/wall changes)",
+        "job_summary": "Kitchen remodel (full replacement) requires **building review** with AHJ verification.",
+        "what_to_bring": ["connection points", "Scaled plans", "Verify whether plumbing applies or Verify electrical because panels changed."],
+        "pro_tips": ["fire marshal before permit intake."],
+        "permit_verdict": "YES",
+    })
+
+    serialized = json.dumps(cleaned, sort_keys=True).lower()
+    assert "(full replacement)" not in serialized
+    assert "layout/plumbing/electrical/wall changes" not in serialized
+    assert "**" not in serialized
+    assert "ahj" not in serialized
+    assert "connection points" not in serialized
+    assert "or verify" not in serialized
+    assert "coordinate fire-marshal review before permit intake" in serialized
+
+
+def test_customer_sanitizer_rebalances_commercial_ti_timeline_and_fee_copy(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+
+    cleaned = server.sanitize_customer_visible_result({
+        "_primary_scope": "commercial_office_ti",
+        "permit_name": "Commercial Tenant Improvement Building Permit",
+        "permit_verdict": "YES",
+        "fee_range": "Call to confirm",
+        "approval_timeline": {
+            "simple": "Same day OTC for simple trade permits",
+            "complex": "5-10 business days if plan review required",
+        },
+    })
+
+    assert "valuation" in cleaned["fee_range"].lower()
+    assert "trade scope" in cleaned["fee_range"].lower()
+    assert "call to confirm" not in cleaned["fee_range"].lower()
+    simple = cleaned["approval_timeline"]["simple"].lower()
+    assert "plan review" in simple
+    assert "same day" not in simple
+    assert "otc" not in simple
