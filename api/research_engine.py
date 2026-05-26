@@ -28,8 +28,10 @@ import pdfplumber
 
 try:
     from .state_packs import get_state_expert_notes
+    from .scope_contract import build_scope_contract, has_any_unnegated
 except ImportError:  # server.py imports research_engine as a top-level module
     from state_packs import get_state_expert_notes
+    from scope_contract import build_scope_contract, has_any_unnegated
 
 try:
     from .state_schema import compact_state_schema_context
@@ -3497,11 +3499,21 @@ def init_cache():
     conn.commit()
     conn.close()
 
-def cache_key(job_type: str, city: str, state: str, job_category: str = "residential") -> str:
-    # v2 (2026-04-27): bumped after the Pasadena CA → Harris County TX cross-state
-    # leak. Old v1 entries cached buggy county_fallback data; bumping the prefix
-    # invalidates every pre-fix row at once so users never see stale results.
-    raw = f"v2|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{(job_category or 'residential').lower().strip()}"
+def cache_key(job_type: str, city: str, state: str, job_category: str | None = None) -> str:
+    # v3 (2026-05-26): include the canonical scope family/vertical/occupancy
+    # so stale residential/commercial rows cannot collide across request scopes.
+    raw_category = (job_category or "").lower().strip()
+    if raw_category not in ("residential", "commercial"):
+        raw_category = ""
+    scope_contract = build_scope_contract(job_type, city, state, job_category=raw_category or None)
+    scope_bits = "|".join(
+        str(scope_contract.get(key) or "")
+        for key in ("family", "vertical", "occupancy_class")
+    )
+    canonical_category = str(scope_contract.get("category") or "").lower().strip()
+    if canonical_category not in ("residential", "commercial"):
+        canonical_category = raw_category or "residential"
+    raw = f"v3|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{canonical_category}|{scope_bits}"
     return hashlib.md5(raw.encode()).hexdigest()
 
 def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
@@ -5097,28 +5109,55 @@ def _scope_permit(permit_type: str, portal_selection: str, notes: str, required:
     }
 
 
-def classify_scope_required_permits(job_type: str) -> dict | None:
+def classify_scope_required_permits(job_type: str, scope_contract: dict | None = None) -> dict | None:
     """Deterministically classify permits for high-confidence job scopes.
 
-    This is intentionally narrow: it only overrides the model when the job text
-    clearly matches a scope in the Tier B matrix. Other jobs keep model output
-    and receive derived logic only.
+    This consumes the canonical request-entry scope contract when available so
+    contaminated model/cache text cannot reclassify residential work as another
+    vertical. Other jobs keep model output and receive derived logic only.
     """
     job = (job_type or "").lower()
     job = re.sub(r"\s+", " ", job).strip()
     if not job:
         return None
+    scope_contract = scope_contract or build_scope_contract(job_type)
+    contract_vertical = str(scope_contract.get("vertical") or "").lower()
+    contract_family = str(scope_contract.get("family") or "").lower()
 
-    has_panel = _scope_has_any(job, ["panel upgrade", "service upgrade", "new panel", "subpanel", "sub-panel", "200 amp", "200amp", "400 amp", "400amp"])
+    has_panel = _scope_has_any(job, ["panel upgrade", "service upgrade", "new panel", "electrical panel", "main panel", "meter main", "subpanel", "sub-panel", "200 amp", "200amp", "200a", "400 amp", "400amp", "400a"])
     has_gas_line = _scope_has_any(job, ["gas line", "gas piping", "new gas", "relocate gas", "gas modification"])
     has_new_fixtures = _scope_has_any(job, ["new fixture", "new fixtures", "add fixture", "add fixtures", "fixture relocation", "new bathroom", "new kitchen"])
-    has_solar = _scope_has_any(job, ["solar", " pv", "photovoltaic"])
-    has_battery = _scope_has_any(job, ["battery", "ess", "energy storage", "powerwall"])
+    has_solar = contract_vertical == "solar_pv" or has_any_unnegated(job, ("solar", "pv", "photovoltaic"))
+    has_battery = has_any_unnegated(job, ("battery", "ess", "energy storage", "powerwall"))
+    is_hvac = _scope_has_any(job, ["hvac", "condenser", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler"])
+    is_water_heater = "water heater" in job
 
     logic: list[dict] = []
 
     def add_logic(permit_type: str, because: str, trigger: str) -> None:
         logic.append({"permit_type": permit_type, "included_because": because, "scope_trigger": trigger})
+
+    # Pure panel/service jobs should not fall through into Solar PV, but mixed
+    # HVAC/water-heater + panel scopes need both the primary trade permit and
+    # the electrical panel/service permit below.
+    if (scope_contract.get("category") != "commercial") and not is_hvac and not is_water_heater and (contract_vertical == "panel_upgrade" or (has_panel and not has_solar)):
+        permit_name = "Electrical Permit — Service / Panel Upgrade"
+        if re.search(r"\b200\s*(?:amp|a)\b|\b200amp\b", job, flags=re.I):
+            permit_name = "Electrical Permit — Service Upgrade (200A)"
+        elif re.search(r"\b400\s*(?:amp|a)\b|\b400amp\b", job, flags=re.I):
+            permit_name = "Electrical Permit — Service Upgrade (400A)"
+        permits = [_scope_permit(
+            permit_name,
+            "Electrical - Service / Panel Upgrade",
+            "Required for residential electrical panel/service replacement, service-size change, meter-main work, or load-center replacement.",
+        )]
+        add_logic(permits[0]["permit_type"], "Pure residential panel/service upgrade maps to an electrical permit.", "panel/service upgrade scope")
+        return {
+            "scope_classification": "residential_panel_upgrade",
+            "permits_required": permits,
+            "permits_required_logic": logic,
+            "companion_permits": [],
+        }
 
     primary_scope = detect_primary_scope(job)
     if _is_commercial_ti_scope(primary_scope, job):
@@ -5274,15 +5313,13 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
             "companion_permits": [],
         }
 
-    is_hvac = _scope_has_any(job, ["hvac", "condenser", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler"])
-    is_water_heater = "water heater" in job
     hvac_like_for_like = _scope_has_any(job, ["like for like", "like-for-like", "swap", "changeout", "change out", "condenser", "replacement", "replace", "mini split", "mini-split", "ductless"])
     if is_hvac or is_water_heater:
         if is_water_heater and not is_hvac:
-            ptype = "Plumbing Permit — Water Heater Replacement"
-            portal = "Plumbing - Water Heater Replacement"
-            notes = "Required for water heater replacement; companion electrical/gas permits are suppressed unless gas piping, venting conversion, or new circuit work is explicit."
-            base_reason = "Water heater swap is one trade permit when same location/capacity and no new gas/electrical scope is stated."
+            ptype = "Residential Plumbing Permit — Water Heater Replacement" if scope_contract.get("category") == "residential" else "Plumbing Permit — Water Heater Replacement"
+            portal = "Residential Plumbing - Water Heater Replacement" if scope_contract.get("category") == "residential" else "Plumbing - Water Heater Replacement"
+            notes = "Required for residential water heater replacement; companion electrical/gas permits are suppressed unless gas piping, venting conversion, or new circuit work is explicit."
+            base_reason = "Residential water heater swap is one trade permit when same location/capacity and no new gas/electrical scope is stated."
         else:
             ptype = "Mechanical Permit — HVAC Equipment Changeout (Residential)" if hvac_like_for_like else "Mechanical Permit — HVAC System Replacement (Residential)"
             portal = "Mechanical - HVAC Changeout / Replacement"
@@ -5490,11 +5527,13 @@ def _derive_permit_logic(result: dict) -> list[dict]:
     return logic
 
 
-def apply_scope_aware_permit_classification(result: dict, job_type: str) -> dict:
+def apply_scope_aware_permit_classification(result: dict, job_type: str, scope_contract: dict | None = None) -> dict:
     """Apply Tier B scope-aware permits and always add permits_required_logic."""
     if not isinstance(result, dict):
         return result
-    classified = classify_scope_required_permits(job_type)
+    scope_contract = scope_contract or result.get("_scope_contract") or build_scope_contract(job_type)
+    result["_scope_contract"] = scope_contract
+    classified = classify_scope_required_permits(job_type, scope_contract=scope_contract)
     primary_scope = detect_primary_scope(job_type or "")
     if classified:
         result["_primary_scope"] = primary_scope
@@ -6301,11 +6340,13 @@ def enforce_commercial_primary_permit_guardrail(result: dict, job_type: str, cit
     return result
 
 
-def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str) -> dict:
-    """Append deterministic state expert notes (currently California)."""
+def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str, scope_contract: dict | None = None) -> dict:
+    """Append deterministic, scope-filtered state expert notes."""
     if not isinstance(result, dict):
         return result
-    notes = get_state_expert_notes(state, city, job_type)
+    scope_contract = scope_contract or result.get("_scope_contract") or build_scope_contract(job_type, city, state, job_category=result.get("job_category"))
+    result["_scope_contract"] = scope_contract
+    notes = get_state_expert_notes(state, city, job_type, scope_contract=scope_contract)
     if not notes:
         if "expert_notes" not in result:
             result["expert_notes"] = []
@@ -8226,17 +8267,20 @@ def scrub_hidden_trigger_internal_metadata(result: dict) -> dict:
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
-def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False) -> dict:
+def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str | None = None, job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False) -> dict:
     """
     Research permit requirements for a job + location.
     v3: Better advice depth, small city fallback, PDF stripping, Google Maps fallback.
     """
     init_cache()
 
-    job_category = job_category.lower().strip() if job_category else "residential"
-    if job_category not in ("residential", "commercial"):
-        job_category = "residential"
+    requested_job_category = job_category.lower().strip() if isinstance(job_category, str) else ""
+    if requested_job_category not in ("residential", "commercial"):
+        requested_job_category = ""
 
+    scope_contract = build_scope_contract(job_type, city, state, job_category=requested_job_category or None)
+    inferred_job_category = str(scope_contract.get("category") or "").lower().strip()
+    job_category = inferred_job_category if inferred_job_category in ("residential", "commercial") else (requested_job_category or "residential")
     key = cache_key(job_type, city, state, job_category)
 
     if use_cache:
@@ -8254,6 +8298,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
         cached = get_cached(key, _refresh_callback=_background_refresh)
         if cached:
             cached["_cached"] = True
+            cached["_scope_contract"] = scope_contract
             if not isinstance(cached.get("companion_permits"), list):
                 cached["companion_permits"] = []
             if not isinstance(cached.get("sources"), list):
@@ -8299,7 +8344,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             repair_residential_home_office_commercial_leak(cached, job_type, city, state)
             validate_and_sanitize_permit_result(cached, job_type, city, state)
             scrub_hidden_trigger_internal_metadata(cached)
-            apply_state_expert_pack(cached, city, state, job_type)
+            apply_state_expert_pack(cached, city, state, job_type, scope_contract=scope_contract)
             hedge_companion_permits(cached, job_type)
             enrich_result_with_serper_sources(cached, job_type, city, state)
             apply_source_locality_hard_block(cached, city, state, job_type)
@@ -9155,11 +9200,12 @@ Return ONLY the JSON object."""
         result['fee_calculator'] = calculate_exact_fee(job_type, city, state, float(job_value))
     else:
         result['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
+    result["_scope_contract"] = scope_contract
 
     apply_scope_aware_permit_classification(result, job_type)
     enforce_ti_min_permits_floor(result, job_type, city, state)
     apply_residential_permit_name_specificity(result, job_type, city, state)
-    apply_state_expert_pack(result, city, state, job_type)
+    apply_state_expert_pack(result, city, state, job_type, scope_contract=scope_contract)
     apply_state_schema_context(result, job_type, city, state)
 
     # 2026-04-28: Hidden Trigger Detector V1. Deterministic detection of

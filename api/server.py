@@ -42,6 +42,7 @@ from research_engine import (
     detect_primary_scope,
     classify_scope_required_permits,
 )
+from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
@@ -337,10 +338,72 @@ def validate_url(url: str, timeout: int = 4) -> bool:
     except Exception:
         return False
 
+def _scrub_scope_limit_leaks(result: dict, scope_contract: dict) -> None:
+    """Remove customer-visible text that names a forbidden vertical/scope.
+
+    This is upstream cleanup before the final firebreak. It preserves the current
+    request's coverage and rich output while dropping individual stale/model/cache
+    strings that mention unrelated paths (for example homeowner/ADU/solar wording
+    inside a commercial TI result).
+    """
+    if not isinstance(result, dict) or not isinstance(scope_contract, dict):
+        return
+
+    removed = object()
+    structured_title_fields = {"permit_type", "portal_selection", "title", "name", "summary", "reason", "required_if", "claim", "value"}
+
+    def clean_customer_scope_text(value):
+        if isinstance(value, str):
+            return removed if customer_text_mentions_forbidden_scope(value, scope_contract) else value
+        if isinstance(value, list):
+            cleaned = []
+            for item in value:
+                next_item = clean_customer_scope_text(item)
+                if next_item is not removed and next_item not in ("", [], {}):
+                    cleaned.append(next_item)
+            return cleaned
+        if isinstance(value, dict):
+            if any(
+                key in structured_title_fields and isinstance(item, str) and customer_text_mentions_forbidden_scope(item, scope_contract)
+                for key, item in value.items()
+            ):
+                return removed
+            cleaned = {}
+            for key, item in value.items():
+                next_item = clean_customer_scope_text(item)
+                if next_item is not removed and next_item not in ("", [], {}):
+                    cleaned[key] = next_item
+            return cleaned
+        return value
+
+    customer_scope_fields = (
+        "quality_warnings", "warnings", "checklist", "what_to_bring", "pro_tips",
+        "common_mistakes", "watch_out", "requirements", "documents_needed",
+        "next_steps", "inspection_notes", "permit_notes",
+    )
+    for key in customer_scope_fields:
+        if key in result:
+            cleaned = clean_customer_scope_text(result.get(key))
+            if cleaned is removed or cleaned in ("", [], {}):
+                result.pop(key, None)
+            else:
+                result[key] = cleaned
+
+    citations = result.get("claim_citations")
+    if isinstance(citations, list):
+        for citation in citations:
+            if not isinstance(citation, dict):
+                continue
+            limit = citation.get("source_scope_limit")
+            if isinstance(limit, str) and customer_text_has_forbidden_scope(limit, scope_contract):
+                citation["source_scope_limit"] = ""
+
+
 def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool = True) -> dict:
     """Remove internal engine/review wording before any customer surface sees it."""
     if not isinstance(result, dict):
         return result
+    scope_contract = result.get("_scope_contract") if isinstance(result.get("_scope_contract"), dict) else None
 
     internal_terms = (
         "engine flagged",
@@ -399,14 +462,15 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             if value.strip().lower() == "fire marshal before permit intake.":
                 value = "Coordinate fire-marshal review before permit intake."
             value = re.sub(r"\s+or\s+Verify\s+", "; verify ", value)
-            value = re.sub(r"\bAHJ\b", "building department", value)
+            value = re.sub(r"\bahj_contact_source\b", "building department contact source", value, flags=re.I)
+            value = re.sub(r"\bAHJ\b", "building department", value, flags=re.I)
         value = re.sub(r"\bVerified\s*·\s*official sources\b", "Official source path found", value, flags=re.I)
         value = re.sub(r"\bPlanning estimate only\s*:?\s*", "", value, flags=re.I)
         value = re.sub(r"\bHidden triggers?\s*:?\s*", "Scope triggers: ", value, flags=re.I)
         value = re.sub(r"\bEngine flagged(?:\s+this\s+answer)?(?:\s+for\s+review)?\b\.?", "Verify requirements with the building department before filing.", value, flags=re.I)
         value = re.sub(r"\bNeeds review(?:\s+for\s*:\s*[A-Za-z0-9_, ._/-]+)?\b\.?", "Verify requirements with the building department before filing.", value, flags=re.I)
-        value = re.sub(r"\[?\s*verify[^\]\[.;,]{0,100}?before merging\s*\]?", "confirm with the AHJ", value, flags=re.I)
-        value = re.sub(r"\bverify adopted edition before merging\b", "confirm adopted code edition with the AHJ", value, flags=re.I)
+        value = re.sub(r"\[?\s*verify[^\]\[.;,]{0,100}?before merging\s*\]?", "confirm with the building department", value, flags=re.I)
+        value = re.sub(r"\bverify adopted edition before merging\b", "confirm adopted code edition with the building department", value, flags=re.I)
         value = re.sub(r"\s{2,}", " ", value).strip()
         if strip_internal_keys and has_internal(value):
             return ""
@@ -431,7 +495,8 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
                     continue
                 next_value = scrub(child_value, key_name)
                 if not strip_internal_keys or next_value not in ("", [], {}):
-                    cleaned[child_key] = next_value
+                    public_key = "building_department_contact_source" if key_lc == "ahj_contact_source" else child_key
+                    cleaned[public_key] = next_value
             return cleaned
         return value
 
@@ -448,6 +513,11 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
                 if not complex_text:
                     timeline["complex"] = "Longer plan-review cycle if structural, accessibility, fire/life-safety, health, zoning, or trade-plan corrections are triggered."
                 cleaned_result["approval_timeline"] = timeline
+        if scope_contract:
+            cleaned_result = sanitize_result_for_scope_contract(cleaned_result, scope_contract)
+            if strip_internal_keys:
+                cleaned_result.pop("_scope_contract", None)
+                cleaned_result.pop("_scope_firebreak_removed", None)
         return cleaned_result
     return {}
 
@@ -538,7 +608,13 @@ def enrich_result_response(result: dict, job_type: str, city: str, state: str) -
         if booking_bits:
             result["inspection_booking"] = ". ".join(booking_bits) + "."
 
-    if any(token in job_lower for token in ["solar", "pv", "roof", "roofing", "shingle"]) and not result.get("zoning_hoa_flag"):
+    if (
+        not result.get("zoning_hoa_flag")
+        and (
+            _has_unnegated_any(job_lower, ("solar", "pv", "photovoltaic", "roof", "roofing", "shingle"))
+            or (isinstance(result.get("_scope_contract"), dict) and result["_scope_contract"].get("vertical") in {"solar_pv", "reroof"})
+        )
+    ):
         result["zoning_hoa_flag"] = (
             "Check HOA rules, historic district overlays, and local zoning before applying. "
             "Solar and roofing jobs may face placement, material, or visibility restrictions that can delay approval."
@@ -1104,7 +1180,7 @@ def _scrub_residential_private_workspace_fee_floor(result: dict, private_label: 
     result["_residential_fee_floor_leak_repaired"] = True
 
 
-def _repair_residential_trade_model_leak(result: dict, job_type: str, city: str | None = None) -> None:
+def _repair_residential_trade_model_leak(result: dict, job_type: str, city: str | None = None, scope_contract: dict | None = None) -> None:
     """Trust explicit residential single-trade/home-office scope over stale commercial model output."""
     if _looks_like_residential_home_office_noncommercial(job_type or ""):
         result["_primary_scope"] = "residential"
@@ -1178,7 +1254,8 @@ def _repair_residential_trade_model_leak(result: dict, job_type: str, city: str 
         result["_residential_trade_leak_repaired"] = True
         result["permit_verdict"] = "YES"
         return
-    classified = classify_scope_required_permits(job_type or "")
+    scope_contract = scope_contract or result.get("_scope_contract")
+    classified = classify_scope_required_permits(job_type or "", scope_contract=scope_contract)
     if classified:
         result["permits_required"] = classified.get("permits_required", result.get("permits_required", []))
         result["permits_required_logic"] = classified.get("permits_required_logic", result.get("permits_required_logic", []))
@@ -1473,8 +1550,11 @@ def build_claim_citations(result: dict, city: str | None = None, state: str | No
 
 
 def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict:
+    scope_contract = result.get("_scope_contract") if isinstance((result or {}).get("_scope_contract"), dict) else build_scope_contract(job_type, city, state)
+    if not isinstance(scope_contract, dict):
+        scope_contract = build_scope_contract(job_type, city, state)
     url = result.get("apply_url") or ""
-    if result.get("_residential_trade_leak_repaired") and re.search(r"commercial|tenant[-_ ]?improvement|tenant[-_ ]?finish", str(url), re.I):
+    if (scope_contract.get("category") == "residential" or result.get("_residential_trade_leak_repaired")) and re.search(r"commercial|tenant[-_ ]?improvement|tenant[-_ ]?finish", str(url), re.I):
         url = ""
         result["apply_url"] = ""
     lower = url.lower()
@@ -1490,7 +1570,12 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
     elif url:
         platform = "city portal / AHJ website"
 
-    commercial = _is_commercial_scope(job_type, result)
+    if scope_contract.get("category") == "commercial":
+        commercial = True
+    elif scope_contract.get("category") == "residential":
+        commercial = False
+    else:
+        commercial = _is_commercial_scope(job_type, result)
     permit_type = _primary_permit_text(result) or "Permit type needs AHJ verification"
     if url:
         steps = [
@@ -1580,6 +1665,13 @@ def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: boo
 
 def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
+    if not isinstance(result, dict):
+        result = {}
+    contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
+    scope_contract = result.get("_scope_contract") if isinstance(result.get("_scope_contract"), dict) else build_scope_contract(contract_job_type, city, state)
+    if not isinstance(scope_contract, dict):
+        scope_contract = build_scope_contract(contract_job_type, city, state)
+    result["_scope_contract"] = scope_contract
     evidence_pack = get_local_evidence_pack() if evidence_allowed is not False else None
     evidence_enabled = evidence_pack is not None
     unexpected_evidence_cache = evidence_enabled and (is_cached or bool(result.get("_cached")))
@@ -1614,6 +1706,23 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
 
     result = enrich_result_response(result, job_type, city, state)
     result = apply_permitiq_quality_gate(result, job_type, city, state)
+    result["_scope_contract"] = scope_contract
+    classified = classify_scope_required_permits(job_type or "", scope_contract=scope_contract)
+    if classified:
+        result["permits_required"] = classified.get("permits_required", result.get("permits_required", []))
+        result["permits_required_logic"] = classified.get("permits_required_logic", result.get("permits_required_logic", []))
+        result["companion_permits"] = classified.get("companion_permits", result.get("companion_permits", []))
+        if scope_contract.get("vertical") == "panel_upgrade" and any(
+            _has_unnegated_any(str(item).lower(), ("solar", "pv", "photovoltaic", "racking", "interconnection"))
+            for item in (result.get("checklist") or [])
+        ):
+            result["checklist"] = [
+                "Confirm service size, panel amperage, and meter/main location.",
+                "Prepare electrical load calculation if the AHJ or utility requires it.",
+                "Have licensed electrical contractor information and utility coordination details ready.",
+                "Verify inspection scheduling and meter release steps before shutdown work.",
+            ]
+        result["permit_verdict"] = "YES"
 
     if evidence_enabled:
         forced_status = "invalid_contract" if unexpected_evidence_cache else None
@@ -1662,6 +1771,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             if warning and warning not in merged_warnings:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
+    _scrub_scope_limit_leaks(result, scope_contract)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
@@ -3109,6 +3219,32 @@ def generate_checklist(result: dict, job_type: str = "", city: str = "", state: 
     return fallback
 
 
+def _sanitize_customer_result_for_request_scope(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
+    """Apply normal customer sanitizer plus request-scope firebreak."""
+    cleaned = sanitize_customer_visible_result(result)
+    try:
+        scope_contract = build_scope_contract(job_type or "", city or "", state or "")
+        if isinstance(cleaned, dict):
+            _scrub_scope_limit_leaks(cleaned, scope_contract)
+        cleaned = sanitize_result_for_scope_contract(cleaned, scope_contract, fail_on_removal_in_tests=False)
+        if isinstance(cleaned, dict):
+            cleaned.pop("_scope_contract", None)
+            cleaned.pop("_scope_firebreak_removed", None)
+    except Exception as exc:
+        print(f"[customer-sanitize] Scope sanitize fallback used: {exc}")
+    return cleaned if isinstance(cleaned, dict) else {}
+
+
+def _sanitize_checklist_customer_output(checklist: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
+    """Sanitize checklist JSON before customer return/cache storage.
+
+    Checklists can be generated from, or loaded from, stale customer-result cache rows.
+    Use the request scope as the firebreak so a commercial TI checklist cannot show
+    residential/ADU/solar helper copy just because a stale cached checklist row had it.
+    """
+    return _sanitize_customer_result_for_request_scope(checklist, job_type, city, state)
+
+
 def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     result_hash = make_result_hash(result)
     try:
@@ -3122,8 +3258,9 @@ def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", st
             data = json.loads(row[0])
             data["cached"] = True
             data["result_hash"] = result_hash
-            return data
+            return _sanitize_checklist_customer_output(data, job_type, city, state)
         checklist = generate_checklist(result, job_type, city, state)
+        checklist = _sanitize_checklist_customer_output(checklist, job_type, city, state)
         conn.execute(
             "INSERT OR REPLACE INTO checklist_cache (result_hash, checklist_json, created_at) VALUES (?,?,?)",
             (result_hash, json.dumps(checklist), utc_now().isoformat())
@@ -3136,6 +3273,7 @@ def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", st
     except Exception as e:
         print(f"[checklist] Cache error: {e}")
         checklist = build_checklist_fallback(result, job_type, city, state)
+        checklist = _sanitize_checklist_customer_output(checklist, job_type, city, state)
         checklist["cached"] = False
         checklist["result_hash"] = result_hash
         return checklist
@@ -3150,7 +3288,12 @@ def load_report_template() -> str:
 def render_share_page(share: dict) -> str:
     template = load_report_template()
     safe_share = dict(share or {})
-    safe_data = sanitize_customer_visible_result(safe_share.get("data") or {})
+    safe_data = _sanitize_customer_result_for_request_scope(
+        safe_share.get("data") or {},
+        safe_share.get("job_type", ""),
+        safe_share.get("city", ""),
+        safe_share.get("state", ""),
+    )
     safe_share["data"] = safe_data
     payload = {
         "share": safe_share,
@@ -5385,7 +5528,7 @@ class Handler(BaseHTTPRequestHandler):
                 city         = data.get("city", "").strip()
                 state        = data.get("state", "").strip()
                 zip_code     = data.get("zip_code", "").strip()
-                job_category = data.get("job_category", "residential").strip() or "residential"
+                job_category = (data.get("job_category") or "").strip()
                 explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
 
                 if not job_type or not city or not state:
@@ -5583,10 +5726,11 @@ class Handler(BaseHTTPRequestHandler):
                     state = item.get("state", "")
                     zip_code = item.get("zip", "") or item.get("zip_code", "")
                     job_value = item.get("job_value")
+                    job_category = item.get("job_category", "")
                     explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
                     try:
                         evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
-                        result = research_permit(job_type, city, state, zip_code, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
+                        result = research_permit(job_type, city, state, zip_code, job_category=job_category, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
                         if evidence_allowed:
                             result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
                             response = dict(result)
@@ -5899,7 +6043,7 @@ class Handler(BaseHTTPRequestHandler):
                 city = data.get("city", "").strip()
                 state = data.get("state", "").strip()
                 zip_code = data.get("zip_code", "").strip()
-                job_category = data.get("job_category", "residential").strip() or "residential"
+                job_category = (data.get("job_category") or "").strip()
                 explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
