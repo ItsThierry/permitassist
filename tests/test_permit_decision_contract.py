@@ -18,7 +18,13 @@ from api.permit_decision import (  # noqa: E402
 
 
 def _official_result(city="Dallas", state="TX"):
-    host = "dallascityhall.com" if state == "TX" else "cityofpasadena.net"
+    city_key = str(city or "").strip().lower()
+    if state == "TX" and city_key == "austin":
+        host = "www.austintexas.gov"
+    elif state == "TX":
+        host = "dallascityhall.com"
+    else:
+        host = "cityofpasadena.net"
     return {
         "permit_verdict": "YES",
         "confidence": "high",

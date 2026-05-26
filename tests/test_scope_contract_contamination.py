@@ -132,8 +132,8 @@ def test_finalize_panel_upgrade_repairs_stale_solar_and_keeps_residential_apply_
         "permit_verdict": "YES",
         "confidence": "medium",
         "permits_required": [{"permit_type": "Building Permit — Solar PV (Structural Racking & Roof Penetrations)", "required": True}],
-        "apply_url": "https://example.gov/commercial-tenant-improvement",
-        "sources": ["https://example.gov/electrical-permits"],
+        "apply_url": "https://www.tarrantcountytx.gov/en/development-services/permits.html",
+        "sources": ["https://www.tarrantcountytx.gov/en/development-services/permits.html"],
         "checklist": ["Solar PV plans"],
         "approval_timeline": "2-4 weeks",
     }
