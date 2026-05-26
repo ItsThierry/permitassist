@@ -1864,6 +1864,7 @@ def test_pa300_cached_stage_fog_fee_source_drops_food_establishment_metadata():
             "title": "Temporary Food Establishment Permit - the City of Fort Worth",
             "source_type": "official",
         },
+        "sources": [{"url": "https://www.fortworthtexas.gov/departments/development-services/permits", "title": "Official Fort Worth building source"}],
         "confidence": "medium",
     }
 
@@ -2016,7 +2017,7 @@ def test_pa300_cached_lab_fume_hood_exact_response_scrubs_restaurant_contrast():
         ],
         "permits_required_logic": [],
         "companion_permits": [],
-        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "sources": [{"url": "https://www.ladbs.org/services/core-services/plan-check-permit", "title": "Official Los Angeles building source"}],
         "confidence": "medium",
     }
 
@@ -2100,7 +2101,7 @@ def test_pa300_cached_church_classroom_with_stale_residential_primary_is_sanitiz
         ],
         "permits_required_logic": [],
         "companion_permits": [],
-        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "sources": [{"url": "https://www.sandiego.gov/development-services/permits", "title": "Official San Diego building source"}],
         "confidence": "medium",
     }
 
@@ -2138,7 +2139,7 @@ def test_residential_single_trade_cached_result_preserves_residential_wording():
         ],
         "permits_required_logic": [],
         "companion_permits": [],
-        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "sources": [{"url": "https://www.dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/default.aspx", "title": "Official Dallas building source"}],
         "confidence": "medium",
     }
 
@@ -2320,7 +2321,7 @@ def test_true_commercial_office_garage_workshop_cached_fee_floor_is_preserved():
         ],
         "fee_range": office_fee,
         "claim_citations": [],
-        "sources": [{"url": "https://example.com/permit", "title": "Official source"}],
+        "sources": [{"url": "https://www.miami.gov/Services/Permits", "title": "Official Miami building source"}],
         "confidence": "medium",
     }
 
