@@ -347,3 +347,112 @@ def test_austin_residential_remodel_addition_keeps_building_primary_over_trade_k
     assert "hvac system replacement" not in primary_blob
     families = {engine._permit_family(p) for p in result["permits_required"]}
     assert {"building", "mechanical", "electrical", "plumbing"}.issubset(families)
+
+
+def test_live_e2e_dallas_office_tenant_finish_classifies_as_commercial_ti_not_residential_trade():
+    job = (
+        "Dallas office tenant finish for a commercial office suite with demising partitions, "
+        "lighting, RTU ductwork, data cabling, and ADA restroom work"
+    )
+
+    classified = engine.classify_scope_required_permits(job)
+
+    assert classified is not None
+    assert classified["scope_classification"] == "commercial_office_ti"
+    blob = _permit_blob(classified)
+    assert "tenant improvement" in blob or "interior alteration" in blob
+    assert "residential" not in blob
+    assert "hvac system replacement" not in blob
+    assert engine._permit_family(classified["permits_required"][0]) == "building"
+
+
+def test_live_e2e_chicago_commercial_rtu_ductwork_classifies_as_commercial_mechanical_not_roof_or_residential():
+    job = (
+        "Chicago commercial mechanical HVAC rooftop unit RTU replacement with ductwork, "
+        "curb adapter, economizer, and controls at an existing office suite"
+    )
+
+    classified = engine.classify_scope_required_permits(job)
+
+    assert classified is not None
+    assert classified["scope_classification"] == "commercial_mechanical_hvac"
+    blob = _permit_blob(classified)
+    assert "mechanical" in blob
+    assert "commercial" in blob
+    assert "residential" not in blob
+    assert "roofing" not in blob
+
+
+def test_live_e2e_houston_retail_ti_and_dallas_commercial_panel_do_not_emit_residential_labels():
+    cases = [
+        (
+            "Houston retail TI for a new clothing store with storefront, fitting rooms, lighting, "
+            "minor ductwork, and accessible sales counter",
+            "commercial_retail_ti",
+            "building",
+        ),
+        (
+            "Dallas commercial electrical panel and service upgrade from 400A to 800A for an office tenant space",
+            "commercial_electrical_service_upgrade",
+            "electrical",
+        ),
+    ]
+
+    for job, expected_scope, expected_family in cases:
+        classified = engine.classify_scope_required_permits(job)
+        assert classified is not None
+        assert classified["scope_classification"] == expected_scope
+        blob = _permit_blob(classified)
+        assert "residential" not in blob
+        assert "hvac system replacement" not in blob
+        assert "roofing" not in blob
+        assert engine._permit_family(classified["permits_required"][0]) == expected_family
+
+
+def test_retail_tenant_finish_does_not_fall_into_office_ti():
+    job = "Houston retail tenant finish for a clothing store with fitting rooms, storefront lighting, checkout counter, and accessible sales counter"
+
+    assert engine.detect_primary_scope(job) == "commercial_retail_ti"
+    classified = engine.classify_scope_required_permits(job)
+
+    assert classified is not None
+    assert classified["scope_classification"] == "commercial_retail_ti"
+    blob = _permit_blob(classified)
+    assert "retail" in blob or "commercial interior alteration" in blob
+    assert "office interior" not in blob
+    assert "residential" not in blob
+
+
+def test_commercial_electrical_conductor_scope_does_not_match_duct_hvac_substring():
+    job = "Dallas commercial electrical service upgrade with new service conductors, meter main, switchgear, and panel replacement"
+
+    classified = engine.classify_scope_required_permits(job)
+
+    assert classified is not None
+    assert classified["scope_classification"] == "commercial_electrical_service_upgrade"
+    assert engine._permit_family(classified["permits_required"][0]) == "electrical"
+    blob = _permit_blob(classified)
+    assert "electrical" in blob
+    assert "mechanical" not in blob
+    assert "residential" not in blob
+
+
+def test_residential_remodel_service_conductors_do_not_create_mechanical_permit():
+    job = "Austin residential remodel with new service conductors, panel replacement, lighting, and receptacles"
+
+    classified = engine.classify_scope_required_permits(job)
+
+    assert classified is not None
+    families = [engine._permit_family(p) for p in classified["permits_required"]]
+    assert "electrical" in families
+    assert "mechanical" not in families
+
+
+def test_permit_family_classifies_service_conductors_as_electrical_not_mechanical():
+    permit = {
+        "permit_type": "Electrical Permit — Service Conductors / Panel Upgrade",
+        "portal_selection": "Electrical Permit",
+        "notes": "New service conductors and panel replacement.",
+    }
+
+    assert engine._permit_family(permit) == "electrical"

@@ -685,7 +685,7 @@ def _customer_facing_timeline(value: Any, *, city: str, state: str, pack: Eviden
         and "214.904" in text
     ):
         return (
-            "Dallas local queue time still needs AHJ/portal confirmation. "
+            "Dallas local queue time still needs local portal confirmation. "
             "Texas law gives a municipal building-permit outer action deadline: "
             "act by the 45th day after submission, or issue written inability-to-act/deadline notice; "
             "if notice is issued, grant/deny is due within 30 days after notice is received."

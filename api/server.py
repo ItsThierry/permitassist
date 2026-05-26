@@ -41,8 +41,10 @@ from research_engine import (
     get_cache_hit_rate,
     detect_primary_scope,
     classify_scope_required_permits,
+    classify_source_tier,
 )
 from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
+from permit_decision import apply_permit_decision_contract
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
@@ -379,7 +381,7 @@ def _scrub_scope_limit_leaks(result: dict, scope_contract: dict) -> None:
     customer_scope_fields = (
         "quality_warnings", "warnings", "checklist", "what_to_bring", "pro_tips",
         "common_mistakes", "watch_out", "requirements", "documents_needed",
-        "next_steps", "inspection_notes", "permit_notes",
+        "next_steps", "inspection_notes", "permit_notes", "zoning_hoa_flag",
     )
     for key in customer_scope_fields:
         if key in result:
@@ -1504,6 +1506,13 @@ def build_claim_citations(result: dict, city: str | None = None, state: str | No
             if url:
                 sources = [{"url": url, "title": title, "snippet": snippet}]
                 break
+    if has_locality_context:
+        source_city = city or result.get("city") or result.get("jurisdiction_city") or ""
+        source_state = state or result.get("state") or result.get("jurisdiction_state") or ""
+        sources = [
+            src for src in sources
+            if classify_source_tier(str(src.get("url") or ""), source_city, source_state, result=result) == "ahj"
+        ]
     first = sources[0] if sources else {}
     checked = utc_now().date().isoformat()
 
@@ -1772,6 +1781,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
     _scrub_scope_limit_leaks(result, scope_contract)
+    result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
@@ -1816,37 +1826,59 @@ def render_white_label_report_html(data: dict) -> str:
     job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
     location = html.escape(", ".join(x for x in [str(data.get("city") or ""), str(data.get("state") or "")] if x))
     citations = result.get("claim_citations") or build_claim_citations(result, data.get("city"), data.get("state"))
+    decision_contract = result.get("permit_decision_contract") if isinstance(result.get("permit_decision_contract"), dict) else {}
+    decision_headline = str(result.get("customer_headline") or decision_contract.get("customer_headline") or "Permit answer not available from source-backed evidence.")
+    decision_kind = str(result.get("permit_kind") or decision_contract.get("permit_kind") or "Other")
+    customer_next_step = str(result.get("customer_next_step") or decision_contract.get("customer_next_step") or "Use the structured permit kind and local filing path before relying on the answer.")
+    apply_note = str(
+        decision_contract.get("exact_apply_url_customer_note")
+        or "Use the listed department/portal category and match the filing to the structured permit kind."
+    )
     permits = result.get("permits_required") or []
-    permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or "<li>Permit type needs AHJ verification.</li>"
+    permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or f"<li>{html.escape(decision_kind)}</li>"
     safe_apply_url = _safe_external_url(result.get('apply_url') or '')
+    def _customer_safe_report_text(value: object) -> str:
+        text = str(value or "")
+        text = re.sub(r"\blikely\s+primary\s+permit\s+type\b", "Primary permit category", text, flags=re.I)
+        text = re.sub(r"\blikely\s+inspections\b", "Inspection requirements", text, flags=re.I)
+        text = re.sub(r"\blikely\s+permits\b", "Permit decision", text, flags=re.I)
+        text = re.sub(r"\bneeds_verification\b", "source attached; quoted snippet unavailable", text, flags=re.I)
+        text = re.sub(r"\bverify\s+exact\s+AHJ\s+permit\s+name\s+before\s+quoting\b", "Use the structured permit kind; exact local form title is a field-level status", text, flags=re.I)
+        text = re.sub(r"\bverify\s+exact\s+AHJ\s+naming\s+before\s+quoting\b", "Use the structured permit kind; exact local form title is a field-level status", text, flags=re.I)
+        text = re.sub(r"\bverify\s+exact[^.;]{0,120}\s+with\s+(?:the\s+)?AHJ\b", "Use the structured permit kind and local filing path", text, flags=re.I)
+        text = re.sub(r"\bverify\s+with\s+(?:the\s+)?AHJ\b", "Use the listed building department source", text, flags=re.I)
+        text = re.sub(r"\bAHJ\b", "building department", text, flags=re.I)
+        return re.sub(r"\s{2,}", " ", text).strip()
+
     footnotes = "".join(
-        f"<li><strong>{html.escape(c.get('id',''))}</strong> {html.escape(c.get('claim',''))}: "
-        f"{html.escape(c.get('quoted_snippet') or 'No quoted snippet available yet — verify with AHJ.')} "
-        f"<br>{_render_safe_link(c.get('source_url','')) or 'No safe source URL attached'} "
-        f"<em>Checked {html.escape(c.get('checked_at',''))}; confidence {html.escape(c.get('confidence',''))}</em></li>"
+        f"<li><strong>{html.escape(c.get('id',''))}</strong> {html.escape(_customer_safe_report_text(c.get('claim','')))}: "
+        f"{html.escape(_customer_safe_report_text(c.get('quoted_snippet') or 'Quoted snippet not attached in this report artifact.'))} "
+        f"<br>{_render_safe_link(c.get('source_url','')) or 'Source URL not attached to this report artifact'} "
+        f"<em>Checked {html.escape(c.get('checked_at',''))}; confidence {html.escape(_customer_safe_report_text(c.get('confidence','')))}</em></li>"
         for c in citations
-    ) or "<li>No citations attached yet; verify with AHJ.</li>"
+    ) or "<li>No source footnotes attached in this report artifact.</li>"
     warnings_list = list(result.get("quality_warnings") or [])
     evidence_meta = result.get("_evidence_pack") or {}
     evidence_failed = [str(field) for field in (evidence_meta.get("failed_closed_fields") or []) if field]
     evidence_matched = [str(field) for field in (evidence_meta.get("matched_fields") or []) if field]
     if evidence_meta.get("enabled") and evidence_failed:
-        warnings_list.append("Local evidence pack failed closed for: " + ", ".join(evidence_failed) + ". Do not quote or file from those fields until AHJ-confirmed.")
+        warnings_list.append("Local evidence pack failed closed for: " + ", ".join(evidence_failed) + ". Do not quote or file from those fields until official-source fields are restored.")
     if evidence_meta.get("enabled") and "approval_timeline" in evidence_matched:
-        warnings_list.append("Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate.")
+        warnings_list.append("Timeline is statutory/building-department outer-deadline evidence only, not a local queue estimate.")
     if evidence_meta.get("enabled") and "companion_reviews_triggers" in evidence_matched:
-        warnings_list.append("Companion-review evidence is scope-limited; it is not a complete local specialty-trigger list. Verify specialty reviews with the AHJ before filing.")
-    warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in dict.fromkeys(warnings_list))
+        warnings_list.append("Companion-review evidence is scope-limited; it is not a complete local specialty-trigger list. Match specialty reviews to the structured permit kind before filing.")
+    safe_warnings = [_customer_safe_report_text(w) for w in warnings_list]
+    warnings = "".join(f"<li>{html.escape(str(w))}</li>" for w in dict.fromkeys(w for w in safe_warnings if w))
     return f"""<!doctype html>
 <html><head><meta charset='utf-8'><title>Permit research report</title>
 <style>body{{font-family:Arial,sans-serif;max-width:820px;margin:32px auto;color:#172033;line-height:1.45}}.brand{{border-bottom:3px solid #0f766e;padding-bottom:12px;margin-bottom:24px}}.muted{{color:#64748b}}.card{{border:1px solid #dbe3ea;border-radius:12px;padding:16px;margin:16px 0}}@media print{{button{{display:none}}body{{margin:0.5in}}}}</style></head>
 <body><button onclick='window.print()'>Print / Save PDF</button><div class='brand'><h1>{contractor}</h1><div class='muted'>Permit research prepared for {client}</div></div>
 <h2>{job}</h2><p><strong>Location:</strong> {location}</p>
-<div class='card'><h3>Likely permits</h3><ul>{permit_items}</ul></div>
-<div class='card'><h3>How to apply</h3><p>{html.escape(str((result.get('apply_path') or {}).get('verification_note') or 'Verify exact filing path with the AHJ.'))}</p><p><strong>Start URL:</strong> {_render_safe_link(safe_apply_url) or 'Not found'}</p></div>
+<div class='card'><h3>Permit decision</h3><p><strong>{html.escape(decision_headline)}</strong></p><p><strong>Permit kind:</strong> {html.escape(decision_kind)}</p><ul>{permit_items}</ul></div>
+<div class='card'><h3>Next step</h3><p>{html.escape(customer_next_step)}</p><p>{html.escape(apply_note)}</p><p><strong>Start URL:</strong> {_render_safe_link(safe_apply_url) or 'Not found'}</p></div>
 {f"<div class='card'><h3>Warnings</h3><ul>{warnings}</ul></div>" if warnings else ""}
 <div class='card'><h3>Source footnotes</h3><ol>{footnotes}</ol></div>
-<p class='muted'>PermitAssist is guidance only. Verify exact permit type with the AHJ before quoting or starting work.</p></body></html>"""
+<p class='muted'>PermitAssist is guidance only. Use the structured permit decision, permit kind, and listed local filing path before quoting or starting work.</p></body></html>"""
 
 # ── Telegram notifications ────────────────────────────────────────────────────
 def notify_telegram(message: str):

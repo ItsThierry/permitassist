@@ -181,6 +181,7 @@ def test_finalize_commercial_ti_removes_even_exclusionary_residential_scope_leak
             "Use the commercial tenant improvement application path; ignore residential ADU solar forms.",
             "Ask the AHJ if residential owner-builder paperwork applies.",
         ],
+        "sources": ["https://www.phoenix.gov/pdd/development/permits"],
     }
 
     result = server.finalize_permit_lookup_result(
