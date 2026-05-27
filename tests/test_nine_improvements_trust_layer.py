@@ -369,7 +369,7 @@ def test_white_label_report_blocks_unsafe_urls(tmp_path, monkeypatch):
     assert status == 200
     assert "javascript:" not in html
     assert "<script>" not in html
-    assert "No safe source URL attached" in html
+    assert "Source URL not attached to this report artifact" in html
 
 
 def test_quality_gate_does_not_clobber_ahj_specific_commercial_primary(tmp_path, monkeypatch):

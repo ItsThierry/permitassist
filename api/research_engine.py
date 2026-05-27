@@ -28,8 +28,10 @@ import pdfplumber
 
 try:
     from .state_packs import get_state_expert_notes
+    from .scope_contract import build_scope_contract, has_any_unnegated
 except ImportError:  # server.py imports research_engine as a top-level module
     from state_packs import get_state_expert_notes
+    from scope_contract import build_scope_contract, has_any_unnegated
 
 try:
     from .state_schema import compact_state_schema_context
@@ -439,6 +441,9 @@ _AHJ_DOMAIN_ALLOWLIST: dict[tuple[str, str], set[str]] = {
     ("seattle", "wa"): {"seattle.gov", "kingcounty.gov"},
     ("los angeles", "ca"): {"lacity.org", "ladbs.org"},
     ("dallas", "tx"): {"dallascityhall.com", "dallascounty.org"},
+    ("houston", "tx"): {"houstonpermittingcenter.org", "harrispermits.org"},
+    ("pasadena", "ca"): {"cityofpasadena.net"},
+    ("san jose", "ca"): {"sanjoseca.gov"},
     ("denver", "co"): {"denvergov.org"},
     # 2026-05-01 stress100 manual verification: City of Fredericksburg, TX uses fbgtx.org
     # as its official municipal domain; OpenClaw scorer correctly kept it flagged until verified.
@@ -460,7 +465,8 @@ _STATE_OFFICIAL_DOMAINS: dict[str, set[str]] = {
 # of generic state-domain rules (e.g. pw.lacounty.gov is a CA .gov, but not LA City).
 _CITY_LOCALITY_EXCLUSIONS = {
     ("los angeles", "ca"): {"pw.lacounty.gov", "dpw.lacounty.gov", "lacounty.gov", "ldh.la.gov"},
-    ("dallas", "tx"): {"lebanon.in.gov", "govinfo.gov"},
+    ("dallas", "tx"): {"lebanon.in.gov", "govinfo.gov", "fortworthtexas.gov", "fortworthgov.org"},
+    ("pasadena", "ca"): {"southpasadenaca.gov", "southpasadena.net"},
 }
 
 
@@ -650,6 +656,50 @@ def is_url_allowed_for_locality(url: str, city: str, state: str, result: dict | 
     return classify_source_tier(url, city, state, result=result) != SOURCE_TIER_WRONG
 
 
+_APPLY_URL_BLOCK_RE = re.compile(
+    r"(?:^|[/?#&_.=-])(?:fee|fees|fee[-_ ]?schedule|schedule|licens(?:e|ing)|contractor|cslb|tdlr|tabs|search/project)(?:$|[/?#&_.=-])",
+    re.I,
+)
+
+
+def _is_http_url_string(url) -> bool:
+    return isinstance(url, str) and url.lower().startswith("http")
+
+
+def is_apply_url_allowed_for_locality(url: str, city: str, state: str, result: dict | None = None) -> bool:
+    """True only for local AHJ/portal application URLs, never state/licensing/fee pages."""
+    if not _is_http_url_string(url):
+        return False
+    parsed = urlparse(url)
+    url_context = f"{parsed.netloc} {parsed.path} {parsed.query}".lower()
+    if _APPLY_URL_BLOCK_RE.search(url_context):
+        return False
+    return classify_source_tier(url, city, state, result=result) == SOURCE_TIER_AHJ
+
+
+def _source_field_requires_local_ahj(field: str) -> bool:
+    return field in {
+        "fee_source",
+        "building_department_contact_source",
+        "ahj_contact_source",
+        "apply_source",
+        "apply_url_source",
+        "application_source",
+        "online_application_source",
+        "permit_application_source",
+        "portal_source",
+    }
+
+
+def _source_url_allowed_for_field(url: str, field: str, city: str, state: str, result: dict | None = None) -> bool:
+    tier = classify_source_tier(url, city, state, result=result)
+    if tier == SOURCE_TIER_WRONG:
+        return False
+    if _source_field_requires_local_ahj(field):
+        return tier == SOURCE_TIER_AHJ
+    return True
+
+
 def _source_item_url(src) -> str:
     if isinstance(src, str):
         return src
@@ -664,7 +714,7 @@ def filter_sources_by_locality(sources: list, city: str, state: str, result: dic
     kept: list = []
     for src in sources:
         url = _source_item_url(src)
-        if not isinstance(url, str) or not url.startswith("http"):
+        if not _is_http_url_string(url):
             continue
         if is_url_allowed_for_locality(url, city, state, result=result):
             kept.append(src)
@@ -705,7 +755,7 @@ def filter_sources_by_scope(sources: list, scope_text: str) -> tuple[list, list[
     dropped: list[str] = []
     for src in sources:
         url = _source_item_url(src)
-        if not isinstance(url, str) or not url.startswith("http"):
+        if not _is_http_url_string(url):
             continue
         if _source_url_incompatible_with_scope(url, scope_text):
             dropped.append(url)
@@ -733,22 +783,31 @@ def apply_source_locality_hard_block(result: dict, city: str, state: str, job_ty
         dropped.append({"field": "sources", "url": src, "kind": "source_scope"})
 
     apply_url = result.get("apply_url")
-    if isinstance(apply_url, str) and apply_url.startswith("http"):
-        if not is_url_allowed_for_locality(apply_url, city, state, result=result):
+    if _is_http_url_string(apply_url):
+        if not is_apply_url_allowed_for_locality(apply_url, city, state, result=result):
             dropped.append({"field": "apply_url", "url": apply_url})
             result["apply_url"] = None
             result["_apply_url_locality_warning"] = (
-                f"The online application URL did not match {city}, {state}; "
-                "verify the portal directly with the local building department."
+                f"The online application URL did not match {city}, {state} as a verified local application portal; "
+                "verify the exact filing path directly with the local building department."
             )
         else:
             result.pop("_apply_url_locality_warning", None)
 
+    apply_path = result.get("apply_path")
+    if isinstance(apply_path, dict):
+        portal_url = str(apply_path.get("portal_url") or "")
+        if _is_http_url_string(portal_url) and not is_apply_url_allowed_for_locality(portal_url, city, state, result=result):
+            dropped.append({"field": "apply_path.portal_url", "url": portal_url})
+            apply_path["portal_url"] = ""
+            apply_path["support_level"] = "not available"
+            apply_path["verification_note"] = "No confirmed local online filing path was found; use the local building department source before filing."
+
     for key, value in list(result.items()):
         if not key.endswith("_source"):
             continue
-        if isinstance(value, str) and value.startswith("http"):
-            locality_bad = not is_url_allowed_for_locality(value, city, state, result=result)
+        if _is_http_url_string(value):
+            locality_bad = not _source_url_allowed_for_field(value, key, city, state, result=result)
             scope_bad = _source_url_incompatible_with_scope(value, job_type)
             if locality_bad or scope_bad:
                 dropped.append({"field": key, "url": value, "kind": "source_scope" if scope_bad else "source_locality"})
@@ -761,7 +820,7 @@ def apply_source_locality_hard_block(result: dict, city: str, state: str, job_ty
                 "content": value.get("content") or value.get("snippet") or "",
                 "snippet": value.get("snippet") or value.get("content") or "",
             }
-            locality_bad = bool(url) and not is_url_allowed_for_locality(url, city, state, result=result)
+            locality_bad = bool(url) and not _source_url_allowed_for_field(url, key, city, state, result=result)
             scope_bad = _source_incompatible_with_scope_text(source_item, job_type, key.removesuffix("_source"))
             if locality_bad and not scope_bad and _specialty_source_metadata_allowed_for_scope(source_item, job_type, city, state):
                 locality_bad = False
@@ -790,6 +849,22 @@ def apply_source_locality_hard_block(result: dict, city: str, state: str, job_ty
                 _strip_nonlocal_urls_from_text(item, city, state, result, block=False) if isinstance(item, str) else item
                 for item in result[field]
             ]
+
+    if isinstance(result.get("claim_citations"), list):
+        cleaned_citations = []
+        for citation in result.get("claim_citations") or []:
+            if not isinstance(citation, dict):
+                continue
+            item = dict(citation)
+            source_url = str(item.get("source_url") or "")
+            if _is_http_url_string(source_url) and classify_source_tier(source_url, city, state, result=result) != SOURCE_TIER_AHJ:
+                dropped.append({"field": "claim_citations.source_url", "url": source_url})
+                item["source_url"] = ""
+                item["source_title"] = "Local building-department source not confirmed"
+                item["confidence"] = "needs_verification"
+                item["quoted_snippet"] = ""
+            cleaned_citations.append(item)
+        result["claim_citations"] = cleaned_citations
 
     if dropped:
         result["_sources_locality_dropped"] = (result.get("_sources_locality_dropped") or []) + dropped[:10]
@@ -2930,7 +3005,7 @@ def detect_primary_scope(job_type: str) -> str:
         or re.search(r'\b(?:non\s*[- ]?restaurant|not\s+a\s+restaurant)\b', job_lc)
     )
     retail_signal = any(t in job_lc for t in (
-        'retail tenant improvement', 'retail ti', 'retail buildout',
+        'retail tenant improvement', 'retail ti', 'retail buildout', 'retail tenant finish', 'retail tenant buildout',
         'showroom', 'boutique', 'mall tenant', 'strip mall', 'store buildout',
         'commercial retail', 'clothing store',
     ))
@@ -2955,13 +3030,13 @@ def detect_primary_scope(job_type: str) -> str:
     )):
         return 'commercial_restaurant'
     if any(t in job_lc for t in (
-        'office tenant improvement', 'office ti', 'office buildout',
+        'office tenant improvement', 'office ti', 'office buildout', 'office tenant finish', 'office tenant buildout', 'office suite',
         'co-working', 'coworking', 'professional office',
         'law office',
     )):
         return 'commercial_office_ti'
     if any(t in job_lc for t in (
-        'retail tenant improvement', 'retail ti', 'retail buildout',
+        'retail tenant improvement', 'retail ti', 'retail buildout', 'retail tenant finish', 'retail tenant buildout',
         'showroom', 'boutique', 'mall tenant', 'strip mall', 'store buildout',
         'commercial retail',
     )):
@@ -2974,7 +3049,10 @@ def detect_primary_scope(job_type: str) -> str:
     # Generic commercial — no specific subtype detected but commercial markers present
     if any(t in job_lc for t in (
         'commercial tenant improvement', 'commercial buildout', 'commercial building',
-        'industrial ', 'warehouse', 'change of occupancy', 'a-2 occupancy',
+        'tenant finish', 'tenant buildout',
+        'industrial ', 'warehouse', 'research lab', 'laboratory', 'lab tenant improvement',
+        'chemical fume hood', 'lab exhaust', 'hazardous material storage', 'emergency eyewash',
+        'change of occupancy', 'a-2 occupancy',
         'b-occupancy', 'mercantile', 'assembly occupancy', 'change of use',
     )):
         return 'commercial'
@@ -3497,11 +3575,21 @@ def init_cache():
     conn.commit()
     conn.close()
 
-def cache_key(job_type: str, city: str, state: str, job_category: str = "residential") -> str:
-    # v2 (2026-04-27): bumped after the Pasadena CA → Harris County TX cross-state
-    # leak. Old v1 entries cached buggy county_fallback data; bumping the prefix
-    # invalidates every pre-fix row at once so users never see stale results.
-    raw = f"v2|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{(job_category or 'residential').lower().strip()}"
+def cache_key(job_type: str, city: str, state: str, job_category: str | None = None) -> str:
+    # v3 (2026-05-26): include the canonical scope family/vertical/occupancy
+    # so stale residential/commercial rows cannot collide across request scopes.
+    raw_category = (job_category or "").lower().strip()
+    if raw_category not in ("residential", "commercial"):
+        raw_category = ""
+    scope_contract = build_scope_contract(job_type, city, state, job_category=raw_category or None)
+    scope_bits = "|".join(
+        str(scope_contract.get(key) or "")
+        for key in ("family", "vertical", "occupancy_class")
+    )
+    canonical_category = str(scope_contract.get("category") or "").lower().strip()
+    if canonical_category not in ("residential", "commercial"):
+        canonical_category = raw_category or "residential"
+    raw = f"v3|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{canonical_category}|{scope_bits}"
     return hashlib.md5(raw.encode()).hexdigest()
 
 def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
@@ -5097,28 +5185,55 @@ def _scope_permit(permit_type: str, portal_selection: str, notes: str, required:
     }
 
 
-def classify_scope_required_permits(job_type: str) -> dict | None:
+def classify_scope_required_permits(job_type: str, scope_contract: dict | None = None) -> dict | None:
     """Deterministically classify permits for high-confidence job scopes.
 
-    This is intentionally narrow: it only overrides the model when the job text
-    clearly matches a scope in the Tier B matrix. Other jobs keep model output
-    and receive derived logic only.
+    This consumes the canonical request-entry scope contract when available so
+    contaminated model/cache text cannot reclassify residential work as another
+    vertical. Other jobs keep model output and receive derived logic only.
     """
     job = (job_type or "").lower()
     job = re.sub(r"\s+", " ", job).strip()
     if not job:
         return None
+    scope_contract = scope_contract or build_scope_contract(job_type)
+    contract_vertical = str(scope_contract.get("vertical") or "").lower()
+    contract_family = str(scope_contract.get("family") or "").lower()
 
-    has_panel = _scope_has_any(job, ["panel upgrade", "service upgrade", "new panel", "subpanel", "sub-panel", "200 amp", "200amp", "400 amp", "400amp"])
+    has_panel = _scope_has_any(job, ["panel upgrade", "service upgrade", "new panel", "electrical panel", "main panel", "meter main", "subpanel", "sub-panel", "200 amp", "200amp", "200a", "400 amp", "400amp", "400a"])
     has_gas_line = _scope_has_any(job, ["gas line", "gas piping", "new gas", "relocate gas", "gas modification"])
     has_new_fixtures = _scope_has_any(job, ["new fixture", "new fixtures", "add fixture", "add fixtures", "fixture relocation", "new bathroom", "new kitchen"])
-    has_solar = _scope_has_any(job, ["solar", " pv", "photovoltaic"])
-    has_battery = _scope_has_any(job, ["battery", "ess", "energy storage", "powerwall"])
+    has_solar = contract_vertical == "solar_pv" or has_any_unnegated(job, ("solar", "pv", "photovoltaic"))
+    has_battery = has_any_unnegated(job, ("battery", "ess", "energy storage", "powerwall"))
+    is_hvac = _scope_has_any(job, ["hvac", "rtu", "rooftop unit", "roof top unit", "condenser", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting", "mechanical", "economizer"])
+    is_water_heater = "water heater" in job
 
     logic: list[dict] = []
 
     def add_logic(permit_type: str, because: str, trigger: str) -> None:
         logic.append({"permit_type": permit_type, "included_because": because, "scope_trigger": trigger})
+
+    # Pure panel/service jobs should not fall through into Solar PV, but mixed
+    # HVAC/water-heater + panel scopes need both the primary trade permit and
+    # the electrical panel/service permit below.
+    if (scope_contract.get("category") != "commercial") and not is_hvac and not is_water_heater and (contract_vertical == "panel_upgrade" or (has_panel and not has_solar)):
+        permit_name = "Electrical Permit — Service / Panel Upgrade"
+        if re.search(r"\b200\s*(?:amp|a)\b|\b200amp\b", job, flags=re.I):
+            permit_name = "Electrical Permit — Service Upgrade (200A)"
+        elif re.search(r"\b400\s*(?:amp|a)\b|\b400amp\b", job, flags=re.I):
+            permit_name = "Electrical Permit — Service Upgrade (400A)"
+        permits = [_scope_permit(
+            permit_name,
+            "Electrical - Service / Panel Upgrade",
+            "Required for residential electrical panel/service replacement, service-size change, meter-main work, or load-center replacement.",
+        )]
+        add_logic(permits[0]["permit_type"], "Pure residential panel/service upgrade maps to an electrical permit.", "panel/service upgrade scope")
+        return {
+            "scope_classification": "residential_panel_upgrade",
+            "permits_required": permits,
+            "permits_required_logic": logic,
+            "companion_permits": [],
+        }
 
     primary_scope = detect_primary_scope(job)
     if _is_commercial_ti_scope(primary_scope, job):
@@ -5130,6 +5245,66 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
             "permits_required_logic": logic,
             "companion_permits": _commercial_ti_secondary_companions(primary_scope, job_type),
         }
+
+    if primary_scope == "commercial":
+        if _scope_has_any(job, ["research lab", "laboratory", "lab tenant improvement", "chemical fume hood", "lab exhaust", "emergency eyewash", "hazardous material storage"]):
+            permits = [
+                _scope_permit(
+                    "Building Permit — Commercial Laboratory Tenant Improvement",
+                    "Building Permit - Commercial Tenant Improvement",
+                    "Required for commercial lab tenant improvement scope including chemical fume hood, exhaust ducting, lab sinks/emergency eyewash, and hazardous material storage review. Verify exact AHJ laboratory/tenant-improvement permit label before submittal.",
+                ),
+                _scope_permit(
+                    "Mechanical Permit — Commercial Lab Fume Hood / Exhaust",
+                    "Mechanical Permit - Commercial Alteration",
+                    "Required for chemical fume hood exhaust, ductwork, ventilation controls, and related lab exhaust work; this is not a restaurant hood or food-service scope.",
+                ),
+            ]
+            for permit in permits:
+                add_logic(permit["permit_type"], permit["notes"], "commercial laboratory/fume hood tenant improvement scope")
+            return {
+                "scope_classification": "commercial_laboratory_ti",
+                "permits_required": permits,
+                "permits_required_logic": logic,
+                "companion_permits": [],
+            }
+
+        commercial_permit: dict | None = None
+        commercial_scope = "commercial_trade_only"
+        trigger = "commercial trade-only scope"
+        if is_hvac:
+            commercial_permit = _scope_permit(
+                "Mechanical Permit — Commercial HVAC / RTU / Ductwork",
+                "Mechanical Permit - Commercial HVAC / RTU / Ductwork",
+                "Required for commercial mechanical HVAC, rooftop unit (RTU), ductwork, economizer, controls, or ventilation work. Verify exact AHJ trade permit label before submittal.",
+            )
+            commercial_scope = "commercial_mechanical_hvac"
+            trigger = "commercial mechanical/RTU/ductwork scope"
+        elif has_panel or _scope_has_any(job, ["electrical", "service upgrade", "service change", "switchgear", "meter", "transformer"]):
+            commercial_permit = _scope_permit(
+                "Electrical Permit — Commercial Panel / Service Upgrade",
+                "Electrical Permit - Commercial Service / Panel Upgrade",
+                "Required for commercial panel, switchgear, meter-main, service-size, feeder, or electrical service upgrade work. Verify exact AHJ trade permit label before submittal.",
+            )
+            commercial_scope = "commercial_electrical_service_upgrade"
+            trigger = "commercial electrical panel/service scope"
+        elif _scope_has_any(job, ["sign", "signage", "channel letters", "wall sign", "monument sign"]):
+            commercial_permit = _scope_permit(
+                "Sign Permit — Commercial Signage",
+                "Sign Permit - Commercial",
+                "Required for commercial storefront, wall, monument, channel-letter, or exterior signage work. Verify zoning/design-review routing before submittal.",
+            )
+            commercial_scope = "commercial_signage"
+            trigger = "commercial signage scope"
+        if commercial_permit:
+            permits = [commercial_permit]
+            add_logic(commercial_permit["permit_type"], commercial_permit["notes"], trigger)
+            return {
+                "scope_classification": commercial_scope,
+                "permits_required": permits,
+                "permits_required_logic": logic,
+                "companion_permits": [],
+            }
 
     # Solar first so "roof solar" scopes don't collapse into a reroof permit.
     if has_solar:
@@ -5263,7 +5438,7 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
             pp = _scope_permit("Plumbing Permit — Residential Remodel / Addition", "Plumbing - Residential Alteration", "Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition.")
             permits.append(pp)
             add_logic(pp["permit_type"], "Plumbing scope is explicitly included as related trade work under the remodel/addition.", "plumbing/fixture/bathroom/kitchen scope stated")
-        if _scope_has_any(job, ["hvac", "duct", "ducts", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mechanical", "ventilation"]):
+        if _scope_has_any(job, ["hvac", "ductwork", "ducts", "ducting", "duct relocation", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mechanical", "ventilation"]):
             mp = _scope_permit("Mechanical Permit — Residential Remodel / Addition", "Mechanical - Residential Alteration", "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition.")
             permits.append(mp)
             add_logic(mp["permit_type"], "Mechanical/HVAC scope is explicitly included as related trade work under the remodel/addition.", "hvac/duct/mechanical scope stated")
@@ -5274,15 +5449,13 @@ def classify_scope_required_permits(job_type: str) -> dict | None:
             "companion_permits": [],
         }
 
-    is_hvac = _scope_has_any(job, ["hvac", "condenser", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler"])
-    is_water_heater = "water heater" in job
     hvac_like_for_like = _scope_has_any(job, ["like for like", "like-for-like", "swap", "changeout", "change out", "condenser", "replacement", "replace", "mini split", "mini-split", "ductless"])
     if is_hvac or is_water_heater:
         if is_water_heater and not is_hvac:
-            ptype = "Plumbing Permit — Water Heater Replacement"
-            portal = "Plumbing - Water Heater Replacement"
-            notes = "Required for water heater replacement; companion electrical/gas permits are suppressed unless gas piping, venting conversion, or new circuit work is explicit."
-            base_reason = "Water heater swap is one trade permit when same location/capacity and no new gas/electrical scope is stated."
+            ptype = "Residential Plumbing Permit — Water Heater Replacement" if scope_contract.get("category") == "residential" else "Plumbing Permit — Water Heater Replacement"
+            portal = "Residential Plumbing - Water Heater Replacement" if scope_contract.get("category") == "residential" else "Plumbing - Water Heater Replacement"
+            notes = "Required for residential water heater replacement; companion electrical/gas permits are suppressed unless gas piping, venting conversion, or new circuit work is explicit."
+            base_reason = "Residential water heater swap is one trade permit when same location/capacity and no new gas/electrical scope is stated."
         else:
             ptype = "Mechanical Permit — HVAC Equipment Changeout (Residential)" if hvac_like_for_like else "Mechanical Permit — HVAC System Replacement (Residential)"
             portal = "Mechanical - HVAC Changeout / Replacement"
@@ -5490,11 +5663,13 @@ def _derive_permit_logic(result: dict) -> list[dict]:
     return logic
 
 
-def apply_scope_aware_permit_classification(result: dict, job_type: str) -> dict:
+def apply_scope_aware_permit_classification(result: dict, job_type: str, scope_contract: dict | None = None) -> dict:
     """Apply Tier B scope-aware permits and always add permits_required_logic."""
     if not isinstance(result, dict):
         return result
-    classified = classify_scope_required_permits(job_type)
+    scope_contract = scope_contract or result.get("_scope_contract") or build_scope_contract(job_type)
+    result["_scope_contract"] = scope_contract
+    classified = classify_scope_required_permits(job_type, scope_contract=scope_contract)
     primary_scope = detect_primary_scope(job_type or "")
     if classified:
         result["_primary_scope"] = primary_scope
@@ -5521,7 +5696,7 @@ def _permit_family(permit: dict) -> str:
         return "sign"
     if "plumb" in text or "fixture" in text or "restroom" in text or "sewer" in text:
         return "plumbing"
-    if "mechanical" in text or "hvac" in text or "duct" in text or "ventilation" in text or "rtu" in text:
+    if "mechanical" in text or "hvac" in text or re.search(r"\bduct(?:work|s|ing)?\b", text) or "ventilation" in text or "rtu" in text:
         return "mechanical"
     if "electrical" in text or "lighting" in text or "branch circuit" in text or "panel" in text:
         return "electrical"
@@ -6079,7 +6254,8 @@ def _is_commercial_ti_scope(primary_scope: str, job_type: str) -> bool:
         return False
     job = (job_type or "").lower()
     return _scope_has_any(job, [
-        "tenant improvement", " ti", "t.i.", "interior alteration", "interior remodel",
+        "tenant improvement", " ti", "t.i.", "tenant finish", "tenant buildout",
+        "interior alteration", "interior remodel",
         "buildout", "build-out", "change of use", "change of occupancy", "occupancy change",
         "fit out", "fit-out",
     ])
@@ -6125,6 +6301,38 @@ def _commercial_ti_companion_permits(primary_scope: str, job_type: str) -> list[
 
 
 def _commercial_ti_required_permit_set(primary_scope: str, job_type: str) -> tuple[list[dict], list[dict]]:
+    job = (job_type or "").lower()
+    if primary_scope == "commercial" and _scope_has_any(job, [
+        "research lab", "laboratory", "lab tenant improvement", "chemical fume hood",
+        "lab exhaust", "emergency eyewash", "hazardous material storage",
+    ]):
+        permits = [
+            _scope_permit(
+                "Building Permit — Commercial Laboratory Tenant Improvement",
+                "Building Permit - Commercial Tenant Improvement",
+                "Primary commercial laboratory tenant-improvement permit for lab layout, chemical fume hood, exhaust ducting, lab sinks/emergency eyewash, hazardous material storage review, life-safety, accessibility, and plan review. Verify exact AHJ laboratory/TI label before submittal.",
+            ),
+            _scope_permit(
+                "Mechanical Permit — Commercial Lab Fume Hood / Exhaust",
+                "Mechanical Permit - Commercial Alteration",
+                "Commercial lab fume hood, exhaust ducting, ventilation controls, air balance, and related lab exhaust work commonly require mechanical review.",
+            ),
+        ]
+        if _scope_has_any(job, ["electrical", "branch circuit", "panel", "emergency power", "controls"]):
+            permits.append(_scope_permit(
+                "Electrical Permit — Commercial Laboratory Tenant Improvement",
+                "Electrical Permit - Commercial Interior Alteration",
+                "Commercial lab electrical, equipment connections, controls, emergency eyewash/shower alarms, and branch-circuit scope commonly require electrical review.",
+            ))
+        logic = []
+        for permit in permits:
+            logic.append({
+                "permit_type": permit.get("permit_type"),
+                "included_because": permit.get("notes"),
+                "scope_trigger": "commercial laboratory/fume-hood tenant-improvement scope",
+            })
+        return permits, logic
+
     permits = [_commercial_ti_building_permit(primary_scope)]
     logic = [{
         "permit_type": permits[0]["permit_type"],
@@ -6301,11 +6509,13 @@ def enforce_commercial_primary_permit_guardrail(result: dict, job_type: str, cit
     return result
 
 
-def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str) -> dict:
-    """Append deterministic state expert notes (currently California)."""
+def apply_state_expert_pack(result: dict, city: str, state: str, job_type: str, scope_contract: dict | None = None) -> dict:
+    """Append deterministic, scope-filtered state expert notes."""
     if not isinstance(result, dict):
         return result
-    notes = get_state_expert_notes(state, city, job_type)
+    scope_contract = scope_contract or result.get("_scope_contract") or build_scope_contract(job_type, city, state, job_category=result.get("job_category"))
+    result["_scope_contract"] = scope_contract
+    notes = get_state_expert_notes(state, city, job_type, scope_contract=scope_contract)
     if not notes:
         if "expert_notes" not in result:
             result["expert_notes"] = []
@@ -8226,17 +8436,20 @@ def scrub_hidden_trigger_internal_metadata(result: dict) -> dict:
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
-def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str = "residential", job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False) -> dict:
+def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str | None = None, job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False) -> dict:
     """
     Research permit requirements for a job + location.
     v3: Better advice depth, small city fallback, PDF stripping, Google Maps fallback.
     """
     init_cache()
 
-    job_category = job_category.lower().strip() if job_category else "residential"
-    if job_category not in ("residential", "commercial"):
-        job_category = "residential"
+    requested_job_category = job_category.lower().strip() if isinstance(job_category, str) else ""
+    if requested_job_category not in ("residential", "commercial"):
+        requested_job_category = ""
 
+    scope_contract = build_scope_contract(job_type, city, state, job_category=requested_job_category or None)
+    inferred_job_category = str(scope_contract.get("category") or "").lower().strip()
+    job_category = inferred_job_category if inferred_job_category in ("residential", "commercial") else (requested_job_category or "residential")
     key = cache_key(job_type, city, state, job_category)
 
     if use_cache:
@@ -8254,6 +8467,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
         cached = get_cached(key, _refresh_callback=_background_refresh)
         if cached:
             cached["_cached"] = True
+            cached["_scope_contract"] = scope_contract
             if not isinstance(cached.get("companion_permits"), list):
                 cached["companion_permits"] = []
             if not isinstance(cached.get("sources"), list):
@@ -8299,7 +8513,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             repair_residential_home_office_commercial_leak(cached, job_type, city, state)
             validate_and_sanitize_permit_result(cached, job_type, city, state)
             scrub_hidden_trigger_internal_metadata(cached)
-            apply_state_expert_pack(cached, city, state, job_type)
+            apply_state_expert_pack(cached, city, state, job_type, scope_contract=scope_contract)
             hedge_companion_permits(cached, job_type)
             enrich_result_with_serper_sources(cached, job_type, city, state)
             apply_source_locality_hard_block(cached, city, state, job_type)
@@ -9155,11 +9369,12 @@ Return ONLY the JSON object."""
         result['fee_calculator'] = calculate_exact_fee(job_type, city, state, float(job_value))
     else:
         result['fee_calculator'] = {'fee': None, 'formula': None, 'confidence': 'none', 'note': 'Provide job_value to calculate an exact fee where formulas are available.'}
+    result["_scope_contract"] = scope_contract
 
     apply_scope_aware_permit_classification(result, job_type)
     enforce_ti_min_permits_floor(result, job_type, city, state)
     apply_residential_permit_name_specificity(result, job_type, city, state)
-    apply_state_expert_pack(result, city, state, job_type)
+    apply_state_expert_pack(result, city, state, job_type, scope_contract=scope_contract)
     apply_state_schema_context(result, job_type, city, state)
 
     # 2026-04-28: Hidden Trigger Detector V1. Deterministic detection of

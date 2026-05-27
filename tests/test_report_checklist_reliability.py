@@ -140,6 +140,39 @@ def test_render_share_page_sanitizes_internal_engine_wording(tmp_path, monkeypat
     _assert_no_internal_customer_terms(payload["checklist"])
 
 
+def test_render_share_page_uses_request_scope_firebreak_for_saved_dirty_result(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "load_report_template", lambda: "__REPORT_DATA__")
+    share = {
+        "data": {
+            "permit_name": "Commercial Tenant Improvement Building Permit",
+            "permit_verdict": "YES",
+            "pro_tips": [
+                "Ask the AHJ if residential owner-builder paperwork applies.",
+                "Coordinate health and fire review before permit intake.",
+            ],
+            "what_to_bring": ["Owner-builder affidavit for homeowner ADU solar PV"],
+            "ahj_contact_source": "AHJ report source",
+        },
+        "job_type": "Commercial restaurant tenant improvement with Type I hood and grease interceptor",
+        "city": "Austin",
+        "state": "TX",
+    }
+
+    html = server.render_share_page(share)
+
+    payload = json.loads(html)
+    serialized = json.dumps(payload, sort_keys=True).lower()
+    assert "ahj_contact_source" not in serialized
+    assert "ahj" not in serialized
+    assert "homeowner" not in serialized
+    assert "owner-builder" not in serialized
+    assert "adu" not in serialized
+    assert "solar" not in serialized
+    assert "residential" not in serialized
+    assert "coordinate health and fire review" in serialized
+
+
 def test_customer_sanitizer_removes_raw_disambiguation_labels_fragments_and_ahj(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
 

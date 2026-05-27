@@ -195,7 +195,7 @@ def test_step7u_production_preview_response_surfaces_contractor_safe_fields(monk
     assert any("fee range" in warning.lower() for warning in result["warnings"])
     assert any("statutory" in warning.lower() for warning in result["warnings"])
     assert len(result["approval_timeline"]) <= 300
-    assert result["approval_timeline"].startswith("Dallas local queue time still needs AHJ/portal confirmation")
+    assert result["approval_timeline"].startswith("Dallas local queue time still needs local portal confirmation")
     assert "45th day" in result["approval_timeline"]
     assert "_approval_timeline_evidence_detail" not in result
 
@@ -1573,9 +1573,10 @@ def test_white_label_report_surfaces_evidence_pack_limits(tmp_path, monkeypatch)
     )
 
     assert "Local evidence pack failed closed for: fee_range, inspections" in html
-    assert "Timeline is statutory/AHJ outer-deadline evidence only, not a local queue estimate" in html
+    assert "Timeline is statutory/building-department outer-deadline evidence only, not a local queue estimate" in html
     assert "not a complete local specialty-trigger list" in html
-    assert "exact portal subcategory requires AHJ verification" in html
+    assert "Use the listed department/portal category and match the filing to the structured permit kind" in html
+    assert "AHJ verification" not in html
 
 
 

@@ -9,6 +9,11 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+try:
+    from .scope_contract import build_scope_contract, note_allowed_for_contract, note_scope_tags
+except ImportError:  # server.py imports modules as top-level api files
+    from scope_contract import build_scope_contract, note_allowed_for_contract, note_scope_tags
+
 CALIFORNIA_VHFHSZ_URL = (
     "https://osfm.fire.ca.gov/divisions/community-wildfire-preparedness-and-mitigation/"
     "wildland-hazards-building-codes/fire-hazard-severity-zones-maps/"
@@ -4628,16 +4633,20 @@ STATE_PACKS = {
 }
 
 
-def get_state_expert_notes(state: str, city: str = "", job_description: str = "") -> list[dict]:
-    """Return expert notes for a state/city/job combination.
+def get_state_expert_notes(state: str, city: str = "", job_description: str = "", scope_contract: dict | None = None) -> list[dict]:
+    """Return scope-filtered expert notes for a state/city/job combination.
 
-    The result is a new list of dicts so callers can safely mutate it.
+    Notes are tagged with a closed scope enum and filtered by the canonical
+    request scope contract. Broad/general notes remain available, but residential
+    ADU/homeowner/solar/windstorm notes no longer leak into unrelated commercial
+    TI outputs (and vice versa).
     """
     state_upper = (state or "").strip().upper()
     pack = STATE_PACKS.get(state_upper)
     if not pack:
         return []
 
+    scope_contract = scope_contract or build_scope_contract(job_description, city, state)
     notes = deepcopy(pack.get("expert_notes", []))
     city_key = (city or "").strip().lower()
 
@@ -4682,4 +4691,11 @@ def get_state_expert_notes(state: str, city: str = "", job_description: str = ""
             }
         )
 
-    return notes
+    filtered: list[dict] = []
+    for note in notes:
+        if not isinstance(note, dict):
+            continue
+        note["scope_tags"] = note_scope_tags(note)
+        if note_allowed_for_contract(note, scope_contract):
+            filtered.append(note)
+    return filtered
