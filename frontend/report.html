@@ -45,87 +45,142 @@
     const d = share.data || {};
     const checklist = payload.checklist || {};
     const primaryPermit = (d.primary_permit && typeof d.primary_permit === 'object') ? d.primary_permit : {};
-    const firstPermit = d.permits_required && d.permits_required[0] ? d.permits_required[0] : {};
-    const permitName = d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type || 'Permit details';
-    const rawVerdict = (d.permit_verdict || '').toUpperCase();
+    const firstPermit = Array.isArray(d.permits_required) && d.permits_required[0] ? d.permits_required[0] : {};
+    const textValue = (value, fallback = '') => {
+      if (value === null || value === undefined) return fallback;
+      return String(value);
+    };
+    const safeArray = (value) => Array.isArray(value) ? value : [];
+    const permitName = textValue(d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type, 'Permit details');
+    const rawVerdict = textValue(d.permit_verdict).toUpperCase();
     const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'MAYBE');
     const verdictLabel = verdict === 'YES' ? 'Permit required: Yes' : (verdict === 'NO' ? 'Permit required: No' : 'Permit status: Verify');
-    const timeline = (d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || 'Varies by jurisdiction';
-    const docs = [...new Set([...(d.what_to_bring || []), ...(d.requirements || []), ...(d.documents_needed || []), ...(d.checklist || [])])];
+    const timeline = textValue((d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || d.timeline, 'Varies by jurisdiction');
+    const docs = [...new Set([...safeArray(d.what_to_bring), ...safeArray(d.requirements), ...safeArray(d.documents_needed), ...safeArray(d.checklist)].map(x => textValue(x)).filter(Boolean))];
     const inspectionLabel = (item) => {
       if (typeof item === 'string') return item;
       if (!item || typeof item !== 'object') return '';
-      return item.stage || item.title || item.name || item.description || '';
+      return textValue(item.stage || item.title || item.name || item.description);
     };
-    const inspections = (d.inspections || d.inspections_required || d.inspection_checklist || []).map(inspectionLabel).filter(Boolean);
-    const sources = d.sources || [];
+    const inspections = safeArray(d.inspections || d.inspections_required || d.inspection_checklist).map(inspectionLabel).filter(Boolean);
+    const sources = safeArray(d.sources);
     const sourceUrl = (src) => typeof src === 'string' ? src : ((src && src.url) || '');
-    const sourceHost = (url) => { try { return new URL(url).hostname.replace(/^www\./,''); } catch { return 'official source'; } };
-    const sourceTitle = (src) => (src && typeof src === 'object' && (src.title || src.name || src.label)) || sourceHost(sourceUrl(src));
-    const esc = (value) => String(value || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const safeExternalUrl = (url, fallback = '') => {
+      try {
+        const parsed = new URL(String(url || '').trim(), window.location.origin);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
+      } catch {}
+      return fallback;
+    };
+    const sourceHost = (url) => {
+      try { return new URL(url).hostname.replace(/^www\./,''); } catch { return 'official source'; }
+    };
+    const sourceTitle = (src) => textValue((src && typeof src === 'object' && (src.title || src.name || src.label)) || sourceHost(sourceUrl(src)), 'official source');
     const looksLikeRawUrl = (value) => /^https?:\/\//i.test(String(value || '').trim());
     const applyPath = d.apply_path && typeof d.apply_path === 'object' ? d.apply_path : {};
     const applyPathLabel = primaryPermit.portal_selection || firstPermit.portal_selection || applyPath.likely_path || applyPath.label || applyPath.permit_path || applyPath.permit_type || applyPath.permit_category;
     const applyOffice = looksLikeRawUrl(d.applying_office) ? '' : d.applying_office;
     const applyAddress = looksLikeRawUrl(d.apply_address) ? '' : d.apply_address;
     const applyPhone = looksLikeRawUrl(d.apply_phone) ? '' : d.apply_phone;
-    const whereToApply = applyPathLabel || [applyOffice, applyAddress, applyPhone].filter(Boolean).join(' • ');
-    const sourceRows = sources.filter(src => sourceUrl(src)).map(src => {
-      const url = sourceUrl(src);
-      return `<li><a href="${esc(url)}" target="_blank" rel="noopener"><strong>${esc(sourceTitle(src))}</strong></a></li>`;
-    });
+    const whereToApply = textValue(applyPathLabel || [applyOffice, applyAddress, applyPhone].filter(Boolean).join(' • '), 'Contact local building department');
+
+    const el = (tag, options = {}, children = []) => {
+      const node = document.createElement(tag);
+      if (options.className) node.className = options.className;
+      if (options.text !== undefined) node.textContent = textValue(options.text);
+      if (options.style) node.setAttribute('style', options.style);
+      if (options.attrs) {
+        for (const [name, value] of Object.entries(options.attrs)) {
+          if (value !== null && value !== undefined && value !== '') node.setAttribute(name, String(value));
+        }
+      }
+      for (const child of children) {
+        if (child === null || child === undefined) continue;
+        node.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+      }
+      return node;
+    };
+    const addText = (parent, tag, options = {}, children = []) => {
+      const node = el(tag, options, children);
+      parent.appendChild(node);
+      return node;
+    };
+    const listCard = (title, items, fallback) => {
+      const card = el('div', { className: 'card' });
+      addText(card, 'div', { className: 'label', text: title });
+      const ul = addText(card, 'ul');
+      const finalItems = (items && items.length ? items : [fallback]).map(x => textValue(x)).filter(Boolean);
+      for (const item of finalItems) addText(ul, 'li', { text: item });
+      return card;
+    };
+    const metaRow = (label, value) => el('div', { className: 'meta-row' }, [
+      el('strong', { text: label }),
+      el('span', { text: value }),
+    ]);
+
     const app = document.getElementById('app');
-    app.innerHTML = `
-      <section class="hero">
-        <div class="brand"><div class="mark">PA</div><div><div style="font-weight:900;font-size:20px">PermitAssist</div><div class="sub">Permit Intelligence Report</div></div></div>
-        <div class="print-actions" style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
-          <div>
-            <h1 class="headline">${permitName}</h1>
-            <div class="sub">${share.job_type || ''} in ${share.city || ''}, ${share.state || ''}</div>
-            <div class="pill">${verdictLabel}</div>
-          </div>
-          <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
-        </div>
-      </section>
-      <section class="grid">
-        <div class="card">
-          <div class="label">Core details</div>
-          <div class="meta">
-            <div class="meta-row"><strong>Jurisdiction</strong><span>${share.city || ''}, ${share.state || ''}</span></div>
-            <div class="meta-row"><strong>Permit</strong><span>${permitName}</span></div>
-            <div class="meta-row"><strong>Fees</strong><span>${d.fee_range || 'Call to confirm'}</span></div>
-            <div class="meta-row"><strong>Timeline</strong><span>${timeline}</span></div>
-            <div class="meta-row"><strong>Where to apply</strong><span>${whereToApply || 'Contact local building department'}</span></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="label">Summary</div>
-          <div class="sub" style="color:#334155">${d.job_summary || d.permit_summary || 'Permit requirements generated from PermitAssist research.'}</div>
-        </div>
-        <div class="card">
-          <div class="label">Required documents</div>
-          <ul>${(docs.length ? docs : ['Scope of work','Any plans or sketches required by the city','Contractor/license details']).map(x => `<li>${x}</li>`).join('')}</ul>
-        </div>
-        <div class="card">
-          <div class="label">Inspection checklist</div>
-          <ul>${(inspections.length ? inspections : (checklist.items || []).filter(i => i.category === 'inspection').map(i => i.label)).slice(0,8).map(x => `<li>${x}</li>`).join('') || '<li>Confirm inspection phases with the jurisdiction.</li>'}</ul>
-        </div>
-        <div class="card">
-          <div class="label">Pre-construction checklist</div>
-          <ul>${((checklist.items || []).length ? checklist.items : [{label:'Pull permit before starting work'}]).map(item => `<li>${item.label}</li>`).join('')}</ul>
-        </div>
-        ${sourceRows.length ? `<div class="card">
-          <div class="label">Sources checked</div>
-          <ul class="source-list">${sourceRows.join('')}</ul>
-        </div>` : ''}
-      </section>
-      <section class="cta">
-        <div>
-          <div style="font-size:20px;font-weight:900;margin-bottom:6px">Get your own permits instantly at permitassist.io</div>
-          <div style="color:rgba(255,255,255,.78)">Shareable permit reports, contractor checklists, and faster office handoffs.</div>
-        </div>
-        <a href="${payload.app_base_url || 'https://permitassist.io'}">Try PermitAssist</a>
-      </section>`;
+    const fragment = document.createDocumentFragment();
+
+    const hero = addText(fragment, 'section', { className: 'hero' });
+    const brand = addText(hero, 'div', { className: 'brand' });
+    addText(brand, 'div', { className: 'mark', text: 'PA' });
+    const brandCopy = addText(brand, 'div');
+    addText(brandCopy, 'div', { text: 'PermitAssist', style: 'font-weight:900;font-size:20px' });
+    addText(brandCopy, 'div', { className: 'sub', text: 'Permit Intelligence Report' });
+
+    const printActions = addText(hero, 'div', {
+      className: 'print-actions',
+      style: 'display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap'
+    });
+    const heroText = addText(printActions, 'div');
+    addText(heroText, 'h1', { className: 'headline', text: permitName });
+    addText(heroText, 'div', { className: 'sub', text: `${textValue(share.job_type)} in ${textValue(share.city)}, ${textValue(share.state)}` });
+    addText(heroText, 'div', { className: 'pill', text: verdictLabel });
+    const printButton = addText(printActions, 'button', { className: 'print-btn', text: '🖨️ Print / Save PDF' });
+    printButton.addEventListener('click', () => window.print());
+
+    const grid = addText(fragment, 'section', { className: 'grid' });
+    const coreCard = addText(grid, 'div', { className: 'card' });
+    addText(coreCard, 'div', { className: 'label', text: 'Core details' });
+    const meta = addText(coreCard, 'div', { className: 'meta' });
+    meta.appendChild(metaRow('Jurisdiction', `${textValue(share.city)}, ${textValue(share.state)}`));
+    meta.appendChild(metaRow('Permit', permitName));
+    meta.appendChild(metaRow('Fees', textValue(d.fee_range, 'Call to confirm')));
+    meta.appendChild(metaRow('Timeline', timeline));
+    meta.appendChild(metaRow('Where to apply', whereToApply));
+
+    const summaryCard = addText(grid, 'div', { className: 'card' });
+    addText(summaryCard, 'div', { className: 'label', text: 'Summary' });
+    addText(summaryCard, 'div', {
+      className: 'sub',
+      style: 'color:#334155',
+      text: d.job_summary || d.permit_summary || 'Permit requirements generated from PermitAssist research.'
+    });
+
+    grid.appendChild(listCard('Required documents', docs, 'Scope of work'));
+    const inspectionFallback = safeArray(checklist.items).filter(i => i && i.category === 'inspection').map(i => i.label).filter(Boolean).slice(0, 8);
+    grid.appendChild(listCard('Inspection checklist', inspections.length ? inspections : inspectionFallback, 'Confirm inspection phases with the jurisdiction.'));
+    grid.appendChild(listCard('Pre-construction checklist', safeArray(checklist.items).map(item => item && item.label).filter(Boolean), 'Pull permit before starting work'));
+
+    const sourceRows = sources.map(src => ({ src, url: safeExternalUrl(sourceUrl(src)) })).filter(row => row.url);
+    if (sourceRows.length) {
+      const sourceCard = addText(grid, 'div', { className: 'card' });
+      addText(sourceCard, 'div', { className: 'label', text: 'Sources checked' });
+      const ul = addText(sourceCard, 'ul', { className: 'source-list' });
+      for (const row of sourceRows) {
+        const li = addText(ul, 'li');
+        const link = addText(li, 'a', { attrs: { href: row.url, target: '_blank', rel: 'noopener' } });
+        addText(link, 'strong', { text: sourceTitle(row.src) });
+      }
+    }
+
+    const cta = addText(fragment, 'section', { className: 'cta' });
+    const ctaCopy = addText(cta, 'div');
+    addText(ctaCopy, 'div', { text: 'Get your own permits instantly at permitassist.io', style: 'font-size:20px;font-weight:900;margin-bottom:6px' });
+    addText(ctaCopy, 'div', { text: 'Shareable permit reports, contractor checklists, and faster office handoffs.', style: 'color:rgba(255,255,255,.78)' });
+    addText(cta, 'a', { text: 'Try PermitAssist', attrs: { href: safeExternalUrl(payload.app_base_url, 'https://permitassist.io') } });
+
+    app.replaceChildren(fragment);
     document.title = `${permitName} | PermitAssist Report`;
   </script>
 </body>

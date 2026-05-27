@@ -3317,6 +3317,134 @@ def load_report_template() -> str:
         return f.read()
 
 
+PUBLIC_SHARE_FIELDS = frozenset({"data", "job_type", "city", "state"})
+PUBLIC_REPORT_RESULT_FIELDS = frozenset({
+    "permit_required",
+    "permit_verdict",
+    "permit_decision",
+    "permit_kind",
+    "customer_headline",
+    "customer_next_step",
+    "exact_name_customer_note",
+    "exact_apply_url_customer_note",
+    "condition_threshold",
+    "conditional_threshold",
+    "permit_name",
+    "permit_type",
+    "primary_permit",
+    "permits_required",
+    "companion_permits",
+    "companion_reviews",
+    "companion_permits_or_reviews",
+    "trade_permits",
+    "fee_range",
+    "fee",
+    "approval_timeline",
+    "timeline",
+    "requirements",
+    "documents_needed",
+    "what_to_bring",
+    "checklist",
+    "inspections",
+    "inspections_required",
+    "inspection_checklist",
+    "inspection_booking",
+    "job_summary",
+    "permit_summary",
+    "summary",
+    "description",
+    "next_steps",
+    "permit_notes",
+    "inspection_notes",
+    "zoning_hoa_flag",
+    "apply_url",
+    "apply_path",
+    "applying_office",
+    "apply_address",
+    "apply_phone",
+    "source_urls",
+    "sources",
+})
+PUBLIC_CHECKLIST_FIELDS = frozenset({"title", "summary", "items"})
+PUBLIC_REPORT_INTERNAL_FIELDS = frozenset({
+    "quality_warnings",
+    "permit_decision_contract",
+    "source_evidence_floor",
+    "exact_name_status",
+    "exact_apply_url_status",
+    "needs_review",
+    "confidence_modifier",
+    "complexity_modifier",
+    "jurisdiction_multiplier",
+    "hidden_triggers",
+    "claim_citations",
+    "missing_fields",
+    "debug",
+    "model",
+    "provider",
+    "retrieval_metadata",
+    "evidence_metadata",
+    "internal_metadata",
+})
+
+
+def _is_public_internal_key(key: object) -> bool:
+    key_lc = str(key or "").strip().lower()
+    return key_lc.startswith("_") or key_lc in PUBLIC_REPORT_INTERNAL_FIELDS
+
+
+def _strip_public_internal_keys(value):
+    if isinstance(value, dict):
+        cleaned = {}
+        for key, child in value.items():
+            if _is_public_internal_key(key):
+                continue
+            next_value = _strip_public_internal_keys(child)
+            cleaned[key] = next_value
+        return cleaned
+    if isinstance(value, list):
+        return [_strip_public_internal_keys(item) for item in value]
+    if isinstance(value, tuple):
+        return [_strip_public_internal_keys(item) for item in value]
+    return value
+
+
+def _public_allowlist(source: dict, allowed_fields: frozenset[str]) -> dict:
+    if not isinstance(source, dict):
+        return {}
+    public = {}
+    for key in allowed_fields:
+        if key in source and not _is_public_internal_key(key):
+            public[key] = _strip_public_internal_keys(source.get(key))
+    return public
+
+
+def to_public_share_payload(share: dict, checklist: dict | None = None) -> dict:
+    """Build the default-deny public payload embedded in report/share HTML."""
+    share = share if isinstance(share, dict) else {}
+    public_share = _public_allowlist(share, PUBLIC_SHARE_FIELDS)
+    public_share["data"] = _public_allowlist(share.get("data") or {}, PUBLIC_REPORT_RESULT_FIELDS)
+    public_checklist = _public_allowlist(checklist or {}, PUBLIC_CHECKLIST_FIELDS)
+    return {
+        "share": public_share,
+        "app_base_url": APP_BASE_URL,
+        "generated_at": utc_now().isoformat(),
+        "checklist": public_checklist,
+    }
+
+
+def html_safe_json_dumps(value: object) -> str:
+    """Serialize JSON for a <script type=application/json> text context."""
+    raw = json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    return (
+        raw.replace("&", "\\u0026")
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+    )
+
+
 def render_share_page(share: dict) -> str:
     template = load_report_template()
     safe_share = dict(share or {})
@@ -3327,13 +3455,9 @@ def render_share_page(share: dict) -> str:
         safe_share.get("state", ""),
     )
     safe_share["data"] = safe_data
-    payload = {
-        "share": safe_share,
-        "app_base_url": APP_BASE_URL,
-        "generated_at": utc_now().isoformat(),
-        "checklist": sanitize_customer_visible_result(get_or_create_checklist(safe_data, safe_share.get("job_type", ""), safe_share.get("city", ""), safe_share.get("state", ""))),
-    }
-    return template.replace("__REPORT_DATA__", json.dumps(payload))
+    checklist = sanitize_customer_visible_result(get_or_create_checklist(safe_data, safe_share.get("job_type", ""), safe_share.get("city", ""), safe_share.get("state", "")))
+    payload = to_public_share_payload(safe_share, checklist)
+    return template.replace("__REPORT_DATA__", html_safe_json_dumps(payload))
 
 
 def mask_api_key(key: str) -> str:
