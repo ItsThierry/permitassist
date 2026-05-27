@@ -715,6 +715,15 @@ def _iter_customer_source_urls(result: dict):
             value = add(citation.get("source_url"))
             if value:
                 yield value
+    for key in ("apply_url", "online_application_url"):
+        value = add((result or {}).get(key))
+        if value:
+            yield value
+    apply_path = (result or {}).get("apply_path")
+    if isinstance(apply_path, dict):
+        value = add(apply_path.get("portal_url") or apply_path.get("url") or apply_path.get("source_url"))
+        if value:
+            yield value
 
 
 def _local_decision_evidence_urls(result: dict, city: str, state: str) -> list[str]:
@@ -723,6 +732,49 @@ def _local_decision_evidence_urls(result: dict, city: str, state: str) -> list[s
         authority = classify_source_authority(url, city, state, result=result)
         if authority.get("local_decision_evidence") and authority.get("display_allowed"):
             out.append(url)
+    return out
+
+
+def _filing_url_source_dicts(result: dict, city: str, state: str, existing_urls: set[str] | None = None) -> list[dict]:
+    """Promote verified local filing URLs into customer source evidence.
+
+    The final source-floor gate should not weaken its local-AHJ requirement, but
+    the filing URL fields are themselves local source candidates after the URL
+    sanitizer and locality classifier accept them. This keeps source evidence
+    assembly aligned across sources/source_urls/citations and apply-path fields.
+    """
+    if not isinstance(result, dict):
+        return []
+    seen = set(existing_urls or set())
+    jurisdiction = ", ".join(part for part in [city, state] if part)
+    office = _customer_summary_text(
+        result.get("applying_office")
+        or result.get("building_dept_name")
+        or result.get("permit_office")
+        or f"{city or 'Local'} building department"
+    )
+    out = []
+    for url in _iter_customer_source_urls({
+        "apply_url": result.get("apply_url"),
+        "online_application_url": result.get("online_application_url"),
+        "apply_path": result.get("apply_path"),
+    }):
+        if url in seen:
+            continue
+        authority = classify_source_authority(url, city, state, result=result)
+        if not (authority.get("local_decision_evidence") and authority.get("display_allowed")):
+            continue
+        tier = str(authority.get("tier") or "ahj")
+        seen.add(url)
+        out.append({
+            "url": url,
+            "title": office or _source_tier_label(tier, city, state),
+            "publisher": office or _source_tier_label(tier, city, state),
+            "date": _source_display_date({}, result),
+            "source_type": _customer_source_type(tier),
+            "jurisdiction": jurisdiction,
+            "snippet": "Local online filing or permit portal accepted by source-locality checks.",
+        })
     return out
 
 
@@ -792,6 +844,8 @@ def _force_fail_closed_no_local_evidence(result: dict, city: str, state: str) ->
 
 def _filter_customer_sources_in_place(result: dict, city: str, state: str) -> dict:
     display_sources = _source_dicts(result, city=city, state=state, dedupe=True)
+    existing_urls = {str(src.get("url")) for src in display_sources if isinstance(src, dict) and src.get("url")}
+    display_sources.extend(_filing_url_source_dicts(result, city, state, existing_urls))
     result["sources"] = display_sources
     source_urls = []
     for src in display_sources:
