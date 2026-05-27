@@ -2725,14 +2725,53 @@ document.addEventListener('keydown',e=>{
 refreshUpgradeModal();
 
 // ── Verdict ──────────────────────────────────────────────────────────────────
+function hasPositiveNoPermitEvidence(d){
+  const permits = Array.isArray(d?.permits_required) ? d.permits_required : [];
+  const permitEvidence = permits.some(p => p && p.required === false && (p.code_citation || p.source_url || p.source || p.exemption_reason || p.reason || p.notes));
+  const textEvidence = [
+    d?.no_permit_reason,
+    d?.exemption_reason,
+    d?.permit_exemption,
+    d?.code_citation && (typeof d.code_citation === 'string' ? d.code_citation : [d.code_citation.section, d.code_citation.text].filter(Boolean).join(' ')),
+    d?.customer_result_summary?.source_cue,
+    d?.customer_result_summary?.evidence,
+    d?.job_summary,
+    d?.permit_summary,
+    d?.notes,
+  ].filter(Boolean).join(' ');
+  const hasOfficialSource = Array.isArray(d?.sources) && d.sources.some(s => {
+    const raw = typeof s === 'string' ? s : [s?.url, s?.title, s?.publisher, s?.source_type].filter(Boolean).join(' ');
+    return /\.gov|\.us|city|county|building|development|code|ordinance|official/i.test(String(raw || ''));
+  });
+  const saysNoPermit = /\b(no permit required|permit (?:is )?not required|does not require a permit|exempt(?:ion|ed)?|no (?:building )?permit)\b/i.test(textEvidence);
+  const hasCitation = Boolean(d?.code_citation || /\b(code|ordinance|section|chapter|exemption|official|source)\b/i.test(textEvidence));
+  return permitEvidence || (saysNoPermit && (hasCitation || hasOfficialSource));
+}
+
 function verdictState(d){
-  const top=d.permit_verdict||d.verdict||d.requirement||'';
-  if(top){const t=top.toString().toUpperCase().trim();if(t==='NO'||t==='NOT REQUIRED') return 'no';if(t==='YES'||t==='REQUIRED') return 'yes';if(t==='MAYBE') return 'maybe';}
-  const permits=d.permits_required||[];
-  if(permits.length===0){const hint=(d.fee_range||'')+(d.job_summary||'')+(d.permit_summary||'');if(/no permit/i.test(hint)||/not required/i.test(hint)) return 'no';return 'no';}
+  const top=d.permit_verdict||d.verdict||d.requirement||d.permit_decision||'';
+  const t=top ? top.toString().toUpperCase().trim() : '';
+  if(t){
+    if(t==='YES'||t==='REQUIRED'||t==='PERMIT_REQUIRED') return 'yes';
+    if(t==='NO'||t==='NOT REQUIRED'||t==='NOT_REQUIRED'||t==='NO_PERMIT_REQUIRED') return hasPositiveNoPermitEvidence(d) ? 'no' : 'maybe';
+    if(t==='MAYBE'||t==='UNKNOWN'||t==='CONDITIONAL'||t.startsWith('FAIL_CLOSED')||t.startsWith('PENDING')||t.includes('UNSUPPORTED')||t.includes('NO_EVIDENCE')) return 'maybe';
+  }
+  const permits=Array.isArray(d?.permits_required)?d.permits_required:[];
+  if(permits.length===0) return hasPositiveNoPermitEvidence(d) ? 'no' : 'maybe';
   const req=permits[0].required;
-  if(req===true) return 'yes';if(req===false) return 'no';if(req==='maybe') return 'maybe';
+  if(req===true) return 'yes';if(req===false) return hasPositiveNoPermitEvidence(d) ? 'no' : 'maybe';if(req==='maybe') return 'maybe';
   return 'maybe';
+}
+
+function customerFacingDecisionLabel(rawDecision, d, verdict){
+  const raw = (rawDecision || '').toString().toUpperCase().trim();
+  if(raw==='REQUIRED'||raw==='YES'||raw==='PERMIT_REQUIRED') return 'REQUIRED';
+  if(raw==='NOT_REQUIRED'||raw==='NOT REQUIRED'||raw==='NO'||raw==='NO_PERMIT_REQUIRED') return hasPositiveNoPermitEvidence(d) ? 'NOT REQUIRED' : 'CHECK REQUIRED';
+  if(raw==='CONDITIONAL'||raw==='MAYBE') return 'CHECK REQUIRED';
+  if(raw==='UNKNOWN'||raw.startsWith('FAIL_CLOSED')||raw.startsWith('PENDING')||raw.includes('UNSUPPORTED')||raw.includes('NO_EVIDENCE')) return 'VERIFY REQUIRED';
+  if(verdict === 'yes') return 'REQUIRED';
+  if(verdict === 'no') return hasPositiveNoPermitEvidence(d) ? 'NOT REQUIRED' : 'CHECK REQUIRED';
+  return 'CHECK REQUIRED';
 }
 
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
@@ -3037,12 +3076,13 @@ function renderResults(d, job, city, state) {
   html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the local building department before quoting or starting work.</div>`;
 
   const customerSummary = (d.customer_result_summary && typeof d.customer_result_summary === 'object') ? d.customer_result_summary : {};
-  const customerFirstScreen = (d.customer_first_screen_summary && typeof d.customer_first_screen_summary === 'object') ? d.customer_first_screen_summary : {
-    decision: customerSummary.permit_decision || (verdict === 'yes' ? 'REQUIRED' : verdict === 'no' ? 'NOT REQUIRED' : 'CHECK REQUIRED'),
-    kind_category: customerSummary.permit_kind || d.permit_kind || d.permit_type || getResultPermitName(d) || 'Permit details',
-    next_action: customerSummary.next_step || d.customer_next_step || 'Confirm exact filing requirements with the building department before starting work.',
-    ahj_department: customerSummary.ahj_department || office || d.building_dept_name || `${city || 'Local'} building department`,
-    source_cue: customerSummary.source_cue || 'Source cue: verify with the listed building department before filing'
+  const rawCustomerFirstScreen = (d.customer_first_screen_summary && typeof d.customer_first_screen_summary === 'object') ? d.customer_first_screen_summary : {};
+  const customerFirstScreen = {
+    decision: customerFacingDecisionLabel(rawCustomerFirstScreen.decision || customerSummary.permit_decision || d.permit_decision || d.permit_verdict, d, verdict),
+    kind_category: rawCustomerFirstScreen.kind_category || customerSummary.permit_kind || d.permit_kind || d.permit_type || getResultPermitName(d) || 'Permit details',
+    next_action: rawCustomerFirstScreen.next_action || customerSummary.next_step || d.customer_next_step || 'Confirm exact filing requirements with the building department before starting work.',
+    ahj_department: rawCustomerFirstScreen.ahj_department || customerSummary.ahj_department || office || d.building_dept_name || `${city || 'Local'} building department`,
+    source_cue: rawCustomerFirstScreen.source_cue || customerSummary.source_cue || 'Source cue: verify with the listed building department before filing'
   };
   if (customerFirstScreen.decision || customerFirstScreen.kind_category || customerFirstScreen.next_action) {
     html += `<div class="mobile-first-answer-card">

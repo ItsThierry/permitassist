@@ -174,6 +174,96 @@ def test_final_decision_fails_closed_when_required_has_no_surviving_local_source
     assert "File under" not in public.get("customer_next_step", "")
 
 
+def test_local_ahj_apply_url_only_satisfies_final_source_floor(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
+    apply_url = "https://developdallas.dallascityhall.com/PermitDallas/"
+    result = _dirty_required_result(sources=[])
+    result.update({
+        "permit_name": "Building Permit — Office Tenant Improvement",
+        "apply_url": apply_url,
+        "online_application_url": apply_url,
+        "applying_office": "Dallas Development Services Department",
+        "building_dept_name": "Dallas Development Services Department",
+    })
+
+    out = server.finalize_permit_lookup_result(
+        result,
+        "commercial office tenant improvement",
+        "Dallas",
+        "TX",
+        is_cached=False,
+        evidence_allowed=False,
+    )
+    public = server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
+
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_verdict"] == "YES"
+    assert apply_url in public.get("source_urls", [])
+    assert any(src.get("source_type") == "official_local" for src in public.get("sources", []))
+
+
+def test_recorded_dallas_office_fixture_public_view_model_stays_required_with_local_apply_url(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
+    apply_url = "https://developdallas.dallascityhall.com/PermitDallas/"
+    fixture_path = ROOT / "eval" / "stress-test-2026-04-28-commercial" / "dallas-office.json"
+    fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+    # This legacy recorded output includes broad Texas enrichment notes that the
+    # scope firebreak correctly strips under pytest. They are unrelated to the
+    # Dallas final-decision/apply-URL source-floor regression pinned here.
+    fixture.pop("expert_notes", None)
+
+    out = server.finalize_permit_lookup_result(
+        fixture,
+        "4,500 sf commercial office tenant improvement on the 3rd floor in Dallas, TX with partitions, lighting, electrical/data, sprinkler relocation, and accessible path upgrades",
+        "Dallas",
+        "TX",
+        is_cached=False,
+        evidence_allowed=False,
+    )
+    public = server.build_customer_permit_view_model(
+        out,
+        "commercial office tenant improvement",
+        "Dallas",
+        "TX",
+    )
+
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_verdict"] == "YES"
+    assert apply_url in public.get("source_urls", [])
+    assert any(
+        src.get("url") == apply_url and src.get("source_type") == "official_local"
+        for src in public.get("sources", [])
+    )
+
+
+def test_wrong_locality_apply_url_only_still_fails_closed(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
+    wrong_url = "https://www.cityofsouthlake.com/123/Building-Inspections"
+    result = _dirty_required_result(sources=[])
+    result.update({
+        "apply_url": wrong_url,
+        "online_application_url": wrong_url,
+        "applying_office": "Dallas Development Services Department",
+    })
+
+    out = server.finalize_permit_lookup_result(
+        result,
+        "commercial office tenant improvement",
+        "Dallas",
+        "TX",
+        is_cached=False,
+        evidence_allowed=False,
+    )
+    public = server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
+
+    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
+    assert public.get("source_urls", []) == []
+    assert public.get("apply_url") in ("", None)
+
+
 def test_known_smoke_wrong_locality_urls_are_excluded_by_canonical_classifier():
     from api.research_engine import classify_source_authority, classify_source_tier, is_url_allowed_for_locality
 
