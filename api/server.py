@@ -644,6 +644,102 @@ _PUBLIC_KEEP_EMPTY_FIELDS = frozenset({
     "apply_url", "apply_phone", "online_application_url", "source_urls", "sources", "claim_citations",
 })
 
+_STRUCTURED_SOURCE_URL_FIELDS = frozenset({
+    "sources", "source_urls", "claim_citations", "apply_url", "online_application_url",
+})
+_CUSTOMER_FREE_TEXT_SOURCE_URL_FIELDS = frozenset(
+    (_PUBLIC_CUSTOMER_RESULT_FIELDS - _STRUCTURED_SOURCE_URL_FIELDS) | {"permit_summary"}
+)
+_FREE_TEXT_URL_WALK_DENYLIST_FIELDS = frozenset({
+    "expert_notes",
+    "debug_trace",
+    "retrieval_diagnostics",
+    "raw_retrieval",
+    "search_debug",
+    "scoring_debug",
+    "rejected_sources",
+    "_sources_locality_dropped",
+}) | _INTERNAL_CUSTOMER_FIELD_NAMES
+_FREE_TEXT_STRUCTURED_ROOT_FIELDS = frozenset({
+    "sources",
+    "source_urls",
+    "claim_citations",
+    "apply_url",
+    "online_application_url",
+})
+_FREE_TEXT_STRUCTURED_APPLY_PATH_FIELDS = frozenset({"portal_url", "url", "source_url"})
+_CUSTOMER_HTTPS_URL_RE = re.compile(r"https://[^\s<>'\"`]+", re.I)
+
+
+def _trim_extracted_customer_url(url: str) -> str:
+    return str(url or "").strip().rstrip(".,;:!?)]}>")
+
+
+def _extract_customer_text_urls(value):
+    if isinstance(value, str):
+        for match in _CUSTOMER_HTTPS_URL_RE.finditer(value):
+            safe = _safe_customer_source_url(_trim_extracted_customer_url(match.group(0)))
+            if safe:
+                yield safe
+
+
+def _should_walk_free_text_url_field(key, path: tuple[str, ...]) -> bool:
+    key_text = str(key or "")
+    key_lc = key_text.lower()
+    if key_text.startswith("_") or key_lc in _FREE_TEXT_URL_WALK_DENYLIST_FIELDS:
+        return False
+    if not path and key_lc in _FREE_TEXT_STRUCTURED_ROOT_FIELDS:
+        return False
+    if path and path[-1] == "apply_path" and key_lc in _FREE_TEXT_STRUCTURED_APPLY_PATH_FIELDS:
+        return False
+    return True
+
+
+def _iter_free_text_customer_source_urls(value, path: tuple[str, ...] = ()):
+    """Yield HTTPS URLs from non-structured, non-internal customer prose.
+
+    This is a field-aware backstop for model outputs that put an official local
+    URL in customer guidance text instead of structured source fields. It walks
+    dict/list/string values recursively, but refuses internal/debug/rejected
+    fields and root structured source slots so rejected retrieval evidence is
+    never promoted by accident.
+    """
+    if isinstance(value, str):
+        yield from _extract_customer_text_urls(value)
+        return
+    if isinstance(value, list):
+        for item in value:
+            yield from _iter_free_text_customer_source_urls(item, path)
+        return
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if not _should_walk_free_text_url_field(key, path):
+                continue
+            yield from _iter_free_text_customer_source_urls(child, path + (str(key),))
+
+
+def _strip_customer_urls_from_text(value):
+    if isinstance(value, str):
+        cleaned = _CUSTOMER_HTTPS_URL_RE.sub("", value)
+        cleaned = re.sub(r"\s+([.,;:!?])", r"\1", cleaned)
+        cleaned = re.sub(r"\(\s*\)", "", cleaned)
+        cleaned = re.sub(r"\[\s*\]", "", cleaned)
+        return re.sub(r"\s{2,}", " ", cleaned).strip()
+    if isinstance(value, list):
+        return [_strip_customer_urls_from_text(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _strip_customer_urls_from_text(child) for key, child in value.items()}
+    return value
+
+
+def _strip_customer_free_text_urls_in_place(result: dict) -> dict:
+    if not isinstance(result, dict):
+        return result
+    for key in _CUSTOMER_FREE_TEXT_SOURCE_URL_FIELDS:
+        if key in result:
+            result[key] = _strip_customer_urls_from_text(result.get(key))
+    return result
+
 
 def _public_dict(value, allowed_fields: frozenset[str] | None = None):
     if isinstance(value, dict):
@@ -724,6 +820,10 @@ def _iter_customer_source_urls(result: dict):
         value = add(apply_path.get("portal_url") or apply_path.get("url") or apply_path.get("source_url"))
         if value:
             yield value
+    for url in _iter_free_text_customer_source_urls(result or {}):
+        value = add(url)
+        if value:
+            yield value
 
 
 def _local_decision_evidence_urls(result: dict, city: str, state: str) -> list[str]:
@@ -778,6 +878,45 @@ def _filing_url_source_dicts(result: dict, city: str, state: str, existing_urls:
     return out
 
 
+def _free_text_url_source_dicts(result: dict, city: str, state: str, existing_urls: set[str] | None = None) -> list[dict]:
+    """Promote local AHJ URLs discovered only in customer free text.
+
+    Model outputs can place the official portal in inspection/next-step/summary
+    prose instead of structured source fields. Promotion still goes through the
+    canonical source-authority classifier; free-text discovery only broadens
+    where we find candidate URLs, not what counts as local decision evidence.
+    """
+    if not isinstance(result, dict):
+        return []
+    seen = set(existing_urls or set())
+    jurisdiction = ", ".join(part for part in [city, state] if part)
+    office = _customer_summary_text(
+        result.get("applying_office")
+        or result.get("building_dept_name")
+        or result.get("permit_office")
+        or f"{city or 'Local'} building department"
+    )
+    out = []
+    for url in _iter_free_text_customer_source_urls(result):
+        if url in seen:
+            continue
+        authority = classify_source_authority(url, city, state, result=result)
+        if not (authority.get("local_decision_evidence") and authority.get("display_allowed")):
+            continue
+        tier = str(authority.get("tier") or "ahj")
+        seen.add(url)
+        out.append({
+            "url": url,
+            "title": office or _source_tier_label(tier, city, state),
+            "publisher": office or _source_tier_label(tier, city, state),
+            "date": _source_display_date({}, result),
+            "source_type": _customer_source_type(tier),
+            "jurisdiction": jurisdiction,
+            "snippet": "Local official URL discovered in customer-facing permit guidance and accepted by source-locality checks.",
+        })
+    return out
+
+
 def _source_evidence_floor_satisfied(result: dict) -> bool:
     """Return True only for an already-finalized public customer ViewModel."""
     if not isinstance(result, dict):
@@ -807,6 +946,7 @@ def _is_required_permit_decision(result: dict) -> bool:
 
 
 def _force_fail_closed_no_local_evidence(result: dict, city: str, state: str) -> dict:
+    _strip_customer_free_text_urls_in_place(result)
     location = ", ".join(part for part in [city, state] if part) or "this jurisdiction"
     result["permit_decision"] = "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
     result["permit_verdict"] = "UNKNOWN"
@@ -845,7 +985,10 @@ def _force_fail_closed_no_local_evidence(result: dict, city: str, state: str) ->
 def _filter_customer_sources_in_place(result: dict, city: str, state: str) -> dict:
     display_sources = _source_dicts(result, city=city, state=state, dedupe=True)
     existing_urls = {str(src.get("url")) for src in display_sources if isinstance(src, dict) and src.get("url")}
-    display_sources.extend(_filing_url_source_dicts(result, city, state, existing_urls))
+    filing_sources = _filing_url_source_dicts(result, city, state, existing_urls)
+    display_sources.extend(filing_sources)
+    existing_urls.update(str(src.get("url")) for src in filing_sources if isinstance(src, dict) and src.get("url"))
+    display_sources.extend(_free_text_url_source_dicts(result, city, state, existing_urls))
     result["sources"] = display_sources
     source_urls = []
     for src in display_sources:
@@ -2378,6 +2521,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
                 merged_warnings.append(warning)
         result["warnings"] = merged_warnings
     _scrub_scope_limit_leaks(result, scope_contract)
+    _filter_customer_sources_in_place(result, city, state)
     result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
     result = apply_final_source_floor_gate(result, job_type, city, state)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
