@@ -238,6 +238,78 @@ def test_recorded_dallas_office_fixture_public_view_model_stays_required_with_lo
     )
 
 
+def test_production_shape_free_text_local_portal_satisfies_final_source_floor(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
+    apply_url = "https://developdallas.dallascityhall.com/PermitDallas/"
+    result = _dirty_required_result(sources=[])
+    result.update({
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "source_urls": [],
+        "claim_citations": [],
+        "apply_url": "",
+        "online_application_url": "",
+        "apply_path": {},
+        "inspection_booking": f"Book inspections through the Dallas online portal: {apply_url}",
+        "customer_next_step": "File through the local Dallas permit portal after verifying trade submittals.",
+        "applying_office": "Dallas Development Services Department",
+        "building_dept_name": "Dallas Development Services Department",
+    })
+
+    out = server.finalize_permit_lookup_result(
+        result,
+        "commercial office tenant improvement",
+        "Dallas",
+        "TX",
+        is_cached=False,
+        evidence_allowed=False,
+    )
+    public = server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
+
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_verdict"] == "YES"
+    assert apply_url in public.get("source_urls", [])
+    assert any(
+        src.get("url") == apply_url and src.get("source_type") == "official_local"
+        for src in public.get("sources", [])
+    )
+
+
+def test_fail_closed_public_view_model_strips_free_text_urls(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
+    wrong_url = "https://www.cityofsouthlake.com/123/Building-Inspections"
+    result = _dirty_required_result(sources=[])
+    result.update({
+        "source_urls": [],
+        "claim_citations": [],
+        "apply_url": "",
+        "online_application_url": "",
+        "apply_path": {"steps": [f"Apply at {wrong_url}"]},
+        "inspection_booking": f"Book inspection at {wrong_url}",
+        "customer_next_step": f"File through {wrong_url} before starting work.",
+        "job_summary": f"Dallas office TI. Portal: {wrong_url}",
+        "permit_summary": {"notes": [f"Nested unsupported portal {wrong_url}"]},
+    })
+
+    out = server.finalize_permit_lookup_result(
+        result,
+        "commercial office tenant improvement",
+        "Dallas",
+        "TX",
+        is_cached=False,
+        evidence_allowed=False,
+    )
+    public = server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
+    blob = json.dumps(public, sort_keys=True)
+
+    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
+    assert public.get("source_urls", []) == []
+    assert wrong_url not in blob
+    assert "cityofsouthlake.com" not in blob
+
+
 def test_wrong_locality_apply_url_only_still_fails_closed(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
