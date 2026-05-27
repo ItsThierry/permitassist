@@ -849,6 +849,12 @@
     .hero-sources-label { color: var(--muted); font-weight: 600; }
     .hero-source-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.20); color: var(--brand); font-weight: 600; text-decoration: none; transition: background .15s, border-color .15s; }
     .hero-source-chip:hover, .hero-source-chip:active { background: rgba(37,99,235,0.16); border-color: rgba(37,99,235,0.42); }
+    .mobile-first-answer-card { border: 2px solid rgba(37,99,235,0.22); background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(255,255,255,0.98)); border-radius: 16px; padding: 16px 18px; margin: 0 0 14px; box-shadow: 0 10px 24px rgba(15,23,42,0.06); }
+    .mobile-first-answer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .mobile-first-answer-item { background: rgba(255,255,255,0.82); border: 1px solid rgba(148,163,184,0.24); border-radius: 10px; padding: 10px 12px; }
+    .mobile-first-answer-label { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; }
+    .mobile-first-answer-value { color: var(--text); font-size: 13px; font-weight: 800; line-height: 1.35; }
+    @media (max-width: 480px) { .mobile-first-answer-card { margin-top: -2px; padding: 14px; } .mobile-first-answer-grid { grid-template-columns: 1fr; gap: 8px; } }
 
     /* Print / Save PDF button on result hero */
     .btn-print-pdf { background: none; border: 1px solid var(--border); border-radius: 16px; color: var(--text2); cursor: pointer; font-size: 11px; padding: 4px 10px; transition: all .15s; font-weight: 600; }
@@ -3030,6 +3036,26 @@ function renderResults(d, job, city, state) {
 
   html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the local building department before quoting or starting work.</div>`;
 
+  const customerSummary = (d.customer_result_summary && typeof d.customer_result_summary === 'object') ? d.customer_result_summary : {};
+  const customerFirstScreen = (d.customer_first_screen_summary && typeof d.customer_first_screen_summary === 'object') ? d.customer_first_screen_summary : {
+    decision: customerSummary.permit_decision || (verdict === 'yes' ? 'REQUIRED' : verdict === 'no' ? 'NOT REQUIRED' : 'CHECK REQUIRED'),
+    kind_category: customerSummary.permit_kind || d.permit_kind || d.permit_type || getResultPermitName(d) || 'Permit details',
+    next_action: customerSummary.next_step || d.customer_next_step || 'Confirm exact filing requirements with the building department before starting work.',
+    ahj_department: customerSummary.ahj_department || office || d.building_dept_name || `${city || 'Local'} building department`,
+    source_cue: customerSummary.source_cue || 'Source cue: verify with the listed building department before filing'
+  };
+  if (customerFirstScreen.decision || customerFirstScreen.kind_category || customerFirstScreen.next_action) {
+    html += `<div class="mobile-first-answer-card">
+      <div class="section-label">Customer answer</div>
+      <div class="mobile-first-answer-grid">
+        <div class="mobile-first-answer-item"><div class="mobile-first-answer-label">Decision</div><div class="mobile-first-answer-value">${esc(customerFirstScreen.decision || 'Check required')}</div></div>
+        <div class="mobile-first-answer-item"><div class="mobile-first-answer-label">Kind / category</div><div class="mobile-first-answer-value">${esc(customerFirstScreen.kind_category || 'Permit details')}</div></div>
+        <div class="mobile-first-answer-item"><div class="mobile-first-answer-label">Next action</div><div class="mobile-first-answer-value">${esc(customerFirstScreen.next_action || 'Confirm with the building department')}</div></div>
+        <div class="mobile-first-answer-item"><div class="mobile-first-answer-label">AHJ / source</div><div class="mobile-first-answer-value">${esc(customerFirstScreen.ahj_department || 'Local building department')}<br><span style="font-weight:600;color:var(--muted)">${esc(customerFirstScreen.source_cue || '')}</span></div></div>
+      </div>
+    </div>`;
+  }
+
   // Homeowner mode — special "Did they pull the permit?" section
   if (searchMode === 'homeowner') {
     const permitRequired = (verdict === 'yes' || verdict === 'maybe');
@@ -4619,17 +4645,60 @@ async function doLookup() {
     }
     if (data.error) throw new Error(data.message||data.error);
     currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, zip: parsed.zip_code, address, data, ts: Date.now() };
-    saveToHistory(currentResult);
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('results').style.display = 'block';
-    renderResults(data, parsed.job_type, parsed.city, parsed.state);
+    renderCompletedLookupResult(currentResult);
     document.getElementById('page-search').scrollTop = 0;
   } catch (err) {
     stopProgress();
+    if (recoverCompletedLookupResult(err)) return;
     document.getElementById('loading').style.display = 'none';
     document.getElementById('search-form').style.display = 'block';
     alert('Error: ' + err.message);
   }
+}
+
+function showCompletedLookupRecovery(entry, err) {
+  const loading = document.getElementById('loading');
+  const results = document.getElementById('results');
+  const inner = document.getElementById('results-inner');
+  const form = document.getElementById('search-form');
+  if (loading) loading.style.display = 'none';
+  if (form) form.style.display = 'none';
+  if (results) results.style.display = 'block';
+  if (!inner) return false;
+  const message = err && err.message ? err.message : 'The result completed, but the page renderer needs to be reopened.';
+  inner.innerHTML = `<div class="card" style="border-color:#f59e0b;background:rgba(245,158,11,.08)">
+    <h3>Result ready</h3>
+    <p>Your lookup completed successfully. If the full result did not render automatically, open the recovered result below.</p>
+    <p class="muted">Render recovery note: ${esc(message)}</p>
+    <button type="button" class="btn" onclick="renderCompletedLookupResult(window._lastCompletedLookup)">Open recovered result</button>
+  </div>`;
+  return true;
+}
+
+function renderCompletedLookupResult(entry) {
+  if (!entry || !entry.data) return false;
+  window._lastCompletedLookup = entry;
+  currentResult = entry;
+  try { saveToHistory(entry); } catch (err) { console.warn('History save failed after completed lookup:', err); }
+  const loading = document.getElementById('loading');
+  const results = document.getElementById('results');
+  const form = document.getElementById('search-form');
+  if (loading) loading.style.display = 'none';
+  if (form) form.style.display = 'none';
+  if (results) results.style.display = 'block';
+  try {
+    renderResults(entry.data, entry.job, entry.city, entry.state);
+    return true;
+  } catch (err) {
+    console.error('Completed lookup render failed:', err);
+    return showCompletedLookupRecovery(entry, err);
+  }
+}
+
+function recoverCompletedLookupResult(err) {
+  const entry = window._lastCompletedLookup;
+  if (!entry || !entry.data) return false;
+  return showCompletedLookupRecovery(entry, err);
 }
 
 // ── Voice Input ──────────────────────────────────────────────────────────────

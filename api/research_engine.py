@@ -597,16 +597,78 @@ SOURCE_TIER_STATE = "state"
 SOURCE_TIER_UNIVERSAL = "universal"
 SOURCE_TIER_WRONG = "wrong"
 
+SOURCE_AUTHORITY_LOCAL_AHJ = "local_ahj"
+SOURCE_AUTHORITY_COUNTY_AHJ = "county_ahj"
+SOURCE_AUTHORITY_STATE_OFFICIAL = "state_official"
+SOURCE_AUTHORITY_UNIVERSAL_CODE = "universal_code"
+SOURCE_AUTHORITY_VERIFIED_VENDOR_PORTAL = "verified_vendor_portal"
+SOURCE_AUTHORITY_WRONG_LOCALITY = "wrong_locality"
+SOURCE_AUTHORITY_EXCLUDED = "excluded"
 
-def classify_source_tier(url: str, city: str, state: str, result: dict | None = None) -> str:
-    """Classify a source URL relative to the requested jurisdiction.
 
-    Returns one of: ``ahj``, ``state``, ``universal``, or ``wrong``.
-    ``wrong`` must not be rendered to the customer for this lookup.
+def _source_authority(
+    category: str,
+    tier: str,
+    *,
+    reason: str = "",
+    display_allowed: bool | None = None,
+    local_decision_evidence: bool | None = None,
+) -> dict:
+    if display_allowed is None:
+        display_allowed = tier != SOURCE_TIER_WRONG
+    if local_decision_evidence is None:
+        local_decision_evidence = category in {
+            SOURCE_AUTHORITY_LOCAL_AHJ,
+            SOURCE_AUTHORITY_COUNTY_AHJ,
+            SOURCE_AUTHORITY_VERIFIED_VENDOR_PORTAL,
+        }
+    return {
+        "category": category,
+        "tier": tier,
+        "display_allowed": bool(display_allowed),
+        "local_decision_evidence": bool(local_decision_evidence),
+        "reason": reason,
+    }
+
+
+def _same_state_official_domain(domain: str, state_upper: str) -> bool:
+    state_domains = _STATE_OFFICIAL_DOMAINS.get(state_upper, set()) if state_upper else set()
+    return bool(state_domains and _host_matches_any(domain, state_domains))
+
+
+def _different_state_official_domain(domain: str, state_upper: str) -> bool:
+    for code, domains in _STATE_OFFICIAL_DOMAINS.items():
+        if code != state_upper and _host_matches_any(domain, domains):
+            return True
+    # Generic official state host patterns such as des.wa.gov should never cross
+    # state lines even when that exact agency host is not seeded in the table.
+    for code in _US_STATE_NAMES:
+        if code == state_upper:
+            continue
+        token = code.lower()
+        if domain.endswith(f".{token}.gov") or domain.endswith(f".{token}.us"):
+            return True
+    return False
+
+
+def _allowed_domain_authority(domain: str) -> str:
+    text = domain.lower()
+    if "county" in text:
+        return SOURCE_AUTHORITY_COUNTY_AHJ
+    return SOURCE_AUTHORITY_LOCAL_AHJ
+
+
+def classify_source_authority(url: str, city: str, state: str, result: dict | None = None) -> dict:
+    """Canonical source classifier for decision evidence and displayed citations.
+
+    Categories are customer-safety oriented:
+    local_ahj, county_ahj, state_official, universal_code,
+    verified_vendor_portal, wrong_locality, excluded.
+    Only local/county/vendor categories can prove a local permit decision.
     """
     domain = _normalized_source_domain(url)
     if not domain:
-        return SOURCE_TIER_WRONG
+        return _source_authority(SOURCE_AUTHORITY_EXCLUDED, SOURCE_TIER_WRONG, reason="missing_or_invalid_url")
 
     city_key = (city or "").lower().strip()
     state_upper = _normalized_state_code(state)
@@ -614,30 +676,33 @@ def classify_source_tier(url: str, city: str, state: str, result: dict | None = 
 
     # Explicit known wrong-AHJ exclusions always win.
     if _host_matches_any(domain, _CITY_LOCALITY_EXCLUSIONS.get((city_key, state_key), set())):
-        return SOURCE_TIER_WRONG
-
-    # City/local AHJ allowlist + verified city DB domains.
-    if _host_matches_any(domain, locality_allowed_domains(city, state)):
-        return SOURCE_TIER_AHJ
+        return _source_authority(SOURCE_AUTHORITY_WRONG_LOCALITY, SOURCE_TIER_WRONG, reason="explicit_locality_exclusion")
 
     # Shared SaaS permit portals are AHJ evidence only when their tenant/path
     # carries the requested locality token. The vendor host alone is not enough.
     if _host_matches_any(domain, _PLATFORM_VENDOR_DOMAINS):
         if _text_has_locality_token(_vendor_locality_text(domain, url), city, state):
-            return SOURCE_TIER_AHJ
-        return SOURCE_TIER_WRONG
+            return _source_authority(SOURCE_AUTHORITY_VERIFIED_VENDOR_PORTAL, SOURCE_TIER_AHJ, reason="vendor_tenant_or_path_matches_locality")
+        return _source_authority(SOURCE_AUTHORITY_WRONG_LOCALITY, SOURCE_TIER_WRONG, reason="vendor_without_requested_locality_token")
 
-    if classify_source_url(url) == SOURCE_CLASS_EXCLUDED:
-        return SOURCE_TIER_WRONG
+    # City/local AHJ allowlist + verified city DB domains.
+    if _host_matches_any(domain, locality_allowed_domains(city, state)):
+        return _source_authority(_allowed_domain_authority(domain), SOURCE_TIER_AHJ, reason="locality_domain_allowlist")
 
-    # State-level official references for the requested state only.
-    state_domains = _STATE_OFFICIAL_DOMAINS.get(state_upper, set()) if state_upper else set()
-    if state_domains and _host_matches_any(domain, state_domains):
-        return SOURCE_TIER_STATE
+    source_class = classify_source_url(url)
+    if source_class == SOURCE_CLASS_EXCLUDED:
+        return _source_authority(SOURCE_AUTHORITY_EXCLUDED, SOURCE_TIER_WRONG, reason="excluded_source_class")
+
+    # State-level official references are displayed for context only for the
+    # requested state, and rejected when they belong to another state.
+    if _same_state_official_domain(domain, state_upper):
+        return _source_authority(SOURCE_AUTHORITY_STATE_OFFICIAL, SOURCE_TIER_STATE, reason="same_state_official", local_decision_evidence=False)
+    if _different_state_official_domain(domain, state_upper):
+        return _source_authority(SOURCE_AUTHORITY_WRONG_LOCALITY, SOURCE_TIER_WRONG, reason="wrong_state_official")
 
     # Universal/national/federal references are useful, but not local AHJ proof.
     if _host_matches_any(domain, _UNIVERSAL_LOCALITY_DOMAINS):
-        return SOURCE_TIER_UNIVERSAL
+        return _source_authority(SOURCE_AUTHORITY_UNIVERSAL_CODE, SOURCE_TIER_UNIVERSAL, reason="universal_code_reference", local_decision_evidence=False)
 
     # Conservative fallback for non-seeded cities: official host/path with city
     # token AND same-state official host condition.
@@ -645,10 +710,15 @@ def classify_source_tier(url: str, city: str, state: str, result: dict | None = 
     full = f"{domain} {(parsed.path or '').lower()}"
     if _text_has_locality_token(full, city, state):
         if state_key and (domain.endswith(f".{state_key}.gov") or domain.endswith(f".{state_key}.us")):
-            return SOURCE_TIER_AHJ
+            return _source_authority(_allowed_domain_authority(domain), SOURCE_TIER_AHJ, reason="same_state_official_city_token")
         if domain.endswith((".gov", ".us")) and any(tok in full for tok in _state_match_tokens(state) if len(tok) >= 3):
-            return SOURCE_TIER_AHJ
-    return SOURCE_TIER_WRONG
+            return _source_authority(_allowed_domain_authority(domain), SOURCE_TIER_AHJ, reason="official_host_city_and_state_token")
+    return _source_authority(SOURCE_AUTHORITY_WRONG_LOCALITY, SOURCE_TIER_WRONG, reason="no_requested_locality_match")
+
+
+def classify_source_tier(url: str, city: str, state: str, result: dict | None = None) -> str:
+    """Backward-compatible tier wrapper around the canonical source classifier."""
+    return str(classify_source_authority(url, city, state, result=result).get("tier") or SOURCE_TIER_WRONG)
 
 
 def is_url_allowed_for_locality(url: str, city: str, state: str, result: dict | None = None) -> bool:

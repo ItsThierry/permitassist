@@ -23,8 +23,13 @@ def _import_server(tmp_path, monkeypatch):
     research_module = sys.modules.get("research_engine")
     if research_module is not None and not hasattr(research_module, "classify_source_tier"):
         sys.modules.pop("research_engine", None)
-    from api import server
-    server = importlib.reload(server)
+    # Other contract tests intentionally pop/reload api.server with stubs.
+    # Import a fresh module here so this suite is order-independent.
+    sys.modules.pop("api.server", None)
+    api_pkg = sys.modules.get("api")
+    if api_pkg is not None and hasattr(api_pkg, "server"):
+        delattr(api_pkg, "server")
+    server = importlib.import_module("api.server")
     setattr(server, "CACHE_DB", str(tmp_path / "cache.db"))
     setattr(server, "DATA_DIR", str(tmp_path))
     server.init_db()
@@ -105,7 +110,24 @@ def _assert_public_payload_has_no_internal_keys(payload: dict):
     assert leaked == []
 
 
-def _base_result(permit_kind: str, *, marker: str = "") -> dict:
+LOCAL_SOURCE_BY_CITY_STATE = {
+    ("Dallas", "TX"): "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/default.aspx",
+    ("Austin", "TX"): "https://www.austintexas.gov/department/development-services",
+    ("San Jose", "CA"): "https://www.sanjoseca.gov/your-government/departments-offices/planning-building-code-enforcement/building-division",
+    ("Los Angeles", "CA"): "https://www.ladbs.org/services/core-services/plan-check-permit",
+    ("Phoenix", "AZ"): "https://www.phoenix.gov/pdd/development/permits",
+    ("Miami", "FL"): "https://www.miami.gov/Services/Permits",
+    ("Denver", "CO"): "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Permits",
+    ("Seattle", "WA"): "https://www.seattle.gov/sdci/permits",
+    ("Chicago", "IL"): "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits.html",
+}
+
+
+def _local_source_url(city: str, state: str) -> str:
+    return LOCAL_SOURCE_BY_CITY_STATE[(city, state)]
+
+
+def _base_result(permit_kind: str, *, marker: str = "", source_url: str = "https://www.miami.gov/Services/Permits") -> dict:
     text = marker or permit_kind
     return {
         "permit_required": True,
@@ -131,8 +153,8 @@ def _base_result(permit_kind: str, *, marker: str = "") -> dict:
         "apply_address": text,
         "apply_phone": text,
         "apply_path": {"label": text, "likely_path": text},
-        "sources": [{"title": text, "url": "https://example.com/permits", "snippet": text}],
-        "source_urls": ["https://example.com/permits"],
+        "sources": [{"title": text, "url": source_url, "snippet": text}],
+        "source_urls": [source_url],
         "quality_warnings": ["internal warning must not be public"],
         "permit_decision_contract": {
             "permit_decision": "REQUIRED",
@@ -172,7 +194,7 @@ def test_public_share_report_payload_is_allowlisted_across_scope_matrix(
 
     html = server.render_share_page(
         {
-            "data": _base_result(permit_kind),
+            "data": _base_result(permit_kind, source_url=_local_source_url(city, state)),
             "job_type": job_type,
             "city": city,
             "state": state,
@@ -193,9 +215,9 @@ def test_report_json_embedding_prevents_script_breakout_and_markup_payloads(tmp_
 
     html = server.render_share_page(
         {
-            "data": _base_result("Commercial Building / Tenant Improvement", marker=XSS_MARKER),
+            "data": _base_result("Commercial Building / Tenant Improvement", marker=XSS_MARKER, source_url=_local_source_url("Dallas", "TX")),
             "job_type": XSS_MARKER,
-            "city": XSS_MARKER,
+            "city": "Dallas",
             "state": "TX",
         }
     )
@@ -265,7 +287,7 @@ def test_actual_share_report_http_path_uses_public_safe_payload(
                 "job_type": job_type,
                 "city": city,
                 "state": state,
-                "result": _base_result(permit_kind, marker=XSS_MARKER),
+                "result": _base_result(permit_kind, marker=XSS_MARKER, source_url=_local_source_url(city, state)),
             },
         )
         assert status == 200
