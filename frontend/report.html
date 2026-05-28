@@ -78,11 +78,12 @@
     const sourceTitle = (src) => textValue((src && typeof src === 'object' && (src.title || src.name || src.label)) || sourceHost(sourceUrl(src)), 'official source');
     const looksLikeRawUrl = (value) => /^https?:\/\//i.test(String(value || '').trim());
     const applyPath = d.apply_path && typeof d.apply_path === 'object' ? d.apply_path : {};
-    const applyPathLabel = primaryPermit.portal_selection || firstPermit.portal_selection || applyPath.likely_path || applyPath.label || applyPath.permit_path || applyPath.permit_type || applyPath.permit_category;
+    const applyPathLabel = primaryPermit.portal_selection || firstPermit.portal_selection || applyPath.likely_path || applyPath.label || applyPath.permit_path;
     const applyOffice = looksLikeRawUrl(d.applying_office) ? '' : d.applying_office;
     const applyAddress = looksLikeRawUrl(d.apply_address) ? '' : d.apply_address;
     const applyPhone = looksLikeRawUrl(d.apply_phone) ? '' : d.apply_phone;
-    const whereToApply = textValue(applyPathLabel || [applyOffice, applyAddress, applyPhone].filter(Boolean).join(' • '), 'Contact local building department');
+    const applyContactLabel = [applyOffice, applyAddress, applyPhone].filter(Boolean).join(' • ');
+    const whereToApply = textValue(applyContactLabel || applyPathLabel, 'Contact local building department');
 
     const el = (tag, options = {}, children = []) => {
       const node = document.createElement(tag);

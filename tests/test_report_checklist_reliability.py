@@ -146,6 +146,46 @@ def test_render_share_page_sanitizes_internal_engine_wording(tmp_path, monkeypat
     _assert_no_internal_customer_terms(payload["checklist"])
 
 
+def test_render_share_page_sanitizes_apply_path_verification_scaffold(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    monkeypatch.setattr(server, "load_report_template", lambda: "__REPORT_DATA__")
+    share = {
+        "data": {
+            "permit_name": "Commercial Building / Tenant Improvement Permit",
+            "permit_verdict": "YES",
+            "permit_required": True,
+            "applying_office": "City of Phoenix Planning & Development Department (PDD)",
+            "apply_address": "200 W. Washington Street, 2nd Floor, Phoenix, AZ 85003",
+            "apply_phone": "(602) 262-7811",
+            "apply_path": {
+                "support_level": "not available",
+                "platform": None,
+                "login_required": None,
+                "permit_category": "Commercial Building / Tenant Improvement",
+                "permit_type": "Permit type needs building department verification",
+                "portal_selection_path": [
+                    "Ask the building department which permit category best matches: Permit type needs building department verification",
+                ],
+                "steps": [
+                    "Ask the building department which permit category best matches: Permit type needs building department verification",
+                    "Prepare scope of work and contractor license info before final submission",
+                ],
+            },
+        },
+        "job_type": "Phoenix commercial restaurant tenant improvement",
+        "city": "Phoenix",
+        "state": "AZ",
+    }
+
+    html = server.render_share_page(share)
+
+    payload = json.loads(html)
+    serialized = json.dumps(payload, sort_keys=True)
+    assert "Permit type needs building department verification" not in serialized
+    assert "needs building department verification" not in serialized
+    assert payload["share"]["data"]["applying_office"] == "City of Phoenix Planning & Development Department (PDD)"
+
+
 def test_render_share_page_uses_request_scope_firebreak_for_saved_dirty_result(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "load_report_template", lambda: "__REPORT_DATA__")

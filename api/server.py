@@ -679,6 +679,18 @@ def _sanitize_customer_apply_path_in_place(result: dict) -> None:
     def scrub_apply_value(value):
         if isinstance(value, str):
             cleaned = banned_uncertainty_re.sub("", value)
+            cleaned = re.sub(
+                r"\bpermit\s+type\s+needs\s+building\s+department\s+verification\b",
+                "",
+                cleaned,
+                flags=re.I,
+            )
+            cleaned = re.sub(
+                r"Ask\s+the\s+building\s+department\s+which\s+permit\s+category\s+best\s+matches\s*:?\s*$",
+                "Ask the building department which permit category best matches the project scope",
+                cleaned,
+                flags=re.I,
+            )
             cleaned = re.sub(r"\s+", " ", cleaned).strip(" -:;,.\n")
             return cleaned
         if isinstance(value, list):

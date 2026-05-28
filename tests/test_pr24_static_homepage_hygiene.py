@@ -75,6 +75,13 @@ def test_shared_report_static_copy_uses_clean_labels_and_friendly_sources():
     assert "sourceHost" in html
 
 
+def test_shared_report_where_to_apply_prefers_contact_over_permit_type_metadata():
+    html = (ROOT / "frontend/report.html").read_text(encoding="utf-8")
+
+    assert "applyPath.permit_type || applyPath.permit_category" not in html
+    assert "const applyContactLabel" in html
+
+
 def test_homepage_disambiguation_does_not_append_raw_choice_parentheses():
     html = (ROOT / "frontend/index.html").read_text(encoding="utf-8")
 
