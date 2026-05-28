@@ -445,6 +445,29 @@ _AHJ_DOMAIN_ALLOWLIST: dict[tuple[str, str], set[str]] = {
     ("pasadena", "ca"): {"cityofpasadena.net"},
     ("san jose", "ca"): {"sanjoseca.gov"},
     ("denver", "co"): {"denvergov.org"},
+    # Jurisdiction-authority graph entries: canonical AHJ/consolidated hosts
+    # that serve child jurisdictions. These are source-validity mappings only;
+    # they do not allowlist permit answers or weaken the final source floor.
+    ("new york", "ny"): {"nyc.gov", "a810-dobnow.nyc.gov"},
+    ("brooklyn", "ny"): {"nyc.gov", "a810-dobnow.nyc.gov"},
+    ("queens", "ny"): {"nyc.gov", "a810-dobnow.nyc.gov"},
+    ("bronx", "ny"): {"nyc.gov", "a810-dobnow.nyc.gov"},
+    ("manhattan", "ny"): {"nyc.gov", "a810-dobnow.nyc.gov"},
+    ("staten island", "ny"): {"nyc.gov", "a810-dobnow.nyc.gov"},
+    ("washington", "dc"): {"dc.gov", "permitwizard.dcra.dc.gov"},
+    ("district of columbia", "dc"): {"dc.gov", "permitwizard.dcra.dc.gov"},
+    ("miami", "fl"): {"miami.gov", "miamidade.gov"},
+    ("miami-dade", "fl"): {"miamidade.gov"},
+    ("miami dade", "fl"): {"miamidade.gov"},
+    ("hialeah", "fl"): {"miamidade.gov"},
+    ("coral gables", "fl"): {"miamidade.gov"},
+    ("north miami", "fl"): {"miamidade.gov"},
+    ("miami beach", "fl"): {"miamidade.gov"},
+    ("doral", "fl"): {"miamidade.gov"},
+    ("homestead", "fl"): {"miamidade.gov"},
+    ("charlotte", "nc"): {"mecknc.gov", "mecklenburgcountync.gov"},
+    ("mecklenburg county", "nc"): {"mecknc.gov", "mecklenburgcountync.gov"},
+    ("naperville", "il"): {"naperville.il.us"},
     # 2026-05-01 stress100 manual verification: City of Fredericksburg, TX uses fbgtx.org
     # as its official municipal domain; OpenClaw scorer correctly kept it flagged until verified.
     ("fredericksburg", "tx"): {"fbgtx.org"},

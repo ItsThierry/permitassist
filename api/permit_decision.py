@@ -126,6 +126,7 @@ def _source_urls(result: dict[str, Any]) -> list[str]:
 
     for field in (
         "sources",
+        "source_urls",
         "claim_citations",
         "field_evidence",
         "apply_url",
@@ -153,7 +154,7 @@ def has_source_backed_evidence(result: dict[str, Any]) -> bool:
         host = _url_host(url)
         if not host:
             continue
-        if host.endswith(".gov") or ".gov" in host:
+        if host.endswith(".gov") or ".gov" in host or host.endswith(".us"):
             return True
         # Common official city/AHJ domains in current deterministic tests/evidence packs.
         if any(token in host for token in ("city", "county", "dallascityhall", "denvergov", "cityofpasadena", "houstonpermittingcenter", "sanjoseca")):
@@ -381,7 +382,10 @@ def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", c
     elif supplied_decision == PERMIT_DECISION_CONDITIONAL:
         decision = PERMIT_DECISION_CONDITIONAL if _conditional_threshold_evidence(result) else PERMIT_DECISION_FAIL_CLOSED
     elif supplied_decision == PERMIT_DECISION_FAIL_CLOSED:
-        decision = PERMIT_DECISION_FAIL_CLOSED
+        # Recovery path for stale upstream fail-closed metadata: if real source
+        # URLs and concrete scope/kind evidence are present, let the final source
+        # floor decide locality instead of permanently preserving the stale flag.
+        decision = PERMIT_DECISION_REQUIRED if has_evidence and (result.get("permits_required") or kind != "Other") else PERMIT_DECISION_FAIL_CLOSED
     elif has_evidence and (result.get("permits_required") or str(result.get("permit_verdict") or "").upper() in {"YES", "REQUIRED"} or kind != "Other"):
         decision = PERMIT_DECISION_REQUIRED
     else:
