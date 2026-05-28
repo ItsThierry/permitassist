@@ -343,6 +343,42 @@ def test_lookup_share_report_checklist_public_surfaces_banned_text_scan(tmp_path
         assert not BANNED_RE.search(text), text
 
 
+def test_checklist_sanitizer_removes_uncertainty_outside_companion_context(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    dirty_checklist = {
+        "title": "Commercial TI checklist",
+        "summary": (
+            "Required permits: commercial building/tenant improvement and commercial electrical. "
+            "Plan review is likely because new partitions can affect egress, fire ratings, accessibility, "
+            "and life-safety coordination."
+        ),
+        "items": [
+            {
+                "label": "Plan review will probably be required before work starts.",
+                "category": "plan_review",
+                "required": True,
+            },
+            {
+                "label": "Maybe coordinate electrical permit intake with building review.",
+                "category": "coordination",
+                "required": True,
+            },
+        ],
+    }
+
+    cleaned = server._sanitize_checklist_customer_output(
+        dirty_checklist,
+        "commercial office tenant improvement with partitions and electrical work",
+        "Dallas",
+        "TX",
+    )
+
+    _assert_no_uncertainty_outside_companion(cleaned)
+    serialized = json.dumps(cleaned, sort_keys=True)
+    assert "Plan review is required when new partitions" in serialized
+    assert "Coordinate electrical permit intake" in serialized
+
+
 def test_static_customer_paths_do_not_assign_unknown_fail_closed_or_likely_maybe():
     customer_paths = [ROOT / "api" / "server.py", ROOT / "api" / "permit_decision.py"]
     banned = re.compile(

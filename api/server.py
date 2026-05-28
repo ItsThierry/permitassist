@@ -4283,6 +4283,59 @@ def _sanitize_customer_result_for_request_scope(result: dict, job_type: str = ""
     return build_customer_permit_view_model(result, job_type, city, state)
 
 
+_CHECKLIST_BANNED_CUSTOMER_UNCERTAINTY_RE = re.compile(
+    r"\b(?:UNKNOWN|FAIL[_ -]?CLOSED|likely|maybe|probably)\b",  # banned customer terms
+    re.I,
+)
+
+
+def _scrub_checklist_customer_contract_text(text: str) -> str:
+    """Remove customer-contract uncertainty wording from checklist-only strings."""
+    if not isinstance(text, str):
+        return text
+    value = text
+    value = re.sub(
+        r"\bPlan\s+review\s+is\s+likely\s+because\b",  # banned customer term
+        "Plan review is required when",
+        value,
+        flags=re.I,
+    )
+    value = re.sub(
+        r"\bPlan\s+review\s+will\s+probably\s+be\s+required\b",  # banned customer term
+        "Plan review is required",
+        value,
+        flags=re.I,
+    )
+    value = re.sub(r"\bMaybe\s+coordinate\b", "Coordinate", value, flags=re.I)  # banned customer term
+    value = re.sub(r"\bmay\s+require\b", "requires", value, flags=re.I)
+    value = re.sub(r"\bmay\s+be\s+required\b", "is required when applicable", value, flags=re.I)  # banned customer term
+    value = _CHECKLIST_BANNED_CUSTOMER_UNCERTAINTY_RE.sub("", value)
+    value = re.sub(r"\s+", " ", value).strip(" -:;,.\n")
+    return value
+
+
+def _scrub_checklist_customer_contract_value(value, path: tuple[str, ...] = ()):  # noqa: ANN001
+    if isinstance(value, str):
+        if any("companion" in part.lower() or "secondary" in part.lower() for part in path):
+            return value
+        return _scrub_checklist_customer_contract_text(value)
+    if isinstance(value, list):
+        cleaned = [
+            item
+            for item in (_scrub_checklist_customer_contract_value(item, path + (str(index),)) for index, item in enumerate(value))
+            if item not in ("", [], {})
+        ]
+        return cleaned
+    if isinstance(value, dict):
+        cleaned = {}
+        for key, child in value.items():
+            next_value = _scrub_checklist_customer_contract_value(child, path + (str(key),))
+            if next_value not in ("", [], {}):
+                cleaned[key] = next_value
+        return cleaned
+    return value
+
+
 def _sanitize_checklist_customer_output(checklist: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     """Sanitize checklist JSON before customer return/cache storage."""
     cleaned = sanitize_customer_visible_result(checklist if isinstance(checklist, dict) else {}, strip_internal_keys=True)
@@ -4291,6 +4344,7 @@ def _sanitize_checklist_customer_output(checklist: dict, job_type: str = "", cit
         cleaned = sanitize_result_for_scope_contract(cleaned, scope_contract, fail_on_removal_in_tests=False)
     except Exception as exc:
         print(f"[checklist-sanitize] Scope sanitize fallback used: {exc}")
+    cleaned = _scrub_checklist_customer_contract_value(cleaned)
     public = _public_dict(cleaned if isinstance(cleaned, dict) else {}, frozenset({"title", "summary", "items", "cached", "result_hash", "building_department_contact_source"}))
     return public if isinstance(public, dict) else {}
 
