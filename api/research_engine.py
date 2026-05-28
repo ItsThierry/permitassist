@@ -827,7 +827,7 @@ def filter_sources_by_locality(sources: list, city: str, state: str, result: dic
 def _locality_placeholder(result: dict, city: str) -> str:
     ahj = result.get("applying_office") or (f"{city} building department" if city else "the building department")
     phone = result.get("building_dept_phone") or result.get("phone") or result.get("office_phone") or ""
-    return f"[verify with {ahj}{(' ' + phone) if phone else ''}]"
+    return f"confirm with {ahj}{(' ' + phone) if phone else ''}"
 
 
 def _strip_nonlocal_urls_from_text(text: str, city: str, state: str, result: dict, block: bool = False) -> str:
@@ -1111,12 +1111,12 @@ _URL_IN_TEXT_RE = re.compile(r'https?://[^\s\)\]\}\,]+', re.IGNORECASE)
 def strip_junk_urls_from_text(text: str, ahj_name: str = "city building dept") -> str:
     """Remove URLs from a free-text field if their host is EXCLUDED.
 
-    Replaces matched URLs with `[verify with ahj_name]` so the sentence stays
-    readable. Returns the text unchanged if no junk URLs are present.
+    Replaces matched URLs with `confirm with ahj_name` so the sentence stays
+    readable without leaking bracketed template scaffolding. Returns the text unchanged if no junk URLs are present.
     """
     if not isinstance(text, str) or not text:
         return text
-    placeholder = f"[verify with {ahj_name}]"
+    placeholder = f"confirm with {ahj_name}"
 
     def _replace(match):
         url = match.group(0).rstrip('.,;:')
@@ -6090,11 +6090,11 @@ def classify_healthcare_occupancy(job_type: str) -> dict:
         "applies": applies,
         "occupancy_question": "B vs I-2 / ambulatory-care facility review",
         "citations": [
-            "IBC Chapter 3 — occupancy classification [verify adopted edition]",
-            "IBC Group B outpatient clinic basis [verify AHJ interpretation]",
-            "IBC Group I-2 / ambulatory-care facility provisions [verify thresholds]",
-            "IBC §422 Ambulatory Care Facilities [verify applicability]",
-            "IEBC change-of-occupancy provisions [verify adopted edition]",
+            "IBC Chapter 3 — occupancy classification (confirm adopted edition)",
+            "IBC Group B outpatient clinic basis (confirm building department interpretation)",
+            "IBC Group I-2 / ambulatory-care facility provisions (confirm thresholds)",
+            "IBC §422 Ambulatory Care Facilities (confirm applicability)",
+            "IEBC change-of-occupancy provisions (confirm adopted edition)",
         ],
     }
     if not applies:
@@ -8318,7 +8318,7 @@ def _strip_excluded_urls_from_text(text: str, ahj_name: str = "the building depa
     .gov / .us / .mil / municipal / explicit-AHJ-allowlist domains. Anything
     that's SUPPLEMENTARY (.org bucket including kauffman.org, archive.org,
     research foundations, academic) or EXCLUDED gets replaced with
-    `[verify with {ahj_name}]`.
+    `confirm with {ahj_name}`.
 
     Real triangulated leaks this catches:
       - kauffman.org public-firms research dataset (Seattle review)
@@ -8339,9 +8339,9 @@ def _strip_excluded_urls_from_text(text: str, ahj_name: str = "the building depa
             # catches official-looking but wrong-jurisdiction/archive hosts from
             # the four-city review (e.g., pw.lacounty.gov for City of LA fees).
             if cls != SOURCE_CLASS_OFFICIAL or _is_denied_free_text_fee_url(url):
-                return f"[verify with {ahj_name}]"
+                return f"confirm with {ahj_name}"
         except Exception:
-            return f"[verify with {ahj_name}]"
+            return f"confirm with {ahj_name}"
         return url
     return _URL_REGEX.sub(_replace, text)
 

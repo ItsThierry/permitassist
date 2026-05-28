@@ -495,6 +495,11 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         "jurisdiction multiplier",
         "ti floor",
         "ada-path-of-travel adder",
+        "source-backed threshold",
+        "source-backed evidence",
+        "source-backed exemption",
+        "needs_verification",
+        "fail_closed",
     )
     fee_internal_terms = (
         "jurisdiction multiplier",
@@ -541,11 +546,27 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         if key in confidence_fields and strip_internal_keys and has_internal(value):
             return "Source support is degraded; use the resolved permit decision and current local filing category before filing."
         if key in fee_fields and strip_internal_keys and any(term in lowered for term in fee_internal_terms):
-            return "Fee varies by exact scope; confirm current fees with the building department before quoting."
+            value = re.sub(r"\bjurisdiction multiplier\b", "local fee schedule", value, flags=re.I)
+            value = re.sub(r"\bstructured\s+ti\s+floor\b|\bstructured\s+floor\b|\bti\s+floor\b", "commercial TI complexity", value, flags=re.I)
+            value = re.sub(r"\bada-path-of-travel\s+adder\b", "accessibility review scope", value, flags=re.I)
+            lowered = value.lower()
         if key in fee_fields and strip_internal_keys and re.search(r"\b(?:fee\s*:\s*)?(?:call|contact)\s+(?:to\s+)?confirm\b", lowered):
             return "Fee depends on declared valuation, trade scope, plan-review fees, and the current portal fee schedule; verify in the city portal before quoting."
         if strip_internal_keys:
             value = value.replace("**", "")
+            value = re.sub(r"\$\{[^}]*\}", "", value)
+            value = re.sub(r"\{\{[^{}]*\}\}", "", value)
+            value = re.sub(r"\[\s*verify\s+(?:with|in)\s+([^\]]{1,160})\]", r"confirm with \1", value, flags=re.I)
+            value = re.sub(r"\[\s*verify\s+([^\]]{1,160})\]", r"confirm \1", value, flags=re.I)
+            value = re.sub(r"\bsource-backed\s+threshold\b", "listed permit trigger", value, flags=re.I)
+            value = re.sub(r"\bsource-backed\s+evidence\b", "official source", value, flags=re.I)
+            value = re.sub(r"\bsource-backed\s+exemption\b", "official no-permit note", value, flags=re.I)
+            value = re.sub(r"\bsource-backed\b", "official-source", value, flags=re.I)
+            value = re.sub(r"\bneeds_verification\b", "confirm with the listed department", value, flags=re.I)
+            value = re.sub(r"\bfail[_\s-]?closed\b", "not shown", value, flags=re.I)
+            value = re.sub(r"\bpending(?:[_\s-]*(?:active[_\s-]*)?retrieval|view|lookup)?\b", "not yet published", value, flags=re.I)
+            value = re.sub(r"(?<=\b[A-Z]{2})\.(?=[A-Za-z])", ". ", value)
+            value = re.sub(r"\b(work|scope|review|permit|inspection)\.(?=(?:signage|exterior|interior|electrical|plumbing|mechanical|fire|health|zoning)\b)", r"\1. ", value, flags=re.I)
             value = re.sub(r"\s*\((?:full replacement|minor repair|layout/plumbing/electrical/wall changes)\)\s*", " ", value, flags=re.I)
             value = re.sub(r"\blayout/plumbing/electrical/wall changes\b", "layout, plumbing, electrical, or wall changes", value, flags=re.I)
             if value.strip().lower().rstrip(".") == "connection points":
@@ -1312,7 +1333,7 @@ def _build_customer_result_summary(public: dict, source: dict, city: str, state:
     sources = [item for item in raw_sources if isinstance(item, dict)] if isinstance(raw_sources, list) else []
     first_source = sources[0] if sources else {}
     source_title = _customer_summary_text(first_source.get("title"))
-    source_cue = f"Source-backed: {source_title}" if source_title else "Source support: exact source path not published in this result"
+    source_cue = f"Official source: {source_title}" if source_title else "Official source path not published in this result"
 
     next_step = _first_customer_text(
         public.get("customer_next_step"),
@@ -1372,6 +1393,10 @@ def lint_customer_visible_result(public: dict, city: str = "", state: str = "") 
         "unfilled_braces": r"\{\{|\}\}",
         "unfilled_js_template": r"\$\{[^}]+\}",
         "unknown_freshness": r"last\s+updated\s*:\s*unknown",
+        "invalid_date": r"\binvalid\s+date\b",
+        "bracket_verify_placeholder": r"\[\s*verify\b",
+        "internal_customer_terms": r"\b(?:source-backed\s+(?:threshold|evidence|exemption)|needs_verification|fail[_\s-]?closed|verify\s+before\s+merging|structured\s+floor|ti\s+floor|jurisdiction\s+multiplier|ada-path-of-travel\s+adder)\b",
+        "fragment_stutter": r"\b[A-Z][A-Za-z .'-]+,\s*[A-Z]{2}\.[A-Za-z]|\bwork\.(?:signage|exterior|interior|electrical|plumbing|mechanical|fire|health|zoning)\b",
         "repeated_caveat": r"verify\s+with\s+the\s+building\s+department.{0,80}verify\s+with\s+the\s+building\s+department",
     }
     for code, pattern in patterns.items():

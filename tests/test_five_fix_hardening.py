@@ -27,7 +27,8 @@ def test_bug1_strips_four_city_hallucinated_fee_urls_from_free_text():
 
     for junk in ("ojp.gov", "archive.org", "kauffman.org", "pw.lacounty.gov"):
         assert junk not in combined
-    assert "[verify with Phoenix Planning and Development Department]" in combined
+    assert "[verify" not in combined
+    assert "confirm with Phoenix Planning and Development Department" in combined
     assert result["_url_strips"]
 
 

@@ -59,6 +59,7 @@ _CUSTOMER_SAFE_UNCERTAIN_APPLY_URL = "Exact online filing URL was not confirmed;
 BANNED_CUSTOMER_SURFACE_RE = re.compile(
     r"\b(?:likely\s+required|may\s+be\s+required|permit\s+likely\s+required|"
     r"likely\s+(?:primary\s+permit\s+type|inspections|permits?)|"
+    r"source-backed\s+(?:threshold|evidence|exemption)|"
     r"pending(?:[_\s-]*(?:active[_\s-]*)?retrieval|view|lookup)?|pENDING_[A-Z0-9_]*|"
     r"unverified|needs_verification|AHJ|verify\s+exact[^.;]{0,120}\s+(?:with\s+(?:the\s+)?AHJ|AHJ)|verify[^.;]{0,80}\s+with[^.;]{0,80}\s+AHJ|"
     r"generic\s+permit\s+required)\b",
@@ -316,14 +317,14 @@ def _safe_next_step(result: dict[str, Any], decision: str, permit_kind: str, cit
     if decision == PERMIT_DECISION_REQUIRED:
         return f"File under {permit_kind} with {department}; use the permit portal or counter intake for that category, then attach trade plans and companion-review documents that match the scope."
     if decision == PERMIT_DECISION_NOT_REQUIRED:
-        return "Keep the source-backed exemption/no-permit note with the job file before starting work."
+        return "Keep the official no-permit note with the job file before starting work."
     if decision == PERMIT_DECISION_CONDITIONAL:
         threshold = result.get("condition_threshold") or result.get("conditional_threshold") or {}
         if isinstance(threshold, dict):
             condition = _norm_text(threshold.get("threshold") or threshold.get("condition") or threshold.get("rule"))
             if condition:
                 return f"Measure/confirm the job against this threshold: {condition} File the permit if the work is on the permit-required side of the threshold."
-        return "Confirm the source-backed threshold before work starts, then file if the threshold is met."
+        return "Confirm the listed permit trigger with the local building department before work starts, then file if the condition applies."
     return f"Use the structured {permit_kind or 'permit'} filing path with the local building department before starting work."
 
 
@@ -343,8 +344,11 @@ def _strip_customer_banned_text(value: Any, key: str = "") -> Any:
             return value
         text = value
         if BANNED_CUSTOMER_SURFACE_RE.search(text):
-            text = re.sub(r"\bpending(?:[_\s-]*(?:active[_\s-]*)?retrieval|view|lookup)?\b", "source-backed evidence not available", text, flags=re.I)
-            text = re.sub(r"\bPENDING_[A-Z0-9_]*\b", "source-backed evidence not available", text)
+            text = re.sub(r"\bsource-backed\s+threshold\b", "listed permit trigger", text, flags=re.I)
+            text = re.sub(r"\bsource-backed\s+evidence\b", "official source", text, flags=re.I)
+            text = re.sub(r"\bsource-backed\s+exemption\b", "official no-permit note", text, flags=re.I)
+            text = re.sub(r"\bpending(?:[_\s-]*(?:active[_\s-]*)?retrieval|view|lookup)?\b", "not yet published", text, flags=re.I)
+            text = re.sub(r"\bPENDING_[A-Z0-9_]*\b", "not yet published", text)
             text = re.sub(r"\bunverified\b", "not confirmed from official-source fields", text, flags=re.I)
             text = re.sub(r"\bneeds_verification\b", "source attached; quoted snippet unavailable", text, flags=re.I)
             text = re.sub(r"\blikely\s+primary\s+permit\s+type\b", "primary permit category", text, flags=re.I)
@@ -352,7 +356,7 @@ def _strip_customer_banned_text(value: Any, key: str = "") -> Any:
             text = re.sub(r"\blikely\s+permits\b", "permit decision", text, flags=re.I)
             text = re.sub(r"\blikely\s+required\b", "required", text, flags=re.I)
             text = re.sub(r"\bpermit\s+likely\s+required\b", "permit required", text, flags=re.I)
-            text = re.sub(r"\bmay\s+be\s+required\b", "is conditional only when a source-backed threshold applies", text, flags=re.I)
+            text = re.sub(r"\bmay\s+be\s+required\b", "is conditional only when the listed condition applies", text, flags=re.I)
             text = re.sub(r"\bverify\s+exact\s+AHJ\s+(?:permit\s+name|naming)\s+before\s+quoting\b", "use the structured permit kind; exact local form title is a field-level status", text, flags=re.I)
             text = re.sub(r"\bverify\s+exact\s+permit\s+type\s+with\s+the\s+AHJ\b", "use the structured permit kind and local filing path", text, flags=re.I)
             text = re.sub(r"\bverify\s+exact[^.;]{0,120}\s+(?:with\s+(?:the\s+)?AHJ|AHJ)\b", "use the structured permit kind and local filing path", text, flags=re.I)
