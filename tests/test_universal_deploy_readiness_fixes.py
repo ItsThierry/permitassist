@@ -460,3 +460,75 @@ def test_server_binds_real_source_classifier_not_silent_fail_closed_stub(tmp_pat
     assert authority["category"] == "local_ahj"
     assert authority["display_allowed"] is True
     assert server.classify_source_tier("https://www.miami.gov/Services/Permits", "Miami", "FL") == "ahj"
+
+
+def test_jurisdiction_authority_graph_accepts_consolidated_ahj_hosts():
+    from api.research_engine import classify_source_authority
+
+    cases = [
+        ("https://www.nyc.gov/site/buildings/index.page", "Brooklyn", "NY"),
+        ("https://a810-dobnow.nyc.gov/publish/Index.html#!/", "Queens", "NY"),
+        ("https://dob.dc.gov/page/permit-resources", "Washington", "DC"),
+        ("https://permitwizard.dcra.dc.gov/", "Washington", "DC"),
+        ("https://www.miamidade.gov/permits/", "Miami", "FL"),
+        ("https://www.miamidade.gov/Apps/RER/EPSPortal/", "Coral Gables", "FL"),
+        ("https://code.mecknc.gov/permitting", "Charlotte", "NC"),
+        ("https://webpermit.mecklenburgcountync.gov/Default.aspx?PosseMenuName=ViewPermits", "Charlotte", "NC"),
+        ("https://www.naperville.il.us/services/permits--licenses/", "Naperville", "IL"),
+    ]
+
+    for url, city, state in cases:
+        authority = classify_source_authority(url, city, state)
+        assert authority["tier"] == "ahj", (url, city, state, authority)
+        assert authority["display_allowed"] is True, (url, city, state, authority)
+        assert authority["local_decision_evidence"] is True, (url, city, state, authority)
+
+
+def test_named_ahj_blank_apply_url_gets_canonical_official_start_url(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = _dirty_required_result(sources=[])
+    result.update({
+        "source_urls": [],
+        "claim_citations": [],
+        "apply_url": "",
+        "online_application_url": "",
+        "applying_office": "NYC Department of Buildings",
+        "building_dept_name": "NYC Department of Buildings",
+        "customer_next_step": "Use DOB NOW through the NYC Department of Buildings before starting work.",
+    })
+
+    out = server.finalize_permit_lookup_result(
+        result,
+        "Brooklyn dental clinic tenant improvement with plumbing and accessibility work",
+        "Brooklyn",
+        "NY",
+        is_cached=False,
+        evidence_allowed=False,
+    )
+    public = server.build_customer_permit_view_model(out, "Brooklyn dental clinic tenant improvement", "Brooklyn", "NY")
+
+    assert public["permit_decision"] == "REQUIRED"
+    assert public.get("apply_url") == "https://www.nyc.gov/site/buildings/index.page"
+    assert public.get("source_urls") == ["https://www.nyc.gov/site/buildings/index.page"]
+    assert any(src.get("source_type") == "official_local" for src in public.get("sources", []))
+
+
+def test_source_backed_result_never_keeps_not_source_backed_apply_path(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    source_url = "https://code.mecknc.gov/permitting"
+    result = _dirty_required_result(sources=[{"url": source_url, "title": "Mecklenburg County Code Enforcement Permitting"}])
+    result.update({
+        "apply_path": {
+            "support_level": "not source-backed",
+            "verification_note": "stale fail-closed text",
+            "steps": ["Verify directly with the Charlotte building department."],
+        },
+        "applying_office": "Mecklenburg County Code Enforcement",
+    })
+
+    public = server.build_customer_permit_view_model(result, "Charlotte daycare tenant improvement", "Charlotte", "NC")
+
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["apply_path"]["support_level"] != "not source-backed"
+    assert public["apply_path"]["portal_url"] == source_url
+    assert source_url in public.get("source_urls", [])

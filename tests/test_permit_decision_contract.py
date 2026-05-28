@@ -210,3 +210,58 @@ def test_white_label_report_renders_decision_contract_not_likely_or_ahj_surrende
     assert "likely primary permit type" not in text
     assert "needs_verification" not in text
     assert validate_customer_surface_contract(result, rendered_text=rendered) == []
+
+
+def test_stale_fail_closed_recovers_when_official_evidence_and_scope_remain():
+    result = server.finalize_permit_lookup_result(
+        {
+            "permit_decision": "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE",
+            "permit_verdict": "UNKNOWN",
+            "confidence": "low",
+            "data_source": "state_rules",
+            "confidence_reason": "County-level fallback used because exact city data was limited",
+            "permit_name": "Electrical Permit",
+            "permit_type": "Electrical Permit",
+            "permits_required": [{"permit_type": "Electrical Permit"}],
+            "sources": ["https://www.naperville.il.us/services/permits--licenses/"],
+            "claim_citations": [
+                {
+                    "field": "permit_name",
+                    "claim": "Electrical permits are handled by the City of Naperville.",
+                    "source_url": "https://www.naperville.il.us/services/permits--licenses/",
+                    "quoted_snippet": "Permits & Licenses",
+                }
+            ],
+            "applying_office": "City of Naperville",
+            "apply_url": "https://www.naperville.il.us/services/permits--licenses/",
+        },
+        "residential electrical panel upgrade to 200A",
+        "Naperville",
+        "IL",
+        evidence_allowed=False,
+    )
+
+    assert result["permit_decision"] == "REQUIRED"
+    assert result["permit_kind"] == "Electrical"
+    assert result["trade_permits"]
+    assert validate_customer_surface_contract(result) == []
+
+
+def test_pessimistic_metadata_does_not_override_actual_official_evidence():
+    base = _official_result("Dallas", "TX")
+    base.update({
+        "data_source": "state_rules",
+        "confidence_reason": "County-level fallback used because exact city data was limited",
+        "permits_required": [{"permit_type": "Building Permit — Tenant Improvement"}],
+    })
+
+    result = server.finalize_permit_lookup_result(
+        base,
+        "Dallas office tenant improvement with electrical and accessibility work",
+        "Dallas",
+        "TX",
+        evidence_allowed=False,
+    )
+
+    assert result["permit_decision"] == "REQUIRED"
+    assert result["permit_kind"] == "Commercial Building / Tenant Improvement"

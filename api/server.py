@@ -835,6 +835,122 @@ def _local_decision_evidence_urls(result: dict, city: str, state: str) -> list[s
     return out
 
 
+_CANONICAL_AHJ_APPLY_URLS: dict[tuple[str, str], dict[str, object]] = {
+    # Official AHJ start/portal URLs only. These entries restore provenance when
+    # the AHJ is named but the structured apply_url is blank; they do not decide
+    # whether a permit is required.
+    ("new york", "ny"): {
+        "url": "https://www.nyc.gov/site/buildings/index.page",
+        "title": "NYC Department of Buildings",
+        "tokens": ("nyc department of buildings", "new york city department of buildings", "dob now", "nyc dob"),
+    },
+    ("brooklyn", "ny"): {
+        "url": "https://www.nyc.gov/site/buildings/index.page",
+        "title": "NYC Department of Buildings",
+        "tokens": ("nyc department of buildings", "new york city department of buildings", "dob now", "nyc dob", "department of buildings"),
+    },
+    ("queens", "ny"): {
+        "url": "https://www.nyc.gov/site/buildings/index.page",
+        "title": "NYC Department of Buildings",
+        "tokens": ("nyc department of buildings", "new york city department of buildings", "dob now", "nyc dob", "department of buildings"),
+    },
+    ("bronx", "ny"): {
+        "url": "https://www.nyc.gov/site/buildings/index.page",
+        "title": "NYC Department of Buildings",
+        "tokens": ("nyc department of buildings", "new york city department of buildings", "dob now", "nyc dob", "department of buildings"),
+    },
+    ("manhattan", "ny"): {
+        "url": "https://www.nyc.gov/site/buildings/index.page",
+        "title": "NYC Department of Buildings",
+        "tokens": ("nyc department of buildings", "new york city department of buildings", "dob now", "nyc dob", "department of buildings"),
+    },
+    ("staten island", "ny"): {
+        "url": "https://www.nyc.gov/site/buildings/index.page",
+        "title": "NYC Department of Buildings",
+        "tokens": ("nyc department of buildings", "new york city department of buildings", "dob now", "nyc dob", "department of buildings"),
+    },
+    ("washington", "dc"): {
+        "url": "https://dob.dc.gov/page/permit-resources",
+        "title": "DC Department of Buildings Permit Resources",
+        "tokens": ("dc department of buildings", "district department of buildings", "dob permit wizard", "permit wizard", "dob.dc.gov"),
+    },
+    ("miami", "fl"): {
+        "url": "https://www.miamidade.gov/permits/",
+        "title": "Miami-Dade County Permits",
+        "tokens": ("miami-dade", "miami dade", "miamidade", "rer", "permitting and inspection center"),
+    },
+    ("charlotte", "nc"): {
+        "url": "https://code.mecknc.gov/permitting",
+        "title": "Mecklenburg County Code Enforcement Permitting",
+        "tokens": ("mecklenburg", "mecknc", "luesa", "code enforcement", "building permits"),
+    },
+    ("naperville", "il"): {
+        "url": "https://www.naperville.il.us/services/permits--licenses/",
+        "title": "City of Naperville Permits & Licenses",
+        "tokens": ("naperville", "naperville permits", "city of naperville"),
+    },
+}
+
+
+def _result_text_inventory(result: dict) -> str:
+    try:
+        return json.dumps(result or {}, sort_keys=True, default=str).lower()
+    except Exception:
+        return _customer_summary_text(result or {}).lower()
+
+
+def _apply_canonical_ahj_apply_url_fallback(result: dict, city: str, state: str) -> dict:
+    if not isinstance(result, dict):
+        return {}
+    if _safe_customer_source_url(result.get("apply_url") or result.get("online_application_url") or ""):
+        return result
+    city_key = (city or "").lower().strip()
+    state_key = (state or "").lower().strip()
+    entry = _CANONICAL_AHJ_APPLY_URLS.get((city_key, state_key))
+    if not entry:
+        return result
+    text = _result_text_inventory(result)
+    raw_tokens = entry.get("tokens")
+    tokens = tuple(str(token).lower() for token in raw_tokens) if isinstance(raw_tokens, (list, tuple, set)) else ()
+    if tokens and not any(token and token in text for token in tokens):
+        return result
+    url = str(entry.get("url") or "")
+    safe_url = _safe_customer_source_url(url)
+    if not safe_url:
+        return result
+    authority = classify_source_authority(safe_url, city, state, result=result)
+    if not (authority.get("local_decision_evidence") and authority.get("display_allowed")):
+        return result
+    result["apply_url"] = safe_url
+    result.setdefault("online_application_url", safe_url)
+    result.setdefault("applying_office", str(entry.get("title") or f"{city} building department"))
+    result.setdefault("building_dept_name", str(entry.get("title") or f"{city} building department"))
+    return result
+
+
+def _repair_source_backed_apply_path_contradiction(result: dict, city: str, state: str) -> dict:
+    if not isinstance(result, dict):
+        return {}
+    local_urls = _local_decision_evidence_urls(result, city, state)
+    if not local_urls:
+        return result
+    apply_path = result.get("apply_path")
+    if not isinstance(apply_path, dict):
+        return result
+    if str(apply_path.get("support_level") or "").lower().strip() != "not source-backed":
+        return result
+    portal_url = _safe_customer_source_url(apply_path.get("portal_url") or result.get("apply_url") or local_urls[0])
+    repaired = dict(apply_path)
+    repaired["support_level"] = "needs verification"
+    if portal_url:
+        repaired["portal_url"] = portal_url
+        if not result.get("apply_url"):
+            result["apply_url"] = portal_url
+    repaired["verification_note"] = "Official local source evidence is present; verify the exact portal selection/path with the AHJ before filing."
+    result["apply_path"] = repaired
+    return result
+
+
 def _filing_url_source_dicts(result: dict, city: str, state: str, existing_urls: set[str] | None = None) -> list[dict]:
     """Promote verified local filing URLs into customer source evidence.
 
@@ -1016,8 +1132,10 @@ def apply_final_source_floor_gate(result: dict, job_type: str, city: str, state:
     """Final post-filter gate: confident REQUIRED answers need local source evidence."""
     if not isinstance(result, dict):
         return {}
+    result = _apply_canonical_ahj_apply_url_fallback(result, city, state)
     source_floor_satisfied = _source_evidence_floor_satisfied(result)
     _filter_customer_sources_in_place(result, city, state)
+    _repair_source_backed_apply_path_contradiction(result, city, state)
     if _is_required_permit_decision(result) and not source_floor_satisfied and not _local_decision_evidence_urls(result, city, state):
         return _force_fail_closed_no_local_evidence(result, city, state)
     return result
@@ -2513,6 +2631,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     else:
         build_claim_citations(result)
 
+    _apply_canonical_ahj_apply_url_fallback(result, city, state)
     build_apply_path(result, job_type, city, state)
     if result.get("quality_warnings"):
         merged_warnings = []
