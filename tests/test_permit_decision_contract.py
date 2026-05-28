@@ -118,6 +118,45 @@ def test_required_contract_covers_residential_trades_and_mixed_hvac_panel():
             assert {"Mechanical", "Electrical"}.issubset(trade_kinds)
 
 
+def test_required_trade_scope_with_no_structural_work_overrides_stale_not_required():
+    result = server.finalize_permit_lookup_result(
+        {
+            "permit_decision": "NOT_REQUIRED",
+            "permit_verdict": "NO",
+            "permit_required": False,
+            "permit_kind": "Other",
+            "permit_name": "No permit required",
+            "applying_office": "Houston Permitting Center (HPC)",
+            "apply_phone": "(832) 394-8880",
+            "job_summary": (
+                "Residential electrical service upgrade in Houston, TX for a single-family home: "
+                "replace the existing 200A service panel and meter-main equipment, update grounding/bonding, "
+                "and add one dedicated 240V circuit. No structural work is described. This triggers an "
+                "Electrical Permit for the service/panel work."
+            ),
+            "sources": [
+                "https://www.houstonpermittingcenter.org",
+                "https://www.houstonpermittingcenter.org/online-permitting",
+            ],
+            "permits_required": [],
+        },
+        "Upgrade a 200 amp electrical service panel in a single-family home, replace meter-main equipment and grounding, add a dedicated 240V circuit, no structural work",
+        "Houston",
+        "TX",
+    )
+
+    _assert_clean_customer_contract(result, decision="REQUIRED", expected_kind_fragment="Electrical")
+    assert result["permit_decision"] == "REQUIRED"
+    assert result["permit_required"] is True
+    assert result["permit_verdict"] == "YES"
+    assert "Electrical Permit" in result["permit_name"]
+    assert "no permit required" not in _surface_text({
+        "permit_name": result.get("permit_name"),
+        "customer_headline": result.get("customer_headline"),
+        "customer_next_step": result.get("customer_next_step"),
+    })
+
+
 def test_not_required_requires_positive_exemption_evidence_and_customer_step():
     result = server.finalize_permit_lookup_result(
         {

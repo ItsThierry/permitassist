@@ -66,6 +66,25 @@ _EXPLICIT_NO_TRADE_OR_STRUCTURAL_RE = re.compile(
     re.I,
 )
 
+_NEGATED_WORK_CLAUSE_RE = re.compile(
+    r"\b(?:no|without|not)\s+(?:new\s+)?"
+    r"(?:(?:and\s+|or\s+)?(?:structural|electrical|electric|plumbing|mechanical|hvac|mep|layout|occupancy|exterior|wall|walls|trade|trades)"
+    r"\s*(?:,|/|\band\b|\bor\b)?\s*)+"
+    r"(?:work|changes?|scope|included|modifications?)?\b",
+    re.I,
+)
+
+
+def _has_affirmative_structural_or_trade(text: str) -> bool:
+    """Return True for positive trade/structural scope, ignoring local negations.
+
+    Phrases such as "no structural work" should not by themselves make a
+    cosmetic result required, but they also must not let a panel/service upgrade
+    inherit a stale NOT_REQUIRED decision.
+    """
+    without_negated_clauses = _NEGATED_WORK_CLAUSE_RE.sub(" ", text or "")
+    return bool(_STRUCTURAL_OR_TRADE_RE.search(without_negated_clauses))
+
 _BAD_DECISION_VALUES = {
     "",
     "UNKNOWN",
@@ -339,16 +358,18 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
 
     job_text = job_type.lower()
     explicit_no_trade_or_structural = bool(_EXPLICIT_NO_TRADE_OR_STRUCTURAL_RE.search(job_text))
+    has_affirmative_trade_or_structural = _has_affirmative_structural_or_trade(job_text)
     trivial_not_required = (
         bool(_TRIVIAL_NOT_REQUIRED_RE.search(job_text or scope_text))
-        and (explicit_no_trade_or_structural or not _STRUCTURAL_OR_TRADE_RE.search(job_text))
+        and (explicit_no_trade_or_structural or not has_affirmative_trade_or_structural)
+        and not has_affirmative_trade_or_structural
     )
     explicit_not_required = supplied_decision == PERMIT_DECISION_NOT_REQUIRED or supplied_required is False or supplied_verdict in {"NO", "NOT_REQUIRED"}
 
     # Only honor NOT_REQUIRED when the current scope is genuinely trivial/cosmetic
     # or an upstream source/rule explicitly classified it as NOT_REQUIRED. Legacy
     # UNKNOWN/FAIL_CLOSED/null never survive this boundary.
-    if trivial_not_required or (explicit_not_required and not _STRUCTURAL_OR_TRADE_RE.search(scope_text) and not commercial_default):
+    if trivial_not_required or (explicit_not_required and not _has_affirmative_structural_or_trade(scope_text) and not commercial_default):
         decision = PERMIT_DECISION_NOT_REQUIRED
         kinds: list[str] = []
         permit_names: list[str] = []
