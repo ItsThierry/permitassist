@@ -110,7 +110,7 @@ def test_recorded_dallas_fixture_free_text_only_local_portal_satisfies_source_fl
     _assert_required_with_official_local_source(public)
 
 
-def test_wrong_locality_free_text_url_is_not_promoted_and_is_hidden_after_fail_closed(tmp_path, monkeypatch):
+def test_wrong_locality_free_text_url_is_not_promoted_and_is_hidden_after_required_resolution(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
     result = _base_required_result()
@@ -120,16 +120,18 @@ def test_wrong_locality_free_text_url_is_not_promoted_and_is_hidden_after_fail_c
     public = _final_public(server, result)
     blob = json.dumps(public, sort_keys=True)
 
-    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
     assert public.get("source_urls", []) == []
     assert public.get("sources", []) == []
+    assert public.get("source_support", {}).get("decision_mutation_allowed") is False
     assert AUSTIN_URL not in blob
     assert SOUTHLAKE_URL not in blob
     assert "austintexas.gov" not in blob
     assert "cityofsouthlake.com" not in blob
 
 
-def test_same_state_official_free_text_url_does_not_satisfy_local_evidence_floor(tmp_path, monkeypatch):
+def test_same_state_official_free_text_url_degrades_source_support_without_killing_decision(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
     authority = server.classify_source_authority(TEXAS_STATE_URL, "Dallas", "TX", result={})
@@ -140,12 +142,14 @@ def test_same_state_official_free_text_url_does_not_satisfy_local_evidence_floor
 
     public = _final_public(server, result)
 
-    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
     assert TEXAS_STATE_URL not in public.get("source_urls", [])
+    assert public.get("source_support", {}).get("decision_mutation_allowed") is False
     assert not any(src.get("url") == TEXAS_STATE_URL for src in public.get("sources", []))
 
 
-def test_fail_closed_strips_bad_urls_but_valid_required_result_keeps_good_free_text_url(tmp_path, monkeypatch):
+def test_required_resolution_strips_bad_urls_but_valid_required_result_keeps_good_free_text_url(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
     good = _base_required_result()
@@ -158,8 +162,10 @@ def test_fail_closed_strips_bad_urls_but_valid_required_result_keeps_good_free_t
     bad["inspection_booking"] = f"Do not leak unsupported URL {SOUTHLAKE_URL}. Keep this non-URL text."
     bad_public = _final_public(server, bad)
     bad_blob = json.dumps(bad_public, sort_keys=True)
-    assert bad_public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
+    assert bad_public["permit_decision"] == "REQUIRED"
+    assert bad_public["permit_required"] is True
     assert SOUTHLAKE_URL not in bad_blob
+    assert bad_public.get("source_support", {}).get("decision_mutation_allowed") is False
     assert "Keep this non-URL text" in bad_blob
 
 
@@ -182,8 +188,10 @@ def test_internal_rejected_debug_urls_are_not_promoted_by_free_text_walker(tmp_p
 
     public = _final_public(server, result)
 
-    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
     assert public.get("source_urls", []) == []
+    assert public.get("source_support", {}).get("decision_mutation_allowed") is False
     assert not any(src.get("url") == DALLAS_PORTAL for src in public.get("sources", []))
 
 

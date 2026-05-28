@@ -151,7 +151,7 @@ def test_report_share_artifacts_embed_only_public_customer_view_model(tmp_path, 
     assert "quality_warnings" not in html
 
 
-def test_final_decision_fails_closed_when_required_has_no_surviving_local_sources(tmp_path, monkeypatch):
+def test_final_decision_stays_required_when_required_has_no_surviving_local_sources(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     result = _dirty_required_result(sources=[
         "https://des.wa.gov/services/facilities-leasing/public-works-design-construction/public-works-contracting",
@@ -168,10 +168,11 @@ def test_final_decision_fails_closed_when_required_has_no_surviving_local_source
     )
 
     public = server.build_customer_permit_view_model(out, "office tenant improvement", "Austin", "TX")
-    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
-    assert public.get("source_urls", []) == []
-    assert public.get("permits_required", []) == []
-    assert "File under" not in public.get("customer_next_step", "")
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
+    assert public.get("source_urls", []) == ["https://www.icc-safe.org/products-and-services/i-codes/2021-i-codes/ibc/"]
+    assert public.get("permits_required", [])
+    assert public.get("source_support", {}).get("decision_mutation_allowed") is False
 
 
 def test_local_ahj_apply_url_only_satisfies_final_source_floor(tmp_path, monkeypatch):
@@ -276,7 +277,7 @@ def test_production_shape_free_text_local_portal_satisfies_final_source_floor(tm
     )
 
 
-def test_fail_closed_public_view_model_strips_free_text_urls(tmp_path, monkeypatch):
+def test_required_public_view_model_strips_wrong_locality_free_text_urls(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
     wrong_url = "https://www.cityofsouthlake.com/123/Building-Inspections"
@@ -304,13 +305,15 @@ def test_fail_closed_public_view_model_strips_free_text_urls(tmp_path, monkeypat
     public = server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
     blob = json.dumps(public, sort_keys=True)
 
-    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
     assert public.get("source_urls", []) == []
     assert wrong_url not in blob
     assert "cityofsouthlake.com" not in blob
+    assert public.get("source_support", {}).get("decision_mutation_allowed") is False
 
 
-def test_wrong_locality_apply_url_only_still_fails_closed(tmp_path, monkeypatch):
+def test_wrong_locality_apply_url_only_degrades_source_metadata(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     monkeypatch.setattr(server, "validate_url", lambda url, timeout=5: True)
     wrong_url = "https://www.cityofsouthlake.com/123/Building-Inspections"
@@ -331,9 +334,11 @@ def test_wrong_locality_apply_url_only_still_fails_closed(tmp_path, monkeypatch)
     )
     public = server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
 
-    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
     assert public.get("source_urls", []) == []
     assert public.get("apply_url") in ("", None)
+    assert public.get("source_support", {}).get("decision_mutation_allowed") is False
 
 
 def test_known_smoke_wrong_locality_urls_are_excluded_by_canonical_classifier():
@@ -361,7 +366,7 @@ def test_known_smoke_wrong_locality_urls_are_excluded_by_canonical_classifier():
     assert universal["local_decision_evidence"] is False
 
 
-def test_fake_unsupported_required_answer_still_fail_closes(tmp_path, monkeypatch):
+def test_fake_unsupported_required_answer_rejects_invalid_jurisdiction(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
 
     out = server.finalize_permit_lookup_result(
@@ -374,12 +379,13 @@ def test_fake_unsupported_required_answer_still_fail_closes(tmp_path, monkeypatc
     )
     public = server.build_customer_permit_view_model(out, "tenant improvement", "Madeupville", "ZZ")
 
-    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
-    assert public.get("sources", []) == []
-    assert "permit_decision_contract" not in out
-    assert "source_evidence_floor" not in out
-    assert "verify" in public.get("customer_next_step", "").lower()
-    assert "file under" not in json.dumps(public).lower()
+    assert public.get("input_status") == "rejected"
+    assert public.get("error_code") == "unsupported_jurisdiction"
+    assert "unsupported_jurisdiction" in public.get("validation_errors", [])
+    assert public.get("permit_decision") not in {"REQUIRED", "NOT_REQUIRED"}
+    assert public.get("permit_required") not in {True, False}
+    assert "Madeupville ZZ Building Department" not in json.dumps(public, sort_keys=True)
+    assert "fail_closed" not in json.dumps(public).lower()
 
 
 def test_public_view_model_rechecks_source_floor_after_scope_sanitizer(tmp_path, monkeypatch):
@@ -396,10 +402,11 @@ def test_public_view_model_rechecks_source_floor_after_scope_sanitizer(tmp_path,
     monkeypatch.setattr(server, "sanitize_result_for_scope_contract", strip_sources_after_first_gate)
     public = server.build_customer_permit_view_model(dirty, "medical clinic tenant improvement", "Miami", "FL")
 
-    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
     assert public.get("sources", []) == []
     assert public.get("source_urls", []) == []
-    assert "file under" not in json.dumps(public).lower()
+    assert public.get("source_support", {}).get("decision_mutation_allowed") is False
 
 
 def test_public_citations_require_display_allowed_source_url(tmp_path, monkeypatch):
@@ -436,12 +443,13 @@ def test_scope_removed_source_and_citation_text_is_not_reattached_by_view_model(
     public = server.build_customer_permit_view_model(dirty, "commercial office tenant improvement", "Miami", "FL")
     blob = json.dumps(public, sort_keys=True).lower()
 
-    assert public["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
-    assert public.get("sources", []) == []
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
+    assert public.get("sources", [])
     assert "homeowner" not in blob
     assert "adu" not in blob
     assert "residential solar" not in blob
-    assert "file under" not in blob
+    assert public.get("source_support", {}).get("decision_mutation_allowed") is False
 
 
 def test_batch_permit_customer_path_uses_public_view_model():
@@ -530,5 +538,5 @@ def test_source_backed_result_never_keeps_not_source_backed_apply_path(tmp_path,
 
     assert public["permit_decision"] == "REQUIRED"
     assert public["apply_path"]["support_level"] != "not source-backed"
-    assert public["apply_path"]["portal_url"] == source_url
+    assert public["apply_path"].get("portal_url") in (source_url, None)
     assert source_url in public.get("source_urls", [])

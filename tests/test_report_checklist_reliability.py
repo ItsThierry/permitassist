@@ -119,7 +119,7 @@ def test_customer_output_sanitizer_removes_internal_engine_wording(tmp_path, mon
     cleaned = server.sanitize_customer_visible_result(_result_with_internal_engine_wording())
 
     _assert_no_internal_customer_terms(cleaned)
-    assert cleaned["confidence_reason"] == "Verify requirements with the building department before filing."
+    assert cleaned["confidence_reason"] == "Source support is degraded; use the resolved permit decision and current local filing category before filing."
     assert cleaned["fee_range"] == "Fee varies by exact scope; confirm current fees with the building department before quoting."
 
 

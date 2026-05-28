@@ -15,6 +15,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import base64
+import copy
 import json
 import os
 import csv
@@ -59,6 +60,7 @@ except (TypeError, ValueError):
 
 from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
 from permit_decision import apply_permit_decision_contract
+from decision_resolver import is_input_rejection, resolve_customer_decision
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
@@ -537,7 +539,7 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         if strip_internal_keys and target_state and _customer_text_has_wrong_jurisdiction_specific_claim(value, target_state):
             return ""
         if key in confidence_fields and strip_internal_keys and has_internal(value):
-            return "Verify requirements with the building department before filing."
+            return "Source support is degraded; use the resolved permit decision and current local filing category before filing."
         if key in fee_fields and strip_internal_keys and any(term in lowered for term in fee_internal_terms):
             return "Fee varies by exact scope; confirm current fees with the building department before quoting."
         if key in fee_fields and strip_internal_keys and re.search(r"\b(?:fee\s*:\s*)?(?:call|contact)\s+(?:to\s+)?confirm\b", lowered):
@@ -553,12 +555,15 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             value = re.sub(r"\s+or\s+Verify\s+", "; verify ", value)
             value = re.sub(r"\bahj_contact_source\b", "building department contact source", value, flags=re.I)
             value = re.sub(r"\bAHJ\b", "building department", value, flags=re.I)
+            value = re.sub(r"\bLikely\s+primary\s+permit\s+type\b", "Primary permit type", value, flags=re.I)
+            value = re.sub(r"\b(?:Some\s+report\s+claims\s+do\s+not\s+yet\s+have\s+quoted\s+source\s+snippets;\s*)?verify\s+with\s+the\s+building\s+department\s+before\s+relying\s+on\s+them\.?", "Source snippets are incomplete; source support is degraded.", value, flags=re.I)
+            value = re.sub(r"\bverify\s+requirements\s+with\s+the\s+building\s+department\s+before\s+filing\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
         value = re.sub(r"\bVerified\s*·\s*official sources\b", "Official source path found", value, flags=re.I)
         value = re.sub(r"\bPermit\s+Permit\b", "Permit", value, flags=re.I)
         value = re.sub(r"\bPlanning estimate only\s*:?\s*", "", value, flags=re.I)
         value = re.sub(r"\bHidden triggers?\s*:?\s*", "Scope triggers: ", value, flags=re.I)
-        value = re.sub(r"\bEngine flagged(?:\s+this\s+answer)?(?:\s+for\s+review)?\b\.?", "Verify requirements with the building department before filing.", value, flags=re.I)
-        value = re.sub(r"\bNeeds review(?:\s+for\s*:\s*[A-Za-z0-9_, ._/-]+)?\b\.?", "Verify requirements with the building department before filing.", value, flags=re.I)
+        value = re.sub(r"\bEngine flagged(?:\s+this\s+answer)?(?:\s+for\s+review)?\b\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
+        value = re.sub(r"\bNeeds review(?:\s+for\s*:\s*[A-Za-z0-9_, ._/-]+)?\b\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
         value = re.sub(r"\[?\s*verify[^\]\[.;,]{0,100}?before merging\s*\]?", "confirm with the building department", value, flags=re.I)
         value = re.sub(r"\bverify adopted edition before merging\b", "confirm adopted code edition with the building department", value, flags=re.I)
         value = re.sub(r"\s{2,}", " ", value).strip()
@@ -614,10 +619,12 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
 
 _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
     "permit_decision", "permit_verdict", "permit_required", "permit_kind", "permit_name",
+    "input_status", "error_code", "validation_errors", "message", "city", "state",
     "customer_result_summary", "customer_first_screen_summary",
     "permit_type", "permits_required", "permits_required_logic", "companion_permits", "related_permits",
     "customer_headline", "customer_next_step", "summary", "job_summary", "scope_summary",
     "confidence", "confidence_level", "confidence_reason", "data_source", "county_fallback_note",
+    "source_confidence", "source_support", "local_form_known", "apply_url_known", "degraded_sources",
     "requirements", "documents_needed", "what_to_bring", "next_steps", "pro_tips",
     "common_mistakes", "watch_out", "checklist", "inspections", "inspect_checklist",
     "inspection_requirements", "inspection_booking", "fee_range", "fee_estimate",
@@ -1061,41 +1068,22 @@ def _is_required_permit_decision(result: dict) -> bool:
     return decision == "REQUIRED" or result.get("permit_required") is True or verdict in {"YES", "REQUIRED"}
 
 
-def _force_fail_closed_no_local_evidence(result: dict, city: str, state: str) -> dict:
-    _strip_customer_free_text_urls_in_place(result)
-    location = ", ".join(part for part in [city, state] if part) or "this jurisdiction"
-    result["permit_decision"] = "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
-    result["permit_verdict"] = "UNKNOWN"
-    result["permit_required"] = None
-    result["permit_kind"] = "Local AHJ verification required"
-    result["permit_name"] = ""
-    result["permits_required"] = []
-    result["permits_required_logic"] = []
-    result["apply_url"] = ""
-    result["online_application_url"] = ""
-    result["apply_path"] = {
-        "support_level": "not source-backed",
-        "verification_note": f"PermitAssist could not verify local source-backed filing instructions for {location}.",
-        "steps": [f"Verify permit requirements directly with the {city or 'local'} building department before quoting, filing, or starting work."],
-    }
-    result["customer_headline"] = f"PermitAssist could not verify a source-backed local permit decision for {location}."
-    result["customer_next_step"] = f"Verify directly with the {city or 'local'} building department before quoting, filing, or starting work."
-    result["confidence"] = "low"
-    result["sources"] = []
-    result["source_urls"] = []
-    result["claim_citations"] = []
-    for internal_key in (
-        "permit_decision_contract", "source_evidence_floor", "exact_apply_url_status",
-        "exact_name_status", "permit_ready_score", "debug_trace", "provider_metadata",
-        "retrieval_diagnostics", "raw_retrieval", "search_debug", "scoring_debug",
-    ):
-        result.pop(internal_key, None)
-    warnings = result.setdefault("quality_warnings", [])
-    warning = "Required-permit answer failed closed because no valid local AHJ source survived filtering."
-    if warning not in warnings:
-        warnings.append(warning)
-    result["needs_review"] = True
-    return result
+def _source_retrieval_degraded(result: dict) -> bool:
+    if not isinstance(result, dict):
+        return False
+    try:
+        text = json.dumps({
+            "retrieval_diagnostics": result.get("retrieval_diagnostics"),
+            "warnings": result.get("warnings"),
+            "quality_warnings": result.get("quality_warnings"),
+            "source_support": result.get("source_support"),
+        }, default=str).lower()
+    except Exception:
+        text = str(result or "").lower()
+    return any(token in text for token in (
+        "429", "502", "timeout", "timed out", "rate limit", "bad gateway",
+        "temporarily unavailable", "retrieval failed", "source retrieval",
+    ))
 
 
 def _filter_customer_sources_in_place(result: dict, city: str, state: str) -> dict:
@@ -1125,19 +1113,92 @@ def _filter_customer_sources_in_place(result: dict, city: str, state: str) -> di
                 continue
             filtered.append(citation)
         result["claim_citations"] = filtered
+
+    # Never leak rejected/wrong-locality URLs through customer prose or filing slots.
+    # The source floor is metadata-only for decision purposes, but bad source URLs
+    # still must be removed from public DTOs.
+    for key in ("apply_url", "online_application_url"):
+        url = _safe_customer_source_url(result.get(key) or "")
+        if url:
+            authority = classify_source_authority(url, city, state, result=result)
+            if not authority.get("display_allowed"):
+                result[key] = ""
+    apply_path = result.get("apply_path")
+    if isinstance(apply_path, dict):
+        cleaned_path = dict(apply_path)
+        for key in _FREE_TEXT_STRUCTURED_APPLY_PATH_FIELDS:
+            url = _safe_customer_source_url(cleaned_path.get(key) or "")
+            if url:
+                authority = classify_source_authority(url, city, state, result=result)
+                if not authority.get("display_allowed"):
+                    cleaned_path.pop(key, None)
+        result["apply_path"] = cleaned_path
+    _strip_customer_free_text_urls_in_place(result)
     return result
 
 
-def apply_final_source_floor_gate(result: dict, job_type: str, city: str, state: str) -> dict:
-    """Final post-filter gate: confident REQUIRED answers need local source evidence."""
+def apply_source_floor_annotation(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Final source-floor pass that annotates metadata without changing answer.
+
+    Source starvation, locality filtering, and 429/502 retrieval failures may lower
+    source confidence or mark exact form/apply path unknown. They must never
+    overwrite permit_required, permit_decision, permit_kind, permit_name,
+    permits_required, customer_headline, or customer_next_step.
+    """
     if not isinstance(result, dict):
         return {}
+    protected = {
+        key: copy.deepcopy(result.get(key))
+        for key in (
+            "permit_required", "permit_decision", "permit_verdict", "permit_kind",
+            "permit_name", "permit_type", "permits_required", "customer_headline",
+            "customer_next_step",
+        )
+        if key in result
+    }
     result = _apply_canonical_ahj_apply_url_fallback(result, city, state)
-    source_floor_satisfied = _source_evidence_floor_satisfied(result)
     _filter_customer_sources_in_place(result, city, state)
     _repair_source_backed_apply_path_contradiction(result, city, state)
-    if _is_required_permit_decision(result) and not source_floor_satisfied and not _local_decision_evidence_urls(result, city, state):
-        return _force_fail_closed_no_local_evidence(result, city, state)
+
+    local_urls = _local_decision_evidence_urls(result, city, state)
+    display_sources = result.get("sources") if isinstance(result.get("sources"), list) else []
+    degraded = bool(result.get("degraded_sources") or _source_retrieval_degraded(result) or not local_urls)
+    exact_form_known = bool(_customer_summary_text(result.get("permit_name")) or result.get("permits_required"))
+    apply_url_known = bool(_safe_customer_source_url(result.get("apply_url") or result.get("online_application_url") or ""))
+    if not apply_url_known and isinstance(result.get("apply_path"), dict):
+        apply_url_known = bool(_safe_customer_source_url(result["apply_path"].get("portal_url") or result["apply_path"].get("url") or ""))
+
+    if local_urls:
+        source_confidence = "AHJ_DIRECT"
+    elif display_sources:
+        source_confidence = "SOURCE_DEGRADED"
+    else:
+        source_confidence = "SCOPE_DEFAULT"
+
+    source_support = result.get("source_support") if isinstance(result.get("source_support"), dict) else {}
+    source_support.update({
+        "source_confidence": source_confidence,
+        "local_decision_evidence_urls": local_urls,
+        "display_source_count": len(display_sources),
+        "local_form_known": exact_form_known,
+        "apply_url_known": apply_url_known,
+        "degraded_sources": degraded,
+        "decision_mutation_allowed": False,
+    })
+    result["source_confidence"] = source_confidence
+    result["source_support"] = source_support
+    result["local_form_known"] = exact_form_known
+    result["apply_url_known"] = apply_url_known
+    result["degraded_sources"] = degraded
+    if degraded:
+        warnings = result.setdefault("warnings", [])
+        caveat = "Source retrieval or exact local source support is degraded; the permit decision remains resolved by the CustomerDecisionDTO."
+        if caveat not in warnings:
+            warnings.append(caveat)
+
+    # Guard against accidental decision mutation inside this metadata pass.
+    for key, value in protected.items():
+        result[key] = value
     return result
 
 
@@ -1190,13 +1251,13 @@ def _build_customer_result_summary(public: dict, source: dict, city: str, state:
     sources = [item for item in raw_sources if isinstance(item, dict)] if isinstance(raw_sources, list) else []
     first_source = sources[0] if sources else {}
     source_title = _customer_summary_text(first_source.get("title"))
-    source_cue = f"Source-backed: {source_title}" if source_title else "Source cue: verify with the listed building department before filing"
+    source_cue = f"Source-backed: {source_title}" if source_title else "Source support: exact source path not published in this result"
 
     next_step = _first_customer_text(
         public.get("customer_next_step"),
         source.get("customer_next_step"),
         (source.get("apply_path") or {}).get("steps") if isinstance(source.get("apply_path"), dict) else None,
-        f"Confirm filing requirements with {public.get('applying_office') or city or 'the local building department'} before starting work.",
+        f"Use the resolved permit category with {public.get('applying_office') or city or 'the local building department'} before starting work.",
     )
     if next_step and not public.get("customer_next_step"):
         public["customer_next_step"] = next_step
@@ -1211,10 +1272,11 @@ def _build_customer_result_summary(public: dict, source: dict, city: str, state:
         source.get("fee_range"), source.get("fee_estimate"), source.get("total_cost_estimate"),
         "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
     )
+    resolved = resolve_customer_decision({"result": {**source, **public}, "job_type": public.get("job_summary") or source.get("job_summary") or "", "city": city, "state": state})
     return {
-        "permit_decision": _first_customer_text(public.get("permit_decision"), source.get("permit_decision"), "UNKNOWN"),
-        "permit_kind": _first_customer_text(public.get("permit_kind"), source.get("permit_kind"), public.get("permit_type"), "Local AHJ verification required"),
-        "permit_name": _first_customer_text(public.get("permit_name"), source.get("permit_name")),
+        "permit_decision": _first_customer_text(public.get("permit_decision"), source.get("permit_decision"), resolved.get("permit_decision"), "REQUIRED"),
+        "permit_kind": _first_customer_text(public.get("permit_kind"), source.get("permit_kind"), public.get("permit_type"), resolved.get("permit_kind"), "Building"),
+        "permit_name": _first_customer_text(public.get("permit_name"), source.get("permit_name"), resolved.get("permit_name")),
         "ahj_department": ahj_department,
         "next_step": next_step,
         "timeline": timeline,
@@ -1283,34 +1345,61 @@ def _sanitize_customer_result_with_state_context(public: dict, state: str) -> di
 
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
-    working = dict(result or {}) if isinstance(result, dict) else {}
+    working = copy.deepcopy(result) if isinstance(result, dict) else {}
+    jurisdiction_check = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state})
+    if is_input_rejection(jurisdiction_check):
+        rejection_public = _public_dict(jurisdiction_check, _PUBLIC_CUSTOMER_RESULT_FIELDS)
+        return sanitize_customer_visible_result(
+            rejection_public if isinstance(rejection_public, dict) else {},
+            strip_internal_keys=True,
+        )
     source_floor_satisfied = _source_evidence_floor_satisfied(working)
-    working = apply_final_source_floor_gate(working, job_type, city, state)
+    working = apply_source_floor_annotation(working, job_type, city, state)
+    try:
+        working = apply_permit_decision_contract(working, job_type, city, state, build_scope_contract(job_type or "", city or "", state or ""))
+    except Exception as exc:
+        print(f"[customer-view] Decision resolver fallback used: {exc}")
+        dto = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state})
+        working.update(dto)
+        working["permit_verdict"] = "YES" if dto.get("permit_required") else "NO"
     cleaned = sanitize_customer_visible_result(working, strip_internal_keys=True)
     try:
         scope_contract = build_scope_contract(job_type or "", city or "", state or "")
         cleaned = sanitize_result_for_scope_contract(cleaned, scope_contract, fail_on_removal_in_tests=False)
+        cleaned = apply_permit_decision_contract(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state, scope_contract)
         if source_floor_satisfied:
             cleaned = _filter_customer_sources_in_place(cleaned if isinstance(cleaned, dict) else {}, city, state)
         else:
-            cleaned = apply_final_source_floor_gate(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state)
+            cleaned = apply_source_floor_annotation(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state)
     except Exception as exc:
         print(f"[customer-view] Scope sanitize fallback used: {exc}")
     public = _public_dict(cleaned if isinstance(cleaned, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
     if isinstance(public, dict):
+        dto = resolve_customer_decision({"result": public, "job_type": job_type, "city": city, "state": state})
+        if public.get("permit_decision") not in {"REQUIRED", "NOT_REQUIRED"} or public.get("permit_required") not in {True, False}:
+            public.update({k: v for k, v in dto.items() if k in _PUBLIC_CUSTOMER_RESULT_FIELDS})
+            public["permit_verdict"] = "YES" if dto.get("permit_required") else "NO"
+        if public.get("permit_required") is True and not public.get("permits_required"):
+            public["permits_required"] = dto.get("permits_required") or [{"permit_type": dto.get("permit_name") or "Building Permit", "required": True}]
+        if public.get("permit_required") is True and not public.get("permit_kind"):
+            public["permit_kind"] = dto.get("permit_kind") or "Building"
         for key in _PUBLIC_KEEP_EMPTY_FIELDS:
             if key not in public and key in working and working.get(key) in ("", [], {}):
                 public[key] = working.get(key)
+    if not isinstance(public, dict):
+        return {}
     public_sources = _source_dicts(cleaned if isinstance(cleaned, dict) else {}, city=city, state=state)
     if public_sources:
         public["sources"] = [_public_dict(src, _PUBLIC_SOURCE_FIELDS) for src in public_sources]
         public["source_urls"] = [src.get("url") for src in public["sources"] if isinstance(src, dict) and src.get("url")]
-    elif isinstance(cleaned, dict) and cleaned.get("permit_decision") == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE":
-        public["sources"] = []
-        public["source_urls"] = []
+    elif not public_sources:
+        public["sources"] = public.get("sources", []) if isinstance(public.get("sources"), list) else []
+        public["source_urls"] = public.get("source_urls", []) if isinstance(public.get("source_urls"), list) else []
     citations = _public_citations(cleaned if isinstance(cleaned, dict) else {}, city, state)
     if citations:
         public["claim_citations"] = citations
+    else:
+        public["claim_citations"] = []
     if not isinstance(public, dict):
         return {}
     final_public = sanitize_customer_visible_result(public, strip_internal_keys=True)
@@ -1330,6 +1419,14 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         for key in _PUBLIC_KEEP_EMPTY_FIELDS:
             if key in public and public.get(key) in ("", [], {}):
                 final_public[key] = public.get(key)
+        dto = resolve_customer_decision({"result": final_public, "job_type": job_type, "city": city, "state": state})
+        if final_public.get("permit_decision") not in {"REQUIRED", "NOT_REQUIRED"} or final_public.get("permit_required") not in {True, False}:
+            final_public.update({k: v for k, v in dto.items() if k in _PUBLIC_CUSTOMER_RESULT_FIELDS})
+            final_public["permit_verdict"] = "YES" if dto.get("permit_required") else "NO"
+        if final_public.get("permit_required") is True and not final_public.get("permits_required"):
+            final_public["permits_required"] = dto.get("permits_required") or [{"permit_type": dto.get("permit_name") or "Building Permit", "required": True}]
+        final_public["claim_citations"] = citations if citations else []
+        final_public.pop("quality_warnings", None)
         return final_public
     return {}
 
@@ -1416,7 +1513,7 @@ def enrich_result_response(result: dict, job_type: str, city: str, state: str) -
         elif "24-hour" in context_lower or "24 hour" in context_lower:
             booking_bits.append("24 hours advance notice required")
         elif booking_bits:
-            booking_bits.append("Advance notice may be required, verify when booking")
+            booking_bits.append("Confirm the inspection advance-notice window when booking")
         if booking_bits:
             result["inspection_booking"] = ". ".join(booking_bits) + "."
 
@@ -2478,13 +2575,13 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
     if commercial:
         scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
         primary_scope = str((result or {}).get("_primary_scope") or "").lower()
-        maybe_health = (
+        health_review_needed = (
             _restaurant_food_health_scope_present(scope_text)
             or (primary_scope == "commercial_retail_ti" and _retail_food_health_scope_present(scope_text))
             or _medical_clinic_scope_present(scope_text)
         )
         review_list = "building, MEP, fire/life-safety, accessibility"
-        if maybe_health:
+        if health_review_needed:
             review_list += ", health"
         review_list += ", or change-of-occupancy"
         steps.insert(3, f"For commercial TI, check whether separate {review_list} reviews are required.")
@@ -2534,10 +2631,16 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     """Shared final response safety pipeline for all permit lookup endpoints."""
     if not isinstance(result, dict):
         result = {}
+    jurisdiction_check = resolve_customer_decision({"result": result, "job_type": job_type, "city": city, "state": state})
+    if is_input_rejection(jurisdiction_check):
+        return sanitize_customer_visible_result(jurisdiction_check, strip_internal_keys=False)
     contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
-    scope_contract = result.get("_scope_contract") if isinstance(result.get("_scope_contract"), dict) else build_scope_contract(contract_job_type, city, state)
+    raw_meta = result.get("_meta")
+    meta = raw_meta if isinstance(raw_meta, dict) else {}
+    job_category = result.get("job_category") or meta.get("job_category")
+    scope_contract = result.get("_scope_contract") if isinstance(result.get("_scope_contract"), dict) else build_scope_contract(contract_job_type, city, state, job_category=job_category)
     if not isinstance(scope_contract, dict):
-        scope_contract = build_scope_contract(contract_job_type, city, state)
+        scope_contract = build_scope_contract(contract_job_type, city, state, job_category=job_category)
     result["_scope_contract"] = scope_contract
     evidence_pack = get_local_evidence_pack() if evidence_allowed is not False else None
     evidence_enabled = evidence_pack is not None
@@ -2642,7 +2745,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     _scrub_scope_limit_leaks(result, scope_contract)
     _filter_customer_sources_in_place(result, city, state)
     result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
-    result = apply_final_source_floor_gate(result, job_type, city, state)
+    result = apply_source_floor_annotation(result, job_type, city, state)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
@@ -2681,14 +2784,14 @@ def save_beta_feedback(email: str, job_type: str, city: str, state: str, useful:
 
 
 def render_white_label_report_html(data: dict) -> str:
-    result = data.get("result") or {}
+    result = copy.deepcopy(data.get("result") or {}) if isinstance(data, dict) else {}
     contractor = html.escape(str(data.get("contractor_name") or "Contractor"))
     client = html.escape(str(data.get("client_name") or "Client / Property"))
     job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
     location = html.escape(", ".join(x for x in [str(data.get("city") or ""), str(data.get("state") or "")] if x))
     citations = result.get("claim_citations") or build_claim_citations(result, data.get("city"), data.get("state"))
     decision_contract = result.get("permit_decision_contract") if isinstance(result.get("permit_decision_contract"), dict) else {}
-    decision_headline = str(result.get("customer_headline") or decision_contract.get("customer_headline") or "Permit answer not available from source-backed evidence.")
+    decision_headline = str(result.get("customer_headline") or decision_contract.get("customer_headline") or "Permit required: Building Permit.")
     decision_kind = str(result.get("permit_kind") or decision_contract.get("permit_kind") or "Other")
     customer_next_step = str(result.get("customer_next_step") or decision_contract.get("customer_next_step") or "Use the structured permit kind and local filing path before relying on the answer.")
     apply_note = str(
@@ -4132,6 +4235,9 @@ def _sanitize_checklist_customer_output(checklist: dict, job_type: str = "", cit
 
 
 def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
+    # Checklist generation can enrich/mutate its input; keep the CustomerView DTO
+    # boundary immutable so public lookup/share/report/checklist surfaces stay identical.
+    result = copy.deepcopy(result) if isinstance(result, dict) else {}
     result_hash = make_result_hash(result)
     try:
         conn = sqlite3.connect(CACHE_DB)
@@ -4599,9 +4705,9 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
         return str(s or "").replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace('"',"&quot;")
 
     subject = f"Permit Research: {job} in {city}, {state}"
-    pv  = data.get("permit_verdict", "MAYBE")
-    verdict_color = {"YES": "#10b981", "NO": "#ef4444", "MAYBE": "#f59e0b"}.get(pv, "#f59e0b")
-    verdict_bg    = {"YES": "rgba(16,185,129,.12)", "NO": "rgba(239,68,68,.12)", "MAYBE": "rgba(245,158,11,.12)"}.get(pv, "rgba(245,158,11,.12)")
+    pv = "YES" if (data.get("permit_required") is True or data.get("permit_verdict") == "YES" or data.get("permit_decision") == "REQUIRED") else "NO"
+    verdict_color = {"YES": "#10b981", "NO": "#ef4444"}.get(pv, "#10b981")
+    verdict_bg    = {"YES": "rgba(16,185,129,.12)", "NO": "rgba(239,68,68,.12)"}.get(pv, "rgba(16,185,129,.12)")
 
     fee    = esc(data.get("fee_range", ""))
     office = esc(data.get("applying_office", ""))
@@ -4620,8 +4726,8 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     # Build permit rows
     permit_rows = ""
     for p in permits:
-        req = "YES" if p.get("required") is True else ("MAYBE" if p.get("required") == "maybe" else "NO")
-        req_color = {"YES": "#10b981", "MAYBE": "#f59e0b", "NO": "#ef4444"}.get(req, "#94a3b8")
+        req = "YES" if p.get("required") is not False else "NO"
+        req_color = {"YES": "#10b981", "NO": "#ef4444"}.get(req, "#94a3b8")
         permit_rows += f"""
         <tr>
           <td style="padding:10px 0;border-bottom:1px solid #e2e8f0;vertical-align:top;width:60px">
@@ -4655,7 +4761,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     # Plain text fallback
     text_lines = [f"PERMIT RESEARCH REPORT\nJob: {job}\nLocation: {city}, {state}\n"]
     for p in permits:
-        req = "YES" if p.get("required") is True else ("MAYBE" if p.get("required") == "maybe" else "NO")
+        req = "YES" if p.get("required") is not False else "NO"
         text_lines.append(f"[{req}] {p.get('permit_type','')}")
         if p.get("notes"): text_lines.append(f"  {p['notes']}")
     if fee:      text_lines.append(f"\nFee: {data.get('fee_range','')}")
@@ -6768,7 +6874,7 @@ class Handler(BaseHTTPRequestHandler):
                     "summary": {
                         "permits_required": sum(1 for r in results if r.get("permit_verdict") == "YES"),
                         "no_permit": sum(1 for r in results if r.get("permit_verdict") == "NO"),
-                        "verify": sum(1 for r in results if r.get("permit_verdict") == "MAYBE"),
+                        "resolved_review": sum(1 for r in results if r.get("permit_verdict") not in {"YES", "NO"}),
                     }
                 })
             except Exception as e:

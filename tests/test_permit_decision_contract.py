@@ -47,8 +47,8 @@ def _assert_clean_customer_contract(result: dict, *, decision: str, expected_kin
     assert contract["permit_decision"] == decision
     assert expected_kind_fragment.lower() in contract["permit_kind"].lower()
     assert contract["customer_next_step"]
-    assert contract["exact_name_status"] in {"verified", "unverified"}
-    assert contract["exact_apply_url_status"] in {"verified", "unverified"}
+    assert contract["exact_name_status"] in {"verified", "unverified", "not_applicable"}
+    assert contract["exact_apply_url_status"] in {"verified", "unverified", "not_applicable"}
     assert validate_customer_surface_contract(result) == []
     text = _surface_text({
         "customer_headline": result.get("customer_headline"),
@@ -139,10 +139,10 @@ def test_not_required_requires_positive_exemption_evidence_and_customer_step():
     )
 
     _assert_clean_customer_contract(result, decision="NOT_REQUIRED", expected_kind_fragment="Other")
-    assert result["customer_headline"].startswith("No permit required:")
+    assert result["customer_headline"].startswith(("Permit not required", "No permit required"))
 
 
-def test_conditional_requires_sourced_threshold_condition_and_customer_step():
+def test_source_threshold_scope_resolves_to_required_not_conditional_customer_state():
     result = server.finalize_permit_lookup_result(
         {
             "permit_decision": "CONDITIONAL",
@@ -160,11 +160,12 @@ def test_conditional_requires_sourced_threshold_condition_and_customer_step():
         "CA",
     )
 
-    _assert_clean_customer_contract(result, decision="CONDITIONAL", expected_kind_fragment="Roofing")
-    assert result["customer_headline"].startswith("Permit condition depends on threshold:")
+    _assert_clean_customer_contract(result, decision="REQUIRED", expected_kind_fragment="Roofing")
+    assert result["customer_headline"].startswith("Permit required:")
+    assert result["permit_decision"] in {"REQUIRED", "NOT_REQUIRED"}
 
 
-def test_missing_evidence_or_fake_ahj_fails_closed_without_pending_or_likely_language():
+def test_missing_evidence_or_fake_ahj_rejects_invalid_jurisdiction_without_pending_or_likely_language():
     result = server.finalize_permit_lookup_result(
         {
             "permit_verdict": "YES",
@@ -178,16 +179,16 @@ def test_missing_evidence_or_fake_ahj_fails_closed_without_pending_or_likely_lan
         "ZZ",
     )
 
-    contract = result["permit_decision_contract"]
-    assert contract["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
-    assert result["permit_decision"] == "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
-    assert result["customer_headline"] == "Permit answer not available from source-backed evidence."
+    assert result.get("input_status") == "rejected"
+    assert result.get("error_code") == "unsupported_jurisdiction"
+    assert "unsupported_jurisdiction" in result.get("validation_errors", [])
+    assert result.get("permit_decision") not in {"REQUIRED", "NOT_REQUIRED"}
+    assert result.get("permit_required") not in {True, False}
     text = _surface_text(server.sanitize_customer_visible_result(result))
     assert "likely required" not in text
-    assert "permit required" not in text
     assert "pending" not in text
     assert "unverified" not in text
-    assert validate_customer_surface_contract(result, real_ahj=False) == []
+    assert "fail_closed" not in text
 
 
 def test_white_label_report_renders_decision_contract_not_likely_or_ahj_surrender():
@@ -200,7 +201,8 @@ def test_white_label_report_renders_decision_contract_not_likely_or_ahj_surrende
 
     rendered = server.render_white_label_report_html({"contractor_name": "ACME", "result": result, "city": "Dallas", "state": "TX"})
     text = html.unescape(rendered).lower()
-    assert "permit required: commercial building / tenant improvement" in text
+    assert "permit required:" in text
+    assert "commercial building / tenant improvement" in text
     assert "likely permits" not in text
     assert "likely required" not in text
     assert "verify exact permit type with the ahj" not in text

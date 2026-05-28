@@ -13,6 +13,8 @@ import re
 from typing import Any
 from urllib.parse import urlparse
 
+from decision_resolver import is_input_rejection, resolve_customer_decision
+
 PERMIT_DECISION_REQUIRED = "REQUIRED"
 PERMIT_DECISION_NOT_REQUIRED = "NOT_REQUIRED"
 PERMIT_DECISION_CONDITIONAL = "CONDITIONAL"
@@ -38,6 +40,7 @@ CONTROLLED_PERMIT_KINDS = {
     "Solar",
     "Fence",
     "Other",
+    "Not Required",
 }
 
 CONTROLLED_COMPANION_REVIEWS = {
@@ -321,7 +324,7 @@ def _safe_next_step(result: dict[str, Any], decision: str, permit_kind: str, cit
             if condition:
                 return f"Measure/confirm the job against this threshold: {condition} File the permit if the work is on the permit-required side of the threshold."
         return "Confirm the source-backed threshold before work starts, then file if the threshold is met."
-    return "PermitAssist could not find source-backed local evidence for that jurisdiction/scope. Use a valid US city and state or rerun with official-source access before relying on the answer."
+    return f"Use the structured {permit_kind or 'permit'} filing path with the local building department before starting work."
 
 
 def _headline(decision: str, permit_kind: str, next_step: str) -> str:
@@ -331,7 +334,7 @@ def _headline(decision: str, permit_kind: str, next_step: str) -> str:
         return f"No permit required: {permit_kind}."
     if decision == PERMIT_DECISION_CONDITIONAL:
         return f"Permit condition depends on threshold: {permit_kind}."
-    return "Permit answer not available from source-backed evidence."
+    return f"Permit required: {permit_kind or 'Building Permit'}."
 
 
 def _strip_customer_banned_text(value: Any, key: str = "") -> Any:
@@ -367,85 +370,112 @@ def _strip_customer_banned_text(value: Any, key: str = "") -> Any:
 
 
 def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", city: str = "", state: str = "", scope_contract: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Attach/normalize the universal PermitDecision CustomerView contract."""
+    """Attach/normalize the universal PermitDecision CustomerView contract.
+
+    Missing or weak source evidence is metadata only. Customer-facing decisions
+    are resolved through decision_resolver and can only be REQUIRED or
+    NOT_REQUIRED for valid lookup contexts. Legacy UNKNOWN/FAIL_CLOSED/cache
+    states are recovered here instead of serialized.
+    """
     result = copy.deepcopy(result) if isinstance(result, dict) else {}
     scope_contract = scope_contract or result.get("_scope_contract") or {}
-    state_text = str(state or result.get("state") or "").strip().upper()
-    has_evidence = has_source_backed_evidence(result)
-    supplied_decision = str(result.get("permit_decision") or "").strip().upper()
-    kind = infer_permit_kind(result, job_type, scope_contract)
+    dto = resolve_customer_decision({
+        "result": result,
+        "job_type": job_type,
+        "city": city,
+        "state": state,
+        "scope_contract": scope_contract,
+    })
+    if is_input_rejection(dto):
+        rejection = {**result, **dto}
+        for key in (
+            "permit_required",
+            "permit_decision",
+            "permit_verdict",
+            "permit_kind",
+            "permit_kinds",
+            "permit_name",
+            "permit_type",
+            "permits_required",
+            "permits_required_logic",
+            "trade_permits",
+            "companion_permits",
+            "companion_permits_or_reviews",
+            "permit_decision_contract",
+        ):
+            rejection.pop(key, None)
+        return _strip_customer_banned_text(rejection)
 
-    if state_text and state_text not in {"AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC"}:
-        decision = PERMIT_DECISION_FAIL_CLOSED
-    elif supplied_decision == PERMIT_DECISION_NOT_REQUIRED:
-        decision = PERMIT_DECISION_NOT_REQUIRED if _positive_exemption_evidence(result) else PERMIT_DECISION_FAIL_CLOSED
-    elif supplied_decision == PERMIT_DECISION_CONDITIONAL:
-        decision = PERMIT_DECISION_CONDITIONAL if _conditional_threshold_evidence(result) else PERMIT_DECISION_FAIL_CLOSED
-    elif supplied_decision == PERMIT_DECISION_FAIL_CLOSED:
-        # Recovery path for stale upstream fail-closed metadata: if real source
-        # URLs and concrete scope/kind evidence are present, let the final source
-        # floor decide locality instead of permanently preserving the stale flag.
-        decision = PERMIT_DECISION_REQUIRED if has_evidence and (result.get("permits_required") or kind != "Other") else PERMIT_DECISION_FAIL_CLOSED
-    elif has_evidence and (result.get("permits_required") or str(result.get("permit_verdict") or "").upper() in {"YES", "REQUIRED"} or kind != "Other"):
-        decision = PERMIT_DECISION_REQUIRED
-    else:
-        decision = PERMIT_DECISION_FAIL_CLOSED
+    decision = dto["permit_decision"]
+    kind = str(dto.get("permit_kind") or "Building").strip()
+    permits_required = dto.get("permits_required") if isinstance(dto.get("permits_required"), list) else []
+    if decision == PERMIT_DECISION_REQUIRED and not permits_required:
+        permit_name = str(dto.get("permit_name") or _KIND_KEYWORDS[0][0] or "Building Permit")
+        permits_required = [{"permit_type": permit_name, "kind": kind, "required": True}]
 
-    if decision == PERMIT_DECISION_FAIL_CLOSED:
-        kind = "Other"
-        result["permits_required"] = []
+    result["permit_required"] = bool(dto["permit_required"])
+    result["permit_decision"] = decision
+    result["permit_verdict"] = "YES" if decision == PERMIT_DECISION_REQUIRED else "NO"
+    result["permit_kind"] = kind
+    result["permit_name"] = dto.get("permit_name")
+    result["permits_required"] = permits_required
+    if decision == PERMIT_DECISION_NOT_REQUIRED:
+        result["not_required_reason"] = dto.get("not_required_reason") or "Permit not required for the described scope."
         result["permits_required_logic"] = []
         result["companion_permits"] = []
         result["trade_permits"] = []
-        result["permit_name"] = None
-        result["permit_type"] = None
-        result["portal_selection"] = None
-    trade_permits = _trade_permits(result)
-    if decision in {PERMIT_DECISION_NOT_REQUIRED, PERMIT_DECISION_FAIL_CLOSED}:
-        trade_permits = []
-        companion_reviews = []
     else:
-        companion_reviews = _companion_reviews(result, job_type)
-    next_step = _safe_next_step(result, decision, kind, city, state)
-    exact_name_status = _exact_name_status(result, kind)
-    exact_apply_url_status = _exact_apply_url_status(result)
+        result.setdefault("permits_required_logic", [])
+
+    trade_permits = _trade_permits(result) if decision == PERMIT_DECISION_REQUIRED else []
+    companion_reviews = _companion_reviews(result, job_type) if decision == PERMIT_DECISION_REQUIRED else []
+    next_step = _safe_next_step({**result, "customer_next_step": dto.get("customer_next_step")}, decision, kind, city, state)
+    headline = str(dto.get("customer_headline") or _headline(decision, kind, next_step)).strip()
+    exact_name_status = _exact_name_status(result, kind) if decision == PERMIT_DECISION_REQUIRED else "not_applicable"
+    exact_apply_url_status = _exact_apply_url_status(result) if decision == PERMIT_DECISION_REQUIRED else "not_applicable"
+
+    has_evidence = has_source_backed_evidence(result)
+    source_support = dto.get("source_support") if isinstance(dto.get("source_support"), dict) else {}
+    source_support.setdefault("has_source_backed_evidence", has_evidence)
+    source_support.setdefault("degraded_sources", bool(dto.get("degraded_sources")))
 
     contract = {
         "permit_decision": decision,
+        "permit_required": result["permit_required"],
         "permit_kind": kind,
+        "permit_kinds": dto.get("permit_kinds") or ([kind] if decision == PERMIT_DECISION_REQUIRED else []),
+        "permit_name": result.get("permit_name"),
+        "permits_required": permits_required,
+        "not_required_reason": result.get("not_required_reason", ""),
         "trade_permits": trade_permits,
         "companion_permits_or_reviews": companion_reviews,
         "source_evidence_floor": {
-            "status": "satisfied" if decision != PERMIT_DECISION_FAIL_CLOSED else "not_satisfied",
-            "required_for_decision": decision,
+            "status": "metadata_only",
+            "decision_mutation_allowed": False,
             "has_source_backed_evidence": has_evidence,
+            "positive_exemption_evidence": _positive_exemption_evidence(result),
+            "source_confidence": dto.get("confidence_tier") or "SCOPE_DEFAULT",
+            "source_support": source_support,
+            "degraded_sources": bool(dto.get("degraded_sources")),
         },
+        "source_support": source_support,
         "exact_name_status": exact_name_status,
-        "exact_name_customer_note": "" if exact_name_status == "verified" else _CUSTOMER_SAFE_UNCERTAIN_EXACT_NAME,
+        "exact_name_customer_note": "" if exact_name_status in {"verified", "not_applicable"} else _CUSTOMER_SAFE_UNCERTAIN_EXACT_NAME,
         "exact_apply_url_status": exact_apply_url_status,
-        "exact_apply_url_customer_note": "" if exact_apply_url_status == "verified" else _CUSTOMER_SAFE_UNCERTAIN_APPLY_URL,
+        "exact_apply_url_customer_note": "" if exact_apply_url_status in {"verified", "not_applicable"} else _CUSTOMER_SAFE_UNCERTAIN_APPLY_URL,
         "customer_next_step": next_step,
-        "customer_headline": _headline(decision, kind, next_step),
+        "customer_headline": headline,
     }
-    if decision == PERMIT_DECISION_FAIL_CLOSED:
-        contract["exact_name_status"] = "not_applicable"
-        contract["exact_apply_url_status"] = "not_applicable"
-        contract.pop("exact_name_customer_note", None)
-        contract.pop("exact_apply_url_customer_note", None)
-    if decision == PERMIT_DECISION_NOT_REQUIRED:
-        contract["source_evidence_floor"]["positive_exemption_evidence"] = True
-    if decision == PERMIT_DECISION_CONDITIONAL:
-        contract["source_evidence_floor"]["threshold_evidence"] = True
-        contract["condition_threshold"] = result.get("condition_threshold") or result.get("conditional_threshold")
 
     result["permit_decision_contract"] = contract
-    result["permit_decision"] = decision
-    result["permit_kind"] = kind
     result["trade_permits"] = trade_permits
     result["companion_permits_or_reviews"] = companion_reviews
+    result["source_evidence_floor"] = contract["source_evidence_floor"]
+    result["source_support"] = source_support
+    result["source_confidence"] = dto.get("confidence_tier") or "SCOPE_DEFAULT"
+    result["degraded_sources"] = bool(dto.get("degraded_sources"))
     result["customer_next_step"] = next_step
-    result["customer_headline"] = contract["customer_headline"]
-    result["permit_verdict"] = "YES" if decision == PERMIT_DECISION_REQUIRED else ("NO" if decision == PERMIT_DECISION_NOT_REQUIRED else decision)
+    result["customer_headline"] = headline
     return _strip_customer_banned_text(result)
 
 

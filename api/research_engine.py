@@ -39,6 +39,11 @@ except ImportError:  # server.py imports research_engine as a top-level module
     from state_schema import compact_state_schema_context
 
 try:
+    from .decision_resolver import contains_legacy_unknown_state
+except ImportError:  # server.py imports research_engine as a top-level module
+    from decision_resolver import contains_legacy_unknown_state
+
+try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 except Exception:
@@ -578,6 +583,11 @@ def _text_has_locality_token(text: str, city: str, state: str = "") -> bool:
     if not text:
         return False
     normalized = text.lower()
+    city_compact = re.sub(r"[^a-z0-9]+", "", (city or "").lower())
+    state_compact = re.sub(r"[^a-z0-9]+", "", (state or "").lower())
+    compact_tokens = [re.sub(r"[^a-z0-9]+", "", token) for token in re.split(r"[^a-z0-9]+", normalized)]
+    if city_compact and state_compact and f"{city_compact}{state_compact}" in compact_tokens:
+        return True
     for token in _city_match_tokens(city, state):
         token = (token or "").lower().strip()
         if len(token) < 3:
@@ -3811,6 +3821,13 @@ def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
         row = conn.execute(sel_sql, [key]).fetchone()
         if row:
             result = json.loads(row[0])
+            if contains_legacy_unknown_state(result):
+                print(f"[cache] Ignoring legacy UNKNOWN/FAIL_CLOSED cache row for key {key[:8]}…")
+                conn.execute("DELETE FROM permit_cache WHERE cache_key = ?", [key])
+                conn.commit()
+                conn.close()
+                _cache_stats["misses"] += 1
+                return None
             created = datetime.fromisoformat(row[1])
             hits = row[2] or 0
             row_dict = dict(zip(select_cols, row))

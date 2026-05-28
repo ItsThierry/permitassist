@@ -256,7 +256,10 @@ def test_solar_mep_unsupported_city_state_fail_closed(tmp_path, monkeypatch):
     assert meta["matched_fields"] == []
     assert set(meta["failed_closed_fields"]) == {"permit_type", "apply_url", "fee_range", "approval_timeline", "inspections", "companion_reviews_triggers"}
     assert result["claim_citations"] == []
-    assert result["permits_required"] == []
+    assert result["permit_decision"] == "REQUIRED"
+    assert result["permit_required"] is True
+    assert result["permits_required"]
+    assert {row.get("kind") for row in result["permits_required"]} >= {"Solar"}
 
 
 def test_solar_mep_bad_fingerprint_fail_closed(tmp_path, monkeypatch):
@@ -284,7 +287,10 @@ def test_solar_mep_copied_or_modified_pack_fails_closed(tmp_path, monkeypatch):
     assert meta["matched_fields"] == []
     assert meta["fingerprint_valid"] is False
     assert result["claim_citations"] == []
-    assert result["permits_required"] == []
+    assert result["permit_decision"] == "REQUIRED"
+    assert result["permit_required"] is True
+    assert result["permits_required"]
+    assert {row.get("kind") for row in result["permits_required"]} >= {"Solar"}
 
 
 def test_solar_mep_public_no_header_no_evidence_leak(tmp_path, monkeypatch):
