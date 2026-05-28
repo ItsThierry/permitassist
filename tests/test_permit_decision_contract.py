@@ -157,6 +157,41 @@ def test_required_trade_scope_with_no_structural_work_overrides_stale_not_requir
     })
 
 
+def test_commercial_cosmetic_office_refresh_with_negated_trades_stays_not_required():
+    result = server.finalize_permit_lookup_result(
+        {
+            "permit_decision": "REQUIRED",
+            "permit_verdict": "YES",
+            "permit_required": True,
+            "permit_kind": "Commercial Building / Tenant Improvement",
+            "permit_name": "Commercial Building / Tenant Improvement Permit",
+            "applying_office": "Austin Development Services Department (DSD)",
+            "customer_next_step": "File under Commercial Building / Tenant Improvement Permit with Austin Development Services Department (DSD).",
+            "sources": ["https://www.austintexas.gov/department/development-services"],
+            "positive_exemption_evidence": [
+                {
+                    "source_url": "https://www.austintexas.gov/department/development-services",
+                    "quote": "Cosmetic finish refresh with no wall, trade, fire alarm, signage, or occupancy work does not trigger a permit in this fixture.",
+                }
+            ],
+            "permits_required": [{"permit_type": "Commercial Building / Tenant Improvement Permit", "required": True}],
+        },
+        "Commercial office cosmetic refresh only: repaint walls, replace carpet tile and loose furniture in existing office suite, no wall changes, no electrical, no plumbing, no mechanical, no fire alarm, no signage, no occupancy change",
+        "Austin",
+        "TX",
+    )
+
+    _assert_clean_customer_contract(result, decision="NOT_REQUIRED", expected_kind_fragment="Other")
+    assert result["permit_required"] is False
+    assert result["permit_verdict"] == "NO"
+    assert result["permit_name"] == "No permit required"
+    assert "commercial building / tenant improvement" not in _surface_text({
+        "permit_name": result.get("permit_name"),
+        "customer_headline": result.get("customer_headline"),
+        "customer_next_step": result.get("customer_next_step"),
+    })
+
+
 def test_not_required_requires_positive_exemption_evidence_and_customer_step():
     result = server.finalize_permit_lookup_result(
         {

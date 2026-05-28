@@ -68,7 +68,7 @@ _EXPLICIT_NO_TRADE_OR_STRUCTURAL_RE = re.compile(
 
 _NEGATED_WORK_CLAUSE_RE = re.compile(
     r"\b(?:no|without|not)\s+(?:new\s+)?"
-    r"(?:(?:and\s+|or\s+)?(?:structural|electrical|electric|plumbing|mechanical|hvac|mep|layout|occupancy|exterior|wall|walls|trade|trades)"
+    r"(?:(?:and\s+|or\s+)?(?:structural|electrical|electric|plumbing|mechanical|hvac|mep|layout|occupancy|exterior|wall|walls|trade|trades|fire(?:\s+alarm|\s+sprinkler)?|signage|sign)"
     r"\s*(?:,|/|\band\b|\bor\b)?\s*)+"
     r"(?:work|changes?|scope|included|modifications?)?\b",
     re.I,
@@ -412,7 +412,7 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
 
     primary_kind = kinds[0] if kinds else "Building"
     primary_name = permit_names[0] if permit_names else ""
-    display_kind = _display_permit_kind(primary_kind, kinds, result) if decision == PERMIT_DECISION_REQUIRED else (_norm(result.get("permit_kind")) or "Other")
+    display_kind = _display_permit_kind(primary_kind, kinds, result) if decision == PERMIT_DECISION_REQUIRED else "Other"
     permits_required = _permit_payloads_for_names(permit_names, kinds, result)
 
     return {
