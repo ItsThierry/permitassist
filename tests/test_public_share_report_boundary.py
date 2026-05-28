@@ -245,6 +245,18 @@ def test_report_template_does_not_render_payload_with_raw_inner_html():
     assert ".insertAdjacentHTML" not in template
 
 
+def test_report_template_has_no_static_customer_uncertainty_literals():
+    template = (Path(__file__).parents[1] / "frontend" / "report.html").read_text(encoding="utf-8")
+
+    forbidden = re.compile(r"\b(?:UNKNOWN|FAIL[_ -]?CLOSED|likely|maybe|probably)\b", re.I)
+    hits = [
+        match.group(0)
+        for match in forbidden.finditer(template)
+        if "companion" not in template[max(0, match.start() - 120): match.end() + 120].lower()
+    ]
+    assert hits == []
+
+
 def _post_json(url: str, body: dict):
     data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(

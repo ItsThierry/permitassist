@@ -53,7 +53,7 @@
     const safeArray = (value) => Array.isArray(value) ? value : [];
     const permitName = textValue(d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type, 'Permit details');
     const rawVerdict = textValue(d.permit_verdict).toUpperCase();
-    const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'MAYBE');
+    const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'VERIFY');
     const verdictLabel = verdict === 'YES' ? 'Permit required: Yes' : (verdict === 'NO' ? 'Permit required: No' : 'Permit status: Verify');
     const timeline = textValue((d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || d.timeline, 'Varies by jurisdiction');
     const docs = [...new Set([...safeArray(d.what_to_bring), ...safeArray(d.requirements), ...safeArray(d.documents_needed), ...safeArray(d.checklist)].map(x => textValue(x)).filter(Boolean))];
