@@ -1,6 +1,9 @@
 import json
 import re
+import threading
+import urllib.request
 from importlib import util
+from http.server import HTTPServer
 from pathlib import Path
 
 _HELPER_SPEC = util.spec_from_file_location(
@@ -76,6 +79,34 @@ def _import_server(tmp_path, monkeypatch):
     return server
 
 
+class _LiveServer:
+    def __init__(self, handler):
+        self.httpd = HTTPServer(("127.0.0.1", 0), handler)
+        self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
+        self.base = f"http://127.0.0.1:{self.httpd.server_address[1]}"
+
+    def __enter__(self):
+        self.thread.start()
+        return self
+
+    def __exit__(self, *exc):
+        self.httpd.shutdown()
+        self.thread.join(timeout=5)
+
+
+class _CountingSemaphore:
+    def __init__(self):
+        self.acquire_calls = 0
+        self.release_calls = 0
+
+    def acquire(self, timeout=None):
+        self.acquire_calls += 1
+        return True
+
+    def release(self):
+        self.release_calls += 1
+
+
 def _legacy_unknown_result():
     return {
         "permit_decision": "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE",
@@ -116,6 +147,44 @@ def _assert_structured_input_rejection(public, *, expected_code="unsupported_jur
     assert "permit likely" not in serialized.lower()
     assert "maybe" not in serialized.lower()
     assert "probably" not in serialized.lower()
+
+
+def _post_json(url, payload, headers=None):
+    body = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        url,
+        data=body,
+        headers={"Content-Type": "application/json", **(headers or {})},
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=10) as response:
+        return response.status, json.loads(response.read().decode("utf-8"))
+
+
+def _walk_paths(value, path=""):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            child_path = f"{path}.{key}" if path else str(key)
+            yield child_path, key, child
+            yield from _walk_paths(child, child_path)
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            child_path = f"{path}[{index}]"
+            yield child_path, index, child
+            yield from _walk_paths(child, child_path)
+
+
+def _assert_no_uncertainty_outside_companion(public):
+    banned = re.compile(r"\b(?:UNKNOWN|FAIL_CLOSED|likely|maybe|probably)\b", re.I)
+    leaks = []
+    for path, key, value in _walk_paths(public):
+        if path.startswith("companion_permits["):
+            continue
+        if str(key) == "likely_documents":
+            leaks.append(f"{path}=key")
+        elif isinstance(value, str) and banned.search(value):
+            leaks.append(f"{path}={value!r}")
+    assert leaks == []
 
 
 def test_replay_20_pr72_unknown_cases_resolve_concrete(tmp_path, monkeypatch):
@@ -163,6 +232,32 @@ def test_madeupville_zz_is_structured_input_rejection_before_customer_decision(t
     _assert_structured_input_rejection(public)
 
 
+def test_api_permit_rejects_invalid_jurisdiction_before_research_or_lookup_semaphore(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    calls = {"research": 0}
+    semaphore = _CountingSemaphore()
+
+    def fail_research(*args, **kwargs):
+        calls["research"] += 1
+        return _legacy_unknown_result()
+
+    monkeypatch.setattr(server, "research_permit", fail_research)
+    monkeypatch.setattr(server, "PERMIT_LOOKUP_SEMAPHORE", semaphore)
+
+    with _LiveServer(server.Handler) as live:
+        status, body = _post_json(
+            f"{live.base}/api/permit",
+            {"job_type": "commercial remodel", "city": "Madeupville", "state": "ZZ"},
+            headers={"X-Sample-Demo": "1"},
+        )
+
+    assert status == 200
+    _assert_structured_input_rejection(body)
+    assert calls["research"] == 0
+    assert semaphore.acquire_calls == 0
+    assert semaphore.release_calls == 0
+
+
 def test_garbage_non_us_state_code_is_structured_input_rejection(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
 
@@ -187,6 +282,53 @@ def test_valid_us_jurisdiction_still_returns_concrete_never_unknown(tmp_path, mo
     _assert_concrete_public(public)
     assert public["permit_decision"] in {"REQUIRED", "NOT_REQUIRED"}
     assert public["permit_required"] in {True, False}
+
+
+def test_customer_apply_path_scrubs_cached_uncertainty_and_renames_documents(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    dirty = {
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permit_required": True,
+        "permit_kind": "Commercial Building / Tenant Improvement",
+        "permit_name": "Building Permit — Tenant Improvement / Office Interior Alteration",
+        "permits_required": [{"permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration", "required": True}],
+        "customer_headline": "Permit required: Commercial Building / Tenant Improvement.",
+        "customer_next_step": "File with Dallas Development Services Department.",
+        "applying_office": "Dallas Development Services Department",
+        "sources": [{"url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/default.aspx", "title": "Dallas Building Inspection"}],
+        "apply_path": {
+            "support_level": "needs verification",
+            "platform": "UNKNOWN",
+            "portal_url": "",
+            "login_required": "likely",
+            "permit_category": "Commercial Building / Tenant Improvement",
+            "permit_type": "Building Permit — Tenant Improvement / Office Interior Alteration",
+            "portal_selection_path": ["Open the UNKNOWN start URL."],
+            "likely_documents": ["scope of work", "plans/drawings if required"],
+            "steps": ["Create or sign into the contractor/applicant account if likely required."],
+        },
+        "companion_permits": [
+            {
+                "permit_type": "Electrical Permit — Tenant Improvement",
+                "label": "Companion / secondary permit",
+                "requirement_label": "Likely required based on scope",
+                "certainty": "likely",
+                "reason": "Companion permit for electrical alterations only.",
+            }
+        ],
+    }
+
+    public = server.build_customer_permit_view_model(dirty, "commercial office tenant improvement", "Dallas", "TX")
+
+    assert public["permit_decision"] == "REQUIRED"
+    apply_path = public.get("apply_path") or {}
+    assert apply_path.get("login_required") in (True, False, None)
+    assert apply_path.get("platform") in (None, "city portal / AHJ website", "PDF / paper form", "Accela / Citizen Access", "Tyler / EnerGov", "OpenGov")
+    assert "likely_documents" not in apply_path
+    assert apply_path.get("documents_to_prepare") == ["scope of work", "plans/drawings if required"]
+    assert public.get("companion_permits", [{}])[0].get("certainty") == "likely"
+    _assert_no_uncertainty_outside_companion(public)
 
 
 def test_lookup_share_report_checklist_public_surfaces_banned_text_scan(tmp_path, monkeypatch):

@@ -597,6 +597,7 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
 
     cleaned_result = scrub(result)
     if isinstance(cleaned_result, dict):
+        _sanitize_customer_apply_path_in_place(cleaned_result)
         if strip_internal_keys and is_commercial_ti_result(result):
             timeline = cleaned_result.get("approval_timeline")
             if isinstance(timeline, dict):
@@ -615,6 +616,66 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
                 cleaned_result.pop("_scope_firebreak_removed", None)
         return cleaned_result
     return {}
+
+
+def _sanitize_customer_apply_path_in_place(result: dict) -> None:
+    """Normalize customer apply_path metadata so stale cached rows cannot leak uncertainty strings."""
+    if not isinstance(result, dict) or not isinstance(result.get("apply_path"), dict):
+        return
+    apply_path = dict(result.get("apply_path") or {})
+    documents = apply_path.pop("likely_documents", None)
+    if documents and "documents_to_prepare" not in apply_path:
+        apply_path["documents_to_prepare"] = documents
+
+    portal_url = str(apply_path.get("portal_url") or apply_path.get("url") or "").strip()
+    lower_url = portal_url.lower()
+    platform_text = str(apply_path.get("platform") or "").strip()
+    if not platform_text or platform_text.lower() in {"unknown", "fail_closed", "not_applicable_or_unknown"}:
+        if lower_url.endswith(".pdf"):
+            apply_path["platform"] = "PDF / paper form"
+        elif portal_url:
+            apply_path["platform"] = "city portal / AHJ website"
+        else:
+            apply_path["platform"] = None
+    else:
+        apply_path["platform"] = platform_text
+
+    login = apply_path.get("login_required")
+    if isinstance(login, bool) or login is None:
+        apply_path["login_required"] = login
+    else:
+        login_text = str(login or "").strip().lower()
+        if login_text in {"true", "yes", "required", "account_required"}:
+            apply_path["login_required"] = True
+        elif login_text in {"false", "no", "not_required", "not applicable", "not_applicable"}:
+            apply_path["login_required"] = False
+        else:
+            apply_path["login_required"] = None
+
+    # Customer apply_path is not companion-permit context; remove banned uncertainty vocabulary from stale strings.
+    banned_uncertainty_re = re.compile(r"\b(?:unknown|fail[_ -]?closed|likely|maybe|probably)\b", re.I)
+
+    def scrub_apply_value(value):
+        if isinstance(value, str):
+            cleaned = banned_uncertainty_re.sub("", value)
+            cleaned = re.sub(r"\s+", " ", cleaned).strip(" -:;,.\n")
+            return cleaned
+        if isinstance(value, list):
+            return [item for item in (scrub_apply_value(item) for item in value) if item not in ("", [], {})]
+        if isinstance(value, dict):
+            return {
+                key: item
+                for key, item in ((k, scrub_apply_value(v)) for k, v in value.items())
+                if item not in ("", [], {})
+            }
+        return value
+
+    keep_empty_apply_path_keys = {"portal_url", "platform", "login_required"}
+    result["apply_path"] = {
+        key: value
+        for key, value in ((k, scrub_apply_value(v)) for k, v in apply_path.items())
+        if value not in ("", [], {}) or key in keep_empty_apply_path_keys
+    }
 
 
 _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
@@ -2522,7 +2583,7 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
         url = ""
         result["apply_url"] = ""
     lower = url.lower()
-    platform = "unknown"
+    platform = None
     if "accela" in lower or "citizenaccess" in lower:
         platform = "Accela / Citizen Access"
     elif "tyler" in lower or "energov" in lower:
@@ -2561,7 +2622,7 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
             verification_note = f"{city or 'AHJ'} start portal has field evidence, but it is not high-confidence local evidence; exact portal choice and filing path require AHJ/portal verification before filing."
         else:
             verification_note = "PermitAssist guides the application pathway; verify exact portal choice with the AHJ before filing."
-        login_required = "likely" if platform != "PDF / paper form" else "not_applicable_or_unknown"
+        login_required = False if platform == "PDF / paper form" else None
     else:
         steps = [
             "No verified online filing path is available from current field evidence; contact the AHJ or verify the correct portal before filing.",
@@ -2571,7 +2632,7 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
         ]
         support_level = "not available"
         verification_note = "No verified online filing path is available from current sources; verify the exact filing path with the AHJ."
-        login_required = "unknown"
+        login_required = None
     if commercial:
         scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
         primary_scope = str((result or {}).get("_primary_scope") or "").lower()
@@ -2593,7 +2654,7 @@ def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict
         "permit_category": "Commercial Building / Tenant Improvement" if commercial else "Residential / Trade Permit",
         "permit_type": permit_type,
         "portal_selection_path": steps[:3],
-        "likely_documents": ["scope of work", "plans/drawings if required", "contractor license", "valuation", "owner authorization"],
+        "documents_to_prepare": ["scope of work", "plans/drawings if required", "contractor license", "valuation", "owner authorization"],
         "steps": steps,
         "stop_before": "final submit, payment, signature, or legal attestation",
         "verification_note": verification_note,
@@ -6715,6 +6776,20 @@ class Handler(BaseHTTPRequestHandler):
                     print(f"[permit] {job_type} in {city}, {state} — user={user_email} plan={'paid' if paid else 'free'} ip={ip} used={used_before}")
                 else:
                     print(f"[permit] {job_type} in {city}, {state} ({job_category}) — IP={ip} used={used_before}")
+
+                early_rejection = resolve_customer_decision({
+                    "result": {},
+                    "job_type": job_type,
+                    "city": city,
+                    "state": state,
+                })
+                if is_input_rejection(early_rejection):
+                    self.send_json(
+                        200,
+                        build_customer_permit_view_model(early_rejection, job_type, city, state),
+                        extra_headers=response_headers,
+                    )
+                    return
 
                 # Benchmark requests bypass the cache so we measure fresh
                 # pipeline behavior, not pre-cached results.
