@@ -409,6 +409,22 @@ def test_public_view_model_rechecks_source_floor_after_scope_sanitizer(tmp_path,
     assert public.get("source_support", {}).get("decision_mutation_allowed") is False
 
 
+def test_public_view_model_drops_malformed_bracket_redacted_source_urls_without_500(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    dirty = _dirty_required_result(sources=[
+        {"url": "https://www.goodyearaz.gov[REDACTED]", "title": "Malformed redacted Goodyear source"},
+        {"url": "https://www.goodyearaz.gov/government/departments/engineering-development-services/engineering/permits", "title": "Goodyear permits"},
+    ])
+    dirty["apply_url"] = "https://www.goodyearaz.gov/government/departments/engineering-development-services/engineering/permits"
+
+    public = server.build_customer_permit_view_model(dirty, "new commercial construction retail shell", "Goodyear", "AZ")
+
+    assert public["permit_decision"] == "REQUIRED"
+    assert "https://www.goodyearaz.gov[REDACTED]" not in public.get("source_urls", [])
+    assert all("[REDACTED]" not in source.get("url", "") for source in public.get("sources", []))
+    assert dirty["apply_url"] in public.get("source_urls", [])
+
+
 def test_public_citations_require_display_allowed_source_url(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     dirty = _dirty_required_result()

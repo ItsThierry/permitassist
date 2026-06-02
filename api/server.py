@@ -2328,11 +2328,14 @@ def _primary_permit_text(result: dict) -> str:
 
 
 def _safe_external_url(url: str) -> str:
-    """Return http(s) URLs only; block javascript:, data:, and relative HTML href tricks."""
+    """Return http(s) URLs only; block javascript:, data:, and malformed href tricks."""
     url = str(url or "").strip()
     if not url:
         return ""
-    parsed = urlparse(url)
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return ""
     if parsed.scheme.lower() not in ("http", "https") or not parsed.netloc:
         return ""
     return url
