@@ -59,7 +59,7 @@ except (TypeError, ValueError):
     classify_scope_required_permits = _real_classify_scope_required_permits
 
 from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
-from permit_decision import apply_permit_decision_contract
+from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary
 from decision_resolver import is_input_rejection, resolve_customer_decision
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
@@ -1444,6 +1444,7 @@ def _sanitize_customer_result_with_state_context(public: dict, state: str) -> di
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
+    cell_lock = _get_decision_cell_primary_lock(working)
     jurisdiction_check = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state})
     if is_input_rejection(jurisdiction_check):
         rejection_public = _public_dict(jurisdiction_check, _PUBLIC_CUSTOMER_RESULT_FIELDS)
@@ -1464,6 +1465,8 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     try:
         scope_contract = build_scope_contract(job_type or "", city or "", state or "")
         cleaned = sanitize_result_for_scope_contract(cleaned, scope_contract, fail_on_removal_in_tests=False)
+        if cell_lock and isinstance(cleaned, dict):
+            cleaned["_decision_cell_primary_lock"] = cell_lock
         cleaned = apply_permit_decision_contract(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state, scope_contract)
         if source_floor_satisfied:
             cleaned = _filter_customer_sources_in_place(cleaned if isinstance(cleaned, dict) else {}, city, state)
@@ -1525,6 +1528,9 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             final_public["permits_required"] = dto.get("permits_required") or [{"permit_type": dto.get("permit_name") or "Building Permit", "required": True}]
         final_public["claim_citations"] = citations if citations else []
         final_public.pop("quality_warnings", None)
+        if cell_lock:
+            final_public = enforce_decision_cell_primary(final_public, cell_lock, city, state, public=True)
+            final_public = sanitize_customer_visible_result(final_public, strip_internal_keys=True)
         return final_public
     return {}
 

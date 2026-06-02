@@ -327,3 +327,238 @@ def test_build_authoritative_context_is_grounding_only_and_not_customer_marketin
         "source_evidence": [{"quote": "No building permit is required."}],
     }))
     assert not_required_context == ""
+
+
+def _apply_contract(result, job_type, city="Goodyear", state="AZ"):
+    from api.permit_decision import apply_permit_decision_contract
+
+    return apply_permit_decision_contract(copy.deepcopy(result), job_type, city, state)
+
+
+def _goodyear_construction_cell_result():
+    from api.v231_decision_cells import reconcile_v231_result, resolve_v231_cell
+
+    base = {
+        "permit_verdict": "NO",
+        "permit_required": False,
+        "permit_decision": "NOT_REQUIRED",
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "customer_next_step": "File under Commercial Building / Tenant Improvement Permit with Goodyear Development Services.",
+        "customer_result_summary": {
+            "next_step": "File under Commercial Building / Tenant Improvement Permit with Goodyear Development Services.",
+        },
+        "customer_first_screen_summary": {
+            "next_action": "File under Commercial Building / Tenant Improvement Permit with Goodyear Development Services.",
+        },
+        "permits_required": [
+            {"permit_type": "Commercial Building / Tenant Improvement Permit", "kind": "Commercial Building / Tenant Improvement", "required": True, "source": "pipeline"},
+            {"permit_type": "Electrical Permit", "kind": "Electrical", "required": True, "source": "pipeline"},
+        ],
+        "sources": [{"url": "https://www.goodyearaz.gov/government/departments/development-services/building-safety", "title": "Goodyear Building Safety"}],
+        "claim_citations": [{"field": "permit_name", "source_url": "https://www.goodyearaz.gov/government/departments/development-services/building-safety", "claim": "Goodyear permits", "quoted_snippet": "Building Safety"}],
+    }
+    resolution = resolve_v231_cell("Goodyear", "AZ", "new commercial construction retail shell", "commercial")
+    return reconcile_v231_result(base, resolution)
+
+
+def _synthetic_not_required_resolution(cell_id="test-not-required-cell"):
+    from api.v231_decision_cells import ResolutionStatus, V231Resolution
+
+    return V231Resolution(ResolutionStatus.EXACT_CELL_COVERED, cell={
+        "cell_id": cell_id,
+        "jurisdiction_id": "test-city",
+        "project_type_slug": "residential_remodel",
+        "main_decision": "NOT_REQUIRED",
+        "publish_status": "PUBLISHABLE",
+        "permit_name": "Building Permit",
+        "ahj_name": "Test City Building Department",
+        "authority_model": {
+            "application_authority": "Test City Building Department",
+            "application_url": "https://testcity.gov/permits/no-permit-needed",
+        },
+        "source_evidence": [{"url": "https://testcity.gov/permits/no-permit-needed", "final_url": "https://testcity.gov/permits/no-permit-needed", "quote": "No permit is required for this exact scope."}],
+        "customer_action": "Keep the official no-permit note with the job file before starting work.",
+    })
+
+
+def _serialized_public(value):
+    return json.dumps(value, sort_keys=True, default=str).lower()
+
+
+def test_v231_goodyear_construction_direct_resolver_preserves_cell_primary():
+    out = _apply_contract(_goodyear_construction_cell_result(), "new commercial construction retail shell")
+
+    assert out["permit_decision"] == "REQUIRED"
+    assert out["permit_required"] is True
+    assert out["permit_name"] == "Construction Permit"
+    assert out["permit_kind"] == "Building"
+    assert out["permits_required"][0]["permit_type"] == "Construction Permit"
+    assert "Tenant Improvement" not in out["customer_headline"]
+    assert "Tenant Improvement" not in out["customer_next_step"]
+    assert "Construction Permit" in out["customer_next_step"]
+
+
+def test_goodyear_commercial_construction_cell_stays_primary_in_public_view_model():
+    import os
+
+    os.environ.setdefault("OPENAI_API_KEY", "test-key-for-import-only")
+    from api.server import build_customer_permit_view_model
+
+    public = build_customer_permit_view_model(_goodyear_construction_cell_result(), "new commercial construction retail shell", "Goodyear", "AZ")
+
+    assert public["permit_name"] == "Construction Permit"
+    assert public["permit_kind"] == "Building"
+    assert public["permits_required"][0]["permit_type"] == "Construction Permit"
+    assert "Tenant Improvement" not in public["customer_headline"]
+    assert "Tenant Improvement" not in public["customer_next_step"]
+    assert "Construction Permit" in public["customer_next_step"]
+    assert "Tenant Improvement" not in public["customer_result_summary"]["next_step"]
+    assert "Construction Permit" in public["customer_result_summary"]["next_step"]
+    assert "Tenant Improvement" not in public["customer_first_screen_summary"]["next_action"]
+    assert "Construction Permit" in public["customer_first_screen_summary"]["next_action"]
+
+
+def test_cell_primary_lock_survives_double_contract_application():
+    once = _apply_contract(_goodyear_construction_cell_result(), "new commercial construction retail shell")
+    twice = _apply_contract(once, "new commercial construction retail shell")
+
+    assert twice["permit_name"] == "Construction Permit"
+    assert twice["permit_kind"] == "Building"
+    assert twice["permits_required"][0]["permit_type"] == "Construction Permit"
+
+
+def test_cell_primary_lock_survives_customer_view_sanitize_and_terminal_pass():
+    import os
+
+    os.environ.setdefault("OPENAI_API_KEY", "test-key-for-import-only")
+    from api.server import build_customer_permit_view_model, sanitize_customer_visible_result
+    from api.permit_decision import apply_permit_decision_contract
+
+    original = _goodyear_construction_cell_result()
+    cell_lock = original.get("_decision_cell_primary_lock")
+    cleaned = sanitize_customer_visible_result(original, strip_internal_keys=True)
+    if cell_lock:
+        cleaned["_decision_cell_primary_lock"] = cell_lock
+    terminal = apply_permit_decision_contract(cleaned, "new commercial construction retail shell", "Goodyear", "AZ")
+    public = build_customer_permit_view_model(original, "new commercial construction retail shell", "Goodyear", "AZ")
+
+    assert terminal["permit_name"] == "Construction Permit"
+    assert public["permit_name"] == "Construction Permit"
+    assert public["permits_required"][0]["permit_type"] == "Construction Permit"
+
+
+def test_not_required_cell_suppressed_when_pipeline_required_safety_signal_present():
+    from api.v231_decision_cells import reconcile_v231_result
+
+    base = {"permit_verdict": "YES", "permit_required": True, "permit_decision": "REQUIRED", "permit_name": "Electrical Permit", "permits_required": [{"permit_type": "Electrical Permit", "required": True}], "hidden_triggers": [{"trigger": "service_upgrade"}]}
+    out = reconcile_v231_result(copy.deepcopy(base), _synthetic_not_required_resolution("safety-conflict-cell"))
+
+    assert out["permit_decision"] == "REQUIRED"
+    assert out["permit_required"] is True
+    assert out["permits_required"] == base["permits_required"]
+    assert "_decision_cell_primary_lock" not in out
+
+
+def test_not_required_cell_lock_keeps_no_permit_primary_and_does_not_inject_row():
+    from api.v231_decision_cells import reconcile_v231_result
+
+    base = {"permit_verdict": "NO", "permit_required": False, "permit_decision": "NOT_REQUIRED", "permit_name": "No permit required", "permits_required": [], "sources": ["https://testcity.gov/permits/no-permit-needed"], "positive_exemption_evidence": [{"source_url": "https://testcity.gov/permits/no-permit-needed", "quote": "No permit is required."}]}
+    out = reconcile_v231_result(copy.deepcopy(base), _synthetic_not_required_resolution())
+    contracted = _apply_contract(out, "cosmetic repainting only no electrical plumbing mechanical or wall changes", "Test City", "AZ")
+
+    assert contracted["permit_decision"] == "NOT_REQUIRED"
+    assert contracted["permit_required"] is False
+    assert contracted["permit_name"] == "No permit required"
+    assert contracted["permits_required"] == []
+
+
+def test_noncovered_ahj_fallback_has_no_lock_and_is_unchanged():
+    from api.v231_decision_cells import reconcile_v231_result, resolve_v231_cell
+
+    base = {"permit_verdict": "YES", "permit_required": True, "permit_decision": "REQUIRED", "permit_name": "Pipeline Permit", "permits_required": [{"permit_type": "Pipeline Permit", "required": True}]}
+    out = reconcile_v231_result(copy.deepcopy(base), resolve_v231_cell("Sedona", "AZ", "commercial tenant improvement", "commercial"))
+
+    assert out == base
+    assert "_decision_cell_primary_lock" not in out
+
+
+def test_wrong_project_guard_has_no_lock():
+    from api.v231_decision_cells import reconcile_v231_result, resolve_v231_cell
+
+    base = {"permit_decision": "REQUIRED", "permit_required": True, "permit_name": "Pipeline Permit", "permits_required": [{"permit_type": "Pipeline Permit", "required": True}]}
+    out = reconcile_v231_result(copy.deepcopy(base), resolve_v231_cell("Buckeye", "AZ", "commercial tenant improvement", "commercial"))
+
+    assert out == base
+    assert "_decision_cell_primary_lock" not in out
+
+
+def test_ambiguous_broad_input_guard_has_no_lock():
+    from api.v231_decision_cells import reconcile_v231_result, resolve_v231_cell
+
+    base = {"permit_decision": "REQUIRED", "permit_required": True, "permit_name": "Pipeline Permit", "permits_required": [{"permit_type": "Pipeline Permit", "required": True}]}
+    out = reconcile_v231_result(copy.deepcopy(base), resolve_v231_cell("Goodyear", "AZ", "new building", "residential"))
+
+    assert out == base
+    assert "_decision_cell_primary_lock" not in out
+
+
+def test_ti_cells_still_primary_when_cell_says_ti():
+    from api.v231_decision_cells import reconcile_v231_result, resolve_v231_cell
+
+    base = {"permit_verdict": "YES", "permit_required": True, "permit_decision": "REQUIRED", "permit_name": "Pipeline Building Permit", "permits_required": [{"permit_type": "Building Permit", "required": True}], "sources": ["https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit"]}
+    out = _apply_contract(reconcile_v231_result(base, resolve_v231_cell("Gilbert", "AZ", "commercial office tenant improvement", "commercial")), "commercial office tenant improvement", "Gilbert", "AZ")
+
+    assert out["permit_decision"] == "REQUIRED"
+    assert out["permit_name"] == "Building Permit"
+    assert out["permit_kind"] == "Building"
+    assert out["permits_required"][0]["permit_type"] == "Building Permit"
+
+
+def test_locked_primary_preserves_required_trade_and_companion_rows():
+    out = _apply_contract(_goodyear_construction_cell_result(), "new commercial construction retail shell with electrical service", "Goodyear", "AZ")
+    permit_names = [permit.get("permit_type") for permit in out["permits_required"]]
+
+    assert permit_names[0] == "Construction Permit"
+    assert "Electrical Permit" in permit_names
+    assert any(trade.get("kind") == "Electrical" for trade in out.get("trade_permits", []))
+
+
+def test_locked_primary_dedupes_cosmetic_construction_name_variants():
+    result = _goodyear_construction_cell_result()
+    result["permits_required"].extend([
+        {"permit_type": "Construction permit", "required": True, "source": "pipeline"},
+        {"permit_type": "Building Construction Permit", "required": True, "source": "pipeline"},
+    ])
+
+    out = _apply_contract(result, "new commercial construction retail shell", "Goodyear", "AZ")
+    names = [permit.get("permit_type") for permit in out["permits_required"]]
+
+    assert names[0] == "Construction Permit"
+    assert names.count("Construction Permit") == 1
+    assert not any(name in {"Construction permit", "Building Construction Permit"} for name in names[1:])
+
+
+def test_locked_apply_url_still_passes_customer_source_filtering():
+    import os
+
+    os.environ.setdefault("OPENAI_API_KEY", "test-key-for-import-only")
+    from api.server import build_customer_permit_view_model
+
+    public = build_customer_permit_view_model(_goodyear_construction_cell_result(), "new commercial construction retail shell", "Goodyear", "AZ")
+    urls = public.get("source_urls") or []
+
+    assert public["apply_url"].startswith("https://")
+    assert public["apply_url"] in urls or any(src.get("url") == public["apply_url"] for src in public.get("sources", []) if isinstance(src, dict))
+
+
+def test_internal_cell_lock_never_escapes_public_view_model():
+    import os
+
+    os.environ.setdefault("OPENAI_API_KEY", "test-key-for-import-only")
+    from api.server import build_customer_permit_view_model
+
+    public = build_customer_permit_view_model(_goodyear_construction_cell_result(), "new commercial construction retail shell", "Goodyear", "AZ")
+    serialized = _serialized_public(public)
+
+    for forbidden in ("v2.3.1", "_v231_", "permitassist_v231_decision_cell", "_decision_cell_primary_lock", "decision_cell", "cell_id", "resolver", "source metadata"):
+        assert forbidden not in serialized

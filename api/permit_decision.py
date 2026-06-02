@@ -328,6 +328,20 @@ def _safe_next_step(result: dict[str, Any], decision: str, permit_kind: str, cit
     return f"Use the structured {permit_kind or 'permit'} filing path with the local building department before starting work."
 
 
+def _locked_primary_next_step(lock: dict[str, Any], decision: str, permit_kind: str, city: str = "", state: str = "") -> str:
+    locked_action = _norm_text(lock.get("customer_action"))
+    locked_action = re.sub(r"\bAHJ\b", "building department", locked_action, flags=re.I)
+    if locked_action and not BANNED_CUSTOMER_SURFACE_RE.search(locked_action):
+        return locked_action
+    department = _norm_text(lock.get("applying_office")) or f"{city} {state} Building Department".strip() or "the local building department"
+    if decision == PERMIT_DECISION_REQUIRED:
+        permit_name = _norm_text(lock.get("permit_name")) or permit_kind or "Building Permit"
+        return f"Apply for {permit_name} with {department} before starting work."
+    if decision == PERMIT_DECISION_NOT_REQUIRED:
+        return "Keep the official no-permit note with the job file before starting work."
+    return f"Use the structured {permit_kind or 'permit'} filing path with {department} before starting work."
+
+
 def _headline(decision: str, permit_kind: str, next_step: str) -> str:
     if decision == PERMIT_DECISION_REQUIRED:
         return f"Permit required: {permit_kind}."
@@ -373,6 +387,167 @@ def _strip_customer_banned_text(value: Any, key: str = "") -> Any:
     return value
 
 
+def _get_decision_cell_primary_lock(result: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not isinstance(result, dict):
+        return None
+    lock = result.get("_decision_cell_primary_lock")
+    if not isinstance(lock, dict):
+        return None
+    if lock.get("source") != "permitassist_v231_decision_cell" or lock.get("exact_match") is not True:
+        return None
+    decision = str(lock.get("permit_decision") or "").upper().strip()
+    if decision not in {PERMIT_DECISION_REQUIRED, PERMIT_DECISION_NOT_REQUIRED}:
+        return None
+    return copy.deepcopy(lock)
+
+
+def _normalize_permit_name_for_dedupe(name: Any) -> str:
+    text = re.sub(r"[^a-z0-9]+", " ", str(name or "").lower()).strip()
+    tokens = [token for token in text.split() if token not in {"permit", "permits", "required"}]
+    token_set = set(tokens)
+    if "tenant" in token_set and ("improvement" in token_set or "buildout" in token_set):
+        return "commercial_tenant_improvement"
+    if "construction" in token_set:
+        return "construction"
+    if "building" in token_set:
+        return "building"
+    if "electrical" in token_set:
+        return "electrical"
+    if "mechanical" in token_set or "hvac" in token_set:
+        return "mechanical"
+    if "plumbing" in token_set:
+        return "plumbing"
+    if "roof" in token_set or "roofing" in token_set or "reroof" in token_set:
+        return "roofing"
+    return " ".join(tokens)
+
+
+def _controlled_kind_from_lock(lock: dict[str, Any]) -> str:
+    raw = str(lock.get("permit_kind") or "").strip()
+    raw_lc = raw.lower()
+    if raw in CONTROLLED_PERMIT_KINDS:
+        return raw
+    if raw_lc in {"building", "construction"}:
+        return "Building"
+    if raw_lc in {"not_required", "not required", "no permit required"}:
+        return "Not Required"
+    return kind_from_text(str(lock.get("permit_name") or raw), fallback="Building")
+
+
+def _merge_locked_primary_permits(lock: dict[str, Any], existing_permits: Any, *, public: bool = False) -> list[dict[str, Any]]:
+    raw_primary = lock.get("primary_permit")
+    primary: dict[str, Any] = copy.deepcopy(raw_primary) if isinstance(raw_primary, dict) else {}
+    permit_name = str(lock.get("permit_name") or primary.get("permit_type") or "Building Permit").strip() or "Building Permit"
+    primary.update({
+        "permit_type": permit_name,
+        "required": True,
+        "kind": _controlled_kind_from_lock(lock),
+        "permit_kind": lock.get("permit_kind") or "building",
+        "portal_selection": primary.get("portal_selection") or permit_name,
+    })
+    if lock.get("customer_action") and not primary.get("notes"):
+        primary["notes"] = lock.get("customer_action")
+    if not public:
+        primary["source"] = "permitassist_v231_decision_cell"
+    else:
+        primary.pop("source", None)
+
+    permits = [copy.deepcopy(item) for item in existing_permits if isinstance(item, dict)] if isinstance(existing_permits, list) else []
+    primary_key = _normalize_permit_name_for_dedupe(permit_name)
+    merged: list[dict[str, Any]] = [primary]
+    seen = {primary_key}
+    for permit in permits:
+        key = _normalize_permit_name_for_dedupe(permit.get("permit_type") or permit.get("portal_selection") or permit.get("kind"))
+        if key and key in seen:
+            continue
+        if key:
+            seen.add(key)
+        if public:
+            permit.pop("source", None)
+        merged.append(permit)
+    return merged
+
+
+def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] | None = None, city: str = "", state: str = "", public: bool = False) -> dict[str, Any]:
+    if not isinstance(result, dict):
+        return {}
+    lock = copy.deepcopy(lock) if isinstance(lock, dict) else _get_decision_cell_primary_lock(result)
+    if not lock:
+        return result
+
+    decision = str(lock.get("permit_decision") or "").upper().strip()
+    if decision == PERMIT_DECISION_NOT_REQUIRED:
+        result["permit_required"] = False
+        result["permit_decision"] = PERMIT_DECISION_NOT_REQUIRED
+        result["permit_verdict"] = "NO"
+        result["permit_kind"] = "Not Required"
+        result["permit_name"] = "No permit required"
+        result["permits_required"] = []
+        result["trade_permits"] = []
+        result["companion_permits_or_reviews"] = []
+        result["not_required_reason"] = str(lock.get("customer_action") or result.get("not_required_reason") or "No permit required for this exact scope.")
+        result["customer_next_step"] = _locked_primary_next_step(lock, PERMIT_DECISION_NOT_REQUIRED, "Not Required", city, state)
+        result["customer_headline"] = _headline(PERMIT_DECISION_NOT_REQUIRED, "Not Required", result["customer_next_step"])
+    elif decision == PERMIT_DECISION_REQUIRED:
+        kind = _controlled_kind_from_lock(lock)
+        permit_name = str(lock.get("permit_name") or "Building Permit").strip() or "Building Permit"
+        result["permit_required"] = True
+        result["permit_decision"] = PERMIT_DECISION_REQUIRED
+        result["permit_verdict"] = "YES"
+        result["permit_kind"] = kind
+        result["permit_name"] = permit_name
+        if lock.get("applying_office"):
+            result["applying_office"] = lock.get("applying_office")
+        if lock.get("apply_url"):
+            result["apply_url"] = lock.get("apply_url")
+        result.pop("not_required_reason", None)
+        result.pop("no_permit_required_reason", None)
+        result["permits_required"] = _merge_locked_primary_permits(lock, result.get("permits_required"), public=public)
+        result["trade_permits"] = _trade_permits(result)
+        result["companion_permits_or_reviews"] = _companion_reviews(result)
+        result["customer_next_step"] = _locked_primary_next_step(lock, PERMIT_DECISION_REQUIRED, kind, city, state)
+        result["customer_headline"] = _headline(PERMIT_DECISION_REQUIRED, kind, result["customer_next_step"])
+    else:
+        return result
+
+    contract = result.get("permit_decision_contract") if isinstance(result.get("permit_decision_contract"), dict) else {}
+    if contract:
+        contract.update({
+            "permit_decision": result["permit_decision"],
+            "permit_required": result["permit_required"],
+            "permit_kind": result["permit_kind"],
+            "permit_kinds": [result["permit_kind"]] if result["permit_required"] else [],
+            "permit_name": result["permit_name"],
+            "permits_required": result.get("permits_required", []),
+            "not_required_reason": result.get("not_required_reason", ""),
+            "trade_permits": result.get("trade_permits", []),
+            "companion_permits_or_reviews": result.get("companion_permits_or_reviews", []),
+            "customer_next_step": result.get("customer_next_step"),
+            "customer_headline": result.get("customer_headline"),
+        })
+        result["permit_decision_contract"] = contract
+    summary = result.get("customer_result_summary") if isinstance(result.get("customer_result_summary"), dict) else None
+    if summary is not None:
+        summary.update({
+            "permit_decision": result.get("permit_decision"),
+            "permit_kind": result.get("permit_kind"),
+            "permit_name": result.get("permit_name"),
+            "next_step": result.get("customer_next_step"),
+        })
+        result["customer_result_summary"] = summary
+    first_screen = result.get("customer_first_screen_summary") if isinstance(result.get("customer_first_screen_summary"), dict) else None
+    if first_screen is not None:
+        first_screen.update({
+            "decision": result.get("permit_decision"),
+            "kind_category": result.get("permit_kind"),
+            "next_action": result.get("customer_next_step"),
+        })
+        result["customer_first_screen_summary"] = first_screen
+    if public:
+        result.pop("_decision_cell_primary_lock", None)
+    return result
+
+
 def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", city: str = "", state: str = "", scope_contract: dict[str, Any] | None = None) -> dict[str, Any]:
     """Attach/normalize the universal PermitDecision CustomerView contract.
 
@@ -382,6 +557,7 @@ def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", c
     states are recovered here instead of serialized.
     """
     result = copy.deepcopy(result) if isinstance(result, dict) else {}
+    cell_lock = _get_decision_cell_primary_lock(result)
     scope_contract = scope_contract or result.get("_scope_contract") or {}
     dto = resolve_customer_decision({
         "result": result,
@@ -480,6 +656,8 @@ def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", c
     result["degraded_sources"] = bool(dto.get("degraded_sources"))
     result["customer_next_step"] = next_step
     result["customer_headline"] = headline
+    if cell_lock:
+        result = enforce_decision_cell_primary(result, cell_lock, city, state, public=False)
     return _strip_customer_banned_text(result)
 
 

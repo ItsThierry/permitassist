@@ -481,6 +481,7 @@ def reconcile_v231_result(result: dict[str, Any], resolution: V231Resolution | d
 
     permits_obj = result.get("permits_required")
     permits: list[dict[str, Any]] = [copy.deepcopy(p) for p in permits_obj if isinstance(p, dict)] if isinstance(permits_obj, list) else []
+    primary_permit = None
     if permit_required:
         primary_notes = cell.get("customer_action") or (f"Apply with {office} before starting work." if office else "Apply before starting work.")
         if isinstance(primary_notes, str):
@@ -504,6 +505,19 @@ def reconcile_v231_result(result: dict[str, Any], resolution: V231Resolution | d
         if not upgraded:
             permits.insert(0, primary_permit)
     result["permits_required"] = permits
+    result["_decision_cell_primary_lock"] = {
+        "source": "permitassist_v231_decision_cell",
+        "exact_match": True,
+        "cell_id": cell.get("cell_id"),
+        "permit_decision": main_decision,
+        "permit_required": permit_required,
+        "permit_name": permit_name if permit_required else "No permit required",
+        "permit_kind": cell.get("permit_kind") or ("building" if permit_required else "not_required"),
+        "apply_url": apply_url,
+        "applying_office": office,
+        "primary_permit": copy.deepcopy(primary_permit) if primary_permit else None,
+        "customer_action": cell.get("customer_action") or (primary_permit or {}).get("notes") or "",
+    }
 
     sources_obj = result.get("sources")
     sources: list[Any] = list(sources_obj) if isinstance(sources_obj, list) else []
