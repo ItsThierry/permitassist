@@ -425,6 +425,35 @@ def test_public_view_model_drops_malformed_bracket_redacted_source_urls_without_
     assert dirty["apply_url"] in public.get("source_urls", [])
 
 
+def test_decision_cell_primary_lock_recovers_generic_permit_name_at_source():
+    import sys
+    api_root = ROOT / "api"
+    if str(api_root) not in sys.path:
+        sys.path.insert(0, str(api_root))
+    from permit_decision import enforce_decision_cell_primary
+
+    lock = {
+        "permit_decision": "REQUIRED",
+        "permit_kind": "building",
+        "permit_name": "Permit",
+        "applying_office": "Los Angeles Department of Building and Safety",
+        "apply_url": "https://www.ladbs.org/services/core-services/plan-check-permit",
+        "decision_subject": "commercial tenant improvement interior alteration",
+    }
+    result = {
+        "permit_name": "Permit",
+        "permits_required": [{"permit_type": "Permit", "required": True}],
+    }
+
+    public = enforce_decision_cell_primary(result, lock, "Los Angeles", "CA", public=True)
+
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_name"] == "Commercial Building / Tenant Improvement Permit"
+    assert public["permits_required"][0]["permit_type"] == "Commercial Building / Tenant Improvement Permit"
+    assert "Permit" != public["permits_required"][0]["portal_selection"]
+    assert "Apply for Commercial Building / Tenant Improvement Permit" in public["customer_next_step"]
+
+
 def test_public_view_model_scrubs_internal_v231_resolver_terms_from_all_public_text(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     dirty = _dirty_required_result()

@@ -66,7 +66,7 @@ BANNED_CUSTOMER_SURFACE_RE = re.compile(
     re.I,
 )
 
-_GENERIC_PERMIT_NAME_RE = re.compile(r"^\s*(?:permit\s+required|required\s+permit|building\s+permit)?\s*$", re.I)
+_GENERIC_PERMIT_NAME_RE = re.compile(r"^\s*(?:permit|permits?|permit\s+required|required\s+permit)?\s*$", re.I)
 _CONDITIONAL_HEDGE_RE = re.compile(r"\b(?:may|might|could|typically|generally|varies\s+by)\b", re.I)
 
 
@@ -335,7 +335,7 @@ def _locked_primary_next_step(lock: dict[str, Any], decision: str, permit_kind: 
         return locked_action
     department = _norm_text(lock.get("applying_office")) or f"{city} {state} Building Department".strip() or "the local building department"
     if decision == PERMIT_DECISION_REQUIRED:
-        permit_name = _norm_text(lock.get("permit_name")) or permit_kind or "Building Permit"
+        permit_name = _recovered_lock_permit_name(lock, permit_kind)
         return f"Apply for {permit_name} with {department} before starting work."
     if decision == PERMIT_DECISION_NOT_REQUIRED:
         return "Keep the official no-permit note with the job file before starting work."
@@ -434,16 +434,44 @@ def _controlled_kind_from_lock(lock: dict[str, Any]) -> str:
     return kind_from_text(str(lock.get("permit_name") or raw), fallback="Building")
 
 
+def _lock_permit_name_is_generic(name: Any) -> bool:
+    text = _norm_text(name)
+    return not text or bool(_GENERIC_PERMIT_NAME_RE.match(text))
+
+
+def _recovered_lock_permit_name(lock: dict[str, Any], permit_kind: str = "") -> str:
+    name = _norm_text(lock.get("permit_name"))
+    if not _lock_permit_name_is_generic(name):
+        return name
+
+    blob = _blob(lock).lower().replace("_", " ").replace("-", " ")
+    if "tenant improvement" in blob or "tenant build" in blob or "commercial interior" in blob:
+        return "Commercial Building / Tenant Improvement Permit"
+    if "construction permit" in blob:
+        return "Construction Permit"
+    if "water heater" in blob:
+        return "Residential Plumbing Permit — Water Heater Replacement"
+    if "roof" in blob or "reroof" in blob or "re roof" in blob:
+        return "Building Permit"
+    if "building permit" in blob or str(permit_kind).lower() == "building":
+        return "Building Permit"
+    if permit_kind and permit_kind not in {"Other", "Not Required"}:
+        suffix = "" if permit_kind.lower().endswith("permit") else " Permit"
+        return f"{permit_kind}{suffix}"
+    return "Building Permit"
+
+
 def _merge_locked_primary_permits(lock: dict[str, Any], existing_permits: Any, *, public: bool = False) -> list[dict[str, Any]]:
     raw_primary = lock.get("primary_permit")
     primary: dict[str, Any] = copy.deepcopy(raw_primary) if isinstance(raw_primary, dict) else {}
-    permit_name = str(lock.get("permit_name") or primary.get("permit_type") or "Building Permit").strip() or "Building Permit"
+    kind = _controlled_kind_from_lock(lock)
+    permit_name = _recovered_lock_permit_name(lock, kind)
     primary.update({
         "permit_type": permit_name,
         "required": True,
-        "kind": _controlled_kind_from_lock(lock),
+        "kind": kind,
         "permit_kind": lock.get("permit_kind") or "building",
-        "portal_selection": primary.get("portal_selection") or permit_name,
+        "portal_selection": permit_name,
     })
     if lock.get("customer_action") and not primary.get("notes"):
         primary["notes"] = lock.get("customer_action")
@@ -490,7 +518,7 @@ def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] |
         result["customer_headline"] = _headline(PERMIT_DECISION_NOT_REQUIRED, "Not Required", result["customer_next_step"])
     elif decision == PERMIT_DECISION_REQUIRED:
         kind = _controlled_kind_from_lock(lock)
-        permit_name = str(lock.get("permit_name") or "Building Permit").strip() or "Building Permit"
+        permit_name = _recovered_lock_permit_name(lock, kind)
         result["permit_required"] = True
         result["permit_decision"] = PERMIT_DECISION_REQUIRED
         result["permit_verdict"] = "YES"
