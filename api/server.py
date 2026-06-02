@@ -500,6 +500,16 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         "source-backed exemption",
         "needs_verification",
         "fail_closed",
+        "v2.3.1",
+        "_v231_",
+        "permitassist_v231_decision_cell",
+        "_decision_cell_primary_lock",
+        "decision_cell",
+        "decision cell",
+        "cell_id",
+        "resolver",
+        "source metadata",
+        "customerdecisiondto",
     )
     fee_internal_terms = (
         "jurisdiction multiplier",
@@ -517,6 +527,7 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         "permit_decision_contract", "source_evidence_floor", "exact_apply_url_status",
         "exact_name_status", "permit_ready_score", "debug_trace", "provider_metadata",
         "retrieval_diagnostics", "raw_retrieval", "search_debug", "scoring_debug",
+        "source_metadata", "decision_cell", "cell_id", "resolver", "customerdecisiondto",
     }
     primary_scope = str(result.get("_primary_scope") or "").strip().lower()
     target_state = str(
@@ -556,6 +567,15 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             value = value.replace("**", "")
             value = re.sub(r"\$\{[^}]*\}", "", value)
             value = re.sub(r"\{\{[^{}]*\}\}", "", value)
+            value = re.sub(r"\bpermitassist_v231_decision_cell\b", "official permit rule", value, flags=re.I)
+            value = re.sub(r"\b_decision_cell_primary_lock\b", "primary permit rule", value, flags=re.I)
+            value = re.sub(r"\b_v231_\b", "current rule", value, flags=re.I)
+            value = re.sub(r"\bv2\.3\.1\b", "current rule", value, flags=re.I)
+            value = re.sub(r"\bdecision[_\s-]+cell\b", "official permit rule", value, flags=re.I)
+            value = re.sub(r"\bcell[_\s-]*id\b", "official rule reference", value, flags=re.I)
+            value = re.sub(r"\bresolver\b", "lookup", value, flags=re.I)
+            value = re.sub(r"\bsource\s+metadata\b", "source details", value, flags=re.I)
+            value = re.sub(r"\bcustomerdecisiondto\b", "customer decision", value, flags=re.I)
             value = re.sub(r"\[\s*verify\s+(?:with|in)\s+([^\]]{1,160})\]", r"confirm with \1", value, flags=re.I)
             value = re.sub(r"\[\s*verify\s+([^\]]{1,160})\]", r"confirm \1", value, flags=re.I)
             value = re.sub(r"\bsource-backed\s+threshold\b", "listed permit trigger", value, flags=re.I)
@@ -738,6 +758,7 @@ _INTERNAL_CUSTOMER_FIELD_NAMES = frozenset({
     "exact_name_status", "quality_warnings", "needs_review", "permit_ready_score",
     "debug_trace", "provider_metadata", "retrieval_diagnostics", "raw_retrieval",
     "search_debug", "scoring_debug", "missing_fields", "hidden_triggers",
+    "source_metadata", "decision_cell", "cell_id", "resolver", "customerdecisiondto",
 })
 
 
@@ -1286,7 +1307,7 @@ def apply_source_floor_annotation(result: dict, job_type: str, city: str, state:
     result["degraded_sources"] = degraded
     if degraded:
         warnings = result.setdefault("warnings", [])
-        caveat = "Source retrieval or exact local source support is degraded; the permit decision remains resolved by the CustomerDecisionDTO."
+        caveat = "Exact local source support is degraded; the customer permit decision remains resolved."
         if caveat not in warnings:
             warnings.append(caveat)
 

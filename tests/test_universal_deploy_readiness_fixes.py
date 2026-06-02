@@ -425,6 +425,47 @@ def test_public_view_model_drops_malformed_bracket_redacted_source_urls_without_
     assert dirty["apply_url"] in public.get("source_urls", [])
 
 
+def test_public_view_model_scrubs_internal_v231_resolver_terms_from_all_public_text(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    dirty = _dirty_required_result()
+    dirty.update({
+        "job_summary": "The v2.3.1 decision cell resolved this scope through the resolver.",
+        "customer_next_step": "Apply because permitassist_v231_decision_cell matched; source metadata is internal.",
+        "confidence_reason": "_v231_ resolver source metadata confirmed cell_id abc123.",
+        "permits_required_logic": [
+            {
+                "permit_type": "Construction Permit",
+                "included_because": "The decision cell specifically identifies this scope as requiring a Construction Permit.",
+                "scope_trigger": "new commercial construction",
+                "cell_id": "goodyear-commercial-construction",
+            }
+        ],
+        "requirements": ["_decision_cell_primary_lock kept Construction Permit as primary"],
+        "permit_summary": {"notes": ["Resolver copied source metadata from a decision_cell object."]},
+        "source_metadata": {"resolver": "v231", "cell_id": "abc123"},
+    })
+
+    public = server.build_customer_permit_view_model(dirty, "new commercial construction retail shell", "Goodyear", "AZ")
+    blob = json.dumps(public, sort_keys=True).lower()
+
+    forbidden_terms = [
+        "v2.3.1",
+        "_v231_",
+        "permitassist_v231_decision_cell",
+        "_decision_cell_primary_lock",
+        "decision_cell",
+        "decision cell",
+        "cell_id",
+        "resolver",
+        "source metadata",
+        "customerdecisiondto",
+    ]
+    assert public["permit_decision"] == "REQUIRED"
+    assert public.get("permits_required_logic")
+    assert "official permit rule" in blob
+    assert [term for term in forbidden_terms if term in blob] == []
+
+
 def test_public_citations_require_display_allowed_source_url(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     dirty = _dirty_required_result()
