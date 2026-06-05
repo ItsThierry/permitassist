@@ -168,17 +168,24 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
 
     residential_remodel_terms = (
         "residential remodel",
+        "residential interior remodel",
+        "residential interior remodeling",
+        "residential interior renovation",
+        "residential interior alteration",
         "home remodel",
         "kitchen remodel",
         "bathroom remodel",
         "bath remodel",
+        "interior remodel",
+        "interior remodeling",
+        "interior renovation",
         "residential renovation",
         "home renovation",
         "residential alteration",
         "kitchen renovation",
         "bathroom renovation",
     )
-    if _has_any(combined, residential_remodel_terms):
+    if _has_any(combined, residential_remodel_terms) and (category == "residential" or "residential" in combined or "home" in combined or "kitchen" in combined or "bath" in combined):
         candidates.append("residential_remodel")
 
     unique_candidates = list(dict.fromkeys(candidates))
