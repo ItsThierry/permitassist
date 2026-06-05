@@ -53,6 +53,24 @@
     "WV": 32,
     "WY": 32
   },
+  "evidence_hardening_import": {
+    "already_verbatim_candidates": 0,
+    "candidate_promotions_total": 254,
+    "customer_decision_contract_preserved": true,
+    "evidence_counts_after": {
+      "OFFICIAL_DERIVED": 150,
+      "OFFICIAL_VERBATIM": 1450
+    },
+    "evidence_counts_before": {
+      "OFFICIAL_DERIVED": 404,
+      "OFFICIAL_VERBATIM": 1196
+    },
+    "imported_at_utc": "2026-06-05T23:24:01Z",
+    "promoted_cells_this_import": 254,
+    "remaining_official_derived": 150,
+    "run_id": "v231-evidence-hardening-promotions-2026-06-05",
+    "source_ranked_404": "/home/boban/projects/permitassist-data/artifacts/v231-evidence-hardening-20260605/reports/official_derived_ranked_404.json"
+  },
   "expansion_cells": 800,
   "expansion_run_id": "v231-staged-800-expansion-2026-06-05",
   "imported_at_utc": "2026-06-05T02:40:02Z",
