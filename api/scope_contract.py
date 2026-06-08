@@ -23,7 +23,8 @@ _COMMERCIAL_TERMS = (
     "commercial", "tenant improvement", "tenant finish", "tenant buildout", "buildout", "build-out",
     "restaurant", "commercial kitchen", "commercial alteration", "commercial building", "type i hood", "type 1 hood", "grease interceptor",
     "medical clinic", "dental clinic", "office tenant improvement", "office ti", "retail tenant improvement",
-    "change of occupancy", "change of use", "storefront", "clinic tenant improvement",
+    "change of occupancy", "change of use", "retail conversion", "retail converted", "retail space", "retail suite",
+    "fitness studio", "storefront", "clinic tenant improvement", "commercial fit-out", "commercial fit out",
 )
 _STRONG_COMMERCIAL_TERMS = tuple(term for term in _COMMERCIAL_TERMS if term != "commercial")
 _RESIDENTIAL_TERMS = (
@@ -43,7 +44,11 @@ _TAG_TERMS: dict[str, tuple[str, ...]] = {
     # packs often say "residential and commercial" or "commercial refrigeration"
     # as broad applicability/licensing context. Contamination blocking should key
     # on actual TI/change-of-use language, not the standalone word.
-    "commercial_ti": ("tenant improvement", "tenant finish", "tenant buildout", "buildout", "build-out", "commercial alteration", "commercial building", "change of occupancy", "change of use"),
+    "commercial_ti": (
+        "tenant improvement", "tenant finish", "tenant buildout", "buildout", "build-out",
+        "commercial alteration", "commercial building", "change of occupancy", "change of use", "change in use",
+        "conversion", "converted into", "convert into", "converting into", "fit-out", "fit out",
+    ),
     "restaurant_ti": ("restaurant", "commercial kitchen", "food service", "type i hood", "type 1 hood", "grease interceptor", "ansul", "commercial dishwasher"),
     "medical_clinic_ti": ("medical clinic", "dental clinic", "clinic tenant", "exam room", "patient care", "medical gas", "x-ray", "radiology"),
     "office_ti": ("office tenant improvement", "office ti", "professional office", "office buildout", "law office"),

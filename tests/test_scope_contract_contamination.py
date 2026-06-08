@@ -75,6 +75,36 @@ def test_scope_contract_overrides_implicit_residential_default_for_clear_commerc
     assert "_scope_firebreak_removed" not in result
 
 
+def test_scope_contract_commercial_conversion_beats_hvac_single_trade():
+    from scope_contract import build_scope_contract
+
+    contract = build_scope_contract(
+        "4,000 sq ft retail converted into a fitness studio with restrooms, showers, HVAC rooftop units and electrical lighting",
+        "Austin",
+        "TX",
+        job_category="commercial",
+    )
+
+    assert contract["category"] == "commercial"
+    assert contract["family"] == "commercial_ti"
+    assert contract["vertical"] == "commercial_ti"
+
+
+def test_scope_contract_simple_commercial_hvac_stays_single_trade():
+    from scope_contract import build_scope_contract
+
+    contract = build_scope_contract(
+        "commercial rooftop HVAC unit like-for-like replacement only",
+        "Austin",
+        "TX",
+        job_category="commercial",
+    )
+
+    assert contract["category"] == "commercial"
+    assert contract["family"] == "commercial_other"
+    assert contract["vertical"] == "hvac_changeout"
+
+
 def test_batch_and_v1_permit_pass_request_job_category_to_research_permit():
     server_source = (API_DIR / "server.py").read_text()
     batch_block = server_source[server_source.index('elif path == "/api/batch-permit":'):server_source.index('elif path == "/api/beta-event":')]
