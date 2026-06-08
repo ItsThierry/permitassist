@@ -3007,7 +3007,9 @@ def _looks_like_commercial_trade_only_scope(job_type: str) -> bool:
     ti_markers = (
         "tenant improvement", " t.i.", " ti ", " ti,", " ti.", " ti-", "buildout", "build-out",
         "interior alteration", "interior remodel", "change of use", "change of occupancy",
-        "occupancy change", "convert", "converting", "demising", "partition", "partitions",
+        "occupancy change", "convert", "converting", "converted into", "converted to",
+        "conversion", "fit out", "fit-out", "tenant fitout", "tenant fit-out",
+        "demising", "partition", "partitions",
         "new restaurant", "new clinic", "new office", "new retail",
     )
     if any(t in job for t in ti_markers):
@@ -3171,6 +3173,19 @@ def detect_primary_scope(job_type: str) -> str:
         'change of occupancy', 'a-2 occupancy',
         'b-occupancy', 'mercantile', 'assembly occupancy', 'change of use',
     )):
+        return 'commercial'
+
+    conversion_terms = (
+        'converted into', 'converted to', 'convert into', 'convert to', 'conversion to',
+        'change to', 'new occupancy type', 'occupancy conversion', 'use conversion',
+        'fit out', 'fit-out', 'tenant fitout', 'tenant fit-out', 'multi-trade interior alteration',
+    )
+    commercial_conversion_markers = (
+        'commercial', 'tenant', 'suite', 'retail', 'store', 'office', 'restaurant',
+        'fitness studio', 'fitness', 'gym', 'studio', 'yoga', 'pilates', 'assembly',
+        'mercantile', 'warehouse', 'industrial', 'clinic', 'medical', 'dental',
+    )
+    if any(t in job_lc for t in conversion_terms) and any(t in job_lc for t in commercial_conversion_markers):
         return 'commercial'
 
     # ADU detection — important enough to be its own primary scope
@@ -5325,7 +5340,11 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
 
     has_panel = _scope_has_any(job, ["panel upgrade", "service upgrade", "new panel", "electrical panel", "main panel", "meter main", "subpanel", "sub-panel", "200 amp", "200amp", "200a", "400 amp", "400amp", "400a"])
     has_gas_line = _scope_has_any(job, ["gas line", "gas piping", "new gas", "relocate gas", "gas modification"])
-    has_new_fixtures = _scope_has_any(job, ["new fixture", "new fixtures", "add fixture", "add fixtures", "fixture relocation", "new bathroom", "new kitchen"])
+    has_new_fixtures = _scope_has_any(job, [
+        "new fixture", "new fixtures", "add fixture", "add fixtures", "fixture relocation",
+        "new bathroom", "new kitchen", "restroom", "restrooms", "bathroom", "bathrooms",
+        "shower", "showers", "sink", "sinks", "lavatory", "lavatories", "toilet", "toilets",
+    ])
     has_solar = contract_vertical == "solar_pv" or has_any_unnegated(job, ("solar", "pv", "photovoltaic"))
     has_battery = has_any_unnegated(job, ("battery", "ess", "energy storage", "powerwall"))
     is_hvac = _scope_has_any(job, ["hvac", "rtu", "rooftop unit", "roof top unit", "condenser", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting", "mechanical", "economizer"])
@@ -5519,7 +5538,8 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
         }
 
     is_roof = _scope_has_any(job, ["roof", "reroof", "re-roof", "tear-off", "tear off", "shingle"])
-    roof_simple = is_roof and not _scope_has_any(job, ["skylight", "solar", "structural", "rafter", "truss", "decking replacement", "new opening"])
+    roof_hvac_context = _scope_has_any(job, ["hvac", "rtu", "rooftop unit", "roof top unit", "air conditioner", "air conditioning", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler", "mechanical"])
+    roof_simple = is_roof and not roof_hvac_context and not _scope_has_any(job, ["skylight", "solar", "structural", "rafter", "truss", "decking replacement", "new opening"])
     if roof_simple:
         permits = [_scope_permit("Roofing Permit — Tear-Off / Re-Roof", "Roofing - Residential Re-Roof", "Required for roof tear-off and reroof; no companion permit unless skylights, solar, or structural work are added.")]
         add_logic(permits[0]["permit_type"], "Roof tear-off/re-roof scope is isolated roofing work with no skylight, solar, or structural trigger stated.", "roof/reroof keywords without companion triggers")
@@ -5809,23 +5829,36 @@ def apply_scope_aware_permit_classification(result: dict, job_type: str, scope_c
 
 
 def _permit_family(permit: dict) -> str:
-    """Best-effort family classifier for required permit de-duping."""
+    """Best-effort family classifier for required permit de-duping.
+
+    Prefer the actual permit label/portal selection over explanatory notes. Notes
+    may mention suppressed companion triggers (for example an HVAC changeout note
+    saying plumbing is suppressed unless new fixtures are explicit), and those
+    should not reclassify the primary permit family.
+    """
     if not isinstance(permit, dict):
         return ""
-    text = " ".join(str(permit.get(k) or "") for k in ("permit_type", "portal_selection", "notes")).lower()
-    if any(t in text for t in ("fire alarm", "sprinkler", "fire sprinkler", "fire suppression")):
-        return "fire"
-    if "sign" in text or "signage" in text:
-        return "sign"
-    if "plumb" in text or "fixture" in text or "restroom" in text or "sewer" in text:
-        return "plumbing"
-    if "mechanical" in text or "hvac" in text or re.search(r"\bduct(?:work|s|ing)?\b", text) or "ventilation" in text or "rtu" in text:
-        return "mechanical"
-    if "electrical" in text or "lighting" in text or "branch circuit" in text or "panel" in text:
-        return "electrical"
-    if "building" in text or "tenant improvement" in text or "alteration" in text or "interior" in text:
-        return "building"
-    return ""
+    label_text = " ".join(str(permit.get(k) or "") for k in ("permit_type", "portal_selection")).lower()
+    notes_text = str(permit.get("notes") or "").lower()
+
+    def family_from(text: str) -> str:
+        if any(t in text for t in ("fire alarm", "sprinkler", "fire sprinkler", "fire suppression")):
+            return "fire"
+        if "roof" in text or "reroof" in text or "re-roof" in text:
+            return "roofing"
+        if "sign" in text or "signage" in text:
+            return "sign"
+        if "mechanical" in text or "hvac" in text or re.search(r"\bduct(?:work|s|ing)?\b", text) or "ventilation" in text or "rtu" in text:
+            return "mechanical"
+        if "electrical" in text or "lighting" in text or "branch circuit" in text or "panel" in text:
+            return "electrical"
+        if "plumb" in text or "fixture" in text or "restroom" in text or "sewer" in text:
+            return "plumbing"
+        if "building" in text or "tenant improvement" in text or "alteration" in text or "interior" in text:
+            return "building"
+        return ""
+
+    return family_from(label_text) or family_from(notes_text)
 
 
 def _ahj_companion_permit_name(family: str, primary_scope: str, city: str, state: str, verified: bool) -> tuple[str, str]:
@@ -6288,7 +6321,8 @@ _ELECTRICAL_REQUIRED_SCOPE_TERMS = (
     "exit sign", "equipment power", "power connection", "x-ray", "xray", "radiology",
 )
 _PLUMBING_REQUIRED_SCOPE_TERMS = (
-    "plumbing", "restroom", "bathroom", "toilet", "lavatory", "sink",
+    "plumbing", "restroom", "restrooms", "bathroom", "bathrooms", "toilet", "toilets",
+    "lavatory", "lavatories", "sink", "sinks", "shower", "showers",
     "hand sink", "mop sink", "floor sink", "dishwasher", "water line",
     "sewer", "dwv", "fixture", "grease interceptor", "grease trap",
     "medical gas", "nitrous", "oxygen", "vacuum line",
@@ -6380,7 +6414,8 @@ def _is_commercial_ti_scope(primary_scope: str, job_type: str) -> bool:
         "tenant improvement", " ti", "t.i.", "tenant finish", "tenant buildout",
         "interior alteration", "interior remodel",
         "buildout", "build-out", "change of use", "change of occupancy", "occupancy change",
-        "fit out", "fit-out",
+        "converted into", "converted to", "convert into", "convert to", "conversion to",
+        "fit out", "fit-out", "tenant fitout", "tenant fit-out",
     ])
 
 

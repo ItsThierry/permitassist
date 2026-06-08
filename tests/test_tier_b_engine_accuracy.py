@@ -88,6 +88,51 @@ def test_scope_hvac_condenser_changeout_is_one_mechanical_permit():
     assert result["permits_required_logic"][0]["included_because"]
 
 
+def test_scope_rooftop_hvac_unit_is_mechanical_not_roofing():
+    result = engine.apply_scope_aware_permit_classification(_blank_result(), "replace a rooftop HVAC unit, no other work")
+    permits = _permit_types(result)
+
+    assert len(permits) == 1
+    assert "Mechanical Permit" in permits[0]
+    assert "Roofing" not in permits[0]
+    assert result["companion_permits"] == []
+
+
+def test_permit_family_prefers_label_over_suppression_notes():
+    assert engine._permit_family({
+        "permit_type": "Mechanical Permit — HVAC Equipment Changeout (Residential)",
+        "portal_selection": "Mechanical - HVAC Changeout / Replacement",
+        "notes": "Companion permits are suppressed unless panel work, gas-line modification, or new fixtures are explicit.",
+    }) == "mechanical"
+    assert engine._permit_family({
+        "permit_type": "Roofing Permit — Tear-Off / Re-Roof",
+        "portal_selection": "Roofing - Residential Re-Roof",
+        "notes": "No companion permit unless skylights, solar, or structural work are added.",
+    }) == "roofing"
+
+
+def test_scope_commercial_conversion_trade_list_leads_with_building_and_named_trades():
+    for city, state in (("Austin", "TX"), ("Boston", "MA")):
+        job = f"4,000 sq ft retail converted into a fitness studio, {city} {state} — restrooms, showers, HVAC, electrical"
+        result = engine.apply_scope_aware_permit_classification(_blank_result(), job)
+        engine.enforce_ti_min_permits_floor(result, job, city, state)
+        engine.apply_residential_permit_name_specificity(result, job, city, state)
+        engine.enforce_commercial_primary_permit_guardrail(result, job, city, state)
+        permits = _permit_types(result)
+        permits_l = " | ".join(permits).lower()
+
+        assert result["_primary_scope"] in {"commercial", "commercial_retail_ti"}
+        assert permits[0].startswith("Building Permit — Commercial") or "Tenant Improvement" in permits[0]
+        assert "residential" not in permits_l
+        assert "building" in permits_l
+        assert "plumbing" in permits_l
+        assert "mechanical" in permits_l
+        assert "electrical" in permits_l
+        logic_l = " | ".join(str(item.get("permit_type", "")) for item in result.get("permits_required_logic", []) if isinstance(item, dict)).lower()
+        for family in ("building", "plumbing", "mechanical", "electrical"):
+            assert family in logic_l
+
+
 def test_scope_hvac_with_panel_upgrade_is_mechanical_plus_electrical():
     result = engine.apply_scope_aware_permit_classification(_blank_result(), "HVAC system replacement with 200 amp panel upgrade")
     permits = " | ".join(_permit_types(result)).lower()
