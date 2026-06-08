@@ -6,8 +6,10 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "api"))
 
 import api.research_engine as engine
+from permit_decision import apply_permit_decision_contract
 
 
 RESIDENTIAL_THIN_CASES = [
@@ -114,13 +116,16 @@ def test_permit_family_prefers_label_over_suppression_notes():
 def test_scope_commercial_conversion_trade_list_leads_with_building_and_named_trades():
     for city, state in (("Austin", "TX"), ("Boston", "MA")):
         job = f"4,000 sq ft retail converted into a fitness studio, {city} {state} — restrooms, showers, HVAC, electrical"
-        result = engine.apply_scope_aware_permit_classification(_blank_result(), job)
+        scope_contract = engine.build_scope_contract(job, city, state, job_category="commercial")
+        result = engine.apply_scope_aware_permit_classification(_blank_result(), job, scope_contract)
         engine.enforce_ti_min_permits_floor(result, job, city, state)
         engine.apply_residential_permit_name_specificity(result, job, city, state)
         engine.enforce_commercial_primary_permit_guardrail(result, job, city, state)
+        result = apply_permit_decision_contract(result, job, city, state, scope_contract)
         permits = _permit_types(result)
         permits_l = " | ".join(permits).lower()
 
+        assert scope_contract["family"] == "commercial_ti"
         assert result["_primary_scope"] in {"commercial", "commercial_retail_ti"}
         assert permits[0].startswith("Building Permit — Commercial") or "Tenant Improvement" in permits[0]
         assert "residential" not in permits_l

@@ -22,7 +22,7 @@ _REQUIRED_KIND_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("Solar", ("solar", "photovoltaic", " pv ", "battery storage", "energy storage", "ess")),
     ("Electrical", ("electrical", "electric", "panel", "service upgrade", "service change", "meter", "switchgear", "ev charger", "charger", "circuit", "rewire", "generator", "lighting", "lighting controls")),
     ("Mechanical", ("mechanical", "hvac", "rtu", "furnace", "heat pump", "condenser", "air conditioner", "mini split", "ductwork", "makeup air", "exhaust", "fog machine", "stage fog", "hood")),
-    ("Plumbing", ("plumbing", "water heater", "tankless", "sewer", "water line", "gas line", "gas piping", "fixture", "sink", "toilet", "restroom", "bathroom")),
+    ("Plumbing", ("plumbing", "water heater", "tankless", "sewer", "water line", "gas line", "gas piping", "fixture", "fixtures", "sink", "sinks", "toilet", "toilets", "restroom", "restrooms", "bathroom", "bathrooms", "shower", "showers", "lavatory", "lavatories")),
     ("Roofing", ("reroof", "re-roof", "roof replacement", "roofing", "roof repair", "roof patch", "shingle", "membrane roof")),
     ("Sign", ("sign", "signage", "channel letters", "monument sign")),
     ("Fence", ("fence", "retaining wall")),
