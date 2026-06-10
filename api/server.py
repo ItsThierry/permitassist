@@ -59,7 +59,7 @@ except (TypeError, ValueError):
     classify_scope_required_permits = _real_classify_scope_required_permits
 
 from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
-from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary
+from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
 from decision_resolver import is_input_rejection, resolve_customer_decision
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
@@ -1431,6 +1431,10 @@ def lint_customer_visible_result(public: dict, city: str = "", state: str = "") 
         "internal_customer_terms": r"\b(?:source-backed\s+(?:threshold|evidence|exemption)|needs_verification|fail[_\s-]?closed|verify\s+before\s+merging|structured\s+floor|ti\s+floor|jurisdiction\s+multiplier|ada-path-of-travel\s+adder)\b",
         "fragment_stutter": r"\b[A-Z][A-Za-z .'-]+,\s*[A-Z]{2}\.[A-Za-z]|\bwork\.(?:signage|exterior|interior|electrical|plumbing|mechanical|fire|health|zoning)\b",
         "repeated_caveat": r"verify\s+with\s+the\s+building\s+department.{0,80}verify\s+with\s+the\s+building\s+department",
+        # P1B — Serializer bug lint patterns (2026-06-09)
+        "unknown_ahj_title": r"\b(?:unknown\s+ahj|incomplete\s+data|not\s+enough\s+information|data\s+unavailable|cannot\s+verify\s+jurisdiction)\b",
+        "mid_sentence_drop": r"\b[a-z]{3,}\.[A-Z]{2}\.[^ ]{1,3}$|\.[A-Z][a-z]{2,}\.",
+        "empty_bullet_or_fragment": r"^\s*[-•]\s*\.\s*$|[-•]\s*[a-z]{1,3}\.$",
     }
     for code, pattern in patterns.items():
         if re.search(pattern, text, flags=re.I | re.S):
@@ -1552,6 +1556,9 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         if cell_lock:
             final_public = enforce_decision_cell_primary(final_public, cell_lock, city, state, public=True)
             final_public = sanitize_customer_visible_result(final_public, strip_internal_keys=True)
+        # P0: Contact data integrity — provenance-gated contact sanitization
+        # Added 2026-06-09. Suppresses wrong phones/addresses from untrusted sources.
+        final_public = apply_contact_sanitization(final_public, city=city, state=state)
         return final_public
     return {}
 
