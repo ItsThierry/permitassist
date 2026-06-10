@@ -2470,7 +2470,8 @@ function generateCustomerPermitExplanation() {
   const state = window._lastLookupState || '';
   const fee = result.fee_range || result.fee || result.cost || 'Call the city to confirm the exact fee';
   const location = [city, state].filter(Boolean).join(', ') || 'your jurisdiction';
-  return `Why Your ${permitName} Permit is Required\n\nYour contractor is required by ${location} law to pull a ${permitName} before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local safety codes. Without it, your homeowner's insurance may not cover claims related to this work, and you may face issues when selling your home.\n\nCost: ${fee} — this is paid directly to the city, not to your contractor.\n\nWhat happens without it: Unpermitted work can result in fines, required tear-out and redo, insurance claim denials, and required disclosure during home sale.\n\nThis information was verified via PermitAssist (permitassist.io).`;
+  const suffix = (permitName && permitName.trim().toLowerCase().endsWith("permit")) ? " is" : " Permit is";
+  return `Why Your ${permitName}${suffix} Required\n\nYour contractor is required by ${location} law to pull a ${permitName} before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local safety codes. Without it, your homeowner's insurance may not cover claims related to this work, and you may face issues when selling your home.\n\nCost: ${fee} — this is paid directly to the city, not to your contractor.\n\nWhat happens without it: Unpermitted work can result in fines, required tear-out and redo, insurance claim denials, and required disclosure during home sale.\n\nThis information was verified via PermitAssist (permitassist.io).`;
 }
 
 function toggleCustomerExplanation() {
