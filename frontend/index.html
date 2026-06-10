@@ -3008,14 +3008,15 @@ function isCommercialCustomerCopyScope(result) {
 
 function normalizeInspectionItems(items) {
   if (!Array.isArray(items)) return [];
-  return items.map(item => {
+  // First pass: normalize to uniform object shape and filter out placeholders
+  const normalized = items.map(item => {
     if (typeof item === 'string') {
       const title = item.trim();
       if (!title || /^inspection\s*\d*$/i.test(title)) return null;
-      return { title, description: '' };
+      return { title, description: '', timing: '' };
     }
     if (item && typeof item === 'object') {
-      const title = String(item.stage || item.title || item.name || '').trim();
+      const title = String(it...[truncated]
       const description = String(item.description || item.notes || item.detail || '').trim();
       const timing = String(item.timing || '').trim();
       // Hide fixed-slot placeholders like {stage:'Inspection'}, {stage:'Inspection 7'}, or empty dicts.
