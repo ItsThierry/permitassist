@@ -256,9 +256,55 @@ def sanitize_contact_for_public(result: dict[str, Any], city: str = "", state: s
 def apply_contact_sanitization(result: dict[str, Any], city: str = "", state: str = "") -> dict[str, Any]:
     """Public API: sanitize contact data before serialization to frontend.
 
+    Task 3: If AHJ record has verified contact, inject it into the result
+    (overriding unverified auto-searched values).  Then run provenance gate.
+
     Must be called AFTER apply_permit_decision_contract and BEFORE
     JSON serialization in server.py.
     """
+    result = copy.deepcopy(result) if isinstance(result, dict) else {}
+
+    # ── Task 3d: Inject AHJ verified contact data ──
+    try:
+        from ahj_records import get_ahj_contact
+        contact = get_ahj_contact(city, state)
+        if contact:
+            status = contact.get("contact_status", "")
+            if status == "verified":
+                # Override with verified values
+                if contact.get("phone"):
+                    result["apply_phone"] = contact["phone"]
+                    result["building_dept_phone"] = contact["phone"]
+                if contact.get("inspection_scheduling_phone"):
+                    result["inspection_scheduling_phone"] = contact["inspection_scheduling_phone"]
+                if contact.get("address"):
+                    result["apply_address"] = contact["address"]
+                    result["building_dept_address"] = contact["address"]
+                if contact.get("department"):
+                    result["applying_office"] = contact["department"]
+                    result["building_dept_name"] = contact["department"]
+                # Provenance metadata for frontend
+                result["_contact_status"] = "verified"
+                result["_contact_provenance"] = contact.get("contact_source_url", "")
+                result["_contact_verified_at"] = contact.get("contact_verified_at", "")
+            elif status == "mismatch":
+                # Render phone + name only, no address (human resolution needed)
+                if contact.get("phone"):
+                    result["apply_phone"] = contact["phone"]
+                    result["building_dept_phone"] = contact["phone"]
+                if contact.get("department"):
+                    result["applying_office"] = contact["department"]
+                    result["building_dept_name"] = contact["department"]
+                result["apply_address"] = ""
+                result["building_dept_address"] = ""
+                result["_contact_status"] = "mismatch"
+                result["_contact_provenance"] = contact.get("contact_source_url", "")
+                result["_contact_mismatch_note"] = "Address conflict detected — call to confirm location"
+            # "unverified" or missing → fall through to existing provenance gate
+    except Exception as _e:
+        print(f"[contact-sanitize] AHJ contact injection failed (non-fatal): {_e}")
+
+    # Now run the existing provenance gate
     return sanitize_contact_for_public(result, city=city, state=state)
 
 

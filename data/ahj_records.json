@@ -1,0 +1,112 @@
+{
+  "savannah__GA": {
+    "city": "Savannah",
+    "state": "GA",
+    "timezone": "America/New_York",
+    "fee_formula": {
+      "type": "valuation_tiered",
+      "tiers": [
+        {"up_to": 5000000, "rate_per_1000": 8.00},
+        {"up_to": 10000000, "rate_per_1000": 4.00},
+        {"above": 10000000, "rate_per_1000": 2.00}
+      ],
+      "plan_review_brackets": [
+        {"max": 74999, "fee": 75},
+        {"max": 100000, "fee": 150},
+        {"max": 500000, "fee": 200},
+        {"max": 1000000, "fee": 300},
+        {"max": 5000000, "fee": 500},
+        {"max": 10000000, "fee": 1000},
+        {"above": 10000000, "fee": 2000}
+      ],
+      "min_fee": 40,
+      "tech_fee": 5,
+      "applies_to": "renovations_and_new_construction_over_75000",
+      "all_inclusive": true,
+      "excluded_note": "Water & Sewer fees separate and site-specific — call 912-651-6573",
+      "source_url": "https://www.savannahga.gov/DocumentCenter/View/54/Building-Permit-and-Plan-Review-Fees-2025",
+      "effective_date": "2025-01-01"
+    },
+    "contact": {
+      "department": "City of Savannah Development Services",
+      "phone": "912-651-6530",
+      "inspection_scheduling_phone": "",
+      "address": "",
+      "address_candidates": [
+        {"address": "5515 Abercorn St, Savannah, GA 31405", "source": "https://www.savannahga.gov/1820/Fee-Information"},
+        {"address": "20 Interchange Dr, P.O. Box 1027, Savannah, GA 31402", "source": "https://www.savannahga.gov/DocumentCenter/View/54/Building-Permit-and-Plan-Review-Fees-2025"}
+      ],
+      "contact_source_url": "https://www.savannahga.gov/DocumentCenter/View/54/Building-Permit-and-Plan-Review-Fees-2025",
+      "contact_verified_at": "2026-06-10",
+      "contact_status": "mismatch"
+    },
+    "gates": [
+      {
+        "surface": ["watch_out", "pro_tips"],
+        "title": "FOG / Grease Interceptor Permitting",
+        "text": " grease interceptor / FOG permitting and compliance submissions go through the city's mandatory ClearForms online portal, effective 2026-01-02.",
+        "source_url": "https://www.savannahga.gov/4288"
+      }
+    ],
+    "notes": [],
+    "sources": [
+      "https://www.savannahga.gov/892/Building-Permits",
+      "https://www.savannahga.gov/1644/How-to-Apply-for-Commercial-Building-Per",
+      "https://www.savannahga.gov/DocumentCenter/View/54/Building-Permit-and-Plan-Review-Fees-2025",
+      "https://www.savannahga.gov/4288"
+    ]
+  },
+  "richmond__VA": {
+    "city": "Richmond",
+    "state": "VA",
+    "timezone": "America/New_York",
+    "fee_formula": null,
+    "contact": {
+      "department": "Bureau of Permits and Inspections, Dept. of Planning & Development Review",
+      "phone": "804-646-4169",
+      "inspection_scheduling_phone": "804-646-1628",
+      "address": "900 E. Broad St., Room 108, Richmond, VA 23219",
+      "contact_source_url": "https://www.rva.gov/planning-development-review/permits-and-inspections",
+      "contact_verified_at": "2026-06-10",
+      "contact_status": "verified"
+    },
+    "gates": [],
+    "notes": [
+      {
+        "text": "Richmond announced a new consultation program for commercial permit applicants on 2026-06-09.",
+        "source_url": "https://www.rva.gov/planning-development-review/permits-and-inspections",
+        "date": "2026-06-09"
+      }
+    ],
+    "sources": [
+      "https://www.rva.gov/planning-development-review/permits-and-inspections"
+    ]
+  },
+  "spokane__WA": {
+    "city": "Spokane",
+    "state": "WA",
+    "timezone": "America/Los_Angeles",
+    "fee_formula": null,
+    "contact": {
+      "department": "City of Spokane Development Services",
+      "phone": "509-625-6300",
+      "inspection_scheduling_phone": "",
+      "address": "",
+      "contact_source_url": "https://my.spokanecity.org/business/commercial/permit-process/",
+      "contact_verified_at": "",
+      "contact_status": "unverified"
+    },
+    "gates": [
+      {
+        "surface": ["watch_out", "pro_tips"],
+        "title": "Pre-Application Intake Meeting Required",
+        "text": "Spokane requires a pre-application intake meeting for ALL commercial changes of use, scheduled through Development Services at 509-625-6300. Food establishments also require an additional plan set routed to Spokane Regional Health District.",
+        "source_url": "https://my.spokanecity.org/business/commercial/permit-process/"
+      }
+    ],
+    "notes": [],
+    "sources": [
+      "https://my.spokanecity.org/business/commercial/permit-process/"
+    ]
+  }
+}

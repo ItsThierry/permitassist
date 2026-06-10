@@ -546,8 +546,13 @@ def _build_fee_text(
 ) -> str:
     components = [
         f"~{_format_usd(base_floor)} base permit + plan review ({jurisdiction_label} {_scope_label(scope_key)} floor)",
-        f"× {jurisdiction_mult:.1f}× jurisdiction multiplier",
     ]
+    # Task 2a: suppress multiplier when it equals 1; format whole numbers as ints
+    if jurisdiction_mult != 1.0:
+        if jurisdiction_mult == int(jurisdiction_mult):
+            components.append(f"× {int(jurisdiction_mult)}× jurisdiction multiplier")
+        else:
+            components.append(f"× {jurisdiction_mult:.1f}× jurisdiction multiplier")
     for key, add_min, add_max in adders:
         label = key.replace("_", "-")
         midpoint = _round_to_nearest((add_min + add_max) / 2, 500)
@@ -577,6 +582,21 @@ def apply_fee_realism_guardrail(result: dict, job_type: str, city: str, state: s
     mutating the original object they may have logged earlier.
     """
     guarded = copy.deepcopy(result or {})
+
+    # ── Task 1: AHJ fee_formula is authoritative — skip benchmark entirely ──
+    try:
+        from ahj_records import get_ahj
+        ahj = get_ahj(city, state)
+        if ahj and ahj.get("fee_formula"):
+            guarded["_fee_floor_check"] = "ahj_formula_authoritative"
+            guarded["_fee_source_backed"] = True
+            guarded["_fee_adjusted"] = False
+            # Prevent the national benchmark from overwriting the formula output.
+            # The formula fee is set earlier by calculate_exact_fee or the LLM prompt.
+            return guarded
+    except Exception as _e:
+        print(f"[fee-guardrail] AHJ formula check failed (non-fatal): {_e}")
+
     scope_key = _normalize_scope(primary_scope, job_type)
     floor_data = SCOPE_FEE_FLOORS.get(scope_key, SCOPE_FEE_FLOORS["commercial"])
 
@@ -613,6 +633,31 @@ def apply_fee_realism_guardrail(result: dict, job_type: str, city: str, state: s
     structured_high = _round_to_nearest(multiplied_base + add_max_total, 500)
     if structured_high < structured_low:
         structured_high = structured_low
+
+    # ── Task 1c: Coherence guard — 8% ceiling on benchmark path only ──
+    job_val = None
+    try:
+        job_value_match = re.search(r'[\$]?([\d,]+(?:\.\d+)?)\s*[kK]?\b', str(job_type or result.get("job_value", "")))
+        if job_value_match:
+            job_val = float(job_value_match.group(1).replace(",", ""))
+            if "k" in str(job_type or "").lower() or "K" in str(result.get("job_value", "")):
+                job_val *= 1000
+        # Also look for explicit budget mention
+        budget_match = re.search(r'\$?\s*([\d,]+(?:\.\d+)?)\s*[kK]?\b.*(?:budget|cost|value|valuation)', str(job_type or ""), flags=re.I)
+        if budget_match and not job_val:
+            job_val = float(budget_match.group(1).replace(",", ""))
+            if "k" in budget_match.group(0).lower():
+                job_val *= 1000
+    except Exception:
+        pass
+
+    if job_val and job_val > 0:
+        ceiling = job_val * 0.08
+        if structured_low > ceiling:
+            print(f"[fee-guardrail] Coherence clamp: low={structured_low} > 8% ceiling={ceiling:.0f} for {city}, {state}")
+            structured_low = _round_to_nearest(ceiling, 500)
+            structured_high = max(structured_high, structured_low)
+            guarded["_fee_coherence_clamped"] = True
 
     llm_high = extract_llm_fee_high_end(guarded.get("fee_range"))
     guarded["_fee_floor_components"] = {

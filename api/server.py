@@ -1559,6 +1559,18 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         # P0: Contact data integrity — provenance-gated contact sanitization
         # Added 2026-06-09. Suppresses wrong phones/addresses from untrusted sources.
         final_public = apply_contact_sanitization(final_public, city=city, state=state)
+        # ── Task 2: Apply serializer fixes before returning ──
+        final_public = _apply_serializer_fixes_to_dict(final_public, city=city, state=state)
+        # ── Task 2f: Runtime linter alert (log only, never strip) ──
+        from serializer_fixes import lint_output_as_dict
+        _jt = (job_type or "").lower()
+        is_commercial = any(t in _jt for t in _COMMERCIAL_SCOPE_TOKENS)
+        _linter_hits = lint_output_as_dict(final_public, is_commercial=is_commercial)
+        if _linter_hits:
+            final_public["_serializer_linter_hits"] = _linter_hits
+            for hit in _linter_hits:
+                sev = hit.get("severity", "flag")
+                print(f"[serializer-lint:{sev}] {hit.get('code')} — {hit.get('pattern','')}")
         return final_public
     return {}
 
@@ -1614,6 +1626,84 @@ def _normalize_permit_name(name: str) -> str:
     if any(p in n for p in ["building", "structural", "racking", "roof penetration", "roof penetrations"]):
         return "building"
     return n
+
+
+def _apply_serializer_fixes_to_dict(result: dict, *, city: str = "", state: str = "") -> dict:
+    """
+    Task 2: Apply all serializer/composer fixes to a public result dict.
+    Fixes:
+      2a. multiplier ×1 suppression (done in fee_realism_guardrail.py)
+      2b + 2c. list splitter / joiner punctuation seams
+      2d(i). trailing 'Permit' on permit_name
+      2d(ii). duplicate adjacent words (e.g. 'commercial restaurant commercial TI')
+      2e.  HTML entity leaks (double-escape fix)
+    """
+    if not isinstance(result, dict):
+        return result
+    from serializer_fixes import (
+        apply_all_serializer_fixes,
+        apply_all_html_escape_fixes,
+        strip_trailing_permit,
+    )
+
+    out = dict(result)
+
+    # 2d(i): strip trailing "Permit" from permit_name before template use
+    permit_name = out.get("permit_name")
+    if isinstance(permit_name, str):
+        out["permit_name"] = strip_trailing_permit(permit_name)
+
+    # Apply text-level fixes to string fields that feed customer surfaces
+    text_fields = (
+        "fee_range", "fee_estimate", "fee_text", "permit_summary", "job_summary",
+        "customer_next_step", "next_step", "disclaimer", "common_mistakes",
+        "watch_out", "inspection_booking", "timeline", "approval_timeline",
+    )
+    for key in text_fields:
+        v = out.get(key)
+        if isinstance(v, str):
+            out[key] = apply_all_serializer_fixes(v)
+        elif isinstance(v, list):
+            out[key] = [
+                apply_all_serializer_fixes(item) if isinstance(item, str) else item
+                for item in v
+            ]
+
+    # 2e: HTML entity fix — decode double-escaped, escape once for HTML context
+    # Apply to fields that render in HTML cards
+    html_text_fields = ("disclaimer", "fee_range", "permit_summary", "customer_next_step")
+    for key in html_text_fields:
+        v = out.get(key)
+        if isinstance(v, str):
+            out[key] = apply_all_html_escape_fixes(v)
+        elif isinstance(v, list):
+            out[key] = [
+                apply_all_html_escape_fixes(item) if isinstance(item, str) else item
+                for item in v
+            ]
+
+    # Also walk list-of-dict fields and fix any known text keys
+    list_dict_fields = ("pro_tips", "common_mistakes", "watch_out", "what_to_bring", "inspections")
+    for key in list_dict_fields:
+        items = out.get(key)
+        if not isinstance(items, list):
+            continue
+        fixed = []
+        for item in items:
+            if isinstance(item, str):
+                fixed.append(apply_all_serializer_fixes(item))
+            elif isinstance(item, dict):
+                d = dict(item)
+                for text_key in ("text", "title", "description", "summary", "note"):
+                    tv = d.get(text_key)
+                    if isinstance(tv, str):
+                        d[text_key] = apply_all_serializer_fixes(tv)
+                fixed.append(d)
+            else:
+                fixed.append(item)
+        out[key] = fixed
+
+    return out
 
 
 def enrich_result_response(result: dict, job_type: str, city: str, state: str) -> dict:
