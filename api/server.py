@@ -4229,7 +4229,12 @@ def get_share(slug: str) -> dict | None:
         return None
 
 def esc_html(value) -> str:
-    return str(value or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    s = str(value or "")
+    # Guard against double-escape: preserve already-escaped entities, then escape bare &
+    s = s.replace("&amp;", "\x00AMP\x00")
+    s = s.replace("&", "&amp;")
+    s = s.replace("\x00AMP\x00", "&amp;")
+    return s.replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
 def make_result_hash(result: dict) -> str:
@@ -4895,7 +4900,12 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
 def send_email_report(to_email: str, job: str, city: str, state: str, data: dict) -> bool:
     """Send a beautiful HTML permit research report via Resend."""
     def esc(s):
-        return str(s or "").replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace('"',"&quot;")
+        s = str(s or "")
+        # Guard against double-escape: preserve already-escaped entities, then escape bare &
+        s = s.replace("&amp;", "\x00AMP\x00")
+        s = s.replace("&", "&amp;")
+        s = s.replace("\x00AMP\x00", "&amp;")
+        return s.replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
     subject = f"Permit Research: {job} in {city}, {state}"
     pv = "YES" if (data.get("permit_required") is True or data.get("permit_verdict") == "YES" or data.get("permit_decision") == "REQUIRED") else "NO"
