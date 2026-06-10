@@ -546,8 +546,9 @@ def _build_fee_text(
 ) -> str:
     components = [
         f"~{_format_usd(base_floor)} base permit + plan review ({jurisdiction_label} {_scope_label(scope_key)} floor)",
-        f"× {jurisdiction_mult:.1f}× jurisdiction multiplier",
     ]
+    if jurisdiction_mult != 1.0:
+        components.append(f"× {jurisdiction_mult:.1f}× jurisdiction multiplier")
     for key, add_min, add_max in adders:
         label = key.replace("_", "-")
         midpoint = _round_to_nearest((add_min + add_max) / 2, 500)
