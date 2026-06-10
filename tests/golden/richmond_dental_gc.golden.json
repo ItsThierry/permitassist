@@ -1,0 +1,314 @@
+{
+  "job_summary": "Commercial tenant fit-out converting a 1,600 sq ft former retail space into a dental office in Richmond, VA. Scope triggers a building permit for interior demolition/new partitions and accessibility upgrades, plus separate trade permits for plumbing rough-in (four operatories with vacuum/compressed air and nitrous oxide), electrical panel upgrade and dedicated equipment circuits, and mechanical work for rooftop unit replacement with ductwork rework. Because this is a commercial change of use/tenant improvement, expect plan review and coordinated inspections across building, electrical, plumbing, and mechanical disciplines.",
+  "total_cost_estimate": "$190,000 - $235,000",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Commercial Building / Tenant Improvement Permit",
+      "kind": "Commercial Building / Tenant Improvement",
+      "required": true
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration",
+      "included_because": "Commercial TI/change-of-use scopes must lead with a building/interior-alteration permit; trade permits are companion permits unless the job is only a trade changeout.",
+      "scope_trigger": "detected primary scope commercial_medical_clinic_ti"
+    },
+    {
+      "permit_type": "Mechanical Permit — Commercial Tenant Improvement",
+      "included_because": "Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope is stated and commonly requires mechanical review.",
+      "scope_trigger": "commercial TI mechanical companion family"
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Tenant Improvement",
+      "included_because": "Commercial lighting, panels, branch circuits, equipment, emergency lighting, controls, or low-voltage/electrical scope is stated and commonly requires electrical review.",
+      "scope_trigger": "commercial TI electrical companion family"
+    },
+    {
+      "permit_type": "Plumbing Permit — Commercial Tenant Improvement",
+      "included_because": "Commercial clinic fixtures, hand sinks, medical/dental equipment connections, restrooms, and DWV changes commonly require plumbing review when stated in the scope.",
+      "scope_trigger": "commercial TI plumbing companion family"
+    }
+  ],
+  "applying_office": "City of Richmond Permits & Inspections",
+  "apply_url": "https://www.rva.gov/planning-development-review/online-permit-portal",
+  "apply_phone": "",
+  "apply_address": "",
+  "fee_range": "Fee Estimate: Approx. $63 base plus valuation-based fees per trade in Richmond; for a commercial fit-out around $190,000, expect roughly $1,200 - $2,500 total in city permit fees across building, plumbing, electrical, and mechanical permits, depending on the final valuation breakdown and plan-review charges. — verify in confirm with City of Richmond Permits & Inspections before quoting",
+  "approval_timeline": {
+    "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue.",
+    "complex": "Plan review typically 10-20 business days for a commercial tenant improvement with change of use, ADA restroom work, RTU replacement, and multiple trade permits; longer if corrections are issued."
+  },
+  "inspections": [
+    {
+      "stage": "Building Rough-In / Framing",
+      "description": "Inspector checks new partition layout, fireblocking/draftstopping where applicable, rated wall continuity if any tenant separation or corridor rating is involved, door swings/clearances, ADA restroom layout, and that no structural members were altered without approval.",
+      "timing": "After demo and framing are complete, before insulation, drywall, or ceiling closure"
+    },
+    {
+      "stage": "Plumbing Rough-In",
+      "description": "Inspector verifies operatory vacuum and compressed-air piping routing/support, nitrous oxide piping installation and labeling, pipe material compatibility, pressure test results, restroom rough-in locations, trap/venting, and access to shutoffs.",
+      "timing": "Before walls are closed and before fixtures are set"
+    },
+    {
+      "stage": "Electrical Rough-In / Service",
+      "description": "Inspector checks panel upgrade installation, conductor sizing, grounding and bonding, dedicated circuits for dental chairs and X-ray equipment, working clearances at the panel, breaker labeling, and any required AFCI/GFCI protection where applicable.",
+      "timing": "Before insulation and drywall; service work may need utility coordination before final inspection"
+    },
+    {
+      "stage": "Mechanical Rough-In / Equipment Set",
+      "description": "Inspector verifies RTU set on approved curb/support, equipment clearances, ductwork sizing and sealing, condensate drainage, outside air/return air arrangement, thermostat/control wiring, and that the larger unit matches approved plans and load calculations.",
+      "timing": "After RTU and duct modifications are installed, before ceiling closure and startup"
+    },
+    {
+      "stage": "Final Building / Trade Finals",
+      "description": "Inspector confirms all finishes are complete, ADA restroom is usable, all fixtures and devices are installed, equipment is operational, labels and access panels are in place, and all trade finals pass before occupancy.",
+      "timing": "After all work is complete and equipment is energized/tested"
+    },
+    "certificate-of-occupancy conditions.",
+    "fixture counts.",
+    "Mechanical balance / infection-control verification — confirm ventilation, exhaust, pressure relationships, filtration",
+    "Medical gas pressure test / verifier final if oxygen, nitrous, vacuum, alarms, zone valves, or gas outlets are installed or modified.",
+    "Fire alarm / sprinkler / life-safety final — verify notification appliance coverage, sprinkler head layout, emergency lighting, exit signs, and any oxygen/medical-gas hazard coordination.",
+    "Radiology/x-ray shielding or state radiation registration verification if radiation-producing equipment is installed."
+  ],
+  "inspection_booking": "Schedule inspections through the City of Richmond online permit portal: For commercial tenant improvements, book each trade inspection separately under the permit number. Plan on at least 24 hours advance notice for standard inspections; if the portal shows no next-day slot, call Permits & Inspections before covering work. Keep permit numbers, approved plans, and inspection cards on site for every visit.",
+  "what_to_bring": [
+    "Completed commercial tenant fit-out permit application and project valuation",
+    "Signed tenant/owner authorization letter for the contractor to file permits",
+    "Stamped plan set showing demolition, new partitions, ADA restroom layout, reflected ceiling plan, and life-safety/egress if applicable",
+    "Mechanical plans and equipment cut sheets for the larger RTU, ductwork changes, and any load calculations",
+    "Electrical one-line/panel schedule and equipment load data for dental chairs and X-ray circuits",
+    "Plumbing riser/isometric or rough-in plan for operatory vacuum, compressed air, nitrous oxide, and restroom fixtures",
+    "Confirm no surgery/ASC program, anesthesia/sedation, PACU/recovery bays, inpatient/overnight care, or patient self-preservation issue is in scope.",
+    "Show occupancy basis, occupant load, suite separation, egress, accessibility, and certificate-of-occupancy path on the permit set.",
+    "If sedation/procedure scope appears later, reclassify for possible I-2/IBC 422 review before pricing."
+  ],
+  "common_mistakes": [
+    "Submitting only trade permits and skipping the building permit for the change of use and new partitions — Richmond will hold the job up in plan review",
+    "Trying to install the larger RTU without matching duct sizing and load calculations to the approved plans",
+    "Under-sizing the electrical service or panel after adding dedicated dental equipment circuits, which can force a redesign mid-review",
+    "Treating nitrous oxide piping like a simple fixture tie-in instead of a commercial medical-gas-related plumbing scope that needs clear plan documentation",
+    "Starting demo before the permit set is approved and posted — inspectors can issue a stop-work order",
+    "Submitting permit applications without verifying current Virginia contractor license status and trade classification — an expired or mismatched license will stall issuance",
+    "Leaving medical gas, nitrous/oxygen, alarms, zone valves, and verifier paperwork out of the permit package.",
+    "Using ordinary office HVAC assumptions instead of confirming ventilation, exhaust, pressure relationships, filtration, and infection-control needs for procedure/sterilization/lab rooms.",
+    "check-in counters."
+  ],
+  "pro_tips": [
+    "Submit the building, electrical, plumbing, and mechanical permits together with one coordinated plan set so plan review comments come back in one cycle instead of four separate ones.",
+    "Have the RTU submittal, duct layout, and electrical load calc ready before filing — commercial HVAC plan review in Richmond goes faster when the equipment schedule matches the drawings exactly.",
+    "For dental offices, include a clear equipment schedule for chairs, compressors, vacuum pumps, and X-ray units; that prevents electrical corrections on dedicated circuits and panel sizing.",
+    "Check your Virginia contractor license classification and expiration date before opening the portal — license issues are a common reason commercial applications get rejected.",
+    "If the project touches any fire-rated corridor or tenant separation wall, get that detail on the plans up front; otherwise the building reviewer will kick it back for life-safety clarification.",
+    "health-care licensing paths before pricing.",
+    "Coordinate architect/MEP, medical-gas verifier, equipment vendor, and health/licensing reviewer before submitting so room names, fixture schedules, ventilation, and equipment utility loads match.",
+    "verify B vs I-2/ambulatory-care status with the building department if any procedure, sedation, recovery, or self-preservation issue exists."
+  ],
+  "companion_permits": [
+    {
+      "permit_type": "Health-care licensing / local health review",
+      "reason": "Clinic opening may require licensing or health-care approval separate from building permit final.",
+      "certainty": "likely"
+    },
+    {
+      "permit_type": "Medical gas / x-ray specialty review if included",
+      "reason": "Medical gas, nitrous/oxygen/vacuum, or radiology equipment can require specialty documentation and verification.",
+      "certainty": "conditional"
+    },
+    {
+      "permit_type": "Accessibility / ADA path-of-travel verification",
+      "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+      "certainty": "likely"
+    }
+  ],
+  "zoning_hoa_flag": "HOA is not typically the issue for a commercial tenant fit-out, but zoning and use approval can be. Verify that the retail space is allowed to convert to a dental office at this address, and confirm any downtown, historic district, or façade review requirements if exterior signage, rooftop equipment visibility, or exterior penetrations are involved.",
+  "sources": [
+    {
+      "url": "https://www.rva.gov/planning-development-review/online-permit-portal",
+      "title": "Official Richmond source",
+      "publisher": "Official Richmond source",
+      "source_type": "official_local",
+      "jurisdiction": "Richmond, VA"
+    },
+    {
+      "url": "https://www.rva.gov/permits-inspections",
+      "title": "Official Richmond source",
+      "publisher": "Official Richmond source",
+      "source_type": "official_local",
+      "jurisdiction": "Richmond, VA"
+    }
+  ],
+  "confidence": "high",
+  "disclaimer": "Data sourced Jun 10, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "permit_verdict": "YES",
+  "confidence_reason": "City-specific match supported by live web research",
+  "checklist": [
+    "Verify your contractor license is current and valid in VA",
+    "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "certificate-of-occupancy conditions before submittal.",
+    "dental/medical equipment utility connections.",
+    "Medical gas / nitrous / oxygen: submit NFPA 99-style outlet schedule, alarms, zone valves, source equipment, pressure test, and verifier documentation when gas systems are in scope.",
+    "construction infection-control notes where procedure/sterilization/lab spaces exist.",
+    "20% disproportionality cap documentation.",
+    "X-ray / radiology: obtain shielding design or state radiation-control registration where equipment is installed; coordinate lead-lined assemblies, warning lights/signage, and electrical requirements.",
+    "Fire/life-safety: coordinate fire alarm notification appliances, sprinkler head layout, emergency lighting/exit signs, suite separation, and storage/oxygen hazards with Fire Prevention.",
+    "Confirm the required license is active and matches the application: Virginia-licensed contractor pulls the permits on behalf of the owner. For this scope, the general contractor can pull the building permit if properly licensed for commercial construction, and the plumbing, electrical, and mechanical permits must be pulled by the appropriately licensed Virginia trade contractors or their qualifying license holders. The contractor license number must appear on each application.",
+    "Bring 2 copies of all documents to City of Richmond Permits & Inspections"
+  ],
+  "fee_calculator": {
+    "confidence": "none",
+    "note": "Provide job_value to calculate an exact fee where formulas are available."
+  },
+  "watch_out": [
+    "Health-care licensing or state/local health review may control opening even after the building permit is final; verify this path before promising an opening date.",
+    "Medical gas and x-ray shielding often need specialty documentation and third-party verification; missing it can block final inspection or equipment operation."
+  ],
+  "remaining_lookups": 3,
+  "claim_citations": [
+    {
+      "id": "C1",
+      "field": "permit_type",
+      "claim": "primary permit category",
+      "value": "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration",
+      "source_url": "https://www.rva.gov/planning-development-review/online-permit-portal",
+      "source_title": "Source",
+      "checked_at": "2026-06-10",
+      "confidence": "source attached; quoted snippet unavailable"
+    },
+    {
+      "id": "C2",
+      "field": "apply_url",
+      "claim": "Where to start the application",
+      "value": "https://www.rva.gov/planning-development-review/online-permit-portal",
+      "source_url": "https://www.rva.gov/planning-development-review/online-permit-portal",
+      "source_title": "Source",
+      "checked_at": "2026-06-10",
+      "confidence": "source attached; quoted snippet unavailable"
+    },
+    {
+      "id": "C3",
+      "field": "fee_range",
+      "claim": "Estimated fee range",
+      "value": "Fee Estimate: Approx. $63 base plus valuation-based fees per trade in Richmond; for a commercial fit-out around $190,000, expect roughly $1,200 - $2,500 total in city permit fees across building, plumbing, electrical, and mechanical permits, depending on the final valuation breakdown and plan-review charges. — verify in confirm with City of Richmond Permits & Inspections before quoting",
+      "source_url": "https://www.rva.gov/planning-development-review/online-permit-portal",
+      "source_title": "Source",
+      "checked_at": "2026-06-10",
+      "confidence": "source attached; quoted snippet unavailable"
+    },
+    {
+      "id": "C4",
+      "field": "approval_timeline",
+      "claim": "Estimated approval timeline",
+      "value": "{'simple': 'Over-the-counter intake is possible for permit submission, but this scope is not a simple OTC trade job; expect same-day intake only, not same-day issuance.', 'complex': 'Plan review typically 10-20 business days for a commercial tenant improvement with change of use, ADA restroom work, RTU replacement, and multiple trade permits; longer if corrections are issued.'}",
+      "source_url": "https://www.rva.gov/planning-development-review/online-permit-portal",
+      "source_title": "Source",
+      "checked_at": "2026-06-10",
+      "confidence": "source attached; quoted snippet unavailable"
+    },
+    {
+      "id": "C5",
+      "field": "inspections",
+      "claim": "inspection requirements",
+      "value": "[{'stage': 'Building Rough-In / Framing', 'description': 'Inspector checks new partition layout, fireblocking/draftstopping where applicable, rated wall continuity if any tenant separation or corridor rating is involved, door swings/clearances, ADA restroom layout, and that no structural members were altered without approval.', 'timing': 'After demo and framing are complete, before insulation, drywall, or ceiling closure'}, {'stage': 'Plumbing Rough-In', 'description': 'Inspector verifies operatory vacuum and compressed-air piping routing/support, nitrous oxide piping installation and labeling, pipe material compatibility, pressure test results, restroom rough-in locations, trap/venting, and access to shutoffs.', 'timing': 'Before walls are closed and before fixtures are set'}, {'stage': 'Electrical Rough-In / Service', 'description': 'Inspector checks panel upgrade installation, conductor sizing, grounding and bonding, dedicated circuits for dental chairs and X-ray equipment, working clearances at the panel, breaker labeling, and any required AFCI/GFCI protection where applicable.', 'timing': 'Before insulation and drywall; service work may need utility coordination before final inspection'}, {'stage': 'Mechanical Rough-In / Equipment Set', 'description': 'Inspector verifies RTU set on approved curb/support, equipment clearances, ductwork sizing and sealing, condensate drainage, outside air/return air arrangement, thermostat/control wiring, and that the larger unit matches approved plans and load calculations.', 'timing': 'After RTU and duct modifications are installed, before ceiling closure and startup'}, {'stage': 'Final Building / Trade Finals', 'description': 'Inspector confirms all finishes are complete, ADA restroom is usable, all fixtures and devices are installed, equipment is operational, labels and access panels are in place, and all trade finals pass before occupancy.', 'timing': 'After all work is complete and equipment is energized/tested'}, 'certificate-of-occupancy conditions.', 'fixture counts.', 'Mechanical balance / infection-control verification — confirm ventilation, exhaust, pressure relationships, filtration', 'Medical gas pressure test / verifier final if oxygen, nitrous, vacuum, alarms, zone valves, or gas outlets are installed or modified.', 'Fire alarm / sprinkler / life-safety final — verify notification appliance coverage, sprinkler head layout, emergency lighting, exit signs, and any oxygen/medical-gas hazard coordination.', 'Radiology/x-ray shielding or state radiation registration verification if radiation-producing equipment is installed.']",
+      "source_url": "https://www.rva.gov/planning-development-review/online-permit-portal",
+      "source_title": "Source",
+      "checked_at": "2026-06-10",
+      "confidence": "source attached; quoted snippet unavailable"
+    }
+  ],
+  "apply_path": {
+    "support_level": "needs verification",
+    "platform": "city portal / building department website",
+    "permit_category": "Commercial Building / Tenant Improvement",
+    "permit_type": "Building Permit — Tenant Improvement / Medical Clinic Interior Alteration",
+    "portal_selection_path": [
+      "Open the city portal / building department website start URL",
+      "Create or sign into the contractor/applicant account if required",
+      "Look for the closest permit category to: Building Permit — Tenant Improvement / Medical Clinic Interior Alteration"
+    ],
+    "documents_to_prepare": [
+      "scope of work",
+      "plans/drawings if required",
+      "contractor license",
+      "valuation",
+      "owner authorization"
+    ],
+    "steps": [
+      "Open the city portal / building department website start URL",
+      "Create or sign into the contractor/applicant account if required",
+      "Look for the closest permit category to: Building Permit — Tenant Improvement / Medical Clinic Interior Alteration",
+      "For commercial TI, check whether separate building, MEP, fire/life-safety, accessibility, or change-of-occupancy reviews are required",
+      "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission",
+      "Stop before final submit, payment, signature, or legal attestation until the building department details are verified"
+    ],
+    "stop_before": "final submit, payment, signature, or legal attestation",
+    "verification_note": "PermitAssist guides the application pathway; use the structured permit kind and local filing path before filing",
+    "login_required": null
+  },
+  "warnings": [
+    "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+    "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+  ],
+  "source_urls": [
+    "https://www.rva.gov/planning-development-review/online-permit-portal",
+    "https://www.rva.gov/permits-inspections"
+  ],
+  "permit_required": true,
+  "permit_decision": "REQUIRED",
+  "permit_kind": "Commercial Building / Tenant Improvement",
+  "permit_name": "Commercial Building / Tenant Improvement Permit",
+  "source_support": {
+    "confidence_tier": "AHJ_DIRECT",
+    "has_official_source": true,
+    "source_count": 2,
+    "has_live_source": true,
+    "degraded_sources": false,
+    "has_source_backed_evidence": true,
+    "source_confidence": "AHJ_DIRECT",
+    "local_decision_evidence_urls": [
+      "https://www.rva.gov/planning-development-review/online-permit-portal",
+      "https://www.rva.gov/permits-inspections"
+    ],
+    "display_source_count": 2,
+    "local_form_known": true,
+    "apply_url_known": true,
+    "decision_mutation_allowed": false
+  },
+  "source_confidence": "AHJ_DIRECT",
+  "degraded_sources": false,
+  "customer_next_step": "File under Commercial Building / Tenant Improvement with City of Richmond Permits & Inspections; confirm the exact occupancy classification and required plan sets before starting work.",
+  "customer_headline": "Permit required: Commercial Building / Tenant Improvement.",
+  "local_form_known": true,
+  "apply_url_known": true,
+  "customer_result_summary": {
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Commercial Building / Tenant Improvement Permit",
+    "ahj_department": "City of Richmond Permits & Inspections",
+    "next_step": "File under Commercial Building / Tenant Improvement with City of Richmond Permits & Inspections; confirm the exact occupancy classification and required plan sets before starting work.",
+    "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue.",
+    "fee_cost_caveat": "Fee Estimate: Approx. $63 base plus valuation-based fees per trade in Richmond; for a commercial fit-out around $190,000, expect roughly $1,200 - $2,500 total in city permit fees across building, plumbing, electrical, and mechanical permits, depending on the final valuation breakdown and plan-review charges. — verify in confirm with City of Richmond Permits & Inspections before quoting",
+    "freshness_label": "Checked 2026-06-10",
+    "source_cue": "Official source: Official Richmond source",
+    "jurisdiction": "Richmond, VA"
+  },
+  "customer_first_screen_summary": {
+    "decision": "REQUIRED",
+    "kind_category": "Commercial Building / Tenant Improvement",
+    "next_action": "File under Commercial Building / Tenant Improvement with City of Richmond Permits & Inspections; confirm the exact occupancy classification and required plan sets before starting work.",
+    "ahj_department": "City of Richmond Permits & Inspections",
+    "source_cue": "Official source: Official Richmond source"
+  },
+  "building_dept_phone": "",
+  "office_phone": "",
+  "phone": "",
+  "_safe_phone_note": "Call City of Richmond Permits & Inspections directly — local number available via official city website or 311.",
+  "building_dept_address": "",
+  "office_address": "",
+  "_safe_address_note": "Search: City of Richmond Permits & Inspections address",
+  "building_dept_name": ""
+}

@@ -1,0 +1,97 @@
+## job_summary
+Commercial tenant improvement in Savannah, GA converting a former 2,200 sq ft retail space into a full-service restaurant. Scope triggers a Building Permit for the interior alteration/change of use, plus trade permits for plumbing, mechanical, electrical, and Because this is a commercial renovation, Savannah also requires the commercial renovation application package and Water & Sewer Planning/Engineering sign-off before Building Permit issuance.
+
+## customer_headline
+Permit required: Building.
+
+## customer_next_step
+Submit a Building Permit / commercial tenant-improvement building-permit application through Savannah eTRAC / Development Services before starting the work.
+
+## fee_range
+Fee Estimate: Fee planning estimate (NOT a jurisdiction-specific building department fee): $17,500-$29,000+ (national-scope benchmark based on job type, not Savannah, GA official fee schedule). Components: ~$12,000 base permit + plan review (Savannah, GA commercial restaurant commercial TI complexity) × 1. Call Savannah, GA for the exact fee before bidding. — verify in before quoting
+
+## disclaimer
+Data sourced Jun 10, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.
+
+## inspection_booking
+Schedule inspections through Savannah Development Services / eTRAC using the city permit portal. Phone: (912) 651-6790. For commercial work, book inspections with at least 24 hours advance notice; if you need after-hours inspection, Savannah lists a $260 fee for 4 hours plus $65/hour. Have the permit number, address, contractor name, and requested inspection type ready when scheduling.
+
+## zoning_hoa_flag
+Historic District review may apply in Savannah depending on the property location. For a restaurant conversion, also verify zoning use approval, parking/loading requirements, grease interceptor sizing, and any downtown/historic overlay restrictions before finalizing the tenant improvement plans.
+
+## approval_timeline
+
+  simple: Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue.
+
+  complex: 1-3 weeks for commercial plan review, longer if Water & Sewer sign-off, Fire Marshal review, or historic district review is required.
+
+## confidence_reason
+Official building department official-source permit decision for this exact jurisdiction and project type.
+
+## data_source
+city_database
+
+## Permits Required
+
+  - Commercial Building / Tenant Improvement Permit (kind=Commercial Building / Tenant Improvement, required=True)
+
+## Companion Permits
+
+  - Health Department / Food Establishment Review: Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.
+
+  - Grease Interceptor / FOG Approval: Commercial kitchen plumbing often requires grease interceptor/FOG approval.
+
+  - Accessibility / ADA path-of-travel verification: Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.
+
+## pro_tips
+
+  - Get the Water & Sewer Planning and Engineering sign-off first; that is the Savannah-specific gate that most often delays restaurant TI permits.
+
+  - Bundle the building, plumbing, mechanical, electrical, and fire protection submittals with one coordinated plan set so plan review does not bounce the job between departments.
+
+  - Use a realistic valuation on the permit application — Savannah's building fee is $8 per $1,000, so a clean, accurate valuation avoids correction cycles.
+
+  - If the project is in or near the Historic District, check for Historic District Board review before you submit; that can add time even for interior renovation work.
+
+  - Verify contractor registration and license expiration dates before opening the portal — a lapsed credential is one of the fastest ways to get a commercial permit rejected.
+
+## common_mistakes
+
+  - Submitting the commercial building permit application without the Water & Sewer Planning and Engineering signed approval form — Savannah will not accept the renovation application without it.
+
+  - Trying to pull the whole restaurant build-out under only a building permit — the plumbing, mechanical, electrical, and fire protection scopes still need their own trade permits.
+
+  - Understating project valuation to reduce fees — Savannah uses valuation-based fees and can reprice the permit if the declared value is unrealistic.
+
+  - Submitting permit applications without verifying current contractor license status — an expired or lapsed license will block the application and delay review.
+
+## Inspections
+
+  [Building Rough-In / Framing Inspection] Inspector checks demo limits, new partition layout, fire-resistance ratings where required, door swings/egress, accessibility clearances, and that no structural members were altered without approval.
+
+     Timing: After framing and layout are complete, before drywall or ceiling closure
+
+  [Plumbing Rough-In] Inspector verifies grease interceptor location and sizing, floor drain placement and slope, restroom fixture rough-ins, venting, trap arms, cleanouts, and that the three-compartment sink is properly drained and vented.
+
+     Timing: Before slab patching, insulation, or wall/ceiling closure
+
+  [Electrical Rough-In] Inspector verifies panel upgrade installation, feeder sizing, breaker labeling, dedicated cooking equipment circuits, GFCI/AFCI where applicable, equipment disconnects, grounding/bonding, and working clearances at the panel.
+
+     Timing: Before walls/ceilings are closed
+
+## Contact
+Savannah eTRAC / Development Services
+
+## Sources
+
+  - : https://www.savannahga.gov/892/Building-Permits
+
+  - : https://www.savannahga.gov/1820/Fee-Information
+
+  - : https://www.savannahga.gov/1644/How-to-Apply-for-Commercial-Building-Per
+
+  - : https://www.savannahga.gov/891/Site-Development-Permits
+
+  - : https://www.savannahga.gov/DocumentCenter/View/89/Grease-Interceptor-Standard?bidId=
+
+  - : https://www.savannahga.gov/DocumentCenter/View/34834

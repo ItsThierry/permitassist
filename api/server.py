@@ -2809,6 +2809,10 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     if not result.get('apply_phone'):
         result['apply_phone'] = result.get('apply_google_maps', '')
 
+    # P0: Contact sanitization must happen BEFORE enrich_result_response
+    # so that inspection_booking and other derived fields use corrected phone/address.
+    result = apply_contact_sanitization(result, city=city, state=state)
+
     result = enrich_result_response(result, job_type, city, state)
     result = apply_permitiq_quality_gate(result, job_type, city, state)
     result["_scope_contract"] = scope_contract
@@ -2928,10 +2932,10 @@ def render_white_label_report_html(data: dict) -> str:
     decision_contract = result.get("permit_decision_contract") if isinstance(result.get("permit_decision_contract"), dict) else {}
     decision_headline = str(result.get("customer_headline") or decision_contract.get("customer_headline") or "Permit required: Building Permit.")
     decision_kind = str(result.get("permit_kind") or decision_contract.get("permit_kind") or "Other")
-    customer_next_step = str(result.get("customer_next_step") or decision_contract.get("customer_next_step") or "Use the structured permit kind and local filing path before relying on the answer.")
+    customer_next_step = str(result.get("customer_next_step") or decision_contract.get("customer_next_step") or "Confirm requirements with the building department before filing.")
     apply_note = str(
         decision_contract.get("exact_apply_url_customer_note")
-        or "Use the listed department/portal category and match the filing to the structured permit kind."
+        or "Use the listed department/portal category and confirm the permit pathway before filing."
     )
     permits = result.get("permits_required") or []
     permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or f"<li>{html.escape(decision_kind)}</li>"
@@ -2942,9 +2946,9 @@ def render_white_label_report_html(data: dict) -> str:
         text = re.sub(r"\blikely\s+inspections\b", "Inspection requirements", text, flags=re.I)
         text = re.sub(r"\blikely\s+permits\b", "Permit decision", text, flags=re.I)
         text = re.sub(r"\bneeds_verification\b", "source attached; quoted snippet unavailable", text, flags=re.I)
-        text = re.sub(r"\bverify\s+exact\s+AHJ\s+permit\s+name\s+before\s+quoting\b", "Use the structured permit kind; exact local form title is a field-level status", text, flags=re.I)
-        text = re.sub(r"\bverify\s+exact\s+AHJ\s+naming\s+before\s+quoting\b", "Use the structured permit kind; exact local form title is a field-level status", text, flags=re.I)
-        text = re.sub(r"\bverify\s+exact[^.;]{0,120}\s+with\s+(?:the\s+)?AHJ\b", "Use the structured permit kind and local filing path", text, flags=re.I)
+        text = re.sub(r"\bverify\s+exact\s+AHJ\s+permit\s+name\s+before\s+quoting\b", "confirm the exact permit name and form title with the building department before filing", text, flags=re.I)
+        text = re.sub(r"\bverify\s+exact\s+AHJ\s+naming\s+before\s+quoting\b", "confirm the exact permit name and form title with the building department before filing", text, flags=re.I)
+        text = re.sub(r"\bverify\s+exact[^.;]{0,120}\s+with\s+(?:the\s+)?AHJ\b", "confirm the exact permit requirements with the building department", text, flags=re.I)
         text = re.sub(r"\bverify\s+with\s+(?:the\s+)?AHJ\b", "Use the listed building department source", text, flags=re.I)
         text = re.sub(r"\bAHJ\b", "building department", text, flags=re.I)
         return re.sub(r"\s{2,}", " ", text).strip()

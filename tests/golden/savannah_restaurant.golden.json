@@ -1,0 +1,333 @@
+{
+  "job_summary": "Commercial tenant improvement in Savannah, GA converting a former 2,200 sq ft retail space into a full-service restaurant. Scope triggers a Building Permit for the interior alteration/change of use, plus trade permits for plumbing, mechanical, electrical, and Because this is a commercial renovation, Savannah also requires the commercial renovation application package and Water & Sewer Planning/Engineering sign-off before Building Permit issuance.",
+  "total_cost_estimate": "$180,000 - $450,000",
+  "data_source": "city_database",
+  "permits_required": [
+    {
+      "permit_type": "Commercial Building / Tenant Improvement Permit",
+      "kind": "Commercial Building / Tenant Improvement",
+      "required": true
+    }
+  ],
+  "permits_required_logic": [
+    {
+      "permit_type": "Building Permit — Tenant Improvement / Restaurant Interior Alteration",
+      "included_because": "Commercial TI/change-of-use scopes must lead with a building/interior-alteration permit; trade permits are companion permits unless the job is only a trade changeout.",
+      "scope_trigger": "detected primary scope commercial_restaurant"
+    },
+    {
+      "permit_type": "Mechanical Permit — Commercial Tenant Improvement",
+      "included_because": "Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope is stated and commonly requires mechanical review.",
+      "scope_trigger": "commercial TI mechanical companion family"
+    },
+    {
+      "permit_type": "Electrical Permit — Commercial Tenant Improvement",
+      "included_because": "Commercial lighting, panels, branch circuits, equipment, emergency lighting, controls, or low-voltage/electrical scope is stated and commonly requires electrical review.",
+      "scope_trigger": "commercial TI electrical companion family"
+    },
+    {
+      "permit_type": "Plumbing Permit — Commercial Tenant Improvement",
+      "included_because": "Commercial kitchen fixtures, grease-interceptor/FOG work, restrooms, sinks, and DWV changes commonly require plumbing review.",
+      "scope_trigger": "commercial TI plumbing companion family"
+    }
+  ],
+  "applying_office": "Savannah eTRAC / Development Services",
+  "apply_url": "https://www.savannahga.gov/1644/How-to-Apply-for-Commercial-Building-Per",
+  "apply_phone": "",
+  "apply_address": "",
+  "fee_range": "Fee Estimate: Fee planning estimate (NOT a jurisdiction-specific building department fee): $17,500-$29,000+ (national-scope benchmark based on job type, not Savannah, GA official fee schedule). Components: ~$12,000 base permit + plan review (Savannah, GA commercial restaurant commercial TI complexity) × 1. Call Savannah, GA for the exact fee before bidding. — verify in before quoting",
+  "approval_timeline": {
+    "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue.",
+    "complex": "1-3 weeks for commercial plan review, longer if Water & Sewer sign-off, Fire Marshal review, or historic district review is required."
+  },
+  "inspections": [
+    {
+      "stage": "Building Rough-In / Framing Inspection",
+      "description": "Inspector checks demo limits, new partition layout, fire-resistance ratings where required, door swings/egress, accessibility clearances, and that no structural members were altered without approval.",
+      "timing": "After framing and layout are complete, before drywall or ceiling closure"
+    },
+    {
+      "stage": "Plumbing Rough-In",
+      "description": "Inspector verifies grease interceptor location and sizing, floor drain placement and slope, restroom fixture rough-ins, venting, trap arms, cleanouts, and that the three-compartment sink is properly drained and vented.",
+      "timing": "Before slab patching, insulation, or wall/ceiling closure"
+    },
+    {
+      "stage": "Electrical Rough-In",
+      "description": "Inspector verifies panel upgrade installation, feeder sizing, breaker labeling, dedicated cooking equipment circuits, GFCI/AFCI where applicable, equipment disconnects, grounding/bonding, and working clearances at the panel.",
+      "timing": "Before walls/ceilings are closed"
+    }
+  ],
+  "inspection_booking": "Schedule inspections through Savannah Development Services / eTRAC using the city permit portal. Phone: (912) 651-6790. For commercial work, book inspections with at least 24 hours advance notice; if you need after-hours inspection, Savannah lists a $260 fee for 4 hours plus $65/hour. Have the permit number, address, contractor name, and requested inspection type ready when scheduling.",
+  "what_to_bring": [
+    "Completed commercial renovation application package for the Building Permit",
+    "Signed Water & Sewer Planning and Engineering approval form for the commercial renovation application",
+    "Scaled floor plan showing demo, new partitions, kitchen layout, restroom layout, and equipment locations",
+    "cooking equipment",
+    "Contractor license numbers and business information for GC, plumbing, mechanical, electrical, and fire protection trades",
+    "Project valuation breakdown for building, plumbing, mechanical, electrical, and fire protection scope"
+  ],
+  "common_mistakes": [
+    "Submitting the commercial building permit application without the Water & Sewer Planning and Engineering signed approval form — Savannah will not accept the renovation application without it.",
+    "Trying to pull the whole restaurant build-out under only a building permit — the plumbing, mechanical, electrical, and fire protection scopes still need their own trade permits.",
+    "Understating project valuation to reduce fees — Savannah uses valuation-based fees and can reprice the permit if the declared value is unrealistic.",
+    "Submitting permit applications without verifying current contractor license status — an expired or lapsed license will block the application and delay review."
+  ],
+  "pro_tips": [
+    "Get the Water & Sewer Planning and Engineering sign-off first; that is the Savannah-specific gate that most often delays restaurant TI permits.",
+    "Bundle the building, plumbing, mechanical, electrical, and fire protection submittals with one coordinated plan set so plan review does not bounce the job between departments.",
+    "Use a realistic valuation on the permit application — Savannah's building fee is $8 per $1,000, so a clean, accurate valuation avoids correction cycles.",
+    "If the project is in or near the Historic District, check for Historic District Board review before you submit; that can add time even for interior renovation work.",
+    "Verify contractor registration and license expiration dates before opening the portal — a lapsed credential is one of the fastest ways to get a commercial permit rejected."
+  ],
+  "companion_permits": [
+    {
+      "permit_type": "Health Department / Food Establishment Review",
+      "reason": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.",
+      "certainty": "likely"
+    },
+    {
+      "permit_type": "Grease Interceptor / FOG Approval",
+      "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.",
+      "certainty": "likely"
+    },
+    {
+      "permit_type": "Accessibility / ADA path-of-travel verification",
+      "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+      "certainty": "likely"
+    }
+  ],
+  "zoning_hoa_flag": "Historic District review may apply in Savannah depending on the property location. For a restaurant conversion, also verify zoning use approval, parking/loading requirements, grease interceptor sizing, and any downtown/historic overlay restrictions before finalizing the tenant improvement plans.",
+  "sources": [
+    {
+      "url": "https://www.savannahga.gov/892/Building-Permits",
+      "title": "Building Permits | Savannah, GA - Official Website",
+      "publisher": "Official Savannah source",
+      "source_type": "official_local",
+      "jurisdiction": "Savannah, GA"
+    },
+    {
+      "url": "https://www.savannahga.gov/1820/Fee-Information",
+      "title": "Official Savannah source",
+      "publisher": "Official Savannah source",
+      "source_type": "official_local",
+      "jurisdiction": "Savannah, GA"
+    },
+    {
+      "url": "https://www.savannahga.gov/1644/How-to-Apply-for-Commercial-Building-Per",
+      "title": "Official Savannah source",
+      "publisher": "Official Savannah source",
+      "source_type": "official_local",
+      "jurisdiction": "Savannah, GA"
+    },
+    {
+      "url": "https://www.savannahga.gov/891/Site-Development-Permits",
+      "title": "Official Savannah source",
+      "publisher": "Official Savannah source",
+      "source_type": "official_local",
+      "jurisdiction": "Savannah, GA"
+    },
+    {
+      "url": "https://www.savannahga.gov/DocumentCenter/View/89/Grease-Interceptor-Standard?bidId=",
+      "title": "Official Savannah source",
+      "publisher": "Official Savannah source",
+      "source_type": "official_local",
+      "jurisdiction": "Savannah, GA"
+    },
+    {
+      "url": "https://www.savannahga.gov/DocumentCenter/View/34834",
+      "title": "Official Savannah source",
+      "publisher": "Official Savannah source",
+      "source_type": "official_local",
+      "jurisdiction": "Savannah, GA"
+    }
+  ],
+  "confidence": "high",
+  "disclaimer": "Data sourced Jun 10, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+  "permit_verdict": "YES",
+  "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+  "checklist": [
+    "Verify your contractor license is current and valid in GA",
+    "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+    "Have the property address and legal parcel number ready",
+    "Know the project value/cost — required on most permit applications",
+    "building department-approved capture velocity per IMC 507",
+    "7 — use the listed building department source during witness test",
+    "Grease interceptor sized per IPC 1003.3.4 by drainage fixture units (4-comp + mop typically 50+ GPM hydromechanical OR 750–1,500 gal exterior gravity); located ≤25 ft developed length from fixtures",
+    "3.4; tempered if > 35°F differential to prevent backdraft",
+    "ADA fixture counts per IBC Table 2902.1 + 60 in turning radius + lavatory pipe wrap insulation per ADA §606.5 + mirror reflective edge ≤40 in AFF per ADA §603.3",
+    "Local health department food establishment plan review + final inspection sign-off REQUIRED before Certificate of Occupancy (parallel filing — file early)",
+    "TABC / state liquor authority clearance if alcohol service — separate filing from building permit",
+    "Walk-in cooler envelope per IECC 403.10.1 (≥R-25 medium-temp panels, ≥R-32 freezer panels); door gasket seal verification at final",
+    "Existing sprinkler system reuse: hydraulic recalc for new layout + current 5-year cert per NFPA 25; new heads in cooking equipment area must be K-25+ per NFPA 13",
+    "Floor drains within 5 ft of kitchen equipment per IPC 411 with backwater valves where required",
+    "Fire alarm + emergency lighting per NFPA 72/101 with current battery capacity test on file",
+    "Change of occupancy memo (B/M → A-2): include occupant load + exits + restroom count + sprinkler/fire-alarm impacts per IEBC §1001.2/1001.3 + IBC §303.3 (Group A-2)",
+    "Maricopa County (or local equivalent) Environmental Services Department food-establishment plan review + final inspection sign-off REQUIRED before opening — coordinate with City CO schedule (MCESD: maricopa.gov)",
+    "Outdoor patio / sidewalk dining: verify city zoning (use permit may apply, e.g. Phoenix ZO §1207); include patio in occupant load + exiting + accessible route + sprinkler/awning review",
+    "Phoenix-specific (or equivalent local rule): contractor must be AZ ROC licensed AND associated with the Phoenix SHAPE PHX permit account before submittal (A.R.S. Title 32 Ch. 10) — frequently-missed pre-submittal blocker",
+    "Realistic fee warning: a 3,200 sq ft restaurant TI in Phoenix typically lands $8K–$25K+ across plan review + permit + fire + utility + health + zoning. Reject token min-fee outputs; calculate from the live fee schedule before quoting",
+    "Confirm the required license is active and matches the application: Licensed Georgia contractors pull the permits on behalf of the owner/GC, and the appropriate license number must appear on each application. For this job, the GC can coordinate the building permit, but plumbing, mechanical, electrical, and fire protection permits must be pulled by the properly licensed trade contractors or by the GC if the GC holds the required trade license(s).",
+    "Bring 2 copies of all documents to City of Savannah Development Services Department"
+  ],
+  "fee_calculator": {
+    "confidence": "none",
+    "note": "Provide job_value to calculate an exact fee where formulas are available."
+  },
+  "permit_required": true,
+  "permit_decision": "REQUIRED",
+  "permit_name": "Building Permit",
+  "remaining_lookups": 3,
+  "claim_citations": [
+    {
+      "id": "C1",
+      "field": "permit_type",
+      "claim": "primary permit category",
+      "value": "Building Permit — Tenant Improvement / Restaurant Interior Alteration",
+      "source_url": "https://www.savannahga.gov/892/Building-Permits",
+      "source_title": "Building Permits | Savannah, GA - Official Website",
+      "checked_at": "2026-06-10",
+      "confidence": "source attached; quoted snippet unavailable"
+    },
+    {
+      "id": "C2",
+      "field": "apply_url",
+      "claim": "Where to start the application",
+      "value": "https://www.savannahga.gov/1644/How-to-Apply-for-Commercial-Building-Per",
+      "source_url": "https://www.savannahga.gov/892/Building-Permits",
+      "source_title": "Building Permits | Savannah, GA - Official Website",
+      "checked_at": "2026-06-10",
+      "confidence": "source attached; quoted snippet unavailable"
+    },
+    {
+      "id": "C3",
+      "field": "fee_range",
+      "claim": "Estimated fee range",
+      "value": "Fee Estimate: Fee planning estimate (NOT a jurisdiction-specific building department fee): $17,500-$29,000+ (national-scope benchmark based on job type, not Savannah, GA official fee schedule). Components: ~$12,000 base permit + plan review (Savannah, GA commercial restaurant commercial TI complexity) × 1. Call Savannah, GA for the exact fee before bidding. — verify in https://www.savannahga.gov/DocumentCenter/View/89/Grease-Interceptor-Standard?bidId= before quoting",
+      "source_url": "https://www.savannahga.gov/892/Building-Permits",
+      "source_title": "Building Permits | Savannah, GA - Official Website",
+      "checked_at": "2026-06-10",
+      "confidence": "source attached; quoted snippet unavailable"
+    },
+    {
+      "id": "C4",
+      "field": "approval_timeline",
+      "claim": "Estimated approval timeline",
+      "value": "{'simple': '1-5 business days for over-the-counter trade review if documents are complete; some commercial trade permits may still be same-day at intake.', 'complex': '1-3 weeks for commercial plan review, longer if Water & Sewer sign-off, Fire Marshal review, or historic district review is required.'}",
+      "source_url": "https://www.savannahga.gov/892/Building-Permits",
+      "source_title": "Building Permits | Savannah, GA - Official Website",
+      "checked_at": "2026-06-10",
+      "confidence": "source attached; quoted snippet unavailable"
+    },
+    {
+      "id": "C5",
+      "field": "inspections",
+      "claim": "inspection requirements",
+      "value": "[{'stage': 'Building Rough-In / Framing Inspection', 'description': 'Inspector checks demo limits, new partition layout, fire-resistance ratings where required, door swings/egress, accessibility clearances, and that no structural members were altered without approval.', 'timing': 'After framing and layout are complete, before drywall or ceiling closure'}, {'stage': 'Plumbing Rough-In', 'description': 'Inspector verifies grease interceptor location and sizing, floor drain placement and slope, restroom fixture rough-ins, venting, trap arms, cleanouts, and that the three-compartment sink is properly drained and vented.', 'timing': 'Before slab patching, insulation, or wall/ceiling closure'}, {'stage': 'Electrical Rough-In', 'description': 'Inspector verifies panel upgrade installation, feeder sizing, breaker labeling, dedicated cooking equipment circuits, GFCI/AFCI where applicable, equipment disconnects, grounding/bonding, and working clearances at the panel.', 'timing': 'Before walls/ceilings are closed'}]",
+      "source_url": "https://www.savannahga.gov/892/Building-Permits",
+      "source_title": "Building Permits | Savannah, GA - Official Website",
+      "checked_at": "2026-06-10",
+      "confidence": "source attached; quoted snippet unavailable"
+    }
+  ],
+  "apply_path": {
+    "support_level": "needs verification",
+    "platform": "city portal / building department website",
+    "permit_category": "Commercial Building / Tenant Improvement",
+    "permit_type": "Building Permit — Tenant Improvement / Restaurant Interior Alteration",
+    "portal_selection_path": [
+      "Open the city portal / building department website start URL",
+      "Create or sign into the contractor/applicant account if required",
+      "Look for the closest permit category to: Building Permit — Tenant Improvement / Restaurant Interior Alteration"
+    ],
+    "documents_to_prepare": [
+      "scope of work",
+      "plans/drawings if required",
+      "contractor license",
+      "valuation",
+      "owner authorization"
+    ],
+    "steps": [
+      "Open the city portal / building department website start URL",
+      "Create or sign into the contractor/applicant account if required",
+      "Look for the closest permit category to: Building Permit — Tenant Improvement / Restaurant Interior Alteration",
+      "For commercial TI, check whether separate building, MEP, fire/life-safety, accessibility, health, or change-of-occupancy reviews are required",
+      "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission",
+      "Stop before final submit, payment, signature, or legal attestation until the building department details are verified"
+    ],
+    "stop_before": "final submit, payment, signature, or legal attestation",
+    "verification_note": "PermitAssist guides the application pathway; use the structured permit kind and local filing path before filing",
+    "login_required": null
+  },
+  "warnings": [
+    "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing, fire.",
+    "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+  ],
+  "source_urls": [
+    "https://www.savannahga.gov/892/Building-Permits",
+    "https://www.savannahga.gov/1820/Fee-Information",
+    "https://www.savannahga.gov/1644/How-to-Apply-for-Commercial-Building-Per",
+    "https://www.savannahga.gov/891/Site-Development-Permits",
+    "https://www.savannahga.gov/DocumentCenter/View/89/Grease-Interceptor-Standard?bidId=",
+    "https://www.savannahga.gov/DocumentCenter/View/34834"
+  ],
+  "permit_kind": "Building",
+  "source_support": {
+    "confidence_tier": "AHJ_DIRECT",
+    "has_official_source": true,
+    "source_count": 6,
+    "has_live_source": true,
+    "degraded_sources": false,
+    "has_source_backed_evidence": true,
+    "source_confidence": "AHJ_DIRECT",
+    "local_decision_evidence_urls": [
+      "https://www.savannahga.gov/892/Building-Permits",
+      "https://www.savannahga.gov/1820/Fee-Information",
+      "https://www.savannahga.gov/1644/How-to-Apply-for-Commercial-Building-Per",
+      "https://www.savannahga.gov/891/Site-Development-Permits",
+      "https://www.savannahga.gov/DocumentCenter/View/89/Grease-Interceptor-Standard?bidId=",
+      "https://www.savannahga.gov/DocumentCenter/View/34834"
+    ],
+    "display_source_count": 6,
+    "local_form_known": true,
+    "apply_url_known": true,
+    "decision_mutation_allowed": false
+  },
+  "source_confidence": "AHJ_DIRECT",
+  "degraded_sources": false,
+  "customer_next_step": "Submit a Building Permit / commercial tenant-improvement building-permit application through Savannah eTRAC / Development Services before starting the work.",
+  "customer_headline": "Permit required: Building.",
+  "local_form_known": true,
+  "apply_url_known": true,
+  "customer_result_summary": {
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Building Permit",
+    "ahj_department": "Savannah eTRAC / Development Services",
+    "next_step": "Submit a Building Permit / commercial tenant-improvement building-permit application through Savannah eTRAC / Development Services before starting the work.",
+    "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue.",
+    "fee_cost_caveat": "Fee Estimate: Fee planning estimate (NOT a jurisdiction-specific building department fee): $17,500-$29,000+ (national-scope benchmark based on job type, not Savannah, GA official fee schedule). Components: ~$12,000 base permit + plan review (Savannah, GA commercial restaurant commercial TI complexity) × 1. Call Savannah, GA for the exact fee before bidding. — verify in before quoting",
+    "freshness_label": "Checked 2026-06-10",
+    "source_cue": "Official source: Building Permits | Savannah, GA - Official Website",
+    "jurisdiction": "Savannah, GA"
+  },
+  "customer_first_screen_summary": {
+    "decision": "REQUIRED",
+    "kind_category": "Building",
+    "next_action": "Submit a Building Permit / commercial tenant-improvement building-permit application through Savannah eTRAC / Development Services before starting the work.",
+    "ahj_department": "Savannah eTRAC / Development Services",
+    "source_cue": "Official source: Building Permits | Savannah, GA - Official Website"
+  },
+  "companion_permits_or_reviews": [
+    "Health Department review",
+    "Accessibility review",
+    "MEP trade permits"
+  ],
+  "building_dept_phone": "",
+  "office_phone": "",
+  "phone": "",
+  "_safe_phone_note": "Call Savannah eTRAC / Development Services directly — local number available via official city website or 311.",
+  "building_dept_address": "",
+  "office_address": "",
+  "_safe_address_note": "Search: Savannah eTRAC / Development Services address",
+  "building_dept_name": ""
+}

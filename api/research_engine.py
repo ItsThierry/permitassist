@@ -6785,8 +6785,32 @@ def apply_state_schema_context(result: dict, job_type: str, city: str, state: st
 
 
 def apply_fee_verify_caveat(result: dict) -> dict:
-    """Preserve fee numbers and add verify language + source URL when available."""
+    """Preserve fee numbers and add verify language + source URL when available.
+
+    If fee_calculator contains a jurisdiction formula result (Bucket A),
+    override the LLM-generated fee_range with the computed formula text.
+    """
     if not isinstance(result, dict):
+        return result
+
+    # ── Bucket A: AHJ fee formula override ──
+    fee_calc = result.get("fee_calculator") or {}
+    if fee_calc.get("_fee_formula_path") and fee_calc.get("formula"):
+        formula_text = fee_calc["formula"]
+        fee_source = result.get("fee_source") if isinstance(result.get("fee_source"), dict) else {}
+        source_url = fee_source.get("url") or ""
+        if source_url and "verify in" not in formula_text.lower():
+            result["fee_range"] = f"{formula_text} — verify in {source_url} before quoting"
+        elif source_url and "verify in" in formula_text.lower():
+            # Replace any existing verify URL
+            result["fee_range"] = re.sub(
+                r"\s+—\s+verify\s+(?:in|at)\s+.+?(?:\s+before quoting)?$",
+                f" — verify in {source_url} before quoting",
+                formula_text,
+                flags=re.I,
+            )
+        else:
+            result["fee_range"] = f"{formula_text} — verify in city portal before quoting"
         return result
 
     def _strip_fee_markdown(text: str) -> str:

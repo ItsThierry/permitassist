@@ -1,0 +1,115 @@
+## job_summary
+Commercial tenant upfit in Richmond, VA converting a 1,600 sq ft former retail space into a dental office. Scope triggers a building permit for interior demolition/new partitions and change of use/occupancy work, plus separate trade permits for plumbing rough-in (four operatories with vacuum/compressed air and nitrous oxide), ADA restroom plumbing changes, electrical panel upgrade and dedicated circuits for dental chairs/X-ray equipment, and mechanical permit for rooftop unit replacement with ductwork rework. This is not a residential job; use commercial permit categories.
+
+## customer_headline
+Permit required: Commercial Building / Tenant Improvement.
+
+## customer_next_step
+File under Commercial Building / Tenant Improvement with City of Richmond Permits & Inspections; confirm the exact occupancy classification and required plan sets before starting work.
+
+## fee_range
+Fee Estimate: $63 base plus valuation formula for each trade permit; for a project around $190,000, expect roughly $1,200 - $2,500 total in city permit fees across building, plumbing, mechanical, and electrical permits, depending on the final valuation breakdown and plan review requirements — verify in city portal before quoting
+
+## disclaimer
+Data sourced Jun 10, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.
+
+## inspection_booking
+Schedule inspections through the City of Richmond online permit portal: Use the permit number to request each inspection type. If you need phone scheduling or help, call (804) 646-4169. For commercial tenant improvements, plan on at least 24 hours advance notice; book rough-ins before covering work and book finals only after all trades are complete.
+
+## zoning_hoa_flag
+HOA is usually not applicable to a commercial tenant improvement, but zoning and use approval still matter. Verify the space is allowed for dental office use in the zoning district and confirm any parking, accessibility, or occupancy-load requirements. If the building is in a historic district or subject to design review, exterior rooftop equipment visibility and any façade changes may need additional approval.
+
+## approval_timeline
+
+  simple: Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue.
+
+  complex: 5-15 business days for trade permits; 2-4+ weeks if full commercial plan review, accessibility review, or fire/life-safety coordination is required
+
+## confidence_reason
+City-specific match supported by live web research
+
+## data_source
+city_database
+
+## Permits Required
+
+  - Commercial Building / Tenant Improvement Permit (kind=Commercial Building / Tenant Improvement, required=True)
+
+## Companion Permits
+
+  - Health-care licensing / local health review: Clinic opening may require licensing or health-care approval separate from building permit final.
+
+  - Medical gas / x-ray specialty review if included: Medical gas, nitrous/oxygen/vacuum, or radiology equipment can require specialty documentation and verification.
+
+  - Accessibility / ADA path-of-travel verification: Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.
+
+## pro_tips
+
+  - Submit the building, plumbing, mechanical, and electrical permits together as one coordinated tenant improvement package so plan review comments come back in one cycle instead of four separate ones.
+
+  - Have the RTU submittal, panel schedule, and dental equipment load data ready before you open the portal — Richmond plan reviewers will kick back incomplete commercial packages fast.
+
+  - For dental offices, show the vacuum/compressed-air and that avoids a resubmittal when the reviewer asks where those systems are going.
+
+  - If the panel upgrade requires utility disconnect/reconnect, call the utility early so the meter pull does not hold up the rough-in schedule.
+
+  - Verify the contractor license classification before filing — Richmond will not process a commercial trade permit if the license type does not match the scope.
+
+  - health-care licensing paths before pricing.
+
+  - Coordinate architect/MEP, medical-gas verifier, equipment vendor, and health/licensing reviewer before submitting so room names, fixture schedules, ventilation, and equipment utility loads match.
+
+  - verify B vs I-2/ambulatory-care status with the building department if any procedure, sedation, recovery, or self-preservation issue exists.
+
+## common_mistakes
+
+  - Submitting the tenant improvement under only trade permits and skipping the commercial building permit for the change of use and new partitions
+
+  - Under-sizing the electrical service or panel for dental chairs, X-ray equipment, and future load growth
+
+  - Failing to coordinate the RTU replacement with ductwork, outside air, and exhaust requirements for a dental office
+
+  - Not showing nitrous oxide piping, vacuum, and compressed-air systems clearly on the plumbing/mechanical plans
+
+  - Closing walls before rough-in inspections are approved
+
+  - Starting work before the permit is issued and posted on site
+
+  - Missing ADA restroom clearances and accessibility details on the plans
+
+  - Leaving medical gas, nitrous/oxygen, alarms, zone valves, and verifier paperwork out of the permit package.
+
+  - Using ordinary office HVAC assumptions instead of confirming ventilation, exhaust, pressure relationships, filtration, and infection-control needs for procedure/sterilization/lab rooms.
+
+  - check-in counters.
+
+## Inspections
+
+  [Building Demo / Framing Rough-In] Inspector verifies: demo matches approved plans, new partitions are framed per plan, fireblocking/draftstopping where required, rated wall assemblies maintained, door swings and clearances, and ADA restroom layout rough-in before concealment.
+
+     Timing: Before insulation, drywall, or ceiling closure
+
+  [Plumbing Rough-In] Inspector checks: operatory vacuum and compressed-air piping routing/support, nitrous oxide piping installation and labeling, fixture rough-in locations, trap/vent and drain routing, shutoff access, and ADA restroom plumbing clearances.
+
+     Timing: Before walls are closed and before fixtures are set
+
+  [Mechanical Rough-In] Inspector verifies: RTU set per approved plans, ductwork sizing and sealing, supply/return routing, outside air and exhaust provisions, condensate drainage, equipment clearances, and any required economizer or ventilation controls for the dental occupancy.
+
+     Timing: Before ceiling closure and before final startup
+
+  [Electrical Rough-In / Service Upgrade] Inspector checks: panel upgrade installation, feeder sizing, breaker labeling, grounding/bonding, dedicated circuits for dental chairs and X-ray equipment, working clearances at panel, GFCI/AFCI where applicable, and proper disconnects.
+
+     Timing: Before walls/ceilings are closed and before equipment is energized
+
+  [Final Commercial] Inspector verifies: all systems operate, fixtures and equipment are installed, ADA restroom is complete, egress and exit signage are correct, panel schedules are labeled, mechanical startup is complete, and the space matches approved tenant improvement plans.
+
+     Timing: After all work is complete and before occupancy
+
+## Contact
+City of Richmond Permits & Inspections
+
+## Sources
+
+  - : https://www.rva.gov/planning-development-review/online-permit-portal
+
+  - : https://www.rva.gov/permits-inspections
