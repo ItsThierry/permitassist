@@ -607,6 +607,9 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         value = re.sub(r"\bNeeds review(?:\s+for\s*:\s*[A-Za-z0-9_, ._/-]+)?\b\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
         value = re.sub(r"\[?\s*verify[^\]\[.;,]{0,100}?before merging\s*\]?", "confirm with the building department", value, flags=re.I)
         value = re.sub(r"\bverify adopted edition before merging\b", "confirm adopted code edition with the building department", value, flags=re.I)
+        # Normalize broken sentence seams from LLM fragment splicing
+        value = re.sub(r"(?<!\.)\.\.(?!\.)", ". ", value)          # "queue..Check" → "queue. Check"
+        value = re.sub(r"\.\s+and\s+([a-z])", r" and \1", value)    # "bidding. and save" → "bidding and save"
         value = re.sub(r"\s{2,}", " ", value).strip()
         if strip_internal_keys and has_internal(value):
             return ""
