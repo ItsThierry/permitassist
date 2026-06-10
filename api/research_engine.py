@@ -9616,6 +9616,23 @@ Return ONLY the JSON object."""
     # "low", and sets needs_review=True so the UI surfaces the warning.
     validate_and_sanitize_permit_result(result, job_type, city, state)
     scrub_hidden_trigger_internal_metadata(result)
+    # P2C — Procedural gate extraction (2026-06-09)
+    try:
+        from hidden_trigger_detector import extract_procedural_gates
+        # Aggregate all text fields that might contain AHJ procedural instructions
+        gate_text = " ".join(filter(None, [
+            str(result.get("customer_next_step") or ""),
+            str(result.get("requirements") or ""),
+            str(result.get("what_to_bring") or ""),
+            str(result.get("common_mistakes") or ""),
+            str(result.get("pro_tips") or ""),
+            str(result.get("notes") or ""),
+        ]))
+        gates = extract_procedural_gates(gate_text)
+        if gates:
+            result["_procedural_gates"] = gates
+    except Exception:
+        pass
     apply_rulebook_depth(result, job_type, city, state)
     sanitize_non_food_office_breakroom_text(result, job_type)
     reconcile_v231_result(result, v231_resolution)

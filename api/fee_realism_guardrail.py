@@ -554,10 +554,10 @@ def _build_fee_text(
         components.append(f"+ {_format_usd(midpoint)} {label} adder")
 
     return (
-        f"Fee planning estimate: {_format_usd(low_total)}-{_format_usd(high_total)}+ "
-        f"(based on commercial TI complexity, not a quoted AHJ fee schedule). Components: "
+        f"Fee planning estimate (NOT a jurisdiction-specific AHJ fee): {_format_usd(low_total)}-{_format_usd(high_total)}+ "
+        f"(national-scope benchmark based on job type, not {jurisdiction_label} official fee schedule). Components: "
         f"{' '.join(components)}. "
-        f"Confirm final fees with the AHJ before bidding or payment."
+        f"Call {jurisdiction_label} for the exact fee before bidding."
     )
 
 
@@ -656,5 +656,17 @@ def apply_fee_realism_guardrail(result: dict, job_type: str, city: str, state: s
         guarded["_fee_adjusted"] = False
         guarded["_fee_source_backed"] = False
         guarded["_fee_floor_check"] = "llm_above_floor"
+
+    # P2A: Coherence check — fee shall not exceed 40% of job value
+    try:
+        job_value_match = re.search(r'[\$]?([\d,]+(?:\.\d+)?)\s*[kK]?', str(job_type or result.get("job_value", "")))
+        if job_value_match:
+            job_val = float(job_value_match.group(1).replace(",", ""))
+            if "k" in job_type.lower() or "K" in str(result.get("job_value", "")):
+                job_val *= 1000
+            if structured_high > job_val * 0.45:
+                guarded["_fee_coherence_warning"] = f"Fee estimate ({structured_high}) exceeds 45% of stated job value ({job_val}). Review scope with customer."
+    except Exception:
+        pass
 
     return guarded

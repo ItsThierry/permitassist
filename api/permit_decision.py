@@ -100,6 +100,169 @@ def _blob(value: Any) -> str:
     return str(value or "")
 
 
+# ─── P0: Contact Data Integrity ───────────────────────────────────────────────
+# Provenance-gated contact validator + safe fallback.
+# Prevents wrong phone numbers/addresses from being shown to customers
+# when the source is unverified (model_training, web_search without .gov).
+# Added 2026-06-09 per permitassist-lookup-fix-spec v1.0.
+
+_CONTACT_TRUSTED_SOURCES = frozenset({
+    "auto_verified", "city_kb", "county_kb", "verified_cities_db",
+    "accela_api", "official_hallucination_blocker",
+    # Any source prefixed with these trusted categories
+})
+
+_CONTACT_UNTRUSTED_SOURCES = frozenset({
+    "model_training", "web_search", "machine_extracted", "county_fallback",
+})
+
+# Phone patterns that indicate placeholders or non-department numbers
+_CONTACT_SUSPICIOUS_PHONE_RE = re.compile(
+    r"(?i)(?:000[-.]?000[-.]?0000|123[-.]?456[-.]?7890|"
+    r"555[-.]?0100|555[-.]?555[-.]?5555|"
+    r"xxx[-.]?xxx[-.]?xxxx|\(?000\)?|999[-.]?999[-.]?9999|"
+    r"000-0000|(?:search|google|find)\s*:?)"
+)
+
+# Address patterns that indicate placeholders
+_CONTACT_SUSPICIOUS_ADDR_RE = re.compile(
+    r"(?i)(?:123\s+main\s+st(?:reet)?,?\s*(?:anytown|anystate|[a-z]+,?\s*[a-z]{2})?|"
+    r"tbd|to be determined|unknown)"
+)
+
+
+def _is_trusted_contact_source(field_sources: dict[str, Any], field: str) -> bool:
+    """Return True if the field has a trusted provenance source."""
+    if not isinstance(field_sources, dict):
+        return False
+    src = str(field_sources.get(field) or "").lower()
+    if not src:
+        return False
+    # Check trusted prefixes
+    for trusted in _CONTACT_TRUSTED_SOURCES:
+        if src.startswith(trusted.lower()):
+            return True
+    # Check if it contains a .gov URL (URL-based source)
+    if ".gov" in src or ".us" in src:
+        return True
+    # Explicit untrusted
+    if src in _CONTACT_UNTRUSTED_SOURCES:
+        return False
+    # Unknown source — treat as untrusted for safety
+    return False
+
+
+def validate_contact_provenance(result: dict[str, Any]) -> list[str]:
+    """Validate contact fields and return list of trust issues.
+
+    Issues trigger contact-card suppression in the public view.
+    """
+    issues: list[str] = []
+    if not isinstance(result, dict):
+        return ["result_not_dict"]
+
+    # Map public field names to internal field names
+    field_map = {
+        "apply_phone": ("apply_phone", "office_phone", "phone"),
+        "applying_office": ("applying_office", "building_dept_name"),
+        "apply_address": ("apply_address", "building_dept_address", "office_address"),
+    }
+
+    field_sources = result.get("_field_sources") or {}
+
+    for public_field, internal_fields in field_map.items():
+        value = ""
+        for f in internal_fields:
+            if result.get(f):
+                value = str(result[f])
+                break
+
+        # Skip empty
+        if not value or value.strip() in ("", "N/A", "n/a"):
+            continue
+
+        # Check provenance
+        is_trusted = _is_trusted_contact_source(field_sources, public_field)
+
+        # Apply heuristic red flags even if source claims trusted
+        if public_field == "apply_phone":
+            # Check for placeholder/suspicious patterns
+            digits = re.sub(r"[^0-9]", "", value)
+            if len(digits) < 10:
+                issues.append(f"{public_field}_short_digits")
+            elif _CONTACT_SUSPICIOUS_PHONE_RE.search(value):
+                issues.append(f"{public_field}_placeholder_pattern")
+            elif not is_trusted:
+                issues.append(f"{public_field}_untrusted_source")
+
+        elif public_field == "applying_office":
+            if len(value) < 5:
+                issues.append(f"{public_field}_too_short")
+            elif not is_trusted:
+                issues.append(f"{public_field}_untrusted_source")
+
+        elif public_field == "apply_address":
+            if _CONTACT_SUSPICIOUS_ADDR_RE.search(value):
+                issues.append(f"{public_field}_placeholder_pattern")
+            elif not is_trusted:
+                issues.append(f"{public_field}_untrusted_source")
+
+    return issues
+
+
+def sanitize_contact_for_public(result: dict[str, Any], city: str = "", state: str = "") -> dict[str, Any]:
+    """Return a contact-sanitized copy of result for public/serialized views.
+
+    If contact fields fail provenance validation, suppress them entirely
+    and replace with a safe fallback message. Never show wrong phone numbers.
+    """
+    result = copy.deepcopy(result) if isinstance(result, dict) else {}
+    contact_issues = validate_contact_provenance(result)
+
+    # Build safe fallback text
+    dept_name = _norm_text(result.get("applying_office")) or f"{city} {state} Building Department".strip() or "the local building department"
+    safe_phone = f"Call {dept_name} directly — local number available via official city website or 311."
+    safe_address = f"Search: {dept_name} address"
+    safe_office = dept_name
+
+    if contact_issues:
+        # Suppress fields provenance-failure — metadata is NOT customer-facing
+        result.pop("_contact_suppressed", None)
+        result.pop("_contact_suppression_reasons", None)
+
+        # Replace untrusted phone with safe fallback
+        if any("apply_phone" in issue for issue in contact_issues):
+            result["apply_phone"] = ""
+            result["building_dept_phone"] = ""
+            result["office_phone"] = ""
+            result["phone"] = ""
+            result["_safe_phone_note"] = safe_phone
+
+        # Replace untrusted address with safe fallback
+        if any("apply_address" in issue for issue in contact_issues):
+            result["apply_address"] = ""
+            result["building_dept_address"] = ""
+            result["office_address"] = ""
+            result["_safe_address_note"] = safe_address
+
+        # Replace untrusted office name with safe generic
+        if any("applying_office" in issue for issue in contact_issues):
+            result["applying_office"] = safe_office
+            result["building_dept_name"] = ""
+
+    return result
+
+
+def apply_contact_sanitization(result: dict[str, Any], city: str = "", state: str = "") -> dict[str, Any]:
+    """Public API: sanitize contact data before serialization to frontend.
+
+    Must be called AFTER apply_permit_decision_contract and BEFORE
+    JSON serialization in server.py.
+    """
+    return sanitize_contact_for_public(result, city=city, state=state)
+
+
+
 def _is_http_url(value: Any) -> bool:
     return isinstance(value, str) and value.lower().startswith(("http://", "https://"))
 
@@ -401,6 +564,62 @@ def _get_decision_cell_primary_lock(result: dict[str, Any] | None) -> dict[str, 
     return copy.deepcopy(lock)
 
 
+
+
+def _collapse_parent_child_permits(permits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """P1C: Collapse generic parent permits when a specific child permit exists.
+
+    E.g. 'Building Permit' + 'Commercial Building / Tenant Improvement Permit'
+    → keep only the specific one. Added 2026-06-09.
+    """
+    if not permits:
+        return permits
+
+    def _specificity_score(p: dict) -> int:
+        name = _norm_text(p.get("permit_type") or p.get("portal_selection") or "").lower()
+        score = len(name.split())
+        # Bonus for containing category keywords
+        for _, keywords in _KIND_KEYWORDS:
+            for kw in keywords:
+                if kw in name:
+                    score += 2
+        return score
+
+    # Sort by specificity descending (most specific first)
+    sorted_permits = sorted(permits, key=lambda p: (-_specificity_score(p), _norm_text(p.get("permit_type") or "").lower()))
+
+    collapsed: list[dict[str, Any]] = []
+    for permit in sorted_permits:
+        p_name = _norm_text(permit.get("permit_type") or permit.get("portal_selection") or "").lower()
+        p_kind = kind_from_text(_permit_kind_text(permit))
+        is_child = False
+        for existing in collapsed:
+            e_name = _norm_text(existing.get("permit_type") or existing.get("portal_selection") or "").lower()
+            e_kind = kind_from_text(_permit_kind_text(existing))
+            # Same or compatible kind, and one contains the other
+            if p_kind == e_kind or p_kind == "Other" or e_kind == "Other" or e_kind == "Building":
+                if p_name != e_name:
+                    if e_name in p_name and len(e_name) < len(p_name):
+                        # existing is parent of permit → keep permit (child), drop existing
+                        # Actually existing is already in collapsed, so we need to remove it
+                        pass
+                    elif p_name in e_name and len(p_name) < len(e_name):
+                        # permit is parent of existing → skip permit
+                        is_child = True
+                        break
+        if not is_child:
+            # Remove any existing permits that are parents of this one
+            collapsed = [e for e in collapsed if not (
+                _norm_text(e.get("permit_type") or e.get("portal_selection") or "").lower() in p_name
+                and len(_norm_text(e.get("permit_type") or e.get("portal_selection") or "").lower()) < len(p_name)
+                and (kind_from_text(_permit_kind_text(e)) == p_kind or p_kind == "Other" or kind_from_text(_permit_kind_text(e)) == "Building")
+            )]
+            collapsed.append(permit)
+
+    # Re-sort by kind-order preference (matching CONTROLLED_PERMIT_KINDS order)
+    kind_order = {k: i for i, k in enumerate(CONTROLLED_PERMIT_KINDS)}
+    collapsed.sort(key=lambda p: kind_order.get(kind_from_text(_permit_kind_text(p)), 999))
+    return collapsed
 def _normalize_permit_name_for_dedupe(name: Any) -> str:
     text = re.sub(r"[^a-z0-9]+", " ", str(name or "").lower()).strip()
     tokens = [token for token in text.split() if token not in {"permit", "permits", "required"}]
@@ -530,7 +749,7 @@ def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] |
             result["apply_url"] = lock.get("apply_url")
         result.pop("not_required_reason", None)
         result.pop("no_permit_required_reason", None)
-        result["permits_required"] = _merge_locked_primary_permits(lock, result.get("permits_required"), public=public)
+        result["permits_required"] = _collapse_parent_child_permits(_merge_locked_primary_permits(lock, result.get("permits_required"), public=public))
         result["trade_permits"] = _trade_permits(result)
         result["companion_permits_or_reviews"] = _companion_reviews(result)
         result["customer_next_step"] = _locked_primary_next_step(lock, PERMIT_DECISION_REQUIRED, kind, city, state)
@@ -626,7 +845,7 @@ def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", c
     result["permit_verdict"] = "YES" if decision == PERMIT_DECISION_REQUIRED else "NO"
     result["permit_kind"] = kind
     result["permit_name"] = dto.get("permit_name")
-    result["permits_required"] = permits_required
+    result["permits_required"] = _collapse_parent_child_permits(permits_required)
     if decision == PERMIT_DECISION_NOT_REQUIRED:
         result["not_required_reason"] = dto.get("not_required_reason") or "Permit not required for the described scope."
         result["permits_required_logic"] = []
@@ -742,3 +961,166 @@ def _customer_visible_contract_blob(value: Any, key: str = "") -> str:
     if isinstance(value, list):
         return " ".join(_customer_visible_contract_blob(v, key) for v in value)
     return str(value or "")
+
+
+# ─── P0: Contact Data Integrity ───────────────────────────────────────────────
+# Provenance-gated contact validator + safe fallback.
+# Prevents wrong phone numbers/addresses from being shown to customers
+# when the source is unverified (model_training, web_search without .gov).
+# Added 2026-06-09 per permitassist-lookup-fix-spec v1.0.
+
+_CONTACT_TRUSTED_SOURCES = frozenset({
+    "auto_verified", "city_kb", "county_kb", "verified_cities_db",
+    "accela_api", "official_hallucination_blocker",
+    # Any source prefixed with these trusted categories
+})
+
+_CONTACT_UNTRUSTED_SOURCES = frozenset({
+    "model_training", "web_search", "machine_extracted", "county_fallback",
+})
+
+# Phone patterns that indicate placeholders or non-department numbers
+_CONTACT_SUSPICIOUS_PHONE_RE = re.compile(
+    r"(?i)(?:000[-.]?000[-.]?0000|123[-.]?456[-.]?7890|"
+    r"555[-.]?0100|555[-.]?555[-.]?5555|"
+    r"xxx[-.]?xxx[-.]?xxxx|\(?000\)?|999[-.]?999[-.]?9999|"
+    r"000-0000|(?:search|google|find)\s*:?)"
+)
+
+# Address patterns that indicate placeholders
+_CONTACT_SUSPICIOUS_ADDR_RE = re.compile(
+    r"(?i)(?:123\s+main\s+st(?:reet)?,?\s*(?:anytown|anystate|[a-z]+,?\s*[a-z]{2})?|"
+    r"tbd|to be determined|unknown)"
+)
+
+
+def _is_trusted_contact_source(field_sources: dict[str, Any], field: str) -> bool:
+    """Return True if the field has a trusted provenance source."""
+    if not isinstance(field_sources, dict):
+        return False
+    src = str(field_sources.get(field) or "").lower()
+    if not src:
+        return False
+    # Check trusted prefixes
+    for trusted in _CONTACT_TRUSTED_SOURCES:
+        if src.startswith(trusted.lower()):
+            return True
+    # Check if it contains a .gov URL (URL-based source)
+    if ".gov" in src or ".us" in src:
+        return True
+    # Explicit untrusted
+    if src in _CONTACT_UNTRUSTED_SOURCES:
+        return False
+    # Unknown source — treat as untrusted for safety
+    return False
+
+
+def validate_contact_provenance(result: dict[str, Any]) -> list[str]:
+    """Validate contact fields and return list of trust issues.
+
+    Issues trigger contact-card suppression in the public view.
+    """
+    issues: list[str] = []
+    if not isinstance(result, dict):
+        return ["result_not_dict"]
+
+    # Map public field names to internal field names
+    field_map = {
+        "apply_phone": ("apply_phone", "office_phone", "phone"),
+        "applying_office": ("applying_office", "building_dept_name"),
+        "apply_address": ("apply_address", "building_dept_address", "office_address"),
+    }
+
+    field_sources = result.get("_field_sources") or {}
+
+    for public_field, internal_fields in field_map.items():
+        value = ""
+        for f in internal_fields:
+            if result.get(f):
+                value = str(result[f])
+                break
+
+        # Skip empty
+        if not value or value.strip() in ("", "N/A", "n/a"):
+            continue
+
+        # Check provenance
+        is_trusted = _is_trusted_contact_source(field_sources, public_field)
+
+        # Apply heuristic red flags even if source claims trusted
+        if public_field == "apply_phone":
+            # Check for placeholder/suspicious patterns
+            digits = re.sub(r"[^0-9]", "", value)
+            if len(digits) < 10:
+                issues.append(f"{public_field}_short_digits")
+            elif _CONTACT_SUSPICIOUS_PHONE_RE.search(value):
+                issues.append(f"{public_field}_placeholder_pattern")
+            elif not is_trusted:
+                issues.append(f"{public_field}_untrusted_source")
+
+        elif public_field == "applying_office":
+            if len(value) < 5:
+                issues.append(f"{public_field}_too_short")
+            elif not is_trusted:
+                issues.append(f"{public_field}_untrusted_source")
+
+        elif public_field == "apply_address":
+            if _CONTACT_SUSPICIOUS_ADDR_RE.search(value):
+                issues.append(f"{public_field}_placeholder_pattern")
+            elif not is_trusted:
+                issues.append(f"{public_field}_untrusted_source")
+
+    return issues
+
+
+def sanitize_contact_for_public(result: dict[str, Any], city: str = "", state: str = "") -> dict[str, Any]:
+    """Return a contact-sanitized copy of result for public/serialized views.
+
+    If contact fields fail provenance validation, suppress them entirely
+    and replace with a safe fallback message. Never show wrong phone numbers.
+    """
+    result = copy.deepcopy(result) if isinstance(result, dict) else {}
+    contact_issues = validate_contact_provenance(result)
+
+    # Build safe fallback text
+    dept_name = _norm_text(result.get("applying_office")) or f"{city} {state} Building Department".strip() or "the local building department"
+    safe_phone = f"Call {dept_name} directly — local number available via official city website or 311."
+    safe_address = f"Search: {dept_name} address"
+    safe_office = dept_name
+
+    if contact_issues:
+        # Suppress fields provenance-failure — metadata is NOT customer-facing
+        result.pop("_contact_suppressed", None)
+        result.pop("_contact_suppression_reasons", None)
+
+        # Replace untrusted phone with safe fallback
+        if any("apply_phone" in issue for issue in contact_issues):
+            result["apply_phone"] = ""
+            result["building_dept_phone"] = ""
+            result["office_phone"] = ""
+            result["phone"] = ""
+            result["_safe_phone_note"] = safe_phone
+
+        # Replace untrusted address with safe fallback
+        if any("apply_address" in issue for issue in contact_issues):
+            result["apply_address"] = ""
+            result["building_dept_address"] = ""
+            result["office_address"] = ""
+            result["_safe_address_note"] = safe_address
+
+        # Replace untrusted office name with safe generic
+        if any("applying_office" in issue for issue in contact_issues):
+            result["applying_office"] = safe_office
+            result["building_dept_name"] = ""
+
+    return result
+
+
+def apply_contact_sanitization(result: dict[str, Any], city: str = "", state: str = "") -> dict[str, Any]:
+    """Public API: sanitize contact data before serialization to frontend.
+
+    Must be called AFTER apply_permit_decision_contract and BEFORE
+    JSON serialization in server.py.
+    """
+    return sanitize_contact_for_public(result, city=city, state=state)
+

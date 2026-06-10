@@ -860,6 +860,32 @@ HIDDEN_TRIGGER_REGISTRY = [
         "citations": ["40 CFR Part 84 (AIM Act technology transitions)", "ASHRAE 15-2022", "UL 60335-2-40", "IMC §1106 [verify adopted edition before merging]"],
         "primary_scope": "commercial_ti",
     },
+
+    # P2B: Deterministic scope-triggered content rules (2026-06-09)
+    {
+        "id": "type_i_hood_wet_chemical_suppression_card",
+        "severity": "high",
+        "title": "Type I hood requires wet-chemical suppression and separate fire-prevention review",
+        "why_it_matters": "Any commercial cooking producing grease-laden vapors (fryers, griddles, ranges, char-broilers) requires a UL-300 wet-chemical suppression system. This is reviewed on a separate fire-prevention track and often causes commercial-kitchen final inspections to fail when overlooked.",
+        "fired_by": [r"\btype\s*(i|1)\s+hood\b", r"\bwet[-\s]?chemical\b", r"\bul\s*300\b", r"\bgrease[-\s]?laden\b"],
+        "likely_required_actions": ["Submit wet-chemical suppression shop drawings", "Show fuel/electric interlocks and manual pull", "Schedule final suppression acceptance / discharge witness test"],
+        "companion_permits": ["Fire suppression permit / Fire Prevention review"],
+        "agencies": ["AHJ Fire Prevention", "AHJ Building Dept"],
+        "citations": ["NFPA 17A", "UL 300", "IMC §507.2"],
+        "primary_scope": "commercial_restaurant",
+    },
+    {
+        "id": "rooftop_unit_structural_calc_note",
+        "severity": "medium",
+        "title": "Rooftop unit (RTU) replacement may require structural calculations",
+        "why_it_matters": "New RTUs often differ in weight, dimensions, and curb details from the original equipment. A structural engineer may need to verify roof-loading, curb anchorage, and seismic restraints before the mechanical permit is issued.",
+        "fired_by": [r"\brtu\b", r"\brooftop\s+unit\b", r"\broof[-\s]?mounted\s+hvac\b"],
+        "likely_required_actions": ["Verify existing roof structure capacity for new unit weight", "Submit stamped structural calcs if unit exceeds original loading", "Show curb detail, anchorage, and seismic restraint"],
+        "companion_permits": ["Structural review (if required by AHJ)"],
+        "agencies": ["AHJ Building Dept", "Structural reviewer"],
+        "citations": ["IBC Chapter 16", "ASCE 7"],
+        "primary_scope": "commercial_ti",
+    },
     {
         "id": "commercial_change_of_occupancy_b_to_a2_or_m_sprinkler_general",
         "severity": "high",
@@ -1535,3 +1561,57 @@ def detect_hidden_triggers(job_type: str, city: str, state: str, primary_scope: 
 
     fired.sort(key=lambda t: (SEVERITY_RANK.get(t.get("severity", "low"), 99), t.get("title", "")))
     return fired
+
+
+
+# P2C: Jurisdiction procedural gates (2026-06-09)
+# Extract intake meetings, signed forms, FOG portal requirements, SRHD plan sets.
+_PROCEDURAL_GATE_TRIGGERS = [
+    {
+        "gate_type": "pre_application_meeting",
+        "label": "Pre-application meeting required",
+        "patterns": [r"pre[-\s]?application[-\s]?meeting", r"pre[-\s]?app[-\s]?meet", r"initial[-\s]?consultation"],
+        "severity": "high",
+    },
+    {
+        "gate_type": "signed_forms",
+        "label": "Signed forms / notarization required at intake",
+        "patterns": [r"signed[-\s]?form", r"notariz", r"notarized", r"original[-\s]?signature"],
+        "severity": "medium",
+    },
+    {
+        "gate_type": "fog_portal",
+        "label": "FOG (Fats, Oils, Grease) portal registration required",
+        "patterns": [r"fog[-\s]?portal", r"fats[-\s]?oils[-\s]?grease", r"grease[-\s]?interceptor[-\s]?registration"],
+        "severity": "high",
+    },
+    {
+        "gate_type": "srhd_plan_set",
+        "label": "Specialty plan sets required (SRHD, health, fire)",
+        "patterns": [r"srhd[-\s]?plan[-\s]?set", r"specialty[-\s]?plan[-\s]?review", r"health[-\s]?plan[-\s]?set"],
+        "severity": "medium",
+    },
+    {
+        "gate_type": "online_submittal_only",
+        "label": "Online submittal only — no paper plans accepted",
+        "patterns": [r"online[-\s]?submittal[-\s]?only", r"no[-\s]?paper[-\s]?plans", r"electronic[-\s]?submittal[-\s]?required"],
+        "severity": "medium",
+    },
+]
+
+
+def extract_procedural_gates(result_text: str) -> list[dict]:
+    """Return detected procedural gates from free-text AHJ instructions."""
+    gates: list[dict] = []
+    text = (result_text or "").lower()
+    for gate in _PROCEDURAL_GATE_TRIGGERS:
+        for pat in gate["patterns"]:
+            if re.search(pat, text):
+                gates.append({
+                    "gate_type": gate["gate_type"],
+                    "label": gate["label"],
+                    "severity": gate["severity"],
+                })
+                break
+    return gates
+

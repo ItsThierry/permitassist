@@ -29,6 +29,38 @@ _REQUIRED_KIND_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("Building", ("addition", "adu", "deck", "pool", "egress", "structural", "load bearing", "foundation", "framing", "window", "door", "kitchen remodel", "bath remodel", "bathroom remodel", "remodel", "alteration", "demolition", "garage conversion", "racking", "warehouse racking")),
 )
 
+# P1A — Change-of-use anchor guard (2026-06-09).
+# When a job explicitly describes a use-type change (dental → fitness, B → A-2,
+# etc.), the anchor classifier must select Commercial Building / Tenant Improvement,
+# NOT a trade-first category that happens to be mentioned as equipment.
+_CHANGE_OF_USE_TERMS = (
+    "change of occupancy", "change of use", "change in use",
+    "convert", "converted into", "converting", "conversion",
+    "reclassify", "reclassification", "use group", "occupancy group",
+    "b-occupancy", "a-2 occupancy", "m-occupancy", "i-2 occupancy",
+    "business group", "mercantile", "assembly", "institutional",
+)
+
+_USE_TYPE_LEXICON = (
+    "fitness studio", "gym", "crossfit", "yoga studio", "pilates",
+    "physical therapy", "pt clinic", "chiropractor", "dental clinic",
+    "medical clinic", "veterinary clinic", "veterinary hospital",
+    "restaurant", "cafe", "coffee shop", "bakery", "bar", "brewery",
+    "food truck commissary", "ghost kitchen", "retail store", "boutique",
+    "salon", "nail salon", "spa", "tanning salon", "tattoo parlor",
+    "office", "law office", "accounting office", "insurance office",
+    "real estate office", "start up", "coworking", "call center",
+    "warehouse", "distribution center", "light industrial", "manufacturing",
+    "print shop", "auto repair", "body shop", "car wash",
+    "self-storage", "mini storage", "data center", "server room",
+)
+
+def _explicit_change_of_use(job_text: str) -> bool:
+    """Return True when the request explicitly describes a use-type change."""
+    lowered = (job_text or "").lower()
+    return any(term in lowered for term in _CHANGE_OF_USE_TERMS) or            any(term in lowered for term in _USE_TYPE_LEXICON)
+
+
 _KIND_TO_PERMIT_NAME = {
     "ADU / Accessory Dwelling Unit": "ADU / Accessory Dwelling Unit Permit",
     "Zoning / Land Use": "Zoning / Land Use Permit",
@@ -380,6 +412,45 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     else:
         decision = PERMIT_DECISION_REQUIRED
         existing_names = _existing_required_permit_names(result)
+        # P1A — Change-of-use anchor guard (2026-06-09).
+        # Force Building/TI anchor for any explicit use-type change.
+        if _explicit_change_of_use(job_text):
+            kinds = ["Commercial Building / Tenant Improvement"]
+            permit_names = ["Commercial Building / Tenant Improvement Permit"]
+            reason = "Permit required because the scope involves a change of use or occupancy classification."
+            headline = "Permit required: Commercial Building / Tenant Improvement."
+            department = _norm(result.get("applying_office") or result.get("building_dept_name")) or f"{city} {state} Building Department".strip() or "the local building department"
+            next_step = f"File under Commercial Building / Tenant Improvement with {department}; confirm the exact occupancy classification and required plan sets before starting work."
+            confidence_tier = "AHJ_DIRECT" if _has_official_source(result) else "SCOPE_DEFAULT"
+            degraded_sources = bool(result.get("degraded_sources") or _source_failure_seen(result))
+            source_support = result.get("source_support") if isinstance(result.get("source_support"), dict) else {}
+            if not source_support:
+                source_support = {
+                    "confidence_tier": confidence_tier,
+                    "has_official_source": _has_official_source(result),
+                    "source_count": len(result.get("sources") or []),
+                    "has_live_source": bool(result.get("sources") or result.get("source_urls")),
+                    "degraded_sources": degraded_sources,
+                }
+            else:
+                source_support.setdefault("confidence_tier", confidence_tier)
+            return {
+                "permit_decision": decision,
+                "permit_required": True,
+                "permit_verdict": "YES",
+                "permit_kind": kinds[0],
+                "permit_kinds": kinds,
+                "permit_name": permit_names[0],
+                "permits_required": _permit_payloads_for_names(permit_names, kinds, result),
+                "not_required_reason": "",
+                "trade_permits": [],
+                "companion_permits_or_reviews": [],
+                "customer_next_step": next_step,
+                "customer_headline": headline,
+                "confidence_tier": confidence_tier,
+                "source_support": source_support,
+                "degraded_sources": degraded_sources,
+            }
         kinds = _kinds_from_text(job_type, commercial_default=commercial_default)
         if not kinds:
             kinds = _kinds_from_text(" ".join([job_scope_text, " ".join(existing_names)]), commercial_default=commercial_default)
