@@ -2946,6 +2946,27 @@ def calculate_permit_ready_score(context: str, structured: dict) -> tuple[int, s
 
 
 def calculate_exact_fee(job_type: str, city: str, state: str, job_value: float) -> dict:
+    """Calculate fee. Prefer AHJ record fee_formula if available, else legacy FEE_FORMULAS."""
+    # ── Bucket A: AHJ record fee_formula is authoritative ──
+    try:
+        from ahj_records import get_ahj, compute_fee_from_formula, format_fee_formula_text
+        ahj = get_ahj(city, state)
+        if ahj and ahj.get("fee_formula"):
+            ff = ahj["fee_formula"]
+            job_low = max(job_value * 0.8, 75000)
+            job_high = job_value * 1.2
+            fee_res = compute_fee_from_formula(ff, job_low, job_high)
+            return {
+                'fee': round(fee_res['total_low'], 2),
+                'formula': format_fee_formula_text(fee_res, city, state),
+                'confidence': 'high',
+                'note': 'Computed from jurisdiction published fee schedule',
+                '_fee_formula_path': True,
+            }
+    except Exception as _e:
+        print(f"[fee-calc] AHJ formula fallback failed: {_e}")
+
+    # ── Legacy path ──
     try:
         key = f"{city.lower().replace(' ', '_')}_{state.lower()}"
         formula = FEE_FORMULAS.get(key)
@@ -9391,7 +9412,17 @@ Return ONLY the JSON object."""
     # Build disclaimer with freshness note
     _generated_at = result.get("_meta", {}).get("generated_at") or datetime.now().isoformat()
     try:
-        _gen_date = datetime.fromisoformat(_generated_at).strftime("%b %d, %Y")
+        _gen_date = datetime.fromisoformat(_generated_at)
+        # Task 6: Render sourced date in AHJ-local timezone
+        try:
+            from ahj_records import get_ahj_timezone
+            tz_name = get_ahj_timezone(city, state)
+            if tz_name:
+                from zoneinfo import ZoneInfo
+                _gen_date = _gen_date.astimezone(ZoneInfo(tz_name))
+        except Exception:
+            pass
+        _gen_date = _gen_date.strftime("%b %d, %Y")
     except Exception:
         _gen_date = datetime.now().strftime("%b %d, %Y")
     result["disclaimer"] = (
@@ -9633,6 +9664,45 @@ Return ONLY the JSON object."""
             result["_procedural_gates"] = gates
     except Exception:
         pass
+    # ── Task 4: Inject AHJ-record gates + notes into customer surfaces ──
+    try:
+        from ahj_records import get_ahj_gates, get_ahj_notes
+        ahj_gates = get_ahj_gates(city, state)
+        for gate in ahj_gates:
+            surfaces = gate.get("surface", [])
+            title = gate.get("title", "")
+            text = gate.get("text", "")
+            source_url = gate.get("source_url", "")
+            payload = f"{title}: {text}".strip(" :")
+            if source_url and source_url not in payload:
+                payload += f" Source: {source_url}"
+            for surf in surfaces:
+                if surf in ("watch_out", "pro_tips", "common_mistakes", "what_to_bring"):
+                    arr = result.get(surf) or []
+                    if not isinstance(arr, list):
+                        arr = [str(arr)]
+                    # Deduplicate by title
+                    if not any(title.lower() in str(item).lower() for item in arr):
+                        arr.append(payload)
+                        result[surf] = arr
+        # Inject notes into pro_tips with source
+        ahj_notes = get_ahj_notes(city, state)
+        for note in ahj_notes:
+            if isinstance(note, dict):
+                note_text = note.get("text", "")
+                note_url = note.get("source_url", "")
+                if note_text:
+                    payload = note_text
+                    if note_url and note_url not in payload:
+                        payload += f" Source: {note_url}"
+                    arr = result.get("pro_tips") or []
+                    if not isinstance(arr, list):
+                        arr = [str(arr)]
+                    if not any(note_text.lower()[:40] in str(item).lower() for item in arr):
+                        arr.append(payload)
+                        result["pro_tips"] = arr
+    except Exception as _e:
+        print(f"[finalize] AHJ gate/note injection failed (non-fatal): {_e}")
     apply_rulebook_depth(result, job_type, city, state)
     sanitize_non_food_office_breakroom_text(result, job_type)
     reconcile_v231_result(result, v231_resolution)
