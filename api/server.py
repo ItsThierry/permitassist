@@ -536,6 +536,12 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         or result.get("jurisdiction_state")
         or ""
     ).upper().strip()
+    target_city = str(
+        (scope_contract or {}).get("city")
+        or result.get("city")
+        or result.get("jurisdiction_city")
+        or ""
+    ).lower().strip()
 
     def is_commercial_ti_result(value: dict) -> bool:
         text = " ".join(str(value.get(k) or "") for k in ("permit_name", "permit_type", "job_summary")).lower()
@@ -601,6 +607,10 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             value = re.sub(r"\bverify\s+requirements\s+with\s+the\s+building\s+department\s+before\s+filing\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
         value = re.sub(r"\bVerified\s*·\s*official sources\b", "Official source path found", value, flags=re.I)
         value = re.sub(r"\bPermit\s+Permit\b", "Permit", value, flags=re.I)
+        # Customer-visible final guardrails for deterministic serializer defects.
+        value = re.sub(r"\s*×\s*1(?:\.0)?\b", "", value)
+        if target_state == "GA" and target_city == "savannah":
+            value = re.sub(r"\(?912\)?[-\s]*651[-\s]*6790", "912-651-6530", value)
         value = re.sub(r"\bPlanning estimate only\s*:?\s*", "", value, flags=re.I)
         value = re.sub(r"\bHidden triggers?\s*:?\s*", "Scope triggers: ", value, flags=re.I)
         value = re.sub(r"\bEngine flagged(?:\s+this\s+answer)?(?:\s+for\s+review)?\b\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
