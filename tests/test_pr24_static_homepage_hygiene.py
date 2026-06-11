@@ -7,6 +7,10 @@ runtime fields from the API; it just must not ship the literal private key names
 in source text.
 """
 
+import re
+import shutil
+import subprocess
+import tempfile
 from pathlib import Path
 
 
@@ -80,6 +84,44 @@ def test_shared_report_where_to_apply_prefers_contact_over_permit_type_metadata(
 
     assert "applyPath.permit_type || applyPath.permit_category" not in html
     assert "const applyContactLabel" in html
+
+
+def _extract_executable_inline_scripts(html: str) -> str:
+    scripts = []
+    for match in re.finditer(r"<script([^>]*)>(.*?)</script>", html, flags=re.S | re.I):
+        attrs = match.group(1)
+        if re.search(r"\bsrc\s*=", attrs, flags=re.I):
+            continue
+        script_type = re.search(r"\btype\s*=\s*['\"]?([^'\" >]+)", attrs, flags=re.I)
+        if script_type and script_type.group(1).lower() not in {
+            "text/javascript",
+            "application/javascript",
+            "module",
+        }:
+            continue
+        scripts.append(match.group(2))
+    return "\n;\n".join(scripts)
+
+
+def test_homepage_inline_javascript_is_parseable_and_not_tool_truncated():
+    html = (ROOT / "frontend/index.html").read_text(encoding="utf-8")
+
+    assert "...[truncated]" not in html
+    node = shutil.which("node")
+    assert node, "node is required to syntax-check shipped inline homepage JavaScript"
+
+    with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8", delete=False) as handle:
+        handle.write(_extract_executable_inline_scripts(html))
+        script_path = handle.name
+
+    try:
+        result = subprocess.run([node, "--check", script_path], text=True, capture_output=True, check=False)
+    finally:
+        Path(script_path).unlink(missing_ok=True)
+
+    assert result.returncode == 0, result.stderr or result.stdout
+    assert "function setJobCategory" in html
+    assert "function setSearchMode" in html
 
 
 def test_homepage_disambiguation_does_not_append_raw_choice_parentheses():

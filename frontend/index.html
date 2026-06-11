@@ -3016,7 +3016,7 @@ function normalizeInspectionItems(items) {
       return { title, description: '', timing: '' };
     }
     if (item && typeof item === 'object') {
-      const title = String(it...[truncated]
+      const title = String(item.stage || item.title || item.name || '').trim();
       const description = String(item.description || item.notes || item.detail || '').trim();
       const timing = String(item.timing || '').trim();
       // Hide fixed-slot placeholders like {stage:'Inspection'}, {stage:'Inspection 7'}, or empty dicts.
@@ -3026,6 +3026,22 @@ function normalizeInspectionItems(items) {
     }
     return null;
   }).filter(Boolean);
+
+  // Second pass: merge orphan fragments into the preceding real inspection item.
+  return normalized.reduce((result, item) => {
+    const effective = `${item.title || ''} ${item.description || ''}`.trim();
+    const wordCount = effective ? effective.split(/\s+/).length : 0;
+    const isOrphan = wordCount < 4 && !String(item.timing || '').trim() && String(item.description || '').trim().length < 3;
+    if (isOrphan && result.length) {
+      const previous = result[result.length - 1];
+      const orphanText = String(item.title || '').trim();
+      const previousDescription = String(previous.description || '').trim();
+      previous.description = previousDescription ? `${previousDescription} ${orphanText}` : orphanText;
+      return result;
+    }
+    result.push(item);
+    return result;
+  }, []);
 }
 
 function conciseHeroFeeCopy(rawFee) {
