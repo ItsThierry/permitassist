@@ -5917,7 +5917,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Session-Token, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Session-Token, Authorization, X-Admin-Token, X-PermitIQ-Benchmark-Secret, X-PermitIQ-Engine, X-PermitAssist-Cache-Mode")
         self.end_headers()
 
     def do_PATCH(self):
@@ -6948,6 +6948,12 @@ class Handler(BaseHTTPRequestHandler):
                     "benchmark": is_benchmark,
                 }, user_email or "")
                 evidence_allowed = evidence_pack_allowed_for_request(path, self.headers, is_sample_demo=is_sample_demo)
+                requested_cache_mode = (self.headers.get("X-PermitAssist-Cache-Mode", "") or "").strip().lower()
+                qa_cache_mode = requested_cache_mode if requested_cache_mode in ("bypass", "refresh") and (is_benchmark or admin_bypass) else ""
+                if requested_cache_mode and requested_cache_mode in ("bypass", "refresh") and not qa_cache_mode:
+                    print("[permit][cache-mode] ignored cache-mode request without admin/benchmark authorization")
+                if qa_cache_mode:
+                    print(f"[permit][cache-mode] {qa_cache_mode}: bypassing permit/search/PDF caches for QA retest")
                 acquired_lookup_slot = PERMIT_LOOKUP_SEMAPHORE.acquire(timeout=PERMIT_LOOKUP_QUEUE_TIMEOUT_SECONDS)
                 if not acquired_lookup_slot:
                     print(
@@ -6974,13 +6980,14 @@ class Handler(BaseHTTPRequestHandler):
                                 "upgrade_url": FREE_LOOKUP_UPGRADE_URL,
                             }, extra_headers=response_headers)
                             return
-                    _use_cache = (not is_benchmark) and (not evidence_allowed)
+                    _use_cache = (not is_benchmark) and (not evidence_allowed) and (not qa_cache_mode)
                     result = research_permit(
                         job_type, city, state, zip_code,
                         job_category=job_category,
                         use_cache=_use_cache,
                         force_model=force_model,
-                        suppress_cache_write=evidence_allowed,
+                        suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
+                        bypass_lookup_caches=bool(qa_cache_mode),
                     )
                     is_cached = result.get("_cached", False)
 
@@ -7373,7 +7380,26 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
                 evidence_allowed = evidence_pack_allowed_for_request(path, self.headers)
-                result = research_permit(job_type, city, state, zip_code, job_category=job_category, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
+                requested_cache_mode = (self.headers.get("X-PermitAssist-Cache-Mode", "") or "").strip().lower()
+                _BENCHMARK_SECRET = os.environ.get("BENCHMARK_SECRET", "")
+                _benchmark_token = self.headers.get("X-PermitIQ-Benchmark-Secret", "")
+                is_benchmark = bool(
+                    _BENCHMARK_SECRET
+                    and _benchmark_token
+                    and len(_BENCHMARK_SECRET) >= 16
+                    and hmac.compare_digest(_benchmark_token, _BENCHMARK_SECRET)
+                )
+                admin_bypass = bool(ADMIN_TOKEN and self.headers.get("X-Admin-Token", "") == ADMIN_TOKEN)
+                qa_cache_mode = requested_cache_mode if requested_cache_mode in ("bypass", "refresh") and (is_benchmark or admin_bypass) else ""
+                if requested_cache_mode and requested_cache_mode in ("bypass", "refresh") and not qa_cache_mode:
+                    print("[api-v1-permit][cache-mode] ignored cache-mode request without admin/benchmark authorization")
+                result = research_permit(
+                    job_type, city, state, zip_code,
+                    job_category=job_category,
+                    use_cache=(not evidence_allowed) and (not qa_cache_mode),
+                    suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
+                    bypass_lookup_caches=bool(qa_cache_mode),
+                )
                 if evidence_allowed:
                     result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
                 self.send_json(200, result)

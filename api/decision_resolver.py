@@ -415,8 +415,14 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
         # P1A — Change-of-use anchor guard (2026-06-09).
         # Force Building/TI anchor for any explicit use-type change.
         if _explicit_change_of_use(job_text):
-            kinds = ["Commercial Building / Tenant Improvement"]
-            permit_names = ["Commercial Building / Tenant Improvement Permit"]
+            extra_trade_kinds = [
+                kind for kind in _kinds_from_text(" ".join(existing_names), commercial_default=False)
+                if kind not in {"Commercial Building / Tenant Improvement", "Building"}
+            ]
+            kinds = list(dict.fromkeys(["Commercial Building / Tenant Improvement", *extra_trade_kinds]))
+            permit_names = _permit_names_for_kinds(kinds, existing_names)
+            if not permit_names:
+                permit_names = ["Commercial Building / Tenant Improvement Permit"]
             reason = "Permit required because the scope involves a change of use or occupancy classification."
             headline = "Permit required: Commercial Building / Tenant Improvement."
             department = _norm(result.get("applying_office") or result.get("building_dept_name")) or f"{city} {state} Building Department".strip() or "the local building department"
