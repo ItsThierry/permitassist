@@ -1825,10 +1825,60 @@ function setSearchMode(mode) {
   }
 }
 const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function normalizeCustomerVisibleCopy(value) {
+  return String(value || '')
+    .replace(/(^|[^.])\.\.(?!\.)/g, '$1. ')
+    .replace(/\.\s+and\s+([a-z])/g, ' and $1')
+    .replace(/\bverify\s+in\s+before\b/gi, 'verify with the building department before quoting')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+function esc(s){return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function escCopy(s){return esc(normalizeCustomerVisibleCopy(s))}
 function sourceUrl(src){return typeof src==='string'?src:((src&&src.url)||'')}
 function sourceTitle(src){return (src&&typeof src==='object'&&(src.title||src.name))||'Source'}
 function sourceHostname(src){try{return new URL(sourceUrl(src)).hostname}catch(_){return sourceUrl(src)}}
+function sanitizeFallbackJurisdictionCopy(text, level) {
+  let value = normalizeCustomerVisibleCopy(text || 'Verify this jurisdiction with the building department before starting work.');
+  if (['county', 'state', 'general'].includes(level)) {
+    value = value.replace(/\blast\s+verified\b/gi, 'last checked').replace(/\bverified\b/gi, 'registry-listed');
+  }
+  return value;
+}
+function hasOfficialLocalResearchSource(d, city) {
+  const cityToken = String(city || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const hasSpecificCityToken = cityToken.length >= 4;
+  return (Array.isArray(d?.sources) ? d.sources : []).some(src => {
+    const url = sourceUrl(src);
+    const title = sourceTitle(src).toLowerCase();
+    let host = '';
+    try { host = new URL(url).hostname.toLowerCase().replace(/^www\./, ''); } catch (_) {}
+    const compactHost = host.replace(/[^a-z0-9]/g, '');
+    const compactTitle = title.replace(/[^a-z0-9]/g, '');
+    const cityMatched = hasSpecificCityToken && (compactHost.includes(cityToken) || compactTitle.includes(cityToken));
+    const officialSignal = /\.(gov|us)(\/|$)/i.test(url) || /official|building|permit|inspection|community development|department/i.test(title);
+    return Boolean(url) && cityMatched && officialSignal;
+  });
+}
+function normalizeCustomerWarningItems(...groups) {
+  return groups.flat().map(item => {
+    if (!item) return '';
+    if (typeof item === 'object') return item.title || item.warning || item.text || item.description || item.reason || '';
+    return String(item);
+  }).map(normalizeCustomerVisibleCopy)
+    .map(s => s.replace(/^\s*rationale\s*:\s*/i, ''))
+    .filter(Boolean)
+    .filter(s => !/^\s*Required\s+(?:for|because)\b/i.test(s))
+    .filter(s => !/companion permits are suppressed/i.test(s));
+}
+function visibleCompanionPermits(d) {
+  return (d?.companion_permits || []).filter(cp => {
+    if (!cp || !cp.permit_type) return false;
+    const certainty = String(cp.certainty || '').toLowerCase();
+    if (!certainty) return true;
+    return ['almost_certain', 'likely', 'required', 'yes'].includes(certainty);
+  });
+}
 
 const TRADE_QUESTIONS = {
   'hvac': [
@@ -2096,10 +2146,13 @@ function generateCustomerPermitExplanation() {
   // commercial restaurant + office + retail TI responses (4/4 commercial Opus
   // reviews flagged this as a credibility-killing template leak).
   const suffix = (permitName && permitName.trim().toLowerCase().endsWith("permit")) ? " is" : " Permit is";
+  const sourceLine = city
+    ? `Prepared with PermitAssist (permitassist.io) from ${city}'s published permit guidance. Verify final requirements with the local building department before filing.`
+    : 'Prepared with PermitAssist (permitassist.io) from published permit guidance. Verify final requirements with the local building department before filing.';
   if (isCommercial) {
-    return `Why Your ${permitName}${suffix} Required\n\nYour project requires a ${permitName} under ${location} law before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local building, fire, mechanical, plumbing, and life-safety codes. Without it, the building cannot receive a Certificate of Occupancy and the tenant cannot lawfully open for business.\n\nCost: ${fee} — paid to the city, not to your contractor. Plan-review and trade-permit fees scale with project valuation; budget for the full package.\n\nWhat happens without it: Unpermitted commercial work can result in stop-work orders, fines, required tear-out and rework, denied business-insurance claims, denied Certificate of Occupancy, lease violations with the landlord, and forced delays to the opening date.\n\nThis information was verified via PermitAssist (permitassist.io).`;
+    return `Why Your ${permitName}${suffix} Required\n\nYour project requires a ${permitName} under ${location} law before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local building, fire, mechanical, plumbing, and life-safety codes. Without it, the building cannot receive a Certificate of Occupancy and the tenant cannot lawfully open for business.\n\nCost: ${fee} — paid to the applicable permitting authority, not to your contractor. Plan-review and trade-permit fees scale with project valuation; budget for the full package.\n\nWhat happens without it: Unpermitted commercial work can result in stop-work orders, fines, required tear-out and rework, denied business-insurance claims, denied Certificate of Occupancy, lease violations with the landlord, and forced delays to the opening date.\n\n${sourceLine}`;
   }
-  return `Why Your ${permitName}${suffix} Required\n\nYour contractor is required by ${location} law to pull a ${permitName} before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local safety codes. Without it, your homeowner's insurance may not cover claims related to this work, and you may face issues when selling your home.\n\nCost: ${fee} — this is paid directly to the city, not to your contractor.\n\nWhat happens without it: Unpermitted work can result in fines, required tear-out and redo, insurance claim denials, and required disclosure during home sale.\n\nThis information was verified via PermitAssist (permitassist.io).`;
+  return `Why Your ${permitName}${suffix} Required\n\nYour contractor is required by ${location} law to pull a ${permitName} before this work begins.\n\nWhat it covers: This permit ensures the work is inspected and meets local safety codes. Without it, your homeowner's insurance may not cover claims related to this work, and you may face issues when selling your home.\n\nCost: ${fee} — this is paid directly to the permitting authority, not to your contractor.\n\nWhat happens without it: Unpermitted work can result in fines, required tear-out and redo, insurance claim denials, and required disclosure during home sale.\n\n${sourceLine}`;
 }
 
 function toggleCustomerExplanation() {
@@ -2840,30 +2893,35 @@ function getJurisdictionDisplay(d, city, state, jobAddress) {
     : levelRaw === 'web_search' ? 'web'
     : ['state', 'state_rules'].includes(levelRaw) ? 'state'
     : 'general';
-  const matchedTo = level === 'county'
-    ? `County-level match for ${city}, ${state}`
-    : level === 'city'
-      ? `City match for ${city}, ${state}`
-      : level === 'web'
-        ? `Live official-source match for ${city}, ${state}`
-        : level === 'state'
-          ? `State/fallback match for ${city}, ${state}`
-          : `General jurisdiction estimate for ${city}, ${state}`;
-  const badge = level === 'city'
-    ? '🟢 Exact jurisdiction'
+  const hasFallbackOfficialSource = ['county', 'state', 'general'].includes(level) && hasOfficialLocalResearchSource(d, city);
+  const matchedTo = hasFallbackOfficialSource
+    ? `${city}, ${state} isn't yet in PermitAssist's registry. This answer was built from official ${city} sources found via live web research. Fees are AI-estimated — confirm with the building department before quoting.`
     : level === 'county'
-      ? '🟠 County fallback'
-      : level === 'web'
-        ? '🟡 Official-source match'
-        : level === 'state'
-          ? '🟡 State fallback'
-          : '🔴 Needs manual verify';
-  const why = d.confidence_reason || d.county_fallback_note || 'Verify this jurisdiction with the building department before starting work.';
+      ? `County-level match for ${city}, ${state}`
+      : level === 'city'
+        ? `City match for ${city}, ${state}`
+        : level === 'web'
+          ? `Live official-source match for ${city}, ${state}`
+          : level === 'state'
+            ? `State/fallback match for ${city}, ${state}`
+            : `General jurisdiction estimate for ${city}, ${state}`;
+  const badge = hasFallbackOfficialSource
+    ? '🟡 Registry fallback + official sources'
+    : level === 'city'
+      ? '🟢 Exact jurisdiction'
+      : level === 'county'
+        ? '🟠 County fallback'
+        : level === 'web'
+          ? '🟡 Official-source match'
+          : level === 'state'
+            ? '🟡 State fallback'
+            : '🔴 Needs manual verify';
+  const why = sanitizeFallbackJurisdictionCopy(d.confidence_reason || d.county_fallback_note || 'Verify this jurisdiction with the building department before starting work.', level);
   return {
     badge,
     matchedTo,
     why,
-    lookupBasis: jobAddress ? `Used job address: ${jobAddress}` : 'Used city/state lookup only',
+    lookupBasis: hasFallbackOfficialSource ? 'Fallback registry tier; official local sources found via live web research.' : (jobAddress ? `Used job address: ${jobAddress}` : 'Used city/state lookup only'),
   };
 }
 
@@ -3314,7 +3372,7 @@ function renderResults(d, job, city, state) {
   }
 
   // Related permits warning
-  const companionPermits = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
+  const companionPermits = visibleCompanionPermits(d);
   if (companionPermits.length > 0) {
     html += `<div class="companion-card" style="background:#fffbeb; border:2px solid #f59e0b; border-radius:12px; padding:18px 20px; margin-bottom:16px;">
       <div class="section-label" style="color:#92400e; margin-bottom:10px;">⚠️ Related permits</div>
@@ -3520,8 +3578,7 @@ function renderResults(d, job, city, state) {
   }
 
   // Watch Out / Common mistakes
-  const conditionalNotes = permits.filter(p => p.notes && /if|unless|except|conditional|may not|only when|depending/i.test(p.notes)).map(p => p.notes);
-  const allWarnings = [...mistakes.slice(0, 4), ...conditionalNotes.slice(0, 2)];
+  const allWarnings = normalizeCustomerWarningItems(mistakes, d.watch_out || []).slice(0, 6);
   if (allWarnings.length) {
     html += `<div class="watchout-card"><div class="section-label">⚠️ Watch Out — Common Mistakes & Gotchas</div>
       <ul class="bullet-list">${[...new Set(allWarnings)].map(m => `<li>${esc(m)}</li>`).join('')}</ul>
@@ -3763,8 +3820,10 @@ function renderResultAsReport(d, job, city, state) {
                     : (Array.isArray(d.inspections) ? d.inspections : []))
                     .map(ins => ins.title || ins.stage || ins.description || ins.notes || '')
                     .filter(Boolean);
-  const failureRisks = (Array.isArray(d.common_mistakes) && d.common_mistakes.length) ? d.common_mistakes
-                    : (Array.isArray(d.watch_out) ? d.watch_out : []);
+  const failureRisks = normalizeCustomerWarningItems(
+    (Array.isArray(d.common_mistakes) && d.common_mistakes.length) ? d.common_mistakes : [],
+    Array.isArray(d.watch_out) ? d.watch_out : []
+  );
   const sources = Array.isArray(d.sources) ? d.sources.filter(Boolean) : [];
   const validationIssues = Array.isArray(d._validation_issues) ? d._validation_issues : [];
   const missingFields = Array.isArray(d.missing_fields) ? d.missing_fields : [];
@@ -4409,7 +4468,7 @@ function copyForQuote() {
   if (tl) t += `\nPermit Timeline: ${tl}`;
   const permits = d.permits_required || [];
   if (permits.length > 1) t += `\nPermits required: ${permits.map(p => p.permit_type).join(', ')}`;
-  t += `\n(Verified via PermitAssist — permitassist.io)`;
+  t += `\n(Prepared with PermitAssist — verify final requirements with the local building department before filing)`;
   navigator.clipboard.writeText(t).then(() => showCopy('✅ Quote line copied!')).catch(() => {
     const box = document.createElement('textarea'); box.value = t; document.body.appendChild(box); box.select(); document.execCommand('copy'); document.body.removeChild(box); showCopy('✅ Quote line copied!');
   });
@@ -4426,11 +4485,11 @@ function downloadReport() {
   const tlText = tl.simple || tl.complex || '';
   const licenseNote = normalizeLicenseRequirementCopy(d.license_required || '');
   const cityRegNote = (d.city_contractor_registration && d.city_contractor_registration !== 'null') ? d.city_contractor_registration : '';
-  const companions = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
+  const companions = visibleCompanionPermits(d);
   const permits = (d.permits_required || []);
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])];
   const tips = (d.pro_tips || []).slice(0, 4);
-  const mistakes = (d.common_mistakes || []).slice(0, 4);
+  const mistakes = normalizeCustomerWarningItems(d.common_mistakes || [], d.watch_out || []).slice(0, 4);
   const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
   const sources = (d.sources || []).filter(s => sourceUrl(s)).slice(0, 5);
   const phone = d.apply_phone || '';
@@ -4561,11 +4620,11 @@ function printResult() {
   const tl = d.approval_timeline || {};
   const tlText = tl.simple || tl.complex || '';
   const licenseNote = normalizeLicenseRequirementCopy(d.license_required || '');
-  const companions = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
+  const companions = visibleCompanionPermits(d);
   const permits = (d.permits_required || []);
   const docs = [...new Set([...(d.what_to_bring || d.checklist || []), ...(d.requirements || d.documents_needed || [])])];  
   const tips = (d.pro_tips || []).slice(0, 4);
-  const mistakes = (d.common_mistakes || []).slice(0, 4);
+  const mistakes = normalizeCustomerWarningItems(d.common_mistakes || [], d.watch_out || []).slice(0, 4);
   const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
   const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';

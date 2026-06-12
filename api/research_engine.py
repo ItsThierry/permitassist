@@ -2874,11 +2874,11 @@ def _extract_pdf_text_with_firecrawl(url: str) -> str:
         return ""
 
 
-def extract_pdf_text(url: str, city: str, state: str) -> str:
+def extract_pdf_text(url: str, city: str, state: str, bypass_cache: bool = False, suppress_cache_write: bool = False) -> str:
     try:
         if not is_pdf_url(url):
             return ''
-        cached = get_cached_pdf_text(city, state, source_url=url)
+        cached = '' if bypass_cache else get_cached_pdf_text(city, state, source_url=url)
         if cached:
             print(f"[pdf_kb] Cache hit for {city}, {state}: {len(cached)} chars")
             return cached
@@ -2891,27 +2891,30 @@ def extract_pdf_text(url: str, city: str, state: str) -> str:
 
         pdfplumber_text = _extract_pdf_text_with_pdfplumber(pdf_bytes, url=url)
         if _meaningful_pdf_text_len(pdfplumber_text) >= 100:
-            cache_pdf_text(city, state, pdfplumber_text, url, extraction_method="pdfplumber")
-            print(f"[pdf_kb] Cached text PDF for {city}, {state}: {len(pdfplumber_text)} chars")
+            if not suppress_cache_write:
+                cache_pdf_text(city, state, pdfplumber_text, url, extraction_method="pdfplumber")
+                print(f"[pdf_kb] Cached text PDF for {city}, {state}: {len(pdfplumber_text)} chars")
             return pdfplumber_text
 
         print(f"[pdf_kb] Low-text PDF detected for {url}, trying Firecrawl OCR")
         firecrawl_text = _extract_pdf_text_with_firecrawl(url)
         if _meaningful_pdf_text_len(firecrawl_text) >= 100:
-            cache_pdf_text(city, state, firecrawl_text, url, extraction_method="firecrawl_pdf_ocr")
-            print(f"[pdf_kb] Cached OCR PDF for {city}, {state}: {len(firecrawl_text)} chars")
+            if not suppress_cache_write:
+                cache_pdf_text(city, state, firecrawl_text, url, extraction_method="firecrawl_pdf_ocr")
+                print(f"[pdf_kb] Cached OCR PDF for {city}, {state}: {len(firecrawl_text)} chars")
             return firecrawl_text
 
         if pdfplumber_text:
-            cache_pdf_text(city, state, pdfplumber_text, url, extraction_method="pdfplumber_low_text")
+            if not suppress_cache_write:
+                cache_pdf_text(city, state, pdfplumber_text, url, extraction_method="pdfplumber_low_text")
             return pdfplumber_text
     except Exception as e:
         print(f"[pdf_kb] Unified PDF extraction failed for {url}: {e}")
     return ''
 
 
-def fetch_and_cache_pdf(url: str, city: str, state: str) -> str:
-    return extract_pdf_text(url, city, state)
+def fetch_and_cache_pdf(url: str, city: str, state: str, bypass_cache: bool = False, suppress_cache_write: bool = False) -> str:
+    return extract_pdf_text(url, city, state, bypass_cache=bypass_cache, suppress_cache_write=suppress_cache_write)
 
 
 def calculate_permit_ready_score(context: str, structured: dict) -> tuple[int, str, list[str]]:
@@ -3204,13 +3207,14 @@ def detect_primary_scope(job_type: str) -> str:
         'tenant finish', 'tenant buildout',
         'industrial ', 'warehouse', 'research lab', 'laboratory', 'lab tenant improvement',
         'chemical fume hood', 'lab exhaust', 'hazardous material storage', 'emergency eyewash',
-        'change of occupancy', 'a-2 occupancy',
+        'change of occupancy', 'a-2 occupancy', 'laundromat', 'laundry tenant',
         'b-occupancy', 'mercantile', 'assembly occupancy', 'change of use',
     )):
         return 'commercial'
 
     conversion_terms = (
-        'converted into', 'converted to', 'convert into', 'convert to', 'conversion to',
+        'converted into', 'converted to', 'converting into', 'converting to',
+        'converting', 'convert into', 'convert to', 'conversion to',
         'change to', 'new occupancy type', 'occupancy conversion', 'use conversion',
         'fit out', 'fit-out', 'tenant fitout', 'tenant fit-out', 'multi-trade interior alteration',
     )
@@ -3218,6 +3222,7 @@ def detect_primary_scope(job_type: str) -> str:
         'commercial', 'tenant', 'suite', 'retail', 'store', 'office', 'restaurant',
         'fitness studio', 'fitness', 'gym', 'studio', 'yoga', 'pilates', 'assembly',
         'mercantile', 'warehouse', 'industrial', 'clinic', 'medical', 'dental',
+        'laundromat', 'laundry tenant',
     )
     if any(t in job_lc for t in conversion_terms) and any(t in job_lc for t in commercial_conversion_markers):
         return 'commercial'
@@ -5475,11 +5480,25 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
         if commercial_permit:
             permits = [commercial_permit]
             add_logic(commercial_permit["permit_type"], commercial_permit["notes"], trigger)
+            companion_permits: list[dict] = []
+            if commercial_scope == "commercial_mechanical_hvac":
+                if _has_unnegated_any(job, ("gas", "gas-fired", "gas fired", "gas connection", "gas connections", "gas line", "gas piping")):
+                    companion_permits.append({
+                        "permit_type": "Gas Permit — Commercial Fuel Gas Connection / Pressure Test",
+                        "reason": "Commercial gas-fired HVAC/RTU work commonly requires gas piping reconnection, appliance connection, or pressure-test sign-off even when the job is otherwise a like-for-like mechanical swap.",
+                        "certainty": "likely",
+                    })
+                if _has_unnegated_any(job, ("electrical", "disconnect", "breaker", "circuit", "controls", "power connection")):
+                    companion_permits.append({
+                        "permit_type": "Electrical Permit — Commercial Equipment Connection / Disconnect",
+                        "reason": "Commercial HVAC/RTU replacements commonly require electrical disconnect, equipment connection, controls, or service-equipment inspection coordination.",
+                        "certainty": "likely",
+                    })
             return {
                 "scope_classification": commercial_scope,
                 "permits_required": permits,
                 "permits_required_logic": logic,
-                "companion_permits": [],
+                "companion_permits": companion_permits,
             }
 
     # Solar first so "roof solar" scopes don't collapse into a reroof permit.
@@ -5631,12 +5650,12 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
         if is_water_heater and not is_hvac:
             ptype = "Residential Plumbing Permit — Water Heater Replacement" if scope_contract.get("category") == "residential" else "Plumbing Permit — Water Heater Replacement"
             portal = "Residential Plumbing - Water Heater Replacement" if scope_contract.get("category") == "residential" else "Plumbing - Water Heater Replacement"
-            notes = "Required for residential water heater replacement; companion electrical/gas permits are suppressed unless gas piping, venting change, or new circuit work is explicit."
+            notes = "Required for residential water heater replacement; confirm any connection or venting details with the building department before submittal."
             base_reason = "Residential water heater swap is one trade permit when same location/capacity and no new gas/electrical scope is stated."
         else:
             ptype = "Mechanical Permit — HVAC Equipment Changeout (Residential)" if hvac_like_for_like else "Mechanical Permit — HVAC System Replacement (Residential)"
             portal = "Mechanical - HVAC Changeout / Replacement"
-            notes = "Required for HVAC equipment replacement/changeout; companion permits are suppressed unless panel work, gas-line modification, or new fixtures are explicit."
+            notes = "Required for HVAC equipment replacement/changeout; confirm any equipment-connection details with the building department before submittal."
             base_reason = "HVAC equipment swap/changeout triggers the mechanical permit; no companion trade permit is included without explicit extra scope."
         permits = [_scope_permit(ptype, portal, notes)]
         add_logic(permits[0]["permit_type"], base_reason, "HVAC/water-heater replacement scope")
@@ -5884,6 +5903,8 @@ def _permit_family(permit: dict) -> str:
             return "sign"
         if "mechanical" in text or "hvac" in text or re.search(r"\bduct(?:work|s|ing)?\b", text) or "ventilation" in text or "rtu" in text:
             return "mechanical"
+        if "gas permit" in text or "fuel gas" in text or "gas piping" in text or "gas line" in text or "gas manifold" in text:
+            return "gas"
         if "electrical" in text or "lighting" in text or "branch circuit" in text or "panel" in text:
             return "electrical"
         if "plumb" in text or "fixture" in text or "restroom" in text or "sewer" in text:
@@ -5917,6 +5938,7 @@ def _ahj_companion_permit_name(family: str, primary_scope: str, city: str, state
         "building": (f"Building Permit — Tenant Improvement ({scope_label})", "Building - Tenant Improvement / Alteration"),
         "mechanical": ("Mechanical Permit", "Mechanical Permit"),
         "plumbing": ("Plumbing Permit", "Plumbing Permit"),
+        "gas": ("Gas / Fuel Gas Permit", "Gas / Fuel Gas Permit"),
         "electrical": ("Electrical Permit", "Electrical Permit"),
         "sign": ("Sign Permit", "Sign Permit"),
         "fire": ("Fire Alarm / Fire Sprinkler Permit", "Fire Alarm / Fire Sprinkler Permit"),
@@ -5925,6 +5947,7 @@ def _ahj_companion_permit_name(family: str, primary_scope: str, city: str, state
         "building": (f"Building Permit — Tenant Improvement / Commercial Alteration ({scope_label})", "Commercial Building Permit - Tenant Improvement"),
         "mechanical": ("Mechanical Permit — Commercial Tenant Improvement", "Mechanical Permit - Commercial Interior Alteration"),
         "plumbing": ("Plumbing Permit — Commercial Tenant Improvement", "Plumbing Permit - Commercial Interior Alteration"),
+        "gas": ("Gas Permit — Commercial Fuel Gas Piping", "Gas Permit - Commercial Fuel Gas"),
         "electrical": ("Electrical Permit — Commercial Tenant Improvement", "Electrical Permit - Commercial Interior Alteration"),
         "sign": ("Sign Permit — Commercial Storefront / Wall Sign", "Sign Permit - Commercial"),
         "fire": ("Fire Alarm / Fire Sprinkler Permit — Commercial Tenant Improvement", "Fire Alarm / Fire Sprinkler Permit - Commercial"),
@@ -6358,8 +6381,13 @@ _PLUMBING_REQUIRED_SCOPE_TERMS = (
     "plumbing", "restroom", "restrooms", "bathroom", "bathrooms", "toilet", "toilets",
     "lavatory", "lavatories", "sink", "sinks", "shower", "showers",
     "hand sink", "mop sink", "floor sink", "dishwasher", "water line",
-    "sewer", "dwv", "fixture", "grease interceptor", "grease trap",
+    "sewer", "dwv", "fixture", "floor drain", "floor drains", "washer", "washers",
+    "laundromat", "laundry", "commercial water heater", "grease interceptor", "grease trap",
     "medical gas", "nitrous", "oxygen", "vacuum line",
+)
+_GAS_REQUIRED_SCOPE_TERMS = (
+    "gas line", "gas piping", "fuel gas", "gas manifold", "gas dryer", "gas dryers",
+    "gas-fired", "gas fired", "gas appliance", "gas connection", "gas connections",
 )
 _FIRE_REQUIRED_SCOPE_TERMS = (
     "fire alarm", "sprinkler", "sprinkler relocation", "relocate sprinkler",
@@ -6385,6 +6413,8 @@ def _commercial_ti_required_trade_families(primary_scope: str, job_type: str) ->
         families.append("electrical")
     if _has_unnegated_any(job, _PLUMBING_REQUIRED_SCOPE_TERMS):
         families.append("plumbing")
+    if _has_unnegated_any(job, _GAS_REQUIRED_SCOPE_TERMS):
+        families.append("gas")
     if _has_unnegated_any(job, _FIRE_REQUIRED_SCOPE_TERMS):
         families.append("fire")
     if _has_unnegated_any(job, _SIGN_REQUIRED_SCOPE_TERMS):
@@ -6448,7 +6478,9 @@ def _is_commercial_ti_scope(primary_scope: str, job_type: str) -> bool:
         "tenant improvement", " ti", "t.i.", "tenant finish", "tenant buildout",
         "interior alteration", "interior remodel",
         "buildout", "build-out", "change of use", "change of occupancy", "occupancy change",
-        "converted into", "converted to", "convert into", "convert to", "conversion to",
+        "converted into", "converted to", "converting into", "converting to",
+        "convert into", "convert to", "conversion to",
+        "laundromat", "laundry tenant", "self-service laundromat", "former retail space",
         "fit out", "fit-out", "tenant fitout", "tenant fit-out",
     ])
 
@@ -6482,6 +6514,12 @@ def _commercial_ti_companion_permits(primary_scope: str, job_type: str) -> list[
         elif primary_scope == "commercial_medical_clinic_ti":
             plumbing_note = "Commercial clinic fixtures, hand sinks, medical/dental equipment connections, restrooms, and DWV changes commonly require plumbing review when stated in the scope."
         companions.append(_scope_permit("Plumbing Permit — Commercial Tenant Improvement", "Plumbing Permit - Commercial Interior Alteration", plumbing_note))
+    if "gas" in families:
+        companions.append(_scope_permit(
+            "Gas Permit — Commercial Fuel Gas Piping",
+            "Gas Permit - Commercial Fuel Gas",
+            "Commercial fuel-gas piping, gas manifold, gas appliance connection, or gas-dryer scope is stated and commonly requires gas piping review and pressure-test inspection.",
+        ))
     if "fire" in families:
         fire_note = "Commercial TI fire-alarm, sprinkler, suppression, or related life-safety trade scope is stated and commonly requires fire review."
         if primary_scope == "commercial_restaurant" and _has_unnegated_any(job_type or "", ("hood", "type i hood", "type 1 hood", "ansul", "hood suppression", "fryer", "griddle", "grease duct")):
@@ -6807,6 +6845,8 @@ def apply_fee_verify_caveat(result: dict) -> dict:
     if not isinstance(result, dict):
         return result
 
+    verify_caveat = " — verify with the building department before quoting"
+
     # ── Bucket A: AHJ fee formula override ──
     fee_calc = result.get("fee_calculator") or {}
     if fee_calc.get("_fee_formula_path") and fee_calc.get("formula"):
@@ -6814,17 +6854,17 @@ def apply_fee_verify_caveat(result: dict) -> dict:
         fee_source = result.get("fee_source") if isinstance(result.get("fee_source"), dict) else {}
         source_url = fee_source.get("url") or ""
         if source_url and "verify in" not in formula_text.lower():
-            result["fee_range"] = f"{formula_text} — verify in {source_url} before quoting"
+            result["fee_range"] = f"{formula_text}{verify_caveat}"
         elif source_url and "verify in" in formula_text.lower():
             # Replace any existing verify URL
             result["fee_range"] = re.sub(
                 r"\s+—\s+verify\s+(?:in|at)\s+.+?(?:\s+before quoting)?$",
-                f" — verify in {source_url} before quoting",
+                verify_caveat,
                 formula_text,
                 flags=re.I,
             )
         else:
-            result["fee_range"] = f"{formula_text} — verify in city portal before quoting"
+            result["fee_range"] = f"{formula_text}{verify_caveat}"
         return result
 
     def _strip_fee_markdown(text: str) -> str:
@@ -6851,24 +6891,23 @@ def apply_fee_verify_caveat(result: dict) -> dict:
         # Keep the fee number, strip customer-visible Markdown, and align inline
         # caveat with the current fee_source when available.
         updated_fee_text = fee_text
-        if source_url and source_url not in updated_fee_text:
-            updated_fee_text = re.sub(
-                r"\s+—\s+verify\s+(?:in|at)\s+.+?(?:\s+before quoting)?$",
-                f" — verify in {source_url} before quoting",
-                updated_fee_text,
-                flags=re.I,
-            )
+        updated_fee_text = re.sub(
+            r"\s+—\s+verify\s+(?:in|at)\s+.+?(?:\s+before quoting)?$",
+            verify_caveat,
+            updated_fee_text,
+            flags=re.I,
+        )
         result["fee_range"] = updated_fee_text
         return result
     fee_lower = fee_text.lower()
+    if verify_caveat.lower() in fee_lower:
+        result["fee_range"] = _strip_fee_markdown(fee_text)
+        return result
     if fee_lower.startswith("fee estimate:") or fee_lower.startswith("fee planning estimate:"):
         base = fee_text
     else:
         base = f"Fee Estimate: {fee_text}"
-    if source_url:
-        result["fee_range"] = f"{base} — verify in {source_url} before quoting"
-    else:
-        result["fee_range"] = f"{base} — verify in city portal before quoting"
+    result["fee_range"] = f"{base}{verify_caveat}"
     result["fee_range"] = _strip_fee_markdown(result["fee_range"])
     return result
 
@@ -7554,12 +7593,12 @@ def _make_result(url: str, title: str, content: str, source_layer: str) -> dict:
 
 
 
-def _fetch_and_structure_url(url: str, city: str, state: str, default_title: str = "") -> dict | None:
+def _fetch_and_structure_url(url: str, city: str, state: str, default_title: str = "", bypass_cache: bool = False, suppress_cache_write: bool = False) -> dict | None:
     if not url:
         return None
     if is_pdf_url(url):
         print("[search] PDF detected, routing to unified PDF extractor")
-        pdf_text = extract_pdf_text(url, city, state)
+        pdf_text = extract_pdf_text(url, city, state, bypass_cache=bypass_cache, suppress_cache_write=suppress_cache_write)
         content = (pdf_text or "").strip()
         status = 200 if content else 0
         source_layer = "layer1_pdf"
@@ -7629,12 +7668,12 @@ def _fetch_and_structure_url(url: str, city: str, state: str, default_title: str
 
 
 
-def scrape_urls_parallel(urls: list[str], city: str = "", state: str = "", max_workers: int = 3, timeout: int = 12) -> list[dict]:
+def scrape_urls_parallel(urls: list[str], city: str = "", state: str = "", max_workers: int = 3, timeout: int = 12, bypass_cache: bool = False, suppress_cache_write: bool = False) -> list[dict]:
     """Scrape multiple URLs in parallel. Returns list of dicts with structured extraction."""
     results = []
     unique_urls = _unique_keep_order(urls)[: max_workers + 1]
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_url = {executor.submit(_fetch_and_structure_url, url, city, state): url for url in unique_urls[:max_workers]}
+        future_to_url = {executor.submit(_fetch_and_structure_url, url, city, state, "", bypass_cache, suppress_cache_write): url for url in unique_urls[:max_workers]}
         try:
             for future in as_completed(future_to_url, timeout=timeout):
                 url = future_to_url[future]
@@ -7651,10 +7690,10 @@ def scrape_urls_parallel(urls: list[str], city: str = "", state: str = "", max_w
 
 
 def build_search_context(job_type: str, city: str, state: str, zip_code: str = "",
-                          city_match_level: str = "city") -> str:
+                          city_match_level: str = "city", bypass_cache: bool = False, suppress_cache_write: bool = False) -> str:
     try:
         search_city, search_state, jurisdiction_note = normalize_jurisdiction(city, state)
-        cached = get_search_cache(search_city, search_state, city_match_level)
+        cached = None if bypass_cache else get_search_cache(search_city, search_state, city_match_level)
         if cached:
             if _cache_still_valid(cached):
                 print(f"[search] Search cache hit for {search_city}, {search_state}")
@@ -7703,11 +7742,11 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
 
         if kb_entry and kb_entry.get("permit_url"):
             print("[search] Layer 0: direct permit source check")
-            primary = _fetch_and_structure_url(kb_entry.get("permit_url"), city, state, kb_entry.get("permit_office", f"{city} permit office"))
+            primary = _fetch_and_structure_url(kb_entry.get("permit_url"), city, state, kb_entry.get("permit_office", f"{city} permit office"), bypass_cache=bypass_cache, suppress_cache_write=suppress_cache_write)
             add_scraped_item(primary, kb_entry.get("permit_office", f"{city} permit office"))
             portal_url = kb_entry.get("online_portal")
             if portal_url and portal_url != kb_entry.get("permit_url"):
-                add_scraped_item(_fetch_and_structure_url(portal_url, city, state, f"{city} online permit portal"), f"{city} online permit portal")
+                add_scraped_item(_fetch_and_structure_url(portal_url, city, state, f"{city} online permit portal", bypass_cache=bypass_cache, suppress_cache_write=suppress_cache_write), f"{city} online permit portal")
 
         if ACCELA_APP_ID:
             accela_data = accela_get_permit_info(city, state, job_type)
@@ -7759,7 +7798,7 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
             if not merged_results:
                 merged_results.extend(_search_with_fallback(relaxed_query, num=5, city=search_city, state=search_state))
             ranked = _rank_search_results(merged_results, limit=4, city=search_city, state=search_state)
-            scraped = scrape_urls_parallel([r.get("url", "") for r in ranked], city=city, state=state, max_workers=3, timeout=14)
+            scraped = scrape_urls_parallel([r.get("url", "") for r in ranked], city=city, state=state, max_workers=3, timeout=14, bypass_cache=bypass_cache, suppress_cache_write=suppress_cache_write)
             scraped_by_url = {item.get("url", ""): item for item in scraped}
             for r in ranked:
                 item = scraped_by_url.get(r.get("url", ""))
@@ -7800,7 +7839,8 @@ def build_search_context(job_type: str, city: str, state: str, zip_code: str = "
             "results": compact_results,
             "auto_kb_updated": auto_kb_updated,
         }
-        set_search_cache(search_city, search_state, payload)
+        if not suppress_cache_write:
+            set_search_cache(search_city, search_state, payload)
         return _render_search_context(payload)
     except Exception as e:
         print(f"[search] build_search_context failed (non-fatal): {e}")
@@ -8663,7 +8703,7 @@ def scrub_hidden_trigger_internal_metadata(result: dict) -> dict:
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
-def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str | None = None, job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False) -> dict:
+def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str | None = None, job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False, bypass_lookup_caches: bool = False) -> dict:
     """
     Research permit requirements for a job + location.
     v3: Better advice depth, small city fallback, PDF stripping, Google Maps fallback.
@@ -8685,7 +8725,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             """Re-run the lookup without cache and save fresh result."""
             try:
                 print(f"[cache] Background refresh started for key {k[:8]}…")
-                fresh = research_permit(job_type, city, state, zip_code, use_cache=False, job_category=job_category, job_value=job_value, suppress_cache_write=suppress_cache_write)
+                fresh = research_permit(job_type, city, state, zip_code, use_cache=False, job_category=job_category, job_value=job_value, suppress_cache_write=suppress_cache_write, bypass_lookup_caches=bypass_lookup_caches)
                 if fresh and not fresh.get("error"):
                     save_cache(k, job_type, job_category, city, state, zip_code, fresh)
                     print(f"[cache] Background refresh complete for {city}, {state} / {job_type}")
@@ -8791,7 +8831,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
 
     # ── Step 2: Live web search (adaptive based on city match) ──
     print(f"[research] Searching web for: {job_type} in {location_str}")
-    search_context = build_search_context(job_type, city, state, zip_code, city_match_level)
+    search_context = build_search_context(job_type, city, state, zip_code, city_match_level, bypass_cache=bypass_lookup_caches, suppress_cache_write=suppress_cache_write)
     machine_structured = _parse_search_context_structured(search_context)
     if search_context:
         print(f"[research] Got {search_context.count('Source:')} web sources")

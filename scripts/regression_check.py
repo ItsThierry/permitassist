@@ -115,6 +115,10 @@ FAIL_PATTERNS: list[re.Pattern] = [
     re.compile(r"&amp;|&lt;|&gt;|&quot;|&#\d+;"),
     # Double period (not ellipsis)
     re.compile(r"\.\.(?!\.)"),
+    # BG-POLISH-01 customer-copy blacklists
+    re.compile(r"verify\s+in\s+before", re.I),
+    re.compile(r"verified\s+via\s+PermitAssist", re.I),
+    re.compile(r"companion\s+permits\s+are\s+suppressed", re.I),
     # Multiplier missing integer
     re.compile(r"^\s*\.?[0-9]*×", re.MULTILINE),
     # Known fragment lines from splitter bug

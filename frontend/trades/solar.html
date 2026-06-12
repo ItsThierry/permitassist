@@ -3264,7 +3264,7 @@ function copyForQuote() {
   if (tl) t += `\nPermit Timeline: ${tl}`;
   const permits = d.permits_required || [];
   if (permits.length > 1) t += `\nPermits required: ${permits.map(p => p.permit_type).join(', ')}`;
-  t += `\n(Verified via PermitAssist — permitassist.io)`;
+  t += `\n(Prepared with PermitAssist — verify final requirements with the local building department before filing)`;
   navigator.clipboard.writeText(t).then(() => showCopy('✅ Quote line copied!')).catch(() => {
     const box = document.createElement('textarea'); box.value = t; document.body.appendChild(box); box.select(); document.execCommand('copy'); document.body.removeChild(box); showCopy('✅ Quote line copied!');
   });
