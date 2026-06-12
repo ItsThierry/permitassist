@@ -145,3 +145,31 @@ def test_ri_noncustomer_boundary_required_answer_gets_statewide_public_sources_w
         public = build_customer_permit_view_model(result, job, city, "RI")
         assert public["source_urls"] == result["source_urls"]
         _assert_no_internal_tokens(public)
+
+
+def test_finalizer_reconciles_stale_cached_required_result_to_exact_not_required_cell():
+    from api.server import finalize_permit_lookup_result
+
+    job = "Office/retail tenant buildout with non-structural interior alteration"
+    cached = {
+        "_cached": True,
+        "permit_decision": "REQUIRED",
+        "permit_required": True,
+        "permit_verdict": "YES",
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permits_required": [{"permit_type": "Commercial Building / Tenant Improvement Permit", "kind": "Commercial Building / Tenant Improvement", "required": True}],
+        "sources": [
+            {"url": "https://www.washingtoncountymn.gov/DocumentCenter/View/26", "title": "Washington County commercial development guide"},
+            {"url": "https://www.washingtoncountymn.gov/486/Permits", "title": "Permits | Washington County, MN"},
+        ],
+        "source_urls": ["https://www.washingtoncountymn.gov/DocumentCenter/View/26", "https://www.washingtoncountymn.gov/486/Permits"],
+    }
+
+    public = finalize_permit_lookup_result(cached, job, "Washington", "MN", is_cached=True, explicit_vertical="commercial_ti", evidence_allowed=False)
+
+    assert public["permit_decision"] == "NOT_REQUIRED"
+    assert public["permit_required"] is False
+    assert public["permit_verdict"] == "NO"
+    assert public["permit_name"] == "No permit required"
+    assert "https://washingtoncountymn.gov/486/Permits" in public["source_urls"]
+    _assert_no_internal_tokens(public)

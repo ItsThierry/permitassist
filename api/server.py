@@ -61,6 +61,10 @@ except (TypeError, ValueError):
 from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
 from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
 from decision_resolver import is_input_rejection, resolve_customer_decision
+try:
+    from v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
+except ImportError:  # package import path in some tests
+    from api.v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
@@ -2846,6 +2850,14 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             ]
         result["permit_verdict"] = "YES"
 
+    if is_cached or bool(result.get("_cached")):
+        try:
+            v231_category = str(scope_contract.get("category") or job_category or "").lower().strip()
+            result = _reconcile_v231_result(result, _resolve_v231_cell(city, state, job_type, v231_category))
+            result["_scope_contract"] = scope_contract
+        except Exception as exc:
+            print(f"[finalize] v2.3.1 final reconciliation failed (non-fatal): {exc}")
+
     if evidence_enabled:
         forced_status = "invalid_contract" if unexpected_evidence_cache else None
         result = apply_evidence_pack_fail_closed(result, job_type, city, state, utc_now().date().isoformat(), explicit_vertical=explicit_vertical, force_contract_status=forced_status)
@@ -2898,6 +2910,9 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     _filter_customer_sources_in_place(result, city, state)
     result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
     result = apply_source_floor_annotation(result, job_type, city, state)
+    for internal_key in list(result.keys()):
+        if internal_key in {"_decision_cell_primary_lock", "_field_sources"} or str(internal_key).startswith("_v231"):
+            result.pop(internal_key, None)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
