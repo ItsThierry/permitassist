@@ -43,6 +43,7 @@ def test_golden_exact_resolutions_and_project_classifier():
     cases = [
         ("Buckeye", "AZ", "residential roof tear-off and reroof shingles", "residential", "us-az-buckeye__residential__reroof__building", "reroof", "AZ|buckeye|reroof"),
         ("Goodyear", "AZ", "new commercial construction retail shell", "commercial", "us-az-goodyear__commercial__commercial_construction__building", "commercial_construction", "AZ|goodyear|commercial_tenant_improvement"),
+        ("Casa Grande", "AZ", "Commercial construction plan review for interior alteration and change of occupancy", "commercial", "us-az-casa_grande__commercial__building_plan_review__building", "commercial_construction", "AZ|casa_grande|commercial_tenant_improvement"),
         ("Gilbert", "AZ", "commercial office tenant improvement", "commercial", "us-az-gilbert__commercial__commercial_tenant_improvement__building", "commercial_tenant_improvement", "AZ|gilbert|commercial_tenant_improvement"),
         ("Anchorage", "AK", "commercial office tenant improvement", "commercial", "us-ak-anchorage__commercial__commercial_tenant_improvement__building", "commercial_tenant_improvement", "AK|anchorage|commercial_tenant_improvement"),
     ]

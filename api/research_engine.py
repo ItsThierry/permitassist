@@ -720,6 +720,20 @@ def classify_source_authority(url: str, city: str, state: str, result: dict | No
     state_upper = _normalized_state_code(state)
     state_key = (state_upper or state or "").lower().strip()
 
+    if (
+        isinstance(result, dict)
+        and result.get("source_floor") == "statewide_public_code_source_floor"
+        and state_upper == "RI"
+        and _host_matches_any(domain, {"webserver.rilegislature.gov", "rhodeisland.portal.opengov.com"})
+    ):
+        return _source_authority(
+            SOURCE_AUTHORITY_STATE_OFFICIAL,
+            SOURCE_TIER_STATE,
+            reason="ri_statewide_public_code_source_floor",
+            display_allowed=True,
+            local_decision_evidence=True,
+        )
+
     # Explicit known wrong-AHJ exclusions always win.
     if _host_matches_any(domain, _CITY_LOCALITY_EXCLUSIONS.get((city_key, state_key), set())):
         return _source_authority(SOURCE_AUTHORITY_WRONG_LOCALITY, SOURCE_TIER_WRONG, reason="explicit_locality_exclusion")

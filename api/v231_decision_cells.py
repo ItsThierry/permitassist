@@ -170,8 +170,18 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
         "commercial interior alteration",
         "interior commercial alteration",
     )
+    construction_project_review_terms = (
+        "commercial construction plan review",
+        "building plan review",
+        "plan review",
+        "change of occupancy",
+        "change of use",
+    )
+    construction_project_review = "commercial_construction" in candidates and _has_any(combined, construction_project_review_terms)
     if _has_any(combined, commercial_ti_explicit_terms) or (
-        _has_any(text, commercial_ti_generic_terms) and (category == "commercial" or _has_any(combined, commercial_context_terms))
+        not construction_project_review
+        and _has_any(text, commercial_ti_generic_terms)
+        and (category == "commercial" or _has_any(combined, commercial_context_terms))
     ):
         candidates.append("commercial_tenant_improvement")
 
@@ -392,6 +402,43 @@ def _primary_source(cell: dict[str, Any]) -> dict[str, Any]:
     return evidence[0] if evidence and isinstance(evidence[0], dict) else {}
 
 
+def _cell_source_urls(cell: dict[str, Any], apply_url: str = "") -> list[dict[str, str]]:
+    """Return trusted v2.3.1 Decision Cell source URLs for public provenance.
+
+    Decision Cells have already passed the import/source gates; runtime locality
+    filters can be too strict for small-city domains/abbreviated hosts. Preserve
+    this vetted provenance structurally so a customer-visible exact decision never
+    degrades into a bare REQUIRED/NOT_REQUIRED answer with no source path.
+    """
+    out: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    def add(url: Any, title: Any = "", quote: Any = "") -> None:
+        value = str(url or "").strip()
+        if not value.startswith("http") or value in seen:
+            return
+        seen.add(value)
+        out.append({
+            "url": value,
+            "title": str(title or "Official AHJ source").strip() or "Official AHJ source",
+            "quote": str(quote or "").strip(),
+            "source": "permitassist_v231_decision_cell",
+            "trusted_decision_cell_source": "true",
+        })
+
+    for source in cell.get("source_evidence") or []:
+        if not isinstance(source, dict):
+            continue
+        add(
+            source.get("final_url") or source.get("source_url") or source.get("url"),
+            source.get("title") or source.get("source_title") or source.get("final_title"),
+            source.get("quote") or source.get("exact_quote_or_snippet") or source.get("snippet"),
+        )
+    if apply_url:
+        add(apply_url, "Official AHJ application/start page", "")
+    return out
+
+
 def _cell_authority_fields(cell: dict[str, Any]) -> tuple[str, str, str, str, str]:
     authority_obj = cell.get("authority_model")
     authority: dict[str, Any] = authority_obj if isinstance(authority_obj, dict) else {}
@@ -399,8 +446,8 @@ def _cell_authority_fields(cell: dict[str, Any]) -> tuple[str, str, str, str, st
     apply_url = authority.get("application_url") or source.get("final_url") or source.get("url") or ""
     office = authority.get("application_authority") or authority.get("issuing_authority") or cell.get("ahj_name") or ""
     permit_name = cell.get("permit_name") or "Building Permit"
-    source_url = source.get("final_url") or source.get("url") or apply_url
-    quote = source.get("quote") or ""
+    source_url = source.get("final_url") or source.get("source_url") or source.get("url") or apply_url
+    quote = source.get("quote") or source.get("exact_quote_or_snippet") or source.get("snippet") or ""
     return permit_name, office, apply_url, source_url, quote
 
 
@@ -429,27 +476,150 @@ def _dedupe_sources(sources: list[Any]) -> list[Any]:
 def _pipeline_has_required_safety_signal(result: dict[str, Any]) -> bool:
     """Detect existing PermitAssist signals that must not be suppressed by NO.
 
-    v2.3.1 NOT_REQUIRED cells are allowed to make a covered exact no-permit
-    decision only when the normal engine has not already found a required
-    permit, trade-scope permit, or hidden trigger. This prevents contradictory
-    customer payloads such as ``permit_required=False`` beside required
-    electrical/plumbing/mechanical permits.
+    A source-backed v2.3.1 NOT_REQUIRED cell should beat a generic building/TI
+    default from the normal pipeline. It must *not* beat concrete safety signals:
+    hidden triggers, companion trade/life-safety permits, or a non-generic
+    required permit already found by the engine. This keeps the product capable
+    while preventing generic REQUIRED fallbacks from overruling exact no-permit
+    decision cells everywhere.
     """
-    if result.get("permit_required") is True:
-        return True
-    if str(result.get("permit_verdict") or "").upper() == "YES":
-        return True
-    if str(result.get("permit_decision") or "").upper() == "REQUIRED":
-        return True
-    permits = result.get("permits_required")
-    if isinstance(permits, list):
-        for permit in permits:
-            if isinstance(permit, dict) and permit.get("required") is True:
-                return True
     hidden = result.get("hidden_triggers")
     if isinstance(hidden, list) and any(isinstance(trigger, dict) for trigger in hidden):
         return True
+
+    trade_permits = result.get("trade_permits")
+    if isinstance(trade_permits, list):
+        for permit in trade_permits:
+            if isinstance(permit, dict) and permit.get("required") is True:
+                return True
+            if isinstance(permit, str) and permit.strip():
+                return True
+
+    generic_required_keys = {
+        "building",
+        "construction",
+        "commercial_tenant_improvement",
+        "commercial_building_tenant_improvement",
+        "commercial_building_interior_alteration",
+    }
+    permits = result.get("permits_required")
+    if isinstance(permits, list):
+        for permit in permits:
+            if not (isinstance(permit, dict) and permit.get("required") is True):
+                continue
+            name = permit.get("permit_type") or permit.get("portal_selection") or permit.get("kind")
+            key = _normalize_permit_type(name)
+            dedupe_key = _normalize_permit_type(str(name or "").replace("/", " "))
+            family_key = _normalize_permit_name_for_safety(name)
+            if key in {"electrical", "plumbing", "mechanical", "fire", "sprinkler", "health", "zoning"}:
+                return True
+            if family_key not in generic_required_keys and dedupe_key not in {"building", "construction"}:
+                return True
     return False
+
+
+def _normalize_permit_name_for_safety(name: Any) -> str:
+    text = re.sub(r"[^a-z0-9]+", " ", str(name or "").lower()).strip()
+    tokens = [token for token in text.split() if token not in {"permit", "permits", "required"}]
+    token_set = set(tokens)
+    if {"commercial", "building", "tenant", "improvement"} & token_set and ("tenant" in token_set or "improvement" in token_set):
+        return "commercial_building_tenant_improvement"
+    if "tenant" in token_set and ("improvement" in token_set or "buildout" in token_set):
+        return "commercial_tenant_improvement"
+    if "interior" in token_set and "alteration" in token_set and "commercial" in token_set:
+        return "commercial_building_interior_alteration"
+    if "construction" in token_set:
+        return "construction"
+    if "building" in token_set:
+        return "building"
+    if "electrical" in token_set:
+        return "electrical"
+    if "mechanical" in token_set or "hvac" in token_set:
+        return "mechanical"
+    if "plumbing" in token_set:
+        return "plumbing"
+    if "fire" in token_set or "sprinkler" in token_set:
+        return "fire"
+    if "health" in token_set:
+        return "health"
+    if "zoning" in token_set:
+        return "zoning"
+    return "_".join(tokens)
+
+
+RI_STATEWIDE_BUILDING_PERMIT_SOURCES: tuple[dict[str, str], ...] = (
+    {
+        "url": "https://webserver.rilegislature.gov/Statutes/TITLE23/23-27.3/23-2/23-27.3-113.1.htm",
+        "title": "R.I. Gen. Laws § 23-27.3-113.1 official permit-required statute",
+        "publisher": "Rhode Island General Assembly",
+        "snippet": "It shall be unlawful to construct, enlarge, alter, remove, or demolish a building, or change the occupancy of a building ... without first filing an application with the building official in writing and obtaining the required permit therefor; except that ordinary repairs ... shall be exempt.",
+    },
+    {
+        "url": "https://webserver.rilegislature.gov/Statutes/TITLE23/23-27.3/23-2/23-27.3-115.6.htm",
+        "title": "R.I. Gen. Laws § 23-27.3-115.6 official electronic construction permitting statute",
+        "publisher": "Rhode Island General Assembly",
+        "snippet": "Every municipality in the state ... shall adopt and implement electronic construction permitting.",
+    },
+    {
+        "url": "https://rhodeisland.portal.opengov.com/",
+        "title": "Rhode Island official electronic construction permitting portal",
+        "publisher": "Rhode Island electronic construction permitting",
+        "snippet": "Official statewide e-permitting intake portal used by Rhode Island municipalities.",
+    },
+)
+
+
+def _has_public_source_urls(result: dict[str, Any]) -> bool:
+    urls = result.get("source_urls")
+    if isinstance(urls, list) and any(isinstance(url, str) and url.startswith("http") for url in urls):
+        return True
+    sources = result.get("sources")
+    if isinstance(sources, list):
+        return any(isinstance(source, dict) and str(source.get("url") or "").startswith("http") for source in sources)
+    return False
+
+
+def _resolution_state_from_key(resolution: V231Resolution) -> str:
+    key = str(resolution.key or "")
+    return key.split("|", 1)[0].upper() if "|" in key else ""
+
+
+def _apply_nonpublishable_boundary_source_floor(result: dict[str, Any], resolution: V231Resolution) -> dict[str, Any]:
+    """Attach only genuinely statewide sources for non-customer v2.3.1 boundaries.
+
+    Boundary rows are not promoted to exact Decision Cell answers. If the normal
+    engine independently returns REQUIRED for a source-less Rhode Island building
+    alteration/construction boundary, the statewide code/e-permitting sources
+    substantiate the generic REQUIRED claim without faking local cell coverage or
+    leaking internal publishability tokens.
+    """
+    if resolution.status != ResolutionStatus.AHJ_COVERED_PROJECT_NOT_COVERED:
+        return result
+    if _resolution_state_from_key(resolution) != "RI":
+        return result
+    if str(result.get("permit_decision") or "").upper() != "REQUIRED" and str(result.get("permit_verdict") or "").upper() != "YES":
+        return result
+    if _has_public_source_urls(result):
+        return result
+    candidates = {str(candidate or "") for candidate in resolution.project_candidates}
+    if not candidates.intersection({"commercial_tenant_improvement", "commercial_construction", "residential_remodel", "residential_addition", "residential_alteration"}):
+        return result
+
+    existing_sources_obj = result.get("sources")
+    existing_sources = existing_sources_obj if isinstance(existing_sources_obj, list) else []
+    sources = [copy.deepcopy(source) for source in RI_STATEWIDE_BUILDING_PERMIT_SOURCES]
+    seen = {source["url"] for source in sources}
+    for source in existing_sources:
+        if isinstance(source, dict):
+            url = str(source.get("url") or "")
+            if url.startswith("http") and url not in seen:
+                seen.add(url)
+                sources.append(source)
+    result["sources"] = sources
+    result["source_urls"] = [source["url"] for source in sources]
+    result["source_floor"] = "statewide_public_code_source_floor"
+    result["source_confidence"] = result.get("source_confidence") or "STATEWIDE_CODE"
+    return result
 
 
 def reconcile_v231_result(result: dict[str, Any], resolution: V231Resolution | dict[str, Any] | None) -> dict[str, Any]:
@@ -464,8 +634,10 @@ def reconcile_v231_result(result: dict[str, Any], resolution: V231Resolution | d
 
     if isinstance(resolution, dict):
         resolution = V231Resolution(ResolutionStatus.EXACT_CELL_COVERED, cell=resolution)
-    if not isinstance(resolution, V231Resolution) or resolution.status != ResolutionStatus.EXACT_CELL_COVERED:
+    if not isinstance(resolution, V231Resolution):
         return result
+    if resolution.status != ResolutionStatus.EXACT_CELL_COVERED:
+        return _apply_nonpublishable_boundary_source_floor(result, resolution)
 
     cell = resolution.cell or {}
     if cell.get("publish_status") != "PUBLISHABLE" or cell.get("main_decision") not in {"REQUIRED", "NOT_REQUIRED"}:
@@ -515,6 +687,7 @@ def reconcile_v231_result(result: dict[str, Any], resolution: V231Resolution | d
     result["confidence"] = result.get("confidence") or "high"
     result["confidence_reason"] = "Official AHJ source-backed permit decision for this exact jurisdiction and project type."
 
+    decision_cell_sources = _cell_source_urls(cell, apply_url)
     authority = cell.get("authority_model") if isinstance(cell.get("authority_model"), dict) else {}
     if authority:
         if authority.get("authority_type"):
@@ -593,13 +766,24 @@ def reconcile_v231_result(result: dict[str, Any], resolution: V231Resolution | d
         "applying_office": office,
         "primary_permit": copy.deepcopy(primary_permit) if primary_permit else None,
         "customer_action": cell.get("customer_action") or (primary_permit or {}).get("notes") or "",
+        "source_urls": [src.get("url") for src in decision_cell_sources if src.get("url")],
+        "sources": copy.deepcopy(decision_cell_sources),
     }
 
     sources_obj = result.get("sources")
     sources: list[Any] = list(sources_obj) if isinstance(sources_obj, list) else []
-    if source_url:
-        sources.insert(0, {"url": source_url, "title": _primary_source(cell).get("title") or "Official AHJ source"})
+    if decision_cell_sources:
+        sources = [*copy.deepcopy(decision_cell_sources), *sources]
+    elif source_url:
+        sources.insert(0, {"url": source_url, "title": _primary_source(cell).get("title") or "Official AHJ source", "source": "permitassist_v231_decision_cell", "trusted_decision_cell_source": "true"})
     result["sources"] = _dedupe_sources(sources)
+    if decision_cell_sources:
+        existing_source_urls = [url for url in result.get("source_urls") or [] if isinstance(url, str)] if isinstance(result.get("source_urls"), list) else []
+        merged_source_urls: list[str] = []
+        for url in [*[src.get("url") for src in decision_cell_sources], *existing_source_urls]:
+            if isinstance(url, str) and url and url not in merged_source_urls:
+                merged_source_urls.append(url)
+        result["source_urls"] = merged_source_urls
 
     field_sources = dict(result.get("_field_sources") or {}) if isinstance(result.get("_field_sources"), dict) else {}
     for field in ("permit_verdict", "permit_required", "permit_decision", "permit_name", "permits_required", "applying_office", "apply_url"):
