@@ -555,7 +555,7 @@ def _build_fee_text(
         components.append(f"+ {_format_usd(midpoint)} {label} adder")
 
     return (
-        f"Fee planning estimate (NOT a jurisdiction-specific AHJ fee): {_format_usd(low_total)}-{_format_usd(high_total)}+ "
+        f"Fee planning estimate (not a quoted AHJ fee schedule): {_format_usd(low_total)}-{_format_usd(high_total)}+ "
         f"(national-scope benchmark based on job type, not {jurisdiction_label} official fee schedule). Components: "
         f"{' '.join(components)}. "
         f"Call {jurisdiction_label} for the exact fee before bidding."

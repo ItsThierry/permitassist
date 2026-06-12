@@ -612,6 +612,30 @@ def _get_decision_cell_primary_lock(result: dict[str, Any] | None) -> dict[str, 
 
 
 
+def _is_placeholder_generic_permit_row(permit: dict[str, Any]) -> bool:
+    """True only for rows that have no specific title, portal, or trade kind."""
+    if not isinstance(permit, dict):
+        return False
+    title_fields = [
+        _norm_text(permit.get("permit_type")),
+        _norm_text(permit.get("portal_selection")),
+        _norm_text(permit.get("name")),
+        _norm_text(permit.get("title")),
+    ]
+    if any(value and not _GENERIC_PERMIT_NAME_RE.match(value) for value in title_fields):
+        return False
+    kind_text = " ".join(
+        value for value in [
+            _norm_text(permit.get("kind")),
+            _norm_text(permit.get("permit_kind")),
+        ] if value
+    )
+    inferred_kind = kind_from_text(kind_text, fallback="Other") if kind_text else "Other"
+    if inferred_kind not in {"Other", "Building"}:
+        return False
+    return any(value for value in title_fields) or bool(kind_text)
+
+
 def _collapse_parent_child_permits(permits: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """P1C: Collapse generic parent permits when a specific child permit exists.
 
@@ -620,6 +644,11 @@ def _collapse_parent_child_permits(permits: list[dict[str, Any]]) -> list[dict[s
     """
     if not permits:
         return permits
+
+    # Drop only true placeholders (e.g. {permit_type: "Permit"}), not rows whose
+    # portal_selection/kind carries specific trade scope.
+    if any(not _is_placeholder_generic_permit_row(p) for p in permits):
+        permits = [p for p in permits if not _is_placeholder_generic_permit_row(p)]
 
     def _specificity_score(p: dict) -> int:
         name = _norm_text(p.get("permit_type") or p.get("portal_selection") or "").lower()
@@ -893,6 +922,17 @@ def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] |
     elif decision == PERMIT_DECISION_REQUIRED:
         kind = _controlled_kind_from_lock(lock)
         permit_name = _recovered_lock_permit_name(lock, kind)
+        preserve_existing_primary = bool(lock.get("preserve_existing_primary"))
+        if preserve_existing_primary:
+            existing_name = _norm_text(result.get("permit_name"))
+            raw_primary = lock.get("primary_permit") if isinstance(lock.get("primary_permit"), dict) else {}
+            if existing_name and not _lock_permit_name_is_generic(existing_name):
+                permit_name = existing_name
+            elif raw_primary:
+                permit_name = _norm_text(raw_primary.get("permit_type") or raw_primary.get("portal_selection") or permit_name)
+            existing_kind = _norm_text(result.get("permit_kind"))
+            if existing_kind:
+                kind = existing_kind
         result["permit_required"] = True
         result["permit_decision"] = PERMIT_DECISION_REQUIRED
         result["permit_verdict"] = "YES"
@@ -904,8 +944,13 @@ def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] |
             result["apply_url"] = lock.get("apply_url")
         result.pop("not_required_reason", None)
         result.pop("no_permit_required_reason", None)
-        merged_permits = _merge_locked_primary_permits(lock, result.get("permits_required"), public=False)
-        result["permits_required"] = _restore_locked_primary_first(_collapse_parent_child_permits(merged_permits), lock)
+        if preserve_existing_primary:
+            result["permits_required"] = _collapse_parent_child_permits([
+                copy.deepcopy(item) for item in (result.get("permits_required") or []) if isinstance(item, dict)
+            ])
+        else:
+            merged_permits = _merge_locked_primary_permits(lock, result.get("permits_required"), public=False)
+            result["permits_required"] = _restore_locked_primary_first(_collapse_parent_child_permits(merged_permits), lock)
         if public:
             for permit in result["permits_required"]:
                 permit.pop("source", None)

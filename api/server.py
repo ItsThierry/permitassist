@@ -60,6 +60,7 @@ except (TypeError, ValueError):
 
 from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
 from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
+from trade_authority_routing import apply_trade_authority_routing
 from decision_resolver import is_input_rejection, resolve_customer_decision
 try:
     from v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
@@ -763,6 +764,8 @@ _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
     "applying_office", "building_dept_name", "building_dept_phone", "apply_phone",
     "apply_address", "apply_google_maps", "apply_url", "apply_path", "online_application_url",
     "source_urls", "sources", "claim_citations", "warnings", "disclaimer",
+    "permit_routing_map", "permit_authority_cards", "jurisdiction_routing_summary",
+    "city_contractor_registration",
     "zoning_hoa_flag", "remaining_lookups", "_cached",
 })
 _PUBLIC_SOURCE_FIELDS = frozenset({"url", "title", "snippet", "source_url", "source_title", "publisher", "date", "source_type", "jurisdiction"})
@@ -1436,6 +1439,10 @@ def lint_customer_visible_result(public: dict, city: str = "", state: str = "") 
     if not isinstance(public, dict):
         return [{"code": "not_a_dict", "message": "Customer result is not an object."}]
     text = json.dumps(public, sort_keys=True, default=str)
+    # Lint copy, not URL punctuation. Raw https URLs naturally contain
+    # `.Gov.`/path punctuation that matches the serializer-fragment regex but is
+    # not customer-copy corruption.
+    lint_text = re.sub(r"https://[^\s\"'<>]+", "https://source-url", text)
     text_lc = text.lower()
     hits: list[dict] = []
     patterns = {
@@ -1454,7 +1461,8 @@ def lint_customer_visible_result(public: dict, city: str = "", state: str = "") 
         "empty_bullet_or_fragment": r"^\s*[-•]\s*\.\s*$|[-•]\s*[a-z]{1,3}\.$",
     }
     for code, pattern in patterns.items():
-        if re.search(pattern, text, flags=re.I | re.S):
+        haystack = lint_text if code in {"fragment_stutter", "mid_sentence_drop"} else text
+        if re.search(pattern, haystack, flags=re.I | re.S):
             hits.append({"code": code, "message": "Customer-visible output failed deterministic copy lint."})
     summary = public.get("customer_result_summary") if isinstance(public.get("customer_result_summary"), dict) else {}
     required = {
@@ -1587,6 +1595,10 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         if cell_lock:
             final_public = enforce_decision_cell_primary(final_public, cell_lock, city, state, public=True)
             final_public = sanitize_customer_visible_result(final_public, strip_internal_keys=True)
+        # P0/P1: Per-scope trade authority routing. Keeps existing product
+        # features but moves state-administered trade scopes (e.g. WA L&I
+        # electrical) into separate authority cards and filters city inspections.
+        final_public = apply_trade_authority_routing(final_public, job_type=job_type, city=city, state=state)
         # P0: Contact data integrity — provenance-gated contact sanitization
         # Added 2026-06-09. Suppresses wrong phones/addresses from untrusted sources.
         final_public = apply_contact_sanitization(final_public, city=city, state=state)
@@ -2325,7 +2337,7 @@ def _repair_residential_trade_model_leak(result: dict, job_type: str, city: str 
             "permit_type": permit_type,
             "portal_selection": "Plumbing - Water Heater Replacement",
             "required": True,
-            "notes": "Residential water heater replacement; verify Dallas residential plumbing permit naming before applying.",
+            "notes": f"Residential water heater replacement; confirm the local residential plumbing permit name with {city or 'the building department'} before applying.",
         }]
         result["permits_required_logic"] = [{
             "permit_type": permit_type,
@@ -2977,7 +2989,7 @@ def render_white_label_report_html(data: dict) -> str:
     customer_next_step = str(result.get("customer_next_step") or decision_contract.get("customer_next_step") or "Confirm requirements with the building department before filing.")
     apply_note = str(
         decision_contract.get("exact_apply_url_customer_note")
-        or "Use the listed department/portal category and confirm the permit pathway before filing."
+        or "Use the listed department/portal category and match the filing to the structured permit kind before filing."
     )
     permits = result.get("permits_required") or []
     permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or f"<li>{html.escape(decision_kind)}</li>"

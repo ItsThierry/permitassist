@@ -5631,7 +5631,7 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
         if is_water_heater and not is_hvac:
             ptype = "Residential Plumbing Permit — Water Heater Replacement" if scope_contract.get("category") == "residential" else "Plumbing Permit — Water Heater Replacement"
             portal = "Residential Plumbing - Water Heater Replacement" if scope_contract.get("category") == "residential" else "Plumbing - Water Heater Replacement"
-            notes = "Required for residential water heater replacement; companion electrical/gas permits are suppressed unless gas piping, venting conversion, or new circuit work is explicit."
+            notes = "Required for residential water heater replacement; companion electrical/gas permits are suppressed unless gas piping, venting change, or new circuit work is explicit."
             base_reason = "Residential water heater swap is one trade permit when same location/capacity and no new gas/electrical scope is stated."
         else:
             ptype = "Mechanical Permit — HVAC Equipment Changeout (Residential)" if hvac_like_for_like else "Mechanical Permit — HVAC System Replacement (Residential)"

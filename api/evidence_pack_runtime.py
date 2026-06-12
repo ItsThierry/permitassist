@@ -336,27 +336,31 @@ def _parse_utc(value: Any) -> datetime | None:
 
 
 def _record_is_fresh(record: dict[str, Any], now: datetime | None = None) -> bool:
+    """Return whether a record is still usable for fail-closed runtime fields.
+
+    `stale_after_utc` is the hard customer-output cutoff. `reverify_after_utc`
+    means the evidence is due for ops review, but it must not zero out a
+    checked-in pack that is still before its explicit stale date.
+    """
     now = now or datetime.now(timezone.utc)
     cutoffs: list[datetime] = []
-    for key in ("stale_after_utc", "reverify_after_utc"):
-        raw = record.get(key)
-        if str(raw or "").strip():
-            cutoff = _parse_utc(raw)
-            if cutoff is None:
-                return False
-            cutoffs.append(cutoff)
+    raw = record.get("stale_after_utc")
+    if str(raw or "").strip():
+        cutoff = _parse_utc(raw)
+        if cutoff is None:
+            return False
+        cutoffs.append(cutoff)
     evidence = record.get("field_evidence")
     if isinstance(evidence, list):
         for item in evidence:
             if not isinstance(item, dict):
                 continue
-            for key in ("stale_after_utc", "reverify_after_utc"):
-                raw = item.get(key)
-                if str(raw or "").strip():
-                    cutoff = _parse_utc(raw)
-                    if cutoff is None:
-                        return False
-                    cutoffs.append(cutoff)
+            raw = item.get("stale_after_utc")
+            if str(raw or "").strip():
+                cutoff = _parse_utc(raw)
+                if cutoff is None:
+                    return False
+                cutoffs.append(cutoff)
     if not cutoffs:
         return False
     return all(cutoff > now for cutoff in cutoffs)

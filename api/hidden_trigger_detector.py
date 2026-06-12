@@ -883,7 +883,7 @@ HIDDEN_TRIGGER_REGISTRY = [
             r"\brtu\b.*\b(?:larger|heavier|new|upsiz|replac\w*.*larger)\b",
             r"\brooftop\s+unit\b.*\b(?:larger|heavier|new|upsiz|replac\w*.*larger)\b",
             r"\brooftop\s+hvac\b.*\b(?:larger|heavier|new|upsiz|replac\w*.*larger)\b",
-            r"\b(?:larger|heavier|new|upsiz|replac\w*.*larger)\b.*\brt u\b",
+            r"\b(?:larger|heavier|new|upsiz|replac\w*.*larger)\b.*\brtu\b",
             r"\b(?:larger|heavier|new|upsiz|replac\w*.*larger)\b.*\brooftop\s+unit\b",
             r"\b(?:larger|heavier|new|upsiz|replac\w*.*larger)\b.*\brooftop\s+hvac\b",
         ],
@@ -1456,6 +1456,12 @@ def _pattern_matches(pattern: str, text: str) -> bool:
 
 def _trigger_matches(trigger: dict, text: str) -> bool:
     trigger_id = _normalize(trigger.get("id", "")).replace(" ", "_")
+    if trigger_id == "type_i_hood_wet_chemical_suppression_card":
+        return _contains_unnegated_any(text, _RESTAURANT_HOOD_TERMS)
+    if trigger_id == "restaurant_fire_alarm_monitoring_modification":
+        return _contains_unnegated_any(text, ("fire alarm", "monitoring", "duct detector", "ansul", "sprinkler", "a-2"))
+    if trigger_id == "commercial_ti_fire_smoke_damper_penetrations":
+        return _contains_unnegated_any(text, ("duct", "shaft", "penetration", "fire damper", "smoke damper", "rated wall", "mechanical reroute"))
     if trigger_id.startswith("restaurant_") or "_restaurant_" in trigger_id:
         if any(token in trigger_id for token in ("hood", "suppression", "duct", "cooking")) and not _contains_unnegated_any(text, _RESTAURANT_HOOD_TERMS):
             return False

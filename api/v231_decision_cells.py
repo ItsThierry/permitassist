@@ -76,6 +76,33 @@ def _has_any(text: str, terms: tuple[str, ...]) -> bool:
     return any(re.search(_term_pattern(term), text) for term in terms)
 
 
+_NEGATION_PREFIX_RE = re.compile(
+    r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone\s+of\b|\bexcludes?\b|\bexcluding\b)"
+    r"(?:[\s,;/()'\"-]+[a-z0-9]+){0,5}[\s,;/()'\"-]*$",
+    re.I,
+)
+
+
+def _term_is_locally_negated(text: str, term_start: int, term_end: int) -> bool:
+    prefix = text[max(0, term_start - 96):term_start]
+    if _NEGATION_PREFIX_RE.search(prefix):
+        return True
+    suffix = text[term_end:term_end + 96]
+    return bool(re.search(
+        r"^[a-z0-9\s,;/()'\"-]{0,48}\b(?:not included|excluded|not in scope|outside(?: the)? scope|not part|not proposed)\b",
+        suffix,
+        flags=re.I,
+    ))
+
+
+def _has_any_unnegated(text: str, terms: tuple[str, ...]) -> bool:
+    for term in terms:
+        for match in re.finditer(_term_pattern(term), text):
+            if not _term_is_locally_negated(text, match.start(), match.end()):
+                return True
+    return False
+
+
 def classify_project_candidates(job_type: str, job_category: str = "") -> list[str]:
     """Classify request text to safe v2.3.1 project-family candidates.
 
@@ -112,7 +139,7 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
         "new roof shingles",
         "roofing",
     )
-    if _has_any(combined, reroof_terms):
+    if _has_any_unnegated(combined, reroof_terms):
         candidates.append("reroof")
 
     commercial_construction_explicit_terms = (
@@ -136,9 +163,9 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
         "ground up",
         "new building",
     )
-    if _has_any(combined, commercial_construction_explicit_terms) or (
-        _has_any(text, commercial_construction_broad_terms)
-        and (category == "commercial" or _has_any(combined, commercial_context_terms))
+    if _has_any_unnegated(combined, commercial_construction_explicit_terms) or (
+        _has_any_unnegated(text, commercial_construction_broad_terms)
+        and (category == "commercial" or _has_any_unnegated(combined, commercial_context_terms))
     ):
         candidates.append("commercial_construction")
 
@@ -177,11 +204,11 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
         "change of occupancy",
         "change of use",
     )
-    construction_project_review = "commercial_construction" in candidates and _has_any(combined, construction_project_review_terms)
-    if _has_any(combined, commercial_ti_explicit_terms) or (
+    construction_project_review = "commercial_construction" in candidates and _has_any_unnegated(combined, construction_project_review_terms)
+    if _has_any_unnegated(combined, commercial_ti_explicit_terms) or (
         not construction_project_review
-        and _has_any(text, commercial_ti_generic_terms)
-        and (category == "commercial" or _has_any(combined, commercial_context_terms))
+        and _has_any_unnegated(text, commercial_ti_generic_terms)
+        and (category == "commercial" or _has_any_unnegated(combined, commercial_context_terms))
     ):
         candidates.append("commercial_tenant_improvement")
 
@@ -204,7 +231,7 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
         "kitchen renovation",
         "bathroom renovation",
     )
-    if _has_any(combined, residential_remodel_terms) and (category == "residential" or "residential" in combined or "home" in combined or "kitchen" in combined or "bath" in combined):
+    if _has_any_unnegated(combined, residential_remodel_terms) and (category == "residential" or "residential" in combined or "home" in combined or "kitchen" in combined or "bath" in combined):
         candidates.append("residential_remodel")
 
     unique_candidates = list(dict.fromkeys(candidates))
@@ -421,7 +448,10 @@ def _cell_source_urls(cell: dict[str, Any], apply_url: str = "") -> list[dict[st
         out.append({
             "url": value,
             "title": str(title or "Official AHJ source").strip() or "Official AHJ source",
-            "quote": str(quote or "").strip(),
+            # Keep URL/title provenance, but do not expose broad imported source
+            # quotes as public snippets; homepage quotes often include unrelated
+            # ADU/solar/residential text that violates the current scope contract.
+            "quote": "",
             "source": "permitassist_v231_decision_cell",
             "trusted_decision_cell_source": "true",
         })
@@ -457,6 +487,29 @@ def _normalize_permit_type(value: Any) -> str:
     if "building" in text or "construction" in text:
         return "building"
     return text
+
+
+_SPECIALTY_PRIMARY_TERMS = (
+    "laboratory", "fume hood", "cannabis", "special use", "stage fog", "fog machine",
+    "lighting controls", "garage hobby", "residential", "electrical", "mechanical",
+    "plumbing", "health", "fire", "sign", "roof", "solar",
+)
+
+
+def _existing_specialty_primary_permit(result: dict[str, Any]) -> dict[str, Any] | None:
+    permits = result.get("permits_required")
+    if not isinstance(permits, list):
+        return None
+    for permit in permits:
+        if not isinstance(permit, dict) or permit.get("required") is False:
+            continue
+        label = " ".join(str(permit.get(k) or "") for k in ("permit_type", "portal_selection", "kind", "permit_kind", "notes")).lower()
+        simple_label = re.sub(r"[^a-z0-9]+", " ", label).strip()
+        if not simple_label or simple_label in {"permit", "required permit", "building permit", "construction permit"}:
+            continue
+        if any(term in label for term in _SPECIALTY_PRIMARY_TERMS):
+            return copy.deepcopy(permit)
+    return None
 
 
 def _dedupe_sources(sources: list[Any]) -> list[Any]:
@@ -675,7 +728,8 @@ def reconcile_v231_result(result: dict[str, Any], resolution: V231Resolution | d
     result["permit_verdict"] = "YES" if permit_required else "NO"
     result["permit_required"] = permit_required
     result["permit_decision"] = main_decision
-    if permit_required:
+    preserve_existing_primary = bool(permit_required and result.get("_cached") is True and _existing_specialty_primary_permit(result))
+    if permit_required and not preserve_existing_primary:
         result["permit_name"] = permit_name
     if office:
         result["applying_office"] = office
@@ -732,27 +786,31 @@ def reconcile_v231_result(result: dict[str, Any], resolution: V231Resolution | d
     permits: list[dict[str, Any]] = [copy.deepcopy(p) for p in permits_obj if isinstance(p, dict)] if isinstance(permits_obj, list) else []
     primary_permit = None
     if permit_required:
-        primary_notes = cell.get("customer_action") or (f"Apply with {office} before starting work." if office else "Apply before starting work.")
-        if isinstance(primary_notes, str):
-            primary_notes = primary_notes.replace("tenant-improvement", "tenant improvement")
+        preserved_primary = _existing_specialty_primary_permit(result) if preserve_existing_primary else None
+        if preserved_primary:
+            primary_permit = preserved_primary
+        else:
+            primary_notes = cell.get("customer_action") or (f"Apply with {office} before starting work." if office else "Apply before starting work.")
+            if isinstance(primary_notes, str):
+                primary_notes = primary_notes.replace("tenant-improvement", "tenant improvement")
 
-        primary_permit = {
-            "permit_type": permit_name,
-            "required": True,
-            "permit_kind": cell.get("permit_kind") or "building",
-            "portal_selection": permit_name,
-            "notes": primary_notes,
-            "source": "permitassist_v231_decision_cell",
-        }
-        primary_norm = _normalize_permit_type(permit_name)
-        upgraded = False
-        for permit in permits:
-            if _normalize_permit_type(permit.get("permit_type")) == primary_norm:
-                permit.update(primary_permit)
-                upgraded = True
-                break
-        if not upgraded:
-            permits.insert(0, primary_permit)
+            primary_permit = {
+                "permit_type": permit_name,
+                "required": True,
+                "permit_kind": cell.get("permit_kind") or "building",
+                "portal_selection": permit_name,
+                "notes": primary_notes,
+                "source": "permitassist_v231_decision_cell",
+            }
+            primary_norm = _normalize_permit_type(permit_name)
+            upgraded = False
+            for permit in permits:
+                if _normalize_permit_type(permit.get("permit_type")) == primary_norm:
+                    permit.update(primary_permit)
+                    upgraded = True
+                    break
+            if not upgraded:
+                permits.insert(0, primary_permit)
     result["permits_required"] = permits
     result["_decision_cell_primary_lock"] = {
         "source": "permitassist_v231_decision_cell",
@@ -765,6 +823,7 @@ def reconcile_v231_result(result: dict[str, Any], resolution: V231Resolution | d
         "apply_url": apply_url,
         "applying_office": office,
         "primary_permit": copy.deepcopy(primary_permit) if primary_permit else None,
+        "preserve_existing_primary": preserve_existing_primary,
         "customer_action": cell.get("customer_action") or (primary_permit or {}).get("notes") or "",
         "source_urls": [src.get("url") for src in decision_cell_sources if src.get("url")],
         "sources": copy.deepcopy(decision_cell_sources),
