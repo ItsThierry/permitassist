@@ -1514,6 +1514,20 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             cleaned = _filter_customer_sources_in_place(cleaned if isinstance(cleaned, dict) else {}, city, state)
         else:
             cleaned = apply_source_floor_annotation(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state)
+        try:
+            v231_resolution = _resolve_v231_cell(city, state, job_type, str(scope_contract.get("category") or "").lower().strip())
+            v231_status = getattr(v231_resolution.status, "value", str(v231_resolution.status))
+            v231_cell = v231_resolution.cell if isinstance(getattr(v231_resolution, "cell", None), dict) else {}
+            if (v231_status == "exact_cell_covered" and v231_cell.get("main_decision") == "NOT_REQUIRED") or (v231_status == "ahj_covered_project_not_covered" and str(state or "").upper() == "RI"):
+                cleaned = _reconcile_v231_result(cleaned if isinstance(cleaned, dict) else {}, v231_resolution)
+                v231_lock = _get_decision_cell_primary_lock(cleaned)
+                cleaned = apply_permit_decision_contract(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state, scope_contract)
+                if v231_lock:
+                    cleaned = enforce_decision_cell_primary(cleaned if isinstance(cleaned, dict) else {}, v231_lock, city, state, public=True)
+                else:
+                    cleaned = apply_source_floor_annotation(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state)
+        except Exception as exc:
+            print(f"[customer-view] v2.3.1 display reconciliation skipped: {exc}")
     except Exception as exc:
         print(f"[customer-view] Scope sanitize fallback used: {exc}")
     public = _public_dict(cleaned if isinstance(cleaned, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
