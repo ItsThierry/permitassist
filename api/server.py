@@ -2909,7 +2909,10 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     _scrub_scope_limit_leaks(result, scope_contract)
     _filter_customer_sources_in_place(result, city, state)
     result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
+    final_cell_lock = _get_decision_cell_primary_lock(result)
     result = apply_source_floor_annotation(result, job_type, city, state)
+    if final_cell_lock:
+        result = enforce_decision_cell_primary(result, final_cell_lock, city, state, public=True)
     for internal_key in list(result.keys()):
         if internal_key in {"_decision_cell_primary_lock", "_field_sources"} or str(internal_key).startswith("_v231"):
             result.pop(internal_key, None)
