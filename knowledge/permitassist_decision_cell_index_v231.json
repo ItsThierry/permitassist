@@ -169513,11 +169513,30 @@
       "state": "WI"
     },
     "WI|us_wi_eau_claire|commercial_tenant_improvement": {
+      "_duplicate_alias_customer_boundary": {
+        "alias_key": "WI|us_wi_eau_claire|commercial_tenant_improvement",
+        "canonical_customer_cell_id": "us-wi-eau-claire__commercial__commercial_tenant_improvement__building",
+        "canonical_customer_key": "WI|eau_claire|commercial_tenant_improvement",
+        "customer_reachable": false,
+        "repair_id": "run3-live-validation-duplicate-alias-demotion-20260612T134132Z"
+      },
       "_v231_run3_import_wrapper": {
+        "alias_key": "WI|us_wi_eau_claire|commercial_tenant_improvement",
+        "canonical_customer_cell_id": "us-wi-eau-claire__commercial__commercial_tenant_improvement__building",
+        "canonical_customer_key": "WI|eau_claire|commercial_tenant_improvement",
+        "duplicate_alias_not_customer_publishable": true,
+        "duplicate_alias_repair_id": "run3-live-validation-duplicate-alias-demotion-20260612T134132Z",
         "effective_cell_id_missing_nonblocking": false,
         "import_eligibility": "STAGED_NET_NEW_CANDIDATE",
         "package_sequence": 344,
+        "pre_repair_publishability": {
+          "customer_main_decision": "REQUIRED",
+          "main_decision": "REQUIRED",
+          "promotion_allowed": true,
+          "publish_status": "PUBLISHABLE"
+        },
         "record_level_customer_main_decision": "REQUIRED",
+        "repair_reason": "same normal city/state/runtime bucket as an existing canonical customer key; customer input cannot uniquely select this alias row",
         "run_label": "run2_next10",
         "runtime_record_key": "us-wi-eau_claire__commercial_ti__building",
         "source_artifact_relative_path": "artifacts/permitassist-v231-expansion-run3-run2-next10-20260606T183327Z/research/WI/WI_decision_cells.json",
@@ -169531,19 +169550,21 @@
       "city": "Eau Claire",
       "companion_permits": [],
       "customer_action": "Apply to the listed municipal building/inspection authority before starting covered commercial building or alteration work.",
-      "customer_main_decision": "REQUIRED",
+      "customer_main_decision": null,
       "enrichment_backlog": null,
       "entity_type": "city",
       "evidence_level": "official_verbatim_snapshot_hash_verified",
       "jurisdiction_id": "us-wi-eau_claire",
-      "main_decision": "REQUIRED",
+      "main_decision": null,
       "permit_kind": "building",
       "permit_name": "Building Permit",
       "project_type_label": "Commercial tenant improvement / commercial building work",
       "project_type_slug": "commercial_ti",
-      "promotion_allowed": true,
-      "publish_blockers": [],
-      "publish_status": "PUBLISHABLE",
+      "promotion_allowed": false,
+      "publish_blockers": [
+        "runtime_city_key_collision_duplicate_alias_not_customer_reachable"
+      ],
+      "publish_status": "IMPORTED_DUPLICATE_ALIAS_NOT_CUSTOMER_PUBLISHABLE",
       "source_evidence": [
         {
           "ahj_source_tie": "official_city_host_or_documented_successor_domain",
@@ -169599,11 +169620,30 @@
       "state": "WI"
     },
     "WI|us_wi_fond_du_lac|commercial_tenant_improvement": {
+      "_duplicate_alias_customer_boundary": {
+        "alias_key": "WI|us_wi_fond_du_lac|commercial_tenant_improvement",
+        "canonical_customer_cell_id": "us-wi-fond-du-lac__commercial__commercial_tenant_improvement__building",
+        "canonical_customer_key": "WI|fond_du_lac|commercial_tenant_improvement",
+        "customer_reachable": false,
+        "repair_id": "run3-live-validation-duplicate-alias-demotion-20260612T134132Z"
+      },
       "_v231_run3_import_wrapper": {
+        "alias_key": "WI|us_wi_fond_du_lac|commercial_tenant_improvement",
+        "canonical_customer_cell_id": "us-wi-fond-du-lac__commercial__commercial_tenant_improvement__building",
+        "canonical_customer_key": "WI|fond_du_lac|commercial_tenant_improvement",
+        "duplicate_alias_not_customer_publishable": true,
+        "duplicate_alias_repair_id": "run3-live-validation-duplicate-alias-demotion-20260612T134132Z",
         "effective_cell_id_missing_nonblocking": false,
         "import_eligibility": "STAGED_NET_NEW_CANDIDATE",
         "package_sequence": 347,
+        "pre_repair_publishability": {
+          "customer_main_decision": "REQUIRED",
+          "main_decision": "REQUIRED",
+          "promotion_allowed": true,
+          "publish_status": "PUBLISHABLE"
+        },
         "record_level_customer_main_decision": "REQUIRED",
+        "repair_reason": "same normal city/state/runtime bucket as an existing canonical customer key; customer input cannot uniquely select this alias row",
         "run_label": "run2_next10",
         "runtime_record_key": "us-wi-fond_du_lac__commercial_ti__building",
         "source_artifact_relative_path": "artifacts/permitassist-v231-expansion-run3-run2-next10-20260606T183327Z/research/WI/WI_decision_cells.json",
@@ -169617,19 +169657,21 @@
       "city": "Fond Du Lac",
       "companion_permits": [],
       "customer_action": "Apply to the listed municipal building/inspection authority before starting covered commercial building or alteration work.",
-      "customer_main_decision": "REQUIRED",
+      "customer_main_decision": null,
       "enrichment_backlog": null,
       "entity_type": "city",
       "evidence_level": "official_verbatim_snapshot_hash_verified",
       "jurisdiction_id": "us-wi-fond_du_lac",
-      "main_decision": "REQUIRED",
+      "main_decision": null,
       "permit_kind": "building",
       "permit_name": "Building Permit",
       "project_type_label": "Commercial tenant improvement / commercial building work",
       "project_type_slug": "commercial_ti",
-      "promotion_allowed": true,
-      "publish_blockers": [],
-      "publish_status": "PUBLISHABLE",
+      "promotion_allowed": false,
+      "publish_blockers": [
+        "runtime_city_key_collision_duplicate_alias_not_customer_reachable"
+      ],
+      "publish_status": "IMPORTED_DUPLICATE_ALIAS_NOT_CUSTOMER_PUBLISHABLE",
       "source_evidence": [
         {
           "ahj_source_tie": "official_city_host_or_documented_successor_domain",
@@ -169685,11 +169727,30 @@
       "state": "WI"
     },
     "WI|us_wi_green_bay|commercial_tenant_improvement": {
+      "_duplicate_alias_customer_boundary": {
+        "alias_key": "WI|us_wi_green_bay|commercial_tenant_improvement",
+        "canonical_customer_cell_id": "us-wi-green-bay__commercial__commercial_tenant_improvement__building",
+        "canonical_customer_key": "WI|green_bay|commercial_tenant_improvement",
+        "customer_reachable": false,
+        "repair_id": "run3-live-validation-duplicate-alias-demotion-20260612T134132Z"
+      },
       "_v231_run3_import_wrapper": {
+        "alias_key": "WI|us_wi_green_bay|commercial_tenant_improvement",
+        "canonical_customer_cell_id": "us-wi-green-bay__commercial__commercial_tenant_improvement__building",
+        "canonical_customer_key": "WI|green_bay|commercial_tenant_improvement",
+        "duplicate_alias_not_customer_publishable": true,
+        "duplicate_alias_repair_id": "run3-live-validation-duplicate-alias-demotion-20260612T134132Z",
         "effective_cell_id_missing_nonblocking": false,
         "import_eligibility": "STAGED_NET_NEW_CANDIDATE",
         "package_sequence": 343,
+        "pre_repair_publishability": {
+          "customer_main_decision": "REQUIRED",
+          "main_decision": "REQUIRED",
+          "promotion_allowed": true,
+          "publish_status": "PUBLISHABLE"
+        },
         "record_level_customer_main_decision": "REQUIRED",
+        "repair_reason": "same normal city/state/runtime bucket as an existing canonical customer key; customer input cannot uniquely select this alias row",
         "run_label": "run2_next10",
         "runtime_record_key": "us-wi-green_bay__commercial_ti__building",
         "source_artifact_relative_path": "artifacts/permitassist-v231-expansion-run3-run2-next10-20260606T183327Z/research/WI/WI_decision_cells.json",
@@ -169703,19 +169764,21 @@
       "city": "Green Bay",
       "companion_permits": [],
       "customer_action": "Apply to the listed municipal building/inspection authority before starting covered commercial building or alteration work.",
-      "customer_main_decision": "REQUIRED",
+      "customer_main_decision": null,
       "enrichment_backlog": null,
       "entity_type": "city",
       "evidence_level": "official_verbatim_snapshot_hash_verified",
       "jurisdiction_id": "us-wi-green_bay",
-      "main_decision": "REQUIRED",
+      "main_decision": null,
       "permit_kind": "building",
       "permit_name": "Building Permit",
       "project_type_label": "Commercial tenant improvement / commercial building work",
       "project_type_slug": "commercial_ti",
-      "promotion_allowed": true,
-      "publish_blockers": [],
-      "publish_status": "PUBLISHABLE",
+      "promotion_allowed": false,
+      "publish_blockers": [
+        "runtime_city_key_collision_duplicate_alias_not_customer_reachable"
+      ],
+      "publish_status": "IMPORTED_DUPLICATE_ALIAS_NOT_CUSTOMER_PUBLISHABLE",
       "source_evidence": [
         {
           "ahj_source_tie": "official_city_host_or_documented_successor_domain",
@@ -169771,11 +169834,30 @@
       "state": "WI"
     },
     "WI|us_wi_la_crosse|commercial_tenant_improvement": {
+      "_duplicate_alias_customer_boundary": {
+        "alias_key": "WI|us_wi_la_crosse|commercial_tenant_improvement",
+        "canonical_customer_cell_id": "us-wi-la-crosse__commercial__commercial_tenant_improvement__building",
+        "canonical_customer_key": "WI|la_crosse|commercial_tenant_improvement",
+        "customer_reachable": false,
+        "repair_id": "run3-live-validation-duplicate-alias-demotion-20260612T134132Z"
+      },
       "_v231_run3_import_wrapper": {
+        "alias_key": "WI|us_wi_la_crosse|commercial_tenant_improvement",
+        "canonical_customer_cell_id": "us-wi-la-crosse__commercial__commercial_tenant_improvement__building",
+        "canonical_customer_key": "WI|la_crosse|commercial_tenant_improvement",
+        "duplicate_alias_not_customer_publishable": true,
+        "duplicate_alias_repair_id": "run3-live-validation-duplicate-alias-demotion-20260612T134132Z",
         "effective_cell_id_missing_nonblocking": false,
         "import_eligibility": "STAGED_NET_NEW_CANDIDATE",
         "package_sequence": 346,
+        "pre_repair_publishability": {
+          "customer_main_decision": "REQUIRED",
+          "main_decision": "REQUIRED",
+          "promotion_allowed": true,
+          "publish_status": "PUBLISHABLE"
+        },
         "record_level_customer_main_decision": "REQUIRED",
+        "repair_reason": "same normal city/state/runtime bucket as an existing canonical customer key; customer input cannot uniquely select this alias row",
         "run_label": "run2_next10",
         "runtime_record_key": "us-wi-la_crosse__commercial_ti__building",
         "source_artifact_relative_path": "artifacts/permitassist-v231-expansion-run3-run2-next10-20260606T183327Z/research/WI/WI_decision_cells.json",
@@ -169789,19 +169871,21 @@
       "city": "La Crosse",
       "companion_permits": [],
       "customer_action": "Apply to the listed municipal building/inspection authority before starting covered commercial building or alteration work.",
-      "customer_main_decision": "REQUIRED",
+      "customer_main_decision": null,
       "enrichment_backlog": null,
       "entity_type": "city",
       "evidence_level": "official_verbatim_snapshot_hash_verified",
       "jurisdiction_id": "us-wi-la_crosse",
-      "main_decision": "REQUIRED",
+      "main_decision": null,
       "permit_kind": "building",
       "permit_name": "Building Permit",
       "project_type_label": "Commercial tenant improvement / commercial building work",
       "project_type_slug": "commercial_ti",
-      "promotion_allowed": true,
-      "publish_blockers": [],
-      "publish_status": "PUBLISHABLE",
+      "promotion_allowed": false,
+      "publish_blockers": [
+        "runtime_city_key_collision_duplicate_alias_not_customer_reachable"
+      ],
+      "publish_status": "IMPORTED_DUPLICATE_ALIAS_NOT_CUSTOMER_PUBLISHABLE",
       "source_evidence": [
         {
           "ahj_source_tie": "official_city_host_or_documented_successor_domain",
@@ -169857,11 +169941,30 @@
       "state": "WI"
     },
     "WI|us_wi_west_allis|commercial_tenant_improvement": {
+      "_duplicate_alias_customer_boundary": {
+        "alias_key": "WI|us_wi_west_allis|commercial_tenant_improvement",
+        "canonical_customer_cell_id": "us-wi-west-allis__commercial__commercial_building_plan_review__building_plan_review",
+        "canonical_customer_key": "WI|west_allis|commercial_tenant_improvement",
+        "customer_reachable": false,
+        "repair_id": "run3-live-validation-duplicate-alias-demotion-20260612T134132Z"
+      },
       "_v231_run3_import_wrapper": {
+        "alias_key": "WI|us_wi_west_allis|commercial_tenant_improvement",
+        "canonical_customer_cell_id": "us-wi-west-allis__commercial__commercial_building_plan_review__building_plan_review",
+        "canonical_customer_key": "WI|west_allis|commercial_tenant_improvement",
+        "duplicate_alias_not_customer_publishable": true,
+        "duplicate_alias_repair_id": "run3-live-validation-duplicate-alias-demotion-20260612T134132Z",
         "effective_cell_id_missing_nonblocking": false,
         "import_eligibility": "STAGED_NET_NEW_CANDIDATE",
         "package_sequence": 345,
+        "pre_repair_publishability": {
+          "customer_main_decision": "REQUIRED",
+          "main_decision": "REQUIRED",
+          "promotion_allowed": true,
+          "publish_status": "PUBLISHABLE"
+        },
         "record_level_customer_main_decision": "REQUIRED",
+        "repair_reason": "same normal city/state/runtime bucket as an existing canonical customer key; customer input cannot uniquely select this alias row",
         "run_label": "run2_next10",
         "runtime_record_key": "us-wi-west_allis__commercial_ti__building",
         "source_artifact_relative_path": "artifacts/permitassist-v231-expansion-run3-run2-next10-20260606T183327Z/research/WI/WI_decision_cells.json",
@@ -169875,19 +169978,21 @@
       "city": "West Allis",
       "companion_permits": [],
       "customer_action": "Apply to the listed municipal building/inspection authority before starting covered commercial building or alteration work.",
-      "customer_main_decision": "REQUIRED",
+      "customer_main_decision": null,
       "enrichment_backlog": null,
       "entity_type": "city",
       "evidence_level": "official_verbatim_snapshot_hash_verified",
       "jurisdiction_id": "us-wi-west_allis",
-      "main_decision": "REQUIRED",
+      "main_decision": null,
       "permit_kind": "building",
       "permit_name": "Building Permit",
       "project_type_label": "Commercial tenant improvement / commercial building work",
       "project_type_slug": "commercial_ti",
-      "promotion_allowed": true,
-      "publish_blockers": [],
-      "publish_status": "PUBLISHABLE",
+      "promotion_allowed": false,
+      "publish_blockers": [
+        "runtime_city_key_collision_duplicate_alias_not_customer_reachable"
+      ],
+      "publish_status": "IMPORTED_DUPLICATE_ALIAS_NOT_CUSTOMER_PUBLISHABLE",
       "source_evidence": [
         {
           "ahj_source_tie": "official_city_host_or_documented_successor_domain",

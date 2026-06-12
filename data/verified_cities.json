@@ -51035,17 +51035,16 @@
     "data": {
       "city": "Eau Claire",
       "fee_range": "",
-      "permit_office": "City of Eau Claire Inspections Division",
+      "permit_office": "City of Eau Claire",
       "phone": "",
       "sources": [
-        "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required",
         "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-eau_claire__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Eau Claire Inspections Division.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-eau-claire__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial remodeling / alteration with City of Eau Claire.",
       "trade": "electrical"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
+    "import_version": "v231-national-baseline-2026-06-02",
     "source_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required",
     "state": "WI",
     "trade": "electrical",
@@ -51057,17 +51056,16 @@
     "data": {
       "city": "Eau Claire",
       "fee_range": "",
-      "permit_office": "City of Eau Claire Inspections Division",
+      "permit_office": "City of Eau Claire",
       "phone": "",
       "sources": [
-        "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required",
         "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-eau_claire__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Eau Claire Inspections Division.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-eau-claire__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial remodeling / alteration with City of Eau Claire.",
       "trade": "general"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
+    "import_version": "v231-national-baseline-2026-06-02",
     "source_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required",
     "state": "WI",
     "trade": "general",
@@ -51079,17 +51077,16 @@
     "data": {
       "city": "Eau Claire",
       "fee_range": "",
-      "permit_office": "City of Eau Claire Inspections Division",
+      "permit_office": "City of Eau Claire",
       "phone": "",
       "sources": [
-        "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required",
         "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-eau_claire__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Eau Claire Inspections Division.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-eau-claire__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial remodeling / alteration with City of Eau Claire.",
       "trade": "hvac"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
+    "import_version": "v231-national-baseline-2026-06-02",
     "source_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required",
     "state": "WI",
     "trade": "hvac",
@@ -51101,17 +51098,16 @@
     "data": {
       "city": "Eau Claire",
       "fee_range": "",
-      "permit_office": "City of Eau Claire Inspections Division",
+      "permit_office": "City of Eau Claire",
       "phone": "",
       "sources": [
-        "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required",
         "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-eau_claire__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Eau Claire Inspections Division.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-eau-claire__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial remodeling / alteration with City of Eau Claire.",
       "trade": "plumbing"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
+    "import_version": "v231-national-baseline-2026-06-02",
     "source_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required",
     "state": "WI",
     "trade": "plumbing",
@@ -51123,17 +51119,16 @@
     "data": {
       "city": "Eau Claire",
       "fee_range": "",
-      "permit_office": "City of Eau Claire Inspections Division",
+      "permit_office": "City of Eau Claire",
       "phone": "",
       "sources": [
-        "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required",
         "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-eau_claire__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Eau Claire Inspections Division.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-eau-claire__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial remodeling / alteration with City of Eau Claire.",
       "trade": "roofing"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
+    "import_version": "v231-national-baseline-2026-06-02",
     "source_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required",
     "state": "WI",
     "trade": "roofing",
@@ -59880,18 +59875,17 @@
     "data": {
       "city": "Fond Du Lac",
       "fee_range": "",
-      "permit_office": "City of Fond du Lac Inspection Services",
+      "permit_office": "City of Fond du Lac",
       "phone": "",
       "sources": [
-        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/",
-        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/"
+        "https://www.fdl.wi.gov/inspection-services/permits-fees/"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-fond_du_lac__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Fond du Lac Inspection Services.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-fond-du-lac__commercial__commercial_tenant_improvement__building: REQUIRED for Interior or exterior alteration with City of Fond du Lac.",
       "trade": "electrical"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.fdl.wi.gov/inspection-services/permits-fees/",
     "state": "WI",
     "trade": "electrical",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -59902,18 +59896,17 @@
     "data": {
       "city": "Fond Du Lac",
       "fee_range": "",
-      "permit_office": "City of Fond du Lac Inspection Services",
+      "permit_office": "City of Fond du Lac",
       "phone": "",
       "sources": [
-        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/",
-        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/"
+        "https://www.fdl.wi.gov/inspection-services/permits-fees/"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-fond_du_lac__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Fond du Lac Inspection Services.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-fond-du-lac__commercial__commercial_tenant_improvement__building: REQUIRED for Interior or exterior alteration with City of Fond du Lac.",
       "trade": "general"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.fdl.wi.gov/inspection-services/permits-fees/",
     "state": "WI",
     "trade": "general",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -59924,18 +59917,17 @@
     "data": {
       "city": "Fond Du Lac",
       "fee_range": "",
-      "permit_office": "City of Fond du Lac Inspection Services",
+      "permit_office": "City of Fond du Lac",
       "phone": "",
       "sources": [
-        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/",
-        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/"
+        "https://www.fdl.wi.gov/inspection-services/permits-fees/"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-fond_du_lac__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Fond du Lac Inspection Services.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-fond-du-lac__commercial__commercial_tenant_improvement__building: REQUIRED for Interior or exterior alteration with City of Fond du Lac.",
       "trade": "hvac"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.fdl.wi.gov/inspection-services/permits-fees/",
     "state": "WI",
     "trade": "hvac",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -59946,18 +59938,17 @@
     "data": {
       "city": "Fond Du Lac",
       "fee_range": "",
-      "permit_office": "City of Fond du Lac Inspection Services",
+      "permit_office": "City of Fond du Lac",
       "phone": "",
       "sources": [
-        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/",
-        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/"
+        "https://www.fdl.wi.gov/inspection-services/permits-fees/"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-fond_du_lac__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Fond du Lac Inspection Services.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-fond-du-lac__commercial__commercial_tenant_improvement__building: REQUIRED for Interior or exterior alteration with City of Fond du Lac.",
       "trade": "plumbing"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.fdl.wi.gov/inspection-services/permits-fees/",
     "state": "WI",
     "trade": "plumbing",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -59968,18 +59959,17 @@
     "data": {
       "city": "Fond Du Lac",
       "fee_range": "",
-      "permit_office": "City of Fond du Lac Inspection Services",
+      "permit_office": "City of Fond du Lac",
       "phone": "",
       "sources": [
-        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/",
-        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/"
+        "https://www.fdl.wi.gov/inspection-services/permits-fees/"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-fond_du_lac__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Fond du Lac Inspection Services.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-fond-du-lac__commercial__commercial_tenant_improvement__building: REQUIRED for Interior or exterior alteration with City of Fond du Lac.",
       "trade": "roofing"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.fdl.wi.gov/inspection-services/permits-fees/",
     "state": "WI",
     "trade": "roofing",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -68980,18 +68970,17 @@
     "data": {
       "city": "Green Bay",
       "fee_range": "",
-      "permit_office": "City of Green Bay Community and Economic Development",
+      "permit_office": "City of Green Bay",
       "phone": "",
       "sources": [
-        "https://www.greenbaywi.gov/312/Building-Permits-Inspections",
-        "https://www.greenbaywi.gov/312/Building-Permits-Inspections"
+        "https://www.greenbaywi.gov/315/Permitting-Process"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-green_bay__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Green Bay Community and Economic Development.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-green-bay__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial alteration / improvement with City of Green Bay.",
       "trade": "electrical"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.greenbaywi.gov/312/Building-Permits-Inspections",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.greenbaywi.gov/315/Permitting-Process",
     "state": "WI",
     "trade": "electrical",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -69002,18 +68991,17 @@
     "data": {
       "city": "Green Bay",
       "fee_range": "",
-      "permit_office": "City of Green Bay Community and Economic Development",
+      "permit_office": "City of Green Bay",
       "phone": "",
       "sources": [
-        "https://www.greenbaywi.gov/312/Building-Permits-Inspections",
-        "https://www.greenbaywi.gov/312/Building-Permits-Inspections"
+        "https://www.greenbaywi.gov/315/Permitting-Process"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-green_bay__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Green Bay Community and Economic Development.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-green-bay__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial alteration / improvement with City of Green Bay.",
       "trade": "general"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.greenbaywi.gov/312/Building-Permits-Inspections",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.greenbaywi.gov/315/Permitting-Process",
     "state": "WI",
     "trade": "general",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -69024,18 +69012,17 @@
     "data": {
       "city": "Green Bay",
       "fee_range": "",
-      "permit_office": "City of Green Bay Community and Economic Development",
+      "permit_office": "City of Green Bay",
       "phone": "",
       "sources": [
-        "https://www.greenbaywi.gov/312/Building-Permits-Inspections",
-        "https://www.greenbaywi.gov/312/Building-Permits-Inspections"
+        "https://www.greenbaywi.gov/315/Permitting-Process"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-green_bay__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Green Bay Community and Economic Development.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-green-bay__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial alteration / improvement with City of Green Bay.",
       "trade": "hvac"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.greenbaywi.gov/312/Building-Permits-Inspections",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.greenbaywi.gov/315/Permitting-Process",
     "state": "WI",
     "trade": "hvac",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -69046,18 +69033,17 @@
     "data": {
       "city": "Green Bay",
       "fee_range": "",
-      "permit_office": "City of Green Bay Community and Economic Development",
+      "permit_office": "City of Green Bay",
       "phone": "",
       "sources": [
-        "https://www.greenbaywi.gov/312/Building-Permits-Inspections",
-        "https://www.greenbaywi.gov/312/Building-Permits-Inspections"
+        "https://www.greenbaywi.gov/315/Permitting-Process"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-green_bay__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Green Bay Community and Economic Development.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-green-bay__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial alteration / improvement with City of Green Bay.",
       "trade": "plumbing"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.greenbaywi.gov/312/Building-Permits-Inspections",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.greenbaywi.gov/315/Permitting-Process",
     "state": "WI",
     "trade": "plumbing",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -69068,18 +69054,17 @@
     "data": {
       "city": "Green Bay",
       "fee_range": "",
-      "permit_office": "City of Green Bay Community and Economic Development",
+      "permit_office": "City of Green Bay",
       "phone": "",
       "sources": [
-        "https://www.greenbaywi.gov/312/Building-Permits-Inspections",
-        "https://www.greenbaywi.gov/312/Building-Permits-Inspections"
+        "https://www.greenbaywi.gov/315/Permitting-Process"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-green_bay__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of Green Bay Community and Economic Development.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-green-bay__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial alteration / improvement with City of Green Bay.",
       "trade": "roofing"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.greenbaywi.gov/312/Building-Permits-Inspections",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.greenbaywi.gov/315/Permitting-Process",
     "state": "WI",
     "trade": "roofing",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -92175,17 +92160,16 @@
     "data": {
       "city": "La Crosse",
       "fee_range": "",
-      "permit_office": "City of La Crosse Building Inspection Division",
+      "permit_office": "City of La Crosse",
       "phone": "",
       "sources": [
-        "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits",
         "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-la_crosse__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of La Crosse Building Inspection Division.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-la-crosse__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial alteration with City of La Crosse.",
       "trade": "electrical"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
+    "import_version": "v231-national-baseline-2026-06-02",
     "source_url": "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits",
     "state": "WI",
     "trade": "electrical",
@@ -92197,17 +92181,16 @@
     "data": {
       "city": "La Crosse",
       "fee_range": "",
-      "permit_office": "City of La Crosse Building Inspection Division",
+      "permit_office": "City of La Crosse",
       "phone": "",
       "sources": [
-        "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits",
         "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-la_crosse__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of La Crosse Building Inspection Division.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-la-crosse__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial alteration with City of La Crosse.",
       "trade": "general"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
+    "import_version": "v231-national-baseline-2026-06-02",
     "source_url": "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits",
     "state": "WI",
     "trade": "general",
@@ -92219,17 +92202,16 @@
     "data": {
       "city": "La Crosse",
       "fee_range": "",
-      "permit_office": "City of La Crosse Building Inspection Division",
+      "permit_office": "City of La Crosse",
       "phone": "",
       "sources": [
-        "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits",
         "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-la_crosse__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of La Crosse Building Inspection Division.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-la-crosse__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial alteration with City of La Crosse.",
       "trade": "hvac"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
+    "import_version": "v231-national-baseline-2026-06-02",
     "source_url": "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits",
     "state": "WI",
     "trade": "hvac",
@@ -92241,17 +92223,16 @@
     "data": {
       "city": "La Crosse",
       "fee_range": "",
-      "permit_office": "City of La Crosse Building Inspection Division",
+      "permit_office": "City of La Crosse",
       "phone": "",
       "sources": [
-        "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits",
         "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-la_crosse__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of La Crosse Building Inspection Division.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-la-crosse__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial alteration with City of La Crosse.",
       "trade": "plumbing"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
+    "import_version": "v231-national-baseline-2026-06-02",
     "source_url": "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits",
     "state": "WI",
     "trade": "plumbing",
@@ -92263,17 +92244,16 @@
     "data": {
       "city": "La Crosse",
       "fee_range": "",
-      "permit_office": "City of La Crosse Building Inspection Division",
+      "permit_office": "City of La Crosse",
       "phone": "",
       "sources": [
-        "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits",
         "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-la_crosse__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of La Crosse Building Inspection Division.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-la-crosse__commercial__commercial_tenant_improvement__building: REQUIRED for Commercial alteration with City of La Crosse.",
       "trade": "roofing"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
+    "import_version": "v231-national-baseline-2026-06-02",
     "source_url": "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits",
     "state": "WI",
     "trade": "roofing",
@@ -180275,18 +180255,17 @@
     "data": {
       "city": "West Allis",
       "fee_range": "",
-      "permit_office": "City of West Allis Code Enforcement Department",
+      "permit_office": "City of West Allis",
       "phone": "",
       "sources": [
-        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
-        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit"
+        "https://www.westalliswi.gov/page/building-permits"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-west_allis__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of West Allis Code Enforcement Department.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-west-allis__commercial__commercial_building_plan_review__building_plan_review: REQUIRED for Commercial building plan review with City of West Allis.",
       "trade": "electrical"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.westalliswi.gov/page/building-permits",
     "state": "WI",
     "trade": "electrical",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -180297,18 +180276,17 @@
     "data": {
       "city": "West Allis",
       "fee_range": "",
-      "permit_office": "City of West Allis Code Enforcement Department",
+      "permit_office": "City of West Allis",
       "phone": "",
       "sources": [
-        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
-        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit"
+        "https://www.westalliswi.gov/page/building-permits"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-west_allis__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of West Allis Code Enforcement Department.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-west-allis__commercial__commercial_building_plan_review__building_plan_review: REQUIRED for Commercial building plan review with City of West Allis.",
       "trade": "general"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.westalliswi.gov/page/building-permits",
     "state": "WI",
     "trade": "general",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -180319,18 +180297,17 @@
     "data": {
       "city": "West Allis",
       "fee_range": "",
-      "permit_office": "City of West Allis Code Enforcement Department",
+      "permit_office": "City of West Allis",
       "phone": "",
       "sources": [
-        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
-        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit"
+        "https://www.westalliswi.gov/page/building-permits"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-west_allis__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of West Allis Code Enforcement Department.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-west-allis__commercial__commercial_building_plan_review__building_plan_review: REQUIRED for Commercial building plan review with City of West Allis.",
       "trade": "hvac"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.westalliswi.gov/page/building-permits",
     "state": "WI",
     "trade": "hvac",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -180341,18 +180318,17 @@
     "data": {
       "city": "West Allis",
       "fee_range": "",
-      "permit_office": "City of West Allis Code Enforcement Department",
+      "permit_office": "City of West Allis",
       "phone": "",
       "sources": [
-        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
-        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit"
+        "https://www.westalliswi.gov/page/building-permits"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-west_allis__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of West Allis Code Enforcement Department.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-west-allis__commercial__commercial_building_plan_review__building_plan_review: REQUIRED for Commercial building plan review with City of West Allis.",
       "trade": "plumbing"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.westalliswi.gov/page/building-permits",
     "state": "WI",
     "trade": "plumbing",
     "verified_at": "2026-06-12T12:23:30Z"
@@ -180363,18 +180339,17 @@
     "data": {
       "city": "West Allis",
       "fee_range": "",
-      "permit_office": "City of West Allis Code Enforcement Department",
+      "permit_office": "City of West Allis",
       "phone": "",
       "sources": [
-        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
-        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit"
+        "https://www.westalliswi.gov/page/building-permits"
       ],
       "state": "WI",
-      "summary": "v2.3.1 Run3 import record us-wi-west_allis__commercial_ti__building: REQUIRED for Commercial tenant improvement / commercial building work with City of West Allis Code Enforcement Department.",
+      "summary": "v2.3.1 approved Decision Cell us-wi-west-allis__commercial__commercial_building_plan_review__building_plan_review: REQUIRED for Commercial building plan review with City of West Allis.",
       "trade": "roofing"
     },
-    "import_version": "v231-run3-expansion-889-2026-06-12",
-    "source_url": "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
+    "import_version": "v231-national-baseline-2026-06-02",
+    "source_url": "https://www.westalliswi.gov/page/building-permits",
     "state": "WI",
     "trade": "roofing",
     "verified_at": "2026-06-12T12:23:30Z"

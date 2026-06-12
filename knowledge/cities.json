@@ -7520,12 +7520,12 @@
       "phone": "",
       "state": "WI",
       "v231_decision_cell": {
-        "cell_id": "us-wi-eau_claire__commercial_ti__building",
-        "import_version": "v231-run3-expansion-889-2026-06-12",
-        "jurisdiction_id": "us-wi-eau_claire",
+        "cell_id": "us-wi-eau-claire__commercial__commercial_tenant_improvement__building",
+        "evidence_level": "OFFICIAL_VERBATIM",
+        "import_version": "v231-national-baseline-2026-06-02",
+        "jurisdiction_id": "us-wi-eau-claire",
         "main_decision": "REQUIRED",
-        "project_type_slug": "commercial_ti",
-        "promotion_allowed": true,
+        "project_type_slug": "commercial_tenant_improvement",
         "publish_status": "PUBLISHABLE",
         "source_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required"
       }
@@ -8895,14 +8895,14 @@
       "phone": "",
       "state": "WI",
       "v231_decision_cell": {
-        "cell_id": "us-wi-fond_du_lac__commercial_ti__building",
-        "import_version": "v231-run3-expansion-889-2026-06-12",
-        "jurisdiction_id": "us-wi-fond_du_lac",
+        "cell_id": "us-wi-fond-du-lac__commercial__commercial_tenant_improvement__building",
+        "evidence_level": "OFFICIAL_VERBATIM",
+        "import_version": "v231-national-baseline-2026-06-02",
+        "jurisdiction_id": "us-wi-fond-du-lac",
         "main_decision": "REQUIRED",
-        "project_type_slug": "commercial_ti",
-        "promotion_allowed": true,
+        "project_type_slug": "commercial_tenant_improvement",
         "publish_status": "PUBLISHABLE",
-        "source_url": "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/"
+        "source_url": "https://www.fdl.wi.gov/inspection-services/permits-fees/"
       }
     },
     "forest_grove_or": {
@@ -10079,14 +10079,14 @@
         "plan_review": "1\u20132 weeks"
       },
       "v231_decision_cell": {
-        "cell_id": "us-wi-green_bay__commercial_ti__building",
-        "import_version": "v231-run3-expansion-889-2026-06-12",
-        "jurisdiction_id": "us-wi-green_bay",
+        "cell_id": "us-wi-green-bay__commercial__commercial_tenant_improvement__building",
+        "evidence_level": "OFFICIAL_VERBATIM",
+        "import_version": "v231-national-baseline-2026-06-02",
+        "jurisdiction_id": "us-wi-green-bay",
         "main_decision": "REQUIRED",
-        "project_type_slug": "commercial_ti",
-        "promotion_allowed": true,
+        "project_type_slug": "commercial_tenant_improvement",
         "publish_status": "PUBLISHABLE",
-        "source_url": "https://www.greenbaywi.gov/312/Building-Permits-Inspections"
+        "source_url": "https://www.greenbaywi.gov/315/Permitting-Process"
       }
     },
     "green_river_wy": {
@@ -13138,12 +13138,12 @@
       "phone": "",
       "state": "WI",
       "v231_decision_cell": {
-        "cell_id": "us-wi-la_crosse__commercial_ti__building",
-        "import_version": "v231-run3-expansion-889-2026-06-12",
-        "jurisdiction_id": "us-wi-la_crosse",
+        "cell_id": "us-wi-la-crosse__commercial__commercial_tenant_improvement__building",
+        "evidence_level": "OFFICIAL_VERBATIM",
+        "import_version": "v231-national-baseline-2026-06-02",
+        "jurisdiction_id": "us-wi-la-crosse",
         "main_decision": "REQUIRED",
-        "project_type_slug": "commercial_ti",
-        "promotion_allowed": true,
+        "project_type_slug": "commercial_tenant_improvement",
         "publish_status": "PUBLISHABLE",
         "source_url": "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits"
       }
@@ -26190,14 +26190,14 @@
       "phone": "",
       "state": "WI",
       "v231_decision_cell": {
-        "cell_id": "us-wi-west_allis__commercial_ti__building",
-        "import_version": "v231-run3-expansion-889-2026-06-12",
-        "jurisdiction_id": "us-wi-west_allis",
+        "cell_id": "us-wi-west-allis__commercial__commercial_building_plan_review__building_plan_review",
+        "evidence_level": "OFFICIAL_VERBATIM",
+        "import_version": "v231-national-baseline-2026-06-02",
+        "jurisdiction_id": "us-wi-west-allis",
         "main_decision": "REQUIRED",
-        "project_type_slug": "commercial_ti",
-        "promotion_allowed": true,
+        "project_type_slug": "commercial_building_plan_review",
         "publish_status": "PUBLISHABLE",
-        "source_url": "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit"
+        "source_url": "https://www.westalliswi.gov/page/building-permits"
       }
     },
     "west_columbia_sc": {

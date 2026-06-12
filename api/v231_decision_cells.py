@@ -119,6 +119,9 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
         "new commercial construction",
         "commercial new construction",
         "new commercial building",
+        "commercial building construction",
+        "commercial plan review",
+        "building plan review",
         "retail shell",
         "commercial retail shell",
         "shell building",
@@ -156,10 +159,16 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
         "restaurant ti",
         "clinic tenant improvement",
         "clinic ti",
+        "commercial building permit",
+        "commercial building project",
     )
     commercial_ti_generic_terms = (
         "interior alteration",
         "interior remodel",
+        "commercial interior remodel",
+        "interior commercial remodel",
+        "commercial interior alteration",
+        "interior commercial alteration",
     )
     if _has_any(combined, commercial_ti_explicit_terms) or (
         _has_any(text, commercial_ti_generic_terms) and (category == "commercial" or _has_any(combined, commercial_context_terms))
@@ -256,6 +265,68 @@ def _ahj_has_any_project(index: dict[str, dict[str, Any]], state_key: str, city_
     return any(key.startswith(prefix) for key in index)
 
 
+def _publishable_customer_cell(cell: Any) -> bool:
+    return isinstance(cell, dict) and cell.get("publish_status") == "PUBLISHABLE" and cell.get("main_decision") in {"REQUIRED", "NOT_REQUIRED"}
+
+
+def _commercial_construction_alias_cell(cell: dict[str, Any]) -> bool:
+    """Return True when a compressed TI runtime key is truly construction/building scope.
+
+    The Run3 import intentionally compressed many richer commercial building/
+    construction slugs into the broad runtime bucket
+    ``commercial_tenant_improvement``.  The resolver may use that compressed key
+    for explicit commercial-construction customer phrasing only when the row's
+    own metadata shows construction/building/plan-review scope.  Pure TI rows
+    stay TI-only; ambiguous "commercial work" still abstains.
+    """
+    blob = " ".join(str(cell.get(field) or "") for field in (
+        "project_type_slug",
+        "project_type_label",
+        "decision_subject",
+        "permit_name",
+        "customer_action",
+    )).lower().replace("_", " ").replace("-", " ")
+    construction_markers = (
+        "construction",
+        "building/construction",
+        "building plan review",
+        "commercial building",
+        "state plan review",
+        "change of occupancy",
+        "change of use",
+        "core and shell",
+        "shell building",
+    )
+    return any(marker in blob for marker in construction_markers)
+
+
+def _resolve_publishable_cell_from_index(
+    index: dict[str, dict[str, Any]],
+    state_key: str,
+    city_key: str,
+    project_slug: str,
+    candidates: tuple[str, ...],
+) -> V231Resolution | None:
+    key = f"{state_key}|{city_key}|{project_slug}"
+    cell = index.get(key)
+    if isinstance(cell, dict):
+        if _publishable_customer_cell(cell):
+            return V231Resolution(
+                ResolutionStatus.EXACT_CELL_COVERED,
+                cell=copy.deepcopy(cell),
+                key=key,
+                project_candidates=candidates,
+                reason="exact publishable AHJ/project cell",
+            )
+        return V231Resolution(
+            ResolutionStatus.AHJ_COVERED_PROJECT_NOT_COVERED,
+            key=key,
+            project_candidates=candidates,
+            reason="cell exists but is not publishable/customer-concrete",
+        )
+    return None
+
+
 def resolve_v231_cell(
     city: str,
     state: str,
@@ -280,22 +351,20 @@ def resolve_v231_cell(
         return V231Resolution(status, project_candidates=(), reason="project family ambiguous or unsupported")
 
     for project_slug in candidates:
-        key = f"{state_key}|{city_key}|{project_slug}"
-        cell = index.get(key)
-        if isinstance(cell, dict):
-            if cell.get("publish_status") == "PUBLISHABLE" and cell.get("main_decision") in {"REQUIRED", "NOT_REQUIRED"}:
-                return V231Resolution(
-                    ResolutionStatus.EXACT_CELL_COVERED,
-                    cell=copy.deepcopy(cell),
-                    key=key,
-                    project_candidates=candidates,
-                    reason="exact publishable AHJ/project cell",
-                )
+        resolved = _resolve_publishable_cell_from_index(index, state_key, city_key, project_slug, candidates)
+        if resolved is not None:
+            return resolved
+
+    if "commercial_construction" in candidates:
+        alias_key = f"{state_key}|{city_key}|commercial_tenant_improvement"
+        alias_cell = index.get(alias_key)
+        if isinstance(alias_cell, dict) and _publishable_customer_cell(alias_cell) and _commercial_construction_alias_cell(alias_cell):
             return V231Resolution(
-                ResolutionStatus.AHJ_COVERED_PROJECT_NOT_COVERED,
-                key=key,
+                ResolutionStatus.EXACT_CELL_COVERED,
+                cell=copy.deepcopy(alias_cell),
+                key=alias_key,
                 project_candidates=candidates,
-                reason="cell exists but is not publishable/customer-concrete",
+                reason="commercial construction resolved through compressed commercial_tenant_improvement runtime bucket",
             )
 
     first_key = f"{state_key}|{city_key}|{candidates[0]}"

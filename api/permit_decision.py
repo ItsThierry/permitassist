@@ -725,7 +725,10 @@ def _lock_permit_name_is_generic(name: Any) -> bool:
 
 def _recovered_lock_permit_name(lock: dict[str, Any], permit_kind: str = "") -> str:
     name = _norm_text(lock.get("permit_name"))
-    if not _lock_permit_name_is_generic(name):
+    if name:
+        # Exact publishable Decision Cells own the primary permit framing.  Do
+        # not rewrite a source-backed "Building Permit" into a generic
+        # commercial/TI heuristic label at the customer-contract boundary.
         return name
 
     blob = _blob(lock).lower().replace("_", " ").replace("-", " ")
@@ -780,6 +783,42 @@ def _merge_locked_primary_permits(lock: dict[str, Any], existing_permits: Any, *
     return merged
 
 
+def _restore_locked_primary_first(permits: list[dict[str, Any]], lock: dict[str, Any]) -> list[dict[str, Any]]:
+    """Keep the exact Decision Cell primary as the first permit after collapse.
+
+    Generic parent/child cleanup can otherwise re-sort the list or drop a
+    source-backed primary such as "Construction Permit" in favor of a generic
+    commercial/TI heuristic.  The cell primary is authoritative; companion/trade
+    rows remain after it.
+    """
+    if not permits:
+        return permits
+    kind = _controlled_kind_from_lock(lock)
+    primary_name = _recovered_lock_permit_name(lock, kind)
+    primary_key = _normalize_permit_name_for_dedupe(primary_name)
+    raw_primary = lock.get("primary_permit")
+    primary: dict[str, Any] = copy.deepcopy(raw_primary) if isinstance(raw_primary, dict) else {}
+    primary.update({
+        "permit_type": primary_name,
+        "required": True,
+        "kind": kind,
+        "permit_kind": lock.get("permit_kind") or "building",
+        "portal_selection": primary_name,
+    })
+    if lock.get("customer_action") and not primary.get("notes"):
+        primary["notes"] = lock.get("customer_action")
+    primary["source"] = "permitassist_v231_decision_cell"
+
+    rest: list[dict[str, Any]] = []
+    for permit in permits:
+        key = _normalize_permit_name_for_dedupe(permit.get("permit_type") or permit.get("portal_selection") or permit.get("kind"))
+        source = permit.get("source")
+        if key == primary_key or source == "permitassist_v231_decision_cell":
+            continue
+        rest.append(permit)
+    return [primary, *rest]
+
+
 def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] | None = None, city: str = "", state: str = "", public: bool = False) -> dict[str, Any]:
     if not isinstance(result, dict):
         return {}
@@ -814,7 +853,11 @@ def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] |
             result["apply_url"] = lock.get("apply_url")
         result.pop("not_required_reason", None)
         result.pop("no_permit_required_reason", None)
-        result["permits_required"] = _collapse_parent_child_permits(_merge_locked_primary_permits(lock, result.get("permits_required"), public=public))
+        merged_permits = _merge_locked_primary_permits(lock, result.get("permits_required"), public=False)
+        result["permits_required"] = _restore_locked_primary_first(_collapse_parent_child_permits(merged_permits), lock)
+        if public:
+            for permit in result["permits_required"]:
+                permit.pop("source", None)
         result["trade_permits"] = _trade_permits(result)
         result["companion_permits_or_reviews"] = _companion_reviews(result)
         result["customer_next_step"] = _locked_primary_next_step(lock, PERMIT_DECISION_REQUIRED, kind, city, state)
