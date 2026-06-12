@@ -148,7 +148,7 @@ def test_ri_noncustomer_boundary_required_answer_gets_statewide_public_sources_w
 
 
 def test_finalizer_reconciles_stale_cached_required_result_to_exact_not_required_cell():
-    from api.server import finalize_permit_lookup_result
+    from api.server import finalize_permit_lookup_result, build_customer_permit_view_model
 
     job = "Office/retail tenant buildout with non-structural interior alteration"
     cached = {
@@ -165,7 +165,8 @@ def test_finalizer_reconciles_stale_cached_required_result_to_exact_not_required
         "source_urls": ["https://www.washingtoncountymn.gov/DocumentCenter/View/26", "https://www.washingtoncountymn.gov/486/Permits"],
     }
 
-    public = finalize_permit_lookup_result(cached, job, "Washington", "MN", is_cached=True, explicit_vertical="commercial_ti", evidence_allowed=False)
+    finalized = finalize_permit_lookup_result(cached, job, "Washington", "MN", is_cached=True, explicit_vertical="commercial_ti", evidence_allowed=False)
+    public = build_customer_permit_view_model(finalized, job, "Washington", "MN")
 
     assert public["permit_decision"] == "NOT_REQUIRED"
     assert public["permit_required"] is False

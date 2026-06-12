@@ -2912,10 +2912,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     final_cell_lock = _get_decision_cell_primary_lock(result)
     result = apply_source_floor_annotation(result, job_type, city, state)
     if final_cell_lock:
-        result = enforce_decision_cell_primary(result, final_cell_lock, city, state, public=True)
-    for internal_key in list(result.keys()):
-        if internal_key in {"_decision_cell_primary_lock", "_field_sources"} or str(internal_key).startswith("_v231"):
-            result.pop(internal_key, None)
+        result = enforce_decision_cell_primary(result, final_cell_lock, city, state, public=False)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
