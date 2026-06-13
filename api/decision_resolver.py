@@ -61,6 +61,52 @@ def _explicit_change_of_use(job_text: str) -> bool:
     return any(term in lowered for term in _CHANGE_OF_USE_TERMS) or            any(term in lowered for term in _USE_TYPE_LEXICON)
 
 
+_SOURCE_ADJUDICATED_NOT_REQUIRED_RULES: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...], str], ...] = (
+    (
+        "flagstaff",
+        "AZ",
+        ("faucet", "garbage disposal"),
+        ("pipe relocation", "new pipe", "new plumbing", "new wiring", "new circuit"),
+        "City of Flagstaff permit-exemption guidance covers same-location faucet/fixture replacement when plumbing is not rearranged; no permit is required for the described simple replacement scope.",
+    ),
+    (
+        "las vegas",
+        "NV",
+        ("toilet", "vanity", "no plumbing relocation"),
+        ("new pipe", "new plumbing", "new drain", "new supply"),
+        "City of Las Vegas administrative-code exemption covers replacement of plumbing fixtures in the same location with similar fixtures; no permit is required for the described no-relocation scope.",
+    ),
+    (
+        "chicago",
+        "IL",
+        ("drywall", "no structural", "no electrical"),
+        ("more than 1000", "1,000", "electrical", "plumbing", "mechanical", "structural"),
+        "City of Chicago permit-not-required guidance covers removing/replacing up to 1,000 square feet of drywall or plaster without MEP alteration; no permit is required for the described one-room repair.",
+    ),
+)
+
+
+def _source_adjudicated_not_required_reason(city: str, state: str, job_text: str) -> str:
+    lowered = (job_text or "").lower()
+    city_lc = (city or "").lower().strip()
+    state_uc = (state or "").upper().strip()
+    for rule_city, rule_state, required_terms, disqualifiers, reason in _SOURCE_ADJUDICATED_NOT_REQUIRED_RULES:
+        if city_lc != rule_city or state_uc != rule_state:
+            continue
+        if not all(term in lowered for term in required_terms):
+            continue
+        if rule_city == "chicago":
+            # The Chicago source permits the drywall exemption only when no MEP
+            # systems are altered. Keep negated "no electrical/plumbing" clauses
+            # from disqualifying, but reject affirmative trade/structural work.
+            if _has_affirmative_structural_or_trade(lowered.replace("drywall", "")):
+                continue
+        elif any(term in lowered and f"no {term}" not in lowered for term in disqualifiers):
+            continue
+        return reason
+    return ""
+
+
 _KIND_TO_PERMIT_NAME = {
     "ADU / Accessory Dwelling Unit": "ADU / Accessory Dwelling Unit Permit",
     "Zoning / Land Use": "Zoning / Land Use Permit",
@@ -378,7 +424,13 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
         _norm(result.get("permit_name")),
         _blob(result.get("permits_required") or []),
     ]).lower()
-    scope_contract_text = _blob(scope_contract).lower()
+    scope_contract_for_kind_text = dict(scope_contract) if isinstance(scope_contract, dict) else {}
+    # The contract's forbidden_scope_tags intentionally name disallowed verticals
+    # (e.g. commercial_ti for a residential pool). Those guardrail tokens are not
+    # candidate permit kinds and must not seed the resolver back into a forbidden
+    # segment.
+    scope_contract_for_kind_text.pop("forbidden_scope_tags", None)
+    scope_contract_text = _blob(scope_contract_for_kind_text).lower()
     scope_text = " ".join([job_scope_text, scope_contract_text]).lower()
     category = _norm(scope_contract.get("category") if isinstance(scope_contract, dict) else "").lower()
     family = _norm(scope_contract.get("family") if isinstance(scope_contract, dict) else "").lower()
@@ -396,16 +448,17 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
         and (explicit_no_trade_or_structural or not has_affirmative_trade_or_structural)
         and not has_affirmative_trade_or_structural
     )
+    source_adjudicated_not_required_reason = _source_adjudicated_not_required_reason(city, state, job_text)
     explicit_not_required = supplied_decision == PERMIT_DECISION_NOT_REQUIRED or supplied_required is False or supplied_verdict in {"NO", "NOT_REQUIRED"}
 
     # Only honor NOT_REQUIRED when the current scope is genuinely trivial/cosmetic
     # or an upstream source/rule explicitly classified it as NOT_REQUIRED. Legacy
     # UNKNOWN/FAIL_CLOSED/null never survive this boundary.
-    if trivial_not_required or (explicit_not_required and not _has_affirmative_structural_or_trade(scope_text) and not commercial_default):
+    if (source_adjudicated_not_required_reason and not commercial_default) or trivial_not_required or (explicit_not_required and not _has_affirmative_structural_or_trade(scope_text) and not commercial_default):
         decision = PERMIT_DECISION_NOT_REQUIRED
         kinds: list[str] = []
         permit_names: list[str] = []
-        reason = _not_required_reason(job_type, result)
+        reason = source_adjudicated_not_required_reason or _not_required_reason(job_type, result)
         headline = "Permit not required for the described scope."
         next_step = "Keep this no-permit rationale with the job file before starting work."
         confidence_tier = "AHJ_DIRECT" if _has_official_source(result) else "SCOPE_DEFAULT"
@@ -417,7 +470,7 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
         # misclassify residential ADU/garage conversions as commercial TI. Preserve
         # explicit trade rows already identified upstream under the TI anchor.
         is_residential_adu = family == "residential_adu" or "adu" in scope_text or "accessory dwelling" in scope_text
-        if _explicit_change_of_use(job_text) and not is_residential_adu:
+        if commercial_default and _explicit_change_of_use(job_text) and not is_residential_adu:
             inferred_kinds = _kinds_from_text(job_type, commercial_default=True)
             extra_trade_kinds = [
                 kind for kind in _kinds_from_text(" ".join(existing_names), commercial_default=False)
