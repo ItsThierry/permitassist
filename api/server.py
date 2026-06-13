@@ -1053,6 +1053,74 @@ def _apply_canonical_ahj_apply_url_fallback(result: dict, city: str, state: str)
     return result
 
 
+def _customer_apply_url_fallback_from_sources(result: dict, city: str, state: str) -> dict:
+    """Fill a missing REQUIRED apply_url only from provenance-accepted local sources.
+
+    Resolution order: existing verified apply_url/online_application_url →
+    apply_path.portal_url/url → local official portal/source URL. Never invent a
+    URL; if none passes source-authority checks, leave apply_url empty and add
+    in-person/contact guidance.
+    """
+    if not isinstance(result, dict):
+        return {}
+    if str(result.get("permit_decision") or "").upper() != "REQUIRED" and result.get("permit_required") is not True:
+        return result
+    existing = _safe_customer_source_url(result.get("apply_url") or result.get("online_application_url") or "")
+    if existing:
+        result["apply_url"] = existing
+        result.setdefault("online_application_url", existing)
+        return result
+
+    candidates: list[tuple[int, str]] = []
+
+    def add_candidate(url: object, priority: int) -> None:
+        safe = _safe_customer_source_url(str(url or ""))
+        if not safe:
+            return
+        authority = classify_source_authority(safe, city, state, result=result)
+        if not (authority.get("local_decision_evidence") and authority.get("display_allowed")):
+            return
+        lowered = safe.lower()
+        portal_bonus = 0 if any(token in lowered for token in ("permit", "accela", "portal", "aca", "develop", "civic", "opengov", "online")) else 20
+        candidates.append((priority + portal_bonus, safe))
+
+    apply_path = result.get("apply_path")
+    if isinstance(apply_path, dict):
+        add_candidate(apply_path.get("portal_url") or apply_path.get("url") or apply_path.get("source_url"), 0)
+    for citation in result.get("claim_citations") or []:
+        if isinstance(citation, dict) and str(citation.get("field") or "").lower() in {"apply_url", "online_application_url", "apply_path"}:
+            add_candidate(citation.get("source_url"), 5)
+    for source in result.get("sources") or []:
+        if isinstance(source, dict):
+            add_candidate(source.get("url") or source.get("source_url"), 10)
+        else:
+            add_candidate(source, 10)
+    for url in result.get("source_urls") or []:
+        add_candidate(url, 10)
+
+    seen: set[str] = set()
+    ordered = []
+    for priority, url in sorted(candidates, key=lambda item: (item[0], item[1])):
+        if url not in seen:
+            seen.add(url)
+            ordered.append(url)
+    if ordered:
+        result["apply_url"] = ordered[0]
+        result.setdefault("online_application_url", ordered[0])
+        apply_path = result.get("apply_path") if isinstance(result.get("apply_path"), dict) else {}
+        apply_path = dict(apply_path or {})
+        apply_path.setdefault("portal_url", ordered[0])
+        apply_path.setdefault("support_level", "needs verification")
+        apply_path.setdefault("verification_note", "Start URL comes from local official source evidence; confirm exact portal category before filing.")
+        result["apply_path"] = apply_path
+    else:
+        guidance = "Apply in person or contact the listed building department; no verified local online application URL was available in the source evidence."
+        result.setdefault("apply_path", {"support_level": "in_person_or_contact_ahj", "verification_note": guidance})
+        if not result.get("customer_next_step"):
+            result["customer_next_step"] = guidance
+    return result
+
+
 def _repair_source_backed_apply_path_contradiction(result: dict, city: str, state: str) -> dict:
     if not isinstance(result, dict):
         return {}
@@ -1422,6 +1490,9 @@ def lint_customer_visible_result(public: dict, city: str = "", state: str = "") 
     if not isinstance(public, dict):
         return [{"code": "not_a_dict", "message": "Customer result is not an object."}]
     text = json.dumps(public, sort_keys=True, default=str)
+    # Copy-lint regexes inspect prose, not structured URLs. Strip URL tokens so
+    # domains like www.phoenix.gov do not look like mid-sentence punctuation drops.
+    prose_lint_text = re.sub(r"https?://[^\s\"'<>]+", "", text)
     text_lc = text.lower()
     hits: list[dict] = []
     patterns = {
@@ -1440,7 +1511,7 @@ def lint_customer_visible_result(public: dict, city: str = "", state: str = "") 
         "empty_bullet_or_fragment": r"^\s*[-•]\s*\.\s*$|[-•]\s*[a-z]{1,3}\.$",
     }
     for code, pattern in patterns.items():
-        if re.search(pattern, text, flags=re.I | re.S):
+        if re.search(pattern, prose_lint_text, flags=re.I | re.S):
             hits.append({"code": code, "message": "Customer-visible output failed deterministic copy lint."})
     summary = public.get("customer_result_summary") if isinstance(public.get("customer_result_summary"), dict) else {}
     required = {
@@ -1469,11 +1540,92 @@ def _sanitize_customer_result_with_state_context(public: dict, state: str) -> di
     return sanitize_customer_visible_result(scoped, strip_internal_keys=True)
 
 
-def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
+def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
+    """Repair cross-segment permit labels before the customer resolver ranks them.
+
+    Residential requests must not inherit Commercial/TI anchors from stale/cache
+    rows, while commercial TI answers must keep their trade richness without
+    displaying residential companion labels.
+    """
+    if not isinstance(result, dict) or not isinstance(scope_contract, dict):
+        return result if isinstance(result, dict) else {}
+    category = str(scope_contract.get("category") or "").lower().strip()
+    if category not in {"residential", "commercial"}:
+        return result
+
+    commercial_ti_re = re.compile(r"\b(?:commercial\s+building|tenant\s+improvement|tenant[-\s]?improvement|tenant\s+finish|tenant\s+buildout)\b", re.I)
+
+    def permit_text(permit) -> str:
+        if isinstance(permit, dict):
+            return " ".join(str(permit.get(k) or "") for k in ("permit_type", "portal_selection", "kind", "name", "notes"))
+        return str(permit or "")
+
+    def primary_from(permits: list) -> tuple[str, str]:
+        for permit in permits:
+            if not isinstance(permit, dict):
+                continue
+            name = str(permit.get("permit_type") or permit.get("name") or permit.get("portal_selection") or "").strip()
+            kind = str(permit.get("kind") or "").strip()
+            if name:
+                return name, kind or "Building"
+        return "Building Permit", "Building"
+
+    if category == "residential":
+        permits = result.get("permits_required") if isinstance(result.get("permits_required"), list) else []
+        if permits:
+            kept = [p for p in permits if not commercial_ti_re.search(permit_text(p))]
+            if kept and len(kept) != len(permits):
+                result["permits_required"] = kept
+                primary_name, primary_kind = primary_from(kept)
+                if commercial_ti_re.search(str(result.get("permit_name") or result.get("permit_kind") or result.get("customer_headline") or "")):
+                    result["permit_name"] = primary_name
+                    result["permit_kind"] = primary_kind
+                    result["permit_type"] = primary_name
+                    result.pop("customer_headline", None)
+                    result.pop("customer_next_step", None)
+                    result.pop("customer_result_summary", None)
+                    result.pop("customer_first_screen_summary", None)
+                apply_path = result.get("apply_path")
+                if isinstance(apply_path, dict):
+                    apply_path = dict(apply_path)
+                    if commercial_ti_re.search(str(apply_path.get("permit_category") or "")):
+                        apply_path["permit_category"] = "Residential / Trade Permit"
+                    if commercial_ti_re.search(str(apply_path.get("permit_type") or "")):
+                        apply_path["permit_type"] = primary_name
+                    result["apply_path"] = apply_path
+        return result
+
+    # Commercial: preserve the trade rows, but remove stale residential labels
+    # from permit titles and application-path guidance.
+    def clean_commercial(value):
+        if isinstance(value, str):
+            cleaned = re.sub(r"\s*\((?:residential|dwelling)\)", " (Commercial)", value, flags=re.I)
+            cleaned = re.sub(r"\bResidential\s+HVAC\b", "Commercial HVAC", cleaned, flags=re.I)
+            cleaned = re.sub(r"\bHVAC\s+System\s+Replacement\s+\(Commercial\)", "HVAC System Work (Commercial)", cleaned, flags=re.I)
+            return re.sub(r"\s{2,}", " ", cleaned).strip()
+        if isinstance(value, list):
+            return [clean_commercial(item) for item in value]
+        if isinstance(value, dict):
+            return {key: clean_commercial(child) for key, child in value.items()}
+        return value
+
+    for key in ("permit_name", "permit_kind", "customer_headline", "customer_next_step", "permits_required", "permits_required_logic", "companion_permits", "apply_path", "claim_citations", "customer_result_summary", "customer_first_screen_summary"):
+        if key in result:
+            result[key] = clean_commercial(result.get(key))
+    return result
+
+
+def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
+    raw_meta = working.get("_meta") if isinstance(working.get("_meta"), dict) else {}
+    request_job_category = job_category or working.get("job_category") or raw_meta.get("job_category")
+    contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
+    scope_contract = working.get("_scope_contract") if isinstance(working.get("_scope_contract"), dict) else build_scope_contract(contract_job_type, city, state, job_category=request_job_category, vertical=explicit_vertical)
+    working["_scope_contract"] = scope_contract
+    working = _normalize_segment_scope_labels(working, scope_contract)
     cell_lock = _get_decision_cell_primary_lock(working)
-    jurisdiction_check = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state})
+    jurisdiction_check = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
     if is_input_rejection(jurisdiction_check):
         rejection_public = _public_dict(jurisdiction_check, _PUBLIC_CUSTOMER_RESULT_FIELDS)
         return sanitize_customer_visible_result(
@@ -1483,15 +1635,15 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     source_floor_satisfied = _source_evidence_floor_satisfied(working)
     working = apply_source_floor_annotation(working, job_type, city, state)
     try:
-        working = apply_permit_decision_contract(working, job_type, city, state, build_scope_contract(job_type or "", city or "", state or ""))
+        working = apply_permit_decision_contract(working, job_type, city, state, scope_contract)
     except Exception as exc:
         print(f"[customer-view] Decision resolver fallback used: {exc}")
-        dto = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state})
+        dto = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
         working.update(dto)
         working["permit_verdict"] = "YES" if dto.get("permit_required") else "NO"
     cleaned = sanitize_customer_visible_result(working, strip_internal_keys=True)
     try:
-        scope_contract = build_scope_contract(job_type or "", city or "", state or "")
+        cleaned = _normalize_segment_scope_labels(cleaned if isinstance(cleaned, dict) else {}, scope_contract)
         cleaned = sanitize_result_for_scope_contract(cleaned, scope_contract, fail_on_removal_in_tests=False)
         if cell_lock and isinstance(cleaned, dict):
             cleaned["_decision_cell_primary_lock"] = cell_lock
@@ -1504,7 +1656,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         print(f"[customer-view] Scope sanitize fallback used: {exc}")
     public = _public_dict(cleaned if isinstance(cleaned, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
     if isinstance(public, dict):
-        dto = resolve_customer_decision({"result": public, "job_type": job_type, "city": city, "state": state})
+        dto = resolve_customer_decision({"result": public, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
         if public.get("permit_decision") not in {"REQUIRED", "NOT_REQUIRED"} or public.get("permit_required") not in {True, False}:
             public.update({k: v for k, v in dto.items() if k in _PUBLIC_CUSTOMER_RESULT_FIELDS})
             public["permit_verdict"] = "YES" if dto.get("permit_required") else "NO"
@@ -1529,6 +1681,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         public["claim_citations"] = citations
     else:
         public["claim_citations"] = []
+    public = _customer_apply_url_fallback_from_sources(public, city, state)
     if not isinstance(public, dict):
         return {}
     final_public = sanitize_customer_visible_result(public, strip_internal_keys=True)
@@ -1548,7 +1701,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         for key in _PUBLIC_KEEP_EMPTY_FIELDS:
             if key in public and public.get(key) in ("", [], {}):
                 final_public[key] = public.get(key)
-        dto = resolve_customer_decision({"result": final_public, "job_type": job_type, "city": city, "state": state})
+        dto = resolve_customer_decision({"result": final_public, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
         if final_public.get("permit_decision") not in {"REQUIRED", "NOT_REQUIRED"} or final_public.get("permit_required") not in {True, False}:
             final_public.update({k: v for k, v in dto.items() if k in _PUBLIC_CUSTOMER_RESULT_FIELDS})
             final_public["permit_verdict"] = "YES" if dto.get("permit_required") else "NO"
@@ -1562,7 +1715,14 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         # P0: Contact data integrity — provenance-gated contact sanitization
         # Added 2026-06-09. Suppresses wrong phones/addresses from untrusted sources.
         final_public = apply_contact_sanitization(final_public, city=city, state=state)
-        return final_public
+        # Contact sanitization intentionally adds internal fallback-note metadata
+        # (for example _safe_phone_note/_safe_address_note) after the main public
+        # sanitizer. Run the public boundary scrub again on the outbound copy so
+        # useful sanitized contact fields remain but underscore-prefixed metadata
+        # never reaches the customer API.
+        final_public = sanitize_customer_visible_result(final_public, strip_internal_keys=True)
+        final_public = _public_dict(final_public if isinstance(final_public, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
+        return final_public if isinstance(final_public, dict) else {}
     return {}
 
 
@@ -2765,7 +2925,7 @@ def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: boo
     return preview_route_allowed
 
 
-def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None) -> dict:
+def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None, job_category: str | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
     if not isinstance(result, dict):
         result = {}
@@ -2775,11 +2935,12 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
     raw_meta = result.get("_meta")
     meta = raw_meta if isinstance(raw_meta, dict) else {}
-    job_category = result.get("job_category") or meta.get("job_category")
+    job_category = job_category or result.get("job_category") or meta.get("job_category")
     scope_contract = result.get("_scope_contract") if isinstance(result.get("_scope_contract"), dict) else build_scope_contract(contract_job_type, city, state, job_category=job_category)
     if not isinstance(scope_contract, dict):
         scope_contract = build_scope_contract(contract_job_type, city, state, job_category=job_category)
     result["_scope_contract"] = scope_contract
+    result = _normalize_segment_scope_labels(result, scope_contract)
     evidence_pack = get_local_evidence_pack() if evidence_allowed is not False else None
     evidence_enabled = evidence_pack is not None
     unexpected_evidence_cache = evidence_enabled and (is_cached or bool(result.get("_cached")))
@@ -2835,6 +2996,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
                 "Verify inspection scheduling and meter release steps before shutdown work.",
             ]
         result["permit_verdict"] = "YES"
+        result = _normalize_segment_scope_labels(result, scope_contract)
 
     if evidence_enabled:
         forced_status = "invalid_contract" if unexpected_evidence_cache else None
@@ -2877,6 +3039,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         build_claim_citations(result)
 
     _apply_canonical_ahj_apply_url_fallback(result, city, state)
+    result = _customer_apply_url_fallback_from_sources(result, city, state)
     build_apply_path(result, job_type, city, state)
     if result.get("quality_warnings"):
         merged_warnings = []
@@ -6931,7 +7094,7 @@ class Handler(BaseHTTPRequestHandler):
                 if is_input_rejection(early_rejection):
                     self.send_json(
                         200,
-                        build_customer_permit_view_model(early_rejection, job_type, city, state),
+                        build_customer_permit_view_model(early_rejection, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical),
                         extra_headers=response_headers,
                     )
                     return
@@ -7000,7 +7163,7 @@ class Handler(BaseHTTPRequestHandler):
                     elif unlimited:
                         result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
-                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
+                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
                     existing_citations = result.get("claim_citations") if isinstance(result.get("claim_citations"), list) else []
                     display_sources = _source_dicts(result, city=city, state=state)
                     result["source_urls"] = [s.get("url") for s in display_sources if s.get("url")]
@@ -7037,7 +7200,7 @@ class Handler(BaseHTTPRequestHandler):
                     # No Telegram on lookups — only notify on paying customers
                     # Evidence-pack preview endpoints intentionally expose pack diagnostics for gated QA/API parity.
                     # Normal customer lookups send only sanitized, customer-visible fields.
-                    customer_result = result if evidence_allowed else build_customer_permit_view_model(result, job_type, city, state)
+                    customer_result = result if evidence_allowed else build_customer_permit_view_model(result, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical)
 
                     self.send_json(200, customer_result, extra_headers=response_headers)
                 finally:
@@ -7076,11 +7239,11 @@ class Handler(BaseHTTPRequestHandler):
                         evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
                         result = research_permit(job_type, city, state, zip_code, job_category=job_category, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
                         if evidence_allowed:
-                            result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
+                            result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
                             response = dict(result)
                             response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                             return response
-                        response = build_customer_permit_view_model(result, job_type, city, state)
+                        response = build_customer_permit_view_model(result, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical)
                         response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                         return response
                     except Exception as e:
@@ -7295,10 +7458,12 @@ class Handler(BaseHTTPRequestHandler):
                 job_type = data.get("job_type", "").strip()
                 city = data.get("city", "").strip()
                 state = data.get("state", "").strip()
+                job_category = (data.get("job_category") or "").strip()
+                explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
                 if not result:
                     self.send_json(400, {"error": "result is required"})
                     return
-                public_result = build_customer_permit_view_model(result, job_type, city, state)
+                public_result = build_customer_permit_view_model(result, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical)
                 self.send_json(200, get_or_create_checklist(public_result, job_type, city, state))
             except Exception as e:
                 print(f"[checklist] Error: {e}")
@@ -7401,7 +7566,7 @@ class Handler(BaseHTTPRequestHandler):
                     bypass_lookup_caches=bool(qa_cache_mode),
                 )
                 if evidence_allowed:
-                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed)
+                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
                 self.send_json(200, result)
             except Exception as e:
                 print(f"[api-v1-permit] Error: {e}")
