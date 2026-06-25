@@ -3416,16 +3416,46 @@ function renderResults(d, job, city, state) {
     </div>`;
   }
 
+  const permitAuthorityCards = Array.isArray(d.permit_authority_cards) ? d.permit_authority_cards : [];
+  if (permitAuthorityCards.length > 1 && verdict !== 'no') {
+    html += `<div class="card" style="border:2px solid rgba(37,99,235,0.28);background:linear-gradient(135deg,rgba(37,99,235,0.06),rgba(255,255,255,0.98))">
+      <div class="section-label">🏛️ Permit authority split</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:12px">Different parts of this job may be filed or inspected by different authorities. Do not assume every trade permit goes through the city counter.</div>
+      ${permitAuthorityCards.map(card => {
+        const scopes = Array.isArray(card.scopes) ? card.scopes.map(s => String(s).replace(/_/g, ' ')).join(', ') : '';
+        const permitsForCard = Array.isArray(card.permit_types) ? card.permit_types : [];
+        const sourceRef = Array.isArray(card.source_refs) && card.source_refs.length ? card.source_refs[0] : null;
+        const sourceUrl = sourceRef && sourceRef.url ? String(sourceRef.url) : '';
+        const inspectionsForCard = normalizeInspectionItems(Array.isArray(card.inspections) ? card.inspections : []).slice(0, 4);
+        return `<div class="list-card-item" style="border-left:4px solid ${card.authority_level === 'state' ? '#2563eb' : '#10b981'}">
+          <div class="list-item-title">${esc(card.authority || 'Permit authority')}</div>
+          ${scopes ? `<div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Scopes: ${esc(scopes)}</div>` : ''}
+          ${permitsForCard.length ? `<div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:6px"><strong>Ask/file for:</strong> ${esc(permitsForCard.join(' · '))}</div>` : ''}
+          ${inspectionsForCard.length ? `<div style="font-size:12px;color:var(--text2);line-height:1.5"><strong>Inspections here:</strong> ${esc(inspectionsForCard.map(i => i.stage || i.title || i.description || '').filter(Boolean).join(' · '))}</div>` : ''}
+          ${sourceUrl ? `<div style="font-size:11px;margin-top:6px"><a href="${esc(sourceUrl)}" target="_blank" rel="noopener" style="color:var(--brand);font-weight:700">Source for this routing →</a></div>` : ''}
+        </div>`;
+      }).join('')}
+      ${d.jurisdiction_routing_summary ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">${esc(d.jurisdiction_routing_summary)}</div>` : ''}
+    </div>`;
+  }
+
   // How to Apply card (replaces misleading "Apply Online" button)
   if (verdict !== 'no') {
     const portalName = (permits.length > 0 && permits[0].portal_selection) ? permits[0].portal_selection : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
     const cityName = city || 'your city';
+    const hasAuthoritySplit = permitAuthorityCards.length > 1;
     html += `<div class="how-to-apply-card">`;
     html += `<div class="section-label">📝 How to Apply</div>`;
     html += `<div class="apply-permit-name"><div class="label">Ask for this permit</div><div class="value">${esc(portalName)}</div></div>`;
     html += `<ol class="apply-steps">`;
-    html += `<li>Go to the <strong>${esc(cityName)}</strong> building department website or visit in person</li>`;
-    html += `<li>Search for or ask about <strong>"${esc(portalName)}"</strong></li>`;
+    if (hasAuthoritySplit) {
+      html += `<li>Start with the <strong>${esc(cityName)}</strong> building department for the main building / tenant-improvement permit</li>`;
+      html += `<li>Use the <strong>Permit authority split</strong> card above for trades handled outside the city counter</li>`;
+      html += `<li>File or schedule each trade with its routed authority before covering work or energizing equipment</li>`;
+    } else {
+      html += `<li>Go to the <strong>${esc(cityName)}</strong> building department website or visit in person</li>`;
+      html += `<li>Search for or ask about <strong>"${esc(portalName)}"</strong></li>`;
+    }
     html += `<li>Create an account if it's your first time applying online</li>`;
     html += `<li>Upload your documents (plans, scope of work, contractor license)</li>`;
     html += `<li>Pay the application fee and save your confirmation number</li>`;

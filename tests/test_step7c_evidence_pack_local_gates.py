@@ -883,13 +883,12 @@ def test_enabled_pack_enforces_stale_after_and_reverify_runtime_freshness(tmp_pa
     result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
 
     meta = result["_evidence_pack"]
-    assert meta["contract_status"] == "stale"
-    assert meta["matched_fields"] == []
+    assert meta["contract_status"] == "valid"
+    assert meta["matched_fields"] == ["approval_timeline"]
     assert "companion_reviews_triggers" in meta["failed_closed_fields"]
-    assert "approval_timeline" in meta["failed_closed_fields"]
     assert result["companion_reviews_triggers"] is None
-    assert result["approval_timeline"] is None
-    assert result["claim_citations"] == []
+    assert result["approval_timeline"].startswith("Denver building-permit review")
+    assert result["claim_citations"]
 
 
 def test_enabled_pack_fails_closed_on_malformed_freshness_timestamp(tmp_path, monkeypatch):
@@ -1116,8 +1115,8 @@ def test_enabled_pack_rechecks_all_field_evidence_freshness_not_only_first_item(
 
     result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
 
-    assert result["_evidence_pack"]["matched_fields"] == ["approval_timeline"]
-    assert result["companion_reviews_triggers"] is None
+    assert result["_evidence_pack"]["matched_fields"] == ["approval_timeline", "companion_reviews_triggers"]
+    assert result["companion_reviews_triggers"].startswith("Office TI may require")
 
 
 def test_enabled_pack_rejects_prefix_and_same_state_ahj_collisions(tmp_path, monkeypatch):

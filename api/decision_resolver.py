@@ -466,16 +466,18 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
         decision = PERMIT_DECISION_REQUIRED
         existing_names = _existing_required_permit_names(result)
         # P1A — Change-of-use anchor guard (2026-06-09).
-        # Force Building/TI anchor for any explicit use-type change.
-        if commercial_default and _explicit_change_of_use(job_text):
+        # Force Building/TI anchor for commercial use-type changes, but do not
+        # misclassify residential ADU/garage conversions as commercial TI. Preserve
+        # explicit trade rows already identified upstream under the TI anchor.
+        is_residential_adu = family == "residential_adu" or "adu" in scope_text or "accessory dwelling" in scope_text
+        if commercial_default and _explicit_change_of_use(job_text) and not is_residential_adu:
+            inferred_kinds = _kinds_from_text(job_type, commercial_default=True)
             extra_trade_kinds = [
                 kind for kind in _kinds_from_text(" ".join(existing_names), commercial_default=False)
                 if kind not in {"Commercial Building / Tenant Improvement", "Building"}
             ]
-            kinds = list(dict.fromkeys(["Commercial Building / Tenant Improvement", *extra_trade_kinds]))
-            permit_names = _permit_names_for_kinds(kinds, existing_names)
-            if not permit_names:
-                permit_names = ["Commercial Building / Tenant Improvement Permit"]
+            kinds = list(dict.fromkeys(["Commercial Building / Tenant Improvement", *inferred_kinds, *extra_trade_kinds]))
+            permit_names = _permit_names_for_kinds(kinds, existing_names) or ["Commercial Building / Tenant Improvement Permit"]
             reason = "Permit required because the scope involves a change of use or occupancy classification."
             headline = "Permit required: Commercial Building / Tenant Improvement."
             department = _norm(result.get("applying_office") or result.get("building_dept_name")) or f"{city} {state} Building Department".strip() or "the local building department"

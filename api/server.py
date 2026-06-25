@@ -60,7 +60,12 @@ except (TypeError, ValueError):
 
 from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
 from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
+from trade_authority_routing import apply_trade_authority_routing
 from decision_resolver import is_input_rejection, resolve_customer_decision
+try:
+    from v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
+except ImportError:  # package import path in some tests
+    from api.v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
@@ -541,6 +546,12 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         or result.get("jurisdiction_state")
         or ""
     ).upper().strip()
+    target_city = str(
+        (scope_contract or {}).get("city")
+        or result.get("city")
+        or result.get("jurisdiction_city")
+        or ""
+    ).lower().strip()
 
     def is_commercial_ti_result(value: dict) -> bool:
         text = " ".join(str(value.get(k) or "") for k in ("permit_name", "permit_type", "job_summary")).lower()
@@ -611,6 +622,10 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             value = re.sub(r"\bverify\s+requirements\s+with\s+the\s+building\s+department\s+before\s+filing\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
         value = re.sub(r"\bVerified\s*·\s*official sources\b", "Official source path found", value, flags=re.I)
         value = re.sub(r"\bPermit\s+Permit\b", "Permit", value, flags=re.I)
+        # Customer-visible final guardrails for deterministic serializer defects.
+        value = re.sub(r"\s*×\s*1(?:\.0)?\b", "", value)
+        if target_state == "GA" and target_city == "savannah":
+            value = re.sub(r"\(?912\)?[-\s]*651[-\s]*6790", "912-651-6530", value)
         value = re.sub(r"\bPlanning estimate only\s*:?\s*", "", value, flags=re.I)
         value = re.sub(r"\bHidden triggers?\s*:?\s*", "Scope triggers: ", value, flags=re.I)
         value = re.sub(r"\bEngine flagged(?:\s+this\s+answer)?(?:\s+for\s+review)?\b\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
@@ -759,6 +774,8 @@ _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
     "applying_office", "building_dept_name", "building_dept_phone", "apply_phone",
     "apply_address", "apply_google_maps", "apply_url", "apply_path", "online_application_url",
     "source_urls", "sources", "claim_citations", "warnings", "disclaimer",
+    "permit_routing_map", "permit_authority_cards", "jurisdiction_routing_summary",
+    "city_contractor_registration",
     "zoning_hoa_flag", "remaining_lookups", "_cached",
 })
 _PUBLIC_SOURCE_FIELDS = frozenset({"url", "title", "snippet", "source_url", "source_title", "publisher", "date", "source_type", "jurisdiction"})
@@ -1748,6 +1765,20 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             cleaned = _filter_customer_sources_in_place(cleaned if isinstance(cleaned, dict) else {}, city, state)
         else:
             cleaned = apply_source_floor_annotation(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state)
+        try:
+            v231_resolution = _resolve_v231_cell(city, state, job_type, str(scope_contract.get("category") or "").lower().strip())
+            v231_status = getattr(v231_resolution.status, "value", str(v231_resolution.status))
+            v231_cell = v231_resolution.cell if isinstance(getattr(v231_resolution, "cell", None), dict) else {}
+            if (v231_status == "exact_cell_covered" and v231_cell.get("main_decision") == "NOT_REQUIRED") or (v231_status == "ahj_covered_project_not_covered" and str(state or "").upper() == "RI"):
+                cleaned = _reconcile_v231_result(cleaned if isinstance(cleaned, dict) else {}, v231_resolution)
+                v231_lock = _get_decision_cell_primary_lock(cleaned)
+                cleaned = apply_permit_decision_contract(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state, scope_contract)
+                if v231_lock:
+                    cleaned = enforce_decision_cell_primary(cleaned if isinstance(cleaned, dict) else {}, v231_lock, city, state, public=True)
+                else:
+                    cleaned = apply_source_floor_annotation(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state)
+        except Exception as exc:
+            print(f"[customer-view] v2.3.1 display reconciliation skipped: {exc}")
     except Exception as exc:
         print(f"[customer-view] Scope sanitize fallback used: {exc}")
     public = _public_dict(cleaned if isinstance(cleaned, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
@@ -1808,6 +1839,10 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         if cell_lock:
             final_public = enforce_decision_cell_primary(final_public, cell_lock, city, state, public=True)
             final_public = sanitize_customer_visible_result(final_public, strip_internal_keys=True)
+        # P0/P1: Per-scope trade authority routing. Keeps existing product
+        # features but moves state-administered trade scopes (e.g. WA L&I
+        # electrical) into separate authority cards and filters city inspections.
+        final_public = apply_trade_authority_routing(final_public, job_type=job_type, city=city, state=state)
         # P0: Contact data integrity — provenance-gated contact sanitization
         # Added 2026-06-09. Suppresses wrong phones/addresses from untrusted sources.
         final_public = apply_contact_sanitization(final_public, city=city, state=state)
@@ -2553,7 +2588,7 @@ def _repair_residential_trade_model_leak(result: dict, job_type: str, city: str 
             "permit_type": permit_type,
             "portal_selection": "Plumbing - Water Heater Replacement",
             "required": True,
-            "notes": "Residential water heater replacement; verify Dallas residential plumbing permit naming before applying.",
+            "notes": f"Residential water heater replacement; confirm the local residential plumbing permit name with {city or 'the building department'} before applying.",
         }]
         result["permits_required_logic"] = [{
             "permit_type": permit_type,
@@ -3094,6 +3129,14 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         result["permit_verdict"] = "YES"
         result = _normalize_segment_scope_labels(result, scope_contract)
 
+    if is_cached or bool(result.get("_cached")):
+        try:
+            v231_category = str(scope_contract.get("category") or job_category or "").lower().strip()
+            result = _reconcile_v231_result(result, _resolve_v231_cell(city, state, job_type, v231_category))
+            result["_scope_contract"] = scope_contract
+        except Exception as exc:
+            print(f"[finalize] v2.3.1 final reconciliation failed (non-fatal): {exc}")
+
     if evidence_enabled:
         forced_status = "invalid_contract" if unexpected_evidence_cache else None
         result = apply_evidence_pack_fail_closed(result, job_type, city, state, utc_now().date().isoformat(), explicit_vertical=explicit_vertical, force_contract_status=forced_status)
@@ -3147,7 +3190,10 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     _scrub_scope_limit_leaks(result, scope_contract)
     _filter_customer_sources_in_place(result, city, state)
     result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
+    final_cell_lock = _get_decision_cell_primary_lock(result)
     result = apply_source_floor_annotation(result, job_type, city, state)
+    if final_cell_lock:
+        result = enforce_decision_cell_primary(result, final_cell_lock, city, state, public=False)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
@@ -3198,7 +3244,7 @@ def render_white_label_report_html(data: dict) -> str:
     customer_next_step = str(result.get("customer_next_step") or decision_contract.get("customer_next_step") or "Confirm requirements with the building department before filing.")
     apply_note = str(
         decision_contract.get("exact_apply_url_customer_note")
-        or "Use the listed department/portal category and confirm the permit pathway before filing."
+        or "Use the listed department/portal category and match the filing to the structured permit kind before filing."
     )
     permits = result.get("permits_required") or []
     permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or f"<li>{html.escape(decision_kind)}</li>"

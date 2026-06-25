@@ -612,6 +612,30 @@ def _get_decision_cell_primary_lock(result: dict[str, Any] | None) -> dict[str, 
 
 
 
+def _is_placeholder_generic_permit_row(permit: dict[str, Any]) -> bool:
+    """True only for rows that have no specific title, portal, or trade kind."""
+    if not isinstance(permit, dict):
+        return False
+    title_fields = [
+        _norm_text(permit.get("permit_type")),
+        _norm_text(permit.get("portal_selection")),
+        _norm_text(permit.get("name")),
+        _norm_text(permit.get("title")),
+    ]
+    if any(value and not _GENERIC_PERMIT_NAME_RE.match(value) for value in title_fields):
+        return False
+    kind_text = " ".join(
+        value for value in [
+            _norm_text(permit.get("kind")),
+            _norm_text(permit.get("permit_kind")),
+        ] if value
+    )
+    inferred_kind = kind_from_text(kind_text, fallback="Other") if kind_text else "Other"
+    if inferred_kind not in {"Other", "Building"}:
+        return False
+    return any(value for value in title_fields) or bool(kind_text)
+
+
 def _collapse_parent_child_permits(permits: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """P1C: Collapse generic parent permits when a specific child permit exists.
 
@@ -620,6 +644,11 @@ def _collapse_parent_child_permits(permits: list[dict[str, Any]]) -> list[dict[s
     """
     if not permits:
         return permits
+
+    # Drop only true placeholders (e.g. {permit_type: "Permit"}), not rows whose
+    # portal_selection/kind carries specific trade scope.
+    if any(not _is_placeholder_generic_permit_row(p) for p in permits):
+        permits = [p for p in permits if not _is_placeholder_generic_permit_row(p)]
 
     def _specificity_score(p: dict) -> int:
         name = _norm_text(p.get("permit_type") or p.get("portal_selection") or "").lower()
@@ -725,7 +754,11 @@ def _lock_permit_name_is_generic(name: Any) -> bool:
 
 def _recovered_lock_permit_name(lock: dict[str, Any], permit_kind: str = "") -> str:
     name = _norm_text(lock.get("permit_name"))
-    if not _lock_permit_name_is_generic(name):
+    if name and (not _lock_permit_name_is_generic(name) or (lock.get("source") == "permitassist_v231_decision_cell" and lock.get("exact_match") is True)):
+        # Exact publishable Decision Cells own the primary permit framing, even
+        # when an AHJ calls the filing category simply "permit".  Generic legacy
+        # locks without Decision Cell provenance still recover to the safer
+        # customer-facing heuristic below.
         return name
 
     blob = _blob(lock).lower().replace("_", " ").replace("-", " ")
@@ -780,6 +813,91 @@ def _merge_locked_primary_permits(lock: dict[str, Any], existing_permits: Any, *
     return merged
 
 
+def _restore_locked_primary_first(permits: list[dict[str, Any]], lock: dict[str, Any]) -> list[dict[str, Any]]:
+    """Keep the exact Decision Cell primary as the first permit after collapse.
+
+    Generic parent/child cleanup can otherwise re-sort the list or drop a
+    source-backed primary such as "Construction Permit" in favor of a generic
+    commercial/TI heuristic.  The cell primary is authoritative; companion/trade
+    rows remain after it.
+    """
+    if not permits:
+        return permits
+    kind = _controlled_kind_from_lock(lock)
+    primary_name = _recovered_lock_permit_name(lock, kind)
+    primary_key = _normalize_permit_name_for_dedupe(primary_name)
+    raw_primary = lock.get("primary_permit")
+    primary: dict[str, Any] = copy.deepcopy(raw_primary) if isinstance(raw_primary, dict) else {}
+    primary.update({
+        "permit_type": primary_name,
+        "required": True,
+        "kind": kind,
+        "permit_kind": lock.get("permit_kind") or "building",
+        "portal_selection": primary_name,
+    })
+    if lock.get("customer_action") and not primary.get("notes"):
+        primary["notes"] = lock.get("customer_action")
+    primary["source"] = "permitassist_v231_decision_cell"
+
+    rest: list[dict[str, Any]] = []
+    for permit in permits:
+        key = _normalize_permit_name_for_dedupe(permit.get("permit_type") or permit.get("portal_selection") or permit.get("kind"))
+        source = permit.get("source")
+        if key == primary_key or source == "permitassist_v231_decision_cell":
+            continue
+        rest.append(permit)
+    return [primary, *rest]
+
+
+def _merge_locked_decision_cell_sources(result: dict[str, Any], lock: dict[str, Any], *, public: bool = False) -> None:
+    """Preserve trusted Decision Cell provenance through public serialization.
+
+    Source-backed v2.3.1 cells are the authority for the main decision. If the
+    normal source locality filter drops an abbreviated/small-city official host,
+    the customer response must still carry the vetted Decision Cell source path
+    rather than a bare REQUIRED/NOT_REQUIRED answer.
+    """
+    raw_sources_obj = lock.get("sources")
+    raw_sources = raw_sources_obj if isinstance(raw_sources_obj, list) else []
+    raw_urls_obj = lock.get("source_urls")
+    raw_urls = raw_urls_obj if isinstance(raw_urls_obj, list) else []
+    merged_sources: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    def add_source(url: Any, title: Any = "", snippet: Any = "") -> None:
+        value = str(url or "").strip()
+        if not value.startswith("http") or value in seen:
+            return
+        seen.add(value)
+        source = {
+            "url": value,
+            "title": str(title or "Official AHJ source").strip() or "Official AHJ source",
+            "publisher": str(lock.get("applying_office") or "Official AHJ source").strip() or "Official AHJ source",
+            "snippet": str(snippet or "").strip(),
+        }
+        if not public:
+            source["source"] = "permitassist_v231_decision_cell"
+        merged_sources.append(source)
+
+    for source in raw_sources:
+        if isinstance(source, dict):
+            add_source(source.get("url") or source.get("source_url"), source.get("title") or source.get("source_title"), source.get("quote") or source.get("snippet"))
+        elif isinstance(source, str):
+            add_source(source)
+    for url in raw_urls:
+        add_source(url)
+
+    existing = result.get("sources") if isinstance(result.get("sources"), list) else []
+    for source in existing:
+        if isinstance(source, dict):
+            add_source(source.get("url") or source.get("source_url"), source.get("title") or source.get("source_title"), source.get("snippet") or source.get("quote"))
+        elif isinstance(source, str):
+            add_source(source)
+    if merged_sources:
+        result["sources"] = merged_sources
+        result["source_urls"] = [source["url"] for source in merged_sources]
+
+
 def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] | None = None, city: str = "", state: str = "", public: bool = False) -> dict[str, Any]:
     if not isinstance(result, dict):
         return {}
@@ -800,9 +918,21 @@ def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] |
         result["not_required_reason"] = str(lock.get("customer_action") or result.get("not_required_reason") or "No permit required for this exact scope.")
         result["customer_next_step"] = _locked_primary_next_step(lock, PERMIT_DECISION_NOT_REQUIRED, "Not Required", city, state)
         result["customer_headline"] = _headline(PERMIT_DECISION_NOT_REQUIRED, "Not Required", result["customer_next_step"])
+        _merge_locked_decision_cell_sources(result, lock, public=public)
     elif decision == PERMIT_DECISION_REQUIRED:
         kind = _controlled_kind_from_lock(lock)
         permit_name = _recovered_lock_permit_name(lock, kind)
+        preserve_existing_primary = bool(lock.get("preserve_existing_primary"))
+        if preserve_existing_primary:
+            existing_name = _norm_text(result.get("permit_name"))
+            raw_primary = lock.get("primary_permit") if isinstance(lock.get("primary_permit"), dict) else {}
+            if existing_name and not _lock_permit_name_is_generic(existing_name):
+                permit_name = existing_name
+            elif raw_primary:
+                permit_name = _norm_text(raw_primary.get("permit_type") or raw_primary.get("portal_selection") or permit_name)
+            existing_kind = _norm_text(result.get("permit_kind"))
+            if existing_kind:
+                kind = existing_kind
         result["permit_required"] = True
         result["permit_decision"] = PERMIT_DECISION_REQUIRED
         result["permit_verdict"] = "YES"
@@ -814,11 +944,21 @@ def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] |
             result["apply_url"] = lock.get("apply_url")
         result.pop("not_required_reason", None)
         result.pop("no_permit_required_reason", None)
-        result["permits_required"] = _collapse_parent_child_permits(_merge_locked_primary_permits(lock, result.get("permits_required"), public=public))
+        if preserve_existing_primary:
+            result["permits_required"] = _collapse_parent_child_permits([
+                copy.deepcopy(item) for item in (result.get("permits_required") or []) if isinstance(item, dict)
+            ])
+        else:
+            merged_permits = _merge_locked_primary_permits(lock, result.get("permits_required"), public=False)
+            result["permits_required"] = _restore_locked_primary_first(_collapse_parent_child_permits(merged_permits), lock)
+        if public:
+            for permit in result["permits_required"]:
+                permit.pop("source", None)
         result["trade_permits"] = _trade_permits(result)
         result["companion_permits_or_reviews"] = _companion_reviews(result)
         result["customer_next_step"] = _locked_primary_next_step(lock, PERMIT_DECISION_REQUIRED, kind, city, state)
         result["customer_headline"] = _headline(PERMIT_DECISION_REQUIRED, kind, result["customer_next_step"])
+        _merge_locked_decision_cell_sources(result, lock, public=public)
     else:
         return result
 

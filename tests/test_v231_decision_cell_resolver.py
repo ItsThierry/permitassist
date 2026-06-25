@@ -21,11 +21,13 @@ def test_index_contract_and_golden_cells_present():
 
     index_doc = json.loads(index_path.read_text())
     index = index_doc["index"]
-    assert len(index) == 800
+    assert len(index) == 2489
 
     expected = {
         "AZ|buckeye|reroof": "us-az-buckeye__residential__reroof__building",
-        "AZ|goodyear|commercial_construction": "us-az-goodyear__commercial__commercial_construction__building",
+        # Run3 compresses richer commercial-construction cells into the broad
+        # live runtime bucket while preserving the cell slug/label internally.
+        "AZ|goodyear|commercial_tenant_improvement": "us-az-goodyear__commercial__commercial_construction__building",
         "AZ|gilbert|commercial_tenant_improvement": "us-az-gilbert__commercial__commercial_tenant_improvement__building",
         "AK|anchorage|commercial_tenant_improvement": "us-ak-anchorage__commercial__commercial_tenant_improvement__building",
     }
@@ -39,17 +41,18 @@ def test_golden_exact_resolutions_and_project_classifier():
     from api.v231_decision_cells import ResolutionStatus, classify_project_candidates, resolve_v231_cell
 
     cases = [
-        ("Buckeye", "AZ", "residential roof tear-off and reroof shingles", "residential", "us-az-buckeye__residential__reroof__building", "reroof"),
-        ("Goodyear", "AZ", "new commercial construction retail shell", "commercial", "us-az-goodyear__commercial__commercial_construction__building", "commercial_construction"),
-        ("Gilbert", "AZ", "commercial office tenant improvement", "commercial", "us-az-gilbert__commercial__commercial_tenant_improvement__building", "commercial_tenant_improvement"),
-        ("Anchorage", "AK", "commercial office tenant improvement", "commercial", "us-ak-anchorage__commercial__commercial_tenant_improvement__building", "commercial_tenant_improvement"),
+        ("Buckeye", "AZ", "residential roof tear-off and reroof shingles", "residential", "us-az-buckeye__residential__reroof__building", "reroof", "AZ|buckeye|reroof"),
+        ("Goodyear", "AZ", "new commercial construction retail shell", "commercial", "us-az-goodyear__commercial__commercial_construction__building", "commercial_construction", "AZ|goodyear|commercial_tenant_improvement"),
+        ("Casa Grande", "AZ", "Commercial construction plan review for interior alteration and change of occupancy", "commercial", "us-az-casa_grande__commercial__building_plan_review__building", "commercial_construction", "AZ|casa_grande|commercial_tenant_improvement"),
+        ("Gilbert", "AZ", "commercial office tenant improvement", "commercial", "us-az-gilbert__commercial__commercial_tenant_improvement__building", "commercial_tenant_improvement", "AZ|gilbert|commercial_tenant_improvement"),
+        ("Anchorage", "AK", "commercial office tenant improvement", "commercial", "us-ak-anchorage__commercial__commercial_tenant_improvement__building", "commercial_tenant_improvement", "AK|anchorage|commercial_tenant_improvement"),
     ]
-    for city, state, job_type, category, cell_id, slug in cases:
-        assert slug in classify_project_candidates(job_type, category)
+    for city, state, job_type, category, cell_id, classifier_slug, expected_key in cases:
+        assert classifier_slug in classify_project_candidates(job_type, category)
         resolution = resolve_v231_cell(city, state, job_type, category)
         assert resolution.status == ResolutionStatus.EXACT_CELL_COVERED
         assert resolution.cell["cell_id"] == cell_id
-        assert resolution.key.endswith(f"|{slug}")
+        assert resolution.key == expected_key
 
 
 def test_wrong_project_and_noncovered_inputs_abstain_without_neighbor_cell():
@@ -77,8 +80,8 @@ def test_ambiguous_project_text_abstains_instead_of_guessing_from_category():
     assert classify_project_candidates("soundproofing an office conference room", "commercial") == []
     assert classify_project_candidates("anti corrosion coating", "commercial") == []
     assert classify_project_candidates("multi tenant directory signage", "commercial") == []
-    assert classify_project_candidates("residential interior alteration", "residential") == []
-    assert classify_project_candidates("home interior remodel", "residential") == []
+    assert classify_project_candidates("residential interior alteration", "residential") == ["residential_remodel"]
+    assert classify_project_candidates("home interior remodel", "residential") == ["residential_remodel"]
     assert classify_project_candidates("new building", "residential") == []
     assert classify_project_candidates("ground-up detached garage", "residential") == []
     assert classify_project_candidates("commercial tenant improvement and reroof", "commercial") == []
@@ -476,7 +479,7 @@ def test_noncovered_ahj_fallback_has_no_lock_and_is_unchanged():
     from api.v231_decision_cells import reconcile_v231_result, resolve_v231_cell
 
     base = {"permit_verdict": "YES", "permit_required": True, "permit_decision": "REQUIRED", "permit_name": "Pipeline Permit", "permits_required": [{"permit_type": "Pipeline Permit", "required": True}]}
-    out = reconcile_v231_result(copy.deepcopy(base), resolve_v231_cell("Sedona", "AZ", "commercial tenant improvement", "commercial"))
+    out = reconcile_v231_result(copy.deepcopy(base), resolve_v231_cell("Not A Real Covered City", "AZ", "commercial tenant improvement", "commercial"))
 
     assert out == base
     assert "_decision_cell_primary_lock" not in out
