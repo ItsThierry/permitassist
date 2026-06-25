@@ -7292,15 +7292,16 @@ class Handler(BaseHTTPRequestHandler):
                     except Exception as e:
                         return {"job_type": job_type, "city": city, "state": state, "error": str(e)}
 
-                results = []
+                results = [None] * len(lookups)
                 with ThreadPoolExecutor(max_workers=5) as executor:
-                    futures = {executor.submit(run_lookup, item): item for item in lookups}
+                    futures = {executor.submit(run_lookup, item): (idx, item) for idx, item in enumerate(lookups)}
                     for future in as_completed(futures, timeout=120):
+                        idx, item = futures[future]
                         try:
-                            results.append(future.result(timeout=30))
+                            results[idx] = future.result(timeout=30)
                         except Exception as e:
-                            item = futures[future]
-                            results.append({"city": item.get("city"), "error": str(e)})
+                            results[idx] = {"job_type": item.get("job_type"), "city": item.get("city"), "state": item.get("state"), "error": str(e)}
+                results = [r if isinstance(r, dict) else {"error": "lookup did not complete"} for r in results]
                 self.send_json(200, {
                     "results": results,
                     "total": len(results),
