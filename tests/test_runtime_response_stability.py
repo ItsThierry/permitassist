@@ -52,6 +52,6 @@ def test_queued_public_lookup_rechecks_free_limit_before_research():
 def test_public_permit_response_is_customer_sanitized_after_internal_telemetry():
     permit_route = SERVER.split('if path == "/api/permit":', 1)[1].split('elif path == "/api/batch-permit":', 1)[0]
     telemetry_pos = permit_route.index('record_beta_event("lookup_completed"')
-    sanitize_pos = permit_route.index("customer_result = result if evidence_allowed else build_customer_permit_view_model(result, job_type, city, state)")
+    sanitize_pos = permit_route.index("customer_result = result if evidence_allowed else build_customer_permit_view_model(result, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical)")
     send_pos = permit_route.index("self.send_json(200, customer_result")
     assert telemetry_pos < sanitize_pos < send_pos

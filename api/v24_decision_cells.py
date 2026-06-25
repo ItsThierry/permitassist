@@ -677,7 +677,15 @@ def _classify_project_candidates(job_type: str, job_category: str = "") -> list[
         except Exception:
             classify_project_candidates = None
     if classify_project_candidates:
-        return list(classify_project_candidates(job_type, job_category))
+        candidates = list(classify_project_candidates(job_type, job_category))
+        text = _normalize_text(f"{job_type} {job_category}")
+        if "roof" in text and "residential_remodel" not in candidates and ("residential" in text or "home" in text):
+            # Many v24 W3 residential cells cover roofing inside the broader
+            # residential_remodel family. Try exact reroof first, then the
+            # source-backed broader residential family instead of dropping to a
+            # generic live answer or fail-closed path.
+            candidates.append("residential_remodel")
+        return candidates
     text = _normalize_text(f"{job_type} {job_category}")
     if "roof" in text:
         return ["reroof"]
@@ -790,16 +798,35 @@ def reconcile_v24_result(result: dict[str, Any], resolution: V24Resolution | Non
     if resolution.status == V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED:
         cell = resolution.cell or {}
         result["_v24_cell_id"] = cell.get("cell_id")
-        result["permit_decision"] = result.get("permit_decision") or "UNKNOWN"
-        result["permit_required"] = None
-        result["permit_verdict"] = "CONTACT_AHJ"
-        result["confidence"] = "fail_closed"
-        result["confidence_reason"] = "v2.4 exact Decision Cell is fail-closed/contact-only; PermitAssist must not publish a binary permit answer for this AHJ/project until repaired."
         fc = cell.get("tier1", {}).get("fail_closed", {}) if isinstance(cell.get("tier1"), dict) else {}
         result["fail_closed"] = copy.deepcopy(fc) if isinstance(fc, dict) else {"active": True}
+        result["_v24_fail_closed_live_policy"] = "static_data_gap_live_research_allowed_when_source_backed"
+
+        # A fail-closed v24 row means the static package cannot lock regulated
+        # fields. It must not neuter the engine: if the normal live-research path
+        # already produced a binary REQUIRED/NOT_REQUIRED answer, preserve it and
+        # let the final source floor require AHJ-specific evidence/caveats. Only
+        # when there is no live binary answer do we use the safe contact-only
+        # fallback.
+        decision = str(result.get("permit_decision") or "").upper().strip()
+        verdict = str(result.get("permit_verdict") or "").upper().strip()
+        binary_answer = result.get("permit_required") in {True, False} or decision in {"REQUIRED", "NOT_REQUIRED"} or verdict in {"YES", "NO", "REQUIRED", "NOT_REQUIRED"}
         field_sources = dict(result.get("_field_sources") or {}) if isinstance(result.get("_field_sources"), dict) else {}
-        for field in ("permit_verdict", "permit_required", "permit_decision", "fail_closed"):
-            field_sources[field] = "permitassist_v24_fail_closed"
+        field_sources["fail_closed"] = "permitassist_v24_static_data_gap"
+        if not binary_answer:
+            result["permit_decision"] = "UNKNOWN"
+            result["permit_required"] = None
+            result["permit_verdict"] = "CONTACT_AHJ"
+            result["confidence"] = "fail_closed"
+            result["confidence_reason"] = "v2.4 static Decision Cell is fail-closed and no source-backed live answer was produced; routing to office confirmation."
+            for field in ("permit_verdict", "permit_required", "permit_decision"):
+                field_sources[field] = "permitassist_v24_fail_closed_no_live_answer"
+        else:
+            result.setdefault("confidence_reason", "v2.4 static Decision Cell has a data gap; live source-backed engine answer is preserved and must cite AHJ-specific evidence.")
+            warnings = result.setdefault("warnings", [])
+            warning = "Static v2.4 package row has a source/data gap; this answer relies on live source-backed research rather than a locked decision cell."
+            if isinstance(warnings, list) and warning not in warnings:
+                warnings.append(warning)
         result["_field_sources"] = field_sources
         return result
     if resolution.status != V24ResolutionStatus.EXACT_CELL_PUBLISHABLE or not resolution.cell:

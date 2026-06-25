@@ -72,7 +72,7 @@ def test_phase8_manifest_hash_pin_and_missing_index_are_safe(monkeypatch, tmp_pa
     assert unavailable.status == V24ResolutionStatus.INDEX_UNAVAILABLE
 
 
-def test_phase8_wrong_project_and_fail_closed_do_not_emit_fake_binary(monkeypatch):
+def test_phase8_wrong_project_and_fail_closed_preserve_live_binary_but_do_not_use_v231(monkeypatch):
     monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
 
     wrong_project = resolve_v24_cell("Anchorage", "AK", "water heater replacement", "residential")
@@ -85,9 +85,10 @@ def test_phase8_wrong_project_and_fail_closed_do_not_emit_fake_binary(monkeypatc
     assert fail_closed.status == V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED
     result = {"permit_required": True, "permit_decision": "REQUIRED", "permit_verdict": "YES"}
     reconcile_authoritative_result(result, v24_resolution=fail_closed, v231_resolution={"publish_status": "PUBLISHABLE"})
-    assert result["permit_required"] is None
-    assert result["permit_verdict"] == "CONTACT_AHJ"
-    assert result["_field_sources"]["permit_required"] == "permitassist_v24_fail_closed"
+    assert result["permit_required"] is True
+    assert result["permit_verdict"] == "YES"
+    assert result["_field_sources"]["fail_closed"] == "permitassist_v24_static_data_gap"
+    assert "_v231_decision_cell" not in result
 
 
 def test_phase9_local_canary_samples_validate_and_full_target_invariants_hold(monkeypatch):
@@ -106,14 +107,14 @@ def test_phase9_local_canary_samples_validate_and_full_target_invariants_hold(mo
         "ready_total": 2162,
         "v231_total": 2489,
         "w2_reroof_pass": 25,
-        "w3_publishable": 199,
+        "w3_publishable": 200,
         "w4_tier1_complete": 1938,
     }
     assert len(index) == 2162
     assert len(cells) == 2162
     assert deferred.get("counts", {}).get("total") == 327
-    assert sum(1 for cell in cells if cell.get("status") == "PUBLISHABLE") == 2127
-    assert sum(1 for cell in cells if cell.get("status") == "FAIL_CLOSED") == 35
+    assert sum(1 for cell in cells if cell.get("status") == "PUBLISHABLE") == 2128
+    assert sum(1 for cell in cells if cell.get("status") == "FAIL_CLOSED") == 34
 
     # C1/C2 local canary-ramp proof: validate a deterministic 50-cell spread,
     # including all project families and fail-closed rows, without touching prod.

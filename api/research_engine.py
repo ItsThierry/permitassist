@@ -506,6 +506,8 @@ _AHJ_DOMAIN_ALLOWLIST: dict[tuple[str, str], set[str]] = {
     # 2026-05-01 stress100 manual verification: City of Fredericksburg, TX uses fbgtx.org
     # as its official municipal domain; OpenClaw scorer correctly kept it flagged until verified.
     ("fredericksburg", "tx"): {"fbgtx.org"},
+    # 2026-06-25 live 300-customer sweep: Delmar, DE official municipal permit PDFs live on townofdelmar.us.
+    ("delmar", "de"): {"townofdelmar.us"},
 }
 
 # State-level official references are useful sources, but they are not city/AHJ

@@ -5,7 +5,7 @@
     "ready_total": 2162,
     "v231_total": 2489,
     "w2_reroof_pass": 25,
-    "w3_publishable": 199,
+    "w3_publishable": 200,
     "w4_tier1_complete": 1938
   },
   "created_at_utc": "2026-06-25T01:31:57.017417Z",
@@ -13,8 +13,8 @@
   "decision_cells_file": "permitassist_decision_cells_v24.json",
   "deferred_manifest_file": "permitassist_v24_deferred_manifest.json",
   "files": {
-    "permitassist_decision_cell_index_v24.json": "ca47de8a44f210e6f78b3783f5c0f4ba8cf82f7ae48daf06f1539b391a8d43bb",
-    "permitassist_decision_cells_v24.json": "c40f65511f32777bafdb523bd40b88a86597a7ce96fb93bedf92809e3b8df30b",
+    "permitassist_decision_cell_index_v24.json": "7a0529f78a863e3c848adc73111f5afa85f2b6d832b060ecbf38f0ab3da23e83",
+    "permitassist_decision_cells_v24.json": "4f634d87bd7e8bf25b44a3530caa4aa3d057f20ec5f1549bd2cecf87aa6e3078",
     "permitassist_v24_deferred_manifest.json": "873ac003b4c8b3530c6b7e3644d6185ab3447971487e7d30b016b557529b2ac0",
     "permitassist_v24_manifest.json": "df56716bee0a0f36511185aa9ae6de0ff9d6840c4e4528d3f07ca78d5459e391"
   },
@@ -24,10 +24,11 @@
   "target_manifest_sha256": "f9fb3c4976bc1ed16f84ec61b82f76de324b831db23d9d5ce05abf6fc4438c75",
   "validation": {
     "build_validate_v24_cell_strict_snapshots": "PASS",
-    "demoted_fail_closed_count": 34,
+    "demoted_fail_closed_count": 33,
     "portable_runtime_package_no_home_boban_paths": true,
     "require_live_url_check_at_package_build": false,
     "runtime_requires_validation": true,
     "runtime_validate_v24_cell_strict_snapshots": false
-  }
+  },
+  "repair_note_20260625": "Delmar DE residential_remodel promoted from runtime fail-closed using current official Town of Delmar residential building permit application and fee schedule; live fallback remains enabled for other data gaps."
 }

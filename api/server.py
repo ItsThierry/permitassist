@@ -594,7 +594,8 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             value = re.sub(r"\bneeds_verification\b", "confirm with the listed department", value, flags=re.I)
             value = re.sub(r"\bfail[_\s-]?closed\b", "not shown", value, flags=re.I)
             value = re.sub(r"\bpending(?:[_\s-]*(?:active[_\s-]*)?retrieval|view|lookup)?\b", "not yet published", value, flags=re.I)
-            value = re.sub(r"(?<=\b[A-Z]{2})\.(?=[A-Za-z])", ". ", value)
+            if not value.lower().startswith(("http://", "https://")):
+                value = re.sub(r"(?<=\b[A-Z]{2})\.(?=[A-Za-z])", ". ", value)
             value = re.sub(r"\b(work|scope|review|permit|inspection)\.(?=(?:signage|exterior|interior|electrical|plumbing|mechanical|fire|health|zoning)\b)", r"\1. ", value, flags=re.I)
             value = re.sub(r"\s*\((?:full replacement|minor repair|layout/plumbing/electrical/wall changes)\)\s*", " ", value, flags=re.I)
             value = re.sub(r"\blayout/plumbing/electrical/wall changes\b", "layout, plumbing, electrical, or wall changes", value, flags=re.I)
@@ -969,6 +970,49 @@ def _local_decision_evidence_urls(result: dict, city: str, state: str) -> list[s
     return out
 
 
+def _demote_nonlocal_apply_url_for_required(result: dict, city: str, state: str) -> dict:
+    """Never present generic/model-code URLs as the local filing URL.
+
+    This is intentionally not a decision suppressor. If the engine resolved a
+    REQUIRED/NOT_REQUIRED answer from live research, preserve the answer and use
+    source_support/warnings to show source quality. Only the filing URL slots are
+    cleared when their URL is not local AHJ/county/vendor evidence; canonical AHJ
+    fallbacks may then restore a verified local start URL.
+    """
+    if not isinstance(result, dict) or not _is_required_permit_decision(result):
+        return result
+    for key in ("apply_url", "online_application_url"):
+        url = _safe_customer_source_url(result.get(key) or "")
+        if not url:
+            continue
+        authority = classify_source_authority(url, city, state, result=result)
+        if authority.get("local_decision_evidence") and authority.get("display_allowed"):
+            continue
+        result[key] = ""
+        support = result.setdefault("source_support", {})
+        if isinstance(support, dict):
+            support.setdefault("demoted_nonlocal_apply_urls", [])
+            if url not in support["demoted_nonlocal_apply_urls"]:
+                support["demoted_nonlocal_apply_urls"].append(url)
+            support["apply_url_source_confidence"] = "NEEDS_AHJ_SOURCE"
+        warnings = result.setdefault("warnings", [])
+        warning = "Permit decision preserved, but a non-local/generic filing URL was removed; use AHJ-specific source evidence for the application path."
+        if isinstance(warnings, list) and warning not in warnings:
+            warnings.append(warning)
+    apply_path = result.get("apply_path")
+    if isinstance(apply_path, dict):
+        cleaned = dict(apply_path)
+        for key in ("portal_url", "url", "source_url"):
+            url = _safe_customer_source_url(cleaned.get(key) or "")
+            if not url:
+                continue
+            authority = classify_source_authority(url, city, state, result=result)
+            if not (authority.get("local_decision_evidence") and authority.get("display_allowed")):
+                cleaned.pop(key, None)
+        result["apply_path"] = cleaned
+    return result
+
+
 _CANONICAL_AHJ_APPLY_URLS: dict[tuple[str, str], dict[str, object]] = {
     # Official AHJ start/portal URLs only. These entries restore provenance when
     # the AHJ is named but the structured apply_url is blank; they do not decide
@@ -1022,6 +1066,11 @@ _CANONICAL_AHJ_APPLY_URLS: dict[tuple[str, str], dict[str, object]] = {
         "url": "https://www.naperville.il.us/services/permits--licenses/",
         "title": "City of Naperville Permits & Licenses",
         "tokens": ("naperville", "naperville permits", "city of naperville"),
+    },
+    ("delmar", "de"): {
+        "url": "https://www.townofdelmar.us/departments/code-enforcement.htm",
+        "title": "Town of Delmar Code Enforcement",
+        "tokens": (),
     },
 }
 
@@ -1351,6 +1400,7 @@ def apply_source_floor_annotation(result: dict, job_type: str, city: str, state:
         )
         if key in result
     }
+    result = _demote_nonlocal_apply_url_for_required(result, city, state)
     result = _apply_canonical_ahj_apply_url_fallback(result, city, state)
     _filter_customer_sources_in_place(result, city, state)
     _repair_source_backed_apply_path_contradiction(result, city, state)
@@ -1634,10 +1684,13 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     working["_scope_contract"] = scope_contract
     fail_closed_value = working.get("fail_closed")
     fail_closed_obj = fail_closed_value if isinstance(fail_closed_value, dict) else {}
+    decision_text = str(working.get("permit_decision") or "").upper().strip()
+    verdict_text = str(working.get("permit_verdict") or "").upper().strip()
+    has_binary_live_answer = working.get("permit_required") in {True, False} or decision_text in {"REQUIRED", "NOT_REQUIRED"} or verdict_text in {"YES", "NO", "REQUIRED", "NOT_REQUIRED"}
     fail_closed_active = (
-        str(working.get("permit_verdict") or "").upper() == "CONTACT_AHJ"
-        or str(working.get("confidence") or "").lower() == "fail_closed"
-        or fail_closed_obj.get("active") is True
+        verdict_text == "CONTACT_AHJ"
+        or (str(working.get("confidence") or "").lower() == "fail_closed" and not has_binary_live_answer)
+        or (fail_closed_obj.get("active") is True and not has_binary_live_answer)
     )
     if fail_closed_active:
         contact_value = fail_closed_obj.get("contact")
@@ -3081,6 +3134,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     else:
         build_claim_citations(result)
 
+    result = _demote_nonlocal_apply_url_for_required(result, city, state)
     _apply_canonical_ahj_apply_url_fallback(result, city, state)
     result = _customer_apply_url_fallback_from_sources(result, city, state)
     build_apply_path(result, job_type, city, state)

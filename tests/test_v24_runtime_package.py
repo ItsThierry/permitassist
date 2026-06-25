@@ -15,6 +15,7 @@ from api.v24_decision_cells import (  # noqa: E402
     get_v24_mode,
     load_v24_index,
     reconcile_authoritative_result,
+    regulated_payload_from_cell,
     resolve_v24_cell,
     validate_v24_cell,
 )
@@ -55,7 +56,7 @@ def test_v24_package_manifest_counts_and_hashes():
     assert manifest["counts"]["ready_total"] == 2162
     assert manifest["counts"]["deferred_total"] == 327
     assert manifest["counts"]["w4_tier1_complete"] == 1938
-    assert manifest["counts"]["w3_publishable"] == 199
+    assert manifest["counts"]["w3_publishable"] == 200
     assert manifest["counts"]["w2_reroof_pass"] == 25
     cells = json.loads((PKG / manifest["decision_cells_file"]).read_text())["cells"]
     assert len(cells) == 2162
@@ -128,8 +129,9 @@ def test_v24_prod_sim_resolves_w4_w3_w2_without_local_snapshot_files(monkeypatch
     assert fail_closed.status == V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED
     result = {"permit_required": True, "permit_decision": "REQUIRED", "permit_verdict": "YES"}
     reconcile_authoritative_result(result, v24_resolution=fail_closed, v231_resolution={"publish_status": "PUBLISHABLE"})
-    assert result["permit_required"] is None
-    assert result["permit_verdict"] == "CONTACT_AHJ"
+    assert result["permit_required"] is True
+    assert result["permit_verdict"] == "YES"
+    assert result["_v24_fail_closed_live_policy"] == "static_data_gap_live_research_allowed_when_source_backed"
 
 
 def test_v24_resolver_is_flag_gated_and_exact_publishable_wins(monkeypatch):
@@ -150,17 +152,27 @@ def test_v24_resolver_is_flag_gated_and_exact_publishable_wins(monkeypatch):
     assert result["_decision_cell_primary_lock"]["source"] == "permitassist_v24_decision_cell"
 
 
-def test_v24_fail_closed_blocks_v231_fallback(monkeypatch):
+def test_v24_fail_closed_blocks_v231_fallback_without_neutering_live_answer(monkeypatch):
     monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
     resolution = resolve_v24_cell("Yuma", "AZ", "residential remodel", "residential")
     assert resolution.status == V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED
     result = {"permit_required": True, "permit_decision": "REQUIRED", "permit_verdict": "YES"}
     fake_v231 = {"publish_status": "PUBLISHABLE", "main_decision": "REQUIRED", "permit_name": "Building Permit"}
     reconcile_authoritative_result(result, v24_resolution=resolution, v231_resolution=fake_v231)
+    assert result["permit_required"] is True
+    assert result["permit_verdict"] == "YES"
+    assert result["_field_sources"]["fail_closed"] == "permitassist_v24_static_data_gap"
+    assert "_v231_decision_cell" not in result
+
+
+def test_v24_fail_closed_no_live_answer_still_contacts_office(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    resolution = resolve_v24_cell("Yuma", "AZ", "residential remodel", "residential")
+    result = {}
+    reconcile_authoritative_result(result, v24_resolution=resolution, v231_resolution=None)
     assert result["permit_required"] is None
     assert result["permit_verdict"] == "CONTACT_AHJ"
-    assert result["_field_sources"]["permit_required"] == "permitassist_v24_fail_closed"
-    assert "_v231_decision_cell" not in result
+    assert result["_field_sources"]["permit_required"] == "permitassist_v24_fail_closed_no_live_answer"
 
 
 def test_v24_falls_back_to_v231_when_no_exact_v24(monkeypatch):
@@ -278,3 +290,62 @@ def test_cache_legacy_unknown_check_ignores_internal_scope_contract():
         "_scope_contract": {"occupancy_class": "unknown"},
     }
     assert contains_legacy_unknown_state(cached) is False
+
+
+def test_v24_delmar_repaired_cell_is_publishable_and_source_backed(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    resolution = resolve_v24_cell("Delmar", "DE", "residential reroof", "residential")
+    assert resolution.status == V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
+    assert resolution.key == "DE|delmar|residential_remodel"
+    cell = resolution.cell or {}
+    validation = validate_v24_cell(cell, strict_snapshots=False, require_live_url_check=False)
+    assert validation.ok, validation.to_dict()
+    payload = regulated_payload_from_cell(cell)
+    assert payload["permit_required"] is True
+    assert payload["permit_decision"] == "REQUIRED"
+    rendered = json.dumps(payload).lower()
+    assert "townofdelmar.us" in rendered
+    assert "residential_building_permit_application" in rendered
+    assert "iccsafe.org" not in rendered
+
+
+def test_fail_closed_live_answer_survives_customer_view_model(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-import-only")
+    from api.server import build_customer_permit_view_model
+
+    raw = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permit_name": "Building Permit",
+        "sources": [{"url": "https://www.townofdelmar.us/pdfs/RESIDENTIAL_BUILDING_PERMIT_APPLICATION_FINAL_as_of_1_6_26%2E.pdf", "quote": "Type of Construction: Roofing"}],
+        "apply_url": "https://www.townofdelmar.us/pdfs/RESIDENTIAL_BUILDING_PERMIT_APPLICATION_FINAL_as_of_1_6_26%2E.pdf",
+        "fail_closed": {"active": True, "reason": "static package data gap"},
+        "confidence_reason": "live source-backed answer",
+    }
+    public = build_customer_permit_view_model(raw, "residential reroof", "Delmar", "DE", job_category="residential")
+    assert public["permit_required"] is True
+    assert public["permit_verdict"] == "YES"
+    assert public["permit_decision"] == "REQUIRED"
+    assert "contact_ahj" not in json.dumps(public).lower()
+
+
+def test_generic_icc_apply_url_demoted_not_decision_neutered(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-import-only")
+    from api.server import build_customer_permit_view_model, finalize_permit_lookup_result
+
+    raw = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permit_name": "Roofing Permit — Tear-Off / Re-Roof",
+        "apply_url": "https://www.iccsafe.org/products-and-services/i-codes/2018-i-codes/irc/",
+        "source_urls": ["https://www.iccsafe.org/products-and-services/i-codes/2018-i-codes/irc/"],
+        "sources": [{"url": "https://www.iccsafe.org/products-and-services/i-codes/2018-i-codes/irc/", "quote": "IRC"}],
+    }
+    finalized = finalize_permit_lookup_result(raw, "residential reroof", "Delmar", "DE", job_category="residential", evidence_allowed=False)
+    public = build_customer_permit_view_model(finalized, "residential reroof", "Delmar", "DE", job_category="residential")
+    assert public["permit_required"] is True
+    assert public["permit_verdict"] == "YES"
+    assert "townofdelmar.us" in (public.get("apply_url") or "")
+    assert "iccsafe.org" not in (public.get("apply_url") or "")
