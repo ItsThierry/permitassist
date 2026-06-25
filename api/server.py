@@ -501,8 +501,12 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         "needs_verification",
         "fail_closed",
         "v2.3.1",
+        "v2.4",
         "_v231_",
+        "_v24_",
         "permitassist_v231_decision_cell",
+        "permitassist_v24_decision_cell",
+        "permitassist_v24_fail_closed",
         "_decision_cell_primary_lock",
         "decision_cell",
         "decision cell",
@@ -528,6 +532,7 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         "exact_name_status", "permit_ready_score", "debug_trace", "provider_metadata",
         "retrieval_diagnostics", "raw_retrieval", "search_debug", "scoring_debug",
         "source_metadata", "decision_cell", "cell_id", "resolver", "customerdecisiondto",
+        "_v24_resolution_status", "_v24_cell_id", "_v24_resolver_version",
     }
     primary_scope = str(result.get("_primary_scope") or "").strip().lower()
     target_state = str(
@@ -568,9 +573,13 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             value = re.sub(r"\$\{[^}]*\}", "", value)
             value = re.sub(r"\{\{[^{}]*\}\}", "", value)
             value = re.sub(r"\bpermitassist_v231_decision_cell\b", "official permit rule", value, flags=re.I)
+            value = re.sub(r"\bpermitassist_v24_decision_cell\b", "official permit rule", value, flags=re.I)
+            value = re.sub(r"\bpermitassist_v24_fail_closed\b", "building department confirmation needed", value, flags=re.I)
             value = re.sub(r"\b_decision_cell_primary_lock\b", "primary permit rule", value, flags=re.I)
             value = re.sub(r"\b_v231_\b", "current rule", value, flags=re.I)
+            value = re.sub(r"\b_v24_\b", "current rule", value, flags=re.I)
             value = re.sub(r"\bv2\.3\.1\b", "current rule", value, flags=re.I)
+            value = re.sub(r"\bv2\.4\b", "current rule", value, flags=re.I)
             value = re.sub(r"\bdecision[_\s-]+cell\b", "official permit rule", value, flags=re.I)
             value = re.sub(r"\bcell[_\s-]*id\b", "official rule reference", value, flags=re.I)
             value = re.sub(r"\bresolver\b", "lookup", value, flags=re.I)
@@ -1623,6 +1632,40 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
     scope_contract = working.get("_scope_contract") if isinstance(working.get("_scope_contract"), dict) else build_scope_contract(contract_job_type, city, state, job_category=request_job_category, vertical=explicit_vertical)
     working["_scope_contract"] = scope_contract
+    fail_closed_value = working.get("fail_closed")
+    fail_closed_obj = fail_closed_value if isinstance(fail_closed_value, dict) else {}
+    fail_closed_active = (
+        str(working.get("permit_verdict") or "").upper() == "CONTACT_AHJ"
+        or str(working.get("confidence") or "").lower() == "fail_closed"
+        or fail_closed_obj.get("active") is True
+    )
+    if fail_closed_active:
+        contact_value = fail_closed_obj.get("contact")
+        contact = contact_value if isinstance(contact_value, dict) else {}
+        office = working.get("applying_office") or contact.get("office_name") or f"{city} permit office"
+        apply_url = working.get("apply_url") or contact.get("apply_url") or ""
+        contact_public = {
+            "permit_required": None,
+            "permit_decision": "UNKNOWN",
+            "permit_verdict": "CONTACT_AHJ",
+            "permit_name": None,
+            "permit_type": None,
+            "permits_required": [],
+            "summary": working.get("summary") or f"Contact {office} before starting work; PermitAssist is not publishing a binary permit answer for this covered AHJ/project yet.",
+            "job_summary": working.get("job_summary") or f"Contact {office} before starting work; PermitAssist is not publishing a binary permit answer for this covered AHJ/project yet.",
+            "customer_headline": "Contact the permit office before filing.",
+            "customer_next_step": f"Contact {office} before starting work; PermitAssist cannot publish a yes/no answer for this exact AHJ/project yet.",
+            "confidence": "needs office confirmation",
+            "confidence_reason": working.get("confidence_reason") or "Source-backed package routed this exact AHJ/project to office confirmation instead of a binary permit answer.",
+            "applying_office": office,
+            "apply_url": apply_url,
+            "online_application_url": apply_url,
+            "source_urls": working.get("source_urls") if isinstance(working.get("source_urls"), list) else ([apply_url] if apply_url else []),
+            "sources": working.get("sources") if isinstance(working.get("sources"), list) else [],
+            "claim_citations": [],
+            "warnings": ["PermitAssist is routing this covered AHJ/project to office confirmation instead of publishing a binary permit answer."],
+        }
+        return sanitize_customer_visible_result(contact_public, strip_internal_keys=True)
     working = _normalize_segment_scope_labels(working, scope_contract)
     cell_lock = _get_decision_cell_primary_lock(working)
     jurisdiction_check = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
@@ -7565,9 +7608,26 @@ class Handler(BaseHTTPRequestHandler):
                     suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
                     bypass_lookup_caches=bool(qa_cache_mode),
                 )
-                if evidence_allowed:
-                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
-                self.send_json(200, result)
+                is_cached = result.get("_cached", False) if isinstance(result, dict) else False
+                result = finalize_permit_lookup_result(
+                    result,
+                    job_type,
+                    city,
+                    state,
+                    is_cached=is_cached,
+                    explicit_vertical=explicit_vertical,
+                    evidence_allowed=evidence_allowed,
+                    job_category=job_category,
+                )
+                api_result = result if evidence_allowed else build_customer_permit_view_model(
+                    result,
+                    job_type,
+                    city,
+                    state,
+                    job_category=job_category,
+                    explicit_vertical=explicit_vertical,
+                )
+                self.send_json(200, api_result)
             except Exception as e:
                 print(f"[api-v1-permit] Error: {e}")
                 self.send_json(500, {"error": str(e)})

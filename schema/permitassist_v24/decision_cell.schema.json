@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://permitassist.local/schema/permitassist_v24/decision_cell.schema.json",
+  "title": "PermitAssist v2.4 Tiered Verified Decision Cell",
+  "type": "object",
+  "required": ["schema_version", "cell_id", "jurisdiction_id", "state", "ahj", "project_family", "status", "serving_status", "tier1", "tier2", "change_watch"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "v2.4"},
+    "cell_id": {"type": "string", "minLength": 1},
+    "jurisdiction_id": {"type": "string", "minLength": 1},
+    "ahj": {"type": "string", "minLength": 1},
+    "state": {"type": "string", "minLength": 2},
+    "county": {"type": ["string", "null"]},
+    "project_family": {"type": "string", "minLength": 1},
+    "scope": {"type": ["string", "null"]},
+    "status": {"enum": ["PUBLISHABLE", "DRAFT", "FAIL_CLOSED"]},
+    "serving_status": {"enum": ["SPINE_ONLY", "TIER1_COMPLETE", "TIER1_PLUS_TIER2", "FAIL_CLOSED"]},
+    "tier1": {
+      "type": "object",
+      "required": ["main_decision", "permits_required", "trade_authority", "apply", "fail_closed"],
+      "properties": {
+        "main_decision": {"$ref": "#/$defs/value_with_provenance"},
+        "permits_required": {"type": "array", "items": {"$ref": "#/$defs/permit_required"}},
+        "trade_authority": {"type": "array", "items": {"$ref": "#/$defs/trade_authority"}},
+        "apply": {"type": "array", "items": {"$ref": "#/$defs/apply_route"}},
+        "fail_closed": {"$ref": "#/$defs/fail_closed"}
+      },
+      "additionalProperties": true
+    },
+    "tier2": {
+      "type": "object",
+      "properties": {
+        "apply_path_detail": {"type": "array", "items": {"type": "object"}},
+        "fee_basis": {"type": "array", "items": {"type": "object"}},
+        "inspections": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": true
+    },
+    "change_watch": {
+      "type": "object",
+      "required": ["tier1_snapshot_hashes", "diff_cadence", "last_diff", "stale"],
+      "properties": {
+        "tier1_snapshot_hashes": {"type": "array", "items": {"type": "string"}},
+        "diff_cadence": {"type": "string"},
+        "last_diff": {"type": ["string", "null"]},
+        "stale": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "required": ["source_url", "source_quote", "retrieved_at", "snapshot_hash", "snapshot_path", "freshness_class", "last_verified_at", "publishable"],
+      "properties": {
+        "source_url": {"type": "string"},
+        "source_quote": {"type": "string"},
+        "retrieved_at": {"type": "string"},
+        "snapshot_hash": {"type": "string"},
+        "snapshot_path": {"type": "string"},
+        "effective_date": {"type": ["string", "null"]},
+        "freshness_class": {"type": "string"},
+        "last_verified_at": {"type": "string"},
+        "publishable": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "value_with_provenance": {
+      "type": "object",
+      "required": ["value", "provenance"],
+      "properties": {
+        "value": {},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      },
+      "additionalProperties": true
+    },
+    "permit_required": {
+      "type": "object",
+      "required": ["permit_name", "permit_kind", "trigger", "required_status", "provenance"],
+      "properties": {
+        "permit_name": {"type": "string"},
+        "permit_kind": {"type": "string"},
+        "trigger": {"type": "string"},
+        "required_status": {"enum": ["required", "conditional", "not_required"]},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      },
+      "additionalProperties": true
+    },
+    "trade_authority": {
+      "type": "object",
+      "required": ["trade", "handled_by_local_ahj", "issuing_authority", "application_authority", "negative_routing", "provenance"],
+      "properties": {
+        "trade": {"type": "string"},
+        "handled_by_local_ahj": {"type": "boolean"},
+        "issuing_authority": {"type": "object"},
+        "application_authority": {"type": "object"},
+        "negative_routing": {"type": "array", "items": {"$ref": "#/$defs/negative_routing"}},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      },
+      "additionalProperties": true
+    },
+    "negative_routing": {
+      "type": "object",
+      "required": ["authority", "does_not_handle", "provenance"],
+      "properties": {
+        "authority": {"type": "string"},
+        "does_not_handle": {"type": "string"},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      },
+      "additionalProperties": true
+    },
+    "apply_route": {
+      "type": "object",
+      "required": ["permit_name", "office_name", "apply_url", "url_status", "last_url_check", "channel", "provenance"],
+      "properties": {
+        "permit_name": {"type": "string"},
+        "office_name": {"type": "string"},
+        "apply_url": {"type": "string"},
+        "url_status": {"enum": ["live", "stale", "broken"]},
+        "last_url_check": {"type": "string"},
+        "channel": {"enum": ["online", "counter", "email", "phone"]},
+        "phone": {"type": ["string", "null"]},
+        "address": {"type": ["string", "null"]},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      },
+      "additionalProperties": true
+    },
+    "fail_closed": {
+      "type": "object",
+      "required": ["active", "reason", "contact"],
+      "properties": {
+        "active": {"type": "boolean"},
+        "reason": {"type": ["string", "null"]},
+        "contact": {"type": "object"}
+      },
+      "additionalProperties": true
+    }
+  }
+}

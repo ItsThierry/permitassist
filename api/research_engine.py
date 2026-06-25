@@ -57,6 +57,23 @@ except ImportError:  # server.py imports research_engine as a top-level module
     )
 
 try:
+    from .v24_decision_cells import (
+        build_v24_prompt_context,
+        deterministic_narrative,
+        reconcile_authoritative_result,
+        regulated_payload_from_cell,
+        resolve_v24_cell,
+    )
+except ImportError:  # server.py imports research_engine as a top-level module
+    from v24_decision_cells import (
+        build_v24_prompt_context,
+        deterministic_narrative,
+        reconcile_authoritative_result,
+        regulated_payload_from_cell,
+        resolve_v24_cell,
+    )
+
+try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 except Exception:
@@ -8689,6 +8706,116 @@ def scrub_hidden_trigger_internal_metadata(result: dict) -> dict:
 
 # ─── Main Research Function ───────────────────────────────────────────────────
 
+def _deterministic_v24_result_from_resolution(v24_resolution, job_type: str, city: str, state: str) -> dict | None:
+    """Build a minimal customer-safe result from an exact v2.4 cell.
+
+    This is a local/runtime fallback for covered v24 cells when all AI providers
+    are unavailable. It deliberately covers only exact publishable and exact
+    fail-closed v24 resolutions; uncovered/ambiguous cases must continue through
+    the normal engine or fail honestly.
+    """
+    status = getattr(getattr(v24_resolution, "status", None), "value", str(getattr(v24_resolution, "status", "")))
+    if status not in {"exact_cell_publishable", "exact_cell_fail_closed"}:
+        return None
+    cell = getattr(v24_resolution, "cell", None)
+    if not isinstance(cell, dict):
+        return None
+    payload = regulated_payload_from_cell(cell)
+    if not isinstance(payload, dict):
+        return None
+    narrative = deterministic_narrative(payload)
+    applies = payload.get("apply") if isinstance(payload.get("apply"), list) else []
+    route = applies[0] if applies and isinstance(applies[0], dict) else {}
+    fail_closed = payload.get("fail_closed") if isinstance(payload.get("fail_closed"), dict) else {}
+    contact_value = fail_closed.get("contact") if isinstance(fail_closed, dict) else {}
+    contact = contact_value if isinstance(contact_value, dict) else {}
+    sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
+    route_contact_value = route.get("contact") if isinstance(route, dict) else {}
+    route_contact = route_contact_value if isinstance(route_contact_value, dict) else {}
+
+    result = {
+        "job_summary": narrative,
+        "summary": narrative,
+        "permit_required": payload.get("permit_required"),
+        "permit_decision": payload.get("permit_decision"),
+        "permit_verdict": "YES" if payload.get("permit_required") is True else ("NO" if payload.get("permit_required") is False else "CONTACT_AHJ"),
+        "permit_name": payload.get("permit_name"),
+        "permit_type": payload.get("permit_name"),
+        "permits_required": payload.get("permits_required") or [],
+        "trade_authority": payload.get("trade_authority") or [],
+        "apply_url": route.get("apply_url") or route.get("application_url") or contact.get("apply_url") or "",
+        "applying_office": route.get("office_name") or route.get("application_authority") or contact.get("office_name") or f"{city} permit office",
+        "apply_phone": route.get("phone") or route_contact.get("phone") or "",
+        "apply_address": route.get("address") or "",
+        "sources": sources,
+        "source_urls": [s.get("url") for s in sources if isinstance(s, dict) and s.get("url")],
+        "confidence": "fail_closed" if status == "exact_cell_fail_closed" else "high",
+        "confidence_reason": "Authoritative v2.4 Decision Cell deterministic fallback; regulated fields are source-backed and locked by late reconciliation.",
+        "needs_review": status == "exact_cell_fail_closed",
+        "_v24_deterministic_fallback": True,
+    }
+    if status == "exact_cell_fail_closed":
+        result.update({
+            "permit_required": None,
+            "permit_decision": "UNKNOWN",
+            "permit_verdict": "CONTACT_AHJ",
+            "permit_name": None,
+            "permit_type": None,
+            "permits_required": [],
+            "trade_authority": [],
+            "fail_closed": fail_closed or {"active": True},
+            "confidence_reason": "v2.4 exact Decision Cell is fail-closed/contact-only; PermitAssist must not publish a binary permit answer for this AHJ/project until repaired.",
+        })
+    return result
+
+
+def _deterministic_v231_result_from_resolution(v231_resolution, job_type: str, city: str, state: str) -> dict | None:
+    """Minimal no-AI fallback for exact v2.3.1 cells when providers are unavailable."""
+    status = getattr(getattr(v231_resolution, "status", None), "value", str(getattr(v231_resolution, "status", "")))
+    if status != "exact_cell_covered":
+        return None
+    cell = getattr(v231_resolution, "cell", None)
+    if not isinstance(cell, dict) or cell.get("publish_status") != "PUBLISHABLE":
+        return None
+    decision = cell.get("main_decision")
+    if decision not in {"REQUIRED", "NOT_REQUIRED"}:
+        return None
+    evidence = cell.get("source_evidence") if isinstance(cell.get("source_evidence"), list) else []
+    primary_source_value = evidence[0] if evidence and isinstance(evidence[0], dict) else {}
+    primary_source = primary_source_value if isinstance(primary_source_value, dict) else {}
+    authority_value = cell.get("authority_model") if isinstance(cell.get("authority_model"), dict) else {}
+    authority = authority_value if isinstance(authority_value, dict) else {}
+    permit_required = decision == "REQUIRED"
+    permit_name = cell.get("permit_name") or ("Building Permit" if permit_required else "No permit required")
+    apply_url = authority.get("application_url") or primary_source.get("final_url") or primary_source.get("url") or ""
+    office = authority.get("application_authority") or authority.get("issuing_authority") or cell.get("ahj_name") or f"{city} permit office"
+    source_url = primary_source.get("final_url") or primary_source.get("url") or apply_url
+    quote = primary_source.get("quote") or primary_source.get("source_quote") or ""
+    narrative = (
+        f"Permit required. Apply for {permit_name} through {office} before starting work."
+        if permit_required
+        else "No permit required based on the source-backed v2.3.1 decision cell."
+    )
+    return {
+        "job_summary": narrative,
+        "summary": narrative,
+        "permit_required": permit_required,
+        "permit_decision": decision,
+        "permit_verdict": "YES" if permit_required else "NO",
+        "permit_name": permit_name,
+        "permit_type": permit_name,
+        "permits_required": [{"permit_type": permit_name, "kind": "building", "required": True}] if permit_required else [],
+        "apply_url": apply_url,
+        "applying_office": office,
+        "sources": [{"url": source_url, "quote": quote[:500]}] if source_url else [],
+        "source_urls": [source_url] if source_url else [],
+        "confidence": "high",
+        "confidence_reason": "Authoritative v2.3.1 Decision Cell deterministic fallback; regulated fields are source-backed and locked by late reconciliation.",
+        "needs_review": False,
+        "_v231_deterministic_fallback": True,
+    }
+
+
 def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str | None = None, job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False, bypass_lookup_caches: bool = False) -> dict:
     """
     Research permit requirements for a job + location.
@@ -8705,6 +8832,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
     job_category = inferred_job_category if inferred_job_category in ("residential", "commercial") else (requested_job_category or "residential")
     key = cache_key(job_type, city, state, job_category)
     v231_resolution = resolve_v231_cell(city, state, job_type, job_category)
+    v24_resolution = resolve_v24_cell(city, state, job_type, job_category)
 
     if use_cache:
         def _background_refresh(k):
@@ -8774,7 +8902,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             apply_fee_verify_caveat(cached)
             apply_rulebook_depth(cached, job_type, city, state)
             sanitize_non_food_office_breakroom_text(cached, job_type)
-            reconcile_v231_result(cached, v231_resolution)
+            reconcile_authoritative_result(cached, v24_resolution=v24_resolution, v231_resolution=v231_resolution)
             return cached
 
     # ── Check auto-verified data first ──
@@ -8847,6 +8975,9 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
     if city_match_level == "city":
         state_ctx = _get_state_context(state)
         if state_ctx: kb_context_parts.append(state_ctx)
+    v24_prompt_context = build_v24_prompt_context(v24_resolution)
+    if v24_prompt_context:
+        kb_context_parts.append(v24_prompt_context)
     v231_prompt_context = build_v231_prompt_context(v231_resolution)
     if v231_prompt_context:
         kb_context_parts.append(v231_prompt_context)
@@ -8984,7 +9115,14 @@ Return ONLY the JSON object."""
                 _model_used = _gemini_primary_model
                 print(f"[engine] Gemini fallback ({_gemini_primary_model}) responded in {round((time.time()-start)*1000)}ms")
             except Exception as gemini_err:
-                raise RuntimeError(f"Both OpenAI and Gemini failed. OpenAI: {openai_err} | Gemini: {gemini_err}")
+                v24_fallback = _deterministic_v24_result_from_resolution(v24_resolution, job_type, city, state)
+                v231_fallback = None if v24_fallback is not None else _deterministic_v231_result_from_resolution(v231_resolution, job_type, city, state)
+                deterministic_fallback = v24_fallback or v231_fallback
+                if deterministic_fallback is None:
+                    raise RuntimeError(f"Both OpenAI and Gemini failed. OpenAI: {openai_err} | Gemini: {gemini_err}")
+                raw = json.dumps(deterministic_fallback)
+                _model_used = "permitassist_v24_deterministic_fallback" if v24_fallback is not None else "permitassist_v231_deterministic_fallback"
+                print(f"[engine] AI providers unavailable; using deterministic exact-cell fallback ({_model_used})")
 
     elapsed = round((time.time() - start) * 1000)
     try:
@@ -9769,7 +9907,7 @@ Return ONLY the JSON object."""
         print(f"[finalize] AHJ gate/note injection failed (non-fatal): {_e}")
     apply_rulebook_depth(result, job_type, city, state)
     sanitize_non_food_office_breakroom_text(result, job_type)
-    reconcile_v231_result(result, v231_resolution)
+    reconcile_authoritative_result(result, v24_resolution=v24_resolution, v231_resolution=v231_resolution)
 
     if not suppress_cache_write:
         save_cache(key, job_type, job_category, city, state, zip_code, result)

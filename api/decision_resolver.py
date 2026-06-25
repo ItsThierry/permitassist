@@ -569,7 +569,7 @@ def contains_legacy_unknown_state(value: Any) -> bool:
         verdict = _norm(value.get("permit_verdict")).upper()
         if (("permit_decision" in value and decision in _BAD_DECISION_VALUES) or verdict == "UNKNOWN" or ("permit_required" in value and value.get("permit_required") is None)):
             return True
-        return any(contains_legacy_unknown_state(v) for k, v in value.items() if not str(k).startswith("_meta"))
+        return any(contains_legacy_unknown_state(v) for k, v in value.items() if not str(k).startswith("_"))
     if isinstance(value, list):
         return any(contains_legacy_unknown_state(item) for item in value)
     if isinstance(value, str):

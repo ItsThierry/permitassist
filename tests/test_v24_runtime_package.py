@@ -1,0 +1,280 @@
+import json
+import os
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+API = ROOT / "api"
+for path in (ROOT, API):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from api.v24_decision_cells import (  # noqa: E402
+    V24ResolutionStatus,
+    get_v24_mode,
+    load_v24_index,
+    reconcile_authoritative_result,
+    resolve_v24_cell,
+    validate_v24_cell,
+)
+
+PKG = ROOT / "knowledge" / "v24"
+INDEX = PKG / "permitassist_decision_cell_index_v24.json"
+MANIFEST = PKG / "permitassist_v24_manifest.json"
+
+
+def _manifest():
+    return json.loads(MANIFEST.read_text())
+
+
+def _walk_dicts(value):
+    if isinstance(value, dict):
+        yield value
+        for child in value.values():
+            yield from _walk_dicts(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _walk_dicts(child)
+
+
+def _walk_path_fields(value, path=""):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            child_path = f"{path}.{key}" if path else key
+            if isinstance(child, str) and ("path" in key.lower() or key.endswith("_file")):
+                yield child_path, child
+            yield from _walk_path_fields(child, child_path)
+    elif isinstance(value, list):
+        for idx, child in enumerate(value):
+            yield from _walk_path_fields(child, f"{path}[{idx}]")
+
+
+def test_v24_package_manifest_counts_and_hashes():
+    manifest = _manifest()
+    assert manifest["counts"]["ready_total"] == 2162
+    assert manifest["counts"]["deferred_total"] == 327
+    assert manifest["counts"]["w4_tier1_complete"] == 1938
+    assert manifest["counts"]["w3_publishable"] == 199
+    assert manifest["counts"]["w2_reroof_pass"] == 25
+    cells = json.loads((PKG / manifest["decision_cells_file"]).read_text())["cells"]
+    assert len(cells) == 2162
+    assert all(cell.get("source_artifact_sha256") for cell in cells[:25])
+
+
+def test_v24_index_loads_and_runtime_portable_sample_validates(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    index = load_v24_index(index_path=INDEX, manifest_path=MANIFEST)
+    assert index is not None
+    assert len(index) == 2162
+    sample = index["AK|anchorage|commercial_tenant_improvement"]
+    assert validate_v24_cell(sample, strict_snapshots=False, require_live_url_check=False).ok
+
+
+def test_v24_shipped_package_has_no_boban_paths_and_keeps_source_metadata(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    for path in PKG.glob("*.json"):
+        assert "/home/boban" not in path.read_text(encoding="utf-8"), path
+
+    index = load_v24_index(index_path=INDEX, manifest_path=MANIFEST)
+    assert index is not None
+    cells_doc = json.loads((PKG / _manifest()["decision_cells_file"]).read_text(encoding="utf-8"))
+    for path_name, value in _walk_path_fields(cells_doc):
+        assert not value.startswith(("/home/", "/Users/", "/tmp/", "/mnt/")), (path_name, value)
+        assert not re.match(r"^[A-Za-z]:\\", value), (path_name, value)
+    for key in (
+        "AK|anchorage|commercial_tenant_improvement",
+        "AL|albertville|residential_remodel",
+        "AZ|buckeye|reroof",
+    ):
+        cell = index[key]
+        provenances = [d for d in _walk_dicts(cell) if {"source_url", "source_quote", "snapshot_hash", "snapshot_path"}.issubset(d)]
+        assert provenances, key
+        assert validate_v24_cell(cell, strict_snapshots=False, require_live_url_check=False).ok
+        for prov in provenances:
+            assert prov["source_url"]
+            assert prov["source_quote"]
+            assert prov["snapshot_hash"]
+            assert prov["retrieved_at"]
+            assert prov["last_verified_at"]
+            assert not str(prov["snapshot_path"]).startswith("/home/boban")
+
+
+def test_v24_prod_sim_resolves_w4_w3_w2_without_local_snapshot_files(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    import api.v24_decision_cells as v24
+
+    original_validate = v24.validate_v24_cell
+
+    def runtime_validate_guard(cell, **kwargs):
+        assert kwargs.get("strict_snapshots") is False
+        return original_validate(cell, **kwargs)
+
+    monkeypatch.setattr(v24, "validate_v24_cell", runtime_validate_guard)
+    cases = [
+        ("Anchorage", "AK", "commercial tenant improvement", "commercial"),
+        ("Albertville", "AL", "residential remodel", "residential"),
+        ("Buckeye", "AZ", "reroof", "residential"),
+    ]
+    for city, state, job_type, category in cases:
+        resolution = resolve_v24_cell(city, state, job_type, category)
+        assert resolution.status == V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
+        result = {"permit_required": False, "permit_decision": "NOT_REQUIRED", "permit_verdict": "NO", "permits_required": []}
+        reconcile_authoritative_result(result, v24_resolution=resolution, v231_resolution=None)
+        assert result["permit_required"] is True
+        assert result["permit_verdict"] == "YES"
+
+    fail_closed = resolve_v24_cell("Yuma", "AZ", "residential remodel", "residential")
+    assert fail_closed.status == V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED
+    result = {"permit_required": True, "permit_decision": "REQUIRED", "permit_verdict": "YES"}
+    reconcile_authoritative_result(result, v24_resolution=fail_closed, v231_resolution={"publish_status": "PUBLISHABLE"})
+    assert result["permit_required"] is None
+    assert result["permit_verdict"] == "CONTACT_AHJ"
+
+
+def test_v24_resolver_is_flag_gated_and_exact_publishable_wins(monkeypatch):
+    monkeypatch.delenv("PERMITASSIST_V24_MODE", raising=False)
+    off = resolve_v24_cell("Anchorage", "AK", "commercial tenant improvement", "commercial")
+    assert off.status == V24ResolutionStatus.INDEX_UNAVAILABLE
+    assert get_v24_mode() == "off"
+
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    resolution = resolve_v24_cell("Anchorage", "AK", "commercial tenant improvement", "commercial")
+    assert resolution.status == V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
+    result = {"permit_required": False, "permit_decision": "NOT_REQUIRED", "permit_verdict": "NO", "permits_required": []}
+    reconcile_authoritative_result(result, v24_resolution=resolution, v231_resolution=None)
+    assert result["permit_required"] is True
+    assert result["permit_decision"] == "REQUIRED"
+    assert result["permit_verdict"] == "YES"
+    assert result["_field_sources"]["permit_required"] == "permitassist_v24_decision_cell"
+    assert result["_decision_cell_primary_lock"]["source"] == "permitassist_v24_decision_cell"
+
+
+def test_v24_fail_closed_blocks_v231_fallback(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    resolution = resolve_v24_cell("Yuma", "AZ", "residential remodel", "residential")
+    assert resolution.status == V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED
+    result = {"permit_required": True, "permit_decision": "REQUIRED", "permit_verdict": "YES"}
+    fake_v231 = {"publish_status": "PUBLISHABLE", "main_decision": "REQUIRED", "permit_name": "Building Permit"}
+    reconcile_authoritative_result(result, v24_resolution=resolution, v231_resolution=fake_v231)
+    assert result["permit_required"] is None
+    assert result["permit_verdict"] == "CONTACT_AHJ"
+    assert result["_field_sources"]["permit_required"] == "permitassist_v24_fail_closed"
+    assert "_v231_decision_cell" not in result
+
+
+def test_v24_falls_back_to_v231_when_no_exact_v24(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    resolution = resolve_v24_cell("Definitely Missing City", "ZZ", "commercial tenant improvement", "commercial")
+    assert resolution.status in {V24ResolutionStatus.AHJ_NOT_COVERED, V24ResolutionStatus.INDEX_UNAVAILABLE}
+    v231_cell = {
+        "publish_status": "PUBLISHABLE",
+        "main_decision": "REQUIRED",
+        "permit_name": "Building Permit",
+        "ahj_name": "Fallback City",
+        "authority_model": {"application_url": "https://fallback.example.gov", "application_authority": "Fallback Office"},
+        "source_evidence": [{"url": "https://fallback.example.gov", "quote": "Apply for a building permit."}],
+    }
+    result = {"permit_required": False, "permit_decision": "NOT_REQUIRED", "permit_verdict": "NO"}
+    reconcile_authoritative_result(result, v24_resolution=resolution, v231_resolution=v231_cell)
+    assert result["permit_required"] is True
+    assert result["_field_sources"]["permit_required"] == "permitassist_v231_decision_cell"
+
+
+def test_v24_internal_markers_do_not_escape_customer_sanitizer(monkeypatch):
+    pytest = __import__("pytest")
+    pytest.importorskip("requests")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-import-only")
+    from api.server import sanitize_customer_visible_result
+    raw = {
+        "permit_decision": "REQUIRED",
+        "permit_required": True,
+        "permit_verdict": "YES",
+        "confidence_reason": "permitassist_v24_decision_cell v2.4 _v24_resolution_status cell_id resolver",
+        "notes": "Use permitassist_v24_fail_closed if the decision_cell is not publishable.",
+        "_v24_resolution_status": "exact_cell_publishable",
+        "_v24_cell_id": "us-ak-anchorage__commercial__commercial_tenant_improvement__building",
+        "_decision_cell_primary_lock": {"source": "permitassist_v24_decision_cell"},
+    }
+    clean = sanitize_customer_visible_result(raw)
+    rendered = json.dumps(clean).lower()
+    assert "permitassist_v24" not in rendered
+    assert "_v24" not in rendered
+    assert "decision_cell" not in rendered
+    assert "cell_id" not in rendered
+
+
+def test_v24_deterministic_fallback_covers_exact_cells_without_ai(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    from api.research_engine import _deterministic_v24_result_from_resolution
+
+    publishable = resolve_v24_cell("Anchorage", "AK", "commercial tenant improvement", "commercial")
+    result = _deterministic_v24_result_from_resolution(publishable, "commercial tenant improvement", "Anchorage", "AK")
+    assert result is not None
+    assert result["permit_required"] is True
+    assert result["permit_decision"] == "REQUIRED"
+    assert result["permit_verdict"] == "YES"
+    assert result["apply_url"]
+    assert result["sources"]
+
+    fail_closed = resolve_v24_cell("Yuma", "AZ", "residential remodel", "residential")
+    result = _deterministic_v24_result_from_resolution(fail_closed, "residential remodel", "Yuma", "AZ")
+    assert result is not None
+    assert result["permit_required"] is None
+    assert result["permit_verdict"] == "CONTACT_AHJ"
+    assert result["needs_review"] is True
+
+
+def test_v24_fail_closed_survives_customer_view_model(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-import-only")
+    from api.research_engine import _deterministic_v24_result_from_resolution
+    from api.server import build_customer_permit_view_model
+
+    fail_closed = resolve_v24_cell("Yuma", "AZ", "residential remodel", "residential")
+    raw = _deterministic_v24_result_from_resolution(fail_closed, "residential remodel", "Yuma", "AZ")
+    assert raw is not None
+    public = build_customer_permit_view_model(raw, "residential remodel", "Yuma", "AZ", job_category="residential")
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] == "CONTACT_AHJ"
+    assert public["permit_decision"] == "UNKNOWN"
+    rendered = json.dumps(public).lower()
+    assert "_v24" not in rendered
+    assert "decision_cell" not in rendered
+    assert "cell_id" not in rendered
+
+
+def test_v24_paid_v1_customer_view_model_does_not_leak_internals(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-import-only")
+    from api.server import build_customer_permit_view_model, finalize_permit_lookup_result
+
+    raw = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permit_name": "Building Permit",
+        "apply_url": "https://official.example.gov/apply",
+        "permits_required": [{"permit_type": "Building Permit", "required": True}],
+        "sources": [{"url": "https://official.example.gov/apply", "quote": "Apply for a building permit."}],
+        "_v24_resolution_status": "exact_cell_publishable",
+        "_v24_cell_id": "us-az-buckeye__reroof",
+        "_decision_cell_primary_lock": {"source": "permitassist_v24_decision_cell", "cell_id": "us-az-buckeye__reroof"},
+        "debug": {"snapshot_hash": "abc", "source_snapshot_path": "/home/boban/projects/permitassist-data/snapshot.txt"},
+    }
+    finalized = finalize_permit_lookup_result(raw, "reroof", "Buckeye", "AZ", job_category="residential", evidence_allowed=False)
+    public = build_customer_permit_view_model(finalized, "reroof", "Buckeye", "AZ", job_category="residential")
+    rendered = json.dumps(public, sort_keys=True).lower()
+    for marker in ("_v24", "permitassist_v24", "v2.4", "decision_cell", "cell_id", "resolver", "snapshot_hash", "source_snapshot_path", "/home/boban"):
+        assert marker not in rendered
+
+
+def test_cache_legacy_unknown_check_ignores_internal_scope_contract():
+    from api.decision_resolver import contains_legacy_unknown_state
+
+    cached = {
+        "permit_decision": "REQUIRED",
+        "permit_required": True,
+        "permit_verdict": "YES",
+        "_scope_contract": {"occupancy_class": "unknown"},
+    }
+    assert contains_legacy_unknown_state(cached) is False

@@ -1,0 +1,11 @@
+{
+  "counts": {
+    "ri_scope_candidates": 7,
+    "total": 327,
+    "w3_blocked_or_fail_closed": 49,
+    "w4_incomplete": 271
+  },
+  "created_at_utc": "2026-06-25T01:31:57.017417Z",
+  "policy": "excluded_from_v24_customer_publishable_runtime_package_until later enrichment/approval",
+  "schema": "permitassist.v24.deferred_manifest.v1"
+}

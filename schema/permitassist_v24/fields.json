@@ -1,0 +1,74 @@
+{
+  "schema_version": "permitassist_v24_field_registry_1",
+  "rules": {
+    "tier1_gate_means_required_provenance": true,
+    "tier2_never_gates_ship": true,
+    "model_may_not_author_regulated_fields": true,
+    "absence_is_not_negative_knowledge": true
+  },
+  "fields": {
+    "main_decision": {
+      "tier": 1,
+      "gate": true,
+      "provenance": "required",
+      "validators": ["source_url", "source_quote", "quote_in_snapshot", "snapshot_hash"],
+      "regulated": true
+    },
+    "permits_required": {
+      "tier": 1,
+      "gate": true,
+      "provenance": "required",
+      "validators": ["source_url", "source_quote", "quote_in_snapshot", "snapshot_hash"],
+      "regulated": true
+    },
+    "trade_authority": {
+      "tier": 1,
+      "gate": true,
+      "provenance": "required",
+      "validators": ["source_url", "source_quote", "quote_in_snapshot", "snapshot_hash", "negative_routing_provenance"],
+      "regulated": true
+    },
+    "apply": {
+      "tier": 1,
+      "gate": true,
+      "provenance": "required",
+      "validators": ["source_url", "source_quote", "quote_in_snapshot", "snapshot_hash", "apply_url_live"],
+      "regulated": true
+    },
+    "fail_closed_contact": {
+      "tier": 1,
+      "gate": true,
+      "provenance": "required_when_source_backed_else_contact_required",
+      "validators": ["real_contact"],
+      "regulated": true
+    },
+    "change_watch": {
+      "tier": 1,
+      "gate": true,
+      "provenance": "required",
+      "validators": ["tier1_snapshot_hashes_present"],
+      "regulated": false
+    },
+    "apply_path_detail": {
+      "tier": 2,
+      "gate": false,
+      "provenance": "required_if_present",
+      "validators": ["source_url", "source_quote", "quote_in_snapshot", "snapshot_hash"],
+      "regulated": true
+    },
+    "fee_basis": {
+      "tier": 2,
+      "gate": false,
+      "provenance": "required_if_present",
+      "validators": ["source_url", "source_quote", "quote_in_snapshot", "snapshot_hash", "effective_date_if_visible"],
+      "regulated": true
+    },
+    "inspections": {
+      "tier": 2,
+      "gate": false,
+      "provenance": "required_if_present",
+      "validators": ["source_url", "source_quote", "quote_in_snapshot", "snapshot_hash"],
+      "regulated": true
+    }
+  }
+}
