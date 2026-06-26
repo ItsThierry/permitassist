@@ -63,7 +63,9 @@
     }
   ],
   "applying_office": "City of Phoenix Planning & Development Department (PDD)",
-  "apply_url": "https://aca-prod.accela.com/PHOENIX",
+  "apply_url": null,
+  "apply_url_status": "needs_verification",
+  "department_url": "https://www.phoenix.gov/pdd",
   "apply_pdf": null,
   "apply_phone": "(602) 262-7811",
   "apply_address": "200 W. Washington Street, 2nd Floor, Phoenix, AZ 85003",
@@ -105,7 +107,7 @@
       "timing": "After all trade finals and before opening to the public"
     }
   ],
-  "inspection_booking": "Schedule inspections through the Phoenix Accela portal: https://aca-prod.accela.com/PHOENIX. Phoenix requires a minimum 24-hour advance notice; same-day requests are not accepted. Use the permit record to request each trade inspection separately if needed. Phone: (602) 262-7811. Plan on standard business hours for the Development Center; confirm current inspection cutoff times in the portal before submitting.",
+  "inspection_booking": "Schedule inspections through the current Phoenix PDD filing portal: current official Phoenix PDD filing route (verify before filing). Phoenix requires a minimum 24-hour advance notice; same-day requests are not accepted. Use the permit record to request each trade inspection separately if needed. Phone: (602) 262-7811. Plan on standard business hours for the Development Center; confirm current inspection cutoff times in the portal before submitting.",
   "license_required": "Arizona ROC-licensed contractor pulls the permit on behalf of the owner or tenant. The contractor's ROC license number must be on the application. For this commercial restaurant TI, the general contractor typically pulls the building permit, and licensed trade contractors pull their respective trade permits or are listed on the combined permit package as required by Phoenix.",
   "city_contractor_registration": "Phoenix requires a separate City Contractor Registration in addition to the Arizona ROC license. If the contractor is not currently registered with the City of Phoenix, the permit application can be rejected or blocked. Verify registration status and renewal before submitting any permit application.",
   "what_to_bring": [
@@ -155,7 +157,7 @@
   "zoning_hoa_flag": "This is a commercial restaurant project, so HOA restrictions usually do not apply. Zoning and site plan issues may still apply for outdoor patio seating, including use approval, occupant load, parking, accessibility, and any encroachment into the public right-of-way. If the building is in a historic district or special overlay area, additional design review may be required.",
   "sources": [
     "https://www.phoenix.gov/pdd",
-    "https://aca-prod.accela.com/PHOENIX",
+    "current official Phoenix PDD filing route (verify before filing)",
     "https://www.phoenix.gov/administration/departments/pdd/tools-resources/fees.html",
     "https://roc.az.gov",
     "https://www.phoenix.gov/residents/residential-building-permits.html",

@@ -19,7 +19,9 @@
     }
   ],
   "applying_office": "City of Phoenix Planning & Development Department (PDD)",
-  "apply_url": "https://aca-prod.accela.com/PHOENIX",
+  "apply_url": null,
+  "apply_url_status": "needs_verification",
+  "department_url": "https://www.phoenix.gov/pdd",
   "apply_pdf": null,
   "apply_phone": "(602) 262-7811",
   "apply_address": "200 W. Washington Street, 2nd Floor, Phoenix, AZ 85003",
@@ -41,7 +43,7 @@
       "timing": "After installation is complete and the unit is operational"
     }
   ],
-  "inspection_booking": "Schedule inspections through the Phoenix Accela portal: https://aca-prod.accela.com/PHOENIX. Phoenix requires a minimum 24-hour advance notice; same-day inspection requests are not accepted. Phone: (602) 262-7811. Use the permit number in the portal to request the inspection.",
+  "inspection_booking": "Schedule inspections through the current Phoenix PDD filing portal: current official Phoenix PDD filing route (verify before filing). Phoenix requires a minimum 24-hour advance notice; same-day inspection requests are not accepted. Phone: (602) 262-7811. Use the permit number in the portal to request the inspection.",
   "license_required": "ROC-licensed plumbing/gas contractor pulls the permit on the homeowner's behalf — the contractor's ROC license number must appear on the application. Phoenix also requires separate City Contractor Registration in addition to the Arizona ROC license before the permit will be accepted.",
   "city_contractor_registration": "Phoenix requires a separate City Contractor Registration on top of the Arizona ROC license. Verify registration is current before submitting the permit application; an expired or lapsed city registration will block the application. Renewal timing is city-controlled and should be checked before each permit submission.",
   "what_to_bring": [
@@ -74,7 +76,7 @@
   "zoning_hoa_flag": "HOA rules may restrict exterior vent termination locations, visible side-yard equipment, or roof/wall penetrations for the new tankless vent. If the vent exits through a wall or roof in a historic district or HOA-controlled community, verify exterior appearance rules before cutting.",
   "sources": [
     "https://www.phoenix.gov/pdd",
-    "https://aca-prod.accela.com/PHOENIX",
+    "current official Phoenix PDD filing route (verify before filing)",
     "https://roc.az.gov",
     "https://www.phoenix.gov/administration/departments/pdd/tools-resources/fees.html",
     "https://www.phoenix.gov/residents/residential-building-permits.html",

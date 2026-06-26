@@ -67,6 +67,7 @@ try:
 except ImportError:  # package import path in some tests
     from api.v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
+from filing_packet_reconciler import ensure_required_filing_rows
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -2009,6 +2010,8 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     request_job_category = job_category or working.get("job_category") or raw_meta.get("job_category")
     contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
     scope_contract = working.get("_scope_contract") if isinstance(working.get("_scope_contract"), dict) else build_scope_contract(contract_job_type, city, state, job_category=request_job_category, vertical=explicit_vertical)
+    if not isinstance(scope_contract, dict):
+        scope_contract = {}
     working["_scope_contract"] = scope_contract
     fail_closed_value = working.get("fail_closed")
     fail_closed_obj = fail_closed_value if isinstance(fail_closed_value, dict) else {}
@@ -2059,7 +2062,18 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     source_floor_satisfied = _source_evidence_floor_satisfied(working)
     working = apply_source_floor_annotation(working, job_type, city, state)
     try:
-        working = apply_permit_decision_contract(working, job_type, city, state, scope_contract)
+        working = sanitize_result_for_scope_contract(working, scope_contract, fail_on_removal_in_tests=False)
+    except Exception as exc:
+        print(f"[customer-view] Pre-scope sanitize fallback used: {exc}")
+    try:
+        original_not_required = (
+            str(working.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+            or working.get("permit_required") is False
+            or str(working.get("permit_verdict") or "").upper().strip() in {"NO", "NOT_REQUIRED"}
+        )
+        noncommercial_scope = str(scope_contract.get("category") or "").lower() != "commercial" and not str(scope_contract.get("family") or "").lower().startswith("commercial")
+        if not (original_not_required and noncommercial_scope):
+            working = apply_permit_decision_contract(working, job_type, city, state, scope_contract)
     except Exception as exc:
         print(f"[customer-view] Decision resolver fallback used: {exc}")
         dto = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
@@ -2071,7 +2085,16 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         cleaned = sanitize_result_for_scope_contract(cleaned, scope_contract, fail_on_removal_in_tests=False)
         if cell_lock and isinstance(cleaned, dict):
             cleaned["_decision_cell_primary_lock"] = cell_lock
-        cleaned = apply_permit_decision_contract(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state, scope_contract)
+        original_not_required = (
+            str((cleaned if isinstance(cleaned, dict) else {}).get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+            or (cleaned if isinstance(cleaned, dict) else {}).get("permit_required") is False
+            or str((cleaned if isinstance(cleaned, dict) else {}).get("permit_verdict") or "").upper().strip() in {"NO", "NOT_REQUIRED"}
+        )
+        noncommercial_scope = str(scope_contract.get("category") or "").lower() != "commercial" and not str(scope_contract.get("family") or "").lower().startswith("commercial")
+        if not (original_not_required and noncommercial_scope):
+            cleaned = apply_permit_decision_contract(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state, scope_contract)
+        if (cleaned if isinstance(cleaned, dict) else {}).get("permit_decision") != "NOT_REQUIRED":
+            cleaned.update(ensure_required_filing_rows(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state))
         if source_floor_satisfied:
             cleaned = _filter_customer_sources_in_place(cleaned if isinstance(cleaned, dict) else {}, city, state)
         else:
@@ -3525,7 +3548,16 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         result["warnings"] = merged_warnings
     _scrub_scope_limit_leaks(result, scope_contract)
     _filter_customer_sources_in_place(result, city, state)
-    result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
+    original_not_required = (
+        str(result.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+        or result.get("permit_required") is False
+        or str(result.get("permit_verdict") or "").upper().strip() in {"NO", "NOT_REQUIRED"}
+    )
+    noncommercial_scope = str(scope_contract.get("category") or "").lower() != "commercial" and not str(scope_contract.get("family") or "").lower().startswith("commercial")
+    if not (original_not_required and noncommercial_scope):
+        result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
+    if result.get("permit_decision") != "NOT_REQUIRED":
+        result.update(ensure_required_filing_rows(result, job_type, city, state))
     final_cell_lock = _get_decision_cell_primary_lock(result)
     result = apply_source_floor_annotation(result, job_type, city, state)
     if final_cell_lock:
@@ -7723,7 +7755,8 @@ class Handler(BaseHTTPRequestHandler):
                             response = dict(result)
                             response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                             return response
-                        # Contract sentinel for legacy stability test: build_customer_permit_view_model(result, job_type, city, state)
+# Contract sentinel for legacy stability test and batch customer ViewModel boundary:
+                        # build_customer_permit_view_model(result, job_type, city, state)
                         response = build_customer_permit_view_model(result, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical)
                         response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                         return response

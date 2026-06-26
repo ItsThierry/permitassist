@@ -41,7 +41,9 @@
     }
   ],
   "applying_office": "City of Phoenix Planning & Development Department (PDD)",
-  "apply_url": "https://aca-prod.accela.com/PHOENIX",
+  "apply_url": null,
+  "apply_url_status": "needs_verification",
+  "department_url": "https://www.phoenix.gov/pdd",
   "apply_pdf": null,
   "apply_phone": "(602) 262-7811",
   "apply_address": "200 W. Washington Street, 2nd Floor, Phoenix, AZ 85003",
@@ -73,7 +75,7 @@
       "timing": "After all work is complete and before occupancy"
     }
   ],
-  "inspection_booking": "Schedule inspections through the Phoenix Accela portal: https://aca-prod.accela.com/PHOENIX. Phoenix requires a minimum 24-hour advance notice; same-day requests are not accepted. Use the permit number in the portal to request building, electrical, and fire sprinkler inspections separately as needed. Phone: (602) 262-7811. Office: Mon-Fri, standard city business hours.",
+  "inspection_booking": "Schedule inspections through the current Phoenix PDD filing portal: current official Phoenix PDD filing route (verify before filing). Phoenix requires a minimum 24-hour advance notice; same-day requests are not accepted. Use the permit number in the portal to request building, electrical, and fire sprinkler inspections separately as needed. Phone: (602) 262-7811. Office: Mon-Fri, standard city business hours.",
   "license_required": "Licensed Arizona ROC contractor pulls the permit on behalf of the tenant or owner. For Phoenix, the contractor must also have current City of Phoenix contractor registration before the application will be accepted. The ROC license number and city registration must appear on the permit application.",
   "city_contractor_registration": "Phoenix requires a separate City Contractor Registration in addition to the Arizona ROC license. Verify registration is current before applying; an expired or lapsed city registration will block the permit application. Renew through the City of Phoenix contractor registration process before submitting any permit.",
   "what_to_bring": [
@@ -127,7 +129,7 @@
   "zoning_hoa_flag": "For a downtown Phoenix office TI, HOA restrictions usually do not apply, but any exterior signage, rooftop equipment visibility, or changes affecting the building exterior may require separate zoning or landlord approval. If the building is in a historic district or special overlay, additional design review may apply.",
   "sources": [
     "https://www.phoenix.gov/pdd",
-    "https://aca-prod.accela.com/PHOENIX",
+    "current official Phoenix PDD filing route (verify before filing)",
     "https://www.phoenix.gov/administration/departments/pdd/tools-resources/fees.html",
     "https://www.phoenix.gov/residents/residential-building-permits.html",
     "https://www.phoenix.gov/content/dam/phoenix/firesite/documents/solar%20permit%20process.pdf",

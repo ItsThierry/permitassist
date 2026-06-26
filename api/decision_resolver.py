@@ -301,7 +301,26 @@ def _permit_payloads_for_names(permit_names: list[str], kinds: list[str], result
         row = {"permit_type": name, "kind": kind, "required": True}
         existing = existing_records.get(name)
         if isinstance(existing, dict):
-            for field in ("portal_selection", "notes", "required_if", "source_url", "source_title"):
+            for field in (
+                "portal_selection",
+                "notes",
+                "required_if",
+                "source_url",
+                "source_title",
+                "filing_family",
+                "approval_type",
+                "row_category",
+                "decision",
+                "trigger_signal_ids",
+                "ahj_name",
+                "ahj_type",
+                "application_authority_name",
+                "apply_url",
+                "department_url",
+                "apply_url_status",
+                "source_status",
+                "provenance",
+            ):
                 value = existing.get(field)
                 if value not in (None, "", [], {}):
                     row[field] = value

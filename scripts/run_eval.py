@@ -98,7 +98,7 @@ def call_engine(base_url: str, job_type: str, city: str, state: str, admin_token
 def _get_fee_high_end(fee_range: Any) -> float | None:
     """Extract the high-end dollar number from a fee_range string.
 
-    Handles formats: '$8K-25K', '$2,500 - $12,000', '$558', 'Fee Estimate: **$19,000-$30,000+**'.
+    Handles formats: '$8K-25K', '$2,500 - $12,000', '$560', 'Fee Estimate: **$19,000-$30,000+**'.
     Returns the highest USD number found, or None if unparseable.
     """
     if not isinstance(fee_range, str) or not fee_range:

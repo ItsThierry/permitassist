@@ -52,7 +52,9 @@
     }
   ],
   "applying_office": "City of Phoenix Planning & Development Department (PDD)",
-  "apply_url": "https://aca-prod.accela.com/PHOENIX",
+  "apply_url": null,
+  "apply_url_status": "needs_verification",
+  "department_url": "https://www.phoenix.gov/pdd",
   "apply_pdf": null,
   "apply_phone": "(602) 262-7811",
   "apply_address": "200 W. Washington Street, 2nd Floor, Phoenix, AZ 85003",
@@ -94,11 +96,11 @@
       "timing": "After all work is finished and utilities are ready"
     }
   ],
-  "inspection_booking": "Schedule inspections through the Phoenix Accela portal: https://aca-prod.accela.com/PHOENIX. Phoenix requires a minimum 24-hour advance notice; same-day requests are not accepted. Use the permit record to request each inspection type online. Phone: (602) 262-7811. Plan your rough-ins so electrical, plumbing, and mechanical are ready before calling for inspection.",
+  "inspection_booking": "Schedule inspections through the current Phoenix PDD filing portal: current official Phoenix PDD filing route (verify before filing). Phoenix requires a minimum 24-hour advance notice; same-day requests are not accepted. Use the permit record to request each inspection type online. Phone: (602) 262-7811. Plan your rough-ins so electrical, plumbing, and mechanical are ready before calling for inspection.",
   "license_required": "Arizona ROC-licensed contractor pulls the permit on the owner's behalf, and the contractor's ROC license number must appear on the application. Phoenix also requires separate City Contractor Registration in addition to the ROC license before the permit will be accepted.",
   "city_contractor_registration": "Phoenix requires separate City Contractor Registration on top of the Arizona ROC license. Verify the city registration is current before submitting any permit application; an expired or missing city registration will block the permit. Check renewal status before starting the application.",
   "what_to_bring": [
-    "Completed ADU permit application in the Phoenix Accela portal",
+    "Completed ADU permit application in the current Phoenix PDD filing portal",
     "Arizona ROC license number and contractor registration information",
     "Full plan set for the detached ADU: site plan, floor plan, elevations, foundation, framing, and roof details",
     "Energy/load documentation and HVAC sizing information, including Manual J if requested",
@@ -127,7 +129,7 @@
   "zoning_hoa_flag": "Detached ADUs in Phoenix can be affected by zoning setbacks, lot coverage, height limits, and utility placement rules. HOA covenants may also restrict detached accessory structures, exterior appearance, or rental use. If the property is in a historic district or overlay zone, additional design review may apply.",
   "sources": [
     "https://www.phoenix.gov/pdd",
-    "https://aca-prod.accela.com/PHOENIX",
+    "current official Phoenix PDD filing route (verify before filing)",
     "https://roc.az.gov",
     "https://www.phoenix.gov/administration/departments/pdd/tools-resources/fees.html",
     "https://www.phoenix.gov/residents/residential-building-permits.html",

@@ -19472,8 +19472,8 @@
       "fees": {
         "electrical": "Standalone electrical permit (e.g., EV charger separate from main work): $219.",
         "ev_charger": "Standalone EV charger: $207.",
-        "fee_note": "Source: Phoenix PDD fee schedule, verified March 23, 2026. IMPORTANT: Phoenix uses ONE combined permit for all trades \u2014 $558 for HVAC replacement covers EVERYTHING. Much higher than cities with separate trade permits, but only ONE permit to pull. ROC license required for all contractor work in AZ.",
-        "hvac_mechanical": "HVAC replacement: $558 total \u2014 Phoenix uses SINGLE permit covering ALL trades (building + mechanical + electrical + plumbing). This is NOT a separate mechanical permit.",
+        "fee_note": "Phoenix fee data must be verified against the current official Phoenix PDD fee schedule before quoting; do not reuse legacy residential/trade-fee anchors for commercial or filing-packet outputs.",
+        "hvac_mechanical": "HVAC replacement fee/routing requires current Phoenix PDD verification before quoting; do not treat legacy combined-permit examples as universal.",
         "plumbing": "Water heater: covered under combined permit. Standalone: ~$219.",
         "roofing": "Roof replacement: $646 (combined permit).",
         "solar": "Solar installation: $706 (building + electrical combined)."
@@ -19486,13 +19486,13 @@
         "Very active solar market \u2014 Phoenix streamlined solar permits",
         "Hot climate: HVAC sizing is critical \u2014 inspectors check Manual J compliance"
       ],
-      "online_portal": "https://aca-prod.accela.com/PHOENIX",
+      "online_portal": null,
       "permit_office": "City of Phoenix Planning & Development Department (PDD)",
       "permit_url": "https://www.phoenix.gov/pdd",
       "phone": "(602) 262-7811",
       "state": "AZ",
       "timeline": {
-        "note": "Phoenix uses Accela online portal \u2014 most residential permits available online",
+        "note": "Phoenix online filing route must be verified against current official PDD sources before filing.",
         "over_the_counter": "Simple residential trade work: 1\u20133 days via online portal",
         "plan_review": "Initial plan review: ~28 days. Express services available."
       },

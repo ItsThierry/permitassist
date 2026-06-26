@@ -74,6 +74,19 @@ except ImportError:  # server.py imports research_engine as a top-level module
     )
 
 try:
+    from .filing_packet_reconciler import (
+        CACHE_SCHEMA_VERSION as FILING_PACKET_CACHE_SCHEMA_VERSION,
+        FILING_PACKET_RECONCILER_VERSION,
+        ensure_required_filing_rows,
+    )
+except ImportError:  # server.py imports research_engine as a top-level module
+    from filing_packet_reconciler import (
+        CACHE_SCHEMA_VERSION as FILING_PACKET_CACHE_SCHEMA_VERSION,
+        FILING_PACKET_RECONCILER_VERSION,
+        ensure_required_filing_rows,
+    )
+
+try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 except Exception:
@@ -83,6 +96,7 @@ except Exception:
     pass
 
 client = None
+
 
 def _get_openai_client() -> OpenAI:
     """Create the OpenAI fallback client lazily so importing tests never needs a key."""
@@ -3765,6 +3779,8 @@ def init_cache():
     conn.close()
 
 def cache_key(job_type: str, city: str, state: str, job_category: str | None = None) -> str:
+    # v4 (2026-06-26): universal filing-packet reconciler/schema bump so stale
+    # cached rows cannot bypass scope→family→structured-row reconciliation.
     # v3 (2026-05-26): include the canonical scope family/vertical/occupancy
     # so stale residential/commercial rows cannot collide across request scopes.
     raw_category = (job_category or "").lower().strip()
@@ -3778,7 +3794,7 @@ def cache_key(job_type: str, city: str, state: str, job_category: str | None = N
     canonical_category = str(scope_contract.get("category") or "").lower().strip()
     if canonical_category not in ("residential", "commercial"):
         canonical_category = raw_category or "residential"
-    raw = f"v3|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{canonical_category}|{scope_bits}"
+    raw = f"v4|{FILING_PACKET_CACHE_SCHEMA_VERSION}|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{canonical_category}|{scope_bits}"
     return hashlib.md5(raw.encode()).hexdigest()
 
 def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
@@ -3909,6 +3925,13 @@ def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
             result = json.loads(row[0])
             if contains_legacy_unknown_state(result):
                 print(f"[cache] Ignoring legacy UNKNOWN/FAIL_CLOSED cache row for key {key[:8]}…")
+                conn.execute("DELETE FROM permit_cache WHERE cache_key = ?", [key])
+                conn.commit()
+                conn.close()
+                _cache_stats["misses"] += 1
+                return None
+            if result.get("_cache_schema_version") != FILING_PACKET_CACHE_SCHEMA_VERSION:
+                print(f"[cache] Ignoring pre-filing-packet schema cache row for key {key[:8]}…")
                 conn.execute("DELETE FROM permit_cache WHERE cache_key = ?", [key])
                 conn.commit()
                 conn.close()
@@ -8089,12 +8112,11 @@ CRITICAL RULES:
    - If not found, provide the format: "Search Google Maps: [city] [state] building permit office"
    Never return null for apply_phone — always return something actionable.
 
-4. APPLY_URL must be a real WEB PORTAL URL (not a PDF). Examples of valid apply_url:
-   - "https://aca-prod.accela.com/PHOENIX" ✅
+4. APPLY_URL must be a real WEB PORTAL URL (not a PDF) and must come from an official/source-backed route. Examples of valid apply_url format:
    - "https://abc.austintexas.gov" ✅
    - "https://houston.gov/onlinepermitting" ✅
    - "https://city.gov/docs/permit-application.pdf" ❌ (this is a PDF — put in apply_pdf instead)
-   If only a PDF application exists, set apply_url = null and apply_pdf = [PDF URL]. If you are not certain of the exact application URL, return the city's main permit office website URL rather than null.
+   Do not invent portal URLs from memory. If you are not certain of the exact application URL, return the city's main permit office website URL and explain that the exact portal path needs verification.
 
 5. SMALL CITY HANDLING: If the city is not in your database, you MUST:
    a. Use web search results to find the actual building department
@@ -8120,9 +8142,8 @@ CRITICAL RULES:
    - "medium": state-level data, city not in KB but web search found something
    - "low": general knowledge only, city not found anywhere — tell contractor to call
 
-10. FEE PRECISION: Always give specific numbers when known. Instead of "$75-$250" say:
-    "$68 for first HVAC system, $19 for each additional (Austin 2025)" or
-    "$558 combined mechanical/electrical/building permit (Phoenix — single permit system)"
+10. FEE PRECISION: Always give specific numbers when known from current official/source-backed schedules. Instead of "$75-$250" say:
+    "$68 for first HVAC system, $19 for each additional (Austin 2025)". If the only number is an old/example/template value or not clearly sourced for this exact AHJ and scope, say the fee needs verification rather than carrying the number forward.
 
 11. CONTRACTOR REGISTRATION WARNINGS: For any city that requires separate city/metro contractor registration (Nashville Metro Codes, Phoenix PDD, Dallas, Chicago, etc.), ALWAYS add to common_mistakes: "Submitting permit application without verifying current contractor registration status — an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting." Also add to pro_tips: "Check your [city] contractor registration renewal date before starting any permit application — registration lapses are the #1 avoidable rejection reason."
 
@@ -8167,7 +8188,7 @@ Return ONLY a JSON object with these exact fields:
     }
   ],
   "applying_office": "exact department name, e.g. Houston Permitting Center or Cook County Building & Zoning Dept",
-  "apply_url": "The DIRECT URL to apply online or start the permit application. IMPORTANT: For cities using Accela (aca-prod.accela.com/CITYNAME), return the exact Accela portal URL. For Tyler Technologies portals, return the exact URL. For city .gov permit pages, return the exact URL. Do NOT return homepage URLs — return the specific permit application page. If you are not certain of the exact URL, return the city's main permit office website URL rather than null.",
+  "apply_url": "The DIRECT URL to apply online or start the permit application. IMPORTANT: return an exact portal URL only when it is source-backed for this jurisdiction/current route. For Tyler Technologies, Accela, CivicPlus, or city .gov portals, use the exact official URL only if the source context supports it. Do NOT return homepage URLs as if they are exact filing paths; if exact path is uncertain, return the main permit office page and make verification status clear.",
   "apply_pdf": "URL to paper application PDF form, or null if online portal exists",
   "apply_phone": "(555) 555-5555 — always return something, even Google Maps search link",
   "apply_address": "123 Main St, City, ST 00000",
@@ -8919,6 +8940,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             apply_rulebook_depth(cached, job_type, city, state)
             sanitize_non_food_office_breakroom_text(cached, job_type)
             reconcile_authoritative_result(cached, v24_resolution=v24_resolution, v231_resolution=v231_resolution)
+            cached.update(ensure_required_filing_rows(cached, job_type, city, state))
             return cached
 
     # ── Check auto-verified data first ──
@@ -9105,6 +9127,7 @@ Return ONLY the JSON object."""
             response_format={"type": "json_object"},
         )
         return response.choices[0].message.content
+
 
     if _force in _gemini_aliases:
         # Forced Gemini — no fallback.
@@ -9829,7 +9852,7 @@ Return ONLY the JSON object."""
 
     # 2026-04-28: Fee Realism Guardrail V1. Closes the systematic 3-10x under-
     # quote bug Opus 4.7 grading caught across all 4 cities of restaurant TI
-    # tests ($219 elec + $558 HVAC for an $8K-25K real fee). Per-scope sqft
+    # tests (residential trade-fee anchors leaking into commercial TI fees). Per-scope sqft
     # floors + 25 jurisdiction multipliers + trigger adders. Pure deterministic
     # logic, zero LLM calls, zero added latency. Reads result['hidden_triggers']
     # so trigger adders compose with the just-detected triggers.
@@ -9924,6 +9947,7 @@ Return ONLY the JSON object."""
     apply_rulebook_depth(result, job_type, city, state)
     sanitize_non_food_office_breakroom_text(result, job_type)
     reconcile_authoritative_result(result, v24_resolution=v24_resolution, v231_resolution=v231_resolution)
+    result.update(ensure_required_filing_rows(result, job_type, city, state))
 
     if not suppress_cache_write:
         save_cache(key, job_type, job_category, city, state, zip_code, result)

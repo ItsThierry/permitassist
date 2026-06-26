@@ -885,6 +885,8 @@ def _merge_locked_primary_permits(lock: dict[str, Any], existing_permits: Any, *
     seen = {primary_key}
     for permit in permits:
         key = _normalize_permit_name_for_dedupe(permit.get("permit_type") or permit.get("portal_selection") or permit.get("kind"))
+        if _lock_permit_name_is_generic(permit.get("permit_type") or permit.get("portal_selection") or permit.get("kind")):
+            continue
         if key and key in seen:
             continue
         if key:

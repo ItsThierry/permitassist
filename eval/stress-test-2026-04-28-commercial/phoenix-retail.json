@@ -41,12 +41,14 @@
     }
   ],
   "applying_office": "City of Phoenix Planning & Development Department (PDD)",
-  "apply_url": "https://aca-prod.accela.com/PHOENIX",
+  "apply_url": null,
+  "apply_url_status": "needs_verification",
+  "department_url": "https://www.phoenix.gov/pdd",
   "apply_pdf": null,
   "apply_phone": "(602) 262-7811",
   "apply_address": "200 W. Washington Street, 2nd Floor, Phoenix, AZ 85003",
   "apply_google_maps": "https://www.google.com/maps?q=200+W.+Washington+Street,+2nd+Floor,+Phoenix,+AZ+85003",
-  "fee_range": "Fee Estimate: $558+ combined permit base for trade-heavy work in Phoenix, plus plan review and sign permit fees; commercial TI projects commonly land around $1,500 - $6,500 in permit fees depending on valuation and scope — verify in https://www.phoenix.gov/administration/departments/pdd/tools-resources/fees.html before quoting",
+  "fee_range": "Fee Estimate: verify current Phoenix fee schedule and valuation/scope-based fees before quoting; legacy residential/trade-fee anchors are not authoritative for this scope.",
   "approval_timeline": {
     "simple": "Over-the-counter or online intake can be same day to 1-3 business days for straightforward commercial submittals if documents are complete",
     "complex": "Plan review commonly runs about 28 days for commercial tenant improvements; express review may be available for qualifying submittals"
@@ -68,7 +70,7 @@
       "timing": "After all work is complete and before occupancy or opening to the public"
     }
   ],
-  "inspection_booking": "Schedule inspections through the Phoenix Accela portal: https://aca-prod.accela.com/PHOENIX. Phoenix requires a minimum 24-hour advance notice; same-day requests are not accepted. Use the permit number in the portal to request each inspection. Phone: (602) 262-7811. Verify available inspection windows in the portal before calling.",
+  "inspection_booking": "Schedule inspections through the current Phoenix PDD filing portal: current official Phoenix PDD filing route (verify before filing). Phoenix requires a minimum 24-hour advance notice; same-day requests are not accepted. Use the permit number in the portal to request each inspection. Phone: (602) 262-7811. Verify available inspection windows in the portal before calling.",
   "license_required": "Arizona ROC-licensed contractor pulls the permit on behalf of the tenant or owner. For commercial TI work, the contractor's ROC license number must be on the application. The owner does not typically pull this permit unless specifically allowed by Phoenix and the project qualifies under owner-builder rules.",
   "city_contractor_registration": "Phoenix requires a separate City Contractor Registration in addition to the Arizona ROC license. If the contractor registration is expired or not active, the permit application can be rejected. Verify registration status and renewal before submitting any permit application.",
   "what_to_bring": [
@@ -122,7 +124,7 @@
   "zoning_hoa_flag": "Commercial tenant improvements can still be delayed by zoning, sign code, and historic district rules. Storefront signage may need separate sign review, and facade changes in a historic overlay or special district can require additional approvals. ADA path of travel upgrades may also be reviewed against site access and frontage requirements.",
   "sources": [
     "https://www.phoenix.gov/pdd",
-    "https://aca-prod.accela.com/PHOENIX",
+    "current official Phoenix PDD filing route (verify before filing)",
     "https://www.phoenix.gov/administration/departments/pdd/tools-resources/fees.html",
     "https://www.phoenix.gov/residents/residential-building-permits.html",
     "https://www.phoenix.gov/content/dam/phoenix/firesite/documents/solar%20permit%20process.pdf",

@@ -1813,12 +1813,11 @@ CRITICAL RULES:
    - If not found, provide the format: "Search Google Maps: [city] [state] building permit office"
    Never return null for apply_phone — always return something actionable.
 
-4. APPLY_URL must be a real WEB PORTAL URL (not a PDF). Examples of valid apply_url:
-   - "https://aca-prod.accela.com/PHOENIX" ✅
+4. APPLY_URL must be a real WEB PORTAL URL (not a PDF) and must come from an official/source-backed route. Examples of valid apply_url format:
    - "https://abc.austintexas.gov" ✅
    - "https://houston.gov/onlinepermitting" ✅
    - "https://city.gov/docs/permit-application.pdf" ❌ (this is a PDF — put in apply_pdf instead)
-   If only a PDF application exists, set apply_url = null and apply_pdf = [PDF URL]. If you are not certain of the exact application URL, return the city's main permit office website URL rather than null.
+   Do not invent portal URLs from memory. If you are not certain of the exact application URL, return the city's main permit office website URL and explain that the exact portal path needs verification.
 
 5. SMALL CITY HANDLING: If the city is not in your database, you MUST:
    a. Use web search results to find the actual building department
@@ -1844,9 +1843,8 @@ CRITICAL RULES:
    - "medium": state-level data, city not in KB but web search found something
    - "low": general knowledge only, city not found anywhere — tell contractor to call
 
-10. FEE PRECISION: Always give specific numbers when known. Instead of "$75-$250" say:
-    "$68 for first HVAC system, $19 for each additional (Austin 2025)" or
-    "$558 combined mechanical/electrical/building permit (Phoenix — single permit system)"
+10. FEE PRECISION: Always give specific numbers when known from current official/source-backed schedules. Instead of "$75-$250" say:
+    "$68 for first HVAC system, $19 each additional (Austin 2025)". If the only number is an old/example/template value or not clearly sourced for this exact AHJ and scope, say the fee needs verification rather than carrying the number forward.
 
 11. CONTRACTOR REGISTRATION WARNINGS: For any city that requires separate city/metro contractor registration (Nashville Metro Codes, Phoenix PDD, Dallas, Chicago, etc.), ALWAYS add to common_mistakes: "Submitting permit application without verifying current contractor registration status — an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting." Also add to pro_tips: "Check your [city] contractor registration renewal date before starting any permit application — registration lapses are the #1 avoidable rejection reason."
 

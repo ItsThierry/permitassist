@@ -626,3 +626,111 @@ def test_source_backed_result_never_keeps_not_source_backed_apply_path(tmp_path,
     assert public["apply_path"]["support_level"] != "not source-backed"
     assert public["apply_path"].get("portal_url") in (source_url, None)
     assert source_url in public.get("source_urls", [])
+
+
+def test_filing_packet_families_survive_customer_view_boundary(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    job_type = (
+        "Phoenix AZ 2400 sf taqueria/bar tenant improvement from retail to restaurant with "
+        "commercial kitchen, Type I hood with ANSUL, new subpanel, restrooms, grease "
+        "interceptor/FOG, alcohol bar service, B/M to A-2 change of occupancy"
+    )
+    result = {
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permit_required": True,
+        "apply_url": "https://aca-prod.accela.com/PHOENIX",
+        "fee_range": "$558 combined mechanical/electrical/building permit",
+        "permits_required": [{"permit_type": "Commercial Building Permit", "required": True}],
+        "checklist": [
+            "Coordinate Maricopa County food-establishment plan review.",
+            "Start liquor-license local governing body routing.",
+            "Show grease interceptor / FOG and wastewater pretreatment details.",
+            "Confirm Certificate of Occupancy / change-of-occupancy and zoning use compatibility.",
+        ],
+    }
+
+    public = server.build_customer_permit_view_model(result, job_type, "Phoenix", "AZ")
+    families = {
+        row.get("filing_family")
+        for row in public.get("permits_required") or []
+        if isinstance(row, dict)
+    }
+
+    assert {
+        "building_ti",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire_suppression",
+        "health_food_establishment",
+        "liquor_license",
+        "wastewater_pretreatment_fog",
+        "co_change_of_occupancy",
+        "planning_zoning",
+    }.issubset(families)
+    serialized = json.dumps(public, sort_keys=True).lower()
+    assert "aca-prod.accela.com/phoenix" not in serialized
+    assert "$558" not in serialized
+
+
+def test_locked_primary_generic_skip_does_not_drop_specific_trade_permits():
+    import sys
+    api_root = ROOT / "api"
+    if str(api_root) not in sys.path:
+        sys.path.insert(0, str(api_root))
+    from permit_decision import enforce_decision_cell_primary
+
+    lock = {
+        "permit_decision": "REQUIRED",
+        "permit_kind": "building",
+        "permit_name": "Permit",
+        "decision_subject": "commercial tenant improvement interior alteration",
+    }
+    result = {
+        "permit_name": "Permit",
+        "permits_required": [
+            {"permit_type": "Permit", "required": True},
+            {"permit_type": "Electrical Permit", "required": True, "filing_family": "electrical"},
+            {"permit_type": "Mechanical Permit", "required": True, "filing_family": "mechanical"},
+            {"permit_type": "Plumbing Permit", "required": True, "filing_family": "plumbing"},
+        ],
+    }
+
+    public = enforce_decision_cell_primary(result, lock, "Los Angeles", "CA", public=True)
+    names = [row.get("permit_type") for row in public.get("permits_required") or []]
+    assert "Commercial Building / Tenant Improvement Permit" in names
+    assert "Electrical Permit" in names
+    assert "Mechanical Permit" in names
+    assert "Plumbing Permit" in names
+    assert "Permit" not in names
+
+
+def test_finalize_preserves_not_required_before_and_after_reconciler(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_decision": "NOT_REQUIRED",
+        "permit_required": False,
+        "permit_verdict": "NO",
+        "not_required_reason": "Source adjudicated no permit for like-for-like minor fixture repair.",
+        "permits_required": [],
+        "sources": [{"url": "https://www.phoenix.gov/pdd", "title": "Phoenix PDD"}],
+    }
+
+    out = server.finalize_permit_lookup_result(
+        result,
+        "like-for-like low voltage thermostat fixture swap with electrical wiring words",
+        "Phoenix",
+        "AZ",
+        evidence_allowed=False,
+    )
+    public = server.build_customer_permit_view_model(
+        out,
+        "like-for-like low voltage thermostat fixture swap with electrical wiring words",
+        "Phoenix",
+        "AZ",
+    )
+
+    assert out["permit_decision"] == "NOT_REQUIRED"
+    assert public["permit_decision"] == "NOT_REQUIRED"
+    assert public.get("permits_required") in ([], None)

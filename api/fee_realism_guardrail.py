@@ -4,8 +4,8 @@ from __future__ import annotations
 
 Drafted by Forge subagent 2026-04-28 from Pass-2 deep-think analysis. Closes
 the systematic 3-10x under-quote bug Opus 4.7 grading caught across all 4
-cities of restaurant TI tests ($219 elec + $558 HVAC for a $8K-25K real
-restaurant TI fee). Per-scope sqft floors + 25 jurisdiction multipliers +
+cities of restaurant TI tests (residential trade-fee anchors leaking into a
+real restaurant TI fee). Per-scope sqft floors + 25 jurisdiction multipliers +
 trigger adders. Pure deterministic logic, zero LLM calls.
 
 Called from research_permit() after detect_hidden_triggers() and before
@@ -275,9 +275,9 @@ def extract_llm_fee_high_end(fee_text: Any) -> Optional[float]:
 
     Handles examples:
         "$8K-25K"                  -> 25000
-        "$558"                     -> 558
+        "$560"                     -> 560
         "$2,500-12,000"            -> 12000
-        "$219 elec + $558 HVAC = $777 total" -> 777
+        "$220 elec + $560 HVAC = $780 total" -> 780
         "$8.5K-14K"                -> 14000
 
     The function is intentionally permissive because fee_range is free text. It looks
@@ -555,7 +555,7 @@ def _build_fee_text(
         components.append(f"+ {_format_usd(midpoint)} {label} adder")
 
     return (
-        f"Fee planning estimate (not a quoted AHJ fee schedule): {_format_usd(low_total)}-{_format_usd(high_total)}+ "
+        f"Fee planning estimate (not a quoted AHJ fee schedule; NOT a jurisdiction-specific AHJ fee): {_format_usd(low_total)}-{_format_usd(high_total)}+ "
         f"(national-scope benchmark based on job type, not {jurisdiction_label} official fee schedule). Components: "
         f"{' '.join(components)}. "
         f"Call {jurisdiction_label} for the exact fee before bidding."

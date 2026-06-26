@@ -56,7 +56,7 @@ Selection principles:
    - Query: `4200 sqft restaurant conversion from mercantile to A-2 with Type I hood, grease interceptor, fire alarm, patio, and ADA upgrades`.
    - City/state: Phoenix, AZ.
    - Expected scope: `commercial_restaurant`.
-   - Candidate portal/application path to lock: City of Phoenix Planning & Development Department; Accela Citizen Access Phoenix; `https://aca-prod.accela.com/PHOENIX`; commercial building tenant improvement / change-of-occupancy application; companion mechanical hood, plumbing grease interceptor, electrical, fire sprinkler/fire alarm paths.
+   - Candidate filing path to verify: City of Phoenix Planning & Development Department / SHAPE PHX or current official Phoenix PDD intake path; commercial building tenant improvement / change-of-occupancy application; companion mechanical hood, plumbing grease interceptor, electrical, fire sprinkler/fire alarm paths. Do **not** treat legacy `legacy Phoenix Accela host` as an accepted portal unless a fresh official Phoenix source proves that exact route is current.
    - Must-hit triggers: B/M to A-2 change of occupancy, Type I hood/NFPA 96, grease interceptor, ADA path of travel/restrooms, fire sprinkler/fire alarm, patio zoning/ROW if applicable.
    - Hard negatives: state contractor-license page as apply URL; residential remodel; generic `building permit only`; no hood/grease/health/fire detail.
 
@@ -121,7 +121,7 @@ Selection principles:
    - Query: `urgent care clinic tenant improvement with exam rooms, x-ray shielding, medical gas, fire alarm notification devices, accessibility upgrades, plumbing and MEP work`.
    - City/state: Phoenix, AZ.
    - Expected scope: `commercial_medical_clinic_ti`.
-   - Candidate portal/application path to lock: City of Phoenix PDD; Accela Citizen Access Phoenix; `https://aca-prod.accela.com/PHOENIX`; commercial tenant improvement/building permit; plumbing/mechanical/electrical/fire alarm permits; Arizona radiation regulatory source for x-ray as supporting source.
+   - Candidate filing path to verify: City of Phoenix PDD / SHAPE PHX or current official Phoenix PDD intake path; commercial tenant improvement/building permit; plumbing/mechanical/electrical/fire alarm permits; Arizona radiation regulatory source for x-ray as supporting source. Do **not** use the legacy Phoenix Accela URL as an oracle without fresh official-source proof.
    - Must-hit triggers: urgent care/clinic occupancy implications, x-ray shielding/radiation registration, medical gas, exam sinks/plumbing, fire alarm notification appliances, ADA path of travel.
    - Hard negatives: restaurant hood/grease terms; no x-ray/medical gas handling; `health department food establishment` filler.
 
@@ -185,13 +185,13 @@ Create a separate fixture file after official-source lock, e.g. `eval/commercial
       "job_type": "4200 sqft restaurant conversion from mercantile to A-2 with Type I hood, grease interceptor, fire alarm, patio, and ADA upgrades",
       "golden": {
         "ahj": "City of Phoenix Planning & Development Department",
-        "portal_name": "Accela Citizen Access / Phoenix",
-        "apply_url_exact_or_host": "https://aca-prod.accela.com/PHOENIX",
+        "portal_name": "Current official Phoenix PDD / SHAPE PHX filing path (verify from source pack)",
+        "apply_url_exact_or_host": "needs_verification_from_current_official_source",
         "primary_application_path": "Commercial building permit / tenant improvement / change of occupancy",
         "primary_application_name_patterns": ["commercial", "tenant improvement", "change of occupancy"],
         "required_permit_families": ["building", "mechanical hood", "plumbing grease interceptor", "electrical", "fire sprinkler/fire alarm"],
         "official_sources": {
-          "portal": ["phoenix.gov", "aca-prod.accela.com/PHOENIX"],
+          "portal": ["phoenix.gov", "current official Phoenix PDD/SHAPE PHX source-pack URL only"],
           "permit_requirements": ["phoenix.gov"],
           "fees_or_plan_review": ["phoenix.gov"],
           "inspections_or_contact": ["phoenix.gov"]
