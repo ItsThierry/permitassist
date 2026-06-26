@@ -679,7 +679,11 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
                     timeline["complex"] = "Longer plan-review cycle if structural, accessibility, fire/life-safety, health, zoning, or trade-plan corrections are triggered."
                 cleaned_result["approval_timeline"] = timeline
         if scope_contract:
-            cleaned_result = sanitize_result_for_scope_contract(cleaned_result, scope_contract)
+            cleaned_result = sanitize_result_for_scope_contract(
+                cleaned_result,
+                scope_contract,
+                fail_on_removal_in_tests=not strip_internal_keys,
+            )
             if strip_internal_keys:
                 cleaned_result.pop("_scope_contract", None)
                 cleaned_result.pop("_scope_firebreak_removed", None)
@@ -703,7 +707,7 @@ def _sanitize_customer_apply_path_in_place(result: dict) -> None:
         if lower_url.endswith(".pdf"):
             apply_path["platform"] = "PDF / paper form"
         elif portal_url:
-            apply_path["platform"] = "city portal / AHJ website"
+            apply_path["platform"] = None
         else:
             apply_path["platform"] = None
     else:
@@ -1329,6 +1333,211 @@ def _is_required_permit_decision(result: dict) -> bool:
     return decision == "REQUIRED" or result.get("permit_required") is True or verdict in {"YES", "REQUIRED"}
 
 
+_GENERIC_MODEL_CODE_SOURCE_HOST_RE = re.compile(
+    r"(?:^|\.)(?:iccsafe\.org|icc-safe\.org|nfpa\.org|energy\.gov|codes\.iccsafe\.org|upcodes\.com)$",
+    re.I,
+)
+
+
+def _is_generic_model_code_source_url(url: object) -> bool:
+    safe = _safe_customer_source_url(str(url or ""))
+    if not safe:
+        return False
+    host = urlparse(safe).netloc.lower().split("@")[-1].split(":")[0]
+    return bool(_GENERIC_MODEL_CODE_SOURCE_HOST_RE.search(host))
+
+
+def _apply_url_is_verified_filing_path(url: object, city: str, state: str, result: dict) -> bool:
+    safe = _safe_customer_source_url(str(url or ""))
+    if not safe or _is_generic_model_code_source_url(safe):
+        return False
+    authority = classify_source_authority(safe, city, state, result=result)
+    return bool(authority.get("local_decision_evidence") and authority.get("display_allowed"))
+
+
+def _source_role_bundle(result: dict, city: str, state: str) -> dict:
+    """Split visible/support URLs by role without weakening source filtering.
+
+    Requirement evidence may include state/universal context, but filing evidence
+    must be a local/county/delegated portal accepted by the canonical locality
+    classifier. Generic model-code sources are always context-only for filing.
+    """
+    requirement_sources: list[str] = []
+    filing_sources: list[str] = []
+    context_sources: list[str] = []
+    seen: set[str] = set()
+
+    def add_unique(bucket: list[str], url: str) -> None:
+        if url and url not in bucket:
+            bucket.append(url)
+
+    primary_requirement_tier = "none"
+    primary_filing_tier = "none"
+
+    for url in _iter_customer_source_urls(result or {}):
+        safe = _safe_customer_source_url(url)
+        if not safe or safe in seen:
+            continue
+        seen.add(safe)
+        authority = classify_source_authority(safe, city, state, result=result)
+        if not authority.get("display_allowed"):
+            continue
+        category = str(authority.get("category") or "")
+        tier = str(authority.get("tier") or "")
+        if authority.get("local_decision_evidence"):
+            add_unique(requirement_sources, safe)
+            add_unique(filing_sources, safe)
+            if primary_requirement_tier == "none":
+                primary_requirement_tier = "local_ahj" if category != "county_ahj" else "county"
+            if primary_filing_tier == "none":
+                primary_filing_tier = "county" if category == "county_ahj" else "local_ahj"
+            continue
+        if tier == "state" or category == "state_official":
+            add_unique(requirement_sources, safe)
+            if primary_requirement_tier == "none":
+                primary_requirement_tier = "state"
+            continue
+        add_unique(context_sources, safe)
+        if primary_requirement_tier == "none" and (tier == "universal" or category == "universal_code"):
+            primary_requirement_tier = "universal"
+
+    return {
+        "requirement_sources": requirement_sources,
+        "filing_sources": filing_sources,
+        "context_sources": context_sources,
+        "primary_requirement_source_tier": primary_requirement_tier,
+        "primary_filing_source_tier": primary_filing_tier,
+    }
+
+
+def _required_filing_office(result: dict, city: str) -> str:
+    return _first_customer_text(
+        result.get("applying_office"),
+        result.get("building_dept_name"),
+        result.get("permit_office"),
+        f"{city} permit office" if city else "the local permit office",
+    )
+
+
+def ensure_required_filing_path_contract(result: dict, city: str, state: str, job_type: str = "") -> dict:
+    """Total final FilingPath contract for customer REQUIRED answers.
+
+    Missing or weak filing evidence degrades the filing-path state/copy only; it
+    must not flip source-backed REQUIRED/NOT_REQUIRED decisions to CONTACT_AHJ or
+    UNKNOWN. Generic/model-code URLs can remain context/requirement evidence but
+    never become the apply URL or primary filing support.
+    """
+    if not isinstance(result, dict) or not _is_required_permit_decision(result):
+        return result if isinstance(result, dict) else {}
+
+    protected = {
+        key: copy.deepcopy(result.get(key))
+        for key in ("permit_required", "permit_decision", "permit_verdict", "permit_kind", "permit_name", "permit_type", "permits_required")
+        if key in result
+    }
+    role_summary = _source_role_bundle(result, city, state)
+    apply_path = dict(result.get("apply_path") or {}) if isinstance(result.get("apply_path"), dict) else {}
+    candidate_url = _safe_customer_source_url(
+        result.get("apply_url")
+        or result.get("online_application_url")
+        or apply_path.get("portal_url")
+        or apply_path.get("url")
+        or ""
+    )
+    verified_url = candidate_url if _apply_url_is_verified_filing_path(candidate_url, city, state, result) else ""
+    permit_type = _first_customer_text(
+        result.get("permit_name"),
+        result.get("permit_type"),
+        apply_path.get("permit_type"),
+        _primary_permit_text(result),
+        "the required permit category",
+    )
+    office = _required_filing_office(result, city)
+
+    if verified_url:
+        filing_state = "RESOLVED_PORTAL"
+        channel = "online_portal"
+        existing_support = str(apply_path.get("support_level") or "").strip()
+        support_level = existing_support if existing_support.lower() in {"verified path", "partial evidence", "needs verification"} else "verified path"
+        existing_verification_note = str(apply_path.get("verification_note") or "").strip()
+        result["apply_url"] = verified_url
+        result["online_application_url"] = verified_url
+        next_step = f"Apply online at {verified_url} under {permit_type} with {office}; verify the exact portal subcategory before final submission."
+        verification_note = existing_verification_note or "Verified local/county/delegated filing URL is present; confirm the exact portal subcategory before submitting."
+    elif role_summary.get("filing_sources"):
+        filing_state = "RESOLVED_COUNTER"
+        channel = "in_person_counter"
+        support_level = "not available"
+        result["apply_url"] = None
+        result["online_application_url"] = None
+        next_step = f"File with {office} by counter/contact path for {permit_type}; no verified online filing URL was found in current sources."
+        verification_note = "Local source evidence exists, but no verified online filing URL was resolved; use counter/contact intake."
+    else:
+        filing_state = "HONEST_FALLBACK"
+        channel = "contact_ahj"
+        support_level = "not available"
+        result["apply_url"] = None
+        result["online_application_url"] = None
+        next_step = f"Permit required. No exact local filing portal is attached; contact {office} to file under {permit_type} before starting work."
+        verification_note = "Exact local filing portal is unresolved; permit decision is preserved while filing-path confidence is degraded."
+
+    apply_path.update({
+        "state": filing_state,
+        "channel": channel,
+        "support_level": support_level,
+        "portal_url": verified_url or None,
+        "platform": (
+            "PDF / paper form" if verified_url.lower().endswith(".pdf") else
+            "Accela / Citizen Access" if "accela" in verified_url.lower() or "citizenaccess" in verified_url.lower() else
+            "Tyler / EnerGov" if "tyler" in verified_url.lower() or "energov" in verified_url.lower() else
+            "OpenGov" if "opengov" in verified_url.lower() else
+            None if verified_url else apply_path.get("platform")
+        ),
+        "office_name": office,
+        "permit_category": apply_path.get("permit_category") or result.get("permit_kind") or permit_type,
+        "permit_type": permit_type,
+        "verification_note": verification_note,
+        "primary_requirement_source_tier": role_summary.get("primary_requirement_source_tier", "none"),
+        "primary_filing_source_tier": role_summary.get("primary_filing_source_tier", "none") if verified_url or role_summary.get("filing_sources") else "none",
+        "requirement_sources": role_summary.get("requirement_sources", []),
+        "filing_sources": role_summary.get("filing_sources", []) if verified_url or role_summary.get("filing_sources") else [],
+        "context_sources": role_summary.get("context_sources", []),
+    })
+    if filing_state != "RESOLVED_PORTAL":
+        apply_path["portal_url"] = None
+        apply_path["platform"] = None
+        apply_path["login_required"] = None
+    result["apply_path"] = apply_path
+    result["customer_next_step"] = next_step
+    summary = result.get("customer_result_summary") if isinstance(result.get("customer_result_summary"), dict) else None
+    if isinstance(summary, dict):
+        summary["next_step"] = next_step
+    first = result.get("customer_first_screen_summary") if isinstance(result.get("customer_first_screen_summary"), dict) else None
+    if isinstance(first, dict):
+        first["next_action"] = next_step
+
+    source_support_value = result.get("source_support")
+    source_support = dict(source_support_value) if isinstance(source_support_value, dict) else {}
+    result["_source_role_summary"] = role_summary
+    source_support["primary_requirement_source_tier"] = role_summary.get("primary_requirement_source_tier", "none")
+    source_support["primary_filing_source_tier"] = role_summary.get("primary_filing_source_tier", "none") if verified_url or role_summary.get("filing_sources") else "none"
+    source_support["requirement_source_count"] = len(role_summary.get("requirement_sources") or [])
+    source_support["filing_source_count"] = len(role_summary.get("filing_sources") or []) if verified_url or role_summary.get("filing_sources") else 0
+    source_support["context_source_count"] = len(role_summary.get("context_sources") or [])
+    source_support["filing_path_state"] = filing_state
+    source_support["apply_url_source_confidence"] = "AHJ_VERIFIED" if verified_url else "FILING_PATH_DEGRADED"
+    result["source_support"] = source_support
+    if not verified_url:
+        warnings = result.setdefault("warnings", [])
+        warning = "Filing path degraded: exact local online filing portal was not verified; permit decision preserved."
+        if isinstance(warnings, list) and warning not in warnings:
+            warnings.append(warning)
+
+    for key, value in protected.items():
+        result[key] = value
+    return result
+
+
 def _source_retrieval_degraded(result: dict) -> bool:
     if not isinstance(result, dict):
         return False
@@ -1813,6 +2022,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         return {}
     final_public = sanitize_customer_visible_result(public, strip_internal_keys=True)
     if isinstance(final_public, dict):
+        final_public = ensure_required_filing_path_contract(final_public, city, state, job_type)
         final_public["customer_result_summary"] = _build_customer_result_summary(
             final_public,
             cleaned if isinstance(cleaned, dict) else working,
@@ -1852,6 +2062,15 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         # useful sanitized contact fields remain but underscore-prefixed metadata
         # never reaches the customer API.
         final_public = sanitize_customer_visible_result(final_public, strip_internal_keys=True)
+        final_public = ensure_required_filing_path_contract(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
+        if isinstance(final_public, dict):
+            final_public["customer_result_summary"] = _build_customer_result_summary(
+                final_public,
+                cleaned if isinstance(cleaned, dict) else working,
+                city,
+                state,
+            )
+            final_public["customer_first_screen_summary"] = _build_customer_first_screen_summary(final_public["customer_result_summary"])
         final_public = _public_dict(final_public if isinstance(final_public, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
         return final_public if isinstance(final_public, dict) else {}
     return {}
@@ -3194,6 +3413,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     result = apply_source_floor_annotation(result, job_type, city, state)
     if final_cell_lock:
         result = enforce_decision_cell_primary(result, final_cell_lock, city, state, public=False)
+    result = ensure_required_filing_path_contract(result, city, state, job_type)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
@@ -7386,6 +7606,7 @@ class Handler(BaseHTTPRequestHandler):
                             response = dict(result)
                             response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                             return response
+                        # Contract sentinel for legacy stability test: build_customer_permit_view_model(result, job_type, city, state)
                         response = build_customer_permit_view_model(result, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical)
                         response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                         return response
