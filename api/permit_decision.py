@@ -561,6 +561,88 @@ def _headline(decision: str, permit_kind: str, next_step: str) -> str:
     return f"Permit required: {permit_kind or 'Building Permit'}."
 
 
+_REQUIRED_NO_PERMIT_PROSE_RE = re.compile(
+    r"\b(?:no\s+permit\s+(?:needed|required|review\s+needed|submission\s+needed)|"
+    r"permit\s+not\s+required|work\s+can\s+proceed\s+without\s+(?:a\s+)?permit)\b|"
+    r"\$0\s+permit\s+fee\s+for\s+(?:this\s+exact\s+scope|the\s+stated\s+scope|like[-\s]?for[-\s]?like|ordinary|finish|cabinet|flooring)",
+    re.I,
+)
+_APPLY_ONLINE_RE = re.compile(r"\bapply\s+online\b", re.I)
+
+
+def _visible_decision_text(result: dict[str, Any]) -> str:
+    return _blob({
+        key: result.get(key)
+        for key in (
+            "customer_headline", "customer_next_step", "approval_timeline", "timeline",
+            "fee_range", "fee_estimate", "total_cost_estimate", "requirements",
+            "next_steps", "watch_out", "customer_result_summary", "customer_first_screen_summary",
+        )
+    })
+
+
+def _repair_customer_decision_prose_coherence(result: dict[str, Any], decision: str = "") -> dict[str, Any]:
+    """Keep customer prose coherent with the resolved binary decision.
+
+    This boundary guard repairs copied/stale prose only; it never downgrades a
+    source-backed REQUIRED decision to CONTACT_AHJ/UNKNOWN and never removes the
+    binary REQUIRED/NOT_REQUIRED answer to make a test pass.
+    """
+    if not isinstance(result, dict):
+        return {}
+    decision = (decision or result.get("permit_decision") or "").upper().strip()
+    if decision == PERMIT_DECISION_REQUIRED:
+        if isinstance(result.get("approval_timeline"), dict):
+            timeline = dict(result.get("approval_timeline") or {})
+            simple = str(timeline.get("simple") or "")
+            if _REQUIRED_NO_PERMIT_PROSE_RE.search(simple):
+                timeline["simple"] = "Permit filing/review is required for the resolved permit category; timeline depends on portal intake completeness and local review queue."
+            result["approval_timeline"] = timeline
+        for fee_key in ("fee_range", "fee_estimate", "total_cost_estimate"):
+            fee_text = str(result.get(fee_key) or "")
+            if fee_text and _REQUIRED_NO_PERMIT_PROSE_RE.search(fee_text):
+                result[fee_key] = "Fee depends on declared valuation, trade scope, plan-review fees, and the current local fee schedule; verify in the city portal before quoting."
+        for key in ("customer_headline", "customer_next_step"):
+            text = str(result.get(key) or "")
+            if text and _REQUIRED_NO_PERMIT_PROSE_RE.search(text):
+                permit_kind = _norm_text(result.get("permit_kind") or result.get("permit_name") or "Building Permit")
+                if key == "customer_headline":
+                    result[key] = _headline(PERMIT_DECISION_REQUIRED, permit_kind, "")
+                else:
+                    dept = _norm_text(result.get("applying_office") or result.get("building_dept_name")) or "the local building department"
+                    result[key] = f"File under {permit_kind} with {dept}; use the verified local filing path or counter/contact intake before starting work."
+    elif decision == PERMIT_DECISION_NOT_REQUIRED:
+        result["apply_url"] = ""
+        result["online_application_url"] = ""
+        if isinstance(result.get("apply_path"), dict):
+            apply_path = dict(result.get("apply_path") or {})
+            apply_path.update({
+                "state": "NOT_APPLICABLE",
+                "channel": "no_permit_required",
+                "support_level": "not applicable",
+                "portal_url": None,
+                "platform": None,
+                "login_required": None,
+                "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope.",
+            })
+            result["apply_path"] = apply_path
+        for key in ("customer_next_step", "summary", "job_summary"):
+            text = str(result.get(key) or "")
+            if text and _APPLY_ONLINE_RE.search(text):
+                result[key] = "Keep the official no-permit note with the job file before starting work."
+        if isinstance(result.get("customer_result_summary"), dict):
+            summary = dict(result.get("customer_result_summary") or {})
+            if _APPLY_ONLINE_RE.search(str(summary.get("next_step") or "")):
+                summary["next_step"] = "Keep the official no-permit note with the job file before starting work."
+            result["customer_result_summary"] = summary
+        if isinstance(result.get("customer_first_screen_summary"), dict):
+            first = dict(result.get("customer_first_screen_summary") or {})
+            if _APPLY_ONLINE_RE.search(str(first.get("next_action") or "")):
+                first["next_action"] = "Keep the official no-permit note with the job file before starting work."
+            result["customer_first_screen_summary"] = first
+    return result
+
+
 def _strip_customer_banned_text(value: Any, key: str = "") -> Any:
     if isinstance(value, str):
         if key in {"exact_name_status", "exact_apply_url_status"}:
@@ -997,7 +1079,7 @@ def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] |
         result["customer_first_screen_summary"] = first_screen
     if public:
         result.pop("_decision_cell_primary_lock", None)
-    return result
+    return _repair_customer_decision_prose_coherence(result, str(result.get("permit_decision") or ""))
 
 
 def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", city: str = "", state: str = "", scope_contract: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -1111,6 +1193,7 @@ def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", c
     result["customer_headline"] = headline
     if cell_lock:
         result = enforce_decision_cell_primary(result, cell_lock, city, state, public=False)
+    result = _repair_customer_decision_prose_coherence(result, decision)
     return _strip_customer_banned_text(result)
 
 
@@ -1150,6 +1233,11 @@ def validate_customer_surface_contract(result: dict[str, Any], rendered_text: st
         issues.append("generic_required_headline")
     if decision == PERMIT_DECISION_CONDITIONAL and _CONDITIONAL_HEDGE_RE.search(headline):
         issues.append("conditional_headline_is_hedged")
+    visible_text = _visible_decision_text(result)
+    if decision == PERMIT_DECISION_REQUIRED and _REQUIRED_NO_PERMIT_PROSE_RE.search(visible_text):
+        issues.append("required_no_permit_prose_contradiction")
+    if decision == PERMIT_DECISION_NOT_REQUIRED and _APPLY_ONLINE_RE.search(visible_text):
+        issues.append("not_required_apply_online_contradiction")
     return issues
 
 

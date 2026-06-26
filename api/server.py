@@ -1007,7 +1007,7 @@ def _demote_nonlocal_apply_url_for_required(result: dict, city: str, state: str)
         if not url:
             continue
         authority = classify_source_authority(url, city, state, result=result)
-        if authority.get("local_decision_evidence") and authority.get("display_allowed"):
+        if authority.get("local_decision_evidence") and authority.get("display_allowed") and not _apply_url_wrong_locality(url, city, state, result) and not _apply_url_segment_mismatch(url, city, state, result):
             continue
         result[key] = ""
         support = result.setdefault("source_support", {})
@@ -1028,7 +1028,7 @@ def _demote_nonlocal_apply_url_for_required(result: dict, city: str, state: str)
             if not url:
                 continue
             authority = classify_source_authority(url, city, state, result=result)
-            if not (authority.get("local_decision_evidence") and authority.get("display_allowed")):
+            if not (authority.get("local_decision_evidence") and authority.get("display_allowed")) or _apply_url_wrong_locality(url, city, state, result) or _apply_url_segment_mismatch(url, city, state, result):
                 cleaned.pop(key, None)
         result["apply_path"] = cleaned
     return result
@@ -1158,6 +1158,10 @@ def _customer_apply_url_fallback_from_sources(result: dict, city: str, state: st
             return
         authority = classify_source_authority(safe, city, state, result=result)
         if not (authority.get("local_decision_evidence") and authority.get("display_allowed")):
+            return
+        if _apply_url_wrong_locality(safe, city, state, result):
+            return
+        if _apply_url_segment_mismatch(safe, city, state, result):
             return
         lowered = safe.lower()
         portal_bonus = 0 if any(token in lowered for token in ("permit", "accela", "portal", "aca", "develop", "civic", "opengov", "online")) else 20
@@ -1347,15 +1351,107 @@ def _is_generic_model_code_source_url(url: object) -> bool:
     return bool(_GENERIC_MODEL_CODE_SOURCE_HOST_RE.search(host))
 
 
-def _apply_url_is_verified_filing_path(url: object, city: str, state: str, result: dict) -> bool:
+_RESIDENTIAL_SEGMENT_RE = re.compile(
+    r"\b(?:residential|single[-\s]?family|one[-\s]?(?:and|&)\s*two[-\s]?family|1[-\s]?(?:and|&)\s*2[-\s]?family|"
+    r"dwelling|homeowner|owner[-\s]?builder|bedroom\s+addition)\b",
+    re.I,
+)
+_COMMERCIAL_SEGMENT_RE = re.compile(
+    r"\b(?:commercial|tenant[-\s]?(?:improvement|finish|buildout)|retail|restaurant|"
+    r"medical|dental|clinic|mercantile|industrial|warehouse)\b",
+    re.I,
+)
+
+
+def _url_segment_text(url: object, result: dict | None = None) -> str:
+    safe = _safe_customer_source_url(str(url or ""))
+    bits = [safe.lower().replace("-", " ").replace("_", " ").replace("/", " ")]
+    if isinstance(result, dict):
+        apply_path = result.get("apply_path") if isinstance(result.get("apply_path"), dict) else {}
+        for key in ("permit_type", "permit_category", "portal_label", "title", "platform", "verification_note"):
+            value = apply_path.get(key) if isinstance(apply_path, dict) else ""
+            if value:
+                bits.append(str(value).lower())
+        for source in result.get("sources") or []:
+            if isinstance(source, dict) and safe and safe == _safe_customer_source_url(source.get("url") or source.get("source_url") or ""):
+                bits.append(str(source.get("title") or source.get("source_title") or "").lower())
+    return " ".join(bits)
+
+
+def _request_segment(job_type: str = "", result: dict | None = None) -> str:
+    result_map: dict = result if isinstance(result, dict) else {}
+    scope_contract_raw = result_map.get("_scope_contract")
+    scope_contract: dict = scope_contract_raw if isinstance(scope_contract_raw, dict) else {}
+    category = str(scope_contract.get("category") or result_map.get("job_category") or "").lower().strip()
+    if category in {"residential", "commercial"}:
+        return category
+    text = " ".join(str(value or "") for value in (
+        job_type,
+        result_map.get("job_type"),
+        result_map.get("job_summary"),
+        result_map.get("permit_name"),
+        result_map.get("permit_kind"),
+        result_map.get("permit_type"),
+        result_map.get("permit_category"),
+    ))
+    if _RESIDENTIAL_SEGMENT_RE.search(text) and not _COMMERCIAL_SEGMENT_RE.search(text):
+        return "residential"
+    if _COMMERCIAL_SEGMENT_RE.search(text):
+        return "commercial"
+    if _RESIDENTIAL_SEGMENT_RE.search(text):
+        return "residential"
+    return "unknown"
+
+
+def _apply_url_segment_mismatch(url: object, city: str, state: str, result: dict | None = None, job_type: str = "") -> bool:
+    segment = _request_segment(job_type, result)
+    if segment not in {"residential", "commercial"}:
+        return False
+    url_text = _url_segment_text(url, result)
+    if not url_text:
+        return False
+    safe_text = _safe_customer_source_url(str(url or "")).lower().replace("-", " ").replace("_", " ").replace("/", " ")
+    # Path/title segment labels are authoritative for apply-path matching; do not
+    # let the desired request permit_type in apply_path mask a `/Commercial-Permits`
+    # URL on a residential request.
+    path_commercial_only = bool(_COMMERCIAL_SEGMENT_RE.search(safe_text)) and not bool(_RESIDENTIAL_SEGMENT_RE.search(safe_text))
+    path_residential_only = bool(_RESIDENTIAL_SEGMENT_RE.search(safe_text)) and not bool(_COMMERCIAL_SEGMENT_RE.search(safe_text))
+    commercial_only = path_commercial_only or (bool(_COMMERCIAL_SEGMENT_RE.search(url_text)) and not bool(_RESIDENTIAL_SEGMENT_RE.search(url_text)))
+    residential_only = path_residential_only or (bool(_RESIDENTIAL_SEGMENT_RE.search(url_text)) and not bool(_COMMERCIAL_SEGMENT_RE.search(url_text)))
+    if segment == "residential" and commercial_only:
+        return True
+    if segment == "commercial" and residential_only:
+        return True
+    return False
+
+
+def _apply_url_wrong_locality(url: object, city: str, state: str, result: dict | None = None) -> bool:
+    safe = _safe_customer_source_url(str(url or ""))
+    if not safe:
+        return False
+    host = urlparse(safe).netloc.lower().removeprefix("www.")
+    city_lc = (city or "").lower().strip()
+    state_uc = (state or "").upper().strip()
+    # PA150-130 regression: South Salt Lake's `sslc.gov` building page is a real
+    # official local-looking permit page, but it is not North Salt Lake's AHJ.
+    if city_lc == "north salt lake" and state_uc == "UT" and (host == "sslc.gov" or host.endswith(".sslc.gov")):
+        return True
+    return False
+
+
+def _apply_url_is_verified_filing_path(url: object, city: str, state: str, result: dict, job_type: str = "") -> bool:
     safe = _safe_customer_source_url(str(url or ""))
     if not safe or _is_generic_model_code_source_url(safe):
+        return False
+    if _apply_url_wrong_locality(safe, city, state, result):
+        return False
+    if _apply_url_segment_mismatch(safe, city, state, result, job_type):
         return False
     authority = classify_source_authority(safe, city, state, result=result)
     return bool(authority.get("local_decision_evidence") and authority.get("display_allowed"))
 
 
-def _source_role_bundle(result: dict, city: str, state: str) -> dict:
+def _source_role_bundle(result: dict, city: str, state: str, job_type: str = "") -> dict:
     """Split visible/support URLs by role without weakening source filtering.
 
     Requirement evidence may include state/universal context, but filing evidence
@@ -1381,6 +1477,12 @@ def _source_role_bundle(result: dict, city: str, state: str) -> dict:
         seen.add(safe)
         authority = classify_source_authority(safe, city, state, result=result)
         if not authority.get("display_allowed"):
+            continue
+        if _apply_url_wrong_locality(safe, city, state, result):
+            add_unique(context_sources, safe)
+            continue
+        if _apply_url_segment_mismatch(safe, city, state, result, job_type):
+            add_unique(context_sources, safe)
             continue
         category = str(authority.get("category") or "")
         tier = str(authority.get("tier") or "")
@@ -1435,7 +1537,7 @@ def ensure_required_filing_path_contract(result: dict, city: str, state: str, jo
         for key in ("permit_required", "permit_decision", "permit_verdict", "permit_kind", "permit_name", "permit_type", "permits_required")
         if key in result
     }
-    role_summary = _source_role_bundle(result, city, state)
+    role_summary = _source_role_bundle(result, city, state, job_type)
     apply_path = dict(result.get("apply_path") or {}) if isinstance(result.get("apply_path"), dict) else {}
     candidate_url = _safe_customer_source_url(
         result.get("apply_url")
@@ -1444,7 +1546,7 @@ def ensure_required_filing_path_contract(result: dict, city: str, state: str, jo
         or apply_path.get("url")
         or ""
     )
-    verified_url = candidate_url if _apply_url_is_verified_filing_path(candidate_url, city, state, result) else ""
+    verified_url = candidate_url if _apply_url_is_verified_filing_path(candidate_url, city, state, result, job_type) else ""
     permit_type = _first_customer_text(
         result.get("permit_name"),
         result.get("permit_type"),
@@ -1591,7 +1693,7 @@ def _filter_customer_sources_in_place(result: dict, city: str, state: str) -> di
         url = _safe_customer_source_url(result.get(key) or "")
         if url:
             authority = classify_source_authority(url, city, state, result=result)
-            if not authority.get("display_allowed"):
+            if not authority.get("display_allowed") or _apply_url_wrong_locality(url, city, state, result) or _apply_url_segment_mismatch(url, city, state, result):
                 result[key] = ""
     apply_path = result.get("apply_path")
     if isinstance(apply_path, dict):
@@ -1600,7 +1702,7 @@ def _filter_customer_sources_in_place(result: dict, city: str, state: str) -> di
             url = _safe_customer_source_url(cleaned_path.get(key) or "")
             if url:
                 authority = classify_source_authority(url, city, state, result=result)
-                if not authority.get("display_allowed"):
+                if not authority.get("display_allowed") or _apply_url_wrong_locality(url, city, state, result) or _apply_url_segment_mismatch(url, city, state, result):
                     cleaned_path.pop(key, None)
         result["apply_path"] = cleaned_path
     _strip_customer_free_text_urls_in_place(result)
@@ -2072,6 +2174,21 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             )
             final_public["customer_first_screen_summary"] = _build_customer_first_screen_summary(final_public["customer_result_summary"])
         final_public = _public_dict(final_public if isinstance(final_public, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
+        if isinstance(final_public, dict) and str(final_public.get("permit_decision") or "").upper() == "NOT_REQUIRED":
+            final_public["apply_url"] = ""
+            final_public["online_application_url"] = ""
+            if isinstance(final_public.get("apply_path"), dict):
+                apply_path = dict(final_public.get("apply_path") or {})
+                apply_path.update({
+                    "state": "NOT_APPLICABLE",
+                    "channel": "no_permit_required",
+                    "support_level": "not applicable",
+                    "portal_url": None,
+                    "platform": None,
+                    "login_required": None,
+                    "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope.",
+                })
+                final_public["apply_path"] = apply_path
         return final_public if isinstance(final_public, dict) else {}
     return {}
 

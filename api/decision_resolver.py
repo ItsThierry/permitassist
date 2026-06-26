@@ -125,9 +125,14 @@ _KIND_TO_PERMIT_NAME = {
 }
 
 _TRIVIAL_NOT_REQUIRED_RE = re.compile(
-    r"\b(?:paint|painting|cosmetic|carpet|flooring|replace\s+flooring|cabinet\s+hardware|"
-    r"like[-\s]?for[-\s]?like\s+fixture\s+trim|non[-\s]?structural\s+cosmetic|"
-    r"no\s+(?:structural|electrical|plumbing|mechanical|mep|layout|occupancy|exterior)\s+(?:work|changes?))\b",
+    r"\b(?:paint|painting|repaint|cosmetic|cosmetic\s+repair|"
+    r"patch\s+drywall|drywall\s+patch|drywall\s+repair|"
+    r"carpet|flooring|finish\s+flooring|floating\s+laminate|replace\s+flooring|"
+    r"(?:replace|replacing|replacement\s+of)\s+(?:kitchen\s+)?cabinets?|"
+    r"(?:kitchen\s+)?cabinets?\s+(?:replacement|like[-\s]?for[-\s]?like)|"
+    r"cabinet\s+hardware|like[-\s]?for[-\s]?like\s+(?:cabinet|fixture|trim)|"
+    r"non[-\s]?structural\s+cosmetic|"
+    r"no\s+(?:(?:subfloor|floor|flooring|wall|walls|building|mep|trade|trades|layout)\s+){0,3}(?:structural|electrical|plumbing|mechanical|mep|layout|occupancy|exterior)\s+(?:work|changes?))\b",
     re.I,
 )
 
@@ -146,9 +151,10 @@ _EXPLICIT_NO_TRADE_OR_STRUCTURAL_RE = re.compile(
 
 _NEGATED_WORK_CLAUSE_RE = re.compile(
     r"\b(?:no|without|not)\s+(?:new\s+)?"
+    r"(?:(?:subfloor|floor|flooring|wall|walls|building|mep|trade|trades|layout)\s+){0,3}"
     r"(?:(?:and\s+|or\s+)?(?:structural|electrical|electric|plumbing|mechanical|hvac|mep|layout|occupancy|exterior|wall|walls|trade|trades|fire(?:\s+alarm|\s+sprinkler)?|signage|sign)"
     r"\s*(?:,|/|\band\b|\bor\b)?\s*)+"
-    r"(?:work|changes?|scope|included|modifications?)?\b",
+    r"(?:work|changes?|scope|included|modifications?|relocation|repair)?\b",
     re.I,
 )
 
@@ -448,13 +454,16 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
         and (explicit_no_trade_or_structural or not has_affirmative_trade_or_structural)
         and not has_affirmative_trade_or_structural
     )
+    source_backed_exemption_evidence = bool(result.get("positive_exemption_evidence") or result.get("exemption_evidence")) and _has_official_source(result)
+    not_required_allowed_for_segment = (not commercial_default) or source_backed_exemption_evidence
     source_adjudicated_not_required_reason = _source_adjudicated_not_required_reason(city, state, job_text)
     explicit_not_required = supplied_decision == PERMIT_DECISION_NOT_REQUIRED or supplied_required is False or supplied_verdict in {"NO", "NOT_REQUIRED"}
 
     # Only honor NOT_REQUIRED when the current scope is genuinely trivial/cosmetic
     # or an upstream source/rule explicitly classified it as NOT_REQUIRED. Legacy
-    # UNKNOWN/FAIL_CLOSED/null never survive this boundary.
-    if (source_adjudicated_not_required_reason and not commercial_default) or trivial_not_required or (explicit_not_required and not _has_affirmative_structural_or_trade(scope_text) and not commercial_default):
+    # UNKNOWN/FAIL_CLOSED/null never survive this boundary. Commercial scopes need
+    # source-backed exemption evidence; cosmetic defaults alone are residential-only.
+    if (source_adjudicated_not_required_reason and not_required_allowed_for_segment) or (trivial_not_required and not_required_allowed_for_segment) or (explicit_not_required and not _has_affirmative_structural_or_trade(scope_text) and not_required_allowed_for_segment):
         decision = PERMIT_DECISION_NOT_REQUIRED
         kinds: list[str] = []
         permit_names: list[str] = []
