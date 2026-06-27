@@ -3094,9 +3094,11 @@ function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
 // ── Render Results ───────────────────────────────────────────────────────────
 function getPermitDisplayName(d) {
   const permits = d.permits_required || [];
+  const requiredNames = Array.isArray(d.required_permit_names) ? d.required_permit_names.filter(Boolean) : [];
+  if (requiredNames.length > 1) return d.permit_name || d.required_permit_summary || `Multiple permits required: ${requiredNames.join(' + ')}`;
   return (permits.length > 0 && permits[0].portal_selection)
     ? permits[0].portal_selection
-    : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
+    : (d.permit_name || d.permit_type || (permits[0] && permits[0].permit_type) || 'the required permit');
 }
 
 function getJurisdictionDisplay(d, city, state, jobAddress) {
@@ -3363,20 +3365,38 @@ function renderResults(d, job, city, state) {
 
   // Summary card (for YES/MAYBE)
   if (verdict !== 'no') {
-    const portalSel = permits.length > 0 ? permits[0].portal_selection : null;
-    const exactPermitName = portalSel || d.permit_name || d.permit_type || permits[0]?.permit_type || 'Permit details';
+    const requiredPermits = permits.filter(p => p && p.required !== false);
+    const requiredPermitNames = (d.required_permit_names && d.required_permit_names.length)
+      ? d.required_permit_names
+      : requiredPermits.map(p => p.permit_type || p.approval_type || p.portal_selection).filter(Boolean);
+    const requiredPermitFamilies = (d.required_permit_families && d.required_permit_families.length)
+      ? d.required_permit_families
+      : requiredPermits.map(p => p.display_family || p.kind || '').filter(Boolean);
+    const isMultiPermit = requiredPermitNames.length > 1;
+    const portalSel = !isMultiPermit && requiredPermits.length > 0 ? requiredPermits[0].portal_selection : null;
+    const exactPermitName = isMultiPermit
+      ? (d.permit_name || `Multiple permits required: ${requiredPermitFamilies.join(' + ') || requiredPermitNames.join(' + ')}`)
+      : (portalSel || d.permit_name || d.permit_type || requiredPermits[0]?.permit_type || 'Permit details');
     html += `<div class="summary-card">
       <div class="section-label">📋 Permit Details</div>
       <div class="verdict-pill ${verdict==='yes'?'verdict-yes':'verdict-maybe'}">${verdict==='yes'?'✅ YES — Permit Required':'⚠️ MAYBE — Check With Building Dept'}</div>
       <div class="permit-name-big">${esc(exactPermitName)}</div>`;
-    if (portalSel && (d.permit_name || d.permit_type || permits[0]?.permit_type) && portalSel !== (d.permit_name || d.permit_type || permits[0]?.permit_type)) {
-      html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">Also known as: ${esc(d.permit_name || d.permit_type || permits[0]?.permit_type)}</div>`;
+    const sameRowAlias = !isMultiPermit && portalSel && requiredPermits[0]?.permit_type && portalSel !== requiredPermits[0].permit_type
+      ? requiredPermits[0].permit_type
+      : '';
+    if (sameRowAlias) {
+      html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">Also listed as: ${esc(sameRowAlias)}</div>`;
     }
-    html += `<div class="big-meta">${esc(d.job_summary || d.permit_summary || d.summary || d.notes || 'Review the details below before starting the job.')}</div>`;
+    html += `<div class="big-meta">${esc(d.required_permit_summary || d.job_summary || d.permit_summary || d.summary || d.notes || 'Review the details below before starting the job.')}</div>`;
     if (fee) {
       html += `<div class="big-price">${esc(fee)}</div><div class="fee-context">— typically added to job invoice</div>`;
     }
-    if (portalSel) {
+    if (isMultiPermit && requiredPermitNames.length) {
+      html += `<div class="portal-select-box">
+        <div class="portal-select-label">🎯 Permit categories to file</div>
+        ${requiredPermitNames.map(name => `<div class="portal-select-value" style="margin-top:4px">${esc(name)}</div>`).join('')}
+      </div>`;
+    } else if (portalSel) {
       html += `<div class="portal-select-box">
         <div class="portal-select-label">🎯 Permit name to ask for</div>
         <div class="portal-select-value">${esc(portalSel)}</div>
@@ -3400,11 +3420,15 @@ function renderResults(d, job, city, state) {
 
   // How to Apply card (replaces misleading "Apply Online" button)
   if (verdict !== 'no') {
-    const portalName = (permits.length > 0 && permits[0].portal_selection) ? permits[0].portal_selection : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
+    const howToRequiredNames = Array.isArray(d.required_permit_names) ? d.required_permit_names.filter(Boolean) : [];
+    const howToMultiPermit = howToRequiredNames.length > 1;
+    const portalName = howToMultiPermit
+      ? howToRequiredNames.join(' · ')
+      : ((permits.length > 0 && permits[0].portal_selection) ? permits[0].portal_selection : (d.permit_name || d.permit_type || (permits[0] && permits[0].permit_type) || 'the required permit'));
     const cityName = city || 'your city';
     html += `<div class="how-to-apply-card">`;
     html += `<div class="section-label">📝 How to Apply</div>`;
-    html += `<div class="apply-permit-name"><div class="label">Ask for this permit</div><div class="value">${esc(portalName)}</div></div>`;
+    html += `<div class="apply-permit-name"><div class="label">${howToMultiPermit ? 'Permit categories to file' : 'Ask for this permit'}</div><div class="value">${esc(portalName)}</div></div>`;
     html += `<ol class="apply-steps">`;
     html += `<li>Go to the <strong>${esc(cityName)}</strong> building department website or visit in person</li>`;
     html += `<li>Search for or ask about <strong>"${esc(portalName)}"</strong></li>`;

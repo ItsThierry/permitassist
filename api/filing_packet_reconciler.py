@@ -646,8 +646,9 @@ def _new_row(family_id: str, signals: list[FilingSignal], city: str, state: str,
         "source_url": prov["source_url"] or None,
         "notes": (
             f"{decision.replace('_', ' ').title()} because the described scope triggers "
-            f"{family.label}. Exact online apply path is metadata; if not verified, keep this row visible and verify routing before filing."
+            f"{family.label}. Confirm the exact portal category with the listed permit office before filing."
         ),
+        # Internal provenance for audits only; customer serializers strip it.
         "provenance": "universal_filing_packet_reconciler",
     }
     return {k: v for k, v in row.items() if v not in (None, "", [], {})}

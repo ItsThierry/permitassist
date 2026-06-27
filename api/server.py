@@ -520,6 +520,10 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         "resolver",
         "source metadata",
         "customerdecisiondto",
+        "exact online apply path is metadata",
+        "keep this row visible",
+        "if not verified",
+        "universal_filing_packet_reconciler",
     )
     fee_internal_terms = (
         "jurisdiction multiplier",
@@ -538,6 +542,9 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         "exact_name_status", "permit_ready_score", "debug_trace", "provider_metadata",
         "retrieval_diagnostics", "raw_retrieval", "search_debug", "scoring_debug",
         "source_metadata", "decision_cell", "cell_id", "resolver", "customerdecisiondto",
+        "provenance", "trigger_signal_ids", "derived_from", "_filing_packet_reconciler",
+        "_filing_packet_reconciler_version", "_cache_schema_version",
+        "apply_url_status", "source_status", "row_category", "ahj_type",
         "_v24_resolution_status", "_v24_cell_id", "_v24_resolver_version",
     }
     primary_scope = str(result.get("_primary_scope") or "").strip().lower()
@@ -780,6 +787,7 @@ _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
     "apply_address", "apply_google_maps", "apply_url", "apply_path", "online_application_url",
     "source_urls", "sources", "claim_citations", "warnings", "disclaimer",
     "permit_routing_map", "permit_authority_cards", "jurisdiction_routing_summary",
+    "required_permit_names", "required_permit_families", "required_permit_summary",
     "city_contractor_registration",
     "zoning_hoa_flag", "remaining_lookups", "_cached",
 })
@@ -1826,6 +1834,10 @@ def _build_customer_result_summary(public: dict, source: dict, city: str, state:
     first_source = sources[0] if sources else {}
     source_title = _customer_summary_text(first_source.get("title"))
     source_cue = f"Official source: {source_title}" if source_title else "Official source path not published in this result"
+    required_families = public.get("required_permit_families") if isinstance(public.get("required_permit_families"), list) else []
+    required_families = required_families or []
+    if len(required_families) > 1 and sources:
+        source_cue = f"Official sources attached for {len(required_families)} required permit categories."
 
     next_step = _first_customer_text(
         public.get("customer_next_step"),
@@ -1850,7 +1862,7 @@ def _build_customer_result_summary(public: dict, source: dict, city: str, state:
     return {
         "permit_decision": _first_customer_text(public.get("permit_decision"), source.get("permit_decision"), resolved.get("permit_decision"), "REQUIRED"),
         "permit_kind": _first_customer_text(public.get("permit_kind"), source.get("permit_kind"), public.get("permit_type"), resolved.get("permit_kind"), "Building"),
-        "permit_name": _first_customer_text(public.get("permit_name"), source.get("permit_name"), resolved.get("permit_name")),
+        "permit_name": _first_customer_text(public.get("required_permit_summary"), public.get("permit_name"), source.get("permit_name"), resolved.get("permit_name")),
         "ahj_department": ahj_department,
         "next_step": next_step,
         "timeline": timeline,
@@ -1873,6 +1885,99 @@ def _build_customer_first_screen_summary(summary: dict) -> dict:
     }
 
 
+_PUBLIC_PERMIT_FAMILY_ORDER = {
+    "Building": 10,
+    "Electrical": 20,
+    "Mechanical": 30,
+    "Refrigeration": 40,
+    "Plumbing": 50,
+    "Fire": 60,
+    "Health": 70,
+    "Planning/Zoning": 80,
+    "Other": 999,
+}
+
+
+def _public_permit_family(row: dict) -> str:
+    text = " ".join(str(row.get(k) or "") for k in ("filing_family", "permit_type", "approval_type", "portal_selection", "kind", "name")).lower()
+    if "refrigeration" in text:
+        return "Refrigeration"
+    if "electrical" in text or "electric" in text:
+        return "Electrical"
+    if "mechanical" in text or "hvac" in text or "heat pump" in text or "mini-split" in text or "mini split" in text or "condenser" in text:
+        return "Mechanical"
+    if "plumbing" in text or "water heater" in text or "gas piping" in text:
+        return "Plumbing"
+    if "fire" in text or "sprinkler" in text or "alarm" in text:
+        return "Fire"
+    if "health" in text or "food" in text:
+        return "Health"
+    if "planning" in text or "zoning" in text or "land use" in text:
+        return "Planning/Zoning"
+    if "building" in text or "tenant improvement" in text or "construction" in text:
+        return "Building"
+    return "Other"
+
+
+def _normalize_public_required_permit_package(public: dict, city: str = "") -> dict:
+    """Final customer-boundary normalizer for multi-permit packages.
+
+    Keeps per-row permit families self-consistent and gives all renderers an
+    explicit multi-permit summary so UI code does not have to infer the answer
+    from permits_required[0] or mix a row portal label with a global permit_name.
+    """
+    if not isinstance(public, dict):
+        return {}
+    rows = [dict(p) for p in public.get("permits_required") or [] if isinstance(p, dict) and p.get("required") is not False]
+    if not rows:
+        return public
+
+    normalized: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for row in rows:
+        family = _public_permit_family(row)
+        # Row kind must describe the row itself, not the lookup's primary/global kind.
+        if family != "Other" and str(row.get("kind") or "").strip() != family:
+            row["kind"] = family
+        if family != "Other" and not row.get("display_family"):
+            row["display_family"] = family
+        key_name = str(row.get("permit_type") or row.get("approval_type") or row.get("portal_selection") or family).strip()
+        key = (family, key_name.lower())
+        if key not in seen:
+            seen.add(key)
+            normalized.append(row)
+
+    normalized.sort(key=lambda p: (_PUBLIC_PERMIT_FAMILY_ORDER.get(str(p.get("display_family") or p.get("kind") or "Other"), 999), str(p.get("permit_type") or "")))
+    public["permits_required"] = normalized
+    families = []
+    names = []
+    for row in normalized:
+        family = str(row.get("display_family") or row.get("kind") or _public_permit_family(row)).strip()
+        name = str(row.get("permit_type") or row.get("approval_type") or row.get("portal_selection") or family).strip()
+        if family and family not in families:
+            families.append(family)
+        if name and name not in names:
+            names.append(name)
+
+    public["required_permit_families"] = families
+    public["required_permit_names"] = names
+    if len(normalized) > 1:
+        family_label = " + ".join(families[:5])
+        names_label = "; ".join(names[:6])
+        summary = f"Multiple permits required: {names_label}."
+        public["required_permit_summary"] = summary
+        existing_kind = str(public.get("permit_kind") or "")
+        if "commercial building" not in existing_kind.lower() and "tenant improvement" not in existing_kind.lower():
+            public["permit_kind"] = "Multiple permits"
+        public["permit_name"] = f"Multiple permits required: {family_label}"
+        public["permit_type"] = public.get("permit_name")
+        public["customer_headline"] = f"Permit required: multiple permits — {family_label}."
+        public["job_summary"] = summary
+        office = _customer_summary_text(public.get("applying_office") or public.get("building_dept_name") or city or "the listed permit office")
+        public["customer_next_step"] = f"File each required permit category with {office}: {names_label}. Confirm exact portal subcategories before final submission."
+    return public
+
+
 def lint_customer_visible_result(public: dict, city: str = "", state: str = "") -> list[dict]:
     """Deterministic customer-output lint for final ViewModel consistency gates."""
     if not isinstance(public, dict):
@@ -1890,7 +1995,7 @@ def lint_customer_visible_result(public: dict, city: str = "", state: str = "") 
         "unknown_freshness": r"last\s+updated\s*:\s*unknown",
         "invalid_date": r"\binvalid\s+date\b",
         "bracket_verify_placeholder": r"\[\s*verify\b",
-        "internal_customer_terms": r"\b(?:source-backed\s+(?:threshold|evidence|exemption)|needs_verification|fail[_\s-]?closed|verify\s+before\s+merging|structured\s+floor|ti\s+floor|jurisdiction\s+multiplier|ada-path-of-travel\s+adder)\b",
+        "internal_customer_terms": r"\b(?:source-backed\s+(?:threshold|evidence|exemption)|needs_verification|fail[_\s-]?closed|verify\s+before\s+merging|structured\s+floor|ti\s+floor|jurisdiction\s+multiplier|ada-path-of-travel\s+adder|exact\s+online\s+apply\s+path\s+is\s+metadata|keep\s+this\s+row\s+visible|if\s+not\s+verified|universal_filing_packet_reconciler|provenance)\b",
         "fragment_stutter": r"\b[A-Z][A-Za-z .'-]+,\s*[A-Z]{2}\.[A-Za-z]|\bwork\.(?:signage|exterior|interior|electrical|plumbing|mechanical|fire|health|zoning)\b",
         "repeated_caveat": r"verify\s+with\s+the\s+building\s+department.{0,80}verify\s+with\s+the\s+building\s+department",
         # P1B — Serializer bug lint patterns (2026-06-09)
@@ -2329,6 +2434,14 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         final_public = sanitize_customer_visible_result(final_public, strip_internal_keys=True)
         final_public = ensure_required_filing_path_contract(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
         if isinstance(final_public, dict):
+            if (
+                _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
+                and evidence_pack_enabled()
+                and "_evidence_pack" not in final_public
+                and original_apply_url in ("", None)
+            ):
+                final_public["apply_url"] = original_apply_url or ""
+            final_public = _normalize_public_required_permit_package(final_public, city)
             final_public["customer_result_summary"] = _build_customer_result_summary(
                 final_public,
                 cleaned if isinstance(cleaned, dict) else working,
