@@ -5467,7 +5467,12 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
     contract_vertical = str(scope_contract.get("vertical") or "").lower()
     contract_family = str(scope_contract.get("family") or "").lower()
 
-    has_panel = _scope_has_any(job, ["panel upgrade", "service upgrade", "new panel", "electrical panel", "main panel", "meter main", "subpanel", "sub-panel", "200 amp", "200amp", "200a", "400 amp", "400amp", "400a"])
+    panel_action_terms = [
+        "panel upgrade", "service upgrade", "upgrade panel", "upgrade service", "new panel",
+        "new electrical panel", "replace panel", "panel replacement", "meter main", "subpanel",
+        "sub-panel", "service change", "service size change",
+    ]
+    has_panel = _scope_has_any(job, panel_action_terms) or bool(re.search(r"\b(?:upgrade|replace|new|modify|change)\b.{0,40}\b(?:200\s*(?:amp|a)|400\s*(?:amp|a)|panel|service)\b", job, flags=re.I))
     has_gas_line = _scope_has_any(job, ["gas line", "gas piping", "new gas", "relocate gas", "gas modification"])
     has_new_fixtures = _scope_has_any(job, [
         "new fixture", "new fixtures", "add fixture", "add fixtures", "fixture relocation",
@@ -5476,8 +5481,14 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
     ])
     has_solar = contract_vertical == "solar_pv" or has_any_unnegated(job, ("solar", "pv", "photovoltaic"))
     has_battery = has_any_unnegated(job, ("battery", "ess", "energy storage", "powerwall"))
-    is_hvac = _scope_has_any(job, ["hvac", "rtu", "rooftop unit", "roof top unit", "condenser", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting", "mechanical", "economizer"])
-    is_water_heater = "water heater" in job
+    is_hvac_raw = has_any_unnegated(job, ("hvac", "rtu", "rooftop unit", "roof top unit", "condenser", "air conditioner", "air conditioning", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting", "mechanical", "economizer", "bath fan", "ventilation"))
+    has_hvac_specific = has_any_unnegated(job, ("hvac", "rtu", "rooftop unit", "roof top unit", "condenser", "air conditioner", "air conditioning", "a/c", "furnace", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting", "mechanical", "economizer", "bath fan", "ventilation"))
+    is_water_heater = contract_vertical == "water_heater" or "water heater" in job
+    # Heat-pump water heaters include the phrase "heat pump" but are plumbing /
+    # water-heater scopes. Suppress HVAC only for HPWH-only jobs, not true
+    # combined HVAC + water-heater scopes.
+    hpwh_only = is_water_heater and not has_hvac_specific
+    is_hvac = is_hvac_raw and not hpwh_only
 
     logic: list[dict] = []
 
@@ -5749,8 +5760,16 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
             base_reason = "HVAC equipment swap/changeout triggers the mechanical permit; no companion trade permit is included without explicit extra scope."
         permits = [_scope_permit(ptype, portal, notes)]
         add_logic(permits[0]["permit_type"], base_reason, "HVAC/water-heater replacement scope")
+        if is_water_heater and is_hvac:
+            water_heater_permit = _scope_permit(
+                "Residential Plumbing Permit — Water Heater Replacement" if scope_contract.get("category") == "residential" else "Plumbing Permit — Water Heater Replacement",
+                "Residential Plumbing - Water Heater Replacement" if scope_contract.get("category") == "residential" else "Plumbing - Water Heater Replacement",
+                "Required for the water-heater replacement portion of the combined scope; keep separate from HVAC/mechanical equipment work.",
+            )
+            permits.append(water_heater_permit)
+            add_logic(water_heater_permit["permit_type"], "Water-heater replacement remains a plumbing scope even when the same request also includes HVAC equipment work.", "combined HVAC plus water-heater scope")
         companions: list[dict] = []
-        seattle_split_system = (not is_water_heater) and _is_seattle_sdci_scope(scope_contract) and _is_seattle_refrigeration_trigger(job)
+        seattle_split_system = is_hvac and _is_seattle_sdci_scope(scope_contract) and _is_seattle_refrigeration_trigger(job)
         if seattle_split_system:
             permits.append(_seattle_source_backed_permit(
                 "Refrigeration Permit — Split-System Heat Pump / Mini-Split",
