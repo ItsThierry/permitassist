@@ -3,6 +3,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 API_DIR = ROOT / "api"
 if str(API_DIR) not in sys.path:
@@ -15,6 +17,8 @@ FROZEN_EVIDENCE = ROOT / "artifacts" / "customer_e2e_20260612T231212Z" / "eviden
 
 
 def _record(case_id: str) -> dict:
+    if not FROZEN_EVIDENCE.exists():
+        pytest.skip(f"frozen customer E2E artifact is not present in this checkout: {FROZEN_EVIDENCE}")
     for line in FROZEN_EVIDENCE.read_text().splitlines():
         if not line.strip():
             continue
