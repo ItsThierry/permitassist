@@ -1959,6 +1959,7 @@ def _apply_seattle_hpwh_output_contract(public: dict, scope_contract: dict, city
         "apply_url": _HPWH_PHSKC_URL,
         "online_application_url": _HPWH_PHSKC_URL,
         "customer_headline": "Plumbing permit required for the water-heater replacement.",
+        "job_summary": "Replace an existing gas storage water heater with a heat pump water heater in an existing single-family home garage in Seattle. The primary filing is a residential plumbing water-heater replacement permit. Electrical work is conditional only if new or altered wiring, circuit, disconnect, hardwired connection, breaker, or service equipment work is added.",
         "customer_next_step": f"File the water-heater plumbing permit with {_HPWH_PHSKC_OFFICE}; confirm any gas cap/abandonment and electrical-connection details before final submission.",
     })
 
@@ -2028,6 +2029,18 @@ def _apply_seattle_hpwh_output_contract(public: dict, scope_contract: dict, city
             seen_urls.add(source["url"])
     out["sources"] = sources
     out["source_urls"] = [source["url"] for source in sources if source.get("url")]
+    out["claim_citations"] = [
+        {
+            "field": "permit_required",
+            "claim": "Seattle residential water-heater replacement routes through the Public Health — Seattle & King County plumbing/gas-piping permit path.",
+            "source_url": _HPWH_PHSKC_URL,
+        },
+        {
+            "field": "related_permits",
+            "claim": "Seattle electrical permit guidance is relevant only if wiring, circuits, disconnects, equipment connection, or service equipment is added or altered.",
+            "source_url": _HPWH_SDCI_ELECTRICAL_URL,
+        },
+    ]
     out["source_support"] = {
         "primary_requirement_source_tier": "county",
         "primary_filing_source_tier": "county",
