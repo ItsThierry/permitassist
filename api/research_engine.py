@@ -5428,7 +5428,7 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
     ])
     has_solar = contract_vertical == "solar_pv" or has_any_unnegated(job, ("solar", "pv", "photovoltaic"))
     has_battery = has_any_unnegated(job, ("battery", "ess", "energy storage", "powerwall"))
-    is_hvac = _scope_has_any(job, ["hvac", "rtu", "rooftop unit", "roof top unit", "condenser", "air conditioner", "air conditioning", " ac ", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting", "mechanical", "economizer"])
+    is_hvac = has_any_unnegated(job, ("hvac", "rtu", "rooftop unit", "roof top unit", "condenser", "air conditioner", "air conditioning", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting", "mechanical", "economizer", "bath fan", "ventilation"))
     is_water_heater = "water heater" in job
 
     logic: list[dict] = []

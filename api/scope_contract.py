@@ -325,7 +325,12 @@ def _firebreak_forbidden_terms(scope_contract: dict[str, Any]) -> tuple[str, ...
     tags = set(scope_contract.get("forbidden_scope_tags") or [])
     terms: list[str] = []
     for tag in tags:
-        terms.extend(_TAG_TERMS.get(tag, ()))
+        for term in _TAG_TERMS.get(tag, ()):
+            # ADU/garage-conversion is a legitimate residential scope; do not let
+            # the broad commercial-TI word "conversion" firebreak strip it.
+            if tag == "commercial_ti" and scope_contract.get("vertical") == "adu" and term == "conversion":
+                continue
+            terms.append(term)
     if "commercial_ti" in tags:
         terms.extend(("tenant improvement", "tenant finish", "tenant buildout", "commercial building", "commercial alteration"))
     if "residential_solar" in tags or "solar_pv" in tags:

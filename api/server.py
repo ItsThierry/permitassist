@@ -68,6 +68,7 @@ except ImportError:  # package import path in some tests
     from api.v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from filing_packet_reconciler import ensure_required_filing_rows
+from residential_universal_gate import apply_residential_universal_gate
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -2051,6 +2052,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         }
         return sanitize_customer_visible_result(contact_public, strip_internal_keys=True)
     working = _normalize_segment_scope_labels(working, scope_contract)
+    working = apply_residential_universal_gate(working, job_type, city, state, scope_contract=scope_contract)
     cell_lock = _get_decision_cell_primary_lock(working)
     jurisdiction_check = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
     if is_input_rejection(jurisdiction_check):
@@ -2080,6 +2082,8 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         working.update(dto)
         working["permit_verdict"] = "YES" if dto.get("permit_required") else "NO"
     cleaned = sanitize_customer_visible_result(working, strip_internal_keys=True)
+    if isinstance(cleaned, dict) and isinstance(working.get("_residential_source_backed_companions"), list):
+        cleaned["_residential_source_backed_companions"] = working.get("_residential_source_backed_companions")
     try:
         cleaned = _normalize_segment_scope_labels(cleaned if isinstance(cleaned, dict) else {}, scope_contract)
         cleaned = sanitize_result_for_scope_contract(cleaned, scope_contract, fail_on_removal_in_tests=False)
@@ -2095,6 +2099,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             cleaned = apply_permit_decision_contract(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state, scope_contract)
         if (cleaned if isinstance(cleaned, dict) else {}).get("permit_decision") != "NOT_REQUIRED":
             cleaned.update(ensure_required_filing_rows(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state))
+        cleaned = apply_residential_universal_gate(cleaned if isinstance(cleaned, dict) else {}, job_type, city, state, scope_contract=scope_contract)
         if source_floor_satisfied:
             cleaned = _filter_customer_sources_in_place(cleaned if isinstance(cleaned, dict) else {}, city, state)
         else:
@@ -2188,6 +2193,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         # never reaches the customer API.
         final_public = sanitize_customer_visible_result(final_public, strip_internal_keys=True)
         final_public = ensure_required_filing_path_contract(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
+        final_public = apply_residential_universal_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract=scope_contract)
         if isinstance(final_public, dict):
             final_public["customer_result_summary"] = _build_customer_result_summary(
                 final_public,
@@ -3470,6 +3476,11 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     result = enrich_result_response(result, job_type, city, state)
     result = apply_permitiq_quality_gate(result, job_type, city, state)
     result["_scope_contract"] = scope_contract
+    # Stash source-backed residential companion rows before deterministic
+    # classification overwrites model/cached rows. The later residential gate
+    # can then preserve grounded AHJ fire/CO/planning companions instead of
+    # treating absence from request scope as proof they are template noise.
+    result = apply_residential_universal_gate(result, job_type, city, state, scope_contract=scope_contract)
     classified = classify_scope_required_permits(job_type or "", scope_contract=scope_contract)
     if classified:
         result["permits_required"] = classified.get("permits_required", result.get("permits_required", []))
@@ -3487,6 +3498,8 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             ]
         result["permit_verdict"] = "YES"
         result = _normalize_segment_scope_labels(result, scope_contract)
+
+    result = apply_residential_universal_gate(result, job_type, city, state, scope_contract=scope_contract)
 
     if is_cached or bool(result.get("_cached")):
         try:
@@ -3540,6 +3553,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     _apply_canonical_ahj_apply_url_fallback(result, city, state)
     result = _customer_apply_url_fallback_from_sources(result, city, state)
     build_apply_path(result, job_type, city, state)
+    result = apply_residential_universal_gate(result, job_type, city, state, scope_contract=scope_contract)
     if result.get("quality_warnings"):
         merged_warnings = []
         for warning in list(result.get("warnings") or []) + list(result.get("quality_warnings") or []):
@@ -3558,11 +3572,13 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
     if result.get("permit_decision") != "NOT_REQUIRED":
         result.update(ensure_required_filing_rows(result, job_type, city, state))
+    result = apply_residential_universal_gate(result, job_type, city, state, scope_contract=scope_contract)
     final_cell_lock = _get_decision_cell_primary_lock(result)
     result = apply_source_floor_annotation(result, job_type, city, state)
     if final_cell_lock:
         result = enforce_decision_cell_primary(result, final_cell_lock, city, state, public=False)
     result = ensure_required_filing_path_contract(result, city, state, job_type)
+    result = apply_residential_universal_gate(result, job_type, city, state, scope_contract=scope_contract)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
