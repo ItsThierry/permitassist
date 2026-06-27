@@ -404,6 +404,29 @@ def _has_official_source(result: dict[str, Any]) -> bool:
     return any(token in lowered for token in (".gov", ".us", "city", "county", "department", "permit")) and "http" in lowered
 
 
+def _source_backed_required_kinds(result: dict[str, Any]) -> list[str]:
+    """Preserve official source-backed required trade rows even when the job text's primary kind is narrower."""
+    kinds: list[str] = []
+    for permit in result.get("permits_required") or []:
+        if not isinstance(permit, dict) or permit.get("required") is False:
+            continue
+        source_blob = _blob({
+            "source_url": permit.get("source_url"),
+            "source_type": permit.get("source_type"),
+            "source": permit.get("source"),
+            "provenance": permit.get("provenance"),
+            "citations": permit.get("citations"),
+            "evidence": permit.get("evidence"),
+        }).lower()
+        if not ("http" in source_blob or "official" in source_blob or ".gov" in source_blob or ".us" in source_blob):
+            continue
+        text = _norm(permit.get("permit_type") or permit.get("portal_selection") or permit.get("kind") or permit.get("name"))
+        for kind in _kinds_from_text(text):
+            if kind not in kinds:
+                kinds.append(kind)
+    return kinds
+
+
 def _source_failure_seen(result: dict[str, Any]) -> bool:
     text = _blob({k: result.get(k) for k in ("retrieval_diagnostics", "warnings", "quality_warnings", "source_support", "sources", "source_urls")}).lower()
     return any(token in text for token in ("429", "502", "timeout", "timed out", "rate limit", "bad gateway", "temporarily unavailable", "retrieval failed"))
@@ -547,6 +570,9 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
             kinds = _kinds_from_text(" ".join([scope_contract_text, " ".join(existing_names)]), commercial_default=commercial_default)
         if not kinds:
             kinds = ["Building"]
+        for source_kind in _source_backed_required_kinds(result):
+            if source_kind not in kinds:
+                kinds.append(source_kind)
         permit_names = _permit_names_for_kinds(kinds, existing_names)
         reason = "Permit required based on the work scope classification."
         headline = f"Permit required: {', '.join(permit_names[:3])}."

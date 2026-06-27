@@ -90,6 +90,27 @@ def test_scope_hvac_condenser_changeout_is_one_mechanical_permit():
     assert result["permits_required_logic"][0]["included_because"]
 
 
+def test_seattle_ductless_mini_split_includes_refrigeration_and_electrical_permits():
+    job = "Install residential ductless mini-split heat pump with exterior condenser and line set"
+    scope_contract = engine.build_scope_contract(job, "Seattle", "WA", job_category="residential")
+    result = engine.apply_scope_aware_permit_classification(_blank_result(), job, scope_contract)
+    permits = " | ".join(_permit_types(result)).lower()
+    logic = " | ".join(str(item.get("included_because", "")) for item in result.get("permits_required_logic", [])).lower()
+
+    assert "mechanical" in permits
+    assert "refrigeration permit" in permits
+    assert "electrical permit" in permits
+    assert "split-system" in logic or "split system" in logic
+    assert "wiring" in logic and "electrical equipment" in logic
+    assert result["companion_permits"] == []
+    assert all("fee" not in str(permit).lower() for permit in result["permits_required"])
+
+    contracted = apply_permit_decision_contract(result, job, "Seattle", "WA", scope_contract)
+    contracted_permits = " | ".join(_permit_types(contracted)).lower()
+    assert "refrigeration permit" in contracted_permits
+    assert "electrical permit" in contracted_permits
+
+
 def test_scope_rooftop_hvac_unit_is_mechanical_not_roofing():
     result = engine.apply_scope_aware_permit_classification(_blank_result(), "replace a rooftop HVAC unit, no other work")
     permits = _permit_types(result)

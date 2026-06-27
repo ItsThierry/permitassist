@@ -5407,6 +5407,54 @@ def _scope_permit(permit_type: str, portal_selection: str, notes: str, required:
     }
 
 
+_SEATTLE_SDCI_MECHANICAL_URL = "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/mechanical-permit"
+_SEATTLE_SDCI_ELECTRICAL_URL = "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+_SEATTLE_SERVICES_PORTAL_INDEX_URL = "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx"
+
+
+def _is_seattle_sdci_scope(scope_contract: dict | None) -> bool:
+    if not isinstance(scope_contract, dict):
+        return False
+    return str(scope_contract.get("city") or "").strip().lower() == "seattle" and str(scope_contract.get("state") or "").strip().upper() == "WA"
+
+
+def _is_seattle_refrigeration_trigger(job: str) -> bool:
+    """Seattle requires an additional refrigeration permit for split-system HVAC.
+
+    Source: Seattle Services Portal Application Index / SDCI furnace & refrigeration
+    guidance says split system heat pumps, air conditioners, and refrigeration
+    piping trigger a Refrigeration Permit.  Keep this narrower than all HVAC so
+    furnace-only jobs do not grow a false refrigeration row.
+    """
+    return has_any_unnegated(job, (
+        "mini split",
+        "mini-split",
+        "ductless",
+        "split system",
+        "split-system",
+        "heat pump",
+        "air conditioner",
+        "air conditioning",
+        "a/c",
+        "condenser",
+        "refrigerant",
+        "refrigeration piping",
+        "line set",
+        "line-set",
+    ))
+
+
+def _seattle_source_backed_permit(permit_type: str, portal_selection: str, notes: str, source_url: str, source_quote: str) -> dict:
+    permit = _scope_permit(permit_type, portal_selection, notes)
+    permit.update({
+        "source_url": source_url,
+        "source_quote": source_quote,
+        "source_type": "official",
+        "authority": "Seattle Department of Construction and Inspections",
+    })
+    return permit
+
+
 def classify_scope_required_permits(job_type: str, scope_contract: dict | None = None) -> dict | None:
     """Deterministically classify permits for high-confidence job scopes.
 
@@ -5705,10 +5753,37 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
         permits = [_scope_permit(ptype, portal, notes)]
         add_logic(permits[0]["permit_type"], base_reason, "HVAC/water-heater replacement scope")
         companions: list[dict] = []
+        seattle_split_system = (not is_water_heater) and _is_seattle_sdci_scope(scope_contract) and _is_seattle_refrigeration_trigger(job)
+        if seattle_split_system:
+            permits.append(_seattle_source_backed_permit(
+                "Refrigeration Permit — Split-System Heat Pump / Mini-Split",
+                "Trade Permits - Refrigeration Permit",
+                "Seattle SDCI requires an additional refrigeration permit for split-system heat pumps, air conditioners, or work involving refrigeration piping.",
+                _SEATTLE_SERVICES_PORTAL_INDEX_URL,
+                "If the job involves installing a split system heat pump, air conditioner, or refrigeration piping, an additional refrigeration permit is required.",
+            ))
+            add_logic(
+                permits[-1]["permit_type"],
+                "Seattle SDCI specifically requires a Refrigeration Permit for split-system heat pumps, air conditioners, or refrigeration piping, in addition to the mechanical/HVAC permit path.",
+                "Seattle split-system heat pump / mini-split refrigeration trigger",
+            )
+            permits.append(_seattle_source_backed_permit(
+                "Electrical Permit — HVAC Equipment Connection / Disconnect",
+                "Electrical Permit: Over the Counter",
+                "Seattle requires an electrical permit whenever wiring is installed, altered, extended, or connected to electrical equipment; mini-split/heat-pump installs should route electrical hookup, disconnect, or circuit work through the electrical permit path.",
+                _SEATTLE_SDCI_ELECTRICAL_URL,
+                "You need an electrical permit any time electrical wiring is installed, altered, extended, or connected to any electrical equipment.",
+            ))
+            add_logic(
+                permits[-1]["permit_type"],
+                "Seattle electrical-permit guidance covers wiring installed, altered, extended, or connected to electrical equipment, so the mini-split electrical hookup/disconnect/circuit scope must not be suppressed.",
+                "Seattle HVAC equipment electrical connection trigger",
+            )
         if has_panel:
             ep = _scope_permit("Electrical Permit — Panel / Service Upgrade", "Electrical - Panel Upgrade / Service Change", "Required because panel or service upgrade work is explicitly included.")
-            permits.append(ep)
-            add_logic(ep["permit_type"], "Electrical permit required because the job explicitly includes panel/service upgrade work.", "panel/service upgrade stated")
+            if not any(_permit_family(p) == "electrical" for p in permits):
+                permits.append(ep)
+                add_logic(ep["permit_type"], "Electrical permit required because the job explicitly includes panel/service upgrade work.", "panel/service upgrade stated")
         if has_gas_line:
             gp = _scope_permit("Gas Permit — Gas Line Modification", "Mechanical/Gas - Gas Line Modification", "Required because gas piping modification is explicitly included.")
             permits.append(gp)
@@ -5942,6 +6017,8 @@ def _permit_family(permit: dict) -> str:
     def family_from(text: str) -> str:
         if any(t in text for t in ("fire alarm", "sprinkler", "fire sprinkler", "fire suppression")):
             return "fire"
+        if "refrigeration" in text or "refrigerant" in text or "line set" in text or "line-set" in text:
+            return "refrigeration"
         if "roof" in text or "reroof" in text or "re-roof" in text:
             return "roofing"
         if "sign" in text or "signage" in text:
