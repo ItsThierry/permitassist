@@ -195,6 +195,41 @@ def test_reconciler_preserves_source_adjudicated_not_required_even_with_trade_wo
     assert out["_filing_packet_reconciler"]["skipped"] == "preserved_not_required_decision"
 
 
+def test_seattle_mini_split_reconciler_keeps_refrigeration_and_repairs_stale_only_prose():
+    out = ensure_required_filing_rows(
+        {
+            "permit_decision": "REQUIRED",
+            "permit_required": True,
+            "permit_verdict": "YES",
+            "job_summary": (
+                "Install a residential ductless mini-split heat pump with an exterior condenser and refrigerant line set in Seattle. "
+                "This scope triggers a Mechanical Permit — Mini Split System (Ductless) only. No separate electrical permit is required from the stated scope unless the installer is adding a new circuit, breaker, disconnect, or panel/service work."
+            ),
+            "permits_required": [
+                {"permit_type": "Mechanical Permit — HVAC Equipment Changeout (Residential)", "required": True},
+                {
+                    "permit_type": "Refrigeration Permit — Split-System Heat Pump / Mini-Split",
+                    "required": True,
+                    "source_url": "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+                    "source_type": "official",
+                },
+            ],
+        },
+        "Install residential ductless mini-split heat pump with exterior condenser and refrigerant line set",
+        "Seattle",
+        "WA",
+    )
+    families = _families(out)
+    assert {"mechanical", "refrigeration", "electrical"}.issubset(families)
+    assert _row(out, "refrigeration")["decision"] == "REQUIRED"
+    surface = _surface(out)
+    assert "mechanical permit" in surface
+    assert "refrigeration permit" in surface
+    assert "electrical permit" in surface
+    assert "mechanical permit — mini split system (ductless) only" not in surface
+    assert "no separate electrical permit is required" not in surface
+
+
 def test_residential_water_heater_advisory_does_not_inject_untriggered_filing_families():
     out = ensure_required_filing_rows(
         {

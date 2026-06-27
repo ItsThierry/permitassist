@@ -81,6 +81,14 @@ FILING_FAMILIES: dict[str, FilingFamily] = {
         ("mechanical", "hvac", "rtu", "makeup air", "make-up air", "exhaust", "hood", "dryer exhaust", "ventilation"),
         ("mechanical permit", "type i hood", "hvac", "makeup air", "exhaust", "ventilation"),
     ),
+    "refrigeration": FilingFamily(
+        "refrigeration",
+        "Refrigeration Permit",
+        "construction_permit",
+        "city_building_department",
+        ("refrigeration", "refrigerant", "line set", "line-set", "split system", "split-system", "mini split", "mini-split", "ductless"),
+        ("refrigeration permit", "refrigeration piping", "split system heat pump", "air conditioner", "refrigerant line set"),
+    ),
     "fire_suppression": FilingFamily(
         "fire_suppression",
         "Fire Suppression / Fire Prevention Review",
@@ -252,6 +260,15 @@ APPLY_PROVENANCE_REGISTRY: dict[tuple[str, str, str], dict[str, Any]] = {
         "ttl_days": 30,
         "status": "needs_verification",
     },
+    ("seattle", "WA", "refrigeration"): {
+        "ahj_name": "Seattle Department of Construction & Inspections (SDCI)",
+        "ahj_type": "city_building_department",
+        "department_url": "https://www.seattle.gov/sdci/permits",
+        "source_url": "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+        "verified_date": "2026-06-27",
+        "ttl_days": 30,
+        "status": "needs_verification",
+    },
 }
 
 BANNED_TEXT_PATTERNS = (
@@ -376,8 +393,22 @@ def detect_filing_scope_signals(job_type: str, result: dict[str, Any] | None = N
     if _contains_any(all_text, hood_terms) or ("restaurant" in all_text and _contains(all_text, "hood")):
         _append_signal(signals, "type_i_hood_fire_suppression", ("mechanical", "fire_suppression"), "Type I hood / ANSUL / suppression signal")
 
-    if _contains_any(scope_text, ("hvac", "mechanical", "rtu", "rooftop unit", "makeup air", "make-up air", "mau", "exhaust", "ventilation", "dryer exhaust", "gas dryer", "medical gas")) or _contains_any(advisory_text, ("mechanical permit", "mechanical inspection")):
+    if _contains_any(scope_text, ("hvac", "mechanical", "rtu", "rooftop unit", "makeup air", "make-up air", "mau", "exhaust", "ventilation", "dryer exhaust", "gas dryer", "medical gas", "heat pump", "condenser", "air conditioner", "air conditioning", "mini split", "mini-split", "ductless")) or _contains_any(advisory_text, ("mechanical permit", "mechanical inspection")):
         _append_signal(signals, "mechanical_hvac_or_exhaust", ("mechanical",), "Mechanical/HVAC/exhaust signal")
+
+    if _city_key(city) == "seattle" and _state_key(state) == "WA" and _contains_any(scope_text, ("mini split", "mini-split", "ductless", "split system", "split-system", "heat pump", "air conditioner", "air conditioning", "a/c", "condenser", "refrigerant", "refrigeration piping", "line set", "line-set")):
+        _append_signal(
+            signals,
+            "seattle_split_system_refrigeration",
+            ("refrigeration",),
+            "Seattle SDCI split-system heat pump / air-conditioner / refrigeration-piping trigger",
+        )
+        _append_signal(
+            signals,
+            "seattle_hvac_equipment_electrical_connection",
+            ("electrical",),
+            "Seattle mini-split / heat-pump equipment connection and disconnect/circuit coordination trigger",
+        )
 
     if _contains_any(all_text, ("grease interceptor", "grease trap", "fog", "f.o.g", "wastewater", "pretreatment", "industrial waste", "laundromat discharge")):
         _append_signal(signals, "grease_fog_wastewater", ("plumbing", "wastewater_pretreatment_fog"), "Grease/FOG/wastewater signal")
@@ -416,6 +447,7 @@ def _family_from_existing_row(row: dict[str, Any], target_families: set[str]) ->
         "fire_suppression",
         "electrical",
         "mechanical",
+        "refrigeration",
         "plumbing",
         "historic_review",
         "planning_zoning",
@@ -528,6 +560,58 @@ def strip_banned_filing_packet_artifacts(value: Any, city: str, state: str) -> A
     if isinstance(value, str):
         return _strip_banned_string(value, city=city, state=state)
     return value
+
+
+def _is_seattle_split_system_scope(job_type: str, city: str, state: str) -> bool:
+    return _city_key(city) == "seattle" and _state_key(state) == "WA" and _contains_any(
+        _norm(job_type),
+        ("mini split", "mini-split", "ductless", "split system", "split-system", "heat pump", "air conditioner", "air conditioning", "a/c", "condenser", "refrigerant", "refrigeration piping", "line set", "line-set"),
+    )
+
+
+def _repair_seattle_split_system_customer_text(result: dict[str, Any], job_type: str, city: str, state: str) -> dict[str, Any]:
+    """Remove stale 'mechanical only/no electrical' prose after Seattle refrigeration fix."""
+    if not _is_seattle_split_system_scope(job_type, city, state):
+        return result
+    out = copy.deepcopy(result)
+    replacement_summary = (
+        "This Seattle split-system/mini-split scope requires Mechanical/HVAC filing plus an additional Refrigeration Permit; "
+        "electrical wiring, circuit, disconnect, or equipment-connection work must also stay on the Electrical Permit path."
+    )
+
+    def clean_text(text: str) -> str:
+        cleaned = str(text)
+        cleaned = re.sub(
+            r"This scope triggers a Mechanical Permit[^.]{0,160}\bonly\.\s*No separate electrical permit is required[^.]*\.",
+            replacement_summary,
+            cleaned,
+            flags=re.I,
+        )
+        cleaned = re.sub(
+            r"\bMechanical Permit\s*[—-]\s*Mini Split System \(Ductless\) only\b",
+            "Mechanical/HVAC permit plus additional Refrigeration Permit",
+            cleaned,
+            flags=re.I,
+        )
+        cleaned = re.sub(
+            r"\bno separate electrical permit is required from the stated scope unless\b",
+            "an Electrical Permit is required if the scope includes",
+            cleaned,
+            flags=re.I,
+        )
+        cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+        return cleaned
+
+    for field in ("job_summary", "permit_summary", "summary", "customer_headline", "customer_next_step", "requirements"):
+        if isinstance(out.get(field), str):
+            out[field] = clean_text(out[field])
+    for field in ("common_mistakes", "pro_tips", "watch_out", "what_to_bring", "inspection_notes", "inspections"):
+        value = out.get(field)
+        if isinstance(value, list):
+            out[field] = [clean_text(item) if isinstance(item, str) else item for item in value]
+        elif isinstance(value, str):
+            out[field] = clean_text(value)
+    return out
 
 
 def _row_decision_for_family(family_id: str, signals: list[FilingSignal]) -> str:
@@ -689,4 +773,4 @@ def ensure_required_filing_rows(result: dict[str, Any], job_type: str, city: str
         "repaired_families": repaired,
         "advisory_gate": "inject_only",
     }
-    return out
+    return _repair_seattle_split_system_customer_text(out, job_type, city, state)
