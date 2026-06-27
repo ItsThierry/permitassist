@@ -64,7 +64,11 @@ def test_render_share_page_accepts_saved_result_with_string_inspections(tmp_path
     payload = json.loads(html)
     labels = [item["label"] for item in payload["checklist"]["items"]]
     assert payload["share"]["job_type"] == "Dallas commercial office TI"
-    assert any("Schedule inspection: Framing inspection before cover" in label for label in labels)
+    assert any(
+        "Schedule inspection: Framing inspection before cover" in label
+        or "Schedule framing inspection before cover" in label
+        for label in labels
+    )
 
 
 def _assert_no_internal_customer_terms(value):

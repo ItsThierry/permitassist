@@ -21,6 +21,15 @@ except ImportError:  # pragma: no cover - package import path
 RESIDENTIAL_UNIVERSAL_GATE_VERSION = "residential_universal_gate_v1_20260626"
 DECISION_STATES = {"REQUIRED", "NOT_REQUIRED", "EXEMPT", "CONDITIONAL", "VERIFY"}
 
+PHSKC_PLUMBING_PERMIT_URL = "https://kingcounty.gov/en/dept/dph/health-safety/environmental-health/plumbing-gas-piping/applications-and-permits"
+PHSKC_PLUMBING_AUTHORITY = "Public Health — Seattle & King County Plumbing and Gas Piping Program"
+SEATTLE_SDCI_ELECTRICAL_URL = "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+PANEL_ACTION_TERMS = (
+    "panel upgrade", "service upgrade", "upgrade panel", "upgrade service", "replace panel",
+    "panel replacement", "new panel", "new electrical panel", "new main panel", "meter main",
+    "subpanel", "sub-panel", "service change", "service size change",
+)
+
 
 def _norm(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value or "").lower()).strip()
@@ -40,6 +49,17 @@ def _has(text: str, terms: tuple[str, ...]) -> bool:
 
 def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
     return any(term in text for term in terms)
+
+
+def _has_panel_scope(text: str) -> bool:
+    value = _norm(text)
+    if _has(value, PANEL_ACTION_TERMS):
+        return True
+    return bool(re.search(r"\b(?:upgrade|replace|new|modify|change)\b.{0,40}\b(?:200\s*(?:amp|a)|400\s*(?:amp|a)|panel|service)\b", value, flags=re.I))
+
+
+def _is_seattle_wa(city: str, state: str) -> bool:
+    return str(city or "").strip().lower() == "seattle" and str(state or "").strip().upper() == "WA"
 
 
 def _explicitly_negated(text: str, terms: tuple[str, ...]) -> bool:
@@ -62,9 +82,10 @@ def _scope_model(job_type: str, city: str, state: str, scope_contract: dict[str,
     tokens: set[str] = set()
     negated: set[str] = set()
 
-    if _has(job, ("water heater",)) or vertical == "water_heater":
+    is_water_heater = _has(job, ("water heater",)) or vertical == "water_heater"
+    if is_water_heater:
         tokens.update({"water_heater", "plumbing"})
-    if _has(job, ("panel upgrade", "service upgrade", "electrical panel", "main panel", "meter main", "200 amp", "200a", "400 amp", "400a", "subpanel", "sub-panel")) or vertical == "panel_upgrade":
+    if _has_panel_scope(job) or vertical == "panel_upgrade":
         tokens.update({"panel_upgrade", "electrical", "utility_coordination", "grounding"})
     if _has(job, ("shed", "storage shed", "accessory structure", "detached storage")):
         tokens.update({"shed", "accessory_structure"})
@@ -79,7 +100,8 @@ def _scope_model(job_type: str, city: str, state: str, scope_contract: dict[str,
         tokens.add("electrical")
     if _has(job, ("bath fan", "exhaust fan", "ductwork", "duct", "ducts", "ventilation", "mechanical", "heating")):
         tokens.add("mechanical")
-    if _has(job, ("hvac", "furnace", "air conditioner", "condenser", "heat pump", "equipment replacement", "changeout", "change-out")):
+    hvac_specific = _has(job, ("hvac", "furnace", "air conditioner", "condenser", "equipment replacement", "changeout", "change-out", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting"))
+    if (not is_water_heater or hvac_specific) and _has(job, ("hvac", "furnace", "air conditioner", "condenser", "heat pump", "equipment replacement", "changeout", "change-out", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting")):
         tokens.add("hvac_equipment")
         tokens.add("mechanical")
     if _has(job, ("zoning", "setback", "setbacks", "lot coverage", "historic district", "overlay")):
@@ -176,6 +198,35 @@ def _append_source(result: dict[str, Any], url: str, title: str, city: str, stat
     source_urls = result.setdefault("source_urls", [])
     if isinstance(source_urls, list) and url not in source_urls:
         source_urls.append(url)
+
+
+def _filter_water_heater_sources(result: dict[str, Any], ledger: list[dict[str, Any]]) -> None:
+    """Drop wrong-scope source contamination for residential water-heater output."""
+    bad_fragments = (
+        "tip424", "tip 424", "cam/tip424", "mechanical-permit", "refrigeration-permit",
+        "commercial and multifamily", "commercial/multifamily", "multifamily buildings",
+    )
+    removed = 0
+    if isinstance(result.get("sources"), list):
+        kept_sources = []
+        for source in result.get("sources") or []:
+            text = _norm(_blob(source))
+            if any(fragment in text for fragment in bad_fragments):
+                removed += 1
+                continue
+            kept_sources.append(source)
+        result["sources"] = kept_sources
+    if isinstance(result.get("source_urls"), list):
+        kept_urls = []
+        for url in result.get("source_urls") or []:
+            url_lc = str(url or "").lower()
+            if any(fragment in url_lc for fragment in bad_fragments):
+                removed += 1
+                continue
+            kept_urls.append(url)
+        result["source_urls"] = kept_urls
+    if removed:
+        ledger.append({"unit": "sources", "reason": "water_heater_wrong_scope_source_filter", "decision": "drop_commercial_mechanical_refrigeration_sources", "count": removed})
 
 
 def _family_for_row(row: dict[str, Any]) -> str:
@@ -295,6 +346,13 @@ def _item_forbidden(text: str, model: dict[str, Any]) -> tuple[bool, str]:
 
     if "pool_spa" not in tokens and _contains_any(value, BAD_TEMPLATE_TERMS):
         return True, "wrong_template_pool_spa"
+    if vertical == "water_heater":
+        if _contains_any(value, ("panel upgrade", "service upgrade", "service change", "electrical panel upgrade")):
+            return True, "water_heater_untriggered_panel_service"
+        if _contains_any(value, ("refrigeration permit", "mechanical permit", "hvac equipment changeout", "hvac system replacement")):
+            return True, "water_heater_untriggered_mechanical_refrigeration"
+        if "electrical" not in tokens and _contains_any(value, ("electrical permit", "electrical -", "electrical /")):
+            return True, "water_heater_untriggered_electrical_permit"
     if "hvac_equipment" not in tokens and _contains_any(value, HVAC_EQUIPMENT_TERMS):
         return True, "wrong_template_hvac_equipment"
     if ("shed" in tokens or "foundation" in negated) and _contains_any(value, FOUNDATION_TERMS):
@@ -451,9 +509,53 @@ def _set_rows_for_scope(result: dict[str, Any], model: dict[str, Any], city: str
 
     rows: list[dict[str, Any]] = []
     if vertical == "water_heater" or "water_heater" in tokens:
-        rows.append(_row("Residential Plumbing Permit — Water Heater Replacement", "plumbing", "water_heater_replacement", ahj_name=ahj, source_url=source_url))
-        _set_permit_kind(result, "Plumbing")
+        if _is_seattle_wa(city_name, state_uc):
+            ahj = PHSKC_PLUMBING_AUTHORITY
+            result["applying_office"] = ahj
+            result["building_dept_name"] = ahj
+            result["apply_url"] = PHSKC_PLUMBING_PERMIT_URL
+            result["online_application_url"] = PHSKC_PLUMBING_PERMIT_URL
+            existing_apply_path = dict(result.get("apply_path") or {}) if isinstance(result.get("apply_path"), dict) else {}
+            result["apply_path"] = {
+                **existing_apply_path,
+                "state": "RESOLVED_PORTAL",
+                "channel": "online_portal",
+                "support_level": "verified path",
+                "portal_url": PHSKC_PLUMBING_PERMIT_URL,
+                "platform": "Public Health Permit Center",
+                "office_name": ahj,
+                "permit_category": "Plumbing / Gas Piping Permit",
+                "permit_type": "Residential Plumbing Permit — Water Heater Replacement",
+                "verification_note": "Seattle plumbing and gas-piping permits route through Public Health — Seattle & King County; confirm the water-heater fixture/type before submitting.",
+            }
+            _append_source(result, PHSKC_PLUMBING_PERMIT_URL, "Public Health — Seattle & King County plumbing and gas piping permits", city, state)
+            _append_source(result, SEATTLE_SDCI_ELECTRICAL_URL, "Seattle SDCI electrical permit conditional trigger", city, state)
+        permit_source_url = PHSKC_PLUMBING_PERMIT_URL if _is_seattle_wa(city_name, state_uc) else source_url
+        rows.append(_row("Residential Plumbing Permit — Water Heater Replacement", "plumbing", "water_heater_replacement", ahj_name=ahj, source_url=permit_source_url))
+        result["permit_kind"] = "Plumbing"
         result["permit_name"] = "Residential Plumbing Permit — Water Heater Replacement"
+        result["related_permits"] = [
+            {
+                "permit_type": "Fuel gas / gas piping permit or inspection",
+                "decision": "CONDITIONAL",
+                "required": False,
+                "required_if": "gas piping is capped, abandoned, relocated, pressure-tested, or otherwise modified while removing the gas water heater",
+                "authority": ahj,
+            },
+            {
+                "permit_type": "Electrical Permit — Water-heater circuit / equipment connection",
+                "decision": "CONDITIONAL",
+                "required": False,
+                "required_if": "new wiring, a new circuit, disconnect replacement, breaker/panel modification, or hardwired equipment connection is added or altered",
+                "authority": "Seattle Department of Construction and Inspections" if _is_seattle_wa(city_name, state_uc) else ahj,
+                "source_url": SEATTLE_SDCI_ELECTRICAL_URL if _is_seattle_wa(city_name, state_uc) else source_url,
+            },
+        ]
+        result["customer_next_step"] = _merge_customer_next_step(
+            result,
+            f"File the water-heater plumbing permit with {ahj}; confirm any gas cap/abandonment and electrical-connection details before final submission.",
+            "confirm any gas cap/abandonment and electrical-connection details before final submission",
+        )
     elif vertical == "panel_upgrade" or "panel_upgrade" in tokens:
         rows.append(_row("Electrical Permit — Service / Panel Upgrade", "electrical", "panel_service_upgrade", ahj_name=ahj, source_url=source_url))
         if "hvac_equipment" in tokens:
@@ -566,6 +668,26 @@ def _scope_derived_lists(result: dict[str, Any], model: dict[str, Any], ledger: 
         result.setdefault("checklist", [
             "Water-heater model/capacity, location, gas/venting or electrical connection details, seismic/support details if locally required, and inspection access.",
         ])
+        city_name = str(model.get("city") or "").strip()
+        state_uc = str(model.get("state") or "").upper().strip()
+        ahj = PHSKC_PLUMBING_AUTHORITY if _is_seattle_wa(city_name, state_uc) else str(result.get("applying_office") or result.get("building_dept_name") or "local permit office")
+        result["related_permits"] = [
+            {
+                "permit_type": "Fuel gas / gas piping permit or inspection",
+                "decision": "CONDITIONAL",
+                "required": False,
+                "required_if": "gas piping is capped, abandoned, relocated, pressure-tested, or otherwise modified while removing the gas water heater",
+                "authority": ahj,
+            },
+            {
+                "permit_type": "Electrical circuit / equipment-connection permit",
+                "decision": "CONDITIONAL",
+                "required": False,
+                "required_if": "new wiring, a new circuit, disconnect replacement, breaker/panel modification, or hardwired equipment connection is added or altered",
+                "authority": "Seattle Department of Construction and Inspections" if _is_seattle_wa(city_name, state_uc) else ahj,
+                "source_url": SEATTLE_SDCI_ELECTRICAL_URL if _is_seattle_wa(city_name, state_uc) else "",
+            },
+        ]
 
 
 def apply_residential_universal_gate(result: dict[str, Any], job_type: str, city: str, state: str, *, scope_contract: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -593,6 +715,13 @@ def apply_residential_universal_gate(result: dict[str, Any], job_type: str, city
             out[key] = _clean_value(out.get(key), model, ledger, key)
 
     _scope_derived_lists(out, model, ledger)
+    if str(model.get("vertical") or "") == "water_heater":
+        _filter_water_heater_sources(out, ledger)
+        if _is_seattle_wa(city, state):
+            note = "Public Health — Seattle & King County notes replacement water-heater permit requirements start July 1, 2026; confirm effective-date handling if the work starts before that date."
+            tips = out.setdefault("pro_tips", [])
+            if isinstance(tips, list) and note not in tips:
+                tips.append(note)
     _fee_contract(out, ledger)
 
     # Final consistency: NOT_REQUIRED/EXEMPT scopes must not carry filing URLs or required rows.

@@ -32,8 +32,14 @@ _RESIDENTIAL_TERMS = (
     "dwelling", "home", "house", "townhouse", "duplex",
 )
 _PANEL_TERMS = ("panel upgrade", "service upgrade", "electrical panel", "main panel", "meter main", "200 amp", "200a", "400 amp", "400a", "subpanel", "sub-panel")
+_PANEL_ACTION_TERMS = (
+    "panel upgrade", "service upgrade", "upgrade panel", "upgrade service", "replace panel",
+    "panel replacement", "new panel", "new electrical panel", "new main panel", "meter main",
+    "subpanel", "sub-panel", "service change", "service size change",
+)
 _SOLAR_TERMS = ("solar", "pv", "photovoltaic", "solarapp")
 _HVAC_TERMS = ("hvac", "air conditioner", "air conditioning", "a/c", "heat pump", "furnace", "mini split", "mini-split", "condenser")
+_HVAC_SPECIFIC_TERMS = ("hvac", "air conditioner", "air conditioning", "a/c", "furnace", "mini split", "mini-split", "condenser", "ductwork", "ducting", "air handler")
 _WATER_HEATER_TERMS = ("water heater",)
 _ROOF_TERMS = ("reroof", "re-roof", "roof replacement", "tear-off", "tear off", "shingle roof")
 _ADU_TERMS = ("adu", "accessory dwelling", "garage conversion", "in-law suite", "granny flat", "jadu")
@@ -104,6 +110,16 @@ def has_any_unnegated(text: str, phrases: tuple[str, ...]) -> bool:
     return any(contains_unnegated_phrase(text, phrase) for phrase in phrases)
 
 
+def _has_panel_scope(job_text: str) -> bool:
+    """Return True for actual panel/service work, not existing-capacity facts."""
+    job = _norm(job_text)
+    if has_any_unnegated(job, _PANEL_ACTION_TERMS):
+        return True
+    # Bare "existing 200A panel available" is context for a water-heater/HVAC
+    # lookup, not an electrical service-change trigger. Require an action verb.
+    return bool(re.search(r"\b(?:upgrade|replace|new|modify|change)\b.{0,40}\b(?:200\s*(?:amp|a)|400\s*(?:amp|a)|panel|service)\b", job, flags=re.I))
+
+
 def _explicit_category(job_text: str, job_category: str | None) -> str:
     category = (job_category or "").strip().lower()
     has_commercial = has_any_unnegated(job_text, _COMMERCIAL_TERMS)
@@ -134,9 +150,10 @@ def build_scope_contract(job_type: str, city: str = "", state: str = "", *, job_
     category = _explicit_category(job, job_category)
     explicit_vertical = _norm(vertical or "").replace(" ", "_").replace("-", "_")
 
-    has_panel = has_any_unnegated(job, _PANEL_TERMS)
+    has_panel = _has_panel_scope(job)
     has_solar = has_any_unnegated(job, _SOLAR_TERMS)
     has_hvac = has_any_unnegated(job, _HVAC_TERMS)
+    has_hvac_specific = has_any_unnegated(job, _HVAC_SPECIFIC_TERMS)
     has_water_heater = has_any_unnegated(job, _WATER_HEATER_TERMS)
     has_roof = has_any_unnegated(job, _ROOF_TERMS)
     has_adu = has_any_unnegated(job, _ADU_TERMS)
@@ -156,16 +173,19 @@ def build_scope_contract(job_type: str, city: str = "", state: str = "", *, job_
 
     if explicit_vertical:
         request_vertical = explicit_vertical
-    elif has_panel and not has_solar and category != "commercial":
-        request_vertical = "panel_upgrade"
     elif has_solar:
         request_vertical = "solar_pv"
     elif category == "commercial" and commercial_vertical:
         request_vertical = commercial_vertical
+    elif has_water_heater and not has_hvac_specific:
+        # "Heat pump water heater" is a plumbing/water-heater vertical, not a
+        # mini-split/HVAC vertical.  If a separate HVAC system is also explicitly
+        # present, let the HVAC branch handle the combined-scope case.
+        request_vertical = "water_heater"
+    elif has_panel and category != "commercial":
+        request_vertical = "panel_upgrade"
     elif has_hvac:
         request_vertical = "hvac_changeout"
-    elif has_water_heater:
-        request_vertical = "water_heater"
     elif has_roof:
         request_vertical = "reroof"
     elif has_adu:

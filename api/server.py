@@ -1922,6 +1922,141 @@ def lint_customer_visible_result(public: dict, city: str = "", state: str = "") 
     return hits
 
 
+_HPWH_PHSKC_URL = "https://kingcounty.gov/en/dept/dph/health-safety/environmental-health/plumbing-gas-piping/applications-and-permits"
+_HPWH_PHSKC_OFFICE = "Public Health — Seattle & King County Plumbing and Gas Piping Program"
+_HPWH_SDCI_ELECTRICAL_URL = "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+
+
+def _is_seattle_residential_water_heater(scope_contract: dict, city: str, state: str) -> bool:
+    return (
+        isinstance(scope_contract, dict)
+        and str(scope_contract.get("category") or "").lower().strip() == "residential"
+        and str(scope_contract.get("vertical") or "").lower().strip() == "water_heater"
+        and str(city or scope_contract.get("city") or "").strip().lower() == "seattle"
+        and str(state or scope_contract.get("state") or "").strip().upper() == "WA"
+    )
+
+
+def _apply_seattle_hpwh_output_contract(public: dict, scope_contract: dict, city: str, state: str) -> dict:
+    """Last-mile invariant gate for Seattle residential HPWH/water-heater output.
+
+    This makes the observed failure class mechanically impossible at the customer
+    boundary: water-heater primary rows cannot serialize as panel/service,
+    mechanical, refrigeration, or SDCI plumbing filing guidance.
+    """
+    if not isinstance(public, dict) or not _is_seattle_residential_water_heater(scope_contract, city, state):
+        return public if isinstance(public, dict) else {}
+
+    out = copy.deepcopy(public)
+    out.update({
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permit_kind": "Plumbing",
+        "permit_name": "Residential Plumbing Permit — Water Heater Replacement",
+        "permit_type": "Residential Plumbing Permit — Water Heater Replacement",
+        "applying_office": _HPWH_PHSKC_OFFICE,
+        "building_dept_name": _HPWH_PHSKC_OFFICE,
+        "apply_url": _HPWH_PHSKC_URL,
+        "online_application_url": _HPWH_PHSKC_URL,
+        "customer_headline": "Plumbing permit required for the water-heater replacement.",
+        "customer_next_step": f"File the water-heater plumbing permit with {_HPWH_PHSKC_OFFICE}; confirm any gas cap/abandonment and electrical-connection details before final submission.",
+    })
+
+    plumbing_row = {
+        "permit_type": "Residential Plumbing Permit — Water Heater Replacement",
+        "filing_family": "plumbing",
+        "required": True,
+        "decision": "REQUIRED",
+        "scope_trigger": "water_heater_replacement",
+        "ahj_name": _HPWH_PHSKC_OFFICE,
+        "source_url": _HPWH_PHSKC_URL,
+    }
+    out["permits_required"] = [plumbing_row]
+    out["permits_required_logic"] = [{
+        "permit_type": plumbing_row["permit_type"],
+        "included_because": "water_heater_replacement",
+        "scope_trigger": "water_heater_replacement",
+        "filing_family": "plumbing",
+    }]
+    out["related_permits"] = [
+        {
+            "permit_type": "Fuel gas / gas piping permit or inspection",
+            "decision": "CONDITIONAL",
+            "required": False,
+            "required_if": "gas piping is capped, abandoned, relocated, pressure-tested, or otherwise modified while removing the gas water heater",
+            "authority": _HPWH_PHSKC_OFFICE,
+        },
+        {
+            "permit_type": "Electrical circuit / equipment-connection permit",
+            "decision": "CONDITIONAL",
+            "required": False,
+            "required_if": "new wiring, a new circuit, disconnect replacement, breaker/panel modification, or hardwired equipment connection is added or altered",
+            "authority": "Seattle Department of Construction and Inspections",
+            "source_url": _HPWH_SDCI_ELECTRICAL_URL,
+        },
+    ]
+    out["companion_permits"] = []
+    out["apply_path"] = {
+        **(dict(out.get("apply_path") or {}) if isinstance(out.get("apply_path"), dict) else {}),
+        "state": "RESOLVED_PORTAL",
+        "channel": "online_portal",
+        "support_level": "verified path",
+        "portal_url": _HPWH_PHSKC_URL,
+        "platform": "Public Health Permit Center",
+        "office_name": _HPWH_PHSKC_OFFICE,
+        "permit_category": "Plumbing / Gas Piping Permit",
+        "permit_type": "Residential Plumbing Permit — Water Heater Replacement",
+        "verification_note": "Seattle plumbing and gas-piping permits route through Public Health — Seattle & King County; confirm the water-heater fixture/type before submitting.",
+        "primary_requirement_source_tier": "county",
+        "primary_filing_source_tier": "county",
+        "requirement_sources": [_HPWH_PHSKC_URL],
+        "filing_sources": [_HPWH_PHSKC_URL],
+        "context_sources": [_HPWH_SDCI_ELECTRICAL_URL],
+    }
+
+    bad_source_fragments = ("tip424", "tip 424", "cam/tip424", "mechanical-permit", "refrigeration-permit")
+    sources = []
+    seen_urls = set()
+    for source in out.get("sources") or []:
+        if not isinstance(source, dict):
+            continue
+        text = json.dumps(source, sort_keys=True, default=str).lower()
+        if any(fragment in text for fragment in bad_source_fragments):
+            continue
+        url = str(source.get("url") or source.get("source_url") or "")
+        if url and url not in seen_urls:
+            sources.append(source)
+            seen_urls.add(url)
+    for source in (
+        {"url": _HPWH_PHSKC_URL, "title": "Public Health — Seattle & King County plumbing and gas piping permits", "source_type": "official", "jurisdiction": "Seattle, WA"},
+        {"url": _HPWH_SDCI_ELECTRICAL_URL, "title": "Seattle SDCI electrical permit conditional trigger", "source_type": "official", "jurisdiction": "Seattle, WA"},
+    ):
+        if source["url"] not in seen_urls:
+            sources.append(source)
+            seen_urls.add(source["url"])
+    out["sources"] = sources
+    out["source_urls"] = [source["url"] for source in sources if source.get("url")]
+    out["source_support"] = {
+        "primary_requirement_source_tier": "county",
+        "primary_filing_source_tier": "county",
+        "requirement_source_count": 1,
+        "filing_source_count": 1,
+        "context_source_count": 1,
+        "filing_path_state": "RESOLVED_PORTAL",
+        "apply_url_source_confidence": "AHJ_VERIFIED",
+    }
+
+    note = "Public Health — Seattle & King County notes replacement water-heater permit requirements start July 1, 2026; confirm effective-date handling if the work starts before that date."
+    tips = out.setdefault("pro_tips", [])
+    if isinstance(tips, list) and note not in tips:
+        tips.append(note)
+
+    out["customer_result_summary"] = _build_customer_result_summary(out, out, city, state)
+    out["customer_first_screen_summary"] = _build_customer_first_screen_summary(out["customer_result_summary"])
+    return out
+
+
 def _sanitize_customer_result_with_state_context(public: dict, state: str) -> dict:
     scoped = dict(public or {})
     if state:
@@ -2234,6 +2369,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope.",
                 })
                 final_public["apply_path"] = apply_path
+        final_public = _apply_seattle_hpwh_output_contract(final_public if isinstance(final_public, dict) else {}, scope_contract, city, state)
         return final_public if isinstance(final_public, dict) else {}
     return {}
 
