@@ -2007,6 +2007,7 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
+    original_apply_url = working.get("apply_url")
     raw_meta = working.get("_meta") if isinstance(working.get("_meta"), dict) else {}
     request_job_category = job_category or working.get("job_category") or raw_meta.get("job_category")
     contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
@@ -2195,6 +2196,13 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         final_public = ensure_required_filing_path_contract(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
         final_public = apply_residential_universal_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract=scope_contract)
         if isinstance(final_public, dict):
+            if (
+                _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
+                and evidence_pack_enabled()
+                and "_evidence_pack" not in final_public
+                and original_apply_url in ("", None)
+            ):
+                final_public["apply_url"] = original_apply_url or ""
             final_public["customer_result_summary"] = _build_customer_result_summary(
                 final_public,
                 cleaned if isinstance(cleaned, dict) else working,
@@ -2203,6 +2211,14 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             )
             final_public["customer_first_screen_summary"] = _build_customer_first_screen_summary(final_public["customer_result_summary"])
         final_public = _public_dict(final_public if isinstance(final_public, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
+        if (
+            isinstance(final_public, dict)
+            and _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
+            and evidence_pack_enabled()
+            and "_evidence_pack" not in final_public
+            and original_apply_url in ("", None)
+        ):
+            final_public["apply_url"] = original_apply_url or ""
         if isinstance(final_public, dict) and str(final_public.get("permit_decision") or "").upper() == "NOT_REQUIRED":
             final_public["apply_url"] = ""
             final_public["online_application_url"] = ""
@@ -3579,6 +3595,8 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         result = enforce_decision_cell_primary(result, final_cell_lock, city, state, public=False)
     result = ensure_required_filing_path_contract(result, city, state, job_type)
     result = apply_residential_universal_gate(result, job_type, city, state, scope_contract=scope_contract)
+    if result.get("_residential_universal_gate") or isinstance(result.get("permit_decision_contract"), dict) or result.get("positive_exemption_evidence"):
+        result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
@@ -5300,12 +5318,27 @@ def html_safe_json_dumps(value: object) -> str:
 def render_share_page(share: dict) -> str:
     template = load_report_template()
     safe_share = dict(share or {})
+    raw_share_data = safe_share.get("data")
+    original_data = raw_share_data if isinstance(raw_share_data, dict) else {}
     safe_data = _sanitize_customer_result_for_request_scope(
-        safe_share.get("data") or {},
+        original_data,
         safe_share.get("job_type", ""),
         safe_share.get("city", ""),
         safe_share.get("state", ""),
     )
+    if not any(original_data.get(k) for k in ("sources", "source_urls", "apply_url", "apply_path", "applying_office")):
+        def _drop_ahj_fields(value):
+            if isinstance(value, dict):
+                return {k: _drop_ahj_fields(v) for k, v in value.items() if "ahj" not in str(k).lower()}
+            if isinstance(value, list):
+                return [_drop_ahj_fields(v) for v in value]
+            if isinstance(value, str):
+                return re.sub(r"\bAHJ\b", "building department", value, flags=re.I)
+            return value
+        safe_data.pop("apply_path", None)
+        safe_data = _drop_ahj_fields(safe_data)
+        if not isinstance(safe_data, dict):
+            safe_data = {}
     safe_share["data"] = safe_data
     checklist = sanitize_customer_visible_result(get_or_create_checklist(safe_data, safe_share.get("job_type", ""), safe_share.get("city", ""), safe_share.get("state", "")))
     payload = to_public_share_payload(safe_share, checklist)
@@ -8096,6 +8129,7 @@ class Handler(BaseHTTPRequestHandler):
                     suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
                     bypass_lookup_caches=bool(qa_cache_mode),
                 )
+                original_apply_url = result.get("apply_url") if isinstance(result, dict) else None
                 is_cached = result.get("_cached", False) if isinstance(result, dict) else False
                 result = finalize_permit_lookup_result(
                     result,
@@ -8115,6 +8149,14 @@ class Handler(BaseHTTPRequestHandler):
                     job_category=job_category,
                     explicit_vertical=explicit_vertical,
                 )
+                if (
+                    not evidence_allowed
+                    and isinstance(api_result, dict)
+                    and _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
+                    and evidence_pack_enabled()
+                    and original_apply_url in ("", None)
+                ):
+                    api_result["apply_url"] = original_apply_url or ""
                 self.send_json(200, api_result)
             except Exception as e:
                 print(f"[api-v1-permit] Error: {e}")

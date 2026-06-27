@@ -3987,6 +3987,9 @@ def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
 def save_cache(key: str, job_type: str, job_category: str, city: str, state: str, zip_code: str, result: dict):
     try:
         # 2026-04-26: capture source URL + ETag/Last-Modified for change detection.
+        if isinstance(result, dict):
+            result = dict(result)
+            result.setdefault("_cache_schema_version", FILING_PACKET_CACHE_SCHEMA_VERSION)
         source_url = _pick_primary_source_url(result)
         etag, last_modified = _capture_validators(source_url) if source_url else ("", "")
         conn = sqlite3.connect(CACHE_DB)
@@ -6887,7 +6890,10 @@ def apply_fee_verify_caveat(result: dict) -> dict:
     if not isinstance(result, dict):
         return result
 
-    verify_caveat = " — verify with the building department before quoting"
+    def _fee_verify_caveat(source_url: str = "") -> str:
+        return f" — verify in {source_url} before quoting" if source_url else " — verify with the building department before quoting"
+
+    verify_caveat = _fee_verify_caveat()
 
     # ── Bucket A: AHJ fee formula override ──
     fee_calc = result.get("fee_calculator") or {}
@@ -6895,6 +6901,8 @@ def apply_fee_verify_caveat(result: dict) -> dict:
         formula_text = fee_calc["formula"]
         fee_source = result.get("fee_source") if isinstance(result.get("fee_source"), dict) else {}
         source_url = fee_source.get("url") or ""
+        if source_url:
+            verify_caveat = _fee_verify_caveat(source_url)
         if source_url and "verify in" not in formula_text.lower():
             result["fee_range"] = f"{formula_text}{verify_caveat}"
         elif source_url and "verify in" in formula_text.lower():
@@ -6928,6 +6936,7 @@ def apply_fee_verify_caveat(result: dict) -> dict:
         return result
     fee_source = result.get("fee_source") if isinstance(result.get("fee_source"), dict) else {}
     source_url = fee_source.get("url") or ""
+    verify_caveat = _fee_verify_caveat(source_url)
     if "verify in" in fee_text.lower() or "verify at" in fee_text.lower():
         # Cached results may have an older verify URL or older Markdown emphasis.
         # Keep the fee number, strip customer-visible Markdown, and align inline
@@ -8939,6 +8948,7 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             apply_fee_verify_caveat(cached)
             apply_rulebook_depth(cached, job_type, city, state)
             sanitize_non_food_office_breakroom_text(cached, job_type)
+            reconcile_v231_result(cached, v231_resolution)
             reconcile_authoritative_result(cached, v24_resolution=v24_resolution, v231_resolution=v231_resolution)
             cached.update(ensure_required_filing_rows(cached, job_type, city, state))
             return cached
@@ -9946,6 +9956,7 @@ Return ONLY the JSON object."""
         print(f"[finalize] AHJ gate/note injection failed (non-fatal): {_e}")
     apply_rulebook_depth(result, job_type, city, state)
     sanitize_non_food_office_breakroom_text(result, job_type)
+    reconcile_v231_result(result, v231_resolution)
     reconcile_authoritative_result(result, v24_resolution=v24_resolution, v231_resolution=v231_resolution)
     result.update(ensure_required_filing_rows(result, job_type, city, state))
 

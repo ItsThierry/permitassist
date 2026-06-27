@@ -456,8 +456,13 @@ def _set_rows_for_scope(result: dict[str, Any], model: dict[str, Any], city: str
         result["permit_name"] = "Residential Plumbing Permit — Water Heater Replacement"
     elif vertical == "panel_upgrade" or "panel_upgrade" in tokens:
         rows.append(_row("Electrical Permit — Service / Panel Upgrade", "electrical", "panel_service_upgrade", ahj_name=ahj, source_url=source_url))
-        _set_permit_kind(result, "Electrical", preserve_terms=("mep", "trade"))
-        result["permit_name"] = "Electrical Permit — Service / Panel Upgrade"
+        if "hvac_equipment" in tokens:
+            rows.append(_row("Mechanical Permit — HVAC Equipment Replacement", "mechanical", "hvac_equipment_replacement", ahj_name=ahj, source_url=source_url))
+            _set_permit_kind(result, "Mechanical", preserve_terms=("mep", "trade"))
+            result["permit_name"] = "Mechanical Permit"
+        else:
+            _set_permit_kind(result, "Electrical", preserve_terms=("mep", "trade"))
+            result["permit_name"] = "Electrical Permit — Service / Panel Upgrade"
         utility_guidance = "Coordinate utility meter release, grounding/bonding, panel schedule, load calculation, and inspection timing before shutdown."
         result["customer_next_step"] = _merge_customer_next_step(
             result,

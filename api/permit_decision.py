@@ -645,7 +645,7 @@ def _repair_customer_decision_prose_coherence(result: dict[str, Any], decision: 
 
 def _strip_customer_banned_text(value: Any, key: str = "") -> Any:
     if isinstance(value, str):
-        if key in {"exact_name_status", "exact_apply_url_status"}:
+        if key in {"exact_name_status", "exact_apply_url_status", "apply_url_status", "exact_source_status", "source_status"}:
             return value
         text = value
         if BANNED_CUSTOMER_SURFACE_RE.search(text):
@@ -1250,7 +1250,7 @@ def _customer_visible_contract_blob(value: Any, key: str = "") -> str:
     contract. The banned phrase scanner applies to prose/customer copy, not that
     controlled status enum.
     """
-    if key in {"exact_name_status", "exact_apply_url_status"}:
+    if key in {"exact_name_status", "exact_apply_url_status", "apply_url_status", "exact_source_status", "source_status"}:
         return ""
     if isinstance(value, dict):
         return " ".join(_customer_visible_contract_blob(v, str(k)) for k, v in value.items())
