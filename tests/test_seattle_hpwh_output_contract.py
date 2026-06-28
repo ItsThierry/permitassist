@@ -178,6 +178,7 @@ print(json.dumps(public, sort_keys=True, default=str))
             "filing_family": "plumbing",
             "required": True,
             "decision": "REQUIRED",
+            "status": "REQUIRED",
             "scope_trigger": "water_heater_replacement",
             "ahj_name": "Public Health — Seattle & King County Plumbing and Gas Piping Program",
             "source_url": PHSKC_URL,

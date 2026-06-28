@@ -25,7 +25,7 @@ def test_permit_lookup_research_path_is_serialized_to_avoid_edge_502_restart():
     assert "PERMIT_LOOKUP_CONCURRENCY_LIMIT" in SERVER
     assert "threading.BoundedSemaphore(PERMIT_LOOKUP_CONCURRENCY_LIMIT)" in SERVER
     permit_route = SERVER.split('if path == "/api/permit":', 1)[1].split('elif path == "/api/batch-permit":', 1)[0]
-    research_pos = permit_route.index("result = research_permit(")
+    research_pos = permit_route.index("result = _research_permit_with_budget(")
     acquire_pos = permit_route.index("PERMIT_LOOKUP_SEMAPHORE.acquire")
     release_pos = permit_route.index("PERMIT_LOOKUP_SEMAPHORE.release()")
     assert acquire_pos < research_pos < release_pos
@@ -44,7 +44,7 @@ def test_queued_public_lookup_rechecks_free_limit_before_research():
     permit_route = SERVER.split('if path == "/api/permit":', 1)[1].split('elif path == "/api/batch-permit":', 1)[0]
     acquire_pos = permit_route.index("PERMIT_LOOKUP_SEMAPHORE.acquire")
     recheck_pos = permit_route.index("used_now = get_effective_free_usage")
-    research_pos = permit_route.index("result = research_permit(")
+    research_pos = permit_route.index("result = _research_permit_with_budget(")
     assert acquire_pos < recheck_pos < research_pos
     assert "if not unlimited and not admin_bypass" in permit_route
 
