@@ -31,6 +31,7 @@ import socket
 import threading
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -118,6 +119,7 @@ PORT           = int(os.environ.get("PORT", 8766))
 # from starving or restarting the worker and surfacing as Railway edge 502s.
 PERMIT_LOOKUP_CONCURRENCY_LIMIT = max(1, int(os.environ.get("PERMIT_LOOKUP_CONCURRENCY_LIMIT", "1")))
 PERMIT_LOOKUP_QUEUE_TIMEOUT_SECONDS = max(1, int(os.environ.get("PERMIT_LOOKUP_QUEUE_TIMEOUT_SECONDS", "45")))
+PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS = max(30, int(os.environ.get("PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS", "110")))
 PERMIT_LOOKUP_SEMAPHORE = threading.BoundedSemaphore(PERMIT_LOOKUP_CONCURRENCY_LIMIT)
 EMAILS_CSV     = os.path.join(DATA_DIR, "captured_emails.csv")
 CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
@@ -2162,6 +2164,593 @@ def _is_seattle_residential_water_heater(scope_contract: dict, city: str, state:
     )
 
 
+
+def _plain_sentence(value: object, max_len: int = 260) -> str:
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    if len(text) <= max_len:
+        return text
+    cut = max(text.rfind(". ", 0, max_len), text.rfind("; ", 0, max_len))
+    if cut >= 80:
+        return text[:cut + 1].strip()
+    return text[:max_len].rsplit(" ", 1)[0].strip().rstrip(",;:") + "."
+
+
+def _pa20_row_text(row: dict) -> str:
+    # Family classification must use row identity fields only.  Rationale/notes
+    # can contain copied text from another row (the PA20 cross-contamination bug),
+    # so including them here misclassifies Building rows as Health/Liquor/etc.
+    return " ".join(str(row.get(k) or "") for k in ("filing_family", "permit_type", "permit_name", "approval_type", "kind", "category"))
+
+
+def _pa20_row_family(row: dict) -> str:
+    filing_text = str(row.get("filing_family") or "").lower()
+    label_text = " ".join(str(row.get(k) or "") for k in ("permit_type", "permit_name", "approval_type")).lower()
+    kind_text = str(row.get("kind") or row.get("category") or "").lower()
+
+    def classify(text: str) -> str:
+        if "liquor" in text or "alcohol" in text:
+            return "liquor"
+        if "food establishment" in text or "health" in text:
+            return "health"
+        if "fog" in text or "pretreatment" in text or "wastewater" in text:
+            return "wastewater"
+        if "historic" in text or "landmark" in text:
+            return "historic"
+        if "planning" in text or "zoning" in text or "land use" in text:
+            return "planning"
+        if "certificate of occupancy" in text or re.search(r"\bco\b", text):
+            return "co"
+        if "fire" in text or "suppression" in text:
+            return "fire"
+        if "electrical" in text or "electric" in text:
+            return "electrical"
+        if "refrigeration" in text or "refrigerant" in text:
+            return "refrigeration"
+        if "mechanical" in text or "hvac" in text or "hood" in text or "ventilation" in text:
+            return "mechanical"
+        if "plumbing" in text or "water heater" in text or "fixture" in text:
+            return "plumbing"
+        if "roof" in text:
+            return "roofing"
+        if "building" in text or "tenant improvement" in text or "alteration" in text or "remodel" in text:
+            return "building"
+        return ""
+
+    # filing_family is the packet row's intended family; prefer it over stale
+    # `kind` values and over generic Building labels accidentally copied onto
+    # specialty rows. Fall back to visible label, then kind.
+    return classify(filing_text) or classify(label_text) or classify(kind_text) or str(row.get("filing_family") or row.get("permit_type") or row.get("permit_name") or "permit").strip().lower()[:60]
+
+
+def _pa20_family_label(family: str, row: dict | None = None) -> str:
+    labels = {
+        "building": "Building", "electrical": "Electrical", "mechanical": "Mechanical",
+        "refrigeration": "Refrigeration",
+        "plumbing": "Plumbing", "fire": "Fire", "planning": "Planning/Zoning",
+        "historic": "Historic/Planning", "co": "Certificate of Occupancy",
+        "health": "Health", "liquor": "Liquor", "wastewater": "Wastewater/FOG",
+        "roofing": "Roofing",
+    }
+    return labels.get(family, str((row or {}).get("permit_type") or (row or {}).get("permit_name") or family).strip() or "Permit")
+
+
+
+def _pa20_canonical_permit_type_for_family(family: str, row: dict, job_type: str = "") -> str:
+    existing = str(row.get("permit_type") or row.get("permit_name") or row.get("approval_type") or "").strip()
+    existing_lc = existing.lower()
+    canonical = {
+        "health": "Health Plan Review / Food Establishment Permit",
+        "wastewater": "Wastewater / FOG / Pretreatment Approval",
+        "planning": "Planning / Zoning Use Clearance",
+        "historic": "Historic Preservation Review",
+        "co": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "fire": "Fire / Hood Suppression Permit" if _pa20_job_has_any(job_type, ("hood", "suppression", "ansul", "type i")) else "Fire Suppression / Fire Prevention Review",
+        "roofing": "Roofing Permit — Tear-Off / Re-Roof",
+    }
+    if family in canonical:
+        family_tokens = {
+            "health": ("health", "food"),
+            "wastewater": ("wastewater", "fog", "pretreatment"),
+            "planning": ("planning", "zoning", "land use"),
+            "historic": ("historic", "landmark"),
+            "co": ("certificate of occupancy", "change-of-occupancy", "co"),
+            "fire": ("fire", "suppression", "hood"),
+            "roofing": ("roof", "reroof", "re-roof"),
+        }[family]
+        if not existing or not any(token in existing_lc for token in family_tokens):
+            return canonical[family]
+    return existing or _pa20_family_label(family, row)
+
+
+def _pa20_row_status(row: dict) -> str:
+    raw = str(row.get("status") or row.get("decision") or row.get("requirement") or "").upper().strip()
+    if raw in {"CONDITIONAL_REQUIRED", "CONDITIONAL", "VERIFY", "MAY_NEED", "MAY NEED"}:
+        return "CONDITIONAL" if raw != "VERIFY" else "VERIFY"
+    if raw in {"NOT_REQUIRED", "NO", "EXEMPT"}:
+        return "NOT_REQUIRED"
+    if raw == "REQUIRED" or row.get("required") is True:
+        return "REQUIRED"
+    return ""
+
+
+def _pa20_job_has_any(job_type: str, terms: tuple[str, ...]) -> bool:
+    return _has_unnegated_any((job_type or "").lower(), terms)
+
+
+
+def _pa20_small_residential_shed_exempt(job_type: str, scope_contract: dict) -> bool:
+    if str((scope_contract or {}).get("category") or "").lower() != "residential":
+        return False
+    text = (job_type or "").lower()
+    if not _pa20_job_has_any(text, ("shed", "accessory structure", "storage building")):
+        return False
+    if re.search(r"\b(?:electrical|electric|circuit|light|outlet|receptacle)\b", text) and not re.search(r"\bno\s+(?:electrical|electric|circuit|light|outlet|receptacle)\b", text):
+        return False
+    if re.search(r"\b(?:add|new|install|with)\b[^.;]{0,80}\b(?:utility|utilities|plumbing|water|sewer|heat|conditioned|habitable)\b", text) and not re.search(r"\bno\s+(?:utilities|utility|plumbing|mechanical|heat)\b", text):
+        return False
+    if _pa20_job_has_any(text, ("utilities", "electrical", "plumbing", "mechanical", "conditioned", "habitable", "foundation", "permanent foundation")):
+        # Allow explicit negations such as "no utilities" / "no permanent foundation".
+        if not (re.search(r"\bno\s+(?:utilities|utility|electrical|electric|plumbing|mechanical|heat)\b", text) and re.search(r"\bno\s+(?:permanent\s+)?foundation\b", text)):
+            return False
+    dims = re.search(r"\b(\d{1,3})\s*(?:x|by)\s*(\d{1,3})\b", text)
+    if dims:
+        area = int(dims.group(1)) * int(dims.group(2))
+        return area <= 120
+    sf = re.search(r"\b(\d{2,3})\s*(?:sq\.?\s*ft|square\s+feet)\b", text)
+    if sf:
+        return int(sf.group(1)) <= 120
+    return bool(re.search(r"\bsmall\b", text) and re.search(r"\bno\s+(?:utilities|utility)", text))
+
+
+def _pa20_apply_small_shed_exemption(public: dict, job_type: str, city: str, state: str) -> dict:
+    out = dict(public)
+    office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office".strip() or "the local permit office"
+    out.update({
+        "permit_required": False,
+        "permit_decision": "NOT_REQUIRED",
+        "permit_verdict": "NO",
+        "permit_kind": "Not Required",
+        "permit_name": "No building permit required for the small detached shed scope",
+        "permit_type": "No building permit required",
+        "permits_required": [],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "customer_headline": "No building permit required for the small detached shed scope.",
+        "customer_next_step": f"Keep the shed detached, unconditioned, without utilities, and without a permanent foundation; verify zoning setbacks/easements with {office} before placement.",
+        "not_required_reason": "Small detached unconditioned shed scope with no utilities and no permanent foundation described.",
+        "fee_range": "No building permit fee expected for the resolved no-permit shed scope; verify zoning or placement fees if the AHJ requires a separate zoning check.",
+        "apply_url": "",
+        "online_application_url": "",
+        "related_permits": [{
+            "permit_type": "Zoning / setback verification",
+            "status": "VERIFY",
+            "decision": "VERIFY",
+            "required": False,
+            "rationale": "Verify setbacks, easements, floodplain/landmark overlays, and HOA constraints before placement.",
+        }],
+    })
+    out["apply_path"] = {
+        **(dict(out.get("apply_path") or {}) if isinstance(out.get("apply_path"), dict) else {}),
+        "state": "NOT_APPLICABLE",
+        "channel": "no_building_permit_required",
+        "support_level": "not applicable",
+        "portal_url": None,
+        "platform": None,
+        "login_required": None,
+        "verification_note": "No building permit filing path is needed for the resolved small-shed scope unless the scope changes; zoning placement still needs verification.",
+    }
+    return out
+
+
+def _pa20_has_commercial_cosmetic_exemption(job_type: str, scope_contract: dict) -> bool:
+    if str((scope_contract or {}).get("category") or "").lower() != "commercial":
+        return False
+    text = f" {(job_type or '').lower()} "
+    cosmetic = _pa20_job_has_any(text, ("paint", "repaint", "carpet", "flooring", "finish", "finishes", "refresh", "cosmetic"))
+    if not cosmetic:
+        return False
+    positive_triggers = (
+        "wall", "partition", "structural", "load bearing", "electrical", "lighting", "receptacle",
+        "plumbing", "sink", "toilet", "mechanical", "hvac", "duct", "ventilation", "fire alarm",
+        "sprinkler", "hood", "grease", "gas", "change of use", "change of occupancy", "occupant load",
+        "storefront", "door", "window", "sign", "exterior", "ceiling", "rated", "accessibility",
+    )
+    if _pa20_job_has_any(text, positive_triggers):
+        return False
+    explicit_no_work = bool(re.search(r"\bno\s+(?:wall|walls|mep|electrical|plumbing|mechanical|structural|occupancy|change of use|fire|sprinkler)", text))
+    no_wall_mep = bool(re.search(r"\bno\s+(?:wall|walls)\b", text)) and bool(re.search(r"\bno\s+(?:mep|electrical|plumbing|mechanical)\b", text))
+    return explicit_no_work or no_wall_mep or "only" in text
+
+
+def _pa20_apply_commercial_cosmetic_exemption(public: dict, job_type: str, city: str, state: str) -> dict:
+    out = dict(public)
+    office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office".strip() or "the local permit office"
+    out.update({
+        "permit_required": False,
+        "permit_decision": "NOT_REQUIRED",
+        "permit_verdict": "NO",
+        "permit_kind": "Not Required",
+        "permit_name": "No permit required",
+        "permit_type": "No permit required",
+        "permits_required": [],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "related_permits": [],
+        "apply_url": "",
+        "online_application_url": "",
+        "customer_headline": "No permit required for cosmetic finish work only.",
+        "customer_next_step": f"Keep the scope limited to paint/carpet/finish work only; if walls, MEP, occupancy, fire/life-safety, exterior, or accessibility work is added, verify with {office} before starting.",
+        "not_required_reason": "Commercial cosmetic finish-only scope with no walls, MEP, structural, occupancy, fire/life-safety, exterior, or accessibility work described.",
+        "fee_range": "No permit fee expected for the resolved no-permit cosmetic scope; verify with the building department if the scope changes.",
+    })
+    out["apply_path"] = {
+        **(dict(out.get("apply_path") or {}) if isinstance(out.get("apply_path"), dict) else {}),
+        "state": "NOT_APPLICABLE",
+        "channel": "no_permit_required",
+        "support_level": "not applicable",
+        "portal_url": None,
+        "platform": None,
+        "login_required": None,
+        "verification_note": "No permit filing path is needed for the resolved cosmetic-only scope unless the scope changes.",
+    }
+    return out
+
+
+def _pa20_fee_text_malformed(value: object) -> bool:
+    text = str(value or "").strip()
+    if not text:
+        return False
+    lower = text.lower()
+    if re.search(r"fee\s*estimate\s*:\s*;", lower):
+        return True
+    if re.search(r"floor\)\s*\.\s*\d+\s*[×x]", lower):
+        return True
+    if "${" in text or "{{" in text or "}}" in text:
+        return True
+    m = re.search(r"\$\s*([\d,]+)\s*-\s*\$\s*\1\s*\+", text)
+    return bool(m)
+
+
+
+def _pa20_clean_public_row_text(text: object, family: str = "") -> str:
+    value = str(text or "").strip()
+    if not value or re.search(r"metadata|keep this row visible|universal_filing_packet|if not verified", value, flags=re.I):
+        label = _pa20_family_label(family, {}) if family else "this review"
+        value = f"Conditional review; file this only if the AHJ or parcel/address review confirms a specific {label.lower()} trigger."
+    return _plain_sentence(value)
+
+
+def _pa20_rewrite_stale_ev_panel_text(value):
+    if isinstance(value, str):
+        text = re.sub(r"Electrical\s+Permit\s+[—-]\s+Service\s*/\s*Panel\s+Upgrade", "Electrical Permit — EV Charger / New Branch Circuit", value, flags=re.I)
+        text = re.sub(r"Electrical\s*-\s*Service\s*/\s*Panel\s+Upgrade", "Electrical - EV Charger / New Branch Circuit", text, flags=re.I)
+        text = re.sub(r"\bservice\s*/\s*panel\s+upgrade\b", "EV charger / new branch circuit", text, flags=re.I)
+        text = re.sub(r"\bpanel\s+upgrade\b", "service upgrade", text, flags=re.I)
+        return text
+    if isinstance(value, list):
+        return [_pa20_rewrite_stale_ev_panel_text(item) for item in value]
+    if isinstance(value, dict):
+        return {k: _pa20_rewrite_stale_ev_panel_text(v) for k, v in value.items()}
+    return value
+
+
+def _pa20_remove_scope_absent_alcohol_text(value):
+    if isinstance(value, list):
+        cleaned = []
+        for item in value:
+            item_text = json.dumps(item, default=str).lower() if isinstance(item, (dict, list)) else str(item).lower()
+            if "liquor" in item_text or "alcohol" in item_text:
+                continue
+            cleaned.append(_pa20_remove_scope_absent_alcohol_text(item))
+        return cleaned
+    if isinstance(value, dict):
+        return {k: _pa20_remove_scope_absent_alcohol_text(v) for k, v in value.items()}
+    if isinstance(value, str) and ("liquor" in value.lower() or "alcohol" in value.lower()):
+        return ""
+    return value
+
+
+def _pa20_should_demote_residential_companion(family: str, job_type: str) -> bool:
+    if family not in {"fire", "planning", "historic", "co"}:
+        return False
+    job = (job_type or "").lower()
+    trigger_terms = {
+        "fire": ("fire alarm", "sprinkler", "fire sprinkler", "fire suppression"),
+        "planning": ("zoning", "setback", "lot coverage", "new footprint", "addition", "adu", "accessory dwelling", "variance"),
+        "historic": ("historic district", "landmark", "historic review", "preservation"),
+        "co": ("change of occupancy", "certificate of occupancy", "new occupancy", "adu", "accessory dwelling"),
+    }[family]
+    return not _pa20_job_has_any(job, trigger_terms)
+
+
+def _pa20_required_rows(rows: list[dict]) -> list[dict]:
+    return [row for row in rows if _pa20_row_status(row) == "REQUIRED"]
+
+
+def _pa20_normalize_customer_rows_and_summaries(public: dict, job_type: str, city: str, state: str, scope_contract: dict) -> dict:
+    if not isinstance(public, dict):
+        return {}
+    out = copy.deepcopy(public)
+    if _pa20_has_commercial_cosmetic_exemption(job_type, scope_contract):
+        return _pa20_apply_commercial_cosmetic_exemption(out, job_type, city, state)
+    if _pa20_small_residential_shed_exempt(job_type, scope_contract):
+        return _pa20_apply_small_shed_exemption(out, job_type, city, state)
+    job_lc_early = (job_type or "").lower()
+    if (out.get("permit_decision") == "NOT_REQUIRED" or out.get("permit_required") is False) and "drywall" in job_lc_early:
+        out["permits_required"] = []
+        out["permits_required_logic"] = []
+        out["permit_name"] = "No permit required for finish-only drywall repair"
+        out["customer_headline"] = "No permit required for finish-only drywall repair."
+        out["job_summary"] = "Residential finish-only drywall repair after a leak; no permit filing is needed if the work stays limited to patching/replacing finishes."
+        out["customer_next_step"] = "Keep the work limited to finish-only drywall repair; if the scope expands into framing, trade, fire-rated assembly, or other regulated work, verify with the building department before starting."
+        for key in ("checklist", "pro_tips", "common_mistakes", "watch_out", "next_steps"):
+            if isinstance(out.get(key), list):
+                out[key] = [item for item in out[key] if not re.search(r"electrical|plumbing|panel|circuit|wire|breaker|permit application|permit office", str(item), flags=re.I)]
+
+    job_has_alcohol = _pa20_job_has_any(job_type or "", ("alcohol", "liquor", "bar", "beer", "wine", "cocktail", "tavern"))
+    is_residential = str((scope_contract or {}).get("category") or "").lower() == "residential"
+    rows_in = [row for row in (out.get("permits_required") or []) if isinstance(row, dict)]
+    rows_out: list[dict] = []
+    related = [copy.deepcopy(row) for row in (out.get("related_permits") or []) if isinstance(row, dict)]
+    seen_required: set[str] = set()
+    demoted_any = False
+    removed_any = False
+
+    for row in rows_in:
+        row = copy.deepcopy(row)
+        row.pop("provenance", None)
+        family = _pa20_row_family(row)
+        if family == "liquor" and not job_has_alcohol:
+            removed_any = True
+            continue
+        status = _pa20_row_status(row)
+        if is_residential and _pa20_should_demote_residential_companion(family, job_type):
+            row["status"] = "CONDITIONAL"
+            row["decision"] = "CONDITIONAL"
+            row["required"] = False
+            row.setdefault("required_if", f"the exact property/scope has a { _pa20_family_label(family, row).lower() } trigger confirmed by the AHJ or parcel/address review")
+            original_note = str(row.get("notes") or row.get("rationale") or row.get("reason") or "").strip()
+            if row.get("source_url") and original_note and not re.search(r"metadata|keep this row visible|universal_filing_packet|if not verified", original_note, flags=re.I):
+                row["rationale"] = _plain_sentence(original_note)
+            else:
+                row["rationale"] = f"Conditional review; file this only if the AHJ or parcel/address review confirms a specific {_pa20_family_label(family, row).lower()} trigger."
+            row["notes"] = row["rationale"]
+            related.append(row)
+            demoted_any = True
+            continue
+        if not status:
+            status = "REQUIRED" if out.get("permit_decision") == "REQUIRED" or out.get("permit_required") is True else "VERIFY"
+        row["status"] = status
+        row["kind"] = _pa20_family_label(family, row)
+        row["permit_type"] = _pa20_canonical_permit_type_for_family(family, row, job_type)
+        if status == "REQUIRED":
+            row["decision"] = "REQUIRED"
+            row["required"] = True
+            dedupe_key = family
+            # Keep one building/TI row; preserve specialty/trade rows separately.
+            if dedupe_key in seen_required and dedupe_key == "building":
+                removed_any = True
+                continue
+            seen_required.add(dedupe_key)
+        rationale = str(row.get("rationale") or row.get("reason") or row.get("notes") or "").strip()
+        foreign = (
+            (family == "building" and re.search(r"food establishment|liquor|health plan", rationale, flags=re.I))
+            or (family in {"mechanical", "fire"} and re.search(r"liquor license", rationale, flags=re.I))
+            or re.search(r"exact online apply path is metadata|keep this row visible|universal_filing_packet", rationale, flags=re.I)
+        )
+        if not rationale or foreign:
+            rationale = f"Required because the described scope triggers {_pa20_family_label(family, row)} review; confirm the exact portal category with the listed permit office before filing."
+        row["rationale"] = _plain_sentence(rationale)
+        if "notes" in row:
+            note = str(row.get("notes") or "")
+            if re.search(r"metadata|keep this row visible|universal_filing_packet|if not verified", note, flags=re.I):
+                note = rationale
+            row["notes"] = _plain_sentence(note)
+        rows_out.append(row)
+
+    out["permits_required"] = rows_out
+    if rows_out:
+        logic_rows = []
+        for row in rows_out:
+            if _pa20_row_status(row) != "REQUIRED":
+                continue
+            family = _pa20_row_family(row)
+            logic_rows.append({
+                "filing_family": family,
+                "permit_type": row.get("permit_type") or row.get("permit_name") or _pa20_family_label(family, row),
+                "included_because": row.get("rationale") or f"Required because the described scope triggers {_pa20_family_label(family, row)} review.",
+                "scope_trigger": f"{family}_scope",
+            })
+        out["permits_required_logic"] = logic_rows
+    if related:
+        # Dedupe related rows by family + name/status.
+        rel_seen = set()
+        rel_out = []
+        for row in related:
+            row = copy.deepcopy(row)
+            row.pop("provenance", None)
+            family = _pa20_row_family(row)
+            if row.get("notes"):
+                row["notes"] = _pa20_clean_public_row_text(row.get("notes"), family)
+            if row.get("rationale"):
+                row["rationale"] = _pa20_clean_public_row_text(row.get("rationale"), family)
+            for status_key in ("apply_url_status", "source_status"):
+                if str(row.get(status_key) or "").lower() in {"needs_verification", "source_needed"}:
+                    row[status_key] = "confirm with the listed department"
+            key = (family, str(row.get("permit_type") or row.get("permit_name") or row.get("approval_type") or ""), str(row.get("decision") or row.get("status") or ""))
+            if key in rel_seen:
+                continue
+            rel_seen.add(key)
+            rel_out.append(row)
+        out["related_permits"] = rel_out
+
+    if _pa20_fee_text_malformed(out.get("fee_range")):
+        out["fee_range"] = "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting."
+    for key in ("fee_estimate", "fee_calculator"):
+        if _pa20_fee_text_malformed(out.get(key)):
+            out.pop(key, None)
+
+    # Correct common scope sub-labels without removing the row/feature.
+    job_lc = (job_type or "").lower()
+    if "ev charger" in job_lc or "level 2" in job_lc:
+        for row in rows_out:
+            if _pa20_row_family(row) == "electrical" and re.search(r"service\s*/\s*panel|panel upgrade|service upgrade", str(row.get("permit_type") or row.get("permit_name") or ""), flags=re.I):
+                row["permit_type"] = "Electrical Permit — EV Charger / New Branch Circuit"
+                row["rationale"] = "Required because the described scope adds an EV charger circuit; confirm the exact electrical portal category before filing."
+    if ("mini split" in job_lc or "mini-split" in job_lc or "ductless" in job_lc) and not re.search(r"\b(?:replace|replacement|changeout|change-out|like for like)\b", job_lc):
+        for row in rows_out:
+            if _pa20_row_family(row) == "mechanical" and re.search(r"changeout|replacement", str(row.get("permit_type") or row.get("permit_name") or ""), flags=re.I):
+                row["permit_type"] = "Mechanical Permit — Ductless Mini-Split / Heat Pump Installation"
+                row["rationale"] = "Required because the described scope installs ductless mini-split equipment; confirm the exact mechanical portal category before filing."
+
+    if rows_out:
+        out["permits_required_logic"] = [
+            {
+                "filing_family": _pa20_row_family(row),
+                "permit_type": row.get("permit_type") or row.get("permit_name") or _pa20_family_label(_pa20_row_family(row), row),
+                "included_because": row.get("rationale") or f"Required because the described scope triggers {_pa20_family_label(_pa20_row_family(row), row)} review.",
+                "scope_trigger": f"{_pa20_row_family(row)}_scope",
+            }
+            for row in rows_out
+            if _pa20_row_status(row) == "REQUIRED"
+        ]
+
+    required_rows = _pa20_required_rows(rows_out)
+    if out.get("permit_decision") == "REQUIRED" or out.get("permit_required") is True:
+        if required_rows:
+            labels = []
+            for row in required_rows:
+                label = _pa20_family_label(_pa20_row_family(row), row)
+                if label not in labels:
+                    labels.append(label)
+            if len(labels) == 1:
+                single_name = str(required_rows[0].get("permit_type") or required_rows[0].get("permit_name") or labels[0]).strip()
+                out["permit_name"] = single_name
+                out["permit_type"] = single_name
+                out["customer_headline"] = f"Permit required: {single_name}."
+            else:
+                out["permit_name"] = "Multiple permits required: " + " + ".join(labels)
+                out["customer_headline"] = "Permit required: multiple permits — " + " + ".join(labels) + "."
+            office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office".strip() or "the local permit office"
+            row_names = [str(row.get("permit_type") or row.get("permit_name") or _pa20_family_label(_pa20_row_family(row), row)).strip() for row in required_rows]
+            pool_primary = next((name for name in row_names if re.search(r"\bpool\b|spa", name, flags=re.I)), "")
+            if pool_primary and str(scope_contract.get("category") or "").lower() == "residential":
+                out["permit_name"] = pool_primary
+                out["permit_type"] = pool_primary
+                out["customer_headline"] = f"Permit required: {pool_primary}."
+            apply_path_obj = out.get("apply_path") if isinstance(out.get("apply_path"), dict) else {}
+            portal_url = apply_path_obj.get("portal_url") or out.get("apply_url") or out.get("online_application_url")
+            if not portal_url and str(apply_path_obj.get("state") or "").upper() != "RESOLVED_PORTAL":
+                guidance_bits = []
+                job_for_guidance = (job_type or "").lower()
+                if "adu" in job_for_guidance or "accessory dwelling" in job_for_guidance:
+                    guidance_bits.append("ADU filing packet")
+                if "basement" in job_for_guidance:
+                    guidance_bits.append("basement-finish building packet")
+                if "shed" in job_for_guidance:
+                    guidance_bits.append("shed thresholds")
+                if "panel" in job_for_guidance or "service" in job_for_guidance:
+                    guidance_bits.append("utility/panel/grounding coordination; coordinate utility meter release")
+                guidance_note = f" Include {'; '.join(guidance_bits)}." if guidance_bits else ""
+                out["customer_next_step"] = f"No exact local filing portal is attached; contact {office} and file the required permit package: {', '.join(row_names)}.{guidance_note}"
+            else:
+                out["customer_next_step"] = f"File the required permit package with {office}: {', '.join(row_names)}. Confirm exact portal subcategories before final submission."
+            if isinstance(out.get("apply_path"), dict):
+                out["apply_path"] = dict(out["apply_path"])
+                out["apply_path"]["permit_type"] = out.get("permit_name") or row_names[0]
+                out["apply_path"]["permit_category"] = out.get("permit_kind") or _pa20_family_label(_pa20_row_family(required_rows[0]), required_rows[0])
+        else:
+            out["customer_headline"] = "Permit category needs permit-office verification."
+            no_row_guidance = " shed thresholds" if "shed" in (job_type or "").lower() else ""
+            out["customer_next_step"] = f"No exact local filing portal is attached; contact {out.get('applying_office') or city + ' permit office'} to verify the exact filing category{no_row_guidance} before starting work."
+    if not job_has_alcohol:
+        for key in ("checklist", "pro_tips", "common_mistakes", "watch_out", "next_steps"):
+            if key in out:
+                out[key] = _pa20_remove_scope_absent_alcohol_text(out.get(key))
+        for key in ("job_summary", "scope_summary", "summary"):
+            if isinstance(out.get(key), str) and ("liquor" in out[key].lower() or "alcohol" in out[key].lower()):
+                out[key] = out.get("customer_headline") or out.get("permit_name") or "Permit decision resolved for the described scope."
+    if "ev charger" in job_lc or "level 2" in job_lc:
+        out = _pa20_rewrite_stale_ev_panel_text(out)
+    if _pa20_fee_text_malformed(out.get("fee_range")):
+        out["fee_range"] = "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting."
+    if isinstance(out.get("claim_citations"), list):
+        cleaned_citations = []
+        for citation in out.get("claim_citations") or []:
+            if not isinstance(citation, dict):
+                continue
+            citation = dict(citation)
+            if _pa20_fee_text_malformed(citation.get("value")):
+                citation["value"] = out.get("fee_range") or "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting."
+            cleaned_citations.append(citation)
+        out["claim_citations"] = cleaned_citations
+    if demoted_any or removed_any:
+        warnings = out.setdefault("warnings", [])
+        if isinstance(warnings, list):
+            msg = "Customer-boundary filing rows were normalized so only hard scope-triggered permits appear as required; address-dependent companion reviews are shown separately."
+            if msg not in warnings:
+                warnings.append(msg)
+    return out
+
+
+def _build_degraded_lookup_fallback(job_type: str, city: str, state: str, *, reason: str = "lookup_timeout") -> dict:
+    office = f"{city} permit office".strip() or "the local permit office"
+    likely = "REQUIRED" if _has_unnegated_any((job_type or "").lower(), ("renovation", "remodel", "bathroom", "plumbing", "electrical", "tenant improvement", "addition", "conversion", "hvac", "water heater")) else "NOT_REQUIRED"
+    if likely == "REQUIRED":
+        return {
+            "permit_required": True,
+            "permit_decision": "REQUIRED",
+            "permit_verdict": "YES",
+            "permit_kind": "Verify with AHJ",
+            "permit_name": "Permit category requires AHJ verification",
+            "permits_required": [{"permit_type": "Permit category needs AHJ verification", "status": "VERIFY", "decision": "VERIFY", "required": False, "rationale": "The live lookup timed out before PermitAssist could verify the exact permit category."}],
+            "related_permits": [],
+            "customer_headline": "Permit category requires permit-office verification before work starts.",
+            "customer_next_step": f"Contact {office} before starting work; PermitAssist could not complete live verification in time for this lookup.",
+            "confidence": "degraded — timeout fallback",
+            "degraded_sources": True,
+            "warnings": ["Live lookup timed out; this fallback preserves a useful next step but is not a fully verified filing packet."],
+            "fee_range": "Fee not confirmed; verify the current AHJ fee schedule before quoting.",
+            "apply_url": "",
+            "online_application_url": "",
+            "applying_office": office,
+            "_runtime_degraded_fallback": {"reason": reason, "timeout_seconds": PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS},
+        }
+    return {
+        "permit_required": False,
+        "permit_decision": "NOT_REQUIRED",
+        "permit_verdict": "NO",
+        "permit_kind": "Not Required",
+        "permit_name": "No permit indicated for the described minor scope",
+        "permits_required": [],
+        "customer_headline": "No permit indicated for the described minor scope.",
+        "customer_next_step": f"Keep the scope as described and verify with {office} if any structural, trade, occupancy, exterior, or life-safety work is added.",
+        "confidence": "degraded — timeout fallback",
+        "degraded_sources": True,
+        "warnings": ["Live lookup timed out; this fallback is not a fully verified filing packet."],
+        "apply_url": "",
+        "online_application_url": "",
+        "applying_office": office,
+        "_runtime_degraded_fallback": {"reason": reason, "timeout_seconds": PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS},
+    }
+
+
+def _research_permit_with_budget(job_type: str, city: str, state: str, zip_code: str = "", **kwargs) -> dict:
+    executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="permit_lookup_budget")
+    future = executor.submit(research_permit, job_type, city, state, zip_code, **kwargs)
+    try:
+        return future.result(timeout=PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS)
+    except FutureTimeout:
+        print(f"[permit][timeout-fallback] lookup exceeded {PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS}s for {city}, {state}: {job_type[:120]}")
+        future.cancel()
+        return _build_degraded_lookup_fallback(job_type, city, state, reason="lookup_timeout")
+    except Exception as exc:
+        print(f"[permit][error-fallback] {type(exc).__name__}: {exc}")
+        return _build_degraded_lookup_fallback(job_type, city, state, reason=type(exc).__name__)
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
+
+
 def _apply_seattle_hpwh_output_contract(public: dict, scope_contract: dict, city: str, state: str) -> dict:
     """Last-mile invariant gate for Seattle residential HPWH/water-heater output.
 
@@ -2194,6 +2783,7 @@ def _apply_seattle_hpwh_output_contract(public: dict, scope_contract: dict, city
         "filing_family": "plumbing",
         "required": True,
         "decision": "REQUIRED",
+        "status": "REQUIRED",
         "scope_trigger": "water_heater_replacement",
         "ahj_name": _HPWH_PHSKC_OFFICE,
         "source_url": _HPWH_PHSKC_URL,
@@ -2587,6 +3177,33 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope.",
                 })
                 final_public["apply_path"] = apply_path
+        if isinstance(final_public, dict):
+            source_backed_companions = (cleaned if isinstance(cleaned, dict) else {}).get("_residential_source_backed_companions")
+            if isinstance(source_backed_companions, list):
+                related_rows = list(final_public.get("related_permits") or []) if isinstance(final_public.get("related_permits"), list) else []
+                related_text = json.dumps(related_rows, sort_keys=True, default=str).lower()
+                for companion in source_backed_companions:
+                    if not isinstance(companion, dict):
+                        continue
+                    comp_name = str(companion.get("permit_type") or companion.get("permit_name") or "").strip()
+                    if not comp_name or comp_name.lower() in related_text:
+                        continue
+                    comp = dict(companion)
+                    comp["required"] = False
+                    comp["decision"] = str(comp.get("decision") or "VERIFY").upper()
+                    comp["status"] = comp["decision"] if comp["decision"] in {"VERIFY", "CONDITIONAL"} else "VERIFY"
+                    related_rows.append(comp)
+                if related_rows:
+                    final_public["related_permits"] = related_rows
+        final_public = _pa20_normalize_customer_rows_and_summaries(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract)
+        if isinstance(final_public, dict):
+            final_public["customer_result_summary"] = _build_customer_result_summary(
+                final_public,
+                cleaned if isinstance(cleaned, dict) else working,
+                city,
+                state,
+            )
+            final_public["customer_first_screen_summary"] = _build_customer_first_screen_summary(final_public["customer_result_summary"])
         final_public = _apply_seattle_hpwh_output_contract(final_public if isinstance(final_public, dict) else {}, scope_contract, city, state)
         return final_public if isinstance(final_public, dict) else {}
     return {}
@@ -8032,7 +8649,7 @@ class Handler(BaseHTTPRequestHandler):
                             }, extra_headers=response_headers)
                             return
                     _use_cache = (not is_benchmark) and (not evidence_allowed) and (not qa_cache_mode)
-                    result = research_permit(
+                    result = _research_permit_with_budget(
                         job_type, city, state, zip_code,
                         job_category=job_category,
                         use_cache=_use_cache,
