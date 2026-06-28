@@ -2787,6 +2787,38 @@ def _live60_regenerate_customer_copy(public: dict, job_type: str, city: str, sta
     return out
 
 
+def _sync_required_permit_summary_fields_from_rows(public: dict) -> dict:
+    """Keep required_permit_* mirrors aligned with final public rows.
+
+    Cell-lock and late boundary passes can preserve a primary permit name while
+    changing rows.  These mirror fields must follow the rows so summaries do not
+    leak stale companion families.
+    """
+    out = copy.deepcopy(public) if isinstance(public, dict) else {}
+    if str(out.get("permit_decision") or "").upper() == "NOT_REQUIRED" or out.get("permit_required") is False:
+        out["required_permit_families"] = []
+        out["required_permit_names"] = []
+        out["required_permit_summary"] = "No permit required for the described scope."
+        return out
+    rows = [row for row in out.get("permits_required") or [] if isinstance(row, dict) and _live60_required_row(row)]
+    if not rows:
+        return out
+    labels: list[str] = []
+    names: list[str] = []
+    for row in rows:
+        family = _pa20_row_family(row) or _customer_row_family(row)
+        label = _pa20_family_label(family, row)
+        name = _live60_row_name(row) or label
+        if label and label not in labels:
+            labels.append(label)
+        if name and name not in names:
+            names.append(name)
+    out["required_permit_families"] = labels
+    out["required_permit_names"] = names
+    out["required_permit_summary"] = (f"Permit required: {names[0]}." if len(names) == 1 else "Multiple permits required: " + "; ".join(names) + ".") if names else out.get("required_permit_summary")
+    return out
+
+
 def apply_live60_customer_boundary_contract(public: dict, job_type: str = "", city: str = "", state: str = "", *, scope_contract: dict | None = None) -> dict:
     """Universal final customer-boundary fixes from the 60-live lookup review.
 
@@ -2846,6 +2878,7 @@ def apply_final_customer_egress_contract(public: dict, job_type: str = "", city:
     if cell_lock:
         final = enforce_decision_cell_primary(final, cell_lock, city, state, public=True)
         final = sanitize_customer_visible_result(final if isinstance(final, dict) else {}, strip_internal_keys=True)
+        final = _sync_required_permit_summary_fields_from_rows(final)
     final = _repair_customer_boundary_copy(final, root=final)
     if isinstance(final, dict):
         decision_obj = _typed_customer_decision_from_public(final, scope_contract, cell_lock)
