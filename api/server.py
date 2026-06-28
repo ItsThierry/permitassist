@@ -2659,6 +2659,7 @@ def _live60_apply_not_required_contract(public: dict, job_type: str, city: str, 
         "approval_timeline": "No permit submission needed for the resolved scope as described.",
         "job_summary": summary,
         "summary": summary,
+        "required_permit_families": [],
         "required_permit_names": [],
         "required_permit_summary": "No permit required for the described scope.",
         "customer_headline": headline,
@@ -2715,6 +2716,7 @@ def _live60_regenerate_customer_copy(public: dict, job_type: str, city: str, sta
         summary = "Multiple permits required: " + "; ".join(row_names) + "."
     out["job_summary"] = summary
     out["summary"] = summary
+    out["required_permit_families"] = labels
     out["required_permit_names"] = row_names
     out["required_permit_summary"] = summary
     office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office".strip() or "the local permit office"

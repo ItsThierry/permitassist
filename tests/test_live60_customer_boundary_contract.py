@@ -96,6 +96,8 @@ def test_not_required_contract_removes_required_docs_filing_timeline_and_stale_s
 
     assert public["permit_decision"] == "NOT_REQUIRED"
     assert public["permits_required"] == []
+    assert public.get("required_permit_families") == []
+    assert public.get("required_permit_names") == []
     assert public["apply_url"] == ""
     for forbidden in ["panel schedule", "wire gauge", "electrical diagram", "utility disconnect", "multiple permits required", "permit filing/review is required"]:
         assert forbidden not in text
@@ -120,6 +122,7 @@ def test_companion_overreach_removed_but_explicit_trade_rows_preserved():
     )
     text = _blob(r22)
     assert {"electrical", "mechanical", "plumbing"}.issubset(_families(r22))
+    assert r22.get("required_permit_families") == ["Electrical", "Mechanical", "Plumbing"]
     assert "fire" not in str(r22.get("permit_name", "")).lower()
     assert "certificate of occupancy" not in text
     assert "planning / zoning" not in text
