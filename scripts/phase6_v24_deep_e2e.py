@@ -15,13 +15,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import os
 import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT_ROOT = ROOT / "artifacts" / "v24_phase6_deep_e2e"
 CACHE_DB = ROOT / "artifacts" / "v24_phase6_e2e" / "tmp-cache" / "cache.db"
 BASE_URL = "http://127.0.0.1:18766"
-LOCAL_API_KEY = "pa_live_phase6_deep_local_only_key"
+LOCAL_API_KEY = os.environ.get("PERMITASSIST_PHASE6_LOCAL_API_KEY", "")
 LOCAL_EMAIL = "phase6-deep-paid@example.test"
 FORBIDDEN_CUSTOMER_MARKERS = [
     "_v24",

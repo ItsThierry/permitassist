@@ -9,6 +9,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from api.scope_contract import build_scope_contract
+from api.residential_universal_gate import apply_residential_universal_gate
 
 
 PHSKC_URL = "https://kingcounty.gov/en/dept/dph/health-safety/environmental-health/plumbing-gas-piping/applications-and-permits"
@@ -87,6 +88,51 @@ def test_scope_classifier_combined_real_hvac_and_water_heater_keeps_both_trades(
     assert "electrical permit" in text
     assert "plumbing permit" in text
     assert "water heater replacement" in text
+
+
+def test_residential_gate_routes_seattle_water_heater_plumbing_to_phskc_and_filters_wrong_scope_sources():
+    contract = build_scope_contract(HPWH_JOB, "Seattle", "WA", job_category="residential")
+    contaminated = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permit_kind": "Electrical",
+        "permit_name": "Electrical Permit — Panel Upgrade / Service Change",
+        "applying_office": "Seattle Department of Construction and Inspections",
+        "apply_url": "https://cosaccela.seattle.gov/",
+        "permits_required": [
+            {"permit_type": "Electrical Permit — Panel Upgrade / Service Change", "required": True, "source_url": "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"},
+            {"permit_type": "Mechanical Permit — HVAC Equipment Changeout", "required": True, "source_url": "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/mechanical-permit"},
+            {"permit_type": "Refrigeration Permit — Split-System Heat Pump / Mini-Split", "required": True, "source_url": "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/refrigeration-permit"},
+        ],
+        "sources": [
+            {"url": "https://www.seattle.gov/DPD/Publications/CAM/Tip424.pdf", "title": "Tip 424 commercial and multifamily heat pump water heating"},
+            {"url": "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/mechanical-permit", "title": "Mechanical Permit"},
+        ],
+        "source_urls": [
+            "https://www.seattle.gov/DPD/Publications/CAM/Tip424.pdf",
+            "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/mechanical-permit",
+        ],
+        "customer_next_step": "Apply for Electrical Permit — Panel Upgrade / Service Change in the Seattle Services Portal.",
+    }
+
+    out = apply_residential_universal_gate(contaminated, HPWH_JOB, "Seattle", "WA", scope_contract=contract)
+    text = _customer_blob(out)
+
+    assert out["permit_kind"] == "Plumbing"
+    assert out["permit_name"] == "Residential Plumbing Permit — Water Heater Replacement"
+    assert "public health" in out["applying_office"].lower()
+    assert out["apply_url"] == PHSKC_URL
+    assert len(out["permits_required"]) == 1
+    assert out["permits_required"][0]["filing_family"] == "plumbing"
+    assert "panel upgrade" not in text
+    assert "service change" not in text
+    assert "mechanical permit" not in text
+    assert "refrigeration permit" not in text
+    assert "tip424" not in text
+    assert "mechanical-permit" not in text
+    assert "electrical circuit" in text
+    assert "conditional" in text
 
 
 def test_customer_view_model_final_gate_makes_contaminated_hpwh_output_a_grade_safe():

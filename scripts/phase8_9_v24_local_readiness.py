@@ -38,7 +38,7 @@ from api.v24_decision_cells import (  # noqa: E402
 ARTIFACT_ROOT = ROOT / "artifacts" / "v24_phase8_9_local_readiness"
 CACHE_DB = ARTIFACT_ROOT / "tmp-cache" / "cache.db"
 BASE_URL = "http://127.0.0.1:18766"
-LOCAL_API_KEY = "pa_live_phase8_9_local_only_key"
+LOCAL_API_KEY = os.environ.get("PERMITASSIST_PHASE8_9_LOCAL_API_KEY", "")
 LOCAL_EMAIL = "phase8-9-paid@example.test"
 PKG = ROOT / "knowledge" / "v24"
 INDEX = PKG / "permitassist_decision_cell_index_v24.json"

@@ -645,7 +645,7 @@ def _repair_customer_decision_prose_coherence(result: dict[str, Any], decision: 
 
 def _strip_customer_banned_text(value: Any, key: str = "") -> Any:
     if isinstance(value, str):
-        if key in {"exact_name_status", "exact_apply_url_status"}:
+        if key in {"exact_name_status", "exact_apply_url_status", "apply_url_status", "exact_source_status", "source_status"}:
             return value
         text = value
         if BANNED_CUSTOMER_SURFACE_RE.search(text):
@@ -684,7 +684,7 @@ def _get_decision_cell_primary_lock(result: dict[str, Any] | None) -> dict[str, 
     lock = result.get("_decision_cell_primary_lock")
     if not isinstance(lock, dict):
         return None
-    if lock.get("source") != "permitassist_v231_decision_cell" or lock.get("exact_match") is not True:
+    if lock.get("source") not in {"permitassist_v231_decision_cell", "permitassist_v24_decision_cell"} or lock.get("exact_match") is not True:
         return None
     decision = str(lock.get("permit_decision") or "").upper().strip()
     if decision not in {PERMIT_DECISION_REQUIRED, PERMIT_DECISION_NOT_REQUIRED}:
@@ -836,7 +836,7 @@ def _lock_permit_name_is_generic(name: Any) -> bool:
 
 def _recovered_lock_permit_name(lock: dict[str, Any], permit_kind: str = "") -> str:
     name = _norm_text(lock.get("permit_name"))
-    if name and (not _lock_permit_name_is_generic(name) or (lock.get("source") == "permitassist_v231_decision_cell" and lock.get("exact_match") is True)):
+    if name and (not _lock_permit_name_is_generic(name) or (lock.get("source") in {"permitassist_v231_decision_cell", "permitassist_v24_decision_cell"} and lock.get("exact_match") is True)):
         # Exact publishable Decision Cells own the primary permit framing, even
         # when an AHJ calls the filing category simply "permit".  Generic legacy
         # locks without Decision Cell provenance still recover to the safer
@@ -1250,7 +1250,7 @@ def _customer_visible_contract_blob(value: Any, key: str = "") -> str:
     contract. The banned phrase scanner applies to prose/customer copy, not that
     controlled status enum.
     """
-    if key in {"exact_name_status", "exact_apply_url_status"}:
+    if key in {"exact_name_status", "exact_apply_url_status", "apply_url_status", "exact_source_status", "source_status"}:
         return ""
     if isinstance(value, dict):
         return " ".join(_customer_visible_contract_blob(v, str(k)) for k, v in value.items())

@@ -278,7 +278,7 @@ BANNED_TEXT_PATTERNS = (
 BANNED_PHOENIX_APPLY_HOST_RE = re.compile(r"aca-prod\.accela\.com/phoenix", re.I)
 
 _NEGATION_RE = re.compile(
-    r"(?:\bno\b|\bwithout\b|\bnot\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b)"
+    r"(?:\bno\b|\bwithout\b|\bnot\b|\bnon[-\s]*(?:restaurant|food|commercial\s+kitchen)\b|\bnone of\b|\bexcludes?\b|\bexcluding\b|\bdoes not include\b|\bdoesn't include\b)"
     r"(?:\s+(?:new|any|commercial|type\s*i|type\s*1|and|or))*"
     r"(?:[\s,;/()-]+[a-z0-9]+){0,5}[\s,;/()-]*$",
     re.I,
@@ -301,6 +301,8 @@ def _term_is_negated(text: str, start: int) -> bool:
     prefix = text[max(0, start - 120):start]
     if re.search(r"\bnot\s+just\s*$", prefix, flags=re.I):
         return False
+    if re.search(r"\bnon[-\s]*$", prefix, flags=re.I):
+        return True
     if re.search(r"\b(?:instead\s+of\s+splitting|wrong\s+permit\s+workflow|force\s+a\s+separate|trying\s+to\s+force\s+a\s+separate)\b", prefix, flags=re.I):
         return True
     return bool(_NEGATION_RE.search(prefix))
@@ -410,7 +412,8 @@ def detect_filing_scope_signals(job_type: str, result: dict[str, Any] | None = N
             "Seattle mini-split / heat-pump equipment connection and disconnect/circuit coordination trigger",
         )
 
-    if _contains_any(all_text, ("grease interceptor", "grease trap", "fog", "f.o.g", "wastewater", "pretreatment", "industrial waste", "laundromat discharge")):
+    has_process_fog = _contains_any(all_text, ("grease interceptor", "grease trap", "f.o.g", "wastewater", "pretreatment", "industrial waste", "laundromat discharge")) or (_contains(all_text, "fog") and not _contains_any(scope_text, ("stage fog", "fog machine", "special effects fog")))
+    if has_process_fog:
         _append_signal(signals, "grease_fog_wastewater", ("plumbing", "wastewater_pretreatment_fog"), "Grease/FOG/wastewater signal")
 
     if _contains_any(all_text, ("alcohol", "liquor", "bar", "beer", "wine", "cocktail", "tavern")):
