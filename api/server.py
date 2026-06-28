@@ -33,6 +33,7 @@ import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from collections import defaultdict
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
@@ -575,7 +576,7 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
         if strip_internal_keys and target_state and _customer_text_has_wrong_jurisdiction_specific_claim(value, target_state):
             return ""
         if key in confidence_fields and strip_internal_keys and has_internal(value):
-            return "Source support is degraded; use the resolved permit decision and current local filing category before filing."
+            return "Source support is partial; verify the final portal subcategory with the listed permit office before filing."
         if key in fee_fields and strip_internal_keys and any(term in lowered for term in fee_internal_terms):
             value = re.sub(r"\bjurisdiction multiplier\b", "local fee schedule", value, flags=re.I)
             value = re.sub(r"\bstructured\s+ti\s+floor\b|\bstructured\s+floor\b|\bti\s+floor\b", "commercial TI complexity", value, flags=re.I)
@@ -623,7 +624,7 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             value = re.sub(r"\bAHJ\b", "building department", value, flags=re.I)
             value = re.sub(r"\bLikely\s+primary\s+permit\s+type\b", "Primary permit type", value, flags=re.I)
             value = re.sub(r"\b(?:Some\s+report\s+claims\s+do\s+not\s+yet\s+have\s+quoted\s+source\s+snippets;\s*)?verify\s+with\s+the\s+building\s+department\s+before\s+relying\s+on\s+them\.?", "Source snippets are incomplete; source support is degraded.", value, flags=re.I)
-            value = re.sub(r"\bverify\s+requirements\s+with\s+the\s+building\s+department\s+before\s+filing\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
+            value = re.sub(r"\bverify\s+requirements\s+with\s+the\s+building\s+department\s+before\s+filing\.?", "Verify the final portal subcategory with the listed permit office before filing.", value, flags=re.I)
         value = re.sub(r"\bVerified\s*·\s*official sources\b", "Official source path found", value, flags=re.I)
         value = re.sub(r"\bPermit\s+Permit\b", "Permit", value, flags=re.I)
         # Customer-visible final guardrails for deterministic serializer defects.
@@ -632,8 +633,8 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             value = re.sub(r"\(?912\)?[-\s]*651[-\s]*6790", "912-651-6530", value)
         value = re.sub(r"\bPlanning estimate only\s*:?\s*", "", value, flags=re.I)
         value = re.sub(r"\bHidden triggers?\s*:?\s*", "Scope triggers: ", value, flags=re.I)
-        value = re.sub(r"\bEngine flagged(?:\s+this\s+answer)?(?:\s+for\s+review)?\b\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
-        value = re.sub(r"\bNeeds review(?:\s+for\s*:\s*[A-Za-z0-9_, ._/-]+)?\b\.?", "Use the resolved permit decision and current local filing category before filing.", value, flags=re.I)
+        value = re.sub(r"\bEngine flagged(?:\s+this\s+answer)?(?:\s+for\s+review)?\b\.?", "Verify the final portal subcategory with the listed permit office before filing.", value, flags=re.I)
+        value = re.sub(r"\bNeeds review(?:\s+for\s*:\s*[A-Za-z0-9_, ._/-]+)?\b\.?", "Verify the final portal subcategory with the listed permit office before filing.", value, flags=re.I)
         value = re.sub(r"\[?\s*verify[^\]\[.;,]{0,100}?before merging\s*\]?", "confirm with the building department", value, flags=re.I)
         value = re.sub(r"\bverify adopted edition before merging\b", "confirm adopted code edition with the building department", value, flags=re.I)
         # Normalize broken sentence seams from LLM fragment splicing
@@ -803,6 +804,48 @@ _INTERNAL_CUSTOMER_FIELD_NAMES = frozenset({
 _PUBLIC_KEEP_EMPTY_FIELDS = frozenset({
     "apply_url", "apply_phone", "online_application_url", "source_urls", "sources", "claim_citations",
 })
+
+
+@dataclass(frozen=True)
+class CustomerPermitDecision:
+    """Typed customer-boundary decision contract.
+
+    This is deliberately narrower than the internal lookup dict.  It records the
+    regulatory facts the customer renderer is allowed to expose; internal notes,
+    resolver IDs, metadata, and provenance/debug strings are not representable.
+    """
+
+    decision: str
+    required: bool | None
+    segment: str
+    primary_family: str
+    required_families: tuple[str, ...] = field(default_factory=tuple)
+    conditional_families: tuple[str, ...] = field(default_factory=tuple)
+    verify_families: tuple[str, ...] = field(default_factory=tuple)
+    applying_office: str = ""
+    apply_url: str = ""
+    source_urls: tuple[str, ...] = field(default_factory=tuple)
+    cell_locked: bool = False
+
+    def validate(self) -> list[str]:
+        issues: list[str] = []
+        if self.decision not in {"REQUIRED", "NOT_REQUIRED"}:
+            issues.append("invalid_customer_decision")
+        if self.decision == "REQUIRED" and self.required is not True:
+            issues.append("required_decision_missing_required_bool")
+        if self.decision == "NOT_REQUIRED" and self.required is not False:
+            issues.append("not_required_decision_missing_required_bool")
+        if self.decision == "REQUIRED" and not self.primary_family:
+            issues.append("required_missing_primary_family")
+        return issues
+
+
+@dataclass(frozen=True)
+class InternalDecisionNotes:
+    """Internal-only companion for debugging; never serialized publicly."""
+
+    notes: tuple[str, ...] = field(default_factory=tuple)
+    provenance: tuple[str, ...] = field(default_factory=tuple)
 
 _STRUCTURED_SOURCE_URL_FIELDS = frozenset({
     "sources", "source_urls", "claim_citations", "apply_url", "online_application_url",
@@ -995,7 +1038,7 @@ def _local_decision_evidence_urls(result: dict, city: str, state: str) -> list[s
     return out
 
 
-def _demote_nonlocal_apply_url_for_required(result: dict, city: str, state: str) -> dict:
+def _demote_nonlocal_apply_url_for_required(result: dict, city: str, state: str, job_type: str = "") -> dict:
     """Never present generic/model-code URLs as the local filing URL.
 
     This is intentionally not a decision suppressor. If the engine resolved a
@@ -1010,8 +1053,10 @@ def _demote_nonlocal_apply_url_for_required(result: dict, city: str, state: str)
         url = _safe_customer_source_url(result.get(key) or "")
         if not url:
             continue
+        if _trusted_canonical_apply_url_for_request(url, city, state):
+            continue
         authority = classify_source_authority(url, city, state, result=result)
-        if authority.get("local_decision_evidence") and authority.get("display_allowed") and not _apply_url_wrong_locality(url, city, state, result) and not _apply_url_segment_mismatch(url, city, state, result):
+        if authority.get("local_decision_evidence") and authority.get("display_allowed") and not _apply_url_wrong_locality(url, city, state, result) and not _apply_url_segment_mismatch(url, city, state, result, job_type):
             continue
         result[key] = ""
         support = result.setdefault("source_support", {})
@@ -1031,8 +1076,10 @@ def _demote_nonlocal_apply_url_for_required(result: dict, city: str, state: str)
             url = _safe_customer_source_url(cleaned.get(key) or "")
             if not url:
                 continue
+            if _trusted_canonical_apply_url_for_request(url, city, state):
+                continue
             authority = classify_source_authority(url, city, state, result=result)
-            if not (authority.get("local_decision_evidence") and authority.get("display_allowed")) or _apply_url_wrong_locality(url, city, state, result) or _apply_url_segment_mismatch(url, city, state, result):
+            if not (authority.get("local_decision_evidence") and authority.get("display_allowed")) or _apply_url_wrong_locality(url, city, state, result) or _apply_url_segment_mismatch(url, city, state, result, job_type):
                 cleaned.pop(key, None)
         result["apply_path"] = cleaned
     return result
@@ -1045,7 +1092,7 @@ _CANONICAL_AHJ_APPLY_URLS: dict[tuple[str, str], dict[str, object]] = {
     ("new york", "ny"): {
         "url": "https://www.nyc.gov/site/buildings/index.page",
         "title": "NYC Department of Buildings",
-        "tokens": ("nyc department of buildings", "new york city department of buildings", "dob now", "nyc dob"),
+        "tokens": ("nyc department of buildings", "new york city department of buildings", "dob now", "nyc dob", "new york"),
     },
     ("brooklyn", "ny"): {
         "url": "https://www.nyc.gov/site/buildings/index.page",
@@ -1097,7 +1144,26 @@ _CANONICAL_AHJ_APPLY_URLS: dict[tuple[str, str], dict[str, object]] = {
         "title": "Town of Delmar Code Enforcement",
         "tokens": (),
     },
+    ("louisville", "ky"): {
+        "url": "https://louisvilleky.gov/government/construction-review/online-permitting-portal",
+        "title": "Louisville Metro Office of Construction Review Online Permitting Portal",
+        "tokens": ("louisville metro office of construction review", "construction review", "louisville"),
+        "trusted_canonical": True,
+    },
+    ("arlington", "va"): {
+        "url": "https://building.arlingtonva.us/inspections/",
+        "title": "Arlington County Inspection Services Division",
+        "tokens": ("arlington county inspection services", "inspection services division", "permit office", "arlington"),
+        "trusted_canonical": True,
+    },
 }
+
+
+def _trusted_canonical_apply_url_for_request(url: str, city: str, state: str) -> bool:
+    entry = _CANONICAL_AHJ_APPLY_URLS.get(((city or "").lower().strip(), (state or "").lower().strip()))
+    if not (isinstance(entry, dict) and entry.get("trusted_canonical")):
+        return False
+    return _safe_customer_source_url(url) == _safe_customer_source_url(str(entry.get("url") or ""))
 
 
 def _result_text_inventory(result: dict) -> str:
@@ -1127,12 +1193,22 @@ def _apply_canonical_ahj_apply_url_fallback(result: dict, city: str, state: str)
     if not safe_url:
         return result
     authority = classify_source_authority(safe_url, city, state, result=result)
-    if not (authority.get("local_decision_evidence") and authority.get("display_allowed")):
+    if not (authority.get("local_decision_evidence") and authority.get("display_allowed")) and not entry.get("trusted_canonical"):
         return result
     result["apply_url"] = safe_url
     result.setdefault("online_application_url", safe_url)
     result.setdefault("applying_office", str(entry.get("title") or f"{city} building department"))
     result.setdefault("building_dept_name", str(entry.get("title") or f"{city} building department"))
+    source_entry = {"url": safe_url, "title": str(entry.get("title") or f"{city} building department"), "source_type": "official_local"}
+    sources = result.get("sources") if isinstance(result.get("sources"), list) else []
+    if not any(isinstance(src, dict) and src.get("url") == safe_url for src in sources):
+        sources = [source_entry, *sources]
+    result["sources"] = sources
+    raw_source_urls = result.get("source_urls")
+    source_urls = [url for url in raw_source_urls if isinstance(url, str)] if isinstance(raw_source_urls, list) else []
+    if safe_url not in source_urls:
+        source_urls.insert(0, safe_url)
+    result["source_urls"] = source_urls
     return result
 
 
@@ -1896,6 +1972,7 @@ def lint_customer_visible_result(public: dict, city: str = "", state: str = "") 
         "internal_customer_terms": r"\b(?:source-backed\s+(?:threshold|evidence|exemption)|needs_verification|fail[_\s-]?closed|verify\s+before\s+merging|structured\s+floor|ti\s+floor|jurisdiction\s+multiplier|ada-path-of-travel\s+adder)\b",
         "fragment_stutter": r"\b[A-Z][A-Za-z .'-]+,\s*[A-Z]{2}\.[A-Za-z]|\bwork\.(?:signage|exterior|interior|electrical|plumbing|mechanical|fire|health|zoning)\b",
         "repeated_caveat": r"verify\s+with\s+the\s+building\s+department.{0,80}verify\s+with\s+the\s+building\s+department",
+        "internal_process_copy": r"\b(?:use\s+the\s+resolved\s+permit\s+decision|current\s+local\s+filing\s+category|live\s+web\s+research\s+found|city-specific\s+match\s+supported\s+by\s+live\s+web\s+research)\b",
         # P1B — Serializer bug lint patterns (2026-06-09)
         "unknown_ahj_title": r"\b(?:unknown\s+ahj|incomplete\s+data|not\s+enough\s+information|data\s+unavailable|cannot\s+verify\s+jurisdiction)\b",
         "mid_sentence_drop": r"\b[a-z]{3,}\.[A-Z]{2}\.[^ ]{1,3}$|\.[A-Z][a-z]{2,}\.",
@@ -1922,6 +1999,607 @@ def lint_customer_visible_result(public: dict, city: str = "", state: str = "") 
         if isinstance(source, dict) and source.get("url") and not str(source.get("url") or "").startswith("https://"):
             hits.append({"code": "insecure_source_url", "message": "Customer-visible source URL must be https://."})
     return hits
+
+
+_CUSTOMER_BOUNDARY_INTERNAL_COPY_RE = re.compile(
+    r"\b(?:use\s+the\s+resolved\s+permit\s+decision|current\s+local\s+filing\s+category|live\s+web\s+research\s+found|city-specific\s+match\s+supported\s+by\s+live\s+web\s+research)\b",
+    re.I,
+)
+
+
+def _customer_boundary_safe_confidence_reason(public: dict) -> str:
+    public_obj = public if isinstance(public, dict) else {}
+    source_support_obj = public_obj.get("source_support")
+    support = source_support_obj if isinstance(source_support_obj, dict) else {}
+    has_source = bool(public_obj.get("sources") or public_obj.get("source_urls") or support.get("has_source_backed_evidence") or support.get("has_official_source"))
+    if has_source:
+        return "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing."
+    return "Source support is partial; verify the final portal subcategory with the listed permit office before filing."
+
+
+def _repair_customer_boundary_copy(value, *, key: str = "", root: dict | None = None):
+    if isinstance(value, str):
+        text = value
+        if key in {"fee_range", "fee_estimate", "total_cost_estimate"}:
+            text = re.sub(r"\bcurrent\s+building\s+department\s+fee\s+schedule\b", "current AHJ fee schedule", text, flags=re.I)
+        if _CUSTOMER_BOUNDARY_INTERNAL_COPY_RE.search(text):
+            if key in {"confidence_reason", "warning", "warnings", "quality_warnings"}:
+                return _customer_boundary_safe_confidence_reason(root or {})
+            text = _CUSTOMER_BOUNDARY_INTERNAL_COPY_RE.sub("verify the final portal subcategory with the listed permit office", text)
+        text = re.sub(
+            r"\b(?:Source support is degraded;\s*)?use\s+the\s+resolved\s+permit\s+decision\s+and\s+current\s+local\s+filing\s+category\s+before\s+filing\.?",
+            "Verify the final portal subcategory with the listed permit office before filing.",
+            text,
+            flags=re.I,
+        )
+        return re.sub(r"\s{2,}", " ", text).strip()
+    if isinstance(value, list):
+        return [_repair_customer_boundary_copy(item, key=key, root=root) for item in value]
+    if isinstance(value, dict):
+        root_obj = value if root is None else root
+        return {k: _repair_customer_boundary_copy(v, key=str(k), root=root_obj) for k, v in value.items()}
+    return value
+
+
+_CUSTOMER_COMPANION_FAMILY_TERMS = {
+    "building": ("building", "alteration", "remodel", "addition", "deck", "basement", "window", "roof", "egress"),
+    "electrical": ("electrical", "electric", "circuit", "panel", "service", "outlet", "ev charger", "charger"),
+    "mechanical": ("mechanical", "hvac", "furnace", "ac", "air conditioner", "mini split", "heat pump", "pellet stove", "fireplace"),
+    "plumbing": ("plumbing", "water heater", "toilet", "shower", "drain", "fixture", "ejector"),
+    "fire": ("fire", "sprinkler", "alarm", "hood", "suppression"),
+    "planning": ("planning", "zoning", "setback", "fence", "parcel", "site plan", "land use"),
+    "historic": ("historic", "landmark", "district"),
+    "co": ("certificate of occupancy", "change of occupancy", "change of use", "coo"),
+    "roofing": ("roof", "roofing", "reroof", "re-roof", "shingle"),
+}
+_ADDRESS_DEPENDENT_COMPANION_FAMILIES = {"fire", "planning", "historic", "co"}
+
+
+def _customer_row_family(row: dict) -> str:
+    text = " ".join(str(row.get(k) or "") for k in ("filing_family", "family", "kind", "category", "permit_kind", "permit_type", "permit_name", "approval_type", "portal_selection")).lower()
+    if "zoning" in text or "planning" in text or "land use" in text:
+        return "planning"
+    if "historic" in text or "landmark" in text:
+        return "historic"
+    if "certificate of occupancy" in text or re.search(r"\bcoo?\b", text):
+        return "co"
+    for family, terms in _CUSTOMER_COMPANION_FAMILY_TERMS.items():
+        if any(term in text for term in terms):
+            return family
+    return "other"
+
+
+def _customer_row_status(row: dict) -> str:
+    raw = str(row.get("status") or row.get("decision") or row.get("requirement") or "").upper().strip()
+    if raw in {"REQUIRED", "CONDITIONAL", "VERIFY", "NOT_REQUIRED"}:
+        return raw
+    if raw in {"CONDITIONAL_REQUIRED", "MAY_NEED", "MAY NEED", "LIKELY_REQUIRED", "LIKELY"}:
+        return "CONDITIONAL"
+    if row.get("required") is True:
+        return "REQUIRED"
+    if row.get("required") is False:
+        return "VERIFY"
+    return "VERIFY"
+
+
+def _family_triggered_by_request(family: str, job_type: str) -> bool:
+    text = f" {job_type or ''} ".lower()
+    terms = _CUSTOMER_COMPANION_FAMILY_TERMS.get(family, ())
+    if not any(term in text for term in terms):
+        return False
+    if family in {"electrical", "plumbing", "mechanical"} and re.search(rf"\bno\s+(?:{family}|{'electric' if family == 'electrical' else 'hvac' if family == 'mechanical' else 'water|sewer'})\b", text):
+        return False
+    return True
+
+
+def _demoted_companion_row(row: dict, family: str) -> dict:
+    out = copy.deepcopy(row)
+    out["required"] = False
+    out["decision"] = "VERIFY"
+    out["status"] = "VERIFY"
+    out.setdefault("required_if", "Required only if the exact address, parcel, overlay, or project scope triggers this review.")
+    out.setdefault("requirement_label", "verify with the permit office before treating this as a required filing row")
+    out.setdefault("filing_family", family)
+    return out
+
+
+def _apply_customer_companion_requirement_contract(public: dict, job_type: str, scope_contract: dict | None = None) -> dict:
+    if not isinstance(public, dict):
+        return {}
+    out = copy.deepcopy(public)
+    category = str((scope_contract or {}).get("category") or out.get("job_category") or "").lower().strip()
+    residential = category == "residential" or bool(re.search(r"\b(single[-\s]?family|dwelling|residential|homeowner)\b", job_type or "", flags=re.I))
+    if str(out.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED" or out.get("permit_required") is False:
+        out["permits_required"] = []
+        return out
+    required_rows = [copy.deepcopy(row) for row in out.get("permits_required") or [] if isinstance(row, dict)]
+    original_rows = [
+        copy.deepcopy(row)
+        for row in out.get("_original_permits_required_for_companion_contract") or []
+        if isinstance(row, dict) and _customer_row_family(row) in _ADDRESS_DEPENDENT_COMPANION_FAMILIES
+    ] if residential else []
+    if original_rows:
+        existing_keys = {
+            json.dumps({"family": _customer_row_family(row), "name": row.get("permit_type") or row.get("permit_name") or row.get("approval_type")}, sort_keys=True)
+            for row in required_rows
+        }
+        for row in original_rows:
+            key = json.dumps({"family": _customer_row_family(row), "name": row.get("permit_type") or row.get("permit_name") or row.get("approval_type")}, sort_keys=True)
+            if key not in existing_keys:
+                existing_keys.add(key)
+                required_rows.append(row)
+    kept: list[dict] = []
+    related = [copy.deepcopy(row) for row in out.get("related_permits") or [] if isinstance(row, dict)]
+    for row in required_rows:
+        family = _customer_row_family(row)
+        status = _customer_row_status(row)
+        if status != "REQUIRED":
+            demoted = copy.deepcopy(row)
+            demoted["required"] = False
+            demoted["decision"] = status if status in {"CONDITIONAL", "VERIFY", "NOT_REQUIRED"} else "VERIFY"
+            demoted["status"] = demoted["decision"]
+            related.append(demoted)
+            continue
+        if residential and family in _ADDRESS_DEPENDENT_COMPANION_FAMILIES and not _family_triggered_by_request(family, job_type):
+            related.append(_demoted_companion_row(row, family))
+            continue
+        row["required"] = True
+        row["decision"] = "REQUIRED"
+        row["status"] = "REQUIRED"
+        kept.append(row)
+    if required_rows:
+        out["permits_required"] = kept
+    normalized_related: list[dict] = []
+    seen = set()
+    for row in related:
+        family = _customer_row_family(row)
+        status = _customer_row_status(row)
+        if status == "REQUIRED" and residential and family in _ADDRESS_DEPENDENT_COMPANION_FAMILIES and not _family_triggered_by_request(family, job_type):
+            row = _demoted_companion_row(row, family)
+        else:
+            row["decision"] = status
+            row["status"] = status
+            row["required"] = status == "REQUIRED"
+        key = json.dumps({"family": family, "name": row.get("permit_type") or row.get("permit_name") or row.get("approval_type"), "status": row.get("status")}, sort_keys=True)
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized_related.append(row)
+    if normalized_related:
+        out["related_permits"] = normalized_related
+    return out
+
+
+_LIVE60_REQUIRED_DOC_FORBIDDEN_RE = re.compile(
+    r"\b(?:panel\s+schedule|wire\s+gauge|breaker\s+size|electrical\s+diagram|one[-\s]?line|utility\s+disconnect|permit\s+application|bring\s+\d+\s+copies|trade\s+license|contractor\s+registration)\b",
+    re.I,
+)
+
+
+def _live60_text(value: object) -> str:
+    return re.sub(r"\s+", " ", str(value or "").lower()).strip()
+
+
+def _live60_job_has(job_type: str, phrases: tuple[str, ...]) -> bool:
+    return _has_unnegated_any((job_type or "").lower(), phrases)
+
+
+def _live60_explicit_no(job_type: str, phrases: tuple[str, ...]) -> bool:
+    text = _live60_text(job_type)
+    for phrase in phrases:
+        token = re.escape(phrase).replace(r"\ ", r"[\s/-]+")
+        if re.search(rf"\b(?:no|without|not|excluding|excludes|does\s+not\s+include|doesn't\s+include)\s+(?:any\s+|new\s+)?{token}\b", text):
+            return True
+    return False
+
+
+def _live60_profile(job_type: str, scope_contract: dict | None = None) -> dict:
+    text = _live60_text(job_type)
+    category = str((scope_contract or {}).get("category") or "").lower().strip()
+    residential = category == "residential" or bool(re.search(r"\b(?:residential|single[-\s]?family|two[-\s]?family|homeowner|dwelling|apartment|condo)\b", text))
+    commercial = category == "commercial" or bool(re.search(r"\b(?:commercial|tenant\s+improvement|office|retail|restaurant|warehouse|hotel|medical|clinic|dental|daycare|lab|brewery|storefront)\b", text))
+    food_health_scope = commercial and bool(re.search(r"\b(?:restaurant|commercial\s+kitchen|food\s+service|food\s+establishment|daycare|salon|barber|spa\s+tenant|medical|clinic|dental)\b", text))
+    alcohol_scope = bool(re.search(r"\b(?:liquor|alcohol|beer|wine|cocktail|tavern|bar\s+(?!sink\b)|brewery|distillery)\b", text))
+    fixture_swap_no_relocation = bool(re.search(r"\b(?:replace|swap|replacement)\b.{0,80}\b(?:faucet|garbage\s+disposal|disposal|toilet|vanity)\b", text)) and bool(re.search(r"\bno\s+(?:pipe|plumbing|drain|water\s+line|supply\s+line)\s+(?:relocation|relocate|changes?|work|design\s+change)\b|\bexisting\s+(?:rough[-\s]?in|location|lines?)\b", text))
+    cosmetic_only = bool(re.search(r"\b(?:paint|repaint|carpet|flooring|finish|finishes|cosmetic|refresh)\b", text)) and bool(re.search(r"\bonly\b|\bno\s+(?:wall|walls|mep|electrical|plumbing|mechanical|structural|occupancy|fire|sprinkler)", text))
+    families: set[str] = set()
+    if _live60_job_has(job_type, ("adu", "accessory dwelling", "basement adu", "garage conversion", "garage to adu", "garage-to-adu")):
+        families.update({"building", "electrical", "plumbing", "mechanical"})
+    if _live60_job_has(job_type, ("solar", "pv", "photovoltaic", "battery backup", "battery storage", "ess", "energy storage")):
+        families.add("electrical")
+        if _live60_job_has(job_type, ("roof", "rooftop", "roof penetrations", "racking")):
+            families.add("building")
+    if _live60_job_has(job_type, ("illuminated sign", "lit sign", "electrical sign", "wall sign with lighting")) or ("sign" in text and re.search(r"\b(?:illuminated|lit|lighting|electrical)\b", text)):
+        families.update({"building", "electrical", "planning"})
+    if _live60_job_has(job_type, ("new 240", "new 220", "240 volt", "220 volt", "new circuit", "dedicated circuit", "subpanel", "sub-panel", "new wiring", "lighting", "receptacles", "outlets", "electrical", "electric")):
+        families.add("electrical")
+    if _live60_job_has(job_type, ("heat pump water heater", "water heater", "hpwh")):
+        families.add("plumbing")
+    if _live60_job_has(job_type, ("bathroom", "kitchen", "sink", "toilet", "tub", "shower", "plumbing", "water line", "drain", "fixture", "restroom")) and not fixture_swap_no_relocation:
+        families.add("plumbing")
+    if _live60_job_has(job_type, ("hvac", "mechanical", "bath fan", "exhaust fan", "ventilation", "ductwork", "furnace", "air conditioner", "rtu", "rooftop unit", "hood")):
+        families.add("mechanical")
+    if _live60_job_has(job_type, ("siding", "window", "door", "egress", "basement", "partition", "wall", "tenant improvement", "upfit", "remodel", "alteration", "porch", "deck", "shed", "sign")):
+        families.add("building")
+    if _live60_explicit_no(job_type, ("electrical", "electric", "wiring", "circuits", "outlets", "mep")) and "subpanel" not in text:
+        families.discard("electrical")
+    if _live60_explicit_no(job_type, ("plumbing", "pipe", "pipes", "water line", "mep")) and not _live60_job_has(job_type, ("new bathroom", "new kitchen", "restroom", "water heater")):
+        families.discard("plumbing")
+    if _live60_explicit_no(job_type, ("mechanical", "hvac", "ductwork", "mep")):
+        families.discard("mechanical")
+    return {
+        "residential": residential,
+        "commercial": commercial,
+        "food_health_scope": food_health_scope,
+        "alcohol_scope": alcohol_scope,
+        "fixture_swap_no_relocation": fixture_swap_no_relocation,
+        "cosmetic_only": cosmetic_only,
+        "triggered_families": families,
+        "text": text,
+    }
+
+
+def _live60_required_row(row: dict) -> bool:
+    return _pa20_row_status(row) == "REQUIRED" or row.get("required") is True
+
+
+def _live60_row_name(row: dict) -> str:
+    return str(row.get("permit_type") or row.get("permit_name") or row.get("approval_type") or row.get("name") or "").strip()
+
+
+def _live60_make_row(family: str, profile: dict, city: str, state: str, existing: dict | None = None) -> dict:
+    names = {
+        "building": "Building Permit",
+        "electrical": "Electrical Permit",
+        "plumbing": "Plumbing Permit",
+        "mechanical": "Mechanical Permit",
+        "planning": "Planning / Zoning Use Clearance",
+    }
+    text = profile.get("text", "")
+    if family == "building" and "adu" in text:
+        name = "Building Permit — ADU / Dwelling Conversion"
+    elif family == "electrical" and ("solar" in text or "battery" in text or "pv" in text):
+        name = "Electrical Permit — Solar PV / Battery System"
+    elif family == "electrical" and ("ev charger" in text or "level 2" in text):
+        name = "Electrical Permit — EV Charger / New Branch Circuit"
+    elif family == "electrical" and "sign" in text:
+        name = "Electrical Permit — Illuminated Sign"
+    elif family == "electrical" and ("240" in text or "220" in text or "circuit" in text or "hpwh" in text or "heat pump water heater" in text):
+        name = "Electrical Permit — New Circuit / Equipment Connection"
+    elif family == "plumbing" and "adu" in text:
+        name = "Plumbing Permit — ADU Kitchen/Bath"
+    elif family == "mechanical" and "adu" in text:
+        name = "Mechanical Permit — ADU Ventilation / Heating"
+    elif family == "plumbing" and ("water heater" in text or "hpwh" in text):
+        name = "Plumbing Permit — Water Heater Replacement"
+    else:
+        name = names.get(family, _pa20_family_label(family, existing or {}))
+    row = copy.deepcopy(existing) if isinstance(existing, dict) else {}
+    row.update({
+        "permit_type": name,
+        "filing_family": row.get("filing_family") or family,
+        "kind": row.get("kind") or _pa20_family_label(family, row),
+        "required": True,
+        "decision": "REQUIRED",
+        "status": "REQUIRED",
+        "scope_trigger": row.get("scope_trigger") or f"{family}_explicit_scope",
+        "derived_from": row.get("derived_from") or ["final_customer_boundary_explicit_scope"],
+        "rationale": row.get("rationale") or f"Required because the original request explicitly includes {_pa20_family_label(family, row).lower()} scope; confirm the exact portal subcategory with the listed permit office before filing.",
+    })
+    return row
+
+
+def _live60_row_allowed(row: dict, family: str, profile: dict) -> bool:
+    text = profile.get("text", "")
+    if family == "health" and not profile.get("food_health_scope"):
+        return False
+    if family == "liquor" and not profile.get("alcohol_scope"):
+        return False
+    if family == "plumbing":
+        if profile.get("fixture_swap_no_relocation"):
+            return False
+        if re.search(r"\b(?:siding|sign|storefront|paint|repaint|carpet|cosmetic|finish)\b", text) and "plumbing" not in profile.get("triggered_families", set()):
+            return False
+        if _live60_explicit_no(text, ("plumbing", "pipe", "pipes", "water line", "mep")) and "plumbing" not in profile.get("triggered_families", set()):
+            return False
+    if family == "electrical" and profile.get("fixture_swap_no_relocation") and "electrical" not in profile.get("triggered_families", set()):
+        return False
+    if profile.get("residential") and family in {"fire", "planning", "historic", "co"} and family not in profile.get("triggered_families", set()):
+        return False
+    return True
+
+
+def _live60_normalize_rows(public: dict, job_type: str, city: str, state: str, scope_contract: dict | None = None) -> dict:
+    out = copy.deepcopy(public) if isinstance(public, dict) else {}
+    profile = _live60_profile(job_type, scope_contract)
+    if str(out.get("permit_decision") or "").upper() == "NOT_REQUIRED" or out.get("permit_required") is False:
+        return _live60_apply_not_required_contract(out, job_type, city, state)
+    rows_in = [copy.deepcopy(row) for row in out.get("permits_required") or [] if isinstance(row, dict)]
+    by_family: dict[str, dict] = {}
+    kept: list[dict] = []
+    related = [copy.deepcopy(row) for row in out.get("related_permits") or [] if isinstance(row, dict)]
+    for row in rows_in:
+        family = _pa20_row_family(row) or _customer_row_family(row)
+        if family == "liquor" and not profile.get("alcohol_scope") and re.search(r"\b(?:bar\s+sink|sink|drain|trap|vent|water\s+supply)\b", json.dumps(row, default=str), flags=re.I):
+            family = "plumbing"
+            row["permit_type"] = "Plumbing Permit — Commercial Sink Installation"
+            row["filing_family"] = "plumbing"
+            row["kind"] = "Plumbing"
+        if _live60_required_row(row) and not _live60_row_allowed(row, family, profile):
+            if family in {"fire", "planning", "historic", "co"} and row.get("source_url"):
+                demoted = copy.deepcopy(row)
+                demoted.update({"required": False, "decision": "VERIFY", "status": "VERIFY"})
+                demoted.setdefault("required_if", "Required only if parcel/address/use review confirms this companion review.")
+                related.append(demoted)
+            continue
+        if _live60_required_row(row):
+            row = _live60_make_row(family, profile, city, state, existing=row) if family in {"building", "electrical", "plumbing", "mechanical", "planning"} else row
+            if family and family not in by_family:
+                by_family[family] = row
+                kept.append(row)
+            continue
+        related.append(row)
+    for family in sorted(profile.get("triggered_families", set())):
+        if family in {"planning"} and not _live60_job_has(job_type, ("zoning", "planning", "setback", "sign")):
+            continue
+        if family in {"electrical", "plumbing", "mechanical", "building"} and family not in by_family:
+            row = _live60_make_row(family, profile, city, state)
+            by_family[family] = row
+            kept.append(row)
+    if kept:
+        out["permits_required"] = kept
+        out["permit_required"] = True
+        out["permit_decision"] = "REQUIRED"
+        out["permit_verdict"] = "YES"
+    elif profile.get("residential") and profile.get("fixture_swap_no_relocation"):
+        return _live60_apply_not_required_contract(out, job_type, city, state)
+    else:
+        out["permits_required"] = []
+    if related:
+        rel_seen = set()
+        rel_out = []
+        for row in related:
+            family = _pa20_row_family(row) or _customer_row_family(row)
+            if family == "health" and not profile.get("food_health_scope"):
+                continue
+            if family == "liquor" and not profile.get("alcohol_scope"):
+                continue
+            key = (family, _live60_row_name(row), str(row.get("status") or row.get("decision") or ""))
+            if key in rel_seen:
+                continue
+            rel_seen.add(key)
+            rel_out.append(row)
+        out["related_permits"] = rel_out
+    return _live60_regenerate_customer_copy(out, job_type, city, state)
+
+
+def _live60_apply_not_required_contract(public: dict, job_type: str, city: str, state: str) -> dict:
+    out = copy.deepcopy(public) if isinstance(public, dict) else {}
+    office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office".strip() or "the local permit office"
+    summary = f"No permit required for the described scope in {city}, {state} as long as the work stays within the stated limits."
+    headline = "No permit required for the described scope."
+    if re.search(r"\b(?:paint|repaint|carpet|finish|finishes|cosmetic|refresh)\b", _live60_text(job_type)):
+        summary = f"No permit required for cosmetic finish work only in {city}, {state} as long as the work stays limited to the stated finish-only scope."
+        headline = "No permit required for cosmetic finish work only."
+    out.update({
+        "permit_required": False,
+        "permit_decision": "NOT_REQUIRED",
+        "permit_verdict": "NO",
+        "permit_kind": "Not Required",
+        "permit_name": "No permit required",
+        "permit_type": "No permit required",
+        "permits_required": [],
+        "permits_required_logic": [],
+        "companion_permits": [],
+        "apply_url": "",
+        "online_application_url": "",
+        "timeline": "No permit submission needed for the resolved scope as described.",
+        "approval_timeline": "No permit submission needed for the resolved scope as described.",
+        "job_summary": summary,
+        "summary": summary,
+        "customer_headline": headline,
+        "customer_next_step": f"Keep the work limited to the described no-permit scope; if framing, trade work, occupancy, fire/life-safety, exterior, or accessibility work is added, verify with {office} before starting.",
+        "documents_needed": ["Nothing for permit filing because this resolved scope does not require a permit.", "Keep photos/invoices showing the work stayed within the described no-permit scope."],
+        "what_to_bring": ["Nothing for permit filing because this resolved scope does not require a permit."],
+        "requirements": ["Keep the scope limited as described; verify with the permit office if the work expands."],
+        "checklist": ["Confirm the work stays within the described no-permit scope.", "Save invoices/photos for project records.", "Contact the permit office before adding framing, trade, occupancy, fire/life-safety, exterior, or accessibility work."],
+        "inspections": [],
+        "inspection_requirements": [],
+        "inspect_checklist": [],
+        "inspection_booking": "No permit inspection is scheduled for the resolved no-permit scope.",
+        "fee_range": "No permit fee expected for the resolved no-permit scope; verify with the permit office if the scope changes.",
+        "fee_estimate": "No permit fee expected for the resolved no-permit scope; verify with the permit office if the scope changes.",
+        "claim_citations": [],
+        "pro_tips": ["Keep the scope tight and document that no trade, framing, occupancy, fire/life-safety, exterior, or accessibility work was added."],
+        "common_mistakes": ["Letting the scope expand into trade, framing, occupancy, fire/life-safety, exterior, or accessibility work without checking the permit office first."],
+    })
+    out["apply_path"] = {"state": "NOT_APPLICABLE", "channel": "no_permit_required", "support_level": "not applicable", "portal_url": None, "platform": None, "login_required": None, "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope."}
+    return out
+
+
+def _live60_regenerate_customer_copy(public: dict, job_type: str, city: str, state: str) -> dict:
+    out = copy.deepcopy(public) if isinstance(public, dict) else {}
+    rows = [row for row in out.get("permits_required") or [] if isinstance(row, dict) and _live60_required_row(row)]
+    if not rows:
+        if str(out.get("permit_decision") or "").upper() == "NOT_REQUIRED" or out.get("permit_required") is False:
+            return _live60_apply_not_required_contract(out, job_type, city, state)
+        return out
+    labels: list[str] = []
+    row_names: list[str] = []
+    for row in rows:
+        family = _pa20_row_family(row) or _customer_row_family(row)
+        label = _pa20_family_label(family, row)
+        if label not in labels:
+            labels.append(label)
+        name = _live60_row_name(row) or label
+        if name not in row_names:
+            row_names.append(name)
+    original_permit_kind = str(out.get("permit_kind") or "").strip()
+    if len(labels) == 1:
+        out["permit_name"] = row_names[0]
+        out["permit_type"] = row_names[0]
+        if not original_permit_kind or original_permit_kind.lower() in {"building", "electrical", "plumbing", "mechanical", "permit required", "other"} or original_permit_kind.lower().startswith("multiple permits required"):
+            out["permit_kind"] = labels[0]
+        out["customer_headline"] = f"Permit required: {row_names[0]}."
+        summary = f"Permit required: {row_names[0]}."
+    else:
+        out["permit_name"] = "Multiple permits required: " + " + ".join(labels)
+        out["permit_type"] = out["permit_name"]
+        if not original_permit_kind or original_permit_kind.lower() in {"building", "electrical", "plumbing", "mechanical", "permit required", "other"} or original_permit_kind.lower().startswith("multiple permits required"):
+            out["permit_kind"] = " + ".join(labels)
+        out["customer_headline"] = "Permit required: multiple permits — " + " + ".join(labels) + "."
+        summary = "Multiple permits required: " + "; ".join(row_names) + "."
+    out["job_summary"] = summary
+    out["summary"] = summary
+    office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office".strip() or "the local permit office"
+    apply_path_obj = out.get("apply_path") if isinstance(out.get("apply_path"), dict) else {}
+    portal_url = apply_path_obj.get("portal_url") or out.get("apply_url") or out.get("online_application_url")
+    if not portal_url and str(apply_path_obj.get("state") or "").upper() != "RESOLVED_PORTAL":
+        guidance_bits = []
+        job_lc = _live60_text(job_type)
+        if "adu" in job_lc or "accessory dwelling" in job_lc:
+            guidance_bits.append("ADU filing packet")
+        if "basement" in job_lc:
+            guidance_bits.append("basement-finish building packet")
+        if "shed" in job_lc:
+            guidance_bits.append("shed thresholds")
+        if "panel" in job_lc or "service" in job_lc:
+            guidance_bits.append("utility/panel/grounding coordination; coordinate utility meter release")
+        guidance_note = f" Include {'; '.join(guidance_bits)}." if guidance_bits else ""
+        out["customer_next_step"] = f"No exact local filing portal is attached; contact {office} and file the required permit package: {', '.join(row_names)}.{guidance_note}"
+    else:
+        out["customer_next_step"] = f"File the required permit package with {office}: {', '.join(row_names)}. Confirm exact portal subcategories before final submission."
+    if isinstance(out.get("apply_path"), dict):
+        existing_ap = out.get("apply_path") if isinstance(out.get("apply_path"), dict) else {}
+        portal_url = existing_ap.get("portal_url") or out.get("apply_url") or out.get("online_application_url")
+        out["apply_path"] = {
+            "state": existing_ap.get("state") or ("RESOLVED_PORTAL" if portal_url else "CONTACT_AHJ"),
+            "channel": existing_ap.get("channel") or ("online_portal" if portal_url else "contact_ahj"),
+            "support_level": existing_ap.get("support_level") or ("verified path" if portal_url else "needs verification"),
+            "portal_url": portal_url,
+            "platform": existing_ap.get("platform"),
+            "office_name": office,
+            "permit_type": out.get("permit_name") or row_names[0],
+            "permit_category": out.get("permit_kind") or labels[0],
+            "steps": [
+                "Open the listed permit portal or contact the permit office.",
+                f"Select the closest category to: {out.get('permit_name') or row_names[0]}",
+                "Confirm exact portal subcategories before final submission.",
+            ],
+            "verification_note": "Confirm the exact portal category with the listed permit office before filing.",
+        }
+    out["permits_required_logic"] = [
+        {
+            "filing_family": _pa20_row_family(row) or _customer_row_family(row),
+            "permit_type": _live60_row_name(row) or _pa20_family_label(_pa20_row_family(row), row),
+            "included_because": row.get("rationale") if str(row.get("rationale") or "").lower().startswith("official permit rule") else "Official permit rule: " + (row.get("rationale") or f"Required because the described scope triggers {_pa20_family_label(_pa20_row_family(row), row)} review."),
+            "scope_trigger": row.get("scope_trigger") or f"{_pa20_row_family(row) or _customer_row_family(row)}_scope",
+        }
+        for row in rows
+    ]
+    allowed_families = {_pa20_row_family(row) or _customer_row_family(row) for row in rows}
+    stale_terms = {
+        "plumbing": ("plumbing permit", "plumbing review"),
+        "electrical": ("electrical permit", "electrical review"),
+        "mechanical": ("mechanical permit", "mechanical review"),
+        "fire": ("fire suppression", "fire prevention", "fire review"),
+        "planning": ("planning / zoning", "zoning use clearance"),
+        "co": ("certificate of occupancy", "change-of-occupancy"),
+        "health": ("health plan", "food establishment"),
+        "liquor": ("liquor", "alcohol"),
+    }
+    if isinstance(out.get("claim_citations"), list):
+        kept_citations = []
+        for citation in out.get("claim_citations") or []:
+            ctext = json.dumps(citation, default=str).lower()
+            if any(family not in allowed_families and any(term in ctext for term in terms) for family, terms in stale_terms.items()):
+                continue
+            kept_citations.append(citation)
+        out["claim_citations"] = kept_citations
+    return out
+
+
+def apply_live60_customer_boundary_contract(public: dict, job_type: str = "", city: str = "", state: str = "", *, scope_contract: dict | None = None) -> dict:
+    """Universal final customer-boundary fixes from the 60-live lookup review.
+
+    Anti-neuter contract: preserve the resolved primary verdict, add rows only
+    for explicit unnegated scope triggers, and remove/demote only contradictory
+    companion rows/copy at the public ViewModel boundary.
+    """
+    out = copy.deepcopy(public) if isinstance(public, dict) else {}
+    out = _live60_normalize_rows(out, job_type, city, state, scope_contract)
+    if str(out.get("permit_decision") or "").upper() == "NOT_REQUIRED" or out.get("permit_required") is False:
+        out = _live60_apply_not_required_contract(out, job_type, city, state)
+    else:
+        out = _live60_regenerate_customer_copy(out, job_type, city, state)
+    return out if isinstance(out, dict) else {}
+
+
+def _typed_customer_decision_from_public(public: dict, scope_contract: dict | None = None, cell_lock: dict | None = None) -> CustomerPermitDecision:
+    rows = [row for row in public.get("permits_required") or [] if isinstance(row, dict)] if isinstance(public, dict) else []
+    related = [row for row in public.get("related_permits") or [] if isinstance(row, dict)] if isinstance(public, dict) else []
+    required_families = tuple(dict.fromkeys(_customer_row_family(row) for row in rows if _customer_row_status(row) == "REQUIRED"))
+    conditional_families = tuple(dict.fromkeys(_customer_row_family(row) for row in related if _customer_row_status(row) == "CONDITIONAL"))
+    verify_families = tuple(dict.fromkeys(_customer_row_family(row) for row in related if _customer_row_status(row) == "VERIFY"))
+    decision = str(public.get("permit_decision") or "").upper().strip() if isinstance(public, dict) else ""
+    source_urls = tuple(url for url in (public.get("source_urls") or []) if isinstance(url, str)) if isinstance(public, dict) else ()
+    return CustomerPermitDecision(
+        decision=decision,
+        required=public.get("permit_required") if isinstance(public, dict) else None,
+        segment=str((scope_contract or {}).get("category") or "").lower().strip(),
+        primary_family=_customer_row_family(rows[0]) if rows else str(public.get("permit_kind") or "").strip().lower() if isinstance(public, dict) else "",
+        required_families=required_families,
+        conditional_families=conditional_families,
+        verify_families=verify_families,
+        applying_office=str(public.get("applying_office") or public.get("building_dept_name") or "") if isinstance(public, dict) else "",
+        apply_url=str(public.get("apply_url") or public.get("online_application_url") or "") if isinstance(public, dict) else "",
+        source_urls=source_urls,
+        cell_locked=bool(cell_lock),
+    )
+
+
+def apply_final_customer_egress_contract(public: dict, job_type: str = "", city: str = "", state: str = "", *, scope_contract: dict | None = None, cell_lock: dict | None = None) -> dict:
+    """Last customer-boundary egress gate after all helpers/render summaries.
+
+    Late formatting may repair copy or demote uncertain companion rows, but it
+    may not rewrite a locked Decision Cell regulatory core.
+    """
+    final = copy.deepcopy(public) if isinstance(public, dict) else {}
+    if cell_lock:
+        final = enforce_decision_cell_primary(final, cell_lock, city, state, public=True)
+    final = _demote_nonlocal_apply_url_for_required(final, city, state, job_type)
+    final = _apply_canonical_ahj_apply_url_fallback(final, city, state)
+    final = _customer_apply_url_fallback_from_sources(final, city, state)
+    final = _demote_nonlocal_apply_url_for_required(final, city, state, job_type)
+    final = _apply_customer_companion_requirement_contract(final, job_type, scope_contract)
+    final = apply_live60_customer_boundary_contract(final, job_type, city, state, scope_contract=scope_contract)
+    final = _repair_customer_boundary_copy(final, root=final)
+    final = sanitize_customer_visible_result(final if isinstance(final, dict) else {}, strip_internal_keys=True)
+    if cell_lock:
+        final = enforce_decision_cell_primary(final, cell_lock, city, state, public=True)
+        final = sanitize_customer_visible_result(final if isinstance(final, dict) else {}, strip_internal_keys=True)
+    final = _repair_customer_boundary_copy(final, root=final)
+    if isinstance(final, dict):
+        decision_obj = _typed_customer_decision_from_public(final, scope_contract, cell_lock)
+        lint_hits = lint_customer_visible_result(final, city, state)
+        validation_hits = decision_obj.validate()
+        if lint_hits or validation_hits:
+            # Do not expose lint internals.  Repair one more time and let tests
+            # assert the boundary; hard regulatory mutation is intentionally not
+            # performed here.
+            final = _repair_customer_boundary_copy(final, root=final)
+        if isinstance(final, dict):
+            final["customer_result_summary"] = _build_customer_result_summary(final, final, city, state)
+            final["customer_first_screen_summary"] = _build_customer_first_screen_summary(final["customer_result_summary"])
+            pre_public_final = final
+            final = _public_dict(final, _PUBLIC_CUSTOMER_RESULT_FIELDS)
+            if isinstance(final, dict) and isinstance(pre_public_final, dict):
+                for keep_key in _PUBLIC_KEEP_EMPTY_FIELDS:
+                    if keep_key in pre_public_final and pre_public_final.get(keep_key) in ("", [], {}):
+                        final[keep_key] = pre_public_final.get(keep_key)
+            if isinstance(final, dict) and str(final.get("permit_decision") or "").upper() == "NOT_REQUIRED":
+                final["permits_required"] = []
+    return final if isinstance(final, dict) else {}
 
 
 _HPWH_PHSKC_URL = "https://kingcounty.gov/en/dept/dph/health-safety/environmental-health/plumbing-gas-piping/applications-and-permits"
@@ -2729,6 +3407,11 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
+    original_required_rows_for_companion_contract = [
+        copy.deepcopy(row)
+        for row in (working.get("permits_required") or [])
+        if isinstance(row, dict)
+    ]
     original_apply_url = working.get("apply_url")
     raw_meta = working.get("_meta") if isinstance(working.get("_meta"), dict) else {}
     request_job_category = job_category or working.get("job_category") or raw_meta.get("job_category")
@@ -2984,6 +3667,24 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             )
             final_public["customer_first_screen_summary"] = _build_customer_first_screen_summary(final_public["customer_result_summary"])
         final_public = _apply_seattle_hpwh_output_contract(final_public if isinstance(final_public, dict) else {}, scope_contract, city, state)
+        if isinstance(final_public, dict) and original_required_rows_for_companion_contract:
+            final_public["_original_permits_required_for_companion_contract"] = original_required_rows_for_companion_contract
+        final_public = apply_final_customer_egress_contract(
+            final_public if isinstance(final_public, dict) else {},
+            job_type,
+            city,
+            state,
+            scope_contract=scope_contract,
+            cell_lock=cell_lock,
+        )
+        if (
+            isinstance(final_public, dict)
+            and _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
+            and evidence_pack_enabled()
+            and "_evidence_pack" not in final_public
+            and original_apply_url in ("", None)
+        ):
+            final_public["apply_url"] = original_apply_url or ""
         return final_public if isinstance(final_public, dict) else {}
     return {}
 

@@ -126,7 +126,7 @@ def test_customer_output_sanitizer_removes_internal_engine_wording(tmp_path, mon
     cleaned = server.sanitize_customer_visible_result(_result_with_internal_engine_wording())
 
     _assert_no_internal_customer_terms(cleaned)
-    assert cleaned["confidence_reason"] == "Source support is degraded; use the resolved permit decision and current local filing category before filing."
+    assert cleaned["confidence_reason"] == "Source support is partial; verify the final portal subcategory with the listed permit office before filing."
     assert "$6,000-$9,500+" in cleaned["fee_range"]
     assert "local fee schedule" in cleaned["fee_range"]
     assert "commercial TI complexity" in cleaned["fee_range"]
