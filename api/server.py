@@ -1894,12 +1894,18 @@ _PUBLIC_PERMIT_FAMILY_ORDER = {
     "Fire": 60,
     "Health": 70,
     "Planning/Zoning": 80,
+    "Historic/Planning": 85,
+    "Certificate of Occupancy": 90,
     "Other": 999,
 }
 
 
 def _public_permit_family(row: dict) -> str:
     text = " ".join(str(row.get(k) or "") for k in ("filing_family", "permit_type", "approval_type", "portal_selection", "kind", "name")).lower()
+    if "certificate of occupancy" in text or "change-of-occupancy" in text or "change of occupancy" in text:
+        return "Certificate of Occupancy"
+    if "historic" in text or "landmark" in text or "preservation" in text:
+        return "Historic/Planning"
     if "refrigeration" in text:
         return "Refrigeration"
     if "electrical" in text or "electric" in text:
@@ -1919,18 +1925,98 @@ def _public_permit_family(row: dict) -> str:
     return "Other"
 
 
-def _normalize_public_required_permit_package(public: dict, city: str = "") -> dict:
+def _normalize_public_required_permit_package(public: dict, job_type: str = "", city: str = "", state: str = "", scope_contract: dict | None = None) -> dict:
     """Final customer-boundary normalizer for multi-permit packages.
 
     Keeps per-row permit families self-consistent and gives all renderers an
     explicit multi-permit summary so UI code does not have to infer the answer
     from permits_required[0] or mix a row portal label with a global permit_name.
+
+    For residential customer lookups, this also prevents source/model companion
+    rows from becoming hard REQUIRED unless the original request scope actually
+    triggered that trade/review. It is anti-neuter: the primary filing stays
+    REQUIRED, while plausible companion reviews move to related_permits as
+    CONDITIONAL/VERIFY with a trigger explanation.
     """
     if not isinstance(public, dict):
         return {}
-    rows = [dict(p) for p in public.get("permits_required") or [] if isinstance(p, dict) and p.get("required") is not False]
-    if not rows:
+
+    scope_contract = scope_contract if isinstance(scope_contract, dict) else {}
+    job_lc = re.sub(r"\s+", " ", str(job_type or public.get("job_summary") or "").lower()).strip()
+    category = str(scope_contract.get("category") or "").lower().strip()
+    vertical = str(scope_contract.get("vertical") or "").lower().strip()
+    is_residential = category == "residential" or (category != "commercial" and re.search(r"\b(?:single[-\s]?family|residential|home|house|dwelling)\b", job_lc))
+
+    def has_any(*terms: str) -> bool:
+        return any(term in job_lc for term in terms)
+
+    is_ev = is_residential and (vertical == "ev_charger" or has_any("ev charger", "electric vehicle charger", "level 2 charger", "level ii charger"))
+    is_window = is_residential and (vertical == "window_replacement" or has_any("window replacement", "replace window", "replace windows", "same-size window", "same size window"))
+    is_patio = is_residential and (vertical == "patio_cover" or has_any("covered patio", "patio cover", "attached patio"))
+    is_reroof = is_residential and (vertical == "reroof" or has_any("reroof", "re-roof", "roof replacement", "shingle roof"))
+    is_fence = is_residential and (vertical == "fence" or has_any("privacy fence", "backyard fence", " fence"))
+    is_hpwh = is_residential and (vertical == "water_heater" or has_any("water heater"))
+    hpwh_electrical = is_hpwh and has_any("heat pump water heater", "hybrid water heater", "electric water heater") and not (str(city or "").strip().lower() == "seattle" and str(state or "").strip().upper() == "WA")
+
+    def conditional_row(row: dict, family: str) -> dict:
+        out = dict(row)
+        out["required"] = False
+        if family in {"Electrical", "Plumbing", "Mechanical", "Refrigeration"}:
+            out["decision"] = "CONDITIONAL"
+            if family == "Electrical":
+                out.setdefault("required_if", "wiring, circuit, disconnect, outlet, panel, powered-equipment connection, or service work is included")
+            elif family == "Plumbing":
+                out.setdefault("required_if", "water, drain, gas piping, fixture, sink, hose bibb, or outdoor-kitchen plumbing is included")
+            elif family == "Mechanical":
+                out.setdefault("required_if", "HVAC equipment, exhaust, ductwork, heaters, or other mechanical work is included")
+            else:
+                out.setdefault("required_if", "refrigerant piping or refrigeration equipment is included")
+        else:
+            out["decision"] = "VERIFY"
+            out.setdefault("required_if", "the exact address, parcel overlay, exterior location, occupancy/use change, or special life-safety condition triggers this review")
+        return out
+
+    raw_rows = [dict(p) for p in public.get("permits_required") or [] if isinstance(p, dict) and p.get("required") is not False]
+    if not raw_rows:
         return public
+
+    rows: list[dict] = []
+    demoted: list[dict] = []
+    original_required_count = len(raw_rows)
+    address_dependent = {"Planning/Zoning", "Historic/Planning", "Fire", "Certificate of Occupancy", "Health"}
+    for row in raw_rows:
+        family = _public_permit_family(row)
+        demote = False
+        if is_ev:
+            demote = family in address_dependent or family in {"Building", "Mechanical", "Plumbing"}
+        elif is_window:
+            demote = family in {"Electrical", "Mechanical", "Plumbing", "Fire", "Health", "Planning/Zoning", "Historic/Planning", "Certificate of Occupancy"}
+        elif is_patio:
+            demote = family in {"Electrical", "Mechanical", "Plumbing", "Fire", "Health", "Planning/Zoning", "Historic/Planning", "Certificate of Occupancy"}
+        elif is_reroof:
+            demote = family in {"Electrical", "Mechanical", "Plumbing", "Fire", "Health", "Planning/Zoning", "Historic/Planning", "Certificate of Occupancy"}
+        elif is_hpwh:
+            if str(city or "").strip().lower() == "seattle" and str(state or "").strip().upper() == "WA":
+                demote = family != "Plumbing"
+            else:
+                demote = family not in ({"Plumbing", "Electrical"} if hpwh_electrical else {"Plumbing"})
+        elif is_fence:
+            demote = family in {"Electrical", "Mechanical", "Plumbing", "Fire", "Health", "Certificate of Occupancy"}
+
+        if demote:
+            demoted.append(conditional_row(row, family))
+            continue
+        rows.append(row)
+
+    if demoted:
+        related = [dict(item) for item in public.get("related_permits") or [] if isinstance(item, dict)]
+        seen_related = {str(item.get("permit_type") or item.get("approval_type") or item.get("name") or "").lower() for item in related}
+        for item in demoted:
+            key = str(item.get("permit_type") or item.get("approval_type") or item.get("name") or "").lower()
+            if key and key not in seen_related:
+                related.append(item)
+                seen_related.add(key)
+        public["related_permits"] = related
 
     normalized: list[dict] = []
     seen: set[tuple[str, str]] = set()
@@ -1973,8 +2059,43 @@ def _normalize_public_required_permit_package(public: dict, city: str = "") -> d
         public["permit_type"] = public.get("permit_name")
         public["customer_headline"] = f"Permit required: multiple permits — {family_label}."
         public["job_summary"] = summary
-        office = _customer_summary_text(public.get("applying_office") or public.get("building_dept_name") or city or "the listed permit office")
-        public["customer_next_step"] = f"File each required permit category with {office}: {names_label}. Confirm exact portal subcategories before final submission."
+        next_step_lc = str(public.get("customer_next_step") or "").lower()
+        if "no exact local filing portal is attached" not in next_step_lc and "no verified online filing url" not in next_step_lc:
+            office = _customer_summary_text(public.get("applying_office") or public.get("building_dept_name") or city or "the listed permit office")
+            public["customer_next_step"] = f"File each required permit category with {office}: {names_label}. Confirm exact portal subcategories before final submission."
+    elif len(normalized) == 1:
+        # If demotion turned a fake multi-permit packet into one real primary row,
+        # make the global display match the remaining required permit.
+        row = normalized[0]
+        if demoted:
+            public["permit_kind"] = str(row.get("display_family") or row.get("kind") or _public_permit_family(row))
+            public["permit_name"] = str(row.get("permit_type") or row.get("approval_type") or row.get("portal_selection") or public.get("permit_name") or "Permit Required")
+            public["permit_type"] = public.get("permit_name")
+            public["required_permit_summary"] = public.get("permit_name")
+
+    fee = str(public.get("fee_range") or public.get("fee_estimate") or "")
+    fee_lc = fee.lower()
+    if original_required_count > len(normalized) and fee and re.search(r"\$\s*\d|\b\d+[.,]?\d*\s*(?:dollars|usd)\b", fee_lc):
+        if not any(phrase in fee_lc for phrase in ("additional", "separate", "other permit", "other trade", "plan-review", "plan review", "technology fee", "verify total", "before quoting", "fees may apply")):
+            public["fee_range"] = f"{fee.rstrip('.')} — known fee for at least one permit category only; additional trade, plan-review, technology, or portal fees may apply. Verify the total before quoting."
+
+    if is_patio and str(city or "").strip().lower() == "las vegas" and str(state or "").strip().upper() == "NV":
+        caveat = "Las Vegas valley permitting can route to City of Las Vegas or Clark County by exact address; verify jurisdiction before filing."
+        public["jurisdiction_routing_summary"] = caveat
+        public["county_fallback_note"] = caveat
+        next_step = str(public.get("customer_next_step") or "").strip()
+        if next_step and caveat.lower() not in next_step.lower():
+            public["customer_next_step"] = f"{next_step.rstrip()} {caveat}"
+
+    for key in ("customer_next_step", "approval_timeline", "timeline", "summary", "job_summary"):
+        text = public.get(key)
+        if isinstance(text, str):
+            cleaned = re.sub(r"\bthat\s+Use the resolved permit decision[^.\n]*\.?", "", text, flags=re.I)
+            cleaned = re.sub(r"\bUse the resolved permit decision[^.\n]*\.?", "", cleaned, flags=re.I)
+            cleaned = re.sub(r"Ask for\s+[‘'\"]?Multiple permits required:?[^.\n]*[’'\"]?\.??", "Ask for the named permit categories shown in this result.", cleaned, flags=re.I)
+            cleaned = re.sub(r"\.\s*\.", ".", cleaned)
+            cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+            public[key] = cleaned
     return public
 
 
@@ -2258,6 +2379,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     if not isinstance(scope_contract, dict):
         scope_contract = {}
     working["_scope_contract"] = scope_contract
+    original_apply_url = working.get("apply_url")
     fail_closed_value = working.get("fail_closed")
     fail_closed_obj = fail_closed_value if isinstance(fail_closed_value, dict) else {}
     decision_text = str(working.get("permit_decision") or "").upper().strip()
@@ -2441,7 +2563,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 and original_apply_url in ("", None)
             ):
                 final_public["apply_url"] = original_apply_url or ""
-            final_public = _normalize_public_required_permit_package(final_public, city)
+            final_public = _normalize_public_required_permit_package(final_public, job_type, city, state, scope_contract)
             final_public["customer_result_summary"] = _build_customer_result_summary(
                 final_public,
                 cleaned if isinstance(cleaned, dict) else working,

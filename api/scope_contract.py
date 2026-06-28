@@ -42,6 +42,11 @@ _HVAC_TERMS = ("hvac", "air conditioner", "air conditioning", "a/c", "heat pump"
 _HVAC_SPECIFIC_TERMS = ("hvac", "air conditioner", "air conditioning", "a/c", "furnace", "mini split", "mini-split", "condenser", "ductwork", "ducting", "air handler")
 _WATER_HEATER_TERMS = ("water heater",)
 _ROOF_TERMS = ("reroof", "re-roof", "roof replacement", "tear-off", "tear off", "shingle roof")
+_EV_CHARGER_TERMS = ("ev charger", "electric vehicle charger", "level 2 charger", "level ii charger", "car charger")
+_WINDOW_TERMS = ("window replacement", "replace window", "replace windows", "replace same-size windows", "replace same size windows", "same-size window", "same-size windows", "same size window", "same size windows")
+_FENCE_TERMS = ("fence", "privacy fence", "backyard fence")
+_PATIO_TERMS = ("covered patio", "patio cover", "attached patio", "attached covered patio")
+_FOUNDATION_TERMS = ("foundation repair", "concrete pier", "concrete piers", "helical pier", "foundation piers")
 _ADU_TERMS = ("adu", "accessory dwelling", "garage conversion", "in-law suite", "granny flat", "jadu")
 _REMODEL_TERMS = ("remodel", "renovation", "alteration", "addition", "new bathroom", "new kitchen", "load bearing", "wall removal")
 
@@ -156,6 +161,11 @@ def build_scope_contract(job_type: str, city: str = "", state: str = "", *, job_
     has_hvac_specific = has_any_unnegated(job, _HVAC_SPECIFIC_TERMS)
     has_water_heater = has_any_unnegated(job, _WATER_HEATER_TERMS)
     has_roof = has_any_unnegated(job, _ROOF_TERMS)
+    has_ev_charger = has_any_unnegated(job, _EV_CHARGER_TERMS)
+    has_window = has_any_unnegated(job, _WINDOW_TERMS)
+    has_fence = has_any_unnegated(job, _FENCE_TERMS)
+    has_patio = has_any_unnegated(job, _PATIO_TERMS)
+    has_foundation = has_any_unnegated(job, _FOUNDATION_TERMS)
     has_adu = has_any_unnegated(job, _ADU_TERMS)
     has_remodel = has_any_unnegated(job, _REMODEL_TERMS)
 
@@ -184,10 +194,20 @@ def build_scope_contract(job_type: str, city: str = "", state: str = "", *, job_
         request_vertical = "water_heater"
     elif has_panel and category != "commercial":
         request_vertical = "panel_upgrade"
+    elif has_ev_charger and category != "commercial":
+        request_vertical = "ev_charger"
     elif has_hvac:
         request_vertical = "hvac_changeout"
     elif has_roof:
         request_vertical = "reroof"
+    elif has_window:
+        request_vertical = "window_replacement"
+    elif has_fence:
+        request_vertical = "fence"
+    elif has_patio:
+        request_vertical = "patio_cover"
+    elif has_foundation:
+        request_vertical = "foundation_repair"
     elif has_adu:
         request_vertical = "adu"
     elif has_remodel:
@@ -197,7 +217,7 @@ def build_scope_contract(job_type: str, city: str = "", state: str = "", *, job_
 
     if category == "commercial":
         family = "commercial_ti" if (request_vertical.endswith("_ti") or request_vertical in {"commercial_ti", "restaurant_ti", "medical_clinic_ti", "office_ti", "retail_ti"}) else "commercial_other"
-    elif request_vertical in {"panel_upgrade", "hvac_changeout", "water_heater", "reroof", "solar_pv"}:
+    elif request_vertical in {"panel_upgrade", "ev_charger", "hvac_changeout", "water_heater", "reroof", "window_replacement", "fence", "patio_cover", "foundation_repair", "solar_pv"}:
         family = "residential_single_trade"
     elif request_vertical == "adu":
         family = "residential_adu"
@@ -251,6 +271,8 @@ def build_scope_contract(job_type: str, city: str = "", state: str = "", *, job_
         allowed.update({"residential_only", "contractor_license", "code_adoption", "inspection", "timeline"})
         if request_vertical == "panel_upgrade":
             allowed.update({"panel_upgrade", "electrical_service", "utility_service"})
+        if request_vertical == "ev_charger":
+            allowed.update({"electrical_service", "utility_service"})
         if request_vertical == "solar_pv":
             allowed.update({"solar_pv", "residential_solar", "utility_interconnection"})
         if request_vertical == "adu":
