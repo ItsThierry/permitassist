@@ -2815,7 +2815,27 @@ def _sync_required_permit_summary_fields_from_rows(public: dict) -> dict:
             names.append(name)
     out["required_permit_families"] = labels
     out["required_permit_names"] = names
-    out["required_permit_summary"] = (f"Permit required: {names[0]}." if len(names) == 1 else "Multiple permits required: " + "; ".join(names) + ".") if names else out.get("required_permit_summary")
+    summary = (f"Permit required: {names[0]}." if len(names) == 1 else "Multiple permits required: " + "; ".join(names) + ".") if names else out.get("required_permit_summary")
+    out["required_permit_summary"] = summary
+    if labels:
+        out["permit_type"] = names[0] if len(names) == 1 else "Multiple permits required: " + " + ".join(labels)
+    out["permits_required_logic"] = [
+        {
+            "filing_family": _pa20_row_family(row) or _customer_row_family(row),
+            "permit_type": _live60_row_name(row) or _pa20_family_label(_pa20_row_family(row), row),
+            "included_because": row.get("rationale") if str(row.get("rationale") or "").lower().startswith("official permit rule") else "Official permit rule: " + (row.get("rationale") or f"Required because the described scope triggers {_pa20_family_label(_pa20_row_family(row), row)} review."),
+            "scope_trigger": row.get("scope_trigger") or f"{_pa20_row_family(row) or _customer_row_family(row)}_scope",
+        }
+        for row in rows
+    ]
+    if isinstance(out.get("apply_path"), dict):
+        ap = dict(out.get("apply_path") or {})
+        ap["permit_type"] = out.get("permit_type") or out.get("permit_name") or (names[0] if names else ap.get("permit_type"))
+        ap["permit_category"] = " + ".join(labels) if labels else ap.get("permit_category")
+        steps = ap.get("steps") if isinstance(ap.get("steps"), list) else []
+        if steps:
+            ap["steps"] = [re.sub(r"Multiple permits required: [^.;]+", str(ap.get("permit_type") or "required permit package"), str(step)) for step in steps]
+        out["apply_path"] = ap
     return out
 
 
