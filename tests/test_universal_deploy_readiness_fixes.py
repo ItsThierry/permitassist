@@ -658,16 +658,16 @@ def test_filing_packet_families_survive_customer_view_boundary(tmp_path, monkeyp
     }
 
     assert {
-        "building_ti",
+        "building",
         "electrical",
         "plumbing",
         "mechanical",
-        "fire_suppression",
-        "health_food_establishment",
-        "liquor_license",
-        "wastewater_pretreatment_fog",
-        "co_change_of_occupancy",
-        "planning_zoning",
+        "fire",
+        "health",
+        "liquor",
+        "wastewater",
+        "co",
+        "planning",
     }.issubset(families)
     serialized = json.dumps(public, sort_keys=True).lower()
     assert "aca-prod.accela.com/phoenix" not in serialized

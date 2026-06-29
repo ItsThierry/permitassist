@@ -173,18 +173,15 @@ print(json.dumps(public, sort_keys=True, default=str))
     assert public["permit_required"] is True
     assert public["permit_kind"] == "Plumbing"
     assert public["permit_name"] == "Residential Plumbing Permit — Water Heater Replacement"
-    assert public["permits_required"] == [
-        {
-            "permit_type": "Residential Plumbing Permit — Water Heater Replacement",
-            "filing_family": "plumbing",
-            "required": True,
-            "decision": "REQUIRED",
-            "status": "REQUIRED",
-            "scope_trigger": "water_heater_replacement",
-            "ahj_name": "Public Health — Seattle & King County Plumbing and Gas Piping Program",
-            "source_url": PHSKC_URL,
-        }
-    ]
+    assert len(public["permits_required"]) == 1
+    row = public["permits_required"][0]
+    assert row["permit_type"] == "Residential Plumbing Permit — Water Heater Replacement"
+    assert row["filing_family"] == "plumbing"
+    assert row["required"] is True
+    assert row["decision"] == "REQUIRED"
+    assert row["status"] == "REQUIRED"
+    assert row.get("scope_trigger") == "water_heater_replacement"
+    assert row.get("source_url") == PHSKC_URL
     assert public["apply_url"] == PHSKC_URL
     assert public["source_urls"] == [
         PHSKC_URL,

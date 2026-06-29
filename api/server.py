@@ -71,6 +71,7 @@ except ImportError:  # package import path in some tests
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from filing_packet_reconciler import ensure_required_filing_rows
 from residential_universal_gate import apply_residential_universal_gate
+from permit_model import build_permit_package, project_permit_package, validate_customer_view
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -3918,298 +3919,42 @@ def _pa20_normalize_customer_rows_and_summaries(public: dict, job_type: str, cit
     return out
 
 
-def _pa50_row_name(row: dict) -> str:
-    return str(row.get("permit_type") or row.get("permit_name") or row.get("approval_type") or row.get("portal_selection") or "").strip()
+# The previous `_pa50_*` case-patch finalizer block was retired by the
+# universal PermitItem/PermitPackage projection.  Its covered cases now live in
+# `tests/fixtures/universal_customer_view_contracts_20260629.json`; universal
+# rules are implemented in api/permit_model.py.
 
+def assert_customer_view_invariants(public: dict, *, soft: bool | None = None) -> dict:
+    """Final public-boundary invariant net for customer permit packages.
 
-def _pa50_required_rows(public: dict) -> list[dict]:
-    return [row for row in (public.get("permits_required") or []) if isinstance(row, dict) and _pa20_row_status(row) == "REQUIRED"]
-
-
-def _pa50_make_row(family: str, name: str, *, status: str = "REQUIRED", rationale: str = "") -> dict:
-    family_label = _pa20_family_label(family, {})
-    reason = rationale or f"{family_label} review is triggered by the described scope; confirm the exact portal category with the listed permit office before filing."
-    row = {
-        "permit_type": name,
-        "kind": family_label,
-        "display_family": family_label,
-        "filing_family": family,
-        "status": status,
-        "decision": status,
-        "required": status == "REQUIRED",
-        "rationale": reason,
-    }
-    if status != "REQUIRED":
-        row["required_if"] = reason
-    return row
-
-
-def _pa50_demote_row(row: dict, family: str, reason: str) -> dict:
-    out = copy.deepcopy(row)
-    out["status"] = "VERIFY"
-    out["decision"] = "VERIFY"
-    out["required"] = False
-    out["required_if"] = reason
-    out["rationale"] = reason
-    out["notes"] = reason
-    out.setdefault("filing_family", family)
-    return out
-
-
-def _pa50_has_row(rows: list[dict], family: str, status: str | None = None) -> bool:
-    for row in rows:
-        if _pa20_row_family(row) != family:
-            continue
-        if status and _pa20_row_status(row) != status:
-            continue
-        return True
-    return False
-
-
-def _pa50_add_row_once(rows: list[dict], row: dict) -> None:
-    family = _pa20_row_family(row)
-    name = _pa50_row_name(row).lower()
-    for existing in rows:
-        if _pa20_row_family(existing) == family and (_pa50_row_name(existing).lower() == name or _pa20_row_status(existing) == _pa20_row_status(row)):
-            return
-    rows.append(row)
-
-
-_PA50_SIGN_SCOPE_TERMS = ("monument sign", "storefront sign", "awning sign", "sign cabinet", "signage", "projecting sign", " sign ")
-
-
-def _pa50_required_family_order(job_type: str) -> list[str]:
-    text = f" {(job_type or '').lower()} "
-    if re.search(r"\b(?:dadu|detached\s+(?:adu|accessory dwelling|backyard cottage)|backyard cottage)\b", text):
-        return ["building", "plumbing", "electrical", "mechanical", "planning", "co", "fire"]
-    if _pa20_job_has_any(text, _PA50_SIGN_SCOPE_TERMS):
-        return ["sign", "electrical", "building", "planning", "grading", "fire"]
-    if _pa20_job_has_any(text, ("mini split", "mini-split", "ductless", "evaporative cooler", "cooler")):
-        return ["mechanical", "electrical", "refrigeration", "building", "planning"]
-    if _pa20_job_has_any(text, ("build new", "new shared", "laundry room", "apartment basement")) and _pa20_job_has_any(text, ("laundry", "basement")):
-        return ["building", "plumbing", "mechanical", "electrical", "fire", "planning", "co"]
-    if _pa20_job_has_any(text, ("sewer", "trenchless", "liner")):
-        return ["plumbing", "grading", "building", "planning"]
-    if _pa20_job_has_any(text, ("ev charger", "level 2", "level ii", "transformer pad")):
-        return ["electrical", "grading", "building", "planning"]
-    return []
-
-
-def _pa50_sort_required_rows(rows: list[dict], job_type: str) -> list[dict]:
-    order_list = _pa50_required_family_order(job_type)
-    if not order_list:
-        return list(rows)
-    order = {family: idx for idx, family in enumerate(order_list)}
-    return sorted(rows, key=lambda row: (order.get(_pa20_row_family(row), 999), _pa50_row_name(row).lower()))
-
-
-def _pa50_scrub_required_no_permit_copy(value, replacement: str):
-    pattern = r"\b(?:no permit required|no permit submission needed|no permit fee expected|resolved no-permit|no-permit scope)\b"
-    if isinstance(value, str):
-        return re.sub(pattern, replacement, value, flags=re.I)
-    if isinstance(value, list):
-        return [_pa50_scrub_required_no_permit_copy(item, replacement) for item in value]
-    if isinstance(value, dict):
-        return {key: _pa50_scrub_required_no_permit_copy(child, replacement) for key, child in value.items()}
-    return value
-
-
-def _pa50_is_sf_window_replacement(job_type: str, city: str, state: str, scope_contract: dict) -> bool:
-    text = (job_type or "").lower()
-    return (
-        str(city or "").strip().lower() == "san francisco"
-        and str(state or "").strip().upper() == "CA"
-        and (str((scope_contract or {}).get("vertical") or "") == "window_replacement" or _pa20_job_has_any(text, ("window replacement", "replace window", "replace windows", "existing windows")))
-    )
-
-
-def _pa50_apply_scope_specific_row_contracts(public: dict, job_type: str, city: str, state: str, scope_contract: dict) -> dict:
+    In tests/CI this fails hard so replay fixtures catch regressions.  In normal
+    production it records a warning and returns the public object unchanged; the
+    preceding pure projection is responsible for making the view safe.
+    """
     out = copy.deepcopy(public) if isinstance(public, dict) else {}
-    text = f" {(job_type or '').lower()} "
-    related = [copy.deepcopy(row) for row in (out.get("related_permits") or []) if isinstance(row, dict)]
-    rows = [copy.deepcopy(row) for row in (out.get("permits_required") or []) if isinstance(row, dict)]
-    hard_required_context = str(out.get("permit_decision") or "").upper() == "REQUIRED" or out.get("permit_required") is True or any(_pa20_row_status(row) == "REQUIRED" for row in rows)
-
-    if _pa50_is_sf_window_replacement(job_type, city, state, scope_contract):
-        out["permit_required"] = True
-        out["permit_decision"] = "REQUIRED"
-        out["permit_verdict"] = "YES"
-        rows = [row for row in rows if _pa20_row_family(row) not in {"planning", "historic"}]
-        if not _pa50_has_row(rows, "building", "REQUIRED"):
-            rows.insert(0, _pa50_make_row("building", "Building Permit — Window Replacement", rationale="San Francisco requires a building permit for window replacement; planning/historic review may also apply by property/district."))
-        for fam, label in (("planning", "Planning review for window work"), ("historic", "Historic preservation review for window work")):
-            if not _pa50_has_row(related, fam):
-                related.append(_pa50_make_row(fam, label, status="VERIFY", rationale="Verify only if the property is in a historic district, landmark, or planning overlay."))
-
-    new_rows: list[dict] = []
-    for row in rows:
-        family = _pa20_row_family(row)
-        name = _pa50_row_name(row).lower()
-        demote_reason = ""
-        if _pa20_job_has_any(text, ("mini split", "mini-split", "ductless")) and family == "building" and re.search(r"detached garage|accessory structure|garage", name, flags=re.I) and not _pa20_job_has_any(text, ("structural", "framing", "new wall", "addition", "convert garage")):
-            demote_reason = "Verify building/accessory-structure review only if the mini-split project also changes structure, occupancy, walls, or the garage use."
-        elif _pa20_job_has_any(text, ("evaporative cooler", "rooftop cooler", "cooler")) and family == "roofing" and not _pa20_job_has_any(text, ("reroof", "re-roof", "tear off", "tear-off", "roof covering", "shingle", "membrane")):
-            demote_reason = "Roofing is not a hard filing row for an evaporative-cooler equipment swap unless roof-covering work is also included."
-        elif _pa20_job_has_any(text, ("sewer", "trenchless", "liner")) and family in {"foundation", "building"} and _pa20_job_has_any(name, ("foundation",)) and not _pa20_job_has_any(text, ("foundation repair", "structural foundation", "underpinning")):
-            demote_reason = "Foundation/building review is not a hard filing row for trenchless sewer-lateral work unless foundation repair is included."
-        elif _pa20_job_has_any(text, _PA50_SIGN_SCOPE_TERMS) and family == "building" and not _pa20_job_has_any(text, ("tenant improvement", "interior alteration", "partition", "wall", "structural", "facade alteration")):
-            demote_reason = "Commercial building/TI is not a hard filing row for a pure sign scope unless building alteration or tenant-improvement work is included."
-        if demote_reason:
-            related.append(_pa50_demote_row(row, family, demote_reason))
-            continue
-        new_rows.append(row)
-    rows = new_rows
-
-    if hard_required_context:
-        if _pa20_job_has_any(text, ("mini split", "mini-split", "ductless", "evaporative cooler", "rooftop cooler")) and not _pa50_has_row(rows, "mechanical", "REQUIRED"):
-            _pa50_add_row_once(rows, _pa50_make_row("mechanical", "Mechanical Permit", rationale="Mechanical/HVAC equipment installation or replacement is the primary triggered permit family."))
-        if _pa20_job_has_any(text, ("sewer", "trenchless", "liner")) and not _pa50_has_row(rows, "plumbing", "REQUIRED"):
-            _pa50_add_row_once(rows, _pa50_make_row("plumbing", "Plumbing / Sewer Permit", rationale="Private sewer lateral repair/relining belongs in plumbing/sewer permitting."))
-        if re.search(r"\b(?:dadu|detached\s+(?:adu|accessory dwelling)|backyard cottage)\b", text) and not _pa50_has_row(rows, "building", "REQUIRED"):
-            rows.insert(0, _pa50_make_row("building", "Building Permit — Detached Accessory Dwelling Unit", rationale="A new detached backyard cottage/DADU requires building/construction permit review."))
-        if _pa20_job_has_any(text, _PA50_SIGN_SCOPE_TERMS) and not _pa50_has_row(rows, "sign", "REQUIRED"):
-            rows.insert(0, _pa50_make_row("sign", "Sign Permit", rationale="The described sign scope requires a visible sign-permit filing row; electrical remains a companion when illumination/disconnect work is included."))
-
-    if _pa20_job_has_any(text, ("restroom", "breakroom sink")) and str(city or "").lower().strip() == "boston" and not _pa50_has_row(rows + related, "electrical"):
-        related.append(_pa50_make_row("electrical", "Electrical Permit / GFCI-Fan-Lighting Verification", status="VERIFY", rationale="Verify electrical filing if fan, GFCI, lighting, receptacle, or circuit work is included with the restroom/breakroom scope."))
-    if _pa20_job_has_any(text, ("fire alarm", "alarm updates")) and str(city or "").lower().strip() == "chicago" and not _pa50_has_row(rows + related, "electrical"):
-        related.append(_pa50_make_row("electrical", "Electrical Permit — Fire Alarm Circuit / Device Work", status="VERIFY", rationale="Fire alarm device/circuit work may need separate electrical coordination even when displayed with fire review."))
-    if _pa20_job_has_any(text, ("ev charger", "level 2", "transformer pad")) and str(city or "").lower().strip() == "minneapolis" and not _pa50_has_row(rows + related, "grading"):
-        related.append(_pa50_make_row("grading", "Site/Civil / Transformer Pad Verification", status="VERIFY", rationale="Verify whether site/civil, pavement, drainage, transformer-pad, or utility coordination requirements apply to the exterior EV charger work."))
-    if _pa20_job_has_any(text, ("awning sign", "projecting over sidewalk", "sidewalk")) and str(city or "").lower().strip() == "boise" and not _pa50_has_row(rows + related, "planning"):
-        related.append(_pa50_make_row("planning", "Planning/Zoning Verification for Sidewalk Projection", status="VERIFY", rationale="Verify whether sidewalk projection, encroachment/right-of-way, or planning approvals apply to the projecting awning sign."))
-
-    out["permits_required"] = _pa50_sort_required_rows(rows, job_type)
-    if related:
-        rel_out = []
-        seen = set()
-        for row in related:
-            status = _pa20_row_status(row)
-            family = _pa20_row_family(row)
-            key = (family, status) if status in {"VERIFY", "CONDITIONAL"} else (family, _pa50_row_name(row).lower(), status)
-            if key in seen:
-                continue
-            seen.add(key)
-            rel_out.append(row)
-        out["related_permits"] = rel_out
-    return out
-
-
-def _pa50_reproject_customer_public_copy(public: dict, job_type: str, city: str, state: str, scope_contract: dict) -> dict:
-    out = copy.deepcopy(public) if isinstance(public, dict) else {}
-    decision = str(out.get("permit_decision") or "").upper().strip()
-    required_rows = _pa50_required_rows(out)
-    if decision not in {"REQUIRED", "NOT_REQUIRED"}:
-        ambiguous_decision = decision in {"CONDITIONAL", "VERIFY", "UNKNOWN", "NEEDS_VERIFICATION", "NEEDS VERIFICATION", "PENDING", "AMBIGUOUS", "REVIEW"}
-        if ambiguous_decision:
-            decision = "REQUIRED"
-        else:
-            decision = "NOT_REQUIRED" if out.get("permit_required") is False and not required_rows else ("REQUIRED" if out.get("permit_required") is True or required_rows else "NOT_REQUIRED")
-    if decision == "NOT_REQUIRED":
-        office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office".strip() or "the local permit office"
-        headline = str(out.get("customer_headline") or "").strip()
-        if not headline or re.search(r"^\s*permit required\b", headline, flags=re.I):
-            headline = "No permit required for cosmetic finish work only." if _pa20_has_commercial_cosmetic_exemption(job_type, scope_contract) else "No permit required for the described scope."
-        out.update({
-            "permit_required": False,
-            "permit_decision": "NOT_REQUIRED",
-            "permit_verdict": "NO",
-            "permit_kind": "Not Required",
-            "permit_name": "No permit required",
-            "permit_type": "No permit required",
-            "permits_required": [],
-            "permits_required_logic": [],
-            "companion_permits": [],
-            "required_permit_names": [],
-            "required_permit_families": [],
-            "required_permit_summary": "No permit required for the described scope.",
-            "customer_headline": headline,
-            "customer_next_step": f"Keep the scope limited to the described no-permit work; if walls, MEP, occupancy, fire/life-safety, exterior, signage, accessibility, or regulated building work is added, verify with {office} before starting.",
-            "apply_url": "",
-            "online_application_url": "",
-        })
-        out["apply_path"] = {
-            **(dict(out.get("apply_path") or {}) if isinstance(out.get("apply_path"), dict) else {}),
-            "state": "NOT_APPLICABLE",
-            "channel": "no_permit_required",
-            "support_level": "not applicable",
-            "portal_url": None,
-            "platform": None,
-            "login_required": None,
-            "permit_type": "No permit required",
-            "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope unless the scope changes.",
-        }
+    issues = validate_customer_view(out)
+    if not issues:
         return out
-
-    if not required_rows:
-        required_rows = [_pa50_make_row("building", out.get("permit_name") or "Building Permit")]
-    required_rows = _pa50_sort_required_rows(required_rows, job_type)
-    out["permits_required"] = required_rows
-    labels: list[str] = []
-    names: list[str] = []
-    for row in required_rows:
-        family = _pa20_row_family(row)
-        label = _pa20_family_label(family, row)
-        name = _pa50_row_name(row) or label
-        row["status"] = "REQUIRED"
-        row["decision"] = "REQUIRED"
-        row["required"] = True
-        row.setdefault("filing_family", family)
-        if label not in labels:
-            labels.append(label)
-        if name not in names:
-            names.append(name)
-    permit_name = names[0] if len(labels) == 1 else "Multiple permits required: " + " + ".join(labels)
-    office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office".strip() or "the local permit office"
-    existing_kind = str(out.get("permit_kind") or "").strip()
-    permit_kind = existing_kind if existing_kind and not re.search(r"\b(?:no permit|required review|needs review|not required)\b", existing_kind, flags=re.I) else (labels[0] if len(labels) == 1 else "Multiple permits")
-    out.update({
-        "permit_required": True,
-        "permit_decision": "REQUIRED",
-        "permit_verdict": "YES",
-        "permit_kind": permit_kind,
-        "permit_name": permit_name,
-        "permit_type": permit_name,
-        "required_permit_names": names,
-        "required_permit_families": labels,
-        "required_permit_summary": permit_name,
-        "customer_headline": f"Permit required: {permit_name}.",
-    })
-    apply_path = dict(out.get("apply_path") or {}) if isinstance(out.get("apply_path"), dict) else {}
-    no_portal = not (out.get("apply_url") or out.get("online_application_url") or apply_path.get("portal_url"))
-    if no_portal or str(apply_path.get("state") or "").upper() == "NOT_APPLICABLE":
-        apply_path["state"] = "HONEST_FALLBACK"
-        apply_path["channel"] = "contact_ahj"
-        apply_path["support_level"] = "not available"
-    existing_next_step = str(out.get("customer_next_step") or "").strip()
-    if no_portal and re.search(r"\b(?:no verified online filing url|no exact local filing portal)\b", existing_next_step, flags=re.I):
-        next_step = existing_next_step
-    else:
-        next_step = (
-            f"No exact local filing portal is attached; contact {office} and file the required permit package: {', '.join(names[:8])}. Confirm exact portal subcategories before final submission."
-            if no_portal else
-            f"File the required permit package with {office}: {', '.join(names[:8])}. Confirm exact portal subcategories before final submission."
-        )
-    out["customer_next_step"] = next_step
-    apply_path["permit_type"] = permit_name
-    apply_path.setdefault("permit_category", out.get("permit_kind") or labels[0])
-    out["apply_path"] = apply_path
-    replacement = f"Permit required for the resolved scope; confirm exact filing details with {office} before starting work."
-    scrubbed = _pa50_scrub_required_no_permit_copy(out, replacement)
-    out = scrubbed if isinstance(scrubbed, dict) else out
-    out["customer_headline"] = f"Permit required: {permit_name}."
-    out["customer_next_step"] = next_step
-    fee_range = out.get("fee_range")
-    if isinstance(fee_range, str) and "building department fee schedule" in fee_range.lower():
-        out["fee_range"] = re.sub(r"building department fee schedule", "AHJ fee schedule", fee_range, flags=re.I)
+    strict = soft is False or _env_flag_enabled("PERMITASSIST_STRICT_CUSTOMER_INVARIANTS") or bool(os.environ.get("PYTEST_CURRENT_TEST"))
+    if strict:
+        raise AssertionError({"customer_view_invariant_issues": issues, "permit_name": out.get("permit_name")})
+    warnings = out.setdefault("warnings", [])
+    if isinstance(warnings, list):
+        warnings.append("Customer-view invariant warning: " + ", ".join(issues[:6]))
     return out
 
 
 def finalize_customer_public_projection(public: dict, job_type: str, city: str, state: str, scope_contract: dict | None = None) -> dict:
-    """Single final customer-projection pass for public copy and mirrors."""
+    """Pure final customer projection: resolved dict -> PermitPackage -> public ViewModel.
+
+    This is the universal customer-view boundary.  It renders only the canonical
+    PermitPackage/PermitItem model and does not perform post-projection row
+    surgery.  Package headers are distinct from permit row/type names; the old
+    `Multiple permits required: A + B` string is never a row or apply type.
+    """
     scope_contract = scope_contract if isinstance(scope_contract, dict) else {}
-    out = _pa50_apply_scope_specific_row_contracts(public if isinstance(public, dict) else {}, job_type, city, state, scope_contract)
-    out = _pa50_reproject_customer_public_copy(out, job_type, city, state, scope_contract)
+    model_input, package = build_permit_package(public if isinstance(public, dict) else {}, job_type, city, state, scope_contract)
+    out = project_permit_package(model_input, package, job_type, city, state)
     out["customer_result_summary"] = _build_customer_result_summary(out, out, city, state)
     out["customer_first_screen_summary"] = _build_customer_first_screen_summary(out["customer_result_summary"])
     projected = _public_dict(sanitize_customer_visible_result(out, strip_internal_keys=True), _PUBLIC_CUSTOMER_RESULT_FIELDS)
@@ -4222,6 +3967,7 @@ def finalize_customer_public_projection(public: dict, job_type: str, city: str, 
         fee_range = projected.get("fee_range")
         if isinstance(fee_range, str) and "building department fee schedule" in fee_range.lower():
             projected["fee_range"] = re.sub(r"building department fee schedule", "AHJ fee schedule", fee_range, flags=re.I)
+        projected = assert_customer_view_invariants(projected)
     return projected if isinstance(projected, dict) else {}
 
 

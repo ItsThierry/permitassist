@@ -82,8 +82,9 @@ def test_seattle_mini_split_customer_boundary_lists_all_required_permits_and_scr
 
     assert public["permit_decision"] == "REQUIRED"
     assert set(public.get("required_permit_families") or []) >= {"Electrical", "Mechanical", "Refrigeration"}
-    assert "multiple permits required" in (public.get("permit_name") or "").lower()
-    assert "multiple permits" in (public.get("customer_result_summary") or {}).get("permit_kind", "").lower()
+    assert "permit package" in (public.get("permit_name") or "").lower()
+    assert not (public.get("permit_name") or "").lower().startswith("multiple permits required:")
+    assert "permit package" in (public.get("customer_result_summary") or {}).get("permit_kind", "").lower() or "permit package" in (public.get("permit_kind") or "").lower()
     assert "electrical" in public["required_permit_summary"].lower()
     assert "mechanical" in public["required_permit_summary"].lower()
     assert "refrigeration" in public["required_permit_summary"].lower()

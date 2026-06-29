@@ -36,7 +36,7 @@ NO_REGRESSION_GOLDENS = {
     "R04": {"plumbing", "electrical"},  # HPWH + new circuit
     "R08": {"electrical", "mechanical", "refrigeration"},  # Seattle mini-split
     "C02": set(),  # Dallas cosmetic office no permit
-    "C25": {"building", "sign"},  # commercial sign
+    "C25": {"sign"},  # commercial sign face-only; building/TI is not hard-required without structural/TI scope
 }
 
 
