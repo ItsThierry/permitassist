@@ -83,6 +83,14 @@ def test_commercial_cosmetic_finish_only_converts_to_not_required_without_neuter
     assert triggered.get("permits_required")
     assert "electrical" in json.dumps(triggered).lower()
 
+    structural_ceiling = _view(
+        contaminated,
+        "commercial office ceiling finish only with rated ceiling assembly work; no walls and no MEP",
+        category="commercial",
+    )
+    assert structural_ceiling["permit_decision"] == "REQUIRED"
+    assert structural_ceiling.get("permits_required")
+
 
 def test_residential_address_dependent_companions_are_related_not_required_headline_items():
     public = _pa20_public("PA20-014")

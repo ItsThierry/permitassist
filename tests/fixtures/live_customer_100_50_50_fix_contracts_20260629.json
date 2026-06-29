@@ -1,0 +1,1339 @@
+{
+  "artifact_root": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z",
+  "contracts": [
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-023_residential_queens_ny.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-023_residential_queens_ny.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-023_residential_queens_ny.txt",
+      "bucket": "Plumbing",
+      "case_id": "R100-023",
+      "city": "Queens",
+      "evidence": [
+        {
+          "excerpt": "Plumbing work involving alteration, rearrangement, relocation, or permanent removal of piping requires a Licensed Master Plumber permit.",
+          "title": "NYC DOB Plumbing Permits",
+          "url": "https://www.nyc.gov/site/buildings/property-or-business-owner/plumbing-permits.page"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "plumbing",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        }
+      ],
+      "final_class": "CONTRADICTORY_DECISION_HEADER_AND_NO_SOURCE_APPLY",
+      "final_grade": "F",
+      "forbidden_primary_families": [
+        "building",
+        "roofing",
+        "foundation"
+      ],
+      "forbidden_required_families": [],
+      "input_scope": "replace bathtub with walk in shower and relocate drain six inches, no electrical work",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "Decision/rows say REQUIRED Plumbing, but customer_headline says \u201cNo permit required\u201d; also missing source/apply and 111s latency.",
+      "state": "NY"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-050_residential_san_francisco_ca.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-050_residential_san_francisco_ca.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-050_residential_san_francisco_ca.txt",
+      "bucket": "Cross-jurisdiction same-scope spread",
+      "case_id": "R100-050",
+      "city": "San Francisco",
+      "evidence": [
+        {
+          "excerpt": "San Francisco source states a building permit is required for all types of window replacement; planning/historic review may also apply.",
+          "title": "SF Planning window replacement guidance",
+          "url": "https://sfplanning.org/resource/window-replacement-standards"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "planning"
+        }
+      ],
+      "final_class": "FALSE_NOT_REQUIRED",
+      "final_grade": "F",
+      "forbidden_primary_families": [
+        "planning",
+        "historic"
+      ],
+      "forbidden_required_families": [],
+      "input_scope": "replace twelve existing windows same size and same openings in single family home, no structural header changes",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "SF Planning official source says a building permit is required for all window replacement; product returned NOT_REQUIRED and demoted Building Window Replacement to conditional.",
+      "state": "CA"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-050_commercial_raleigh_nc.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-050_commercial_raleigh_nc.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-050_commercial_raleigh_nc.txt",
+      "bucket": "Like-for-like / repair-only traps",
+      "case_id": "C100-050",
+      "city": "Raleigh",
+      "evidence": [
+        {
+          "excerpt": "North Carolina permit exemptions allow ordinary repairs/finish work when no structural, MEP, fire/life-safety, occupancy, egress, accessibility, exterior, or signage trigger is present.",
+          "title": "North Carolina permit exemption statute",
+          "url": "https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_160D/GS_160D-1110.html"
+        }
+      ],
+      "expected_decision": "NOT_REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [],
+      "final_class": "FALSE_REQUIRED_COSMETIC_COMMERCIAL",
+      "final_grade": "F",
+      "forbidden_primary_families": [
+        "building",
+        "fire"
+      ],
+      "forbidden_required_families": [
+        "building",
+        "fire",
+        "co",
+        "planning",
+        "electrical",
+        "plumbing",
+        "mechanical"
+      ],
+      "input_scope": "commercial office refresh: repaint walls, replace carpet squares and swap ceiling tiles only, no walls, no MEP, no occupancy change",
+      "min_visible_rows": 0,
+      "segment": "commercial",
+      "source_review_rationale": "Cosmetic-only commercial office refresh (paint/carpet/ceiling tiles, no walls/MEP/occupancy) returned hard REQUIRED Building + Fire from commercial safety gate.",
+      "state": "NC"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-007_residential_asheville_nc.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-007_residential_asheville_nc.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-007_residential_asheville_nc.txt",
+      "bucket": "HVAC/mechanical",
+      "case_id": "R100-007",
+      "city": "Asheville",
+      "evidence": [
+        {
+          "excerpt": "HVAC/mini-split work belongs in mechanical permitting; detached-garage/accessory-structure building work is not triggered by equipment installation alone.",
+          "title": "Asheville Development Services",
+          "url": "https://www.ashevillenc.gov/department/development-services/residential-permits-and-development/"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "mechanical",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        }
+      ],
+      "final_class": "WRONG_PRIMARY_AND_APPLY_FALLBACK",
+      "final_grade": "C",
+      "forbidden_primary_families": [
+        "building",
+        "foundation"
+      ],
+      "forbidden_required_families": [
+        "building"
+      ],
+      "input_scope": "install mini split in detached garage home office, no plumbing and no structural work",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "Mini-split in existing detached garage home office returned Building Permit \u2014 Detached Garage / Accessory Structure as primary and no exact apply_url; mechanical row exists but primary is misleading.",
+      "state": "NC"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-010_residential_albuquerque_nm.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-010_residential_albuquerque_nm.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-010_residential_albuquerque_nm.txt",
+      "bucket": "HVAC/mechanical",
+      "case_id": "R100-010",
+      "city": "Albuquerque",
+      "evidence": [
+        {
+          "excerpt": "Evaporative cooler replacement is mechanical/HVAC equipment work, not roofing or reroof work when roof covering work is not described.",
+          "title": "Albuquerque Building Safety permits",
+          "url": "https://www.cabq.gov/planning/building-safety-division"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "mechanical",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        }
+      ],
+      "final_class": "WRONG_PRIMARY_AND_EXTRA_ROOFING_FOR_HVAC",
+      "final_grade": "C",
+      "forbidden_primary_families": [
+        "roofing",
+        "building"
+      ],
+      "forbidden_required_families": [
+        "roofing"
+      ],
+      "input_scope": "replace rooftop evaporative cooler with new ducted evaporative cooler, same location",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "Evaporative cooler replacement returned headline Roofing Permit / reroof; mechanical row exists but customer-facing primary is wrong and roofing is untriggered.",
+      "state": "NM"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-022_residential_denver_co.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-022_residential_denver_co.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-022_residential_denver_co.txt",
+      "bucket": "Plumbing",
+      "case_id": "R100-022",
+      "city": "Denver",
+      "evidence": [
+        {
+          "excerpt": "Private sewer lateral repair/relining routes through sewer/plumbing/wastewater permitting; foundation repair is not triggered by the described trenchless liner.",
+          "title": "Denver wastewater permits",
+          "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Department-of-Transportation-and-Infrastructure/Documents/Wastewater-Permits"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "plumbing",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        }
+      ],
+      "final_class": "WRONG_PRIMARY_NAME",
+      "final_grade": "C",
+      "forbidden_primary_families": [
+        "foundation",
+        "building"
+      ],
+      "forbidden_required_families": [
+        "foundation"
+      ],
+      "input_scope": "replace private sewer line from foundation to property line using trenchless liner",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "Sewer lateral/trenchless liner correctly has plumbing row, but primary/headline is Building Permit \u2014 Foundation Repair.",
+      "state": "CO"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-040_residential_seattle_wa.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-040_residential_seattle_wa.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-040_residential_seattle_wa.txt",
+      "bucket": "ADU/DADU/garage conversion",
+      "case_id": "R100-040",
+      "city": "Seattle",
+      "evidence": [
+        {
+          "excerpt": "A new detached accessory dwelling/backyard cottage requires a construction/building permit; trade permits are companions for kitchenette, bathroom, and heat pump work.",
+          "title": "Seattle SDCI DADU permits",
+          "url": "https://www.seattle.gov/sdci/permits/common-projects/accessory-dwelling-units"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        }
+      ],
+      "final_class": "WRONG_PRIMARY_NAME",
+      "final_grade": "C",
+      "forbidden_primary_families": [
+        "mechanical"
+      ],
+      "forbidden_required_families": [],
+      "input_scope": "build new detached backyard cottage with kitchenette, bathroom and heat pump",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "New Seattle detached backyard cottage/DADU has required building/electrical/mechanical/plumbing rows, but primary/headline is Mechanical Permit \u2014 HVAC System Replacement.",
+      "state": "WA"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-037_commercial_austin_tx.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-037_commercial_austin_tx.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-037_commercial_austin_tx.txt",
+      "bucket": "Signage/site work/grading",
+      "case_id": "C100-037",
+      "city": "Austin",
+      "evidence": [
+        {
+          "excerpt": "Outdoor/freestanding signs require sign permit submission; illuminated sign work may also require electrical review.",
+          "title": "Austin sign permits",
+          "url": "https://www.austintexas.gov/department/sign-permits"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "sign",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "sign"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        }
+      ],
+      "final_class": "MISSING_SIGN_FAMILY",
+      "final_grade": "C",
+      "forbidden_primary_families": [
+        "building"
+      ],
+      "forbidden_required_families": [
+        "building"
+      ],
+      "input_scope": "install new freestanding monument sign at commercial driveway with internal illumination",
+      "min_visible_rows": 0,
+      "segment": "commercial",
+      "source_review_rationale": "Austin freestanding illuminated monument sign returned Building + Electrical only; official Austin sign-permit page requires sign permit submission for outdoor/freestanding signs.",
+      "state": "TX"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-048_commercial_chicago_il.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-048_commercial_chicago_il.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-048_commercial_chicago_il.txt",
+      "bucket": "Signage/site work/grading",
+      "case_id": "C100-048",
+      "city": "Chicago",
+      "evidence": [
+        {
+          "excerpt": "Chicago requires sign permits for signs on a building/business, with limited exemptions; illuminated sign cabinet work is not a tenant improvement by itself.",
+          "title": "Chicago sign permits",
+          "url": "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits.html"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "sign",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "sign"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        }
+      ],
+      "final_class": "MISSING_SIGN_FAMILY",
+      "final_grade": "C",
+      "forbidden_primary_families": [
+        "building"
+      ],
+      "forbidden_required_families": [
+        "building"
+      ],
+      "input_scope": "replace existing illuminated storefront sign cabinet with same size LED cabinet and new disconnect at retail storefront",
+      "min_visible_rows": 0,
+      "segment": "commercial",
+      "source_review_rationale": "Chicago illuminated storefront sign cabinet replacement returned Electrical + Building only; official Chicago sign-permit page says sign permit is generally required for signs on a building/business.",
+      "state": "IL"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-006_commercial_boston_ma.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-006_commercial_boston_ma.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-006_commercial_boston_ma.txt",
+      "bucket": "Tenant improvement",
+      "case_id": "C100-006",
+      "city": "Boston",
+      "evidence": [
+        {
+          "excerpt": "Commercial tenant improvement adding restroom/breakroom sink needs building/plumbing review and should surface electrical when fan/GFCI/light/circuit work is implied.",
+          "title": "Boston ISD permits",
+          "url": "https://www.boston.gov/departments/inspectional-services/how-get-construction-permit"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        }
+      ],
+      "final_class": "MINOR_MISSING_ELECTRICAL_OR_OVERBROAD_COMPANIONS",
+      "final_grade": "B",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "office suite tenant improvement adding one single-user restroom and breakroom sink",
+      "min_visible_rows": 0,
+      "segment": "commercial",
+      "source_review_rationale": "Boston restroom/breakroom sink TI is usable but misses explicit electrical family and likely over-broad Fire/CO/Planning hard rows.",
+      "state": "MA"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-011_commercial_chicago_il.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-011_commercial_chicago_il.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-011_commercial_chicago_il.txt",
+      "bucket": "Change of use / occupancy",
+      "case_id": "C100-011",
+      "city": "Chicago",
+      "evidence": [
+        {
+          "excerpt": "Daycare classroom conversion with child restrooms and fire alarm updates needs building/fire/plumbing/electrical display clarity.",
+          "title": "Chicago building permits",
+          "url": "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits.html"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "fire"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        }
+      ],
+      "final_class": "DISPLAY_FAMILY_POLISH",
+      "final_grade": "B",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "convert former retail shop to daycare classroom space with child restrooms and fire alarm updates",
+      "min_visible_rows": 0,
+      "segment": "commercial",
+      "source_review_rationale": "Chicago daycare change-of-use is comprehensive; electrical is present as fire-alarm electrical row, but display/header can make electrical/fire distinction clearer.",
+      "state": "IL"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-021_commercial_minneapolis_mn.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-021_commercial_minneapolis_mn.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-021_commercial_minneapolis_mn.txt",
+      "bucket": "Commercial mechanical/electrical",
+      "case_id": "C100-021",
+      "city": "Minneapolis",
+      "evidence": [
+        {
+          "excerpt": "Commercial EV charger work requires electrical permitting; transformer pad/site-civil guidance should be explicit as conditional/verify where applicable.",
+          "title": "Minnesota DLI electrical permits",
+          "url": "https://www.dli.mn.gov/business/electrical-contractors/electrical-permits-contractors"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "electrical",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "grading"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "building"
+        }
+      ],
+      "final_class": "MISSING_SITE_CIVIL_POLISH",
+      "final_grade": "B",
+      "forbidden_primary_families": [
+        "building"
+      ],
+      "forbidden_required_families": [],
+      "input_scope": "install six level 2 EV chargers in office parking lot with new transformer pad",
+      "min_visible_rows": 0,
+      "segment": "commercial",
+      "source_review_rationale": "Minneapolis EV chargers/transformer pad core electrical is correct; site/civil/transformer-pad guidance should be more explicit.",
+      "state": "MN"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-040_commercial_boise_id.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-040_commercial_boise_id.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-040_commercial_boise_id.txt",
+      "bucket": "Signage/site work/grading",
+      "case_id": "C100-040",
+      "city": "Boise",
+      "evidence": [
+        {
+          "excerpt": "Awning/projecting signs require sign handling; sidewalk projection may need planning/right-of-way/encroachment verification.",
+          "title": "Boise sign standards",
+          "url": "https://www.cityofboise.org/departments/planning-and-development-services/planning/signs/"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "sign",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "sign"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "planning"
+        }
+      ],
+      "final_class": "PLANNING_ENCROACHMENT_POLISH",
+      "final_grade": "B",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "install new storefront awning sign projecting over sidewalk for coffee shop",
+      "min_visible_rows": 0,
+      "segment": "commercial",
+      "source_review_rationale": "Boise awning sign has Sign + Building + Electrical; sidewalk projection planning/encroachment/ROW guidance should be explicit.",
+      "state": "ID"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-044_residential_charlotte_nc.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-044_residential_charlotte_nc.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-044_residential_charlotte_nc.txt",
+      "bucket": "Like-for-like / repair-only traps",
+      "case_id": "R100-044",
+      "city": "Charlotte",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact classified this repair-only residential scope as safe NOT_REQUIRED with no hard required filing rows.",
+          "title": "Live 50/50 source adjudication",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "NOT_REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [],
+      "final_class": "AUTO_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "forbidden_required_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "input_scope": "replace kitchen faucet and garbage disposal only, no pipe relocation, no electrical work",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "Auto issue fired on VERIFY/CONDITIONAL/boilerplate or no required companion rows; customer-visible result is safe.",
+      "state": "NC"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-045_residential_scottsdale_az.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-045_residential_scottsdale_az.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-045_residential_scottsdale_az.txt",
+      "bucket": "Like-for-like / repair-only traps",
+      "case_id": "R100-045",
+      "city": "Scottsdale",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact classified this repair-only residential scope as safe NOT_REQUIRED with no hard required filing rows.",
+          "title": "Live 50/50 source adjudication",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "NOT_REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [],
+      "final_class": "AUTO_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "forbidden_required_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "input_scope": "interior repaint and replace carpet only, no walls, no electrical, no plumbing",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "Auto issue fired on VERIFY/CONDITIONAL/boilerplate or no required companion rows; customer-visible result is safe.",
+      "state": "AZ"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-046_residential_austin_tx.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-046_residential_austin_tx.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-046_residential_austin_tx.txt",
+      "bucket": "Like-for-like / repair-only traps",
+      "case_id": "R100-046",
+      "city": "Austin",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact classified this repair-only residential scope as safe NOT_REQUIRED with no hard required filing rows.",
+          "title": "Live 50/50 source adjudication",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "NOT_REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [],
+      "final_class": "AUTO_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "forbidden_required_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "input_scope": "replace kitchen cabinets and countertops only, no plumbing or electrical changes",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "Auto issue fired on VERIFY/CONDITIONAL/boilerplate or no required companion rows; customer-visible result is safe.",
+      "state": "TX"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-047_residential_charleston_sc.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-047_residential_charleston_sc.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-047_residential_charleston_sc.txt",
+      "bucket": "Like-for-like / repair-only traps",
+      "case_id": "R100-047",
+      "city": "Charleston",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact classified this repair-only residential scope as safe NOT_REQUIRED with no hard required filing rows.",
+          "title": "Live 50/50 source adjudication",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "NOT_REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [],
+      "final_class": "AUTO_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "forbidden_required_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "input_scope": "replace damaged drywall in one bedroom after leak, no structural work and no electrical or plumbing",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "Auto issue fired on VERIFY/CONDITIONAL/boilerplate or no required companion rows; customer-visible result is safe.",
+      "state": "SC"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-048_residential_raleigh_nc.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-048_residential_raleigh_nc.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-048_residential_raleigh_nc.txt",
+      "bucket": "Like-for-like / repair-only traps",
+      "case_id": "R100-048",
+      "city": "Raleigh",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact classified this repair-only residential scope as safe NOT_REQUIRED with no hard required filing rows.",
+          "title": "Live 50/50 source adjudication",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "NOT_REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [],
+      "final_class": "AUTO_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "forbidden_required_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "input_scope": "replace interior prehung door same size, no wall framing or header changes",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "Auto issue fired on VERIFY/CONDITIONAL/boilerplate or no required companion rows; customer-visible result is safe.",
+      "state": "NC"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/R100-049_residential_las_vegas_nv.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/R100-049_residential_las_vegas_nv.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/R100-049_residential_las_vegas_nv.txt",
+      "bucket": "Like-for-like / repair-only traps",
+      "case_id": "R100-049",
+      "city": "Las Vegas",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact classified this repair-only residential scope as safe NOT_REQUIRED with no hard required filing rows.",
+          "title": "Live 50/50 source adjudication",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "NOT_REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [],
+      "final_class": "AUTO_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "forbidden_required_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "co"
+      ],
+      "input_scope": "replace toilet and vanity cabinet only, no plumbing relocation and no electrical work",
+      "min_visible_rows": 0,
+      "segment": "residential",
+      "source_review_rationale": "Auto issue fired on VERIFY/CONDITIONAL/boilerplate or no required companion rows; customer-visible result is safe.",
+      "state": "NV"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-005_commercial_seattle_wa.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-005_commercial_seattle_wa.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-005_commercial_seattle_wa.txt",
+      "bucket": "Tenant improvement",
+      "case_id": "C100-005",
+      "city": "Seattle",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact was grade A and packet-rich; regression floor must not collapse useful commercial filing families.",
+          "title": "Live 50/50 packet-rich A anchor",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "fire"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "health"
+        }
+      ],
+      "final_class": "PASS_OR_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "non-structural restaurant dining room refresh with new bar counter, lighting and no kitchen hood work",
+      "min_visible_rows": 4,
+      "segment": "commercial",
+      "source_review_rationale": "Customer-safe after Titi/Opus review; no confirmed hard defect.",
+      "state": "WA"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-008_commercial_columbus_oh.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-008_commercial_columbus_oh.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-008_commercial_columbus_oh.txt",
+      "bucket": "Tenant improvement",
+      "case_id": "C100-008",
+      "city": "Columbus",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact was grade A and packet-rich; regression floor must not collapse useful commercial filing families.",
+          "title": "Live 50/50 packet-rich A anchor",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        }
+      ],
+      "final_class": "PASS_OR_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "dental office tenant improvement with exam rooms, nitrous piping, sinks and ventilation",
+      "min_visible_rows": 4,
+      "segment": "commercial",
+      "source_review_rationale": "Customer-safe after Titi/Opus review; no confirmed hard defect.",
+      "state": "OH"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-010_commercial_phoenix_az.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-010_commercial_phoenix_az.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-010_commercial_phoenix_az.txt",
+      "bucket": "Change of use / occupancy",
+      "case_id": "C100-010",
+      "city": "Phoenix",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact was grade A and packet-rich; regression floor must not collapse useful commercial filing families.",
+          "title": "Live 50/50 packet-rich A anchor",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "health"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "fire"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "wastewater"
+        }
+      ],
+      "final_class": "PASS_OR_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "convert vacant retail suite to quick service restaurant with kitchen equipment, hood, grease interceptor and dining",
+      "min_visible_rows": 4,
+      "segment": "commercial",
+      "source_review_rationale": "Customer-safe after Titi/Opus review; no confirmed hard defect.",
+      "state": "AZ"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-012_commercial_portland_or.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-012_commercial_portland_or.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-012_commercial_portland_or.txt",
+      "bucket": "Change of use / occupancy",
+      "case_id": "C100-012",
+      "city": "Portland",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact was grade A and packet-rich; regression floor must not collapse useful commercial filing families.",
+          "title": "Live 50/50 packet-rich A anchor",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "fire"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        }
+      ],
+      "final_class": "PASS_OR_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "convert warehouse bay to brewery taproom with tasting room, restrooms and small production area",
+      "min_visible_rows": 4,
+      "segment": "commercial",
+      "source_review_rationale": "Customer-safe after Titi/Opus review; no confirmed hard defect.",
+      "state": "OR"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-016_commercial_raleigh_nc.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-016_commercial_raleigh_nc.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-016_commercial_raleigh_nc.txt",
+      "bucket": "Change of use / occupancy",
+      "case_id": "C100-016",
+      "city": "Raleigh",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact was grade A and packet-rich; regression floor must not collapse useful commercial filing families.",
+          "title": "Live 50/50 packet-rich A anchor",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "fire"
+        }
+      ],
+      "final_class": "PASS_OR_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "convert retail space to outpatient medical clinic with exam rooms, sinks and medical gas storage closet",
+      "min_visible_rows": 4,
+      "segment": "commercial",
+      "source_review_rationale": "Customer-safe after Titi/Opus review; no confirmed hard defect.",
+      "state": "NC"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-032_commercial_los_angeles_ca.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-032_commercial_los_angeles_ca.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-032_commercial_los_angeles_ca.txt",
+      "bucket": "Multi-family/mixed-use",
+      "case_id": "C100-032",
+      "city": "Los Angeles",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact was grade A and packet-rich; regression floor must not collapse useful commercial filing families.",
+          "title": "Live 50/50 packet-rich A anchor",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "fire"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "health"
+        }
+      ],
+      "final_class": "PASS_OR_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "mixed-use building ground-floor cafe tenant improvement below apartments with new grease interceptor",
+      "min_visible_rows": 4,
+      "segment": "commercial",
+      "source_review_rationale": "Customer-safe after Titi/Opus review; no confirmed hard defect.",
+      "state": "CA"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/reports/C100-041_commercial_sacramento_ca.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/responses/C100-041_commercial_sacramento_ca.json",
+      "artifact_visible_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_50_50_20260629T120408Z/visible_text/C100-041_commercial_sacramento_ca.txt",
+      "bucket": "Cross-jurisdiction commercial anchors",
+      "case_id": "C100-041",
+      "city": "Sacramento",
+      "evidence": [
+        {
+          "excerpt": "Final reviewed customer artifact was grade A and packet-rich; regression floor must not collapse useful commercial filing families.",
+          "title": "Live 50/50 packet-rich A anchor",
+          "url": "https://permitassist.io"
+        }
+      ],
+      "expected_decision": "REQUIRED",
+      "expected_primary_family": "",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "fire"
+        }
+      ],
+      "final_class": "PASS_OR_FALSE_POSITIVE",
+      "final_grade": "A",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "2,500 square foot vanilla-shell office tenant improvement: nonbearing partitions, LED lighting, no plumbing, no HVAC equipment replacement",
+      "min_visible_rows": 4,
+      "segment": "commercial",
+      "source_review_rationale": "Customer-safe after Titi/Opus review; no confirmed hard defect.",
+      "state": "CA"
+    }
+  ]
+}
