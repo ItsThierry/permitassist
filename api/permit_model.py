@@ -469,6 +469,10 @@ def _apply_universal_invariant_gates(required_items: list[PermitItem], related_i
     special_signals = set(getattr(facts, "special_signals", frozenset()) or [])
     construction_class = str(getattr(facts, "construction_class", "none") or "none")
     exemption_backed = _source_backed_exemption(public)
+    if exemption_backed and "mechanical_fuelgas" in trade_signals and _dominant_family_value(getattr(facts, "dominant_family", "")) == PermitFamily.MECHANICAL:
+        # HVAC/mechanical equipment installs are a hard trade trigger; do not let a generic/generated
+        # no-permit note demote the mechanical filing unless a narrower explicit exemption is modeled.
+        exemption_backed = False
     intentional_safe_downgrade = bool((public or {}).get("_intentional_safe_downgrade"))
 
     # INV-2: segment purity. Unknown rows inherit request segment; explicit cross-segment rows are removed/demoted.

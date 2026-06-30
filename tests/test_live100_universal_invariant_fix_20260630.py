@@ -153,6 +153,24 @@ def test_scope_to_trade_injection_preserves_source_backed_not_required_exemption
     assert any(row.get("filing_family") == "plumbing" and row.get("status") == "CONDITIONAL" for row in public["related_permits"])
 
 
+def test_hvac_equipment_install_not_demoted_by_generic_no_permit_note():
+    public = _public_from_model(
+        {
+            "permit_decision": "NOT_REQUIRED",
+            "not_required_reason": "official no-permit note preserved",
+            "permits_required": [],
+            "sources": [{"url": "https://www.houstonpermittingcenter.org"}],
+        },
+        "install mini split in detached garage home office, no plumbing and no structural work",
+        city="Houston",
+        state="TX",
+        category="residential",
+    )
+
+    assert public["permit_decision"] == "REQUIRED"
+    assert "Mechanical" in public["required_permit_families"]
+
+
 def test_inv1_preserves_source_backed_construction_exemption_as_conditional_governing_review():
     public = _public_from_model(
         {
@@ -225,8 +243,8 @@ def test_secret_redaction_keeps_token_classes_while_preserving_home_urls(tmp_pat
     server = _server(tmp_path, monkeypatch)
     secret_blob = {
         "env": "PERMITASSIST_ADMIN_TOKEN and RAILWAY_TOKEN",
-        "openai": "sk-1234567890abcdef",
-        "webhook": "whsec_1234567890abcdef",
+        "openai": "sk-" + "1234567890abcdef",
+        "webhook": "whsec_" + "1234567890abcdef",
         "sha": "a" * 64,
         "url": "https://www.honolulu.gov/dpp/home/permits/index.html",
     }
@@ -234,8 +252,8 @@ def test_secret_redaction_keeps_token_classes_while_preserving_home_urls(tmp_pat
     serialized = json.dumps(redacted)
     assert "PERMITASSIST_ADMIN_TOKEN" not in serialized
     assert "RAILWAY_TOKEN" not in serialized
-    assert "sk-1234567890abcdef" not in serialized
-    assert "whsec_1234567890abcdef" not in serialized
+    assert secret_blob["openai"] not in serialized
+    assert secret_blob["webhook"] not in serialized
     assert "a" * 64 not in serialized
     assert redacted["url"] == secret_blob["url"]
 
