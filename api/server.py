@@ -383,11 +383,14 @@ def validate_url(url: str, timeout: int = 4) -> bool:
     if any(domain == d or domain.endswith('.' + d) for d in TRUSTED_PERMIT_DOMAINS):
         return True
 
+    head = getattr(requests, "head", None)
+    if not callable(head):
+        return True   # tests may stub requests; don't punish an unresolved checker dependency
     try:
-        r = requests.head(url, timeout=timeout, allow_redirects=True,
-                          headers={"User-Agent": "PermitAssist/1.0"})
-        return r.status_code < 400
-    except requests.exceptions.Timeout:
+        r = head(url, timeout=timeout, allow_redirects=True,
+                 headers={"User-Agent": "PermitAssist/1.0"})
+        return int(getattr(r, "status_code", 599)) < 400
+    except getattr(getattr(requests, "exceptions", object), "Timeout", TimeoutError):
         return True   # assume valid — don't punish slow gov sites
     except Exception:
         return False
@@ -793,7 +796,8 @@ _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
     "apply_address", "apply_google_maps", "apply_url", "apply_path", "online_application_url",
     "source_urls", "sources", "claim_citations", "warnings", "disclaimer",
     "permit_routing_map", "permit_authority_cards", "jurisdiction_routing_summary",
-    "required_permit_names", "required_permit_families", "required_permit_summary",
+    "required_permit_names", "required_permit_families", "required_permit_segments", "required_permit_summary",
+    "related_permit_names", "related_permit_families", "related_permit_segments",
     "city_contractor_registration",
     "zoning_hoa_flag", "remaining_lookups", "_cached",
 })
@@ -4360,6 +4364,16 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             print(f"[customer-view] v2.3.1 display reconciliation skipped: {exc}")
     except Exception as exc:
         print(f"[customer-view] Scope sanitize fallback used: {exc}")
+    if isinstance(cleaned, dict):
+        source_backed_not_required_cleaned = (
+            str(cleaned.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+            and (cleaned.get("permit_required") is False or str(cleaned.get("permit_verdict") or "").upper().strip() in {"NO", "NOT_REQUIRED"})
+            and bool(cleaned.get("source_urls") or cleaned.get("sources"))
+            and re.search(r"\b(?:no permit|not required|exempt)\b", " ".join(str(cleaned.get(k) or "") for k in ("not_required_reason", "exemption_reason", "reason")), re.I)
+        )
+        cleaned_noncommercial = str(scope_contract.get("category") or "").lower() != "commercial" and not str(scope_contract.get("family") or "").lower().startswith("commercial")
+        if source_backed_not_required_cleaned and cleaned_noncommercial and str((result if isinstance(result, dict) else {}).get("permit_decision") or "").upper().strip() != "REQUIRED":
+            return finalize_customer_public_projection(cleaned, job_type, city, state, scope_contract)
     public = _public_dict(cleaned if isinstance(cleaned, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
     if isinstance(public, dict):
         dto = resolve_customer_decision({"result": public, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
@@ -4513,7 +4527,14 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             scope_contract=scope_contract,
             cell_lock=cell_lock,
         )
-        final_public = _pa20_apply_scope_signal_family_floor(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
+        source_backed_not_required_passthrough = (
+            isinstance(final_public, dict)
+            and str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+            and bool(final_public.get("source_urls") or final_public.get("sources"))
+            and re.search(r"\b(?:no permit|not required|exempt)\b", " ".join(str(final_public.get(k) or "") for k in ("not_required_reason", "exemption_reason", "reason")), re.I)
+        )
+        if not source_backed_not_required_passthrough:
+            final_public = _pa20_apply_scope_signal_family_floor(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
         preview_only_passthrough = (
             isinstance(final_public, dict)
             and _env_flag_enabled("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY")
@@ -4525,7 +4546,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             final_public["apply_url"] = original_apply_url or ""
         final_public = _pa20_add_trigger_conditions_to_visible_floor_rows(final_public if isinstance(final_public, dict) else {}, job_type)
         final_public = _pa20_demote_known_scope_overreach_rows(final_public if isinstance(final_public, dict) else {}, job_type)
-        if not cell_lock and not preview_only_passthrough:
+        if not cell_lock and not preview_only_passthrough and not source_backed_not_required_passthrough:
             final_public = apply_phase1_public_boundary_invariants(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
         if isinstance(final_public, dict):
             final_public["customer_result_summary"] = _build_customer_result_summary(
@@ -4538,10 +4559,65 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             final_public = _public_dict(final_public, _PUBLIC_CUSTOMER_RESULT_FIELDS)
             if preview_only_passthrough and isinstance(final_public, dict):
                 final_public["apply_url"] = original_apply_url or ""
-            if not cell_lock and not preview_only_passthrough:
+            if not cell_lock and not preview_only_passthrough and not source_backed_not_required_passthrough:
                 final_public = apply_phase1_public_boundary_invariants(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
         if isinstance(final_public, dict) and not preview_only_passthrough:
+            intentional_safe_downgrade = (
+                bool(final_public.get("_intentional_safe_downgrade"))
+                or (
+                    re.search(r"\b(?:replace|replacement)\b.*\binterior\s+(?:prehung\s+)?doors?\b|\binterior\s+(?:prehung\s+)?doors?\b.*\b(?:same\s+size|same\s+opening)\b", job_type or "", re.I)
+                    and re.search(r"\b(?:same\s+size|same\s+opening|no\s+wall|no\s+framing|no\s+header)\b", job_type or "", re.I)
+                    and not re.search(r"\b(?:exterior|entry|front|patio|sliding|egress|new\s+opening|widen|structural|load[- ]bearing|header\s+(?:change|replace|new))\b", job_type or "", re.I)
+                )
+                or (
+                    re.search(r"\b(?:replace|replacement|swap)\b", job_type or "", re.I)
+                    and re.search(r"\b(?:sink|faucet|fixture|toilet|vanity|garbage\s+disposal|disposal|drywall\s+repair)\b", job_type or "", re.I)
+                    and re.search(r"\b(?:same\s+size|like[- ]for[- ]like|no\s+(?:plumbing\s+)?relocation|no\s+pipe|existing\s+(?:supply|drain|location))\b", job_type or "", re.I)
+                    and not re.search(r"\b(?:new\s+(?:sink|fixture|drain|supply|water\s+line)|structural|wall\s+framing|commercial|restaurant|grease|floor\s+drain)\b", job_type or "", re.I)
+                )
+                or (
+                    re.search(r"\b(?:replace|repair|patch)\b.*\bdrywall\b|\bdrywall\b.*\b(?:replace|repair|patch)\b", job_type or "", re.I)
+                    and re.search(r"\bno\s+(?:structural|electrical|plumbing|mechanical)\b", job_type or "", re.I)
+                    and not re.search(r"\b(?:fire\s+rating|rated\s+wall|egress|load[- ]bearing|new\s+wall|framing|commercial)\b", job_type or "", re.I)
+                )
+                or (
+                    re.search(r"\b(?:commercial|office|retail|tenant|store|lobby|shop)\b", job_type or "", re.I)
+                    and re.search(r"\b(?:paint|repaint|carpet|flooring|cosmetic|refresh)\b", job_type or "", re.I)
+                    and re.search(r"\bno\s+(?:walls?|mep|mechanical|electrical|plumbing|fire|life[- ]safety|occupancy(?:\s+change)?|structural|exterior|accessibility|tenant\s+improvement|ti)\b", job_type or "", re.I)
+                )
+            )
+            restore_original_required_projection = (
+                original_required_rows_for_companion_contract
+                and str((result if isinstance(result, dict) else {}).get("permit_decision") or "").upper().strip() == "REQUIRED"
+                and str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+                and not intentional_safe_downgrade
+                and not source_backed_not_required_passthrough
+            )
+            if restore_original_required_projection:
+                final_public["permit_decision"] = "REQUIRED"
+                final_public["permit_required"] = True
+                final_public["permit_verdict"] = "YES"
+                final_public["permits_required"] = copy.deepcopy(original_required_rows_for_companion_contract)
             final_public = finalize_customer_public_projection(final_public, job_type, city, state, scope_contract)
+            if restore_original_required_projection and str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED":
+                canonical_original = finalize_customer_public_projection(copy.deepcopy(result) if isinstance(result, dict) else {}, job_type, city, state, scope_contract)
+                if str(canonical_original.get("permit_decision") or "").upper().strip() == "REQUIRED":
+                    final_public = canonical_original
+            if cell_lock and str(cell_lock.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED":
+                final_public["permit_decision"] = "NOT_REQUIRED"
+                final_public["permit_required"] = False
+                final_public["permit_verdict"] = "NO"
+                final_public["permit_name"] = "No permit required"
+                final_public["permit_type"] = "No permit required"
+                final_public["permit_kind"] = "Not Required"
+                final_public["permits_required"] = []
+                final_public["required_permit_names"] = []
+                final_public["required_permit_families"] = []
+                final_public["required_permit_segments"] = []
+                if cell_lock.get("customer_action"):
+                    final_public["not_required_reason"] = cell_lock.get("customer_action")
+                if cell_lock.get("source_urls"):
+                    final_public["source_urls"] = list(cell_lock.get("source_urls") or [])
         return final_public if isinstance(final_public, dict) else {}
     return {}
 
@@ -8828,9 +8904,31 @@ def observability_head_snippet() -> str:
     return "\n".join(snippets)
 
 
-_SENSITIVE_OUTPUT_RE = re.compile(
-    r"(?i)(/home/[^/\s\"'<>]+/[^\s\"'<>]+|/app/[^\s\"'<>]+|PERMITASSIST_[A-Z0-9_]+|RAILWAY_[A-Z0-9_]+|sk-[A-Za-z0-9_-]{16,}|whsec_[A-Za-z0-9_-]{16,}|[A-Fa-f0-9]{64})"
-)
+_SENSITIVE_PATH_RE = re.compile(r"(?i)(/home/[^/\s\"'<>]+/[^\s\"'<>]+|/app/[^\s\"'<>]+)")
+_SENSITIVE_SECRET_RE = re.compile(r"(?i)(PERMITASSIST_[A-Z0-9_]+|RAILWAY_[A-Z0-9_]+|sk-[A-Za-z0-9_-]{16,}|whsec_[A-Za-z0-9_-]{16,}|[A-Fa-f0-9]{64})")
+
+
+def _path_match_is_inside_url(text: str, start: int) -> bool:
+    """Do not redact legitimate URL path components like /home/permits.
+
+    The old one-shot scanner treated official URLs such as
+    https://honolulu.gov/dpp/home/... as filesystem leaks. A real filesystem
+    path is still redacted unless the match sits within an unbroken http(s) URL
+    token that begins before the slash and has no whitespace/quote boundary.
+    """
+    prefix = text[:start]
+    boundary = max(prefix.rfind(ch) for ch in (" ", "\n", "\t", "\r", "\"", "'", "<", ">", "`"))
+    token = prefix[boundary + 1:]
+    return bool(re.match(r"https?://[^\s<>'\"`]+$", token, flags=re.I))
+
+
+def _redact_sensitive_text(text: str) -> str:
+    redacted = _SENSITIVE_SECRET_RE.sub("[REDACTED]", text)
+
+    def replace_path(match: re.Match[str]) -> str:
+        return match.group(0) if _path_match_is_inside_url(redacted, match.start()) else "[REDACTED]"
+
+    return _SENSITIVE_PATH_RE.sub(replace_path, redacted)
 
 
 def redact_public_output(value):
@@ -8848,7 +8946,7 @@ def redact_public_output(value):
     if isinstance(value, list):
         return [redact_public_output(item) for item in value]
     if isinstance(value, str):
-        return _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", value)
+        return _redact_sensitive_text(value)
     return value
 
 
@@ -10210,7 +10308,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not user_email:
                     self.send_json(401, {"error": "login_required"})
                     return
-                html_doc = _SENSITIVE_OUTPUT_RE.sub("[REDACTED]", render_white_label_report_html(redact_public_output(data)))
+                html_doc = _redact_sensitive_text(render_white_label_report_html(redact_public_output(data)))
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Cache-Control", "no-store")

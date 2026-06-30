@@ -8,6 +8,7 @@ scope from already-contaminated model/cache text.
 from __future__ import annotations
 
 import copy
+from dataclasses import dataclass, field
 import os
 import re
 from typing import Any
@@ -87,6 +88,119 @@ _GENERAL_TAGS = {"general", "contractor_license", "code_adoption", "energy", "ac
 
 def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "").lower()).strip()
+
+
+@dataclass(frozen=True)
+class ScopeFacts:
+    """Deterministic request-only scope facts used by invariant gates.
+
+    This object is intentionally derived from the original lookup request, not
+    from resolver/model/cache prose, so later contaminated rows cannot override
+    segment, construction class, trade signals, or special review signals.
+    """
+
+    segment: str = "unknown"
+    construction_class: str = "none"
+    trade_signals: frozenset[str] = field(default_factory=frozenset)
+    special_signals: frozenset[str] = field(default_factory=frozenset)
+    dominant_family: str = ""
+    vertical: str = "generic"
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "segment": self.segment,
+            "construction_class": self.construction_class,
+            "trade_signals": sorted(self.trade_signals),
+            "special_signals": sorted(self.special_signals),
+            "dominant_family": self.dominant_family,
+            "vertical": self.vertical,
+            "source": "request_scope_facts_v1",
+        }
+
+
+_CONSTRUCTION_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("change_of_use", ("change of use", "change in use", "change of occupancy", "occupancy change", "retail to", "office to", "warehouse to", "gallery change to", "convert from", "conversion from")),
+    ("conversion", ("convert garage", "garage into", "garage to", "basement adu", "basement apartment", "laundromat conversion", "conversion", "converted into", "convert into", "convert vacant", "convert office", "convert retail", "convert warehouse", "convert space", "convert suite")),
+    ("addition", ("addition", "add classroom", "classroom addition", "bedroom addition", "building addition", "porch addition", "attached patio cover", "metal building addition", "new detached", "backyard cottage", "detached backyard cottage")),
+    ("TI", ("tenant improvement", "tenant finish", "tenant buildout", "buildout", "build-out", "first generation upfit", "first-generation upfit", "upfit", "demising wall", "conference rooms", "non load bearing partitions", "partition walls", "build new shared laundry room", "shared laundry room")),
+    ("alteration", ("alteration", "remodel", "renovation", "structural", "load bearing", "foundation repair", "foundation replacement", "new foundation", "new window", "new wall", "demising")),
+)
+_TRADE_SIGNAL_PATTERNS: dict[str, tuple[str, ...]] = {
+    "electrical": ("electrical", "new lighting", "lighting", "outlets", "receptacles", "gfci", "electrical panel", "service panel", "breaker panel", "load center", "600 amp", "600a", "electrical service", "service upgrade", "amp service", "x ray", "x-ray", "grow lights", "disconnect", "fire alarm wiring", "new circuit"),
+    "mechanical_fuelgas": ("mechanical", "hvac", "mini split", "mini-split", "ductless", "heat pump", "rtu", "rooftop unit", "ventilation", "exhaust", "makeup air", "gas-fired", "gas fired", "gas dryer", "gas dryers", "fuel gas", "gas line", "gas piping", "radiant heat", "furnace"),
+    "plumbing_fog": ("plumbing", "grease interceptor", "fog", "floor drain", "floor drains", "water heater", "shampoo bowls", "sink", "sinks", "toilets", "restroom", "shower drain", "gas line", "fixture"),
+    "fire": ("fire alarm", "sprinkler", "hood", "commercial hood", "type i hood", "type 1 hood", "hood suppression", "fire suppression", "ansul", "wet-chemical", "wet chemical", "high pile", "hazardous", "fuel dispenser"),
+    "building_structural": ("foundation repair", "foundation replacement", "new foundation", "structural", "canopy", "demising wall", "partition", "partitions", "partition walls", "addition", "load bearing", "framing", "new window", "exterior door"),
+    "wastewater_fog": ("grease interceptor", "fog", "pretreatment", "floor drain", "floor drains"),
+}
+_SPECIAL_SIGNAL_PATTERNS: dict[str, tuple[str, ...]] = {
+    "historic": ("historic", "historic district", "bar", "board of architectural review"),
+    "coastal": ("coastal", "shoreline", "windstorm", "twia"),
+    "flood": ("flood", "floodplain", "fema", "sfha"),
+    "hazardous": ("hazardous", "fuel dispenser", "gas station", "service station", "fuel system", "cannabis", "co2 system", "compressed air"),
+    "health": ("restaurant", "food", "kitchen", "daycare", "clinic", "grease interceptor", "commissary"),
+    "row": ("right of way", "right-of-way", "sidewalk", "curb cut", "driveway", "encroachment"),
+    "environmental": ("fuel dispenser", "gas station", "service station", "underground tank", "ust", "environmental"),
+}
+
+
+def _first_matching_class(job: str) -> str:
+    for construction_class, terms in _CONSTRUCTION_PATTERNS:
+        if has_any_unnegated(job, terms):
+            return construction_class
+    return "none"
+
+
+def _signals_from_patterns(job: str, patterns: dict[str, tuple[str, ...]]) -> frozenset[str]:
+    return frozenset(signal for signal, terms in patterns.items() if has_any_unnegated(job, terms))
+
+
+def _dominant_family(job: str, trade_signals: frozenset[str], special_signals: frozenset[str]) -> str:
+    if has_any_unnegated(job, ("heat pump water heater", "hpwh", "hybrid heat pump water heater")):
+        return "plumbing"
+    if has_any_unnegated(job, ("grease interceptor", "fog", "pretreatment")):
+        return "plumbing"
+    if has_any_unnegated(job, ("rtu", "rooftop unit", "hvac", "mechanical", "furnace", "air conditioner", "heat pump")):
+        return "mechanical"
+    if has_any_unnegated(job, ("gas station", "service station", "canopy", "fuel dispenser")):
+        return "building"
+    if "building_structural" in trade_signals:
+        return "building"
+    if "plumbing_fog" in trade_signals or "wastewater_fog" in trade_signals:
+        return "plumbing"
+    if "mechanical_fuelgas" in trade_signals:
+        return "mechanical"
+    if "electrical" in trade_signals:
+        return "electrical"
+    if "fire" in trade_signals:
+        return "fire"
+    if "historic" in special_signals:
+        return "historic"
+    return ""
+
+
+def build_scope_facts(job_type: str, city: str = "", state: str = "", *, job_category: str | None = None, vertical: str | None = None, scope_contract: dict[str, Any] | None = None) -> ScopeFacts:
+    contract = scope_contract if isinstance(scope_contract, dict) else build_scope_contract(job_type, city, state, job_category=job_category, vertical=vertical)
+    job = _norm(job_type)
+    segment = str(contract.get("category") or _explicit_category(job, job_category) or "unknown").lower().strip()
+    if segment not in {"residential", "commercial"}:
+        segment = "unknown"
+    construction_class = _first_matching_class(job)
+    trade_signals = _signals_from_patterns(job, _TRADE_SIGNAL_PATTERNS)
+    special_signals = _signals_from_patterns(job, _SPECIAL_SIGNAL_PATTERNS)
+    dominant_family = "building" if construction_class != "none" else _dominant_family(job, trade_signals, special_signals)
+    return ScopeFacts(
+        segment=segment,
+        construction_class=construction_class,
+        trade_signals=trade_signals,
+        special_signals=special_signals,
+        dominant_family=dominant_family,
+        vertical=str(contract.get("vertical") or vertical or "generic"),
+    )
+
+
+def scope_facts_from_contract(scope_contract: dict[str, Any] | None, job_type: str = "", city: str = "", state: str = "") -> ScopeFacts:
+    return build_scope_facts(job_type, city, state, scope_contract=scope_contract if isinstance(scope_contract, dict) else None)
 
 
 def _term_is_locally_negated(text: str, term_start: int) -> bool:

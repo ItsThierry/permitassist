@@ -103,6 +103,15 @@ def _has_any_unnegated(text: str, terms: tuple[str, ...]) -> bool:
     return False
 
 
+def _candidate_segment(project_slug: str) -> str:
+    slug = str(project_slug or "").lower()
+    if slug.startswith("residential_") or slug in {"reroof"}:
+        return "residential" if slug != "reroof" else "neutral"
+    if slug.startswith("commercial_"):
+        return "commercial"
+    return "neutral"
+
+
 def classify_project_candidates(job_type: str, job_category: str = "") -> list[str]:
     """Classify request text to safe v2.3.1 project-family candidates.
 
@@ -235,6 +244,8 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
         candidates.append("residential_remodel")
 
     unique_candidates = list(dict.fromkeys(candidates))
+    if category in {"residential", "commercial"}:
+        unique_candidates = [candidate for candidate in unique_candidates if _candidate_segment(candidate) in {category, "neutral"}]
     if len(unique_candidates) == 1:
         return unique_candidates
     # Broad category labels, vague words, or mixed project-family signals are not safe enough.
