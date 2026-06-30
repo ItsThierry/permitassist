@@ -2645,15 +2645,16 @@ def _repair_customer_boundary_copy(value, *, key: str = "", root: dict | None = 
 
 
 _CUSTOMER_COMPANION_FAMILY_TERMS = {
-    "building": ("building", "alteration", "remodel", "addition", "deck", "basement", "window", "roof", "egress"),
-    "electrical": ("electrical", "electric", "circuit", "panel", "service", "outlet", "ev charger", "charger"),
+    "building": ("building", "alteration", "remodel", "addition", "deck", "basement", "window", "roof", "egress", "retaining wall", "structural"),
+    "electrical": ("electrical", "electric", "circuit", "panel", "service", "outlet", "ev charger", "charger", "lighting", "fixture"),
     "refrigeration": ("refrigeration", "refrigerant", "line set", "line-set"),
-    "mechanical": ("mechanical", "hvac", "furnace", "ac", "air conditioner", "mini split", "heat pump", "pellet stove", "fireplace"),
-    "plumbing": ("plumbing", "water heater", "toilet", "shower", "drain", "fixture", "ejector"),
+    "mechanical": ("mechanical", "hvac", "furnace", "ac", "air conditioner", "mini split", "heat pump", "heat-pump", "rooftop unit", "rtu", "pellet stove", "fireplace", "fume hood", "exhaust"),
+    "plumbing": ("plumbing", "water heater", "heat-pump water heater", "heat pump water heater", "toilet", "shower", "drain", "fixture", "ejector", "grease interceptor"),
     "sign": ("sign permit", "signage permit", "commercial sign", "illuminated sign", "channel letter"),
-    "fire": ("fire", "sprinkler", "alarm", "hood", "suppression"),
+    "fire": ("fire", "sprinkler", "alarm", "hood", "suppression", "life safety", "life-safety", "hazmat"),
+    "health": ("health", "food establishment", "food", "brewery", "restaurant"),
     "planning": ("planning", "zoning", "setback", "fence", "parcel", "site plan", "land use"),
-    "historic": ("historic", "landmark", "district"),
+    "historic": ("historic", "hdlc", "certificate of appropriateness", "coa", "landmark", "design review"),
     "co": ("certificate of occupancy", "change of occupancy", "change of use", "coo"),
     "roofing": ("roof", "roofing", "reroof", "re-roof", "shingle"),
 }
@@ -2662,14 +2663,17 @@ _ADDRESS_DEPENDENT_COMPANION_FAMILIES = {"fire", "planning", "historic", "co"}
 
 def _customer_row_family(row: dict) -> str:
     text = " ".join(str(row.get(k) or "") for k in ("filing_family", "family", "kind", "category", "permit_kind", "permit_type", "permit_name", "approval_type", "portal_selection")).lower()
+    explicit_family = str(row.get("filing_family") or row.get("family") or "").lower().strip()
+    if explicit_family in _CUSTOMER_COMPANION_FAMILY_TERMS or explicit_family in {"historic", "health", "co", "planning", "mechanical", "plumbing", "electrical", "building", "fire"}:
+        return explicit_family
     if "refrigeration" in text:
         return "refrigeration"
     if "sign" in text and not re.search(r"design|signature|assigned", text):
         return "sign"
+    if "historic" in text or "hdlc" in text or "certificate of appropriateness" in text or re.search(r"\bcoa\b", text) or "landmark" in text:
+        return "historic"
     if "zoning" in text or "planning" in text or "land use" in text:
         return "planning"
-    if "historic" in text or "landmark" in text:
-        return "historic"
     if "certificate of occupancy" in text or re.search(r"\bcoo?\b", text):
         return "co"
     for family, terms in _CUSTOMER_COMPANION_FAMILY_TERMS.items():

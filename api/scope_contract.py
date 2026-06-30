@@ -103,8 +103,10 @@ class ScopeFacts:
     construction_class: str = "none"
     trade_signals: frozenset[str] = field(default_factory=frozenset)
     special_signals: frozenset[str] = field(default_factory=frozenset)
+    negative_scope_facts: frozenset[str] = field(default_factory=frozenset)
     dominant_family: str = ""
     vertical: str = "generic"
+    request_scope_text: str = ""
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -112,8 +114,10 @@ class ScopeFacts:
             "construction_class": self.construction_class,
             "trade_signals": sorted(self.trade_signals),
             "special_signals": sorted(self.special_signals),
+            "negative_scope_facts": sorted(self.negative_scope_facts),
             "dominant_family": self.dominant_family,
             "vertical": self.vertical,
+            "request_scope_text": self.request_scope_text,
             "source": "request_scope_facts_v1",
         }
 
@@ -126,21 +130,44 @@ _CONSTRUCTION_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("alteration", ("alteration", "remodel", "renovation", "structural", "load bearing", "foundation repair", "foundation replacement", "new foundation", "new window", "new wall", "demising")),
 )
 _TRADE_SIGNAL_PATTERNS: dict[str, tuple[str, ...]] = {
-    "electrical": ("electrical", "new lighting", "lighting", "outlets", "receptacles", "gfci", "electrical panel", "service panel", "breaker panel", "load center", "600 amp", "600a", "electrical service", "service upgrade", "amp service", "x ray", "x-ray", "grow lights", "disconnect", "fire alarm wiring", "new circuit"),
-    "mechanical_fuelgas": ("mechanical", "hvac", "mini split", "mini-split", "ductless", "heat pump", "rtu", "rooftop unit", "ventilation", "exhaust", "makeup air", "gas-fired", "gas fired", "gas dryer", "gas dryers", "fuel gas", "gas line", "gas piping", "radiant heat", "furnace"),
-    "plumbing_fog": ("plumbing", "grease interceptor", "fog", "floor drain", "floor drains", "water heater", "shampoo bowls", "sink", "sinks", "toilets", "restroom", "shower drain", "gas line", "fixture"),
-    "fire": ("fire alarm", "sprinkler", "hood", "commercial hood", "type i hood", "type 1 hood", "hood suppression", "fire suppression", "ansul", "wet-chemical", "wet chemical", "high pile", "hazardous", "fuel dispenser"),
-    "building_structural": ("foundation repair", "foundation replacement", "new foundation", "structural", "canopy", "demising wall", "partition", "partitions", "partition walls", "addition", "load bearing", "framing", "new window", "exterior door"),
+    "electrical": ("electrical", "new lighting", "lighting", "lights", "light fixtures", "outlets", "receptacles", "gfci", "240 volt", "240v", "220 volt", "220v", "dryer outlet", "electrical panel", "service panel", "breaker panel", "load center", "600 amp", "600a", "electrical service", "service upgrade", "amp service", "x ray", "x-ray", "grow lights", "disconnect", "fire alarm wiring", "new circuit"),
+    "mechanical_fuelgas": ("mechanical", "hvac", "mini split", "mini-split", "ductless", "heat pump", "rtu", "rooftop unit", "rooftop package", "ventilation", "exhaust", "exhaust fan", "bath fan", "fume hood", "lab hood", "makeup air", "gas-fired", "gas fired", "gas dryer", "gas dryers", "fuel gas", "gas line", "gas piping", "radiant heat", "furnace"),
+    "plumbing_fog": ("plumbing", "grease interceptor", "fog", "floor drain", "floor drains", "water heater", "heat pump water heater", "hpwh", "shampoo bowls", "sink", "sinks", "toilets", "restroom", "shower drain", "gas line", "fixture", "medical gas", "med gas", "nitrous"),
+    "fire": ("fire alarm", "sprinkler", "hood", "commercial hood", "type i hood", "type 1 hood", "hood suppression", "fire suppression", "ansul", "wet-chemical", "wet chemical", "high pile", "hazardous", "chemical storage", "daycare", "child care", "fuel dispenser"),
+    "building_structural": ("foundation repair", "foundation replacement", "new foundation", "structural", "canopy", "demising wall", "partition", "partitions", "partition walls", "addition", "load bearing", "framing", "new window", "exterior door", "pool", "spa", "retaining wall", "storm shelter", "garage conversion"),
     "wastewater_fog": ("grease interceptor", "fog", "pretreatment", "floor drain", "floor drains"),
+    "pool_spa": ("pool", "spa", "swimming pool", "in ground pool", "in-ground pool"),
+    "medical_gas": ("medical gas", "med gas", "nitrous", "oxygen line", "dental gas"),
+    "lab_hazmat": ("lab", "wet lab", "biotech", "fume hood", "chemical storage", "hazmat", "hazardous materials"),
+    "daycare_life_safety": ("daycare", "child care", "classrooms", "fenced play yard"),
+    "retaining_wall": ("retaining wall",),
+    "dryer_outlet": ("dryer outlet", "240 volt outlet", "240v outlet", "220 volt outlet", "heat pump dryer"),
+    "rtu_same_capacity": ("rtu", "rooftop unit", "same capacity", "same tonnage"),
+    "hpwh": ("heat pump water heater", "hpwh", "hybrid heat pump water heater"),
+    "grease_interceptor_only": ("grease interceptor only", "interceptor only"),
 }
 _SPECIAL_SIGNAL_PATTERNS: dict[str, tuple[str, ...]] = {
-    "historic": ("historic", "historic district", "bar", "board of architectural review"),
+    "historic": ("historic", "historic district", "historic overlay", "local historic district", "landmark", "french quarter", "vieux carre", "vieux carré", "vcc", "hdlc", "certificate of appropriateness", "coa", "architectural review", "bar", "board of architectural review"),
+    "exterior_alteration": ("exterior facade", "front facade", "facade", "façade", "shutter", "shutters", "shutter replacement", "exterior sign", "sign replacement", "awning", "storefront", "exterior window", "exterior windows", "front window", "front windows", "window replacement", "windows", "exterior door", "door replacement"),
     "coastal": ("coastal", "shoreline", "windstorm", "twia"),
     "flood": ("flood", "floodplain", "fema", "sfha"),
     "hazardous": ("hazardous", "fuel dispenser", "gas station", "service station", "fuel system", "cannabis", "co2 system", "compressed air"),
-    "health": ("restaurant", "food", "kitchen", "daycare", "clinic", "grease interceptor", "commissary"),
+    "health": ("restaurant", "food", "kitchen", "daycare", "clinic", "grease interceptor", "commissary", "brewery"),
     "row": ("right of way", "right-of-way", "sidewalk", "curb cut", "driveway", "encroachment"),
     "environmental": ("fuel dispenser", "gas station", "service station", "underground tank", "ust", "environmental"),
+}
+
+_NEGATIVE_SCOPE_PATTERNS: dict[str, tuple[str, ...]] = {
+    "same_capacity": ("same capacity", "same tonnage", "same size", "like for like", "like-for-like"),
+    "existing_circuits": ("existing circuit", "existing circuits", "using existing circuits", "no new circuit", "no new circuits", "no panel work", "no service upgrade"),
+    "no_walls": ("no walls", "no wall changes", "no wall work", "no partitions", "no wall or partition work"),
+    "no_mep": ("no mep", "no mechanical", "no electrical", "no plumbing", "no mechanical electrical plumbing"),
+    "no_occupancy_change": ("no occupancy change", "no change of occupancy", "no change of use", "without occupancy change"),
+    "no_electrical": ("no electrical", "no electric", "no wiring", "no new electrical"),
+    "no_plumbing": ("no plumbing", "no pipe", "no drain", "no water line"),
+    "no_mechanical": ("no mechanical", "no hvac", "no ventilation"),
+    "no_structural": ("no structural", "no structural changes", "no framing", "no rough opening", "no rough-opening"),
+    "only_scope": ("only", "interceptor only", "fixture only", "cosmetic only", "repaint and carpet replacement only"),
 }
 
 
@@ -153,6 +180,38 @@ def _first_matching_class(job: str) -> str:
 
 def _signals_from_patterns(job: str, patterns: dict[str, tuple[str, ...]]) -> frozenset[str]:
     return frozenset(signal for signal, terms in patterns.items() if has_any_unnegated(job, terms))
+
+
+def _negative_scope_facts(job: str) -> frozenset[str]:
+    facts = {name for name, terms in _NEGATIVE_SCOPE_PATTERNS.items() if has_any_unnegated(job, terms)}
+    # Handle comma/list negation such as: "no walls, electrical, plumbing, mechanical, or occupancy change".
+    if re.search(r"\bno\s+[^.;]{0,120}\bwalls?\b", job, re.I):
+        facts.add("no_walls")
+    if re.search(r"\bno\s+[^.;]{0,120}\belectrical\b", job, re.I):
+        facts.add("no_electrical")
+    if re.search(r"\bno\s+[^.;]{0,120}\bplumbing\b", job, re.I):
+        facts.add("no_plumbing")
+    if re.search(r"\bno\s+[^.;]{0,120}\bmechanical\b", job, re.I):
+        facts.add("no_mechanical")
+    if re.search(r"\bno\s+[^.;]{0,120}\bmep\b", job, re.I):
+        facts.add("no_mep")
+    if re.search(r"\bno\s+[^.;]{0,120}\boccupancy\s+change\b|\bno\s+change\s+of\s+(?:use|occupancy)\b", job, re.I):
+        facts.add("no_occupancy_change")
+    if {"no_electrical", "no_plumbing", "no_mechanical"}.issubset(facts):
+        facts.add("no_mep")
+    if re.search(r"\b(?:no|without)\s+(?:walls?|mep|mechanical|electrical|plumbing|occupancy(?:\s+change)?)(?:\s*/\s*|\s+or\s+|\s+and\s+)?", job, re.I):
+        if "no walls" in job or "no wall" in job:
+            facts.add("no_walls")
+        if "no mep" in job:
+            facts.add("no_mep")
+        if "no occupancy" in job or "no change of use" in job:
+            facts.add("no_occupancy_change")
+    if re.search(r"\b(?:repaint|paint|carpet|flooring|cosmetic|refresh)\b", job, re.I) and ("only" in job or {"no_walls", "no_mep", "no_occupancy_change"} & facts):
+        facts.add("cosmetic_only")
+    if re.search(r"\b(?:grease\s+)?interceptor\s+only\b", job, re.I):
+        facts.add("grease_interceptor_only")
+        facts.add("only_scope")
+    return frozenset(facts)
 
 
 def _dominant_family(job: str, trade_signals: frozenset[str], special_signals: frozenset[str]) -> str:
@@ -188,14 +247,17 @@ def build_scope_facts(job_type: str, city: str = "", state: str = "", *, job_cat
     construction_class = _first_matching_class(job)
     trade_signals = _signals_from_patterns(job, _TRADE_SIGNAL_PATTERNS)
     special_signals = _signals_from_patterns(job, _SPECIAL_SIGNAL_PATTERNS)
+    negative_scope_facts = _negative_scope_facts(job)
     dominant_family = "building" if construction_class != "none" else _dominant_family(job, trade_signals, special_signals)
     return ScopeFacts(
         segment=segment,
         construction_class=construction_class,
         trade_signals=trade_signals,
         special_signals=special_signals,
+        negative_scope_facts=negative_scope_facts,
         dominant_family=dominant_family,
         vertical=str(contract.get("vertical") or vertical or "generic"),
+        request_scope_text=job,
     )
 
 
