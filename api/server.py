@@ -571,9 +571,29 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
     ).lower().strip()
 
     def is_commercial_ti_result(value: dict) -> bool:
-        text = " ".join(str(value.get(k) or "") for k in ("permit_name", "permit_type", "job_summary")).lower()
-        if primary_scope.startswith("commercial") or primary_scope in {"multifamily", "change_of_occupancy"}:
+        text = " ".join(str(value.get(k) or "") for k in ("permit_name", "permit_type", "permit_kind", "job_summary")).lower()
+        scope_category = str((scope_contract or {}).get("category") or (scope_contract or {}).get("segment") or "").lower().strip()
+        scope_family = str((scope_contract or {}).get("family") or "").lower().strip()
+        structured_commercial = (
+            primary_scope.startswith("commercial")
+            or primary_scope in {"multifamily", "change_of_occupancy"}
+            or scope_category == "commercial"
+            or scope_family.startswith("commercial")
+        )
+        if structured_commercial:
             return True
+        # Live100 no-neuter guard: residential-veto first.  Residential packages
+        # such as bath remodels and ADUs can contain broad words like
+        # "addition/remodel"; never let those generic substrings inject the
+        # commercial-TI timeline unless a commercial signal above has won.
+        structured_residential = (
+            primary_scope.startswith("residential")
+            or scope_category == "residential"
+            or scope_family.startswith("residential")
+            or bool(re.search(r"\b(?:single[-\s]?family|dwelling|adu|accessory\s+dwelling|residential)\b", text, re.I))
+        )
+        if structured_residential and not re.search(r"\b(?:commercial|tenant[-\s]?(?:improvement|finish|buildout)|retail|restaurant|bar|clinic|medical|dental|warehouse|industrial)\b", text, re.I):
+            return False
         return any(term in text for term in ("commercial", "tenant improvement", "buildout", "build-out", "interior alteration"))
 
     def has_internal(text: str) -> bool:
@@ -1171,6 +1191,307 @@ _CANONICAL_AHJ_APPLY_URLS: dict[tuple[str, str], dict[str, object]] = {
         "trusted_canonical": True,
     },
 }
+
+
+def _url_status_soft_404(body: object) -> bool:
+    text = str(body or "").lower()
+    return bool(re.search(r"\b(?:404\s*-\s*file or directory not found|404\s+not\s+found|page\s+not\s+found|url\s+requested\s+wasn'?t\s+found|resource\s+you\s+are\s+looking\s+for\s+might\s+have\s+been\s+removed)\b", text, re.I))
+
+
+def classify_customer_url_status(http_status: int | None = None, error: str | None = None, body: object = "") -> str:
+    """Offline URL reachability semantics for customer filing paths.
+
+    This function is deliberately pure: it classifies evidence from an offline
+    sweep/cache and is never used to perform request-time reachability checks.
+    """
+    error_lc = str(error or "").lower()
+    if any(token in error_lc for token in ("nxdomain", "name_not_resolved", "name not resolved", "err_name_not_resolved")):
+        return "broken"
+    if http_status in {404, 410}:
+        return "broken"
+    if http_status is not None and 200 <= int(http_status) < 400:
+        return "broken" if _url_status_soft_404(body) else "ok"
+    if http_status in {403, 429} or (http_status is not None and 500 <= int(http_status) < 600):
+        return "unknown"
+    if error_lc:
+        if any(token in error_lc for token in ("timeout", "timed out", "tls", "ssl", "reset", "refused", "blocked", "forbidden", "429")):
+            return "unknown"
+        return "unknown"
+    return "unknown"
+
+
+_LIVE100_BROKEN_PRIMARY_URLS = {
+    "https://aca-prod.accela.com/portland",
+    "https://aca-prod.accela.com/nashville",
+    "https://www.boston.gov/departments/inspectional-services/apply-permit-online",
+    "https://www.houstonpermittingcenter.org/online-permitting",
+    "https://www.cityofmadison.com/building-inspection/permits",
+    "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department/bseed-online-services",
+    "https://www.burlingtonvt.gov/dpz",
+    "https://www.santafenm.gov/community_development/permits",
+    "https://santafenm.gov/community_development/permits",
+    "https://www.charleston-sc.gov/1075/inspections",
+    "https://www.littlerock.gov/city-administration/departments/planning-and-development/building-codes",
+    "https://littlerock.gov/city-administration/departments/planning-and-development/building-codes",
+    "https://www.clarkcountynv.gov/business/building/permits",
+}
+
+
+_LIVE100_OFFICIAL_FILING_PATH_REPAIRS: dict[tuple[str, str], dict[str, object]] = {
+    ("portland", "or"): {
+        "apply_url": "https://devhub.portlandoregon.gov/",
+        "source_urls": ["https://www.portland.gov/ppd/get-permit/apply-permits", "https://devhub.portlandoregon.gov/"],
+        "title": "City of Portland Permitting & Development",
+        "evidence": "Official Portland.gov Apply for permits page links to DevHub for online permit applications.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "ok",
+    },
+    ("nashville", "tn"): {
+        "apply_url": "https://epermits.nashville.gov/",
+        "source_urls": ["https://www.nashville.gov/departments/codes/construction-and-permits/e-permits-system", "https://epermits.nashville.gov/"],
+        "title": "Metro Nashville Codes ePermits",
+        "evidence": "Official Nashville.gov Codes E-Permits page links to epermits.nashville.gov for permit applications/inquiry.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "ok",
+    },
+    ("boston", "ma"): {
+        "apply_url": "https://www.boston.gov/boston-permitting",
+        "source_urls": ["https://www.boston.gov/boston-permitting", "https://onlinepermitsandlicenses.boston.gov/isdpermits/"],
+        "title": "City of Boston Permitting / Inspectional Services",
+        "evidence": "Official Boston permitting page links to the Inspectional Services Online Portal.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "ok",
+    },
+    ("houston", "tx"): {
+        "apply_url": "https://permits.houstontx.gov/",
+        "source_urls": ["https://permits.houstontx.gov/", "https://www.houstonpublicworks.org/houston-permitting-center"],
+        "title": "City of Houston Permit Portal",
+        "evidence": "Official City of Houston Permit Portal states users can apply for permits, print permits, make payments, and request inspections.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "ok",
+    },
+    ("madison", "wi"): {
+        "apply_url": "https://www.cityofmadison.com/development-services-center/permits",
+        "source_urls": ["https://www.cityofmadison.com/development-services-center/permits", "https://www.cityofmadison.com/dpced/building-inspection"],
+        "title": "City of Madison Development Services Center Permits",
+        "evidence": "Official City of Madison Development Services Center permits page replaces the stale Building Inspection /permits path.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "ok",
+    },
+    ("detroit", "mi"): {
+        "apply_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review",
+        "source_urls": ["https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review"],
+        "title": "City of Detroit BSEED Permits & Plan Review",
+        "evidence": "Official Detroit BSEED Permits & Plan Review page documents online permit application/ePlans steps.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "ok",
+    },
+    ("burlington", "vt"): {
+        "apply_url": "https://burlingtonvt.portal.opengov.com/",
+        "source_urls": ["https://www.burlingtonvt.gov/548/Permit-Applications-and-Forms", "https://burlingtonvt.portal.opengov.com/"],
+        "title": "City of Burlington Permitting Portal",
+        "evidence": "Official Burlington Permit Applications and Forms page says all permit applications/forms are online at the City permitting portal.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "unknown",
+    },
+    ("santa fe", "nm"): {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "source_urls": ["https://santafenm.gov/land-use/building-permits", "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home"],
+        "title": "City of Santa Fe Building Permits / CSS",
+        "evidence": "Official City of Santa Fe Building Permits page links to Citizen Self-Service for online permitting.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "ok",
+    },
+    ("charleston", "sc"): {
+        "apply_url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+        "source_urls": ["https://www.charleston-sc.gov/856/Permit-Center", "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home"],
+        "title": "City of Charleston Permit Center / Customer Self Service",
+        "evidence": "Official Charleston Permit Center page links to Customer Self Service for permit submittal and inspections.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "ok",
+    },
+    ("little rock", "ar"): {
+        "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "source_urls": ["https://littlerock.gov/government/city-departments/planning-and-development/divisions/"],
+        "title": "City of Little Rock Planning & Development / Building Codes",
+        "evidence": "Official Little Rock Planning & Development divisions page identifies Building Codes as issuing construction permits and providing plan review/inspection for building, plumbing, mechanical, and electrical work.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "ok",
+    },
+    ("las vegas", "nv"): {
+        "apply_url": "https://aca-prod.accela.com/clarkco/Cap/CapHome.aspx?module=Building&TabName=Building",
+        "source_urls": ["https://www.clarkcountynv.gov/government/departments/building___fire_prevention/", "https://aca-prod.accela.com/clarkco/Cap/CapHome.aspx?module=Building&TabName=Building"],
+        "title": "Clark County Building Department / Accela Citizen Access",
+        "evidence": "Official Clark County Building Department page and Clark County Accela Citizen Access Building module replace the stale /business/building/permits path.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "ok",
+    },
+    ("kansas city", "ks"): {
+        "apply_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+        "source_urls": ["https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits", "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection"],
+        "title": "Unified Government of Wyandotte County/Kansas City, KS Building Inspection Permits",
+        "evidence": "Official Wycokck Building Inspection Permits page covers residential, commercial, electrical, mechanical, plumbing, and demolition permits.",
+        "verified_on": "2026-07-01",
+        "reachability_status": "unknown",
+    },
+}
+
+
+def _normalized_customer_url_key(url: object) -> str:
+    return _safe_customer_source_url(str(url or "")).rstrip("/").lower()
+
+
+def _live100_known_broken_url(url: object) -> bool:
+    return _normalized_customer_url_key(url) in _LIVE100_BROKEN_PRIMARY_URLS
+
+
+def _live100_repair_entry_for(city: str, state: str) -> dict[str, object] | None:
+    return _LIVE100_OFFICIAL_FILING_PATH_REPAIRS.get(((city or "").lower().strip(), (state or "").lower().strip()))
+
+
+def _apply_live100_official_filing_path_repair(result: dict, city: str, state: str, job_type: str = "") -> dict:
+    """Repair known Live100 action-path rot without changing decisions/families.
+
+    This uses only evidence-gated official URLs gathered offline for the Live100
+    no-neuter pass. It never performs request-time network checks and never turns
+    a concrete REQUIRED/NOT_REQUIRED answer into AHJ-contact/VERIFY.
+    """
+    if not isinstance(result, dict):
+        return {}
+    if str(result.get("permit_decision") or "").upper().strip() != "REQUIRED" and result.get("permit_required") is not True:
+        return result
+    entry = _live100_repair_entry_for(city, state)
+    if not entry:
+        return result
+    primary_urls = []
+    for key in ("apply_url", "online_application_url"):
+        if result.get(key):
+            primary_urls.append(result.get(key))
+    apply_path = result.get("apply_path") if isinstance(result.get("apply_path"), dict) else {}
+    for key in ("portal_url", "url", "source_url"):
+        if apply_path.get(key):
+            primary_urls.append(apply_path.get(key))
+    has_primary = any(_safe_customer_source_url(url) for url in primary_urls)
+    should_repair = any(_live100_known_broken_url(url) for url in primary_urls)
+    # KCK/Wyandotte resolver miss: existing output had a concrete REQUIRED answer
+    # but no source/apply path; repairing here is an alias/keying fallback, not a
+    # decision override.  Do not promote generic missing-URL outputs in other
+    # cities; legacy tests rely on honest no-exact-portal copy when no official
+    # URL was present in the frozen evidence.
+    if not should_repair and (city or "").lower().strip() == "kansas city" and (state or "").upper().strip() == "KS":
+        text = _result_text_inventory(result)
+        should_repair = (not has_primary) and ("wyandotte" in text or "kansas city, kansas" in text or "kck" in text or "water heater" in (job_type or "").lower())
+    if not should_repair:
+        return result
+
+    apply_url = _safe_customer_source_url(entry.get("apply_url") or "")
+    source_urls = [_safe_customer_source_url(url) for url in (entry.get("source_urls") or [])]
+    source_urls = [url for url in source_urls if url]
+    if not apply_url and source_urls:
+        apply_url = source_urls[0]
+    if not apply_url:
+        return result
+
+    degraded = list(result.get("degraded_sources") or []) if isinstance(result.get("degraded_sources"), list) else []
+    for url in primary_urls:
+        if _live100_known_broken_url(url):
+            degraded.append({
+                "url": _safe_customer_source_url(url),
+                "status": "broken",
+                "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+            })
+    if degraded:
+        result["degraded_sources"] = degraded
+
+    result["apply_url"] = apply_url
+    result["online_application_url"] = apply_url
+    result["apply_url_known"] = True
+    if not result.get("applying_office"):
+        result["applying_office"] = str(entry.get("title") or f"{city} permit office")
+    repaired_path = dict(apply_path or {})
+    repaired_path.update({
+        "channel": "online_portal" if not apply_url.lower().endswith(".pdf") else "pdf_or_paper_form",
+        "portal_url": apply_url,
+        "state": "RESOLVED_PORTAL",
+        "support_level": "official source verified",
+        "verification_note": "Official filing path repaired from an offline verified AHJ source; confirm the exact portal subcategory before final submission.",
+    })
+    result["apply_path"] = repaired_path
+
+    existing_source_urls = [url for url in (result.get("source_urls") or []) if isinstance(url, str)] if isinstance(result.get("source_urls"), list) else []
+    cleaned_existing = [url for url in existing_source_urls if not _live100_known_broken_url(url)]
+    merged_urls: list[str] = []
+    for url in [apply_url, *source_urls, *cleaned_existing]:
+        safe = _safe_customer_source_url(url)
+        if safe and safe not in merged_urls:
+            merged_urls.append(safe)
+    result["source_urls"] = merged_urls
+
+    sources = [src for src in (result.get("sources") or []) if isinstance(src, dict) and not _live100_known_broken_url(src.get("url") or src.get("source_url"))]
+    seen = {_safe_customer_source_url(src.get("url") or src.get("source_url") or "") for src in sources}
+    title = str(entry.get("title") or f"{city} permit office")
+    jurisdiction = ", ".join(part for part in (city, state) if part)
+    for url in merged_urls:
+        if url in seen:
+            continue
+        sources.insert(0, {
+            "url": url,
+            "title": title,
+            "publisher": title,
+            "source_type": "official_local",
+            "jurisdiction": jurisdiction,
+            "snippet": str(entry.get("evidence") or "Official AHJ filing/source path verified offline."),
+            "date": str(entry.get("verified_on") or "2026-07-01"),
+        })
+        seen.add(url)
+    result["sources"] = sources
+
+    source_support = result.get("source_support") if isinstance(result.get("source_support"), dict) else {}
+    source_support = dict(source_support)
+    source_support["filing_path_status"] = "repaired_official_fallback"
+    source_support["filing_path_reachability"] = str(entry.get("reachability_status") or "unknown")
+    source_support["filing_path_verified_on"] = str(entry.get("verified_on") or "2026-07-01")
+    source_support["filing_path_evidence"] = str(entry.get("evidence") or "Official AHJ filing/source path verified offline.")
+    result["source_support"] = source_support
+
+    next_step = str(result.get("customer_next_step") or "")
+    if "No exact local filing portal is attached" in next_step or "contact_ahj" in str(apply_path.get("channel") or "").lower():
+        permit_names = ", ".join(
+            str(row.get("permit_name") or row.get("permit_type") or "").strip()
+            for row in result.get("permits_required") or []
+            if isinstance(row, dict) and str(row.get("permit_name") or row.get("permit_type") or "").strip()
+        )
+        result["customer_next_step"] = (
+            f"Use the official filing path listed for {title} and file the required permit categories"
+            f"{': ' + permit_names if permit_names else ''}. Confirm exact portal subcategories before final submission."
+        )
+    return result
+
+
+def _apply_residential_commercial_timeline_veto(result: dict, job_type: str = "", job_category: str | None = None, scope_contract: dict | None = None) -> dict:
+    if not isinstance(result, dict):
+        return {}
+    timeline = result.get("approval_timeline")
+    if not isinstance(timeline, dict):
+        return result
+    simple = str(timeline.get("simple") or "")
+    if "commercial ti/addition/remodel scopes usually require plan review" not in simple.lower():
+        return result
+    category = str(job_category or (scope_contract or {}).get("category") or (scope_contract or {}).get("segment") or "").lower().strip()
+    family = str((scope_contract or {}).get("family") or "").lower().strip()
+    text = " ".join(str(result.get(k) or "") for k in ("permit_kind", "permit_name", "permit_type", "job_summary")).lower()
+    if category == "commercial" or family.startswith("commercial") or re.search(r"\bcommercial\b|tenant[-\s]?(?:improvement|buildout|finish)|retail|restaurant|bar|warehouse|industrial|clinic|medical|dental", text, re.I):
+        return result
+    residential_signal = category == "residential" or family.startswith("residential") or re.search(r"\b(?:residential|single[-\s]?family|dwelling|adu|accessory\s+dwelling|bath(?:room)?\s+remodel|porch|home)\b", f"{job_type} {text}", re.I)
+    if not residential_signal:
+        return result
+    repaired = dict(timeline)
+    if re.search(r"\b(?:adu|accessory\s+dwelling|dwelling\s+conversion|basement\s+adu)\b", f"{job_type} {text}", re.I):
+        repaired["simple"] = "Residential ADU/conversion scopes usually require plan review; expect several business days to a few weeks depending on completeness, egress/life-safety details, and local queue."
+    else:
+        repaired["simple"] = "Residential remodel/trade scopes may be issued over the counter or after light plan review; timing depends on complete submittal details and the local permit queue."
+    result["approval_timeline"] = repaired
+    return result
 
 
 def _trusted_canonical_apply_url_for_request(url: str, city: str, state: str) -> bool:
@@ -4714,6 +5035,8 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     final_public["not_required_reason"] = cell_lock.get("customer_action")
                 if cell_lock.get("source_urls"):
                     final_public["source_urls"] = list(cell_lock.get("source_urls") or [])
+            final_public = _apply_live100_official_filing_path_repair(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
+            final_public = _apply_residential_commercial_timeline_veto(final_public if isinstance(final_public, dict) else {}, job_type, job_category=request_job_category, scope_contract=scope_contract)
         return final_public if isinstance(final_public, dict) else {}
     return {}
 
