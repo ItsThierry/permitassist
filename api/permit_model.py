@@ -29,8 +29,15 @@ class PermitFamily(StrEnum):
     PLUMBING = "plumbing"
     MECHANICAL = "mechanical"
     REFRIGERATION = "refrigeration"
+    SOLAR = "solar"
+    FENCE = "fence"
+    ROOFING = "roofing"
+    STRUCTURAL = "structural"
+    UTILITY = "utility"
     SIGN = "sign"
     FIRE = "fire"
+    # `zoning` is preserved as a compatibility enum value, but customer
+    # classification canonicalizes zoning/land-use labels to PLANNING.
     ZONING = "zoning"
     PLANNING = "planning"
     HISTORIC = "historic"
@@ -97,6 +104,11 @@ _FAMILY_LABELS: dict[PermitFamily, str] = {
     PermitFamily.PLUMBING: "Plumbing",
     PermitFamily.MECHANICAL: "Mechanical",
     PermitFamily.REFRIGERATION: "Refrigeration",
+    PermitFamily.SOLAR: "Solar / PV",
+    PermitFamily.FENCE: "Fence",
+    PermitFamily.ROOFING: "Roofing",
+    PermitFamily.STRUCTURAL: "Structural",
+    PermitFamily.UTILITY: "Utility",
     PermitFamily.SIGN: "Sign",
     PermitFamily.FIRE: "Fire",
     PermitFamily.ZONING: "Planning/Zoning",
@@ -117,6 +129,11 @@ _FAMILY_DEFAULT_NAMES: dict[PermitFamily, str] = {
     PermitFamily.PLUMBING: "Plumbing Permit",
     PermitFamily.MECHANICAL: "Mechanical Permit",
     PermitFamily.REFRIGERATION: "Refrigeration Permit",
+    PermitFamily.SOLAR: "Solar / PV Permit",
+    PermitFamily.FENCE: "Fence Permit / Planning Review",
+    PermitFamily.ROOFING: "Roofing Permit",
+    PermitFamily.STRUCTURAL: "Structural Permit / Engineering Review",
+    PermitFamily.UTILITY: "Utility Interconnection / Service Approval",
     PermitFamily.SIGN: "Sign Permit",
     PermitFamily.FIRE: "Fire Permit / Fire Prevention Review",
     PermitFamily.ZONING: "Planning/Zoning Verification",
@@ -133,18 +150,23 @@ _FAMILY_DEFAULT_NAMES: dict[PermitFamily, str] = {
 
 _FAMILY_ORDER = [
     PermitFamily.SIGN,
+    PermitFamily.FENCE,
+    PermitFamily.SOLAR,
+    PermitFamily.ROOFING,
+    PermitFamily.STRUCTURAL,
     PermitFamily.BUILDING,
     PermitFamily.PLUMBING,
     PermitFamily.MECHANICAL,
     PermitFamily.REFRIGERATION,
     PermitFamily.ELECTRICAL,
+    PermitFamily.UTILITY,
     PermitFamily.GRADING,
     PermitFamily.WASTEWATER,
     PermitFamily.ENVIRONMENTAL,
     PermitFamily.FIRE,
     PermitFamily.HEALTH,
-    PermitFamily.ZONING,
     PermitFamily.PLANNING,
+    PermitFamily.ZONING,
     PermitFamily.HISTORIC,
     PermitFamily.OCCUPANCY,
     PermitFamily.LIQUOR,
@@ -184,14 +206,28 @@ def normalize_family(value: PermitFamily | str | None, row: dict[str, Any] | Non
         "plumbing": PermitFamily.PLUMBING,
         "mechanical": PermitFamily.MECHANICAL,
         "refrigeration": PermitFamily.REFRIGERATION,
+        "solar": PermitFamily.SOLAR,
+        "pv": PermitFamily.SOLAR,
+        "photovoltaic": PermitFamily.SOLAR,
+        "fence": PermitFamily.FENCE,
+        "wall_fence": PermitFamily.FENCE,
+        "roofing": PermitFamily.ROOFING,
+        "reroof": PermitFamily.ROOFING,
+        "re_roof": PermitFamily.ROOFING,
+        "structural": PermitFamily.STRUCTURAL,
+        "utility": PermitFamily.UTILITY,
+        "utilities": PermitFamily.UTILITY,
         "sign": PermitFamily.SIGN,
         "fire": PermitFamily.FIRE,
         "planning": PermitFamily.PLANNING,
-        "zoning": PermitFamily.ZONING,
+        "zoning": PermitFamily.PLANNING,
+        "land_use": PermitFamily.PLANNING,
         "historic": PermitFamily.HISTORIC,
         "co": PermitFamily.OCCUPANCY,
         "occupancy": PermitFamily.OCCUPANCY,
         "grading": PermitFamily.GRADING,
+        "right_of_way": PermitFamily.GRADING,
+        "row": PermitFamily.GRADING,
         "wastewater": PermitFamily.WASTEWATER,
         "wastewater_pretreatment_fog": PermitFamily.WASTEWATER,
         "environmental": PermitFamily.ENVIRONMENTAL,
@@ -206,19 +242,24 @@ def normalize_family(value: PermitFamily | str | None, row: dict[str, Any] | Non
     checks: list[tuple[PermitFamily, tuple[str, ...]]] = [
         (PermitFamily.WASTEWATER, ("wastewater", "pretreatment", "fog", "grease interceptor")),
         (PermitFamily.ENVIRONMENTAL, ("environmental", "fuel system", "fuel dispenser", "ust", "underground storage tank")),
-        (PermitFamily.REFRIGERATION, ("refrigeration",)),
-        (PermitFamily.SIGN, ("sign permit", "signage", " sign", "monument sign", "blade sign", "cabinet sign", "sign face")),
-        (PermitFamily.GRADING, ("right-of-way", "right of way", "row", "encroachment", "driveway", "sidewalk", "site/civil", "site civil", "grading", "drainage")),
-        (PermitFamily.OCCUPANCY, ("certificate of occupancy", "change-of-occupancy", "co_change", "occupancy")),
-        (PermitFamily.HISTORIC, ("historic",)),
-        (PermitFamily.PLANNING, ("planning", "zoning", "land use")),
-        (PermitFamily.HEALTH, ("health", "food establishment")),
+        (PermitFamily.REFRIGERATION, ("refrigeration", "refrigerant", "line set", "line-set")),
+        (PermitFamily.SOLAR, ("solar", "photovoltaic", " pv ", "solarapp", "battery storage", "battery backup")),
+        (PermitFamily.FENCE, ("fence", "fencing", "privacy wall", "fence / wall", "fence/wall")),
+        (PermitFamily.ROOFING, ("roofing", "reroof", "re-roof", " roof ", "shingle", "sheathing")),
+        (PermitFamily.STRUCTURAL, ("structural", "mezzanine", "platform", "structural steel", "load bearing", "load-bearing", "guardrail", "stairs")),
+        (PermitFamily.UTILITY, ("utility interconnection", "permission to operate", "pto", "utility approval", "transformer", "switchgear", "service equipment", "meter main", "meter/main")),
+        (PermitFamily.SIGN, ("sign permit", "signage", "monument sign", "blade sign", "cabinet sign", "sign cabinet", "projecting sign", "wall sign", "exterior sign", "storefront sign", "sign face", "illuminated sign")),
+        (PermitFamily.GRADING, ("right-of-way", "right of way", "row", "encroachment", "driveway", "sidewalk", "site/civil", "site civil", "grading", "drainage", "street cut")),
+        (PermitFamily.OCCUPANCY, ("certificate of occupancy", "change-of-occupancy", "change of occupancy", "co_change", "occupancy")),
+        (PermitFamily.HISTORIC, ("historic", "landmark", "certificate of appropriateness", "design review")),
+        (PermitFamily.PLANNING, ("planning", "zoning", "land use", "setback")),
+        (PermitFamily.HEALTH, ("health", "food establishment", "environmental health")),
         (PermitFamily.LIQUOR, ("liquor", "alcohol")),
-        (PermitFamily.FIRE, ("fire", "sprinkler", "alarm")),
-        (PermitFamily.PLUMBING, ("plumbing", "water heater", "sewer", "water service", "water line", "repipe", "pex")),
-        (PermitFamily.MECHANICAL, ("mechanical", "hvac", "mini split", "mini-split", "ductless", "wood stove", "solid-fuel", "furnace", "heat pump")),
-        (PermitFamily.ELECTRICAL, ("electrical", "circuit", "panel", "disconnect", "service upgrade", "switch", "fixture")),
-        (PermitFamily.BUILDING, ("building", "tenant improvement", "garage", "deck", "window", "roof", "structural", "construction", "porch", "stairs")),
+        (PermitFamily.FIRE, ("fire", "sprinkler", "alarm", "suppression", "life safety", "hood")),
+        (PermitFamily.PLUMBING, ("plumbing", "water heater", "sewer", "water service", "water line", "repipe", "pex", "backflow", "irrigation", "drain")),
+        (PermitFamily.MECHANICAL, ("mechanical", "hvac", "mini split", "mini-split", "ductless", "wood stove", "solid-fuel", "furnace", "heat pump", "ventilation", "exhaust")),
+        (PermitFamily.ELECTRICAL, ("electrical", "electric", "circuit", "panel", "disconnect", "service upgrade", "switch", "fixture", "lighting", "subpanel")),
+        (PermitFamily.BUILDING, ("building", "tenant improvement", "garage", "deck", "window", "construction", "porch", "stoop", "stairs", "patio cover", "shed")),
     ]
     for family, needles in checks:
         if any(needle in text for needle in needles):

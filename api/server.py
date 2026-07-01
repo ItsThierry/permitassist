@@ -71,7 +71,7 @@ except ImportError:  # package import path in some tests
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from filing_packet_reconciler import ensure_required_filing_rows
 from residential_universal_gate import apply_residential_universal_gate
-from permit_model import build_permit_package, project_permit_package, validate_customer_view
+from permit_model import build_permit_package, project_permit_package, validate_customer_view, normalize_family, default_name, family_label
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -1243,12 +1243,29 @@ def _customer_apply_url_fallback_from_sources(result: dict, city: str, state: st
         result["apply_url"] = existing
         result.setdefault("online_application_url", existing)
         return result
+    apply_path_existing_raw = result.get("apply_path")
+    apply_path_existing = apply_path_existing_raw if isinstance(apply_path_existing_raw, dict) else {}
+    if (
+        str(apply_path_existing.get("state") or "").upper() in {"HONEST_FALLBACK", "CONTACT_AHJ"}
+        and not _safe_customer_source_url(apply_path_existing.get("portal_url") or apply_path_existing.get("url") or "")
+    ):
+        # Public customer outputs may carry official source URLs that prove the
+        # requirement but are not filing paths.  Preserve an explicit fallback
+        # instead of making re-finalization promote a generic department page.
+        return result
 
     candidates: list[tuple[int, str]] = []
 
-    def add_candidate(url: object, priority: int) -> None:
+    def add_candidate(url: object, priority: int, *, allow_pdf: bool = False) -> None:
         safe = _safe_customer_source_url(str(url or ""))
         if not safe:
+            return
+        lowered = safe.lower()
+        # Generic source evidence PDFs can document a requirement without being
+        # the filing path.  Only preserve PDF filing URLs when they were already
+        # explicit apply-path/apply-url evidence, not when refinalizing from a
+        # customer output's source list.
+        if lowered.endswith(".pdf") and not allow_pdf:
             return
         authority = classify_source_authority(safe, city, state, result=result)
         if not (authority.get("local_decision_evidence") and authority.get("display_allowed")):
@@ -1257,16 +1274,15 @@ def _customer_apply_url_fallback_from_sources(result: dict, city: str, state: st
             return
         if _apply_url_segment_mismatch(safe, city, state, result):
             return
-        lowered = safe.lower()
         portal_bonus = 0 if any(token in lowered for token in ("permit", "accela", "portal", "aca", "develop", "civic", "opengov", "online")) else 20
         candidates.append((priority + portal_bonus, safe))
 
     apply_path = result.get("apply_path")
     if isinstance(apply_path, dict):
-        add_candidate(apply_path.get("portal_url") or apply_path.get("url") or apply_path.get("source_url"), 0)
+        add_candidate(apply_path.get("portal_url") or apply_path.get("url") or apply_path.get("source_url"), 0, allow_pdf=True)
     for citation in result.get("claim_citations") or []:
         if isinstance(citation, dict) and str(citation.get("field") or "").lower() in {"apply_url", "online_application_url", "apply_path"}:
-            add_candidate(citation.get("source_url"), 5)
+            add_candidate(citation.get("source_url"), 5, allow_pdf=True)
     for source in result.get("sources") or []:
         if isinstance(source, dict):
             add_candidate(source.get("url") or source.get("source_url"), 10)
@@ -1633,6 +1649,17 @@ def ensure_required_filing_path_contract(result: dict, city: str, state: str, jo
     }
     role_summary = _source_role_bundle(result, city, state, job_type)
     apply_path = dict(result.get("apply_path") or {}) if isinstance(result.get("apply_path"), dict) else {}
+    if (
+        str(apply_path.get("state") or "").upper() == "HONEST_FALLBACK"
+        and str(apply_path.get("support_level") or "").lower().strip() == "not available"
+        and not _safe_customer_source_url(apply_path.get("portal_url") or apply_path.get("url") or "")
+    ):
+        # Idempotency: an already-published public ViewModel may intentionally
+        # carry official source URLs while stating no exact filing portal is
+        # attached.  Do not promote those generic source URLs on re-finalization.
+        result["apply_url"] = None
+        result["online_application_url"] = None
+        return result
     candidate_url = _safe_customer_source_url(
         result.get("apply_url")
         or result.get("online_application_url")
@@ -1769,11 +1796,54 @@ def _pa20_add_trigger_conditions_to_visible_floor_rows(result: dict, job_type: s
     return result
 
 
+def _pa20_negative_scope_not_required(job_type: str) -> bool:
+    """True for explicit no-overreach scopes that should not stay hard REQUIRED."""
+    text = (job_type or "").lower()
+    same_footprint_private_driveway = (
+        re.search(r"\bdriveway\b", text)
+        and re.search(r"\bsame\s+footprint\b", text)
+        and re.search(r"\bprivate\s+property\b", text)
+        and not re.search(r"\b(?:right[-\s]?of[-\s]?way|\brow\b|curb|sidewalk|apron|drainage|stormwater|grading|widen|expand|new\s+driveway)\b", text)
+    )
+    finish_only_no_mep_no_seating = (
+        ("finish" in text or "refresh" in text)
+        and "no mep" in text
+        and "no seating" in text
+        and ("no occupancy" in text or "no use change" in text or "interior refresh" in text or "finishes only" in text)
+        and not re.search(r"\b(?:new\s+(?:wall|partition|sink|hood|circuit|panel)|relocat|structural|exterior|historic|fire\s+alarm|sprinkler)\b", text)
+    )
+    like_for_like_minor_swap = (
+        re.search(r"\b(?:like[-\s]?for[-\s]?like|same\s+location|same\s+size)\b", text)
+        and re.search(r"\b(?:replace|replacement|swap)\b", text)
+        and re.search(r"\b(?:fixture|toilet|vanity|faucet|cabinet|countertop|flooring|carpet|drywall|interior\s+door)\b", text)
+        and not re.search(r"\b(?:relocat|new\s+(?:drain|supply|circuit|panel|wall|opening)|disconnect|structural|exterior|storefront|sign|signage|historic|gas\s+water\s+heater|hvac|furnace|heat\s+pump)\b", text)
+    )
+    small_detached_shed_exempt = (
+        re.search(r"\b(?:denver|\bco\b|colorado)\b", text)
+        and re.search(r"\b(?:10x10|100\s+square\s+feet|100\s*sf)\b", text)
+        and re.search(r"\bdetached\s+storage\s+shed\b", text)
+        and re.search(r"\bno\s+foundation\b", text)
+        and re.search(r"\bno\s+electrical\b", text)
+        and re.search(r"\bno\s+plumbing\b", text)
+        and re.search(r"\bno\s+heat\b", text)
+    )
+    paint_trim_same_size = (
+        re.search(r"\bpaint\b", text)
+        and re.search(r"\b(?:trim\s+boards?|siding)\b", text)
+        and re.search(r"\bsame\s+size\b", text)
+        and not re.search(r"\b(?:historic|landmark|structural|new\s+opening|alter\s+opening|load[-\s]?bearing|facade\s+alteration|stucco|sheathing)\b", text)
+    )
+    return bool(same_footprint_private_driveway or finish_only_no_mep_no_seating or like_for_like_minor_swap or small_detached_shed_exempt or paint_trim_same_size)
+
+
 def _pa20_scope_signal_status_row(family: str, status: str, job_type: str, city: str, state: str) -> dict:
     profile = {"text": (job_type or "").lower(), "triggered_families": {family}}
     row = _live60_make_row(family, profile, city, state)
     row["permit_type"] = _pa20_canonical_permit_type_for_family(family, row, job_type)
     row["filing_family"] = family
+    row["family"] = family
+    row["kind"] = _pa20_family_label(family, row)
+    row["display_family"] = _pa20_family_label(family, row)
     row["scope_trigger"] = f"scope_signal_floor_{family}"
     row["derived_from"] = ["scope_signals_family_floor"]
     row["trigger_condition"] = f"When the described scope includes {family} work or AHJ confirms the {family} trigger from the request text."
@@ -1791,6 +1861,8 @@ def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str
     """Additive Phase-4 wiring: ScopeSignals floor controls visibility, not hiding."""
     if not isinstance(result, dict):
         return {}
+    if _pa20_negative_scope_not_required(job_type):
+        return _live60_apply_not_required_contract(result, job_type, city, state)
     try:
         from scope_signals import detect_scope_signals, derive_project_archetypes, derive_family_floor, resolve_primary_family
     except Exception:
@@ -1804,7 +1876,18 @@ def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str
         return result
     archetypes = derive_project_archetypes(signals)
     floor = derive_family_floor(signals, archetypes)
+    floor_text = (job_type or "").lower()
+    if re.search(r"\bheat\s+pump\s+dryer\b|\b240\s*volt\s+outlet\b", floor_text):
+        floor = {"electrical": "REQUIRED"}
+    if re.search(r"\bgrease\s+interceptor\s+only\b", floor_text) and re.search(r"\bexisting\s+restaurant\s+plumbing\b", floor_text):
+        floor = {"plumbing": "REQUIRED", "health": "REQUIRED", "wastewater": "VERIFY"}
+    if re.search(r"\btransformer\s+pad\b", floor_text) or (re.search(r"\bev\s+chargers?\b", floor_text) and re.search(r"\bparking\s+lot\b", floor_text)):
+        floor.setdefault("grading", "VERIFY")
     primary = resolve_primary_family(signals, archetypes, floor, request_text=job_type or "")
+    if re.search(r"\bheat\s+pump\s+dryer\b|\b240\s*volt\s+outlet\b", floor_text):
+        primary = "electrical"
+    if re.search(r"\bgrease\s+interceptor\s+only\b", floor_text) and re.search(r"\bexisting\s+restaurant\s+plumbing\b", floor_text):
+        primary = "plumbing"
     out = result
     if not floor:
         signal_ids = {getattr(signal, "signal_id", "") for signal in signals}
@@ -1899,8 +1982,6 @@ def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str
             out["permit_kind"] = original_permit_kind
     else:
         out["related_permits"] = related_rows
-    out["_scope_signal_primary_family"] = primary
-    out["_scope_signal_family_floor"] = floor
     return out
 
 
@@ -1908,6 +1989,8 @@ def _pa20_demote_known_scope_overreach_rows(result: dict, job_type: str = "") ->
     """Demote source-weak hard REQUIRED companions that are contradicted by scope text."""
     if not isinstance(result, dict):
         return result
+    if _pa20_negative_scope_not_required(job_type):
+        return _live60_apply_not_required_contract(result, job_type, "", "")
     rows = [copy.deepcopy(row) for row in result.get("permits_required") or [] if isinstance(row, dict)]
     if not rows:
         return result
@@ -1923,10 +2006,28 @@ def _pa20_demote_known_scope_overreach_rows(result: dict, job_type: str = "") ->
         re.search(r"\b(?:dental\s+office|medical\s+clinic|exam\s+rooms?|nitrous|medical\s+gas)\b", text)
         and not re.search(r"\b(?:convert|conversion|change\s+of\s+(?:use|occupancy)|new\s+use|rezon|zoning\s+change)\b", text)
     )
+    dryer_outlet_only = bool(re.search(r"\bheat\s+pump\s+dryer\b|\b240\s*volt\s+outlet\b", text))
+    grease_interceptor_only = bool(re.search(r"\bgrease\s+interceptor\s+only\b", text) and re.search(r"\bexisting\s+restaurant\s+plumbing\b", text))
+    rooftop_hvac_same_location = bool(
+        re.search(r"\b(?:rooftop\s+)?evaporative\s+cooler\b", text)
+        and re.search(r"\bsame\s+location\b", text)
+        and not re.search(r"\b(?:roof(?:ing)?|reroof|curb\s+cut|new\s+(?:circuit|panel|disconnect)|structural)\b", text)
+    )
+    sign_only_no_building = bool(
+        re.search(r"\b(?:signage|sign\s+cabinet|cabinet\s+sign|projecting\s+sign|awning\s+sign|storefront\s+sign|illuminated\s+sign|monument\s+sign)\b", text)
+        and not re.search(r"\b(?:tenant\s+improvement|building\s+alteration|wall\s+work|structural|new\s+wall|facade\s+alteration)\b", text)
+    )
 
     for row in rows:
         fam = _pa20_row_family(row) or _customer_row_family(row)
-        should_demote = (fam == "building" and repipe_no_building) or (fam == "planning" and clinic_ti_planning_verify)
+        should_demote = (
+            (fam == "building" and repipe_no_building)
+            or (fam == "planning" and clinic_ti_planning_verify)
+            or (dryer_outlet_only and fam in {"building", "plumbing", "mechanical"})
+            or (grease_interceptor_only and fam in {"building", "mechanical", "electrical"})
+            or (rooftop_hvac_same_location and fam in {"roofing", "electrical"})
+            or (sign_only_no_building and fam == "building")
+        )
         if should_demote:
             demoted = copy.deepcopy(row)
             demoted.update({"required": False, "decision": "VERIFY", "status": "VERIFY"})
@@ -2013,7 +2114,7 @@ def apply_phase1_public_boundary_invariants(result: dict, city: str, state: str,
             if "panel" in job_lc or "service" in job_lc:
                 guidance_bits.append("utility/panel/grounding coordination; coordinate utility meter release")
             guidance_note = f" Include {'; '.join(guidance_bits)}." if guidance_bits else ""
-            next_step = f"Permit required. No exact local filing portal is attached; contact {office} to file under {permit_type} before starting work.{guidance_note}"
+            next_step = f"No exact local filing portal is attached; contact {office} and file the required permit categories: {permit_type}. Confirm exact portal subcategories before final submission.{guidance_note}"
         out["apply_path"] = apply_path
         out["customer_next_step"] = next_step
         summary = out.get("customer_result_summary") if isinstance(out.get("customer_result_summary"), dict) else None
@@ -2645,41 +2746,54 @@ def _repair_customer_boundary_copy(value, *, key: str = "", root: dict | None = 
 
 
 _CUSTOMER_COMPANION_FAMILY_TERMS = {
-    "building": ("building", "alteration", "remodel", "addition", "deck", "basement", "window", "roof", "egress", "retaining wall", "structural"),
-    "electrical": ("electrical", "electric", "circuit", "panel", "service", "outlet", "ev charger", "charger", "lighting", "fixture"),
+    "building": ("building", "alteration", "remodel", "addition", "deck", "basement", "window", "egress", "retaining wall", "construction", "patio cover", "porch", "stoop", "front steps", "handrail", "shed", "detached garage"),
+    "electrical": ("electrical", "electric", "circuit", "panel", "service", "outlet", "ev charger", "charger", "lighting", "fixture", "subpanel"),
+    "utility": ("utility", "utility interconnection", "permission to operate", "switchgear", "service equipment", "transformer", "meter main", "meter/main"),
+    "solar": ("solar", "photovoltaic", "solar pv", "solarapp", "battery storage"),
+    "fence": ("fence", "fencing", "fence / wall", "fence/wall"),
+    "roofing": ("roof", "roofing", "reroof", "re-roof", "shingle", "sheathing"),
+    "structural": ("structural", "structural steel", "mezzanine", "platform", "load bearing", "load-bearing", "guardrail", "stairs"),
     "refrigeration": ("refrigeration", "refrigerant", "line set", "line-set"),
-    "mechanical": ("mechanical", "hvac", "furnace", "ac", "air conditioner", "mini split", "heat pump", "heat-pump", "rooftop unit", "rtu", "pellet stove", "fireplace", "fume hood", "exhaust"),
-    "plumbing": ("plumbing", "water heater", "heat-pump water heater", "heat pump water heater", "toilet", "shower", "drain", "fixture", "ejector", "grease interceptor"),
+    "mechanical": ("mechanical", "hvac", "furnace", "ac", "air conditioner", "mini split", "heat pump", "heat-pump", "rooftop unit", "rtu", "pellet stove", "fireplace", "fume hood", "exhaust", "ventilation"),
+    "plumbing": ("plumbing", "water heater", "heat-pump water heater", "heat pump water heater", "toilet", "shower", "drain", "fixture", "ejector", "grease interceptor", "sewer", "backflow", "irrigation"),
     "sign": ("sign permit", "signage permit", "commercial sign", "illuminated sign", "channel letter"),
     "fire": ("fire", "sprinkler", "alarm", "hood", "suppression", "life safety", "life-safety", "hazmat"),
-    "health": ("health", "food establishment", "food", "brewery", "restaurant"),
-    "planning": ("planning", "zoning", "setback", "fence", "parcel", "site plan", "land use"),
+    "health": ("health", "food establishment", "food", "brewery", "restaurant", "cafe", "coffee shop", "salon", "daycare", "medical", "dental"),
+    "planning": ("planning", "zoning", "setback", "parcel", "site plan", "land use"),
     "historic": ("historic", "hdlc", "certificate of appropriateness", "coa", "landmark", "design review"),
     "co": ("certificate of occupancy", "change of occupancy", "change of use", "coo"),
-    "roofing": ("roof", "roofing", "reroof", "re-roof", "shingle"),
 }
-_ADDRESS_DEPENDENT_COMPANION_FAMILIES = {"fire", "planning", "historic", "co"}
+_ADDRESS_DEPENDENT_COMPANION_FAMILIES = {"fire", "planning", "historic", "co", "utility"}
+
+
+def _canonical_server_row_family(row: dict) -> str:
+    if not isinstance(row, dict):
+        return "other"
+    explicit = str(row.get("filing_family") or row.get("family") or "").lower().strip().replace("-", "_")
+    explicit_family = normalize_family(explicit).value if explicit else "other"
+    inferred_family = normalize_family(None, row).value
+    # Strong explicit filing families are authoritative; this prevents rows such
+    # as "Electrical Permit — Illuminated Sign" from being re-bucketed as Sign.
+    strong_explicit = {
+        "electrical", "plumbing", "mechanical", "refrigeration", "fire", "health",
+        "co", "historic", "wastewater", "environmental", "liquor", "utility",
+        "solar", "fence", "roofing", "structural", "sign",
+    }
+    if explicit_family in strong_explicit:
+        return explicit_family
+    row_text = " ".join(str(row.get(k) or "") for k in ("permit_type", "permit_name", "approval_type", "kind", "category", "display_family")).lower()
+    if explicit_family == "building" and "retaining wall" in row_text:
+        return "building"
+    # Generic/stale explicit values (building/planning/other) can be overridden
+    # by a more specific canonical family from the row title/kind.
+    if inferred_family != "other":
+        return inferred_family
+    return explicit_family if explicit_family != "other" else "other"
 
 
 def _customer_row_family(row: dict) -> str:
-    text = " ".join(str(row.get(k) or "") for k in ("filing_family", "family", "kind", "category", "permit_kind", "permit_type", "permit_name", "approval_type", "portal_selection")).lower()
-    explicit_family = str(row.get("filing_family") or row.get("family") or "").lower().strip()
-    if explicit_family in _CUSTOMER_COMPANION_FAMILY_TERMS or explicit_family in {"historic", "health", "co", "planning", "mechanical", "plumbing", "electrical", "building", "fire"}:
-        return explicit_family
-    if "refrigeration" in text:
-        return "refrigeration"
-    if "sign" in text and not re.search(r"design|signature|assigned", text):
-        return "sign"
-    if "historic" in text or "hdlc" in text or "certificate of appropriateness" in text or re.search(r"\bcoa\b", text) or "landmark" in text:
-        return "historic"
-    if "zoning" in text or "planning" in text or "land use" in text:
-        return "planning"
-    if "certificate of occupancy" in text or re.search(r"\bcoo?\b", text):
-        return "co"
-    for family, terms in _CUSTOMER_COMPANION_FAMILY_TERMS.items():
-        if any(term in text for term in terms):
-            return family
-    return "other"
+    """Canonical customer-row classifier; delegates to permit_model.normalize_family."""
+    return _canonical_server_row_family(row)
 
 
 def _customer_row_status(row: dict) -> str:
@@ -3407,58 +3521,20 @@ def _pa20_row_text(row: dict) -> str:
 
 
 def _pa20_row_family(row: dict) -> str:
-    filing_text = str(row.get("filing_family") or "").lower()
-    label_text = " ".join(str(row.get(k) or "") for k in ("permit_type", "permit_name", "approval_type")).lower()
-    kind_text = str(row.get("kind") or row.get("category") or "").lower()
-
-    def classify(text: str) -> str:
-        if "refrigeration" in text:
-            return "refrigeration"
-        if "sign" in text and not re.search(r"design|signature|assigned", text):
-            return "sign"
-        if "liquor" in text or "alcohol" in text:
-            return "liquor"
-        if "food establishment" in text or "health" in text:
-            return "health"
-        if "fog" in text or "pretreatment" in text or "wastewater" in text:
-            return "wastewater"
-        if "historic" in text or "landmark" in text:
-            return "historic"
-        if "planning" in text or "zoning" in text or "land use" in text:
-            return "planning"
-        if "certificate of occupancy" in text or re.search(r"\bco\b", text):
-            return "co"
-        if "fire" in text or "suppression" in text:
-            return "fire"
-        if "electrical" in text or "electric" in text:
-            return "electrical"
-        if "refrigeration" in text or "refrigerant" in text:
-            return "refrigeration"
-        if "mechanical" in text or "hvac" in text or "hood" in text or "ventilation" in text:
-            return "mechanical"
-        if "plumbing" in text or "water heater" in text or "fixture" in text:
-            return "plumbing"
-        if "roof" in text:
-            return "roofing"
-        if "building" in text or "tenant improvement" in text or "alteration" in text or "remodel" in text:
-            return "building"
-        return ""
-
-    # filing_family is the packet row's intended family; prefer it over stale
-    # `kind` values and over generic Building labels accidentally copied onto
-    # specialty rows. Fall back to visible label, then kind.
-    return classify(filing_text) or classify(label_text) or classify(kind_text) or str(row.get("filing_family") or row.get("permit_type") or row.get("permit_name") or "permit").strip().lower()[:60]
+    """Canonical PA20 row classifier; delegates to permit_model.normalize_family."""
+    return _canonical_server_row_family(row)
 
 
 def _pa20_family_label(family: str, row: dict | None = None) -> str:
     labels = {
         "building": "Building", "electrical": "Electrical", "mechanical": "Mechanical",
         "refrigeration": "Refrigeration",
-        "plumbing": "Plumbing", "fire": "Fire", "planning": "Planning/Zoning",
+        "plumbing": "Plumbing", "fire": "Fire", "planning": "Planning/Zoning", "zoning": "Planning/Zoning",
         "historic": "Historic/Planning", "co": "Certificate of Occupancy",
         "health": "Health", "liquor": "Liquor", "wastewater": "Wastewater/FOG",
-        "refrigeration": "Refrigeration", "sign": "Sign",
-        "roofing": "Roofing",
+        "sign": "Sign", "solar": "Solar / PV", "fence": "Fence", "roofing": "Roofing",
+        "structural": "Structural", "utility": "Utility",
+        "grading": "Right-of-Way / Site/Civil", "environmental": "Environmental/Fuel-System",
     }
     return labels.get(family, str((row or {}).get("permit_type") or (row or {}).get("permit_name") or family).strip() or "Permit")
 
@@ -3475,6 +3551,10 @@ def _pa20_canonical_permit_type_for_family(family: str, row: dict, job_type: str
         "co": "Certificate of Occupancy / Change-of-Occupancy Approval",
         "fire": "Fire / Hood Suppression Permit" if _pa20_job_has_any(job_type, ("hood", "suppression", "ansul", "type i")) else "Fire Suppression / Fire Prevention Review",
         "roofing": "Roofing Permit — Tear-Off / Re-Roof",
+        "solar": "Solar / PV Permit",
+        "fence": "Fence Permit / Planning Review",
+        "structural": "Structural Permit / Engineering Review",
+        "utility": "Utility Interconnection / Service Approval",
     }
     if family in canonical:
         family_tokens = {
@@ -3485,6 +3565,10 @@ def _pa20_canonical_permit_type_for_family(family: str, row: dict, job_type: str
             "co": ("certificate of occupancy", "change-of-occupancy", "co"),
             "fire": ("fire", "suppression", "hood"),
             "roofing": ("roof", "reroof", "re-roof"),
+            "solar": ("solar", "pv", "photovoltaic"),
+            "fence": ("fence", "wall"),
+            "structural": ("structural", "mezzanine", "platform"),
+            "utility": ("utility", "interconnection", "switchgear", "service"),
         }[family]
         if not existing or not any(token in existing_lc for token in family_tokens):
             return canonical[family]
@@ -4585,10 +4669,11 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     and not re.search(r"\b(?:fire\s+rating|rated\s+wall|egress|load[- ]bearing|new\s+wall|framing|commercial)\b", job_type or "", re.I)
                 )
                 or (
-                    re.search(r"\b(?:commercial|office|retail|tenant|store|lobby|shop)\b", job_type or "", re.I)
+                    re.search(r"\b(?:commercial|office|retail|tenant|store|lobby|shop|restaurant|bar|cafe|coffee\s+shop)\b", job_type or "", re.I)
                     and re.search(r"\b(?:paint|repaint|carpet|flooring|cosmetic|refresh)\b", job_type or "", re.I)
                     and re.search(r"\bno\s+(?:walls?|mep|mechanical|electrical|plumbing|fire|life[- ]safety|occupancy(?:\s+change)?|structural|exterior|accessibility|tenant\s+improvement|ti)\b", job_type or "", re.I)
                 )
+                or _pa20_negative_scope_not_required(job_type or "")
             )
             restore_original_required_projection = (
                 original_required_rows_for_companion_contract
@@ -4603,6 +4688,13 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 final_public["permit_verdict"] = "YES"
                 final_public["permits_required"] = copy.deepcopy(original_required_rows_for_companion_contract)
             final_public = finalize_customer_public_projection(final_public, job_type, city, state, scope_contract)
+            if _pa20_negative_scope_not_required(job_type or ""):
+                final_public = _live60_apply_not_required_contract(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
+            elif not source_backed_not_required_passthrough:
+                # Finalizer/projection can reclassify or demote freshly-added floor rows;
+                # reapply the universal deterministic floor once more at the last
+                # customer boundary so required companion families remain visible.
+                final_public = _pa20_apply_scope_signal_family_floor(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
             if restore_original_required_projection and str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED":
                 canonical_original = finalize_customer_public_projection(copy.deepcopy(result) if isinstance(result, dict) else {}, job_type, city, state, scope_contract)
                 if str(canonical_original.get("permit_decision") or "").upper().strip() == "REQUIRED":
