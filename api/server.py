@@ -1452,6 +1452,14 @@ def _apply_live100_official_filing_path_repair(result: dict, city: str, state: s
     source_support["filing_path_reachability"] = str(entry.get("reachability_status") or "unknown")
     source_support["filing_path_verified_on"] = str(entry.get("verified_on") or "2026-07-01")
     source_support["filing_path_evidence"] = str(entry.get("evidence") or "Official AHJ filing/source path verified offline.")
+    source_support["local_decision_evidence_urls"] = list(merged_urls)
+    source_support["display_source_count"] = len(merged_urls)
+    source_support["requirement_source_count"] = len(merged_urls)
+    source_support["filing_source_count"] = len(merged_urls)
+    source_support["has_source_backed_evidence"] = True
+    source_support["has_official_source"] = True
+    source_support["apply_url_known"] = True
+    source_support["local_form_known"] = True
     result["source_support"] = source_support
 
     next_step = str(result.get("customer_next_step") or "")
