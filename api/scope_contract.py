@@ -331,7 +331,7 @@ def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
             facts.add(trade_map[signal])
     if "historic" in v1.special_signals:
         facts.add("historic_district")
-    if re.search(r"\b(?:roof|reroof|re-roof|shingles?|porch|deck|garage|foundation|helical\s+piers?|structural\s+repair)\b", job, re.I):
+    if re.search(r"\b(?:roof|reroof|re-roof|shingles?|porch|deck|garage|foundation|helical\s+piers?|structural\s+repair|interior\s+wall\s+relocation|wall\s+relocation|relocat(?:e|ing|ion)\s+(?:an?\s+)?(?:interior\s+)?wall)\b", job, re.I):
         facts.add("building")
     if "exterior_alteration" in v1.special_signals or re.search(r"\b(?:exterior|front\s+door|storefront|facade|fa[cç]ade|masonry|lintel|window|door)\b", job, re.I):
         facts.add("exterior")
@@ -380,7 +380,9 @@ def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
         facts.add("food_service")
         if re.search(r"\b(?:restaurant|grease|fog|floor drains?|interceptor)\b", job, re.I):
             facts.add("grease_generating")
-    if re.search(r"\b(?:central\s+air|air\s+conditioner|condenser|coil|furnace|heat\s+pump|mini[- ]split|hvac|rtu|rooftop\s+unit)\b", job, re.I):
+    if re.search(r"\b(?:ev\s+charger|electric\s+vehicle\s+charger|level\s*(?:2|ii)\s+charger|car\s+charger|panel\s+upgrade|service\s+upgrade|upgrade\s+(?:the\s+)?(?:electrical\s+)?panel|replace\s+(?:the\s+)?(?:electrical\s+)?panel|service\s+panel\s+replacement)\b", job, re.I):
+        facts.add("electrical")
+    if re.search(r"\b(?:central\s+air|air\s+conditioner|condenser|coil|furnace|heat\s+pump|mini[- ]split|hvac|rtu|rooftop\s+unit|bath(?:room)?\s+fan|duct\s+replacement|ductwork\s+replacement|replace\s+ducts?|ducting)\b", job, re.I):
         facts.add("mechanical")
     if re.search(r"\b(?:gas\s+(?:line|piping|reconnection|connection|dryer)|fuel\s+gas|radiant\s+heat|compressed\s+air)\b", job, re.I):
         facts.add("plumbing")

@@ -67,6 +67,7 @@ from decision_resolver import is_input_rejection, resolve_customer_decision
 from family_reconciliation_gate import apply_family_reconciliation_gate
 from ahj_identity_guard import apply_ahj_identity_guard
 from public_packet import apply_public_packet_projection
+from closed_world_decision import apply_closed_world_customer_contract
 try:
     from v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
 except ImportError:  # package import path in some tests
@@ -5065,8 +5066,15 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     final_public = apply_family_reconciliation_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract)
                     final_public = apply_ahj_identity_guard(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
                     final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, build_scope_facts_v2(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract))
+                    final_public = apply_closed_world_customer_contract(
+                        final_public if isinstance(final_public, dict) else {},
+                        job_type,
+                        city,
+                        state,
+                        job_category=request_job_category,
+                    )
             except Exception as exc:
-                print(f"[customer-view] Full-customer reconciliation gate skipped: {exc}")
+                print(f"[customer-view] closed_world_contract_skipped error_type={exc.__class__.__name__} error={exc}")
             final_public = _apply_residential_commercial_timeline_veto(final_public if isinstance(final_public, dict) else {}, job_type, job_category=request_job_category, scope_contract=scope_contract)
         return final_public if isinstance(final_public, dict) else {}
     return {}
