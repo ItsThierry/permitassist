@@ -1,0 +1,13 @@
+{
+  "case_id": "R-043",
+  "contract_note": "",
+  "must_add": [],
+  "must_demote": [],
+  "must_keep_required": [
+    "building",
+    "historic_review"
+  ],
+  "must_not_required": [
+    "mechanical"
+  ]
+}

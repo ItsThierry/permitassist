@@ -1,0 +1,590 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "LA TI",
+    "bucket": "retail TI",
+    "city": "Los Angeles",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "Electrical",
+      "Plumbing"
+    ],
+    "id": "C-014",
+    "job_type": "commercial retail tenant improvement adding partition walls storefront door electrical lighting and restroom upgrades, job value 190000",
+    "job_value": 190000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "CA",
+    "zip_code": "90012"
+  },
+  "completed_at_utc": "2026-07-02T00:00:09.271394+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 9.36,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://dbs.lacity.gov/",
+    "applying_office": "Los Angeles Department of Building and Safety",
+    "confidence": "high",
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration.",
+    "customer_next_step": "File the required permit categories with Los Angeles Department of Building and Safety: Building Permit \u2014 Tenant Improvement / Retail Interior Alteration, Plumbing Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Electrical Permit \u2014 Commercial Tenant Improvement, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: $1,500 - $4,500 in permit and plan-check fees for a $190,000 commercial TI; exact LADBS fees depend on valuation, plan check, and trade permit counts \u2014 verify with the building department before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 4
+  },
+  "permit_elapsed_seconds": 4.32,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Los Angeles",
+    "job_category": "commercial",
+    "job_type": "commercial retail tenant improvement adding partition walls storefront door electrical lighting and restroom upgrades, job value 190000",
+    "job_value": 190000,
+    "state": "CA",
+    "vertical": "commercial",
+    "zip_code": "90012"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Los Angeles Department of Building and Safety",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+      "portal_url": "https://dbs.lacity.gov/",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://dbs.lacity.gov/",
+    "apply_url_known": true,
+    "applying_office": "Los Angeles Department of Building and Safety",
+    "approval_timeline": {
+      "complex": "3-8 weeks for commercial plan review, longer if corrections, accessibility, or fire/life-safety issues are flagged",
+      "simple": "1-3 business days for straightforward trade permits; commercial TI still usually routes to plan check"
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in CA",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Occupancy load calc per IBC 1004 (mercantile = 60 sf gross/occupant for sales floor; 300 sf for stockroom)",
+      "Egress capacity sized to occupant load: 0.2 in/occupant for stairs, 0.15 in/occupant for level egress per IBC 1005",
+      "Accessible route from accessible entrance to all customer-accessible areas per ADA \u00a7206",
+      "ADA fixture counts per IBC Table 2902.1 (mercantile uses lower ratios \u2014 verify current edition)",
+      "Exterior signage permit (often a SEPARATE permit from the building TI \u2014 confirm with city sign code)",
+      "Fire alarm strobe coverage per NFPA 72 \u00a718.5 (visible from any point, candela-rated to room area)",
+      "Sprinkler hydraulic recalc required if shelving / racking exceeds 12 ft (NFPA 13 \u00a73.3.4 storage occupancy)",
+      "Storefront glazing: safety glazing per IBC 2406 for any pane within 24 in of door or 60 in of floor",
+      "Demising wall fire-rated per IBC 706.3 + STC \u226540 between tenants if not factory-built",
+      "Means of egress: \u22652 exits if occupant load >49 OR floor area >3,000 sf in M occupancy per IBC 1006",
+      "Public restroom availability per IBC 2902.3 (required for retail >150 occupants OR >300 ft from public restroom)",
+      "Energy code lighting + envelope per IECC C405 / C402 if HVAC or exterior wall is touched",
+      "Confirm the required license is active and matches the application: Licensed commercial contractors pull the permits on the owner's behalf, and their CSLB license number must appear on the application. For this scope, the building contractor typically pulls the building permit, the C-10 electrical contractor pulls the electrical permit, and the C-36 plumbing contractor pulls the plumbing permit. The permit is still required even when licensed contractors are used.",
+      "Bring 2 copies of all documents to Los Angeles Department of Building and Safety (LADBS)"
+    ],
+    "city_contractor_registration": "Los Angeles City requires a CSLB license plus a Los Angeles City Business Tax Registration Certificate (BTRC). Contractors are commonly rejected at counter or online submission if the BTRC is missing or expired. Verify the BTRC is current before submitting any LADBS permit application.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Home Page | LADBS",
+        "source_url": "https://dbs.lacity.gov/",
+        "value": "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Home Page | LADBS",
+        "source_url": "https://dbs.lacity.gov/",
+        "value": "https://dbs.lacity.gov/"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Home Page | LADBS",
+        "source_url": "https://dbs.lacity.gov/",
+        "value": "Fee Estimate: $1,500 - $4,500 in permit and plan-check fees for a $190,000 commercial TI; exact LADBS fees depend on valuation, plan check, and trade permit counts \u2014 verify with the building department before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Home Page | LADBS",
+        "source_url": "https://dbs.lacity.gov/",
+        "value": "{'simple': '1-3 business days for straightforward trade permits; commercial TI still usually routes to plan check', 'complex': '3-8 weeks for commercial plan review, longer if corrections, accessibility, or fire/life-safety issues are flagged'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Home Page | LADBS",
+        "source_url": "https://dbs.lacity.gov/",
+        "value": "[{'stage': 'Building Framing / Wall Inspection', 'description': 'Inspector checks partition wall layout, framing size and spacing, anchorage, fireblocking, rated wall assemblies if any, door rough opening dimensions, and that no unapproved structural changes were made.', 'timing': 'After framing is complete and before drywall, insulation, or wall finishes are installed'}, {'stage': 'Electrical Rough-In Inspection', 'description': 'Inspector verifies branch-circuit routing, box fill, conductor sizing, grounding/bonding, fixture outlet locations, switch legs, emergency/egress lighting if required, and that all wiring is protected before concealment.', 'timing': 'Before insulation, drywall, or ceiling closure'}, {'stage': 'Plumbing Rough-In Inspection', 'description': 'Inspector checks restroom piping layout, fixture rough-in locations, trap and vent configuration, pipe support, slope on drainage lines, and that any new water or waste lines are properly tested before concealment.', 'timing': 'Before walls are closed and before fixtures are set'}, {'stage': 'Final Building / Electrical / Plumbing Inspection', 'description': 'Inspector verifies the storefront door operates correctly, partitions are complete, lighting is installed and functional, restroom fixtures are set and leak-free, required accessibility clearances are maintained, and all work matches approved plans.', 'timing': 'After all finishes, fixtures, and trim are complete'}, 'Building rough/final \u2014 verify sales-floor layout, accessible route, exits, doors/hardware, and certificate-of-occupancy conditions.', 'Storefront/facade final \u2014 verify glazing safety labels, awning attachment, exterior finishes, and approved elevations.', 'Sign final / electrical sign inspection \u2014 verify sign location, mounting, illumination disconnect, and landlord/master-sign-program compliance.', 'Fire alarm / sprinkler acceptance test if devices, ceilings, racking, demising walls, or coverage areas changed.', 'Energy compliance verification \u2014 confirm lighting controls, lighting power density, HVAC controls, economizer/ventilation, and storefront glazing documentation.']"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the TI without plan check documents for the new partition layout and restroom scope \u2014 commercial tenant improvements in LA are not simple over-the-counter jobs",
+      "Forgetting the Los Angeles City Business Tax Registration Certificate \u2014 LADBS can reject the application even if the CSLB license is valid",
+      "Assuming the electrical lighting work is covered by the building permit \u2014 lighting changes need the electrical permit too",
+      "Starting demolition or framing before the permit is issued and posted \u2014 LADBS can issue a stop-work order",
+      "Missing accessibility details for the restroom and storefront path of travel \u2014 this often triggers corrections during plan review",
+      "If the project is near a public street or sidewalk, not checking whether Bureau of Engineering review is also required before permit issuance",
+      "Skipping storefront/facade design review when windows, awnings, signs, or exterior finishes change.",
+      "Underestimating ADA path-of-travel upgrades for a primary-function retail alteration and missing the 20% cost allocation.",
+      "Submitting retail fixture plans without occupant-load, egress, aisle-width, and exit-sign/emergency-lighting coordination."
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Los Angeles Department of Building and Safety",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with Los Angeles Department of Building and Safety: Building Permit \u2014 Tenant Improvement / Retail Interior Alteration, Plumbing Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Electrical Permit \u2014 Commercial Tenant Improvement, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 6 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration.",
+    "customer_next_step": "File the required permit categories with Los Angeles Department of Building and Safety: Building Permit \u2014 Tenant Improvement / Retail Interior Alteration, Plumbing Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Electrical Permit \u2014 Commercial Tenant Improvement, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Los Angeles Department of Building and Safety",
+      "fee_cost_caveat": "Fee Estimate: $1,500 - $4,500 in permit and plan-check fees for a $190,000 commercial TI; exact LADBS fees depend on valuation, plan check, and trade permit counts \u2014 verify with the building department before quoting",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Los Angeles, CA",
+      "next_step": "File the required permit categories with Los Angeles Department of Building and Safety: Building Permit \u2014 Tenant Improvement / Retail Interior Alteration, Plumbing Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Electrical Permit \u2014 Commercial Tenant Improvement, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+      "source_cue": "Official sources attached for 6 required permit categories.",
+      "timeline": "1-3 business days for straightforward trade permits; commercial TI still usually routes to plan check"
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $1,500 - $4,500 in permit and plan-check fees for a $190,000 commercial TI; exact LADBS fees depend on valuation, plan check, and trade permit counts \u2014 verify with the building department before quoting",
+    "inspection_booking": "Schedule inspections through LADBS online permit services at or via the permit status/inspection tools linked from LADBS. Phone: (213) 482-0000. Plan ahead for commercial work; book at least 24 hours in advance and expect longer lead times if the job is in a busy district or requires multiple trade inspections on the same day.",
+    "inspections": [
+      {
+        "description": "Inspector checks partition wall layout, framing size and spacing, anchorage, fireblocking, rated wall assemblies if any, door rough opening dimensions, and that no unapproved structural changes were made.",
+        "stage": "Building Framing / Wall Inspection",
+        "timing": "After framing is complete and before drywall, insulation, or wall finishes are installed"
+      },
+      {
+        "description": "Inspector verifies branch-circuit routing, box fill, conductor sizing, grounding/bonding, fixture outlet locations, switch legs, emergency/egress lighting if required, and that all wiring is protected before concealment.",
+        "stage": "Electrical Rough-In Inspection",
+        "timing": "Before insulation, drywall, or ceiling closure"
+      },
+      {
+        "description": "Inspector checks restroom piping layout, fixture rough-in locations, trap and vent configuration, pipe support, slope on drainage lines, and that any new water or waste lines are properly tested before concealment.",
+        "stage": "Plumbing Rough-In Inspection",
+        "timing": "Before walls are closed and before fixtures are set"
+      },
+      {
+        "description": "Inspector verifies the storefront door operates correctly, partitions are complete, lighting is installed and functional, restroom fixtures are set and leak-free, required accessibility clearances are maintained, and all work matches approved plans.",
+        "stage": "Final Building / Electrical / Plumbing Inspection",
+        "timing": "After all finishes, fixtures, and trim are complete"
+      },
+      "Building rough/final \u2014 verify sales-floor layout, accessible route, exits, doors/hardware, and certificate-of-occupancy conditions.",
+      "Storefront/facade final \u2014 verify glazing safety labels, awning attachment, exterior finishes, and approved elevations.",
+      "Sign final / electrical sign inspection \u2014 verify sign location, mounting, illumination disconnect, and landlord/master-sign-program compliance.",
+      "Fire alarm / sprinkler acceptance test if devices, ceilings, racking, demising walls, or coverage areas changed.",
+      "Energy compliance verification \u2014 confirm lighting controls, lighting power density, HVAC controls, economizer/ventilation, and storefront glazing documentation."
+    ],
+    "job_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Retail Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "local_form_known": true,
+    "online_application_url": "https://dbs.lacity.gov/",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "ahj_name": "Los Angeles permit office",
+        "application_authority_name": "Los Angeles permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "permit_name": "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+        "permit_type": "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+        "portal_selection": "Commercial Building Permit - Tenant Improvement / Interior Alteration",
+        "rationale": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Los Angeles permit office",
+        "application_authority_name": "Los Angeles permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Commercial fixtures, restrooms, sinks, and DWV changes commonly require plumbing review when stated in the scope. Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "portal_selection": "Plumbing Permit - Commercial Interior Alteration",
+        "rationale": "Commercial fixtures, restrooms, sinks, and DWV changes commonly require plumbing review when stated in the scope. Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Mechanical Permit",
+        "condition_text": "When the described scope includes mechanical work or building department confirms the mechanical trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a mechanical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_mechanical",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes mechanical work or building department confirms the mechanical trigger from the request text."
+      },
+      {
+        "ahj_name": "Los Angeles permit office",
+        "application_authority_name": "Los Angeles permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Commercial lighting, panels, branch circuits, equipment, emergency lighting, controls, or low-voltage/electrical scope is stated and commonly requires electrical review. Required because the described scope triggers Electrical Permit.",
+        "permit_name": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "permit_type": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "portal_selection": "Electrical Permit - Commercial Interior Alteration",
+        "rationale": "Commercial lighting, panels, branch circuits, equipment, emergency lighting, controls, or low-voltage/electrical scope is stated and commonly requires electrical review. Required because the described scope triggers Electrical Permit.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Los Angeles permit office",
+        "application_authority_name": "Los Angeles permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Los Angeles permit office",
+        "application_authority_name": "Los Angeles permit office",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "decision": "REQUIRED",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "notes": "Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "rationale": "Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "permit_type": "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Commercial fixtures, restrooms, sinks, and DWV changes commonly require plumbing review when stated in the scope. Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a mechanical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "scope_signal_floor_mechanical",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Commercial lighting, panels, branch circuits, equipment, emergency lighting, controls, or low-voltage/electrical scope is stated and commonly requires electrical review. Required because the described scope triggers Electrical Permit.",
+        "permit_type": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "planning",
+        "included_because": "Official permit rule: Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "co",
+        "included_because": "Official permit rule: Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "co_scope",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "For Los Angeles commercial TI work, submit the building, electrical, and plumbing scope together so plan check can coordinate corrections in one cycle instead of three separate rounds",
+      "Have the contractor's CSLB license and LA City BTRC ready before opening the portal \u2014 missing registration is a common silent rejection",
+      "Include Title 24 energy forms with the lighting package up front; missing energy documentation is a frequent delay on commercial interiors",
+      "If the storefront door affects egress or accessibility, show clear door swing, hardware, and maneuvering clearances on the plan set to avoid correction cycles",
+      "If the site is near a street, curb, or sidewalk work area, check Bureau of Engineering requirements before you submit to LADBS",
+      "Coordinate the sign permit with the landlord's master sign program before ordering storefront signage.",
+      "Confirm retail parking ratio and accessible parking/path-of-travel scope before lease execution or final layout.",
+      "Package storefront elevations, glazing specs, awning details, and sign locations together so facade/design review does not lag the TI."
+    ],
+    "related_permit_families": [
+      "Electrical",
+      "Fire",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Electrical Permit / GFCI-Fan-Lighting Verification",
+      "Fire Suppression / Fire Prevention Review",
+      "Accessibility / ADA path-of-travel verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Electrical Permit / GFCI-Fan-Lighting Verification",
+        "condition_text": "Verify electrical filing if fan, GFCI, lighting, receptacle, or circuit work is included with the restroom/breakroom scope.",
+        "decision": "VERIFY",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit / GFCI-Fan-Lighting Verification",
+        "permit_type": "Electrical Permit / GFCI-Fan-Lighting Verification",
+        "rationale": "Verify electrical filing if fan, GFCI, lighting, receptacle, or circuit work is included with the restroom/breakroom scope.",
+        "required": false,
+        "required_if": "Verify electrical filing if fan, GFCI, lighting, receptacle, or circuit work is included with the restroom/breakroom scope.",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "ahj_name": "Los Angeles permit office",
+        "application_authority_name": "Los Angeles permit office",
+        "approval_type": "Fire Suppression / Fire Prevention Review",
+        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "decision": "CONDITIONAL",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "notes": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "required": false,
+        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "segment": "commercial",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Accessibility / ADA path-of-travel verification",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Accessibility / ADA path-of-travel verification",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical",
+      "Planning/Zoning",
+      "Certificate of Occupancy"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+      "Plumbing Permit \u2014 Commercial Tenant Improvement",
+      "Mechanical Permit",
+      "Electrical Permit \u2014 Commercial Tenant Improvement",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy / Change-of-Occupancy Approval"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Retail Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 4,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 4,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://dbs.lacity.gov/",
+        "https://www.ladbs.org",
+        "https://www.ladbs.org/services/apply-for-a-permit",
+        "https://dbs.lacity.gov/sites/default/files/efs/forms/pc17/document-submittal-requirements-for-tenant-improvement-addition-or-alteration-to-an-existing-commercial-industrial-building-ib-p-gi2014-006.pdf"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 4,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://dbs.lacity.gov/",
+      "https://www.ladbs.org",
+      "https://www.ladbs.org/services/apply-for-a-permit",
+      "https://dbs.lacity.gov/sites/default/files/efs/forms/pc17/document-submittal-requirements-for-tenant-improvement-addition-or-alteration-to-an-existing-commercial-industrial-building-ib-p-gi2014-006.pdf"
+    ],
+    "sources": [
+      {
+        "publisher": "Los Angeles Department of Building and Safety",
+        "title": "Home Page | LADBS",
+        "url": "https://dbs.lacity.gov/"
+      },
+      {
+        "publisher": "Los Angeles Department of Building and Safety",
+        "title": "Official Los Angeles source",
+        "url": "https://www.ladbs.org"
+      },
+      {
+        "publisher": "Los Angeles Department of Building and Safety",
+        "title": "Official Los Angeles source",
+        "url": "https://www.ladbs.org/services/apply-for-a-permit"
+      },
+      {
+        "publisher": "Los Angeles Department of Building and Safety",
+        "title": "Official Los Angeles source",
+        "url": "https://dbs.lacity.gov/sites/default/files/efs/forms/pc17/document-submittal-requirements-for-tenant-improvement-addition-or-alteration-to-an-existing-commercial-industrial-building-ib-p-gi2014-006.pdf"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Retail Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "total_cost_estimate": "$190,000 - $235,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "watch_out": [
+      "Many cities require a Master Sign Program or landlord sign criteria approval before individual retail sign permits.",
+      "Parking, loading, and zoning variances commonly surface on change-of-use retail TIs and can block the certificate of occupancy.",
+      "Tenant leases often restrict facade, storefront, awning, penetrations, and signage even when code allows them \u2014 get landlord signoff early.",
+      "Illuminated signage may need both a sign permit and an electrical sign permit/inspection."
+    ],
+    "what_to_bring": [
+      "Completed LADBS permit application and project address",
+      "Approved plan set for the tenant improvement, including floor plan, reflected ceiling plan, and restroom details",
+      "Contractor CSLB license number and Los Angeles City Business Tax Registration Certificate",
+      "Owner authorization letter or tenant authorization if the contractor is filing on behalf of the tenant",
+      "Equipment and fixture cut sheets for lighting, restroom fixtures, doors, and any accessibility hardware",
+      "Valuation breakdown for the $190,000 scope and any required Title 24 energy documentation"
+    ],
+    "zoning_hoa_flag": "For a commercial retail tenant improvement in downtown Los Angeles, zoning and historic overlay issues can still affect storefront changes, signage, and any exterior alterations. If the storefront door changes the exterior facade, check whether additional zoning, design review, or Bureau of Engineering approvals are needed. HOA restrictions are usually not the issue for a retail TI, but lease and landlord approvals often are."
+  },
+  "response_sha256": "7655e7485089f66cc5973fda0a162ba02d40fc27321c727312f5b3d960b77b9b",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "dhRedAmk1Hg",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/dhRedAmk1Hg",
+  "source_urls": [
+    "https://dbs.lacity.gov/",
+    "https://dbs.lacity.gov/sites/default/files/efs/forms/pc17/document-submittal-requirements-for-tenant-improvement-addition-or-alteration-to-an-existing-commercial-industrial-building-ib-p-gi2014-006.pdf",
+    "https://www.ladbs.org",
+    "https://www.ladbs.org/services/apply-for-a-permit"
+  ],
+  "started_at_utc": "2026-07-01T23:59:59.906653+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

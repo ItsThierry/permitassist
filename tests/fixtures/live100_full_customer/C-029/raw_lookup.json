@@ -1,0 +1,438 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Sign permit threshold",
+    "bucket": "sign face non-electric",
+    "city": "Minneapolis",
+    "expected_decision_pre_registered": "SOURCE_ADJUDICATE",
+    "expected_permit_families_pre_registered": [
+      "Sign possible"
+    ],
+    "id": "C-029",
+    "job_type": "commercial exterior wall sign face change only no electrical work, job value 4500",
+    "job_value": 4500,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_needs_targeted_official_source_check",
+    "state": "MN",
+    "zip_code": "55415"
+  },
+  "completed_at_utc": "2026-07-02T00:02:07.973512+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 4.82,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://aca.minneapolismn.gov",
+    "applying_office": "City of Minneapolis Inspections Services Division",
+    "confidence": "low",
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Commercial Sign Face Replacement.",
+    "customer_next_step": "File the required permit categories with City of Minneapolis Inspections Services Division: Building Permit \u2014 Commercial Sign Face Replacement, Electrical Permit \u2014 Illuminated Sign. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: Fee not confirmed \u2014 call the City of Minneapolis Inspections Services Division or check their online fee schedule before applying. \u2014 verify in before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Building Permit \u2014 Commercial Sign Face Replacement",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 6
+  },
+  "permit_elapsed_seconds": 2.33,
+  "provisional_grade": "B",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Minneapolis",
+    "job_category": "commercial",
+    "job_type": "commercial exterior wall sign face change only no electrical work, job value 4500",
+    "job_value": 4500,
+    "state": "MN",
+    "vertical": "commercial",
+    "zip_code": "55415"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Minneapolis Inspections Services Division",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Building Permit \u2014 Commercial Sign Face Replacement",
+      "portal_url": "https://aca.minneapolismn.gov",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Building Permit \u2014 Commercial Sign Face Replacement",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://aca.minneapolismn.gov",
+    "apply_url_known": true,
+    "applying_office": "City of Minneapolis Inspections Services Division",
+    "approval_timeline": {
+      "complex": "3-10 business days if sign dimensions, mounting details, or zoning review are required.",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in MN",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Panel schedule showing existing and proposed circuits",
+      "Wire gauge and breaker size for each new circuit",
+      "Electrical diagram or one-line drawing (required for panel upgrades)",
+      "Utility disconnect location marked on plans",
+      "Confirm the required license is active and matches the application: For this scope, the sign contractor or general contractor pulls the permit on behalf of the owner if required by the city portal. If the work includes any electrical connection, a licensed electrical contractor must pull the electrical permit separately and their state license number must appear on that application.",
+      "Bring 2 copies of all documents to City of Minneapolis Inspections Services Division"
+    ],
+    "city_contractor_registration": "Minneapolis uses the city permit portal and inspections process; no separate city contractor registration requirement was provided in the supplied city data for this sign-face-only scope. Verify current contractor account/registration rules in ACA before submitting.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://aca.minneapolismn.gov",
+        "value": "Commercial Building / Tenant Improvement Permit"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://aca.minneapolismn.gov",
+        "value": "https://aca.minneapolismn.gov"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://aca.minneapolismn.gov",
+        "value": "Fee Estimate: Fee not confirmed \u2014 call the City of Minneapolis Inspections Services Division or check their online fee schedule before applying. \u2014 verify in https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/permits-overview/fees/ before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://aca.minneapolismn.gov",
+        "value": "{'simple': 'Over-the-counter / online intake can be same day for straightforward sign-face replacement if no zoning or structural review is triggered.', 'complex': '3-10 business days if sign dimensions, mounting details, or zoning review are required.'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://aca.minneapolismn.gov",
+        "value": "[{'stage': 'Final Sign Inspection', 'description': 'Inspector verifies the installed sign face matches the approved permit, mounting is secure, sign dimensions and projection match the approved plans, fasteners and attachment points are sound, and there is no unpermitted electrical work or illumination added.', 'timing': 'After the new sign face is installed and before the job is closed out'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the job as an electrical permit when there is no electrical scope \u2014 that can slow review and create a correction cycle",
+      "Changing the sign cabinet, structure, or illumination without adding the needed companion permit(s)",
+      "Installing a larger sign face than the approved dimensions \u2014 zoning/sign review can reject it after installation",
+      "Starting work before the permit is issued and posted/available in the job record",
+      "Assuming Permit required for the resolved scope; confirm exact filing details with City of Minneapolis Inspections Services Division before starting work. because only the face is being changed \u2014 commercial sign work still needs permit review"
+    ],
+    "confidence": "low",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Minneapolis Inspections Services Division",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with City of Minneapolis Inspections Services Division: Building Permit \u2014 Commercial Sign Face Replacement, Electrical Permit \u2014 Illuminated Sign. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 2 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Commercial Sign Face Replacement.",
+    "customer_next_step": "File the required permit categories with City of Minneapolis Inspections Services Division: Building Permit \u2014 Commercial Sign Face Replacement, Electrical Permit \u2014 Illuminated Sign. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Minneapolis Inspections Services Division",
+      "fee_cost_caveat": "Fee Estimate: Fee not confirmed \u2014 call the City of Minneapolis Inspections Services Division or check their online fee schedule before applying. \u2014 verify in before quoting",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Minneapolis, MN",
+      "next_step": "File the required permit categories with City of Minneapolis Inspections Services Division: Building Permit \u2014 Commercial Sign Face Replacement, Electrical Permit \u2014 Illuminated Sign. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Building Permit \u2014 Commercial Sign Face Replacement",
+      "source_cue": "Official sources attached for 2 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Fee not confirmed \u2014 call the City of Minneapolis Inspections Services Division or check their online fee schedule before applying. \u2014 verify in before quoting",
+    "inspection_booking": "Schedule inspections through the Minneapolis ACA portal: Use the inspection request function tied to the permit record. Phone: (612) 673-3000. Advance notice requirement was not provided in the city data; verify current cutoff time with Inspections Services before requesting the final inspection.",
+    "inspections": [
+      {
+        "description": "Inspector verifies the installed sign face matches the approved permit, mounting is secure, sign dimensions and projection match the approved plans, fasteners and attachment points are sound, and there is no unpermitted electrical work or illumination added.",
+        "stage": "Final Sign Inspection",
+        "timing": "After the new sign face is installed and before the job is closed out"
+      }
+    ],
+    "job_summary": "Required permit package: Building Permit \u2014 Commercial Sign Face Replacement; Electrical Permit \u2014 Illuminated Sign.",
+    "local_form_known": true,
+    "online_application_url": "https://aca.minneapolismn.gov",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Building Permit \u2014 Commercial Sign Face Replacement",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Building Permit \u2014 Commercial Sign Face Replacement",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "ahj_name": "Minneapolis permit office",
+        "application_authority_name": "Minneapolis permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "display_family": "Sign",
+        "family": "sign",
+        "filing_family": "sign",
+        "kind": "Sign",
+        "notes": "Required for a commercial exterior wall sign face change even when no electrical work is included. Minneapolis treats sign work through the building/inspections process; the permit review may also check sign dimensions, mounting, and zoning compliance.",
+        "permit_name": "Building Permit \u2014 Commercial Sign Face Replacement",
+        "permit_type": "Building Permit \u2014 Commercial Sign Face Replacement",
+        "portal_selection": "Sign Permit - Commercial",
+        "rationale": "Required for a commercial exterior wall sign face change even when no electrical work is included. Minneapolis treats sign work through the building/inspections process; the permit review may also check sign dimensions, mounting, and zoning compliance.",
+        "required": true,
+        "scope_trigger": "sign_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Electrical Permit \u2014 Illuminated Sign",
+        "condition_text": "When the described scope includes electrical work or building department confirms the electrical trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit \u2014 Illuminated Sign",
+        "permit_type": "Electrical Permit \u2014 Illuminated Sign",
+        "rationale": "ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_electrical",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes electrical work or building department confirms the electrical trigger from the request text."
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "sign",
+        "included_because": "Official permit rule: Required for a commercial exterior wall sign face change even when no electrical work is included. Minneapolis treats sign work through the building/inspections process; the permit review may also check sign dimensions, mounting, and zoning compliance.",
+        "permit_type": "Building Permit \u2014 Commercial Sign Face Replacement",
+        "scope_trigger": "sign_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Electrical Permit \u2014 Illuminated Sign",
+        "scope_trigger": "scope_signal_floor_electrical",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Keep the scope language tight: 'commercial exterior wall sign face replacement only, no electrical, no structural changes' \u2014 that helps avoid unnecessary plan review.",
+      "Upload clear photos of the existing sign and a dimensioned sketch in ACA; that is usually what speeds sign review the most.",
+      "If the sign cabinet or mounting is staying in place, say that explicitly in the application so reviewers do not treat it like a full sign replacement.",
+      "If the sign is illuminated now or may be in the future, confirm whether the city wants a separate electrical permit even if you are not touching wiring on this job."
+    ],
+    "related_permit_families": [
+      "Building",
+      "Planning/Zoning"
+    ],
+    "related_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Planning / Zoning Use Clearance"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "ahj_name": "Minneapolis permit office",
+        "application_authority_name": "Minneapolis permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "condition_text": "Verify building/TI only if the sign work also changes structure, walls, fa\u00e7ade, occupancy, or tenant-improvement scope.",
+        "decision": "VERIFY",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "rationale": "Verify building/TI only if the sign work also changes structure, walls, fa\u00e7ade, occupancy, or tenant-improvement scope.",
+        "required": false,
+        "required_if": "Verify building/TI only if the sign work also changes structure, walls, fa\u00e7ade, occupancy, or tenant-improvement scope.",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "approval_type": "Planning / Zoning Use Clearance",
+        "condition_text": "When the described scope includes planning work or building department confirms the planning trigger from the request text.",
+        "decision": "VERIFY",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "ScopeSignals family floor: the request text includes a planning trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": false,
+        "scope_trigger": "scope_signal_floor_planning",
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "When the described scope includes planning work or building department confirms the planning trigger from the request text."
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Sign",
+      "Electrical"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 Commercial Sign Face Replacement",
+      "Electrical Permit \u2014 Illuminated Sign"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit \u2014 Commercial Sign Face Replacement; Electrical Permit \u2014 Illuminated Sign.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 6,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 6,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://aca.minneapolismn.gov",
+        "https://www.minneapolismn.gov/permits",
+        "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/permits-overview/fees/",
+        "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/permits-overview/permit-types/building-permits/",
+        "https://www.minneapolismn.gov/business-services/planning-zoning/applications-handouts/land-use-applications/sign-permit/",
+        "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/exempt-from-permit/"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 6,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://aca.minneapolismn.gov",
+      "https://www.minneapolismn.gov/permits",
+      "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/permits-overview/fees/",
+      "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/permits-overview/permit-types/building-permits/",
+      "https://www.minneapolismn.gov/business-services/planning-zoning/applications-handouts/land-use-applications/sign-permit/",
+      "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/exempt-from-permit/"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Minneapolis, MN",
+        "publisher": "Official Minneapolis source",
+        "source_type": "official_local",
+        "title": "Official Minneapolis source",
+        "url": "https://aca.minneapolismn.gov"
+      },
+      {
+        "jurisdiction": "Minneapolis, MN",
+        "publisher": "Official Minneapolis source",
+        "source_type": "official_local",
+        "title": "Official Minneapolis source",
+        "url": "https://www.minneapolismn.gov/permits"
+      },
+      {
+        "jurisdiction": "Minneapolis, MN",
+        "publisher": "Official Minneapolis source",
+        "source_type": "official_local",
+        "title": "Official Minneapolis source",
+        "url": "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/permits-overview/fees/"
+      },
+      {
+        "jurisdiction": "Minneapolis, MN",
+        "publisher": "Official Minneapolis source",
+        "source_type": "official_local",
+        "title": "Official Minneapolis source",
+        "url": "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/permits-overview/permit-types/building-permits/"
+      },
+      {
+        "jurisdiction": "Minneapolis, MN",
+        "publisher": "Official Minneapolis source",
+        "source_type": "official_local",
+        "title": "Official Minneapolis source",
+        "url": "https://www.minneapolismn.gov/business-services/planning-zoning/applications-handouts/land-use-applications/sign-permit/"
+      },
+      {
+        "jurisdiction": "Minneapolis, MN",
+        "publisher": "Official Minneapolis source",
+        "source_type": "official_local",
+        "title": "Official Minneapolis source",
+        "url": "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/exempt-from-permit/"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 Commercial Sign Face Replacement; Electrical Permit \u2014 Illuminated Sign.",
+    "total_cost_estimate": "$4,500 - $5,200",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed permit application in ACA with project address and contractor information",
+      "Site plan or sign location sketch showing the wall sign position and dimensions",
+      "Photo of the existing sign and proposed replacement face",
+      "Manufacturer cut sheet or spec sheet for the replacement sign face materials",
+      "Contract value of $4,500 and scope description stating 'sign face replacement only, no electrical work'",
+      "Contractor license information and business contact details"
+    ],
+    "zoning_hoa_flag": "Commercial sign work can still be delayed by zoning/sign ordinance limits, historic district overlays, or landlord/tenant approval requirements. Verify sign size, projection, illumination, and placement against Minneapolis sign regulations before fabrication."
+  },
+  "response_sha256": "7849120207919f018b393e56f2017bd1c0936af417ec50c6ff670963709b2672",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "sX_zHGtpqaw",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/sX_zHGtpqaw",
+  "source_urls": [
+    "https://aca.minneapolismn.gov",
+    "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/exempt-from-permit/",
+    "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/permits-overview/fees/",
+    "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/construction-permits/permits-overview/permit-types/building-permits/",
+    "https://www.minneapolismn.gov/business-services/planning-zoning/applications-handouts/land-use-applications/sign-permit/",
+    "https://www.minneapolismn.gov/permits"
+  ],
+  "started_at_utc": "2026-07-02T00:02:03.156023+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

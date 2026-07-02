@@ -122,6 +122,38 @@ class ScopeFacts:
         }
 
 
+@dataclass(frozen=True)
+class ScopeFactsV2(ScopeFacts):
+    """Additive V2 request facts for full-customer family reconciliation.
+
+    V2 keeps the V1 fields stable while adding positive/negative facts,
+    occupancy-change markers, and quantitative values used by deterministic ADD
+    implications.  It is still request-only: absence of a word never becomes a
+    negative fact unless the user explicitly says "no/without/non-..." or the
+    phrase is an unambiguous same-scope replacement marker.
+    """
+
+    positive_facts: frozenset[str] = field(default_factory=frozenset)
+    negative_facts: frozenset[str] = field(default_factory=frozenset)
+    occupancy_change: bool = False
+    service_amperage: int | None = None
+    valuation_usd: int | None = None
+    rack_height_ft: float | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        data = super().as_dict()
+        data.update({
+            "positive_facts": sorted(self.positive_facts),
+            "negative_facts": sorted(self.negative_facts),
+            "occupancy_change": self.occupancy_change,
+            "service_amperage": self.service_amperage,
+            "valuation_usd": self.valuation_usd,
+            "rack_height_ft": self.rack_height_ft,
+            "source": "request_scope_facts_v2",
+        })
+        return data
+
+
 _CONSTRUCTION_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("change_of_use", ("change of use", "change in use", "change of occupancy", "occupancy change", "retail to", "office to", "warehouse to", "gallery change to", "convert from", "conversion from")),
     ("conversion", ("convert garage", "garage into", "garage to", "basement adu", "basement apartment", "laundromat conversion", "conversion", "converted into", "convert into", "convert vacant", "convert office", "convert retail", "convert warehouse", "convert space", "convert suite")),
@@ -258,6 +290,180 @@ def build_scope_facts(job_type: str, city: str = "", state: str = "", *, job_cat
         dominant_family=dominant_family,
         vertical=str(contract.get("vertical") or vertical or "generic"),
         request_scope_text=job,
+    )
+
+
+def _extract_int_money_or_plain(text: str, *, value_words: tuple[str, ...]) -> int | None:
+    pattern = r"(?:" + "|".join(re.escape(word) for word in value_words) + r")\D{0,24}(\$?\s*\d{1,3}(?:,\d{3})+|\$?\s*\d{2,7})(\s*[kK])?"
+    match = re.search(pattern, text, re.I)
+    if not match:
+        return None
+    value = int(re.sub(r"\D", "", match.group(1) or "0") or "0")
+    if match.group(2):
+        value *= 1000
+    return value
+
+
+def _extract_service_amperage(text: str) -> int | None:
+    match = re.search(r"\b(\d{2,4})\s*(?:amps?\b|a\b(?=\s+(?:service|panel|electrical|upgrade)))", text, re.I)
+    return int(match.group(1)) if match else None
+
+
+def _extract_rack_height(text: str) -> float | None:
+    match = re.search(r"\b(\d{1,2}(?:\.\d+)?)\s*(?:ft|feet|foot)\b.{0,40}\b(?:rack|racking|storage)\b|\b(?:rack|racking|storage)\b.{0,40}\b(\d{1,2}(?:\.\d+)?)\s*(?:ft|feet|foot)\b", text, re.I)
+    if not match:
+        return None
+    return float(match.group(1) or match.group(2))
+
+
+def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
+    facts: set[str] = set()
+    trade_map = {
+        "electrical": "electrical",
+        "mechanical_fuelgas": "mechanical",
+        "plumbing_fog": "plumbing",
+        "fire": "fire_suppression",
+        "building_structural": "building",
+        "wastewater_fog": "grease_generating",
+    }
+    for signal in v1.trade_signals:
+        if signal in trade_map:
+            facts.add(trade_map[signal])
+    if "historic" in v1.special_signals:
+        facts.add("historic_district")
+    if re.search(r"\b(?:roof|reroof|re-roof|shingles?|porch|deck|garage|foundation|helical\s+piers?|structural\s+repair)\b", job, re.I):
+        facts.add("building")
+    if "exterior_alteration" in v1.special_signals or re.search(r"\b(?:exterior|front\s+door|storefront|facade|fa[cç]ade|masonry|lintel|window|door)\b", job, re.I):
+        facts.add("exterior")
+        facts.add("building")
+    if "health" in v1.special_signals:
+        facts.add("food_service")
+    if re.search(r"\b(?:change\s+of\s+(?:use|occupancy)|occupancy\s+change|convert(?:ing|ed)?\b|conversion\b|retail\s+to|office\s+to|warehouse\s+to)\b", job, re.I):
+        facts.add("use_change")
+    if re.search(r"\b(?:tenant improvement|tenant buildout|tenant finish|commercial interior|white box|demolition|demo)\b", job, re.I):
+        facts.add("commercial_ti")
+        facts.add("building")
+    office_light_ti = bool(re.search(r"\boffice\s+tenant\s+improvement\b|\boffice\s+ti\b", job, re.I) and re.search(r"\b(?:non\s+load\s+bearing|partitions?|diffuser\s+relocation|receptacles?)\b", job, re.I))
+    if v1.segment == "commercial" and re.search(r"\b(?:tenant improvement|tenant buildout|tenant finish|upfit|buildout|build-out)\b", job, re.I) and not office_light_ti:
+        facts.update({"commercial_ti", "building", "electrical", "mechanical", "plumbing", "planning_zoning"})
+    rtu_like_for_like_food_unchanged = bool(re.search(r"\b(?:rtu|rooftop\s+unit)\b", job, re.I) and re.search(r"\b(?:like[- ]for[- ]like|same\s+(?:curb|location|capacity|tonnage))\b", job, re.I) and not re.search(r"\b(?:hood|commercial\s+kitchen|grease|fog|floor\s+drain|interceptor)\b", job, re.I))
+    if v1.segment == "commercial" and re.search(r"\b(?:restaurant|bar|brewery|food\s+service|commercial kitchen)\b", job, re.I) and not rtu_like_for_like_food_unchanged:
+        facts.update({"food_service", "grease_generating", "fire_suppression", "health_food", "co_change_of_occupancy", "planning_zoning", "mechanical", "plumbing", "electrical"})
+    if v1.segment == "commercial" and re.search(r"\b(?:dental|medical|clinic|x[- ]?ray|exam room)\b", job, re.I):
+        facts.update({"electrical", "mechanical", "plumbing", "fire_suppression", "health_food"})
+    if v1.segment == "commercial" and re.search(r"\b(?:auto\s+repair|repair\s+shop|garage|vehicle\s+repair|lifts?)\b", job, re.I):
+        facts.update({"fire_suppression", "planning_zoning"})
+    if re.search(r"\b(?:solar|pv|photovoltaic)\b", job, re.I):
+        facts.update({"electrical", "building"})
+    if re.search(r"\b(?:adu|accessory dwelling|detached dwelling|garage conversion|kitchen\s+bath\s+and\s+utilities)\b", job, re.I):
+        facts.add("new_dwelling_unit")
+    if re.search(r"\b(?:utilities|kitchen|bath|bathroom|water|sewer|electrical|panel|gas)\b", job, re.I) and "new_dwelling_unit" in facts:
+        facts.add("utilities_connected")
+    if re.search(r"\b(?:sign|awning)\b", job, re.I):
+        facts.add("sign")
+    if re.search(r"\b(?:illuminated|lit|lighting|electric sign)\b", job, re.I) and not re.search(r"\b(?:non[- ]?electric|no\s+electrical|no\s+illumination|not\s+illuminated)\b", job, re.I):
+        facts.add("sign_illuminated")
+    if re.search(r"\b(?:rack|racking|high[- ]pile|storage rack)\b", job, re.I):
+        facts.add("racking")
+        facts.add("building")
+    if re.search(r"\b(?:demo|demolition|white box)\b", job, re.I):
+        facts.add("demolition")
+        facts.add("building")
+    if re.search(r"\b(?:fire\s+alarm|alarm\s+panel|sprinkler\s+monitoring)\b", job, re.I):
+        facts.add("fire_alarm")
+        facts.add("electrical")
+    if re.search(r"\b(?:type\s*i\s+hood|type\s*1\s+hood|wet[- ]chemical|ansul|hood\s+suppression)\b", job, re.I):
+        facts.add("hood_wet_chemical")
+        facts.add("fire_suppression")
+        facts.add("food_service")
+    if re.search(r"\b(?:restaurant|food\s+service|commercial kitchen|grease|fog|floor drains?)\b", job, re.I) and not rtu_like_for_like_food_unchanged:
+        facts.add("food_service")
+        if re.search(r"\b(?:restaurant|grease|fog|floor drains?|interceptor)\b", job, re.I):
+            facts.add("grease_generating")
+    if re.search(r"\b(?:central\s+air|air\s+conditioner|condenser|coil|furnace|heat\s+pump|mini[- ]split|hvac|rtu|rooftop\s+unit)\b", job, re.I):
+        facts.add("mechanical")
+    if re.search(r"\b(?:gas\s+(?:line|piping|reconnection|connection|dryer)|fuel\s+gas|radiant\s+heat|compressed\s+air)\b", job, re.I):
+        facts.add("plumbing")
+    if re.search(r"\b(?:plumbing(?:\s+and\s+electrical)?\s+upgrades?|electrical(?:\s+and\s+plumbing)?\s+upgrades?)\b", job, re.I):
+        facts.update({"plumbing", "electrical"})
+    if re.search(r"\b(?:standby\s+generator|automatic\s+transfer\s+switch|transfer\s+switch|generator\s+(?:install|installation))\b", job, re.I):
+        facts.add("electrical")
+    if re.search(r"\b(?:tub\s+valve|shower\s+valve|bathroom\s+renovation|bathroom\s+remodel|replace\s+(?:tub|toilet|sink|valve)|gas\s+water\s+heater|new\s+gas\s+line)\b", job, re.I):
+        facts.add("plumbing")
+    if re.search(r"\b(?:addition|new\s+building|metal\s+building|structural|load[- ]bearing)\b", job, re.I):
+        facts.add("addition" if "addition" in job else "structural")
+        facts.add("building")
+    return facts
+
+
+def _scope_facts_v2_negative(job: str, v1: ScopeFacts) -> set[str]:
+    facts = set(v1.negative_scope_facts)
+    # Normalize older V1 names to the plan's names.
+    if "no_occupancy_change" in facts:
+        facts.add("no_use_change")
+    if "same_capacity" in facts:
+        facts.add("like_for_like_replacement")
+    if re.search(r"\b(?:no|without|non[- ]?)\s*(?:new\s*)?(?:electric(?:al)?|wiring|illumination|illuminated)\b", job, re.I):
+        facts.add("no_electrical")
+    if re.search(r"\bno\s+(?:problems?|issues?)\s+with\s+(?:the\s+)?electrical\b", job, re.I):
+        facts.discard("no_electrical")
+    if re.search(r"\b(?:non[- ]?electric|not\s+illuminated|no\s+illumination|no\s+lighting)\b", job, re.I):
+        facts.add("no_illumination")
+        facts.add("no_electrical")
+    if re.search(r"\b(?:no|without)\s+(?:plumbing|pipe|pipes|drain|drains|fixtures?|water|sewer)\b", job, re.I):
+        facts.add("no_plumbing")
+    if re.search(r"\b(?:no|without)\s+(?:mechanical|hvac|ventilation|duct|ductwork)\b", job, re.I):
+        facts.add("no_mechanical")
+    if re.search(r"\b(?:no|without)\s+(?:mep|mechanical\s*/\s*electrical\s*/\s*plumbing)\b", job, re.I):
+        facts.update({"no_mep", "no_mechanical", "no_electrical", "no_plumbing"})
+    if re.search(r"\b(?:no|without)\s+(?:change\s+of\s+use|use\s+change|occupancy\s+change|change\s+of\s+occupancy)\b", job, re.I):
+        facts.add("no_use_change")
+    if re.search(r"\boffice\s+tenant\s+improvement\b|\boffice\s+ti\b", job, re.I) and re.search(r"\b(?:non\s+load\s+bearing|partitions?|diffuser\s+relocation|receptacles?)\b", job, re.I) and not re.search(r"\b(?:change\s+of\s+(?:use|occupancy)|conversion|convert|occupancy\s+change|retail\s+to|office\s+to|warehouse\s+to)\b", job, re.I):
+        facts.add("no_use_change")
+    if re.search(r"\b(?:no|without)\s+(?:sprinklers?\s+(?:altered|modified|changed)|sprinkler\s+alteration|fire\s+sprinkler\s+work)\b", job, re.I):
+        facts.add("no_sprinkler_alteration")
+    if re.search(r"\b(?:like[- ]for[- ]like|same\s+(?:curb|location|capacity|tonnage|size))\b", job, re.I):
+        facts.add("like_for_like_replacement")
+    if re.search(r"\b(?:rtu|rooftop\s+unit)\b", job, re.I) and re.search(r"\b(?:like[- ]for[- ]like|same\s+(?:curb|location|capacity|tonnage))\b", job, re.I) and not re.search(r"\b(?:hood|kitchen|grease|food\s+service|floor\s+drain)\b", job, re.I):
+        facts.add("no_food_service_change")
+    if v1.segment == "residential" and not re.search(r"\b(?:grease|fog|interceptor|commercial\s+kitchen|food\s+service|restaurant)\b", job, re.I):
+        facts.add("no_food_service_change")
+    if re.search(r"\b(?:new|upgrade|upgrades?|alter|altered|adds?|install|installation|relocat(?:e|ion))\s+(?:electrical|wiring|circuits?|receptacles?|lighting|panel|transfer\s+switch|generator)\b|\b(?:electrical|wiring|circuits?|receptacles?|lighting|panel|transfer\s+switch|generator)\s+(?:upgrade|upgrades?|alteration|installation)\b|\b(?:automatic\s+transfer\s+switch|standby\s+generator|new\s+gas\s+line)\b", job, re.I):
+        facts.discard("no_electrical")
+        facts.discard("no_mep")
+    if re.search(r"\b(?:new|upgrade|upgrades?|alter|altered|adds?|install|installation|relocat(?:e|ion))\s+(?:plumbing|pipes?|drains?|fixtures?|water|sewer)\b|\b(?:plumbing(?:\s+and\s+electrical)?|pipes?|drains?|fixtures?|water|sewer)\s+(?:upgrade|upgrades?|work|alteration|installation)\b", job, re.I):
+        facts.discard("no_plumbing")
+        facts.discard("no_mep")
+    if re.search(r"\b(?:restaurant|bar|brewery|food\s+service|commercial kitchen|small restaurant)\b", job, re.I) and not (re.search(r"\b(?:rtu|rooftop\s+unit)\b", job, re.I) and re.search(r"\b(?:like[- ]for[- ]like|same\s+(?:curb|location|capacity|tonnage))\b", job, re.I)):
+        facts.discard("no_food_service_change")
+    if re.search(r"\bwater\s+heater\b", job, re.I) and not re.search(r"\b(?:hvac|rtu|rooftop|air\s+handler|condenser|mini[- ]split|duct)\b", job, re.I):
+        facts.add("water_heater_only")
+    return facts
+
+
+def build_scope_facts_v2(job_type: str, city: str = "", state: str = "", *, job_category: str | None = None, vertical: str | None = None, scope_contract: dict[str, Any] | None = None) -> ScopeFactsV2:
+    v1 = build_scope_facts(job_type, city, state, job_category=job_category, vertical=vertical, scope_contract=scope_contract if isinstance(scope_contract, dict) else None)
+    job = _norm(job_type)
+    positives = _scope_facts_v2_positive(job, v1)
+    negatives = _scope_facts_v2_negative(job, v1)
+    service_amperage = _extract_service_amperage(job)
+    valuation = _extract_int_money_or_plain(job, value_words=("job value", "valuation", "project value", "value"))
+    rack_height = _extract_rack_height(job)
+    return ScopeFactsV2(
+        segment=v1.segment,
+        construction_class=v1.construction_class,
+        trade_signals=v1.trade_signals,
+        special_signals=v1.special_signals,
+        negative_scope_facts=v1.negative_scope_facts,
+        dominant_family=v1.dominant_family,
+        vertical=v1.vertical,
+        request_scope_text=v1.request_scope_text,
+        positive_facts=frozenset(positives),
+        negative_facts=frozenset(negatives),
+        occupancy_change="use_change" in positives,
+        service_amperage=service_amperage,
+        valuation_usd=valuation,
+        rack_height_ft=rack_height,
     )
 
 

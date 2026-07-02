@@ -1,0 +1,13 @@
+{
+  "case_id": "C-014",
+  "min_fee_amounts": 3,
+  "must_keep_required": [
+    "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration Building Permit \u2014 Tenant Improvement / Retail Interior Alteration Building",
+    "Plumbing Permit \u2014 Commercial Tenant Improvement Plumbing Permit \u2014 Commercial Tenant Improvement Plumbing",
+    "Mechanical Permit Mechanical Permit Mechanical",
+    "Electrical Permit \u2014 Commercial Tenant Improvement Electrical Permit \u2014 Commercial Tenant Improvement Electrical",
+    "Planning / Zoning Use Clearance Planning / Zoning Use Clearance Planning/Zoning",
+    "Certificate of Occupancy / Change-of-Occupancy Approval Certificate of Occupancy / Change-of-Occupancy Approval Certificate of Occupancy"
+  ],
+  "protection": true
+}

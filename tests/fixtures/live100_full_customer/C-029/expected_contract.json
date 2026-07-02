@@ -1,0 +1,12 @@
+{
+  "case_id": "C-029",
+  "contract_note": "",
+  "must_add": [],
+  "must_demote": [],
+  "must_keep_required": [
+    "sign"
+  ],
+  "must_not_required": [
+    "electrical"
+  ]
+}

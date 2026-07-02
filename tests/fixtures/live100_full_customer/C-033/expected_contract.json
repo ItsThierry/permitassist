@@ -1,0 +1,16 @@
+{
+  "case_id": "C-033",
+  "contract_note": "",
+  "must_add": [
+    "electrical",
+    "building_ti"
+  ],
+  "must_demote": [],
+  "must_keep_required": [
+    "building_ti",
+    "electrical",
+    "mechanical",
+    "plumbing"
+  ],
+  "must_not_required": []
+}

@@ -1,0 +1,11 @@
+{
+  "case_id": "C-018",
+  "contract_note": "",
+  "must_add": [],
+  "must_demote": [],
+  "must_keep_required": [
+    "building_ti"
+  ],
+  "must_not_required": [],
+  "summary_must_contain": "Commercial"
+}

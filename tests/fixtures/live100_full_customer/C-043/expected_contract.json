@@ -1,0 +1,13 @@
+{
+  "case_id": "C-043",
+  "contract_note": "",
+  "must_add": [],
+  "must_demote": [],
+  "must_keep_required": [
+    "sign",
+    "historic_review"
+  ],
+  "must_not_required": [
+    "electrical"
+  ]
+}

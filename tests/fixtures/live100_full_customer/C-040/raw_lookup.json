@@ -1,0 +1,595 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Commercial demo often permit; source-adjudicate severity",
+    "bucket": "interior demo",
+    "city": "Detroit",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Demolition/Building possible"
+    ],
+    "id": "C-040",
+    "job_type": "commercial retail white box demolition non structural partitions only no MEP, job value 60000",
+    "job_value": 60000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "MI",
+    "zip_code": "48226"
+  },
+  "completed_at_utc": "2026-07-02T00:03:42.760986+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 4.97,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review",
+    "applying_office": "City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED)",
+    "confidence": "high",
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration.",
+    "customer_next_step": "File the required permit categories with City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED): Building Permit \u2014 Tenant Improvement / Retail Interior Alteration, Plumbing Permit, Mechanical Permit, Electrical Permit. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: $300 minimum building permit fee based on Detroit alteration formula ($5 per $1,000 of valuation x $60,000 = $300), plus any plan review fees if required \u2014 verify in before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 6
+  },
+  "permit_elapsed_seconds": 1.53,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Detroit",
+    "job_category": "commercial",
+    "job_type": "commercial retail white box demolition non structural partitions only no MEP, job value 60000",
+    "job_value": 60000,
+    "state": "MI",
+    "vertical": "commercial",
+    "zip_code": "48226"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED)",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+      "portal_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "official source verified",
+      "verification_note": "Official filing path repaired from an offline verified AHJ source; confirm the exact portal subcategory before final submission."
+    },
+    "apply_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review",
+    "apply_url_known": true,
+    "applying_office": "City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED)",
+    "approval_timeline": {
+      "complex": "2-4 weeks or longer for commercial plan review, especially if tenant space drawings, life-safety review, or code compliance questions are involved",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in MI",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Occupancy load calc per IBC 1004 (mercantile = 60 sf gross/occupant for sales floor; 300 sf for stockroom)",
+      "Egress capacity sized to occupant load: 0.2 in/occupant for stairs, 0.15 in/occupant for level egress per IBC 1005",
+      "Accessible route from accessible entrance to all customer-accessible areas per ADA \u00a7206",
+      "ADA fixture counts per IBC Table 2902.1 (mercantile uses lower ratios \u2014 verify current edition)",
+      "Exterior signage permit (often a SEPARATE permit from the building TI \u2014 confirm with city sign code)",
+      "Fire alarm strobe coverage per NFPA 72 \u00a718.5 (visible from any point, candela-rated to room area)",
+      "Sprinkler hydraulic recalc required if shelving / racking exceeds 12 ft (NFPA 13 \u00a73.3.4 storage occupancy)",
+      "Storefront glazing: safety glazing per IBC 2406 for any pane within 24 in of door or 60 in of floor",
+      "Demising wall fire-rated per IBC 706.3 + STC \u226540 between tenants if not factory-built",
+      "Means of egress: \u22652 exits if occupant load >49 OR floor area >3,000 sf in M occupancy per IBC 1006",
+      "Public restroom availability per IBC 2902.3 (required for retail >150 occupants OR >300 ft from public restroom)",
+      "Energy code lighting + envelope per IECC C405 / C402 if HVAC or exterior wall is touched",
+      "Bring 2 copies of all documents to City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED)"
+    ],
+    "city_contractor_registration": "Detroit has city-level contractor licensing/registration requirements beyond state licensing for some trades and permit types. For commercial building permits, verify the contractor's current Detroit registration status before submitting; an expired or lapsed city registration can block the application. Renewal frequency and exact registration class should be confirmed directly with BSEED.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department",
+        "value": "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department",
+        "value": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department/bseed-online-services"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department",
+        "value": "Fee Estimate: $300 minimum building permit fee based on Detroit alteration formula ($5 per $1,000 of valuation x $60,000 = $300), plus any plan review fees if required \u2014 verify in https://detroitmi.gov/sites/detroitmi.localhost/files/2025-04/Fee%20Schedule_March312025.pdf before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department",
+        "value": "{'simple': '1-5 business days for straightforward interior alteration/demolition if no plan review corrections are needed; commercial jobs often take longer than residential OTC', 'complex': '2-4 weeks or longer for commercial plan review, especially if tenant space drawings, life-safety review, or code compliance questions are involved'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department",
+        "value": "[{'stage': 'Pre-Demolition / Initial Building Inspection', 'description': 'Inspector verifies the permit is posted, scope matches approved plans, and only approved non-structural partitions are being removed. They will look for any hidden structural elements, fire-rated assemblies, or tenant separation walls that cannot be demoed without revised approval.', 'timing': 'Before demolition starts'}, {'stage': 'Framing / Post-Demolition Inspection', 'description': 'Inspector checks that removed partitions were truly non-structural, any exposed framing or openings are left safe, and no unapproved changes were made to load-bearing walls, fireblocking, or rated assemblies.', 'timing': 'After demo is complete and before any new wall framing or concealment'}, {'stage': 'Final Building Inspection', 'description': 'Inspector verifies the space is left in a code-compliant white-box condition, all debris is removed, any required fire-rated separations are restored, and the work matches the approved permit scope and drawings.', 'timing': 'After all demolition and any required patching/restoration are complete'}, 'Building rough/final \u2014 verify sales-floor layout, accessible route, exits, doors/hardware, and certificate-of-occupancy conditions.', 'Storefront/facade final \u2014 verify glazing safety labels, awning attachment, exterior finishes, and approved elevations.', 'Sign final / electrical sign inspection \u2014 verify sign location, mounting, illumination disconnect, and landlord/master-sign-program compliance.', 'Fire alarm / sprinkler acceptance test if devices, ceilings, racking, demising walls, or coverage areas changed.', 'Energy compliance verification \u2014 confirm lighting controls, lighting power density, HVAC controls, economizer/ventilation, and storefront glazing documentation.']"
+      }
+    ],
+    "common_mistakes": [
+      "Starting interior demolition before the permit is issued and posted at the site \u2014 BSEED can issue a stop-work order and require re-inspection",
+      "Assuming every interior wall is non-structural \u2014 if a wall is load-bearing, fire-rated, or part of a tenant separation, the scope changes and revised approval is needed",
+      "Submitting the permit as a generic repair instead of a commercial alteration/demolition permit \u2014 the valuation-based alteration fee applies here",
+      "Submitting permit application without verifying current contractor registration status \u2014 an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting.",
+      "Skipping storefront/facade design review when windows, awnings, signs, or exterior finishes change.",
+      "Underestimating ADA path-of-travel upgrades for a primary-function retail alteration and missing the 20% cost allocation.",
+      "Submitting retail fixture plans without occupant-load, egress, aisle-width, and exit-sign/emergency-lighting coordination."
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED)",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED): Building Permit \u2014 Tenant Improvement / Retail Interior Alteration, Plumbing Permit, Mechanical Permit, Electrical Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration.",
+    "customer_next_step": "File the required permit categories with City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED): Building Permit \u2014 Tenant Improvement / Retail Interior Alteration, Plumbing Permit, Mechanical Permit, Electrical Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED)",
+      "fee_cost_caveat": "Fee Estimate: $300 minimum building permit fee based on Detroit alteration formula ($5 per $1,000 of valuation x $60,000 = $300), plus any plan review fees if required \u2014 verify in before quoting",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Detroit, MI",
+      "next_step": "File the required permit categories with City of Detroit Buildings, Safety Engineering and Environmental Department (BSEED): Building Permit \u2014 Tenant Improvement / Retail Interior Alteration, Plumbing Permit, Mechanical Permit, Electrical Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+      "source_cue": "Official sources attached for 4 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": [
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department/bseed-online-services"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department/bseed-online-services"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department/bseed-online-services"
+      }
+    ],
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $300 minimum building permit fee based on Detroit alteration formula ($5 per $1,000 of valuation x $60,000 = $300), plus any plan review fees if required \u2014 verify in before quoting",
+    "inspection_booking": "Schedule inspections through Detroit BSEED Online Services: Phone: (313) 224-2733. Advance notice requirement was not stated in the provided city data; verify with BSEED before requesting inspection. For commercial work, book early because plan-review-related inspections can be delayed if the permit record is not fully approved.",
+    "inspections": [
+      {
+        "description": "Inspector verifies the permit is posted, scope matches approved plans, and only approved non-structural partitions are being removed. They will look for any hidden structural elements, fire-rated assemblies, or tenant separation walls that cannot be demoed without revised approval.",
+        "stage": "Pre-Demolition / Initial Building Inspection",
+        "timing": "Before demolition starts"
+      },
+      {
+        "description": "Inspector checks that removed partitions were truly non-structural, any exposed framing or openings are left safe, and no unapproved changes were made to load-bearing walls, fireblocking, or rated assemblies.",
+        "stage": "Framing / Post-Demolition Inspection",
+        "timing": "After demo is complete and before any new wall framing or concealment"
+      },
+      {
+        "description": "Inspector verifies the space is left in a code-compliant white-box condition, all debris is removed, any required fire-rated separations are restored, and the work matches the approved permit scope and drawings.",
+        "stage": "Final Building Inspection",
+        "timing": "After all demolition and any required patching/restoration are complete"
+      },
+      "Building rough/final \u2014 verify sales-floor layout, accessible route, exits, doors/hardware, and certificate-of-occupancy conditions.",
+      "Storefront/facade final \u2014 verify glazing safety labels, awning attachment, exterior finishes, and approved elevations.",
+      "Sign final / electrical sign inspection \u2014 verify sign location, mounting, illumination disconnect, and landlord/master-sign-program compliance.",
+      "Fire alarm / sprinkler acceptance test if devices, ceilings, racking, demising walls, or coverage areas changed.",
+      "Energy compliance verification \u2014 confirm lighting controls, lighting power density, HVAC controls, economizer/ventilation, and storefront glazing documentation."
+    ],
+    "job_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Retail Interior Alteration; Plumbing Permit; Mechanical Permit; Electrical Permit.",
+    "local_form_known": true,
+    "online_application_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "ahj_name": "Detroit permit office",
+        "application_authority_name": "Detroit permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "permit_name": "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+        "permit_type": "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+        "portal_selection": "Commercial Building Permit - Tenant Improvement / Interior Alteration",
+        "rationale": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Plumbing Permit",
+        "condition_text": "When the described scope includes plumbing work or building department confirms the plumbing trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a plumbing trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_plumbing",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes plumbing work or building department confirms the plumbing trigger from the request text."
+      },
+      {
+        "approval_type": "Mechanical Permit",
+        "condition_text": "When the described scope includes mechanical work or building department confirms the mechanical trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a mechanical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_mechanical",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes mechanical work or building department confirms the mechanical trigger from the request text."
+      },
+      {
+        "approval_type": "Electrical Permit",
+        "condition_text": "When the described scope includes electrical work or building department confirms the electrical trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_electrical",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes electrical work or building department confirms the electrical trigger from the request text."
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "permit_type": "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a plumbing trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "scope_signal_floor_plumbing",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a mechanical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "scope_signal_floor_mechanical",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "scope_signal_floor_electrical",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Use the $5 per $1,000 alteration formula to budget the permit fee up front: $60,000 valuation means about $300 before any plan review or related charges",
+      "Bring a marked-up demolition plan that clearly shows 'remove' versus 'remain' walls \u2014 that is the fastest way to avoid plan review corrections on white-box jobs",
+      "Check your Detroit contractor registration renewal date before starting any permit application \u2014 registration lapses are the #1 avoidable rejection reason",
+      "If the space is in a strip center or multi-tenant building, confirm whether any rated demising wall or life-safety corridor wall is affected before demo starts",
+      "Coordinate the sign permit with the landlord's master sign program before ordering storefront signage.",
+      "Confirm retail parking ratio and accessible parking/path-of-travel scope before lease execution or final layout.",
+      "Package storefront elevations, glazing specs, awning details, and sign locations together so facade/design review does not lag the TI."
+    ],
+    "related_permit_families": [
+      "Fire",
+      "Planning/Zoning",
+      "Certificate of Occupancy",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Fire Suppression / Fire Prevention Review",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy / Change-of-Occupancy Approval",
+      "Accessibility / ADA path-of-travel verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "ahj_name": "Detroit permit office",
+        "application_authority_name": "Detroit permit office",
+        "approval_type": "Fire Suppression / Fire Prevention Review",
+        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "decision": "CONDITIONAL",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "notes": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "required": false,
+        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "segment": "commercial",
+        "status": "CONDITIONAL"
+      },
+      {
+        "ahj_name": "Detroit permit office",
+        "application_authority_name": "Detroit permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "decision": "CONDITIONAL",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "required": false,
+        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial",
+        "status": "CONDITIONAL"
+      },
+      {
+        "ahj_name": "Detroit permit office",
+        "application_authority_name": "Detroit permit office",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "decision": "CONDITIONAL",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "notes": "Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "required": false,
+        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "segment": "commercial",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Accessibility / ADA path-of-travel verification",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Accessibility / ADA path-of-travel verification",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 Tenant Improvement / Retail Interior Alteration",
+      "Plumbing Permit",
+      "Mechanical Permit",
+      "Electrical Permit"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Retail Interior Alteration; Plumbing Permit; Mechanical Permit; Electrical Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 6,
+      "exact_form_known": true,
+      "filing_path_evidence": "Official Detroit BSEED Permits & Plan Review page documents online permit application/ePlans steps.",
+      "filing_path_reachability": "ok",
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_path_status": "repaired_official_fallback",
+      "filing_path_verified_on": "2026-07-01",
+      "filing_source_count": 6,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review",
+        "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department",
+        "https://detroitmi.gov/sites/detroitmi.localhost/files/2025-04/Fee%20Schedule_March312025.pdf",
+        "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed",
+        "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/residential-and-commercial-ownership",
+        "https://detroitmi.gov/departments/construction-and-demolition-department"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 6,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review",
+      "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department",
+      "https://detroitmi.gov/sites/detroitmi.localhost/files/2025-04/Fee%20Schedule_March312025.pdf",
+      "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed",
+      "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/residential-and-commercial-ownership",
+      "https://detroitmi.gov/departments/construction-and-demolition-department"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Detroit, MI",
+        "publisher": "Official Detroit source",
+        "source_type": "official_local",
+        "title": "Official Detroit source",
+        "url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department"
+      },
+      {
+        "jurisdiction": "Detroit, MI",
+        "publisher": "Official Detroit source",
+        "source_type": "official_local",
+        "title": "Official Detroit source",
+        "url": "https://detroitmi.gov/sites/detroitmi.localhost/files/2025-04/Fee%20Schedule_March312025.pdf"
+      },
+      {
+        "jurisdiction": "Detroit, MI",
+        "publisher": "Official Detroit source",
+        "source_type": "official_local",
+        "title": "Official Detroit source",
+        "url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed"
+      },
+      {
+        "jurisdiction": "Detroit, MI",
+        "publisher": "Official Detroit source",
+        "source_type": "official_local",
+        "title": "Official Detroit source",
+        "url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/residential-and-commercial-ownership"
+      },
+      {
+        "jurisdiction": "Detroit, MI",
+        "publisher": "Official Detroit source",
+        "source_type": "official_local",
+        "title": "Official Detroit source",
+        "url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review"
+      },
+      {
+        "jurisdiction": "Detroit, MI",
+        "publisher": "Official Detroit source",
+        "source_type": "official_local",
+        "title": "Official Detroit source",
+        "url": "https://detroitmi.gov/departments/construction-and-demolition-department"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Retail Interior Alteration; Plumbing Permit; Mechanical Permit; Electrical Permit.",
+    "total_cost_estimate": "$60,750 - $66,500",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "watch_out": [
+      "Many cities require a Master Sign Program or landlord sign criteria approval before individual retail sign permits.",
+      "Parking, loading, and zoning variances commonly surface on change-of-use retail TIs and can block the certificate of occupancy.",
+      "Tenant leases often restrict facade, storefront, awning, penetrations, and signage even when code allows them \u2014 get landlord signoff early.",
+      "Illuminated signage may need both a sign permit and an electrical sign permit/inspection."
+    ],
+    "what_to_bring": [
+      "Completed BSEED building permit application for commercial alteration/demolition",
+      "Scope of work describing exactly which non-structural partitions are being removed",
+      "Current tenant space floor plan or demolition plan showing walls to remain and walls to be removed",
+      "Contractor license and Detroit registration information",
+      "Job value documentation showing the $60,000 valuation",
+      "Owner/tenant authorization letter if the contractor is filing on behalf of the tenant or property owner"
+    ],
+    "zoning_hoa_flag": "For commercial retail interior demolition, zoning/HOA issues are usually limited to landlord approval, lease restrictions, and any historic district or exterior sign impacts. If the work affects storefront fa\u00e7ade, exterior openings, or a historic district property, separate zoning or historic review is conditional only when the listed condition applies. No HOA issue is typically involved for a commercial tenant interior-only demo."
+  },
+  "response_sha256": "75b635d13493f3dd04c33edbacf4ea6a195c2173cec2a0ef988ede3f1c1c6020",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "x8Q25bhXP-o",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/x8Q25bhXP-o",
+  "source_urls": [
+    "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department",
+    "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed",
+    "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review",
+    "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/residential-and-commercial-ownership",
+    "https://detroitmi.gov/departments/construction-and-demolition-department",
+    "https://detroitmi.gov/sites/detroitmi.localhost/files/2025-04/Fee%20Schedule_March312025.pdf"
+  ],
+  "started_at_utc": "2026-07-02T00:03:37.794891+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

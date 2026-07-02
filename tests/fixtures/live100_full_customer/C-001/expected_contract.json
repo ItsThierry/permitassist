@@ -1,0 +1,16 @@
+{
+  "case_id": "C-001",
+  "min_fee_amounts": 0,
+  "must_keep_required": [
+    "Building Permit Building Permit Building",
+    "Gas Permit \u2014 Commercial Fuel Gas Piping Gas Permit \u2014 Commercial Fuel Gas Piping Plumbing",
+    "Mechanical Permit \u2014 Commercial Tenant Improvement Mechanical Permit \u2014 Commercial Tenant Improvement Mechanical",
+    "Electrical Permit \u2014 Commercial Tenant Improvement Electrical Permit \u2014 Commercial Tenant Improvement Electrical",
+    "Wastewater / FOG / Pretreatment Approval Wastewater / FOG / Pretreatment Approval Wastewater/FOG",
+    "Fire Suppression / Fire Prevention Review Fire Suppression / Fire Prevention Review Fire",
+    "Health Plan Review / Food Establishment Permit Health Plan Review / Food Establishment Permit Health",
+    "Planning / Zoning Use Clearance Planning / Zoning Use Clearance Planning/Zoning",
+    "Certificate of Occupancy / Change-of-Occupancy Approval Certificate of Occupancy / Change-of-Occupancy Approval Certificate of Occupancy"
+  ],
+  "protection": true
+}

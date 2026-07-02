@@ -1,0 +1,346 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Facade/scaffold",
+    "bucket": "facade structural",
+    "city": "Philadelphia",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Building",
+      "Right-of-way/scaffold possible"
+    ],
+    "id": "C-037",
+    "job_type": "commercial exterior facade repair with scaffolding and masonry lintel replacement, job value 140000",
+    "job_value": 140000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "PA",
+    "zip_code": "19107"
+  },
+  "completed_at_utc": "2026-07-02T00:03:17.722310+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 6.41,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://li.phila.gov",
+    "applying_office": "Department of Licenses and Inspections (L&I)",
+    "confidence": "high",
+    "customer_headline": "Permit required: Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement.",
+    "customer_next_step": "File the required permit categories with Department of Licenses and Inspections (L&I): Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: $76 for the first 500 sq ft plus $56 per additional 100 sq ft for building alteration review; scaffold/right-of-way fee needs verification with L&I for the exact sidewalk occupancy setup \u2014 verify with the building department before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 4
+  },
+  "permit_elapsed_seconds": 3.28,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Philadelphia",
+    "job_category": "commercial",
+    "job_type": "commercial exterior facade repair with scaffolding and masonry lintel replacement, job value 140000",
+    "job_value": 140000,
+    "state": "PA",
+    "vertical": "commercial",
+    "zip_code": "19107"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Department of Licenses and Inspections (L&I)",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement",
+      "portal_url": "https://li.phila.gov",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://li.phila.gov",
+    "apply_url_known": true,
+    "applying_office": "Department of Licenses and Inspections (L&I)",
+    "approval_timeline": {
+      "complex": "3-8 weeks for standard plan review on commercial facade/structural alteration work",
+      "simple": "EZ permits for simple trade work can be issued in 1-3 days online, but this job is not simple EZ work due to structural lintel replacement."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in PA",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Bring 2 copies of all documents to Department of Licenses and Inspections (L&I)"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.phila.gov/departments/department-of-licenses-and-inspections",
+        "value": "Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.phila.gov/departments/department-of-licenses-and-inspections",
+        "value": "https://li.phila.gov"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.phila.gov/departments/department-of-licenses-and-inspections",
+        "value": "Fee Estimate: $76 for the first 500 sq ft plus $56 per additional 100 sq ft for building alteration review; scaffold/right-of-way fee needs verification with L&I for the exact sidewalk occupancy setup \u2014 verify with the building department before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.phila.gov/departments/department-of-licenses-and-inspections",
+        "value": "{'simple': 'EZ permits for simple trade work can be issued in 1-3 days online, but this job is not simple EZ work due to structural lintel replacement.', 'complex': '3-8 weeks for standard plan review on commercial facade/structural alteration work'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.phila.gov/departments/department-of-licenses-and-inspections",
+        "value": "[{'stage': 'Pre-Work / Field Verification', 'description': 'Inspector or field reviewer verifies permit posting, approved plans on site, scaffold placement, and that any sidewalk protection or street occupancy setup matches the approved scope before work starts.', 'timing': 'Before scaffold erection and before demolition of facade elements'}, {'stage': 'Structural / Masonry Rough Inspection', 'description': 'Inspector checks lintel size and bearing, masonry support conditions, temporary shoring, anchorage, mortar/joint repair details, and that any damaged masonry is repaired per approved plans before concealment.', 'timing': 'After demolition/exposure and before closing up repaired wall sections'}, {'stage': 'Final Building Inspection', 'description': 'Inspector verifies lintel replacement is complete, facade repairs are finished, masonry is stable, scaffold and sidewalk protection are removed, and the exterior condition matches the approved permit documents.', 'timing': 'After all work is complete and before permit closeout'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the building permit without a separate scaffold or sidewalk protection approval when the scaffold will sit in the public right-of-way",
+      "Treating lintel replacement as minor repair \u2014 once you replace a masonry lintel, plan review and structural details are often required",
+      "Starting demolition before the permit is issued and posted on site",
+      "Submitting permit application without verifying current Philadelphia contractor registration status \u2014 an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting."
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Department of Licenses and Inspections (L&I)",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with Department of Licenses and Inspections (L&I): Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official source: Official Philadelphia source"
+    },
+    "customer_headline": "Permit required: Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement.",
+    "customer_next_step": "File the required permit categories with Department of Licenses and Inspections (L&I): Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Department of Licenses and Inspections (L&I)",
+      "fee_cost_caveat": "Fee Estimate: $76 for the first 500 sq ft plus $56 per additional 100 sq ft for building alteration review; scaffold/right-of-way fee needs verification with L&I for the exact sidewalk occupancy setup \u2014 verify with the building department before quoting",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Philadelphia, PA",
+      "next_step": "File the required permit categories with Department of Licenses and Inspections (L&I): Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement",
+      "source_cue": "Official source: Official Philadelphia source",
+      "timeline": "EZ permits for simple trade work can be issued in 1-3 days online, but this job is not simple EZ work due to structural lintel replacement."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $76 for the first 500 sq ft plus $56 per additional 100 sq ft for building alteration review; scaffold/right-of-way fee needs verification with L&I for the exact sidewalk occupancy setup \u2014 verify with the building department before quoting",
+    "inspection_booking": "Schedule inspections through the Philadelphia L&I online portal at For commercial structural work, book inspections with at least 24 hours advance notice; if the scaffold occupies the public way, confirm any separate sidewalk/street occupancy inspection or approval timing with L&I at (215) 686-2400. Use the permit number and address when scheduling.",
+    "inspections": [
+      {
+        "description": "Inspector or field reviewer verifies permit posting, approved plans on site, scaffold placement, and that any sidewalk protection or street occupancy setup matches the approved scope before work starts.",
+        "stage": "Pre-Work / Field Verification",
+        "timing": "Before scaffold erection and before demolition of facade elements"
+      },
+      {
+        "description": "Inspector checks lintel size and bearing, masonry support conditions, temporary shoring, anchorage, mortar/joint repair details, and that any damaged masonry is repaired per approved plans before concealment.",
+        "stage": "Structural / Masonry Rough Inspection",
+        "timing": "After demolition/exposure and before closing up repaired wall sections"
+      },
+      {
+        "description": "Inspector verifies lintel replacement is complete, facade repairs are finished, masonry is stable, scaffold and sidewalk protection are removed, and the exterior condition matches the approved permit documents.",
+        "stage": "Final Building Inspection",
+        "timing": "After all work is complete and before permit closeout"
+      }
+    ],
+    "job_summary": "Permit required: Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement.",
+    "local_form_known": true,
+    "online_application_url": "https://li.phila.gov",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement",
+    "permit_required": true,
+    "permit_type": "Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "ahj_name": "Philadelphia permit office",
+        "application_authority_name": "Philadelphia permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Required for commercial facade repair that includes masonry lintel replacement and any structural opening repair. Expect plan review because this is not simple EZ work.",
+        "permit_name": "Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement",
+        "permit_type": "Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement",
+        "portal_selection": "Building Permit - Alteration (Commercial)",
+        "rationale": "Required for commercial facade repair that includes masonry lintel replacement and any structural opening repair. Expect plan review because this is not simple EZ work.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required for commercial facade repair that includes masonry lintel replacement and any structural opening repair. Expect plan review because this is not simple EZ work.",
+        "permit_type": "Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Have a structural repair sketch or engineer's detail ready before opening the portal \u2014 lintel replacement jobs move much faster when the reviewer can see bearing, support, and repair details up front.",
+      "Check your Philadelphia contractor registration renewal date before starting any permit application \u2014 registration lapses are one of the most avoidable rejection reasons.",
+      "If the scaffold touches the sidewalk, coordinate the sidewalk protection and building permit together so you do not get stuck waiting on one approval while the other is ready.",
+      "For a $140,000 commercial facade job, expect plan review rather than EZ processing; submitting a clean plan set the first time saves weeks."
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Permit required: Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 4,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 4,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.phila.gov/departments/department-of-licenses-and-inspections",
+        "https://li.phila.gov",
+        "https://www.phila.gov/services/permits-violations-licenses/apply-for-a-permit/building-and-repair-permits/get-a-building-permit/",
+        "https://www.phila.gov/departments/department-of-licenses-and-inspections/"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 4,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.phila.gov/departments/department-of-licenses-and-inspections",
+      "https://li.phila.gov",
+      "https://www.phila.gov/services/permits-violations-licenses/apply-for-a-permit/building-and-repair-permits/get-a-building-permit/",
+      "https://www.phila.gov/departments/department-of-licenses-and-inspections/"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Philadelphia, PA",
+        "publisher": "Official Philadelphia source",
+        "source_type": "official_local",
+        "title": "Official Philadelphia source",
+        "url": "https://www.phila.gov/departments/department-of-licenses-and-inspections"
+      },
+      {
+        "jurisdiction": "Philadelphia, PA",
+        "publisher": "Official Philadelphia source",
+        "source_type": "official_local",
+        "title": "Official Philadelphia source",
+        "url": "https://li.phila.gov"
+      },
+      {
+        "jurisdiction": "Philadelphia, PA",
+        "publisher": "Official Philadelphia source",
+        "source_type": "official_local",
+        "title": "Official Philadelphia source",
+        "url": "https://www.phila.gov/services/permits-violations-licenses/apply-for-a-permit/building-and-repair-permits/get-a-building-permit/"
+      },
+      {
+        "jurisdiction": "Philadelphia, PA",
+        "publisher": "Official Philadelphia source",
+        "source_type": "official_local",
+        "title": "Official Philadelphia source",
+        "url": "https://www.phila.gov/departments/department-of-licenses-and-inspections/"
+      }
+    ],
+    "summary": "Permit required: Building Permit \u2014 Commercial Exterior Alteration / Masonry Lintel Replacement.",
+    "total_cost_estimate": "$145,000 - $175,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed L&I permit application with contractor license/registration information",
+      "Signed scope of work describing facade repair and masonry lintel replacement",
+      "Site plan or elevation showing scaffold location and any sidewalk/right-of-way impact",
+      "Structural details or engineer's repair sketch if lintel replacement affects load-bearing masonry",
+      "Contractor HIC registration number and Philadelphia contractor license information",
+      "Job value documentation and contractor estimate for the $140,000 scope"
+    ],
+    "zoning_hoa_flag": "Commercial facade work in Philadelphia may still be affected by historic district, conservation district, or special overlay review if the property is in a protected area. If the building is in a historic district or on a landmarked block, exterior material changes, lintel visibility, or scaffold placement may need additional review before work starts."
+  },
+  "response_sha256": "b287a2e904ed27bab7fa2048aacc12cf06da704dffbe7f78679d88c6224daaf1",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "GchWgPgiD5c",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/GchWgPgiD5c",
+  "source_urls": [
+    "https://li.phila.gov",
+    "https://www.phila.gov/departments/department-of-licenses-and-inspections",
+    "https://www.phila.gov/departments/department-of-licenses-and-inspections/",
+    "https://www.phila.gov/services/permits-violations-licenses/apply-for-a-permit/building-and-repair-permits/get-a-building-permit/"
+  ],
+  "started_at_utc": "2026-07-02T00:03:11.315274+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

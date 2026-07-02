@@ -1,0 +1,16 @@
+{
+  "case_id": "R-044",
+  "contract_note": "",
+  "must_add": [
+    "electrical"
+  ],
+  "must_demote": [],
+  "must_keep_required": [
+    "building_adu",
+    "plumbing",
+    "mechanical",
+    "electrical"
+  ],
+  "must_not_required": [],
+  "source_must_not_contain": "portland.gov/"
+}

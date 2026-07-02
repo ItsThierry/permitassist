@@ -1,0 +1,14 @@
+{
+  "case_id": "C-034",
+  "contract_note": "",
+  "must_add": [],
+  "must_demote": [],
+  "must_keep_required": [
+    "mechanical",
+    "plumbing"
+  ],
+  "must_not_required": [
+    "wastewater_pretreatment_fog",
+    "health_food"
+  ]
+}

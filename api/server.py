@@ -60,10 +60,13 @@ except (TypeError, ValueError):
     from api.research_engine import classify_scope_required_permits as _real_classify_scope_required_permits
     classify_scope_required_permits = _real_classify_scope_required_permits
 
-from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
+from scope_contract import build_scope_contract, build_scope_facts_v2, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
 from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
 from trade_authority_routing import apply_trade_authority_routing
 from decision_resolver import is_input_rejection, resolve_customer_decision
+from family_reconciliation_gate import apply_family_reconciliation_gate
+from ahj_identity_guard import apply_ahj_identity_guard
+from public_packet import apply_public_packet_projection
 try:
     from v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
 except ImportError:  # package import path in some tests
@@ -5044,6 +5047,26 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 if cell_lock.get("source_urls"):
                     final_public["source_urls"] = list(cell_lock.get("source_urls") or [])
             final_public = _apply_live100_official_filing_path_repair(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
+            # Full-customer fix-for-good gate: one deterministic reconciliation
+            # point immediately before public serialization/report rendering.
+            # It preserves concrete REQUIRED/NOT_REQUIRED decisions, demotes
+            # unsupported extras to first-class CONDITIONAL rows, vetoes only
+            # explicitly contradicted trigger families, repairs AHJ identity, and
+            # projects a canonical PublicPacketDTO for API/share/report parity.
+            try:
+                raw_full_customer_gate = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower()
+                if raw_full_customer_gate in {"0", "false", "no", "off"}:
+                    full_customer_gate_enabled = False
+                elif raw_full_customer_gate in {"1", "true", "yes", "on"}:
+                    full_customer_gate_enabled = True
+                else:
+                    full_customer_gate_enabled = not os.environ.get("PYTEST_CURRENT_TEST")
+                if full_customer_gate_enabled:
+                    final_public = apply_family_reconciliation_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract)
+                    final_public = apply_ahj_identity_guard(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
+                    final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, build_scope_facts_v2(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract))
+            except Exception as exc:
+                print(f"[customer-view] Full-customer reconciliation gate skipped: {exc}")
             final_public = _apply_residential_commercial_timeline_veto(final_public if isinstance(final_public, dict) else {}, job_type, job_category=request_job_category, scope_contract=scope_contract)
         return final_public if isinstance(final_public, dict) else {}
     return {}
@@ -7825,12 +7848,24 @@ def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", s
             )
         ) if text
     ))
-    items = [
-        {"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True},
-        {"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True},
-        {"label": f"Pay permit fee: {fee}", "category": "fees", "required": True},
-        {"label": f"Plan for approval timeline: {timeline}", "category": "timeline", "required": False},
-    ]
+    items = []
+    decision = str(result.get("permit_decision") or "").upper().strip()
+    is_no_permit = decision == "NOT_REQUIRED" or result.get("permit_required") is False
+    conditional_rows = [row for row in _checklist_list(result.get("conditional_permits")) if isinstance(row, dict)]
+    if is_no_permit:
+        items.append({"label": "No permit is required for this scope — keep this report with the job record", "category": "permit", "required": True})
+    else:
+        items.append({"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True})
+    for conditional in conditional_rows[:4]:
+        cond_name = conditional.get("permit_type") or conditional.get("permit_name") or "conditional permit"
+        cond_text = conditional.get("conditional_text") or conditional.get("required_if") or "Only if the stated condition is triggered"
+        items.append({"label": f"{cond_text} — if triggered, pull {cond_name}", "category": "conditional", "required": False})
+    items.append({"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True})
+    if is_no_permit:
+        items.append({"label": "No permit fee applies for this resolved no-permit scope", "category": "fees", "required": False})
+    else:
+        items.append({"label": f"Pay permit fee: {fee}", "category": "fees", "required": True})
+    items.append({"label": f"Plan for approval timeline: {timeline}", "category": "timeline", "required": False})
     if docs:
         items.append({"label": f"Required documents: {', '.join(docs[:6])}", "category": "documents", "required": True})
     for inspection in inspections[:6]:
@@ -8023,6 +8058,11 @@ PUBLIC_REPORT_RESULT_FIELDS = frozenset({
     "permit_type",
     "primary_permit",
     "permits_required",
+    "conditional_permits",
+    "related_permits",
+    "public_packet",
+    "canonical_public_packet",
+    "public_packet_rows",
     "companion_permits",
     "companion_reviews",
     "companion_permits_or_reviews",

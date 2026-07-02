@@ -1,0 +1,435 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "RTU permit",
+    "bucket": "commercial RTU",
+    "city": "Tempe",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Mechanical/HVAC",
+      "Gas/Electrical coordination conditional"
+    ],
+    "id": "C-007",
+    "job_type": "commercial rooftop package HVAC unit replacement same tonnage existing gas and electrical, job value 28000",
+    "job_value": 28000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "AZ",
+    "zip_code": "85281"
+  },
+  "completed_at_utc": "2026-07-01T23:58:57.935764+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 6.3,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+    "applying_office": "City of Tempe Community Development Building Safety",
+    "confidence": "medium",
+    "customer_headline": "Permit required: Mechanical Permit \u2014 Rooftop Unit Replacement.",
+    "customer_next_step": "File the required permit categories with City of Tempe Community Development Building Safety: Mechanical Permit \u2014 Rooftop Unit Replacement. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: Permit fee needs verification with Tempe's current commercial fee schedule; for a $28,000 commercial mechanical replacement, expect roughly $250 - $650 in permit/plan review fees, plus any reinspection or after-hours charges if applicable. \u2014 verify with the building department before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 3
+  },
+  "permit_elapsed_seconds": 3.31,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Tempe",
+    "job_category": "commercial",
+    "job_type": "commercial rooftop package HVAC unit replacement same tonnage existing gas and electrical, job value 28000",
+    "job_value": 28000,
+    "state": "AZ",
+    "vertical": "commercial",
+    "zip_code": "85281"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Tempe Community Development Building Safety",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "portal_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+    "apply_url_known": true,
+    "applying_office": "City of Tempe Community Development Building Safety",
+    "approval_timeline": {
+      "complex": "3-10 business days if plan review is required, longer if rooftop curb, structural, or energy compliance details are requested.",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in AZ",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Confirm the required license is active and matches the application: Arizona ROC-licensed HVAC contractor pulls the permit on the owner's behalf \u2014 the contractor's ROC license number must appear on the application. For this scope, the relevant Arizona classification is CR-67 (refrigeration) for HVAC work.",
+      "Bring 2 copies of all documents to City of Tempe Community Development Building Safety"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-01",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "value": "Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "value": "https://www.tempe.gov/government/community-development/building-safety/permit-center"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "value": "Fee Estimate: Permit fee needs verification with Tempe's current commercial fee schedule; for a $28,000 commercial mechanical replacement, expect roughly $250 - $650 in permit/plan review fees, plus any reinspection or after-hours charges if applicable. \u2014 verify with the building department before quoting"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "value": "{'simple': 'Over-the-counter or same-day intake is possible for straightforward commercial replacement permits if no plan review is triggered, but Tempe may still route commercial rooftop equipment replacements for review.', 'complex': '3-10 business days if plan review is required, longer if rooftop curb, structural, or energy compliance details are requested.'}"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "value": "[{'stage': 'Mechanical Rough-In / Pre-Set', 'description': 'Inspector verifies rooftop unit location, curb condition, equipment anchorage, clearances from roof edges and openings, condensate drain routing, gas connection integrity if disturbed, and that any required disconnect is accessible and properly labeled.', 'timing': 'Before final set is covered up, before insulation/roof patching is completed, and before the unit is placed into permanent operation if any rooftop support or connection work is still open.'}, {'stage': 'Final Mechanical', 'description': 'Inspector checks the installed package unit matches approved specs, refrigerant and gas connections are complete and leak-free, thermostat/control operation works, condensate drains properly, equipment is secured, and required labels/access clearances are maintained.', 'timing': 'After startup, after all connections are complete, and before the system is turned over to the owner.'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Starting rooftop demo before the permit is issued and posted \u2014 Tempe can stop the job and require re-submittal",
+      "Assuming same tonnage means no permit \u2014 commercial HVAC replacement still needs a mechanical permit",
+      "Not verifying rooftop curb dimensions and unit footprint before ordering the replacement unit",
+      "Failing to confirm whether the existing electrical disconnect, whip, or gas connection can be reused without modification",
+      "Submitting permit application without verifying current contractor registration status \u2014 an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting."
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test is triggered for this project when the building department confirms the relevant other scope condition.",
+        "permit_type": "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test",
+        "rationale": "Commercial gas-fired HVAC/RTU work commonly requires gas piping reconnection, appliance connection, or pressure-test sign-off even when the job is otherwise a like-for-like mechanical swap.",
+        "reason": "Commercial gas-fired HVAC/RTU work commonly requires gas piping reconnection, appliance connection, or pressure-test sign-off even when the job is otherwise a like-for-like mechanical swap.",
+        "trigger_condition": "Verify whether Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test is triggered for this project when the building department confirms the relevant other scope condition."
+      },
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Electrical Permit \u2014 Commercial Equipment Connection / Disconnect is triggered for this project when the building department confirms the relevant electrical scope condition.",
+        "permit_type": "Electrical Permit \u2014 Commercial Equipment Connection / Disconnect",
+        "rationale": "Commercial HVAC/RTU replacements commonly require electrical disconnect, equipment connection, controls, or service-equipment inspection coordination.",
+        "reason": "Commercial HVAC/RTU replacements commonly require electrical disconnect, equipment connection, controls, or service-equipment inspection coordination.",
+        "trigger_condition": "Verify whether Electrical Permit \u2014 Commercial Equipment Connection / Disconnect is triggered for this project when the building department confirms the relevant electrical scope condition."
+      }
+    ],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Tempe Community Development Building Safety",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with City of Tempe Community Development Building Safety: Mechanical Permit \u2014 Rooftop Unit Replacement. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official source: Official Tempe source"
+    },
+    "customer_headline": "Permit required: Mechanical Permit \u2014 Rooftop Unit Replacement.",
+    "customer_next_step": "File the required permit categories with City of Tempe Community Development Building Safety: Mechanical Permit \u2014 Rooftop Unit Replacement. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Tempe Community Development Building Safety",
+      "fee_cost_caveat": "Fee Estimate: Permit fee needs verification with Tempe's current commercial fee schedule; for a $28,000 commercial mechanical replacement, expect roughly $250 - $650 in permit/plan review fees, plus any reinspection or after-hours charges if applicable. \u2014 verify with the building department before quoting",
+      "freshness_label": "Checked 2026-07-01",
+      "jurisdiction": "Tempe, AZ",
+      "next_step": "File the required permit categories with City of Tempe Community Development Building Safety: Mechanical Permit \u2014 Rooftop Unit Replacement. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "source_cue": "Official source: Official Tempe source",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Permit fee needs verification with Tempe's current commercial fee schedule; for a $28,000 commercial mechanical replacement, expect roughly $250 - $650 in permit/plan review fees, plus any reinspection or after-hours charges if applicable. \u2014 verify with the building department before quoting",
+    "inspection_booking": "Schedule inspections through the City of Tempe permit center/online permitting route at If the portal routes inspection requests separately, use the permit number to request the inspection. Verify current inspection request cutoff time with Tempe Building Safety before scheduling; if no portal path is shown, call the permit center and request mechanical inspection scheduling for the permit number.",
+    "inspections": [
+      {
+        "description": "Inspector verifies rooftop unit location, curb condition, equipment anchorage, clearances from roof edges and openings, condensate drain routing, gas connection integrity if disturbed, and that any required disconnect is accessible and properly labeled.",
+        "stage": "Mechanical Rough-In / Pre-Set",
+        "timing": "Before final set is covered up, before insulation/roof patching is completed, and before the unit is placed into permanent operation if any rooftop support or connection work is still open."
+      },
+      {
+        "description": "Inspector checks the installed package unit matches approved specs, refrigerant and gas connections are complete and leak-free, thermostat/control operation works, condensate drains properly, equipment is secured, and required labels/access clearances are maintained.",
+        "stage": "Final Mechanical",
+        "timing": "After startup, after all connections are complete, and before the system is turned over to the owner."
+      }
+    ],
+    "job_summary": "Permit required: Mechanical Permit \u2014 Rooftop Unit Replacement.",
+    "local_form_known": true,
+    "online_application_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+    "permit_required": true,
+    "permit_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "permit_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "rationale": "Same-capacity RTU/rooftop-unit replacement is mechanically primary.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Same-capacity RTU/rooftop-unit replacement is mechanically primary.",
+        "permit_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "scope_trigger": "mechanical_scope",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Have the rooftop unit submittal sheet ready before you open the permit application \u2014 Tempe reviewers move faster when tonnage, voltage, and curb dimensions are already documented.",
+      "If the crane pick is part of the job, line up the lift date after permit issuance so you do not pay twice for mobilization.",
+      "Check your Tempe contractor registration renewal date before starting any permit application \u2014 registration lapses are the #1 avoidable rejection reason.",
+      "For rooftop replacements, photograph the existing curb, disconnect, and gas/electrical tie-in before removal; it helps resolve inspector questions if the field conditions differ from the plans."
+    ],
+    "related_permit_families": [
+      "Building",
+      "Electrical",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Electrical Permit",
+      "Electrical Permit \u2014 Commercial Equipment Connection / Disconnect",
+      "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "ahj_name": "Tempe permit office",
+        "application_authority_name": "Tempe permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "condition_text": "Verify building/accessory-structure review only if HVAC equipment work also changes structure, occupancy, walls, or building use.",
+        "decision": "VERIFY",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "rationale": "Verify building/accessory-structure review only if HVAC equipment work also changes structure, occupancy, walls, or building use.",
+        "required": false,
+        "required_if": "Verify building/accessory-structure review only if HVAC equipment work also changes structure, occupancy, walls, or building use.",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "ahj_name": "Tempe permit office",
+        "application_authority_name": "Tempe permit office",
+        "approval_type": "Electrical Permit",
+        "condition_text": "Verify electrical filing only if the same-capacity RTU replacement includes new/altered circuit, disconnect, wiring, or service work.",
+        "decision": "VERIFY",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "Verify electrical filing only if the same-capacity RTU replacement includes new/altered circuit, disconnect, wiring, or service work.",
+        "required": false,
+        "required_if": "Verify electrical filing only if the same-capacity RTU replacement includes new/altered circuit, disconnect, wiring, or service work.",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "approval_type": "Electrical Permit \u2014 Commercial Equipment Connection / Disconnect",
+        "condition_text": "Verify whether Electrical Permit \u2014 Commercial Equipment Connection / Disconnect is triggered for this project when the building department confirms the relevant electrical scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit \u2014 Commercial Equipment Connection / Disconnect",
+        "permit_type": "Electrical Permit \u2014 Commercial Equipment Connection / Disconnect",
+        "rationale": "Commercial HVAC/RTU replacements commonly require electrical disconnect, equipment connection, controls, or service-equipment inspection coordination.",
+        "reason": "Commercial HVAC/RTU replacements commonly require electrical disconnect, equipment connection, controls, or service-equipment inspection coordination.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Electrical Permit \u2014 Commercial Equipment Connection / Disconnect is triggered for this project when the building department confirms the relevant electrical scope condition."
+      },
+      {
+        "approval_type": "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test",
+        "condition_text": "Verify whether Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test is triggered for this project when the building department confirms the relevant other scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test",
+        "permit_type": "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test",
+        "rationale": "Commercial gas-fired HVAC/RTU work commonly requires gas piping reconnection, appliance connection, or pressure-test sign-off even when the job is otherwise a like-for-like mechanical swap.",
+        "reason": "Commercial gas-fired HVAC/RTU work commonly requires gas piping reconnection, appliance connection, or pressure-test sign-off even when the job is otherwise a like-for-like mechanical swap.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Mechanical"
+    ],
+    "required_permit_names": [
+      "Mechanical Permit \u2014 Rooftop Unit Replacement"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Permit required: Mechanical Permit \u2014 Rooftop Unit Replacement.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 3,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 2,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "https://www.tempe.gov/i-want-to/apply-for-a-building-permit"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 3,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+      "https://roc.az.gov",
+      "https://www.tempe.gov/i-want-to/apply-for-a-building-permit"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Tempe, AZ",
+        "publisher": "Official Tempe source",
+        "source_type": "official_local",
+        "title": "Official Tempe source",
+        "url": "https://www.tempe.gov/government/community-development/building-safety/permit-center"
+      },
+      {
+        "jurisdiction": "Tempe, AZ",
+        "publisher": "Arizona state reference",
+        "source_type": "official_state",
+        "title": "Arizona state reference",
+        "url": "https://roc.az.gov"
+      },
+      {
+        "jurisdiction": "Tempe, AZ",
+        "publisher": "Official Tempe source",
+        "source_type": "official_local",
+        "title": "Official Tempe source",
+        "url": "https://www.tempe.gov/i-want-to/apply-for-a-building-permit"
+      }
+    ],
+    "summary": "Permit required: Mechanical Permit \u2014 Rooftop Unit Replacement.",
+    "total_cost_estimate": "$28,500 - $38,500",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed commercial mechanical permit application with project address and tenant/building information",
+      "Arizona ROC contractor license number and business information for the HVAC contractor",
+      "Equipment cut sheet showing make, model, tonnage, voltage, MCA/MOP, and rooftop curb dimensions",
+      "Site plan or roof plan showing unit location, access path, and rooftop clearances",
+      "Existing unit information and photos of the current rooftop installation if the city asks for like-for-like verification",
+      "Owner/tenant authorization letter if the contractor is submitting on behalf of the property owner"
+    ],
+    "zoning_hoa_flag": "Commercial rooftop equipment can still be affected by zoning, rooftop screening, historic district overlays, or landlord/tenant design review. If the building is in a historic district or has rooftop screening requirements, verify whether the new unit visibility, curb height, or screening changes need separate approval before installation."
+  },
+  "response_sha256": "8e1258b39ddfd2fc1c1f9a3874dbd445608e75cd99f3e5a38071342d2d92c2f5",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "kUe9NPDgmmE",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/kUe9NPDgmmE",
+  "source_urls": [
+    "https://roc.az.gov",
+    "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+    "https://www.tempe.gov/i-want-to/apply-for-a-building-permit"
+  ],
+  "started_at_utc": "2026-07-01T23:58:51.630979+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

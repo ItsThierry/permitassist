@@ -1,0 +1,464 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Auto repair/high-risk",
+    "bucket": "auto repair addition",
+    "city": "Cheyenne",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building",
+      "Mechanical",
+      "Electrical",
+      "Fire/Environmental verify"
+    ],
+    "id": "C-050",
+    "job_type": "commercial metal building addition for auto repair shop with lifts compressed air electrical and radiant heat, job value 480000",
+    "job_value": 480000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "WY",
+    "zip_code": "82001"
+  },
+  "completed_at_utc": "2026-07-02T00:05:02.092738+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 5.45,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building",
+    "applying_office": "City of Cheyenne Planning & Development",
+    "confidence": "low",
+    "customer_headline": "Permit required: Required permit package \u2014 Commercial Building / Tenant Improvement Permit.",
+    "customer_next_step": "File the required permit categories with City of Cheyenne Planning & Development: Commercial Building / Tenant Improvement Permit, Plumbing Permit, Mechanical Permit, Electrical Permit \u2014 Commercial Panel / Service Upgrade, Environmental / Fuel-System Review, Fire. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting.",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 1
+  },
+  "permit_elapsed_seconds": 2.69,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Cheyenne",
+    "job_category": "commercial",
+    "job_type": "commercial metal building addition for auto repair shop with lifts compressed air electrical and radiant heat, job value 480000",
+    "job_value": 480000,
+    "state": "WY",
+    "vertical": "commercial",
+    "zip_code": "82001"
+  },
+  "response_body": {
+    "apply_google_maps": "'Neil+Avenue,+Room+200,+Cheyenne,+WY+82001",
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Cheyenne Planning & Development",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+      "portal_url": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building",
+      "primary_filing_source_tier": "county",
+      "primary_requirement_source_tier": "county",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building",
+    "apply_url_known": true,
+    "applying_office": "City of Cheyenne Planning & Development",
+    "approval_timeline": {
+      "complex": "1-3 weeks for commercial plan review; longer if structural, fire, or utility coordination comments come back",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in WY",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Confirm the required license is active and matches the application: Commercial general contractor or the appropriate licensed trade contractor pulls each permit on the owner's behalf, and the contractor license information must appear on the application. For this job, the building permit is typically pulled by the GC, the electrical permit by the electrical contractor, and the mechanical permit by the mechanical contractor. Wyoming does not have a comprehensive statewide contractor licensing system, so Cheyenne may verify local registration and business credentials during intake.",
+      "Bring 2 copies of all documents to City of Cheyenne Planning & Development"
+    ],
+    "city_contractor_registration": "Cheyenne does not appear to have a separate city contractor registration program documented in the provided city data, but because Wyoming licensing is locally controlled, verify current contractor credentials and business registration with Planning & Development before submitting. If the city requests contractor qualification documents, have your business license, insurance, and trade credentials ready.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building",
+        "value": "Electrical Permit \u2014 Commercial Panel / Service Upgrade"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building",
+        "value": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building",
+        "value": "Fee estimate not confirmed; verify the current building department fee schedule before quoting."
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building",
+        "value": "{'simple': '1-5 business days for over-the-counter intake if the submittal is complete and no plan review corrections are needed', 'complex': '1-3 weeks for commercial plan review; longer if structural, fire, or utility coordination comments come back'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building",
+        "value": "[{'stage': 'Footing / Foundation Inspection', 'description': 'Inspector checks footing depth, soil bearing, rebar placement, anchor bolts, slab thickening at lift locations, and any required frost-depth compliance before concrete is placed.', 'timing': 'Before concrete pour'}, {'stage': 'Structural Framing Inspection', 'description': 'Inspector verifies steel framing, column connections, bracing, roof framing, wall framing, and load path for the addition before concealment.', 'timing': 'Before insulation, drywall, or wall/roof closure'}, {'stage': 'Rough-In Electrical Inspection', 'description': 'Inspector checks feeder sizing, breaker protection, grounding and bonding, conduit/support, disconnects for lifts and equipment, receptacle placement, and any required GFCI/AFCI where applicable.', 'timing': 'Before walls are closed and before equipment is energized'}, {'stage': 'Rough-In Mechanical Inspection', 'description': 'Inspector verifies radiant heat piping or ducting, equipment clearances, venting, combustion air, gas piping if used, condensate drainage if applicable, and thermostat/control wiring.', 'timing': 'Before concealment and before startup'}, {'stage': 'Final Inspection', 'description': 'Inspector checks that the addition is complete, equipment is installed and labeled, lifts are installed per manufacturer instructions, electrical covers are on, mechanical equipment is operational, and all life-safety items are in place.', 'timing': 'After all work is complete and equipment is ready for use'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting only a building permit and forgetting the separate electrical and mechanical permits for lifts, compressors, and radiant heat",
+      "Understating the project valuation on a commercial addition \u2014 Cheyenne uses valuation-based fees, so lowballing the value can delay approval and trigger corrections",
+      "Not coordinating slab thickness and anchor locations for vehicle lifts before the foundation pour",
+      "Starting steel erection or rough-in work before the permit is issued and posted on site",
+      "Failing to provide equipment cut sheets and load data for the lifts and compressor, which can stall plan review"
+    ],
+    "confidence": "low",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Cheyenne Planning & Development",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with City of Cheyenne Planning & Development: Commercial Building / Tenant Improvement Permit, Plumbing Permit, Mechanical Permit, Electrical Permit \u2014 Commercial Panel / Service Upgrade, Environmental / Fuel-System Review, Fire. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 6 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Commercial Building / Tenant Improvement Permit.",
+    "customer_next_step": "File the required permit categories with City of Cheyenne Planning & Development: Commercial Building / Tenant Improvement Permit, Plumbing Permit, Mechanical Permit, Electrical Permit \u2014 Commercial Panel / Service Upgrade, Environmental / Fuel-System Review, Fire. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Cheyenne Planning & Development",
+      "fee_cost_caveat": "Fee estimate not confirmed; verify the current building department fee schedule before quoting.",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Cheyenne, WY",
+      "next_step": "File the required permit categories with City of Cheyenne Planning & Development: Commercial Building / Tenant Improvement Permit, Plumbing Permit, Mechanical Permit, Electrical Permit \u2014 Commercial Panel / Service Upgrade, Environmental / Fuel-System Review, Fire. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+      "source_cue": "Official sources attached for 6 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting.",
+    "inspection_booking": "Schedule inspections through the City of Cheyenne Planning & Development permit process tied to the building permit portal. Phone: (307) 637-6264. Expect 1-5 business days for standard inspection turnaround and allow extra time for commercial work. For a project this size, call ahead before pouring concrete and before covering any framing or rough-in work. If the portal requires separate trade inspection requests, submit building, electrical, and mechanical inspections individually and keep permit numbers handy.",
+    "inspections": [
+      {
+        "description": "Inspector checks footing depth, soil bearing, rebar placement, anchor bolts, slab thickening at lift locations, and any required frost-depth compliance before concrete is placed.",
+        "stage": "Footing / Foundation Inspection",
+        "timing": "Before concrete pour"
+      },
+      {
+        "description": "Inspector verifies steel framing, column connections, bracing, roof framing, wall framing, and load path for the addition before concealment.",
+        "stage": "Structural Framing Inspection",
+        "timing": "Before insulation, drywall, or wall/roof closure"
+      },
+      {
+        "description": "Inspector checks feeder sizing, breaker protection, grounding and bonding, conduit/support, disconnects for lifts and equipment, receptacle placement, and any required GFCI/AFCI where applicable.",
+        "stage": "Rough-In Electrical Inspection",
+        "timing": "Before walls are closed and before equipment is energized"
+      },
+      {
+        "description": "Inspector verifies radiant heat piping or ducting, equipment clearances, venting, combustion air, gas piping if used, condensate drainage if applicable, and thermostat/control wiring.",
+        "stage": "Rough-In Mechanical Inspection",
+        "timing": "Before concealment and before startup"
+      },
+      {
+        "description": "Inspector checks that the addition is complete, equipment is installed and labeled, lifts are installed per manufacturer instructions, electrical covers are on, mechanical equipment is operational, and all life-safety items are in place.",
+        "stage": "Final Inspection",
+        "timing": "After all work is complete and equipment is ready for use"
+      }
+    ],
+    "job_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Plumbing Permit; Mechanical Permit; Electrical Permit \u2014 Commercial Panel / Service Upgrade; Environmental / Fuel-System Review; Fire.",
+    "local_form_known": true,
+    "online_application_url": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "ahj_name": "Cheyenne permit office",
+        "application_authority_name": "Cheyenne permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "rationale": "Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Plumbing Permit",
+        "condition_text": "When the described scope includes plumbing work or building department confirms the plumbing trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a plumbing trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_plumbing",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes plumbing work or building department confirms the plumbing trigger from the request text."
+      },
+      {
+        "ahj_name": "Cheyenne permit office",
+        "application_authority_name": "Cheyenne permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "rationale": "Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Cheyenne permit office",
+        "application_authority_name": "Cheyenne permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Required for commercial panel, switchgear, meter-main, service-size, feeder, or electrical service upgrade work. confirm the exact permit requirements with the building department trade permit label before submittal.",
+        "permit_name": "Electrical Permit \u2014 Commercial Panel / Service Upgrade",
+        "permit_type": "Electrical Permit \u2014 Commercial Panel / Service Upgrade",
+        "portal_selection": "Electrical Permit - Commercial Service / Panel Upgrade",
+        "rationale": "Required for commercial panel, switchgear, meter-main, service-size, feeder, or electrical service upgrade work. confirm the exact permit requirements with the building department trade permit label before submittal.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Environmental / Fuel-System Review",
+        "decision": "REQUIRED",
+        "display_family": "Environmental/Fuel-System",
+        "family": "environmental",
+        "filing_family": "environmental",
+        "kind": "Environmental/Fuel-System",
+        "permit_name": "Environmental / Fuel-System Review",
+        "permit_type": "Environmental / Fuel-System Review",
+        "rationale": "Fuel-dispenser, service-station, UST, or environmental scope requires environmental/fuel-system review.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Fire",
+        "condition_text": "When the described scope includes fire work or building department confirms the fire trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "permit_name": "Fire",
+        "permit_type": "Fire",
+        "rationale": "ScopeSignals family floor: the request text includes a fire trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_fire",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes fire work or building department confirms the fire trigger from the request text."
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a plumbing trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "scope_signal_floor_plumbing",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Required for commercial panel, switchgear, meter-main, service-size, feeder, or electrical service upgrade work. confirm the exact permit requirements with the building department trade permit label before submittal.",
+        "permit_type": "Electrical Permit \u2014 Commercial Panel / Service Upgrade",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "environmental",
+        "included_because": "Official permit rule: Fuel-dispenser, service-station, UST, or environmental scope requires environmental/fuel-system review.",
+        "permit_type": "Environmental / Fuel-System Review",
+        "scope_trigger": "environmental_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "fire",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a fire trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Fire",
+        "scope_trigger": "scope_signal_floor_fire",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Bring a clean valuation breakdown with separate line items for shell, slab, electrical, mechanical, and lift equipment \u2014 it speeds up commercial fee review",
+      "For vehicle lifts, have the manufacturer installation instructions and anchor bolt requirements ready before the footing inspection",
+      "If the radiant heat is gas-fired, confirm venting and combustion air details early so the mechanical reviewer does not kick back the plans",
+      "Call Planning & Development before submitting to confirm whether they want the building, electrical, and mechanical permits filed together or as linked applications",
+      "Because Cheyenne charges a $50 Planning & Development review fee on all building permits, make sure that fee is included in your budget from the start"
+    ],
+    "related_permits": [],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical",
+      "Environmental/Fuel-System",
+      "Fire"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Plumbing Permit",
+      "Mechanical Permit",
+      "Electrical Permit \u2014 Commercial Panel / Service Upgrade",
+      "Environmental / Fuel-System Review",
+      "Fire"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Plumbing Permit; Mechanical Permit; Electrical Permit \u2014 Commercial Panel / Service Upgrade; Environmental / Fuel-System Review; Fire.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 1,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "county",
+      "primary_requirement_source_tier": "county",
+      "requirement_source_count": 1,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 1
+    },
+    "source_urls": [
+      "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Cheyenne, WY",
+        "publisher": "Official Cheyenne source",
+        "source_type": "official_local",
+        "title": "Official Cheyenne source",
+        "url": "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Plumbing Permit; Mechanical Permit; Electrical Permit \u2014 Commercial Panel / Service Upgrade; Environmental / Fuel-System Review; Fire.",
+    "total_cost_estimate": "$480,000 - $620,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed commercial permit application for the building addition and separate trade permits",
+      "Site plan showing the addition footprint, setbacks, access, and utility routing",
+      "Construction drawings stamped or prepared for commercial review, including structural plans for the metal building",
+      "Equipment cut sheets for lifts, radiant heat equipment, and electrical service/load information",
+      "Contractor business information, license/registration details, and insurance certificates",
+      "Valuation breakdown for the $480,000 scope, including labor, materials, and equipment"
+    ],
+    "zoning_hoa_flag": "Commercial additions can still be delayed by zoning setbacks, lot coverage, parking, access, and any overlay district rules. If the site is in a historic or special overlay area, exterior materials, height, and massing may need additional review. HOA restrictions are uncommon for a commercial auto repair site but private covenants can still affect exterior changes."
+  },
+  "response_sha256": "917d2494109aba6d8855c8702b1337ef22b4ee06c3829e774b4834d4be4a2ac5",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "VllKVWEN1mU",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/VllKVWEN1mU",
+  "source_urls": [
+    "https://www.laramiecountywy.gov/County-Government/County-Departments/Planning-Development/Laramie-County-Building"
+  ],
+  "started_at_utc": "2026-07-02T00:04:56.639768+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

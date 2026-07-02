@@ -1,0 +1,598 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "RTU/gas",
+    "bucket": "restaurant RTU",
+    "city": "Boise",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Mechanical",
+      "Fuel gas/Electrical coordination"
+    ],
+    "id": "C-034",
+    "job_type": "commercial rooftop unit replacement on restaurant same curb with gas reconnection, job value 35000",
+    "job_value": 35000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "ID",
+    "zip_code": "83702"
+  },
+  "completed_at_utc": "2026-07-02T00:02:52.066922+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 7.25,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://aca-prod.accela.com/BOISE",
+    "applying_office": "City of Boise Building Division",
+    "confidence": "medium",
+    "customer_headline": "Permit required: Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement.",
+    "customer_next_step": "File the required permit categories with City of Boise Building Division: Mechanical Permit \u2014 Rooftop Unit Replacement, Plumbing Permit, Food Establishment Health Plan Review / Permit. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting.",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 3
+  },
+  "permit_elapsed_seconds": 3.64,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Boise",
+    "job_category": "commercial",
+    "job_type": "commercial rooftop unit replacement on restaurant same curb with gas reconnection, job value 35000",
+    "job_value": 35000,
+    "state": "ID",
+    "vertical": "commercial",
+    "zip_code": "83702"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Boise Building Division",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "platform": "Accela / Citizen Access",
+      "portal_url": "https://aca-prod.accela.com/BOISE",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://aca-prod.accela.com/BOISE",
+    "apply_url_known": true,
+    "applying_office": "City of Boise Building Division",
+    "approval_timeline": {
+      "complex": "gas reconnection",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in ID",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Confirm the required license is active and the contractor's license number must appear on the application. Gas piping/appliance connection work must be covered by the properly licensed contractor for that trade. Owner-builders should not assume they can pull this commercial permit.",
+      "Bring 2 copies of all documents to City of Boise Building Division"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+        "value": "Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+        "value": "https://aca-prod.accela.com/BOISE"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+        "value": "Fee estimate not confirmed; verify the current building department fee schedule before quoting."
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+        "value": "{'simple': '1-5 business days for over-the-counter intake if the application is complete', 'complex': 'gas reconnection'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+        "value": "[{'stage': 'Mechanical Rough-In / Set Inspection', 'description': 'Inspector verifies the RTU is set on the curb, equipment matches approved submittals, duct connections are sealed, condensate drain is trapped and sloped correctly, clearances are maintained, and the disconnect/control wiring is properly installed before startup.', 'timing': 'Before final startup, before ceiling closure, and before the unit is put into service'}, {'stage': 'Gas Pressure Test / Gas Final', 'description': 'Inspector checks gas piping pressure test results, shutoff valve location, appliance connector or hard pipe connection, sediment trap if required, proper support of gas piping, and leak-free operation at the RTU.', 'timing': 'Before gas is turned on to the unit and before final approval'}, {'stage': 'Final Mechanical', 'description': 'Inspector verifies the unit is operating, thermostat/control sequence works, condensate drains properly, access and service clearances are maintained, labels are present, and the installation matches the approved permit documents.', 'timing': 'After startup and after all related work is complete'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Forgetting the gas reconnection scope and trying to close the permit without a gas inspection",
+      "Starting crane removal or rooftop demo before the permit is issued and posted",
+      "Not providing equipment submittals or gas piping details, which can stall commercial review",
+      "Submitting permit application without verifying current contractor registration status if the contractor also works under any separate city or state registration requirement",
+      "Skipping rooftop access, curb, or clearances on the plan set, which can trigger correction comments"
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test is triggered for this project when the building department confirms the relevant other scope condition.",
+        "permit_type": "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test",
+        "rationale": "Commercial gas-fired HVAC/RTU work commonly requires gas piping reconnection, appliance connection, or pressure-test sign-off even when the job is otherwise a like-for-like mechanical swap.",
+        "reason": "Commercial gas-fired HVAC/RTU work commonly requires gas piping reconnection, appliance connection, or pressure-test sign-off even when the job is otherwise a like-for-like mechanical swap.",
+        "trigger_condition": "Verify whether Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Boise Building Division",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with City of Boise Building Division: Mechanical Permit \u2014 Rooftop Unit Replacement, Plumbing Permit, Food Establishment Health Plan Review / Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 3 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement.",
+    "customer_next_step": "File the required permit categories with City of Boise Building Division: Mechanical Permit \u2014 Rooftop Unit Replacement, Plumbing Permit, Food Establishment Health Plan Review / Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Boise Building Division",
+      "fee_cost_caveat": "Fee estimate not confirmed; verify the current building department fee schedule before quoting.",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Boise, ID",
+      "next_step": "File the required permit categories with City of Boise Building Division: Mechanical Permit \u2014 Rooftop Unit Replacement, Plumbing Permit, Food Establishment Health Plan Review / Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "source_cue": "Official sources attached for 3 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting.",
+    "inspection_booking": "Schedule inspections through the City of Boise Accela portal: Phone: (208) 384-3830. Boise\u2019s building division is typically 1-5 business days for simple trade inspections, but commercial work should be scheduled as early as possible; verify current lead time with the permit desk before you need the crane or rooftop crew back on site.",
+    "inspections": [
+      {
+        "description": "Inspector verifies the RTU is set on the curb, equipment matches approved submittals, duct connections are sealed, condensate drain is trapped and sloped correctly, clearances are maintained, and the disconnect/control wiring is properly installed before startup.",
+        "stage": "Mechanical Rough-In / Set Inspection",
+        "timing": "Before final startup, before ceiling closure, and before the unit is put into service"
+      },
+      {
+        "description": "Inspector checks gas piping pressure test results, shutoff valve location, appliance connector or hard pipe connection, sediment trap if required, proper support of gas piping, and leak-free operation at the RTU.",
+        "stage": "Gas Pressure Test / Gas Final",
+        "timing": "Before gas is turned on to the unit and before final approval"
+      },
+      {
+        "description": "Inspector verifies the unit is operating, thermostat/control sequence works, condensate drains properly, access and service clearances are maintained, labels are present, and the installation matches the approved permit documents.",
+        "stage": "Final Mechanical",
+        "timing": "After startup and after all related work is complete"
+      }
+    ],
+    "job_summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Food Establishment Health Plan Review / Permit.",
+    "local_form_known": true,
+    "online_application_url": "https://aca-prod.accela.com/BOISE",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "condition_text": "When the described scope includes building work or AHJ confirms the building trigger from the request text.",
+        "decision": "REQUIRED",
+        "derived_from": [
+          "scope_signals_family_floor"
+        ],
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_type": "Building Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a building trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_building",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes building work or AHJ confirms the building trigger from the request text."
+      },
+      {
+        "approval_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "permit_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "rationale": "Same-capacity RTU/rooftop-unit replacement is mechanically primary.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Boise permit office",
+        "application_authority_name": "Boise permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Boise permit office",
+        "application_authority_name": "Boise permit office",
+        "approval_type": "Food Establishment Health Plan Review / Permit",
+        "decision": "REQUIRED",
+        "display_family": "Health",
+        "family": "health",
+        "filing_family": "health",
+        "kind": "Health",
+        "notes": "Required because the described scope triggers Food Establishment Health Plan Review / Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Food Establishment Health Plan Review / Permit",
+        "permit_type": "Food Establishment Health Plan Review / Permit",
+        "rationale": "Required because the described scope triggers Food Establishment Health Plan Review / Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "condition_text": "When the described scope includes electrical work or AHJ confirms the electrical trigger from the request text.",
+        "decision": "REQUIRED",
+        "derived_from": [
+          "scope_signals_family_floor"
+        ],
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_type": "Electrical Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_electrical",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes electrical work or AHJ confirms the electrical trigger from the request text."
+      },
+      {
+        "condition_text": "When the described scope includes fire work or AHJ confirms the fire trigger from the request text.",
+        "decision": "REQUIRED",
+        "derived_from": [
+          "scope_signals_family_floor"
+        ],
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "permit_type": "Fire",
+        "rationale": "ScopeSignals family floor: the request text includes a fire trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_fire",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes fire work or AHJ confirms the fire trigger from the request text."
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Same-capacity RTU/rooftop-unit replacement is mechanically primary.",
+        "permit_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "scope_trigger": "mechanical_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "health",
+        "included_because": "Official permit rule: Required because the described scope triggers Food Establishment Health Plan Review / Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Food Establishment Health Plan Review / Permit",
+        "scope_trigger": "health_scope",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Have the RTU cut sheet, gas input rating, and curb dimensions ready before opening the Accela application; Boise commercial review moves faster when the submittal is complete the first time.",
+      "If the gas line is being touched at all, schedule the gas pressure test before the crane day so you are not paying the crew to wait.",
+      "inspector early; commercial final approval often depends on startup being witnessed or documented.",
+      "Check your Boise contractor registration and license status before starting the application if your company also works under any separate local registration requirement.",
+      "Bring photos of the existing unit nameplate and curb condition; they help resolve equipment substitution questions quickly."
+    ],
+    "related_permit_families": [
+      "Building",
+      "Electrical",
+      "Wastewater/FOG",
+      "Fire",
+      "Planning/Zoning",
+      "Certificate of Occupancy",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Electrical Permit",
+      "Wastewater/FOG",
+      "Fire",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy",
+      "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "ahj_name": "Boise permit office",
+        "application_authority_name": "Boise permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "condition_text": "Verify building/TI only if same-capacity RTU replacement changes structure, curb, occupancy, walls, or use.",
+        "decision": "VERIFY",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "rationale": "Verify building/TI only if same-capacity RTU replacement changes structure, curb, occupancy, walls, or use.",
+        "required": false,
+        "required_if": "Verify building/TI only if same-capacity RTU replacement changes structure, curb, occupancy, walls, or use.",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "ahj_name": "Boise permit office",
+        "application_authority_name": "Boise permit office",
+        "approval_type": "Electrical Permit",
+        "condition_text": "Verify electrical filing only if the same-capacity RTU replacement includes new/altered circuit, disconnect, wiring, or service work.",
+        "decision": "VERIFY",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "Verify electrical filing only if the same-capacity RTU replacement includes new/altered circuit, disconnect, wiring, or service work.",
+        "required": false,
+        "required_if": "Verify electrical filing only if the same-capacity RTU replacement includes new/altered circuit, disconnect, wiring, or service work.",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "approval_type": "Wastewater/FOG",
+        "condition_text": "When the described scope includes wastewater work or building department confirms the wastewater trigger from the request text.",
+        "decision": "VERIFY",
+        "display_family": "Wastewater/FOG",
+        "family": "wastewater",
+        "filing_family": "wastewater",
+        "kind": "Wastewater/FOG",
+        "permit_name": "Wastewater/FOG",
+        "permit_type": "Wastewater/FOG",
+        "rationale": "ScopeSignals family floor: the request text includes a wastewater trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": false,
+        "scope_trigger": "scope_signal_floor_wastewater",
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "When the described scope includes wastewater work or building department confirms the wastewater trigger from the request text."
+      },
+      {
+        "approval_type": "Fire",
+        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "decision": "CONDITIONAL",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "permit_name": "Fire",
+        "permit_type": "Fire",
+        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "required": false,
+        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "scope_trigger": "scope_signal_floor_fire",
+        "segment": "commercial",
+        "status": "CONDITIONAL",
+        "trigger_condition": "When the described scope includes fire work or building department confirms the fire trigger from the request text."
+      },
+      {
+        "approval_type": "Planning / Zoning Use Clearance",
+        "condition_text": "When the described scope includes planning work or building department confirms the planning trigger from the request text.",
+        "decision": "VERIFY",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "ScopeSignals family floor: the request text includes a planning trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": false,
+        "scope_trigger": "scope_signal_floor_planning",
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "When the described scope includes planning work or building department confirms the planning trigger from the request text."
+      },
+      {
+        "approval_type": "Certificate of Occupancy",
+        "condition_text": "When the described scope includes co work or building department confirms the co trigger from the request text.",
+        "decision": "VERIFY",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy",
+        "permit_type": "Certificate of Occupancy",
+        "rationale": "ScopeSignals family floor: the request text includes a co trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": false,
+        "scope_trigger": "scope_signal_floor_co",
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "When the described scope includes co work or building department confirms the co trigger from the request text."
+      },
+      {
+        "approval_type": "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test",
+        "condition_text": "Verify whether Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test is triggered for this project when the building department confirms the relevant other scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test",
+        "permit_type": "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test",
+        "rationale": "Commercial gas-fired HVAC/RTU work commonly requires gas piping reconnection, appliance connection, or pressure-test sign-off even when the job is otherwise a like-for-like mechanical swap.",
+        "reason": "Commercial gas-fired HVAC/RTU work commonly requires gas piping reconnection, appliance connection, or pressure-test sign-off even when the job is otherwise a like-for-like mechanical swap.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Mechanical",
+      "Plumbing",
+      "Health"
+    ],
+    "required_permit_names": [
+      "Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "Plumbing Permit",
+      "Food Establishment Health Plan Review / Permit"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Food Establishment Health Plan Review / Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 3,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 3,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+        "https://aca-prod.accela.com/BOISE",
+        "https://www.cityofboise.org/media/4307/mechanical-fees.pdf"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 3,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 3
+    },
+    "source_urls": [
+      "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+      "https://aca-prod.accela.com/BOISE",
+      "https://www.cityofboise.org/media/4307/mechanical-fees.pdf"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Boise, ID",
+        "publisher": "Official Boise source",
+        "source_type": "official_local",
+        "title": "Official Boise source",
+        "url": "https://www.cityofboise.org/departments/planning-and-development-services/building/"
+      },
+      {
+        "jurisdiction": "Boise, ID",
+        "publisher": "Official Boise source",
+        "source_type": "official_local",
+        "title": "Official Boise source",
+        "url": "https://aca-prod.accela.com/BOISE"
+      },
+      {
+        "jurisdiction": "Boise, ID",
+        "publisher": "Official Boise source",
+        "source_type": "official_local",
+        "title": "Official Boise source",
+        "url": "https://www.cityofboise.org/media/4307/mechanical-fees.pdf"
+      }
+    ],
+    "summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Food Establishment Health Plan Review / Permit.",
+    "total_cost_estimate": "$38,000 - $62,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing, fire.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed Boise Accela permit application with project address and valuation",
+      "Mechanical equipment cut sheet for the RTU, including make, model, tonnage, and gas input",
+      "Gas piping scope details and any pressure test information if piping is being altered",
+      "Contractor license information and business contact details",
+      "Site plan or roof plan showing curb location, access path, and equipment replacement area"
+    ],
+    "zoning_hoa_flag": "any historic district overlay, downtown design review, or rooftop screening requirement could affect visible equipment placement. Verify whether the property is in a historic overlay or design review area before changing rooftop equipment location or screening."
+  },
+  "response_sha256": "7f1ed9104c1b272fa2aa37fcc30f01c19d4c90fdcc3a59d77dbf0df0690032c1",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "t-jQkGuERfE",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/t-jQkGuERfE",
+  "source_urls": [
+    "https://aca-prod.accela.com/BOISE",
+    "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+    "https://www.cityofboise.org/media/4307/mechanical-fees.pdf"
+  ],
+  "started_at_utc": "2026-07-02T00:02:44.812731+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

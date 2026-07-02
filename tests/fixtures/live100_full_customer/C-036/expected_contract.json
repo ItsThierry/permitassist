@@ -1,0 +1,16 @@
+{
+  "case_id": "C-036",
+  "contract_note": "",
+  "fee_must_not_contain": "fire-sprinkler-modify",
+  "must_add": [],
+  "must_demote": [],
+  "must_keep_required": [
+    "racking",
+    "fire_suppression"
+  ],
+  "must_not_required": [
+    "plumbing",
+    "mechanical",
+    "electrical"
+  ]
+}

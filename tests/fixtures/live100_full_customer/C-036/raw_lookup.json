@@ -1,0 +1,500 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Threshold under/over check",
+    "bucket": "low rack threshold",
+    "city": "Fort Worth",
+    "expected_decision_pre_registered": "SOURCE_ADJUDICATE",
+    "expected_permit_families_pre_registered": [
+      "Racking/Fire possible"
+    ],
+    "id": "C-036",
+    "job_type": "commercial warehouse racking 8 feet tall anchored to slab no sprinklers altered, job value 30000",
+    "job_value": 30000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_needs_targeted_official_source_check",
+    "state": "TX",
+    "zip_code": "76102"
+  },
+  "completed_at_utc": "2026-07-02T00:03:09.312252+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 6.57,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://www.fortworthtexas.gov/departments/development-services/online-services",
+    "applying_office": "City of Fort Worth Development Services Department",
+    "confidence": "low",
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Commercial Interior Alteration / Rack Installation.",
+    "customer_next_step": "File the required permit categories with City of Fort Worth Development Services Department: Building Permit \u2014 Commercial Interior Alteration / Rack Installation, Plumbing Permit, Mechanical Permit, Electrical Permit. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: Fee planning estimate (not a quoted AHJ fee schedule; NOT a jurisdiction-specific building department fee): $7,000-$11,000+ (national-scope benchmark based on job type, not Fort Worth, TX official fee schedule). Components: ~$5,000 base permit + plan review (Fort Worth, TX commercial floor) + $4,000 fire-sprinkler-modify adder. Call Fort Worth, TX for the exact fee before bidding. \u2014 verify in before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Building Permit \u2014 Commercial Interior Alteration / Rack Installation",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 4
+  },
+  "permit_elapsed_seconds": 3.7,
+  "provisional_grade": "B",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Fort Worth",
+    "job_category": "commercial",
+    "job_type": "commercial warehouse racking 8 feet tall anchored to slab no sprinklers altered, job value 30000",
+    "job_value": 30000,
+    "state": "TX",
+    "vertical": "commercial",
+    "zip_code": "76102"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Fort Worth Development Services Department",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Building Permit \u2014 Commercial Interior Alteration / Rack Installation",
+      "portal_url": "https://www.fortworthtexas.gov/departments/development-services/online-services",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Building Permit \u2014 Commercial Interior Alteration / Rack Installation",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.fortworthtexas.gov/departments/development-services/online-services",
+    "apply_url_known": true,
+    "applying_office": "City of Fort Worth Development Services Department",
+    "approval_timeline": {
+      "complex": "1-2+ weeks if structural calculations, anchorage details, or fire review are required.",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in TX",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Confirm the required license is active and matches the application: Commercial contractor or rack installer pulls the permit on behalf of the owner if the city requires a licensed contractor for the filing. The permit is still required. If an engineer sealed the rack design, the permit application should include the engineer's stamped drawings and the contractor's company/license information as required by Fort Worth.",
+      "Bring 2 copies of all documents to City of Fort Worth Development Services Department"
+    ],
+    "city_contractor_registration": "Fort Worth does not appear in the provided data as requiring a separate city contractor registration beyond the permit application itself. Verify current contractor account requirements in the portal before filing.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.fortworthtexas.gov/departments/development-services",
+        "value": "Building Permit \u2014 Commercial Interior Alteration / Rack Installation"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.fortworthtexas.gov/departments/development-services",
+        "value": "https://www.fortworthtexas.gov/departments/development-services/online-services"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.fortworthtexas.gov/departments/development-services",
+        "value": "Fee Estimate: Fee planning estimate (not a quoted building department fee schedule; NOT a jurisdiction-specific building department fee): $7,000-$11,000+ (national-scope benchmark based on job type, not Fort Worth, TX official fee schedule). Components: ~$5,000 base permit + plan review (Fort Worth, TX commercial floor) + $4,000 fire-sprinkler-modify adder. Call Fort Worth, TX for the exact fee before bidding. \u2014 verify in https://www.fortworthtexas.gov/departments/development-services/permits/residential-information before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.fortworthtexas.gov/departments/development-services",
+        "value": "{'simple': 'Typically 1-5 business days for over-the-counter or routed commercial review if the rack layout is straightforward and no fire/life-safety issues are triggered.', 'complex': '1-2+ weeks if structural calculations, anchorage details, or fire review are required.'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.fortworthtexas.gov/departments/development-services",
+        "value": "[{'stage': 'Structural / Rack Layout Inspection', 'description': 'Inspector verifies rack locations match approved plan, anchor type and spacing match the engineered details, slab anchorage is installed correctly, rack plumb/level, required aisle widths and egress clearances are maintained, and no unapproved field changes were made.', 'timing': 'After rack installation and anchorage is complete, before the area is put into full use or loaded.'}, {'stage': 'Final Building Inspection', 'description': 'Inspector checks final rack installation against approved drawings, confirms any required engineering documents are on site, verifies no sprinkler heads, fire lanes, exits, or access paths were obstructed, and confirms the installation is safe for occupancy and storage use.', 'timing': 'After all work is complete and before closeout.'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the job as a generic trade permit instead of a commercial building permit for slab-anchored rack installation",
+      "Skipping engineered anchorage details \u2014 inspectors can reject the job if anchor spacing, embedment, or load data are missing",
+      "Installing racks too close to exits, fire lanes, or sprinkler clearance zones even when sprinklers are not being altered",
+      "Assuming Permit required for the resolved scope; confirm exact filing details with City of Fort Worth Development Services Department before starting work. because the work is inside a warehouse \u2014 commercial structural anchorage still triggers review"
+    ],
+    "companion_permits": [
+      {
+        "certainty": "possible",
+        "condition_text": "Verify whether Fire Department / Fire Marshal Review is triggered for this project when the building department confirms the relevant fire scope condition.",
+        "permit_type": "Fire Department / Fire Marshal Review",
+        "rationale": "is conditional only when the listed condition applies if: rack layout impacts fire protection access, egress, or sprinkler clearance.",
+        "reason": "is conditional only when the listed condition applies if: rack layout impacts fire protection access, egress, or sprinkler clearance.",
+        "required_if": "rack layout impacts fire protection access, egress, or sprinkler clearance",
+        "requirement_label": "is conditional only when the listed condition applies based on scope",
+        "trigger_condition": "Verify whether Fire Department / Fire Marshal Review is triggered for this project when the building department confirms the relevant fire scope condition."
+      }
+    ],
+    "confidence": "low",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Fort Worth Development Services Department",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with City of Fort Worth Development Services Department: Building Permit \u2014 Commercial Interior Alteration / Rack Installation, Plumbing Permit, Mechanical Permit, Electrical Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Commercial Interior Alteration / Rack Installation.",
+    "customer_next_step": "File the required permit categories with City of Fort Worth Development Services Department: Building Permit \u2014 Commercial Interior Alteration / Rack Installation, Plumbing Permit, Mechanical Permit, Electrical Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Fort Worth Development Services Department",
+      "fee_cost_caveat": "Fee Estimate: Fee planning estimate (not a quoted building department fee schedule; NOT a jurisdiction-specific building department fee): $7,000-$11,000+ (national-scope benchmark based on job type, not Fort Worth, TX official fee schedule). Components: ~$5,000 base permit + plan review (Fort Worth, TX commercial floor) + $4,000 fire-sprinkler-modify adder. Call Fort Worth, TX for the exact fee before bidding. \u2014 verify in before quoting",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Fort Worth, TX",
+      "next_step": "File the required permit categories with City of Fort Worth Development Services Department: Building Permit \u2014 Commercial Interior Alteration / Rack Installation, Plumbing Permit, Mechanical Permit, Electrical Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Building Permit \u2014 Commercial Interior Alteration / Rack Installation",
+      "source_cue": "Official sources attached for 4 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Fee planning estimate (not a quoted AHJ fee schedule; NOT a jurisdiction-specific building department fee): $7,000-$11,000+ (national-scope benchmark based on job type, not Fort Worth, TX official fee schedule). Components: ~$5,000 base permit + plan review (Fort Worth, TX commercial floor) + $4,000 fire-sprinkler-modify adder. Call Fort Worth, TX for the exact fee before bidding. \u2014 verify in before quoting",
+    "inspection_booking": "Schedule inspections through Fort Worth Development Services online services portal: Phone: (817) 392-2222. Advance notice requirement was not stated in the city data provided; verify current cutoff time when booking. Use the permit number and request a commercial building inspection for rack installation.",
+    "inspections": [
+      {
+        "description": "Inspector verifies rack locations match approved plan, anchor type and spacing match the engineered details, slab anchorage is installed correctly, rack plumb/level, required aisle widths and egress clearances are maintained, and no unapproved field changes were made.",
+        "stage": "Structural / Rack Layout Inspection",
+        "timing": "After rack installation and anchorage is complete, before the area is put into full use or loaded."
+      },
+      {
+        "description": "Inspector checks final rack installation against approved drawings, confirms any required engineering documents are on site, verifies no sprinkler heads, fire lanes, exits, or access paths were obstructed, and confirms the installation is safe for occupancy and storage use.",
+        "stage": "Final Building Inspection",
+        "timing": "After all work is complete and before closeout."
+      }
+    ],
+    "job_summary": "Required permit package: Building Permit \u2014 Commercial Interior Alteration / Rack Installation; Plumbing Permit; Mechanical Permit; Electrical Permit.",
+    "local_form_known": true,
+    "online_application_url": "https://www.fortworthtexas.gov/departments/development-services/online-services",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Building Permit \u2014 Commercial Interior Alteration / Rack Installation",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Building Permit \u2014 Commercial Interior Alteration / Rack Installation",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "ahj_name": "Fort Worth permit office",
+        "application_authority_name": "Fort Worth permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Required for commercial warehouse racking anchored to the slab. The permit covers the structural anchorage, rack layout, and any slab penetrations or anchor design review.",
+        "permit_name": "Building Permit \u2014 Commercial Interior Alteration / Rack Installation",
+        "permit_type": "Building Permit \u2014 Commercial Interior Alteration / Rack Installation",
+        "portal_selection": "Commercial Building Permit - Interior Alteration",
+        "rationale": "Required for commercial warehouse racking anchored to the slab. The permit covers the structural anchorage, rack layout, and any slab penetrations or anchor design review.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Plumbing Permit",
+        "condition_text": "When the described scope includes plumbing work or building department confirms the plumbing trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a plumbing trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_plumbing",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes plumbing work or building department confirms the plumbing trigger from the request text."
+      },
+      {
+        "approval_type": "Mechanical Permit",
+        "condition_text": "When the described scope includes mechanical work or building department confirms the mechanical trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a mechanical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_mechanical",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes mechanical work or building department confirms the mechanical trigger from the request text."
+      },
+      {
+        "approval_type": "Electrical Permit",
+        "condition_text": "When the described scope includes electrical work or building department confirms the electrical trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_electrical",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes electrical work or building department confirms the electrical trigger from the request text."
+      },
+      {
+        "condition_text": "When the described scope includes fire work or AHJ confirms the fire trigger from the request text.",
+        "decision": "REQUIRED",
+        "derived_from": [
+          "scope_signals_family_floor"
+        ],
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "permit_type": "Fire",
+        "rationale": "ScopeSignals family floor: the request text includes a fire trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_fire",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes fire work or AHJ confirms the fire trigger from the request text."
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required for commercial warehouse racking anchored to the slab. The permit covers the structural anchorage, rack layout, and any slab penetrations or anchor design review.",
+        "permit_type": "Building Permit \u2014 Commercial Interior Alteration / Rack Installation",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a plumbing trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "scope_signal_floor_plumbing",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a mechanical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "scope_signal_floor_mechanical",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "scope_signal_floor_electrical",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Bring the rack manufacturer's cut sheets and anchor specs with the permit submittal; that speeds structural review.",
+      "If the rack layout is repetitive, submit a clean plan with aisle dimensions and storage heights clearly marked \u2014 vague warehouse layouts get kicked back.",
+      "Have the contractor account and contact info ready before opening the portal so the application can be filed in one sitting.",
+      "If the warehouse has fire protection equipment nearby, confirm clearances with the fire protection contractor before final layout."
+    ],
+    "related_permit_families": [
+      "Fire"
+    ],
+    "related_permit_names": [
+      "Fire Department / Fire Marshal Review",
+      "Fire Suppression / Fire Prevention Review"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Fire Department / Fire Marshal Review",
+        "condition_text": "Verify whether Fire Department / Fire Marshal Review is triggered for this project when the building department confirms the relevant fire scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "permit_name": "Fire Department / Fire Marshal Review",
+        "permit_type": "Fire Department / Fire Marshal Review",
+        "rationale": "is conditional only when the listed condition applies if: rack layout impacts fire protection access, egress, or sprinkler clearance.",
+        "reason": "is conditional only when the listed condition applies if: rack layout impacts fire protection access, egress, or sprinkler clearance.",
+        "required": false,
+        "required_if": "rack layout impacts fire protection access, egress, or sprinkler clearance",
+        "requirement_label": "is conditional only when the listed condition applies based on scope",
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Fire Department / Fire Marshal Review is triggered for this project when the building department confirms the relevant fire scope condition."
+      },
+      {
+        "ahj_name": "Fort Worth permit office",
+        "application_authority_name": "Fort Worth permit office",
+        "approval_type": "Fire Suppression / Fire Prevention Review",
+        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "decision": "CONDITIONAL",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "notes": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "required": false,
+        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "segment": "commercial",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 Commercial Interior Alteration / Rack Installation",
+      "Plumbing Permit",
+      "Mechanical Permit",
+      "Electrical Permit"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit \u2014 Commercial Interior Alteration / Rack Installation; Plumbing Permit; Mechanical Permit; Electrical Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 1,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 4,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 3,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.fortworthtexas.gov/departments/development-services",
+        "https://www.fortworthtexas.gov/departments/development-services/online-services",
+        "https://www.fortworthtexas.gov/departments/development-services/permits/residential-information",
+        "https://www.fortworthtexas.gov/departments/development-services/permits/commercial"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 3,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 4
+    },
+    "source_urls": [
+      "https://www.fortworthtexas.gov/departments/development-services",
+      "https://www.fortworthtexas.gov/departments/development-services/online-services",
+      "https://www.fortworthtexas.gov/departments/development-services/permits/residential-information",
+      "https://www.fortworthtexas.gov/departments/development-services/permits/commercial"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Fort Worth, TX",
+        "publisher": "Official Fort Worth source",
+        "source_type": "official_local",
+        "title": "Official Fort Worth source",
+        "url": "https://www.fortworthtexas.gov/departments/development-services"
+      },
+      {
+        "jurisdiction": "Fort Worth, TX",
+        "publisher": "Official Fort Worth source",
+        "source_type": "official_local",
+        "title": "Official Fort Worth source",
+        "url": "https://www.fortworthtexas.gov/departments/development-services/online-services"
+      },
+      {
+        "jurisdiction": "Fort Worth, TX",
+        "publisher": "Official Fort Worth source",
+        "source_type": "official_local",
+        "title": "Official Fort Worth source",
+        "url": "https://www.fortworthtexas.gov/departments/development-services/permits/residential-information"
+      },
+      {
+        "jurisdiction": "Fort Worth, TX",
+        "publisher": "Official Fort Worth source",
+        "source_type": "official_local",
+        "title": "Official Fort Worth source",
+        "url": "https://www.fortworthtexas.gov/departments/development-services/permits/commercial"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 Commercial Interior Alteration / Rack Installation; Plumbing Permit; Mechanical Permit; Electrical Permit.",
+    "total_cost_estimate": "$32,000 - $45,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed commercial building permit application in the Fort Worth portal",
+      "Rack layout plan showing aisle widths, rack height, and storage configuration",
+      "Anchorage details and any engineer-stamped structural drawings for slab attachment",
+      "Project valuation and contractor/company information",
+      "Site address and tenant/warehouse suite information",
+      "Any fire marshal or warehouse operations notes if the rack layout affects access or clearances"
+    ],
+    "zoning_hoa_flag": "For a warehouse in Fort Worth, HOA issues are usually not applicable. Zoning or site-plan review may still matter if the rack installation changes approved use, storage intensity, or fire access conditions inside a regulated industrial or mixed-use site."
+  },
+  "response_sha256": "caf88807818ac155e5da08548d40ec1fd4490b1e8d196dd51332623579abbb3a",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "SbIOaxDxhNo",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/SbIOaxDxhNo",
+  "source_urls": [
+    "https://www.fortworthtexas.gov/departments/development-services",
+    "https://www.fortworthtexas.gov/departments/development-services/online-services",
+    "https://www.fortworthtexas.gov/departments/development-services/permits/commercial",
+    "https://www.fortworthtexas.gov/departments/development-services/permits/residential-information"
+  ],
+  "started_at_utc": "2026-07-02T00:03:02.742385+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

@@ -1,0 +1,15 @@
+{
+  "case_id": "C-025",
+  "min_fee_amounts": 0,
+  "must_keep_required": [
+    "Commercial Building / Tenant Improvement Permit Commercial Building / Tenant Improvement Permit Building",
+    "Plumbing Permit \u2014 Commercial Fixture Installation Plumbing Permit \u2014 Commercial Fixture Installation Plumbing",
+    "Mechanical Permit Mechanical Permit Mechanical",
+    "Electrical Permit \u2014 Service Upgrade Electrical Permit \u2014 Service Upgrade Electrical",
+    "Planning/Zoning Use Verification Planning/Zoning Use Verification Planning/Zoning",
+    "Certificate of Occupancy / Change-of-Occupancy Review Certificate of Occupancy / Change-of-Occupancy Review Certificate of Occupancy",
+    "Health  Health",
+    "Fire  Fire"
+  ],
+  "protection": true
+}

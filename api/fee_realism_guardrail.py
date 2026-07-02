@@ -503,6 +503,10 @@ def _trigger_names_for_fee(result: Dict[str, Any], job_type: str) -> List[str]:
         names = [name for name in names if name != "hood_fire_suppression"]
     if not _contains_unnegated_any(text, ("grease interceptor", "grease trap", "fats oils grease", "f.o.g", "fog interceptor", "fog wastewater", "fog worksheet", "fog industrial waste", "fog sewer approval")):
         names = [name for name in names if name != "grease_interceptor"]
+    if re.search(r"\b(?:no|without)\s+(?:sprinklers?\s+(?:altered|modified|changed)|sprinkler\s+alteration|fire\s+sprinkler\s+work)\b", text, re.I):
+        names = [name for name in names if name != "fire_sprinkler_modify"]
+    if re.search(r"\b(?:like[- ]for[- ]like|same\s+(?:curb|location|capacity|tonnage))\b", text, re.I) and re.search(r"\b(?:rtu|rooftop\s+unit|hvac)\b", text, re.I) and not re.search(r"\b(?:grease|fog|food\s+service|kitchen|hood|floor\s+drain)\b", text, re.I):
+        names = [name for name in names if name not in {"grease_interceptor", "hood_fire_suppression"}]
     # stable de-dupe preserving declaration order
     ordered = []
     for key in TRIGGER_FEE_ADDERS.keys():

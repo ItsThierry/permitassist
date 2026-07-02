@@ -1,0 +1,685 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Restaurant packet",
+    "bucket": "restaurant second gen",
+    "city": "Houston",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "Mechanical",
+      "Plumbing",
+      "Electrical",
+      "Fire",
+      "Health"
+    ],
+    "id": "C-011",
+    "job_type": "commercial restaurant second generation buildout adding hood suppression grease interceptor and gas appliances, job value 260000",
+    "job_value": 260000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "TX",
+    "zip_code": "77002"
+  },
+  "completed_at_utc": "2026-07-01T23:59:39.013053+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 11.17,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://www.houstonpermittingcenter.org/",
+    "applying_office": "Houston Permitting Center",
+    "confidence": "high",
+    "customer_headline": "Permit required: Required permit package \u2014 Commercial Building / Tenant Improvement Permit.",
+    "customer_next_step": "File the required permit categories with Houston Permitting Center: Commercial Building / Tenant Improvement Permit, Plumbing Permit, Mechanical Permit \u2014 Commercial Tenant Improvement, Electrical Permit, Wastewater / FOG / Pretreatment Approval, Fire Suppression / Fire Prevention Review, Health Plan Review / Food Establishment Permit, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: $300 - $1,500+ in permit fees for the full commercial TI set; Houston building minimum is $89.81, plumbing minimum is $96.22, electrical minimum is $91.06, plus administrative fee $33.10, but a $260,000 commercial restaurant buildout will usually price above minimums and be valuation-based \u2014 verify with the building department before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 5
+  },
+  "permit_elapsed_seconds": 2.86,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Houston",
+    "job_category": "commercial",
+    "job_type": "commercial restaurant second generation buildout adding hood suppression grease interceptor and gas appliances, job value 260000",
+    "job_value": 260000,
+    "state": "TX",
+    "vertical": "commercial",
+    "zip_code": "77002"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Houston Permitting Center",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+      "portal_url": "https://www.houstonpermittingcenter.org/",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.houstonpermittingcenter.org/",
+    "apply_url_known": true,
+    "applying_office": "Houston Permitting Center",
+    "approval_timeline": {
+      "complex": "4-12 weeks for commercial plan review; longer if fire suppression, hood, grease interceptor, or occupancy issues need resubmittal.",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in TX",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Type I commercial exhaust hood listed/labeled per UL 710 with NFPA 96 compliance and building department-approved capture velocity per IMC 507",
+      "ANSUL R-102 (or equivalent UL 300) hood suppression: post-install discharge test certificate + every-6-month cleaning + annual inspection per NFPA 96 \u00a711",
+      "ANSUL discharge auto-shutoffs all hood gas + electric fuel sources per IMC 507.7 \u2014 use the listed building department source during witness test",
+      "Grease interceptor sized per IPC 1003.3.4 by drainage fixture units (4-comp + mop typically 50+ GPM hydromechanical OR 750\u20131,500 gal exterior gravity); located \u226425 ft developed length from fixtures",
+      "Makeup air system balanced to \u00b110% of hood exhaust per IMC 506.3.4; tempered if > 35\u00b0F differential to prevent backdraft",
+      "ADA fixture counts per IBC Table 2902.1 + 60 in turning radius + lavatory pipe wrap insulation per ADA \u00a7606.5 + mirror reflective edge \u226440 in AFF per ADA \u00a7603.3",
+      "Local health department food establishment plan review + final inspection sign-off REQUIRED before Certificate of Occupancy (parallel filing \u2014 file early)",
+      "Walk-in cooler envelope per IECC 403.10.1 (\u2265R-25 medium-temp panels, \u2265R-32 freezer panels); door gasket seal verification at final",
+      "Existing sprinkler system reuse: hydraulic recalc for new layout + current 5-year cert per NFPA 25; new heads in cooking equipment area must be K-25+ per NFPA 13",
+      "Floor drains within 5 ft of kitchen equipment per IPC 411 with backwater valves where required",
+      "Fire alarm + emergency lighting per NFPA 72/101 with current battery capacity test on file",
+      "Change of occupancy memo (B/M \u2192 A-2): include occupant load + exits + restroom count + sprinkler/fire-alarm impacts per IEBC \u00a71001.2/1001.3 + IBC \u00a7303.3 (Group A-2)",
+      "Maricopa County (or local equivalent) Environmental Services Department food-establishment plan review + final inspection sign-off REQUIRED before opening \u2014 coordinate with City CO schedule (MCESD: maricopa.gov)",
+      "Outdoor patio / sidewalk dining: verify city zoning (use permit may apply, e.g. Phoenix ZO \u00a71207); include patio in occupant load + exiting + accessible route + sprinkler/awning review",
+      "Phoenix-specific (or equivalent local rule): contractor must be AZ ROC licensed AND associated with the Phoenix SHAPE PHX permit account before submittal (A.R.S. Title 32 Ch. 10) \u2014 frequently-missed pre-submittal blocker",
+      "Realistic fee warning: a 3,200 sq ft restaurant TI in Phoenix typically lands $8K\u2013$25K+ across plan review + permit + fire + utility + health + zoning. Reject token min-fee outputs; calculate from the live fee schedule before quoting",
+      "Confirm the required license is active and matches the application: Commercial trade contractors pull their own permits in Houston using their state license credentials: the Texas licensed plumber pulls the plumbing permit, the TACL-licensed HVAC contractor pulls the mechanical permit, and the fire suppression contractor pulls the fire permit. Houston does not require a separate city contractor license, but the contractor's license number must appear on the application.",
+      "Bring 2 copies of all documents to Houston Permitting Center (HPC)"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-01",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Houston Permitting Center",
+        "source_url": "https://www.houstonpermittingcenter.org/",
+        "value": "Building Permit \u2014 Tenant Improvement / Restaurant Interior Alteration"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Houston Permitting Center",
+        "source_url": "https://www.houstonpermittingcenter.org/",
+        "value": "https://www.houstonpermittingcenter.org/"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Houston Permitting Center",
+        "source_url": "https://www.houstonpermittingcenter.org/",
+        "value": "Fee Estimate: $300 - $1,500+ in permit fees for the full commercial TI set; Houston building minimum is $89.81, plumbing minimum is $96.22, electrical minimum is $91.06, plus administrative fee $33.10, but a $260,000 commercial restaurant buildout will usually price above minimums and be valuation-based \u2014 verify with the building department before quoting"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Houston Permitting Center",
+        "source_url": "https://www.houstonpermittingcenter.org/",
+        "value": "{'simple': 'Not a simple OTC job; commercial restaurant TI typically goes to plan review. Expect 4-12 weeks in Houston depending on completeness and corrections.', 'complex': '4-12 weeks for commercial plan review; longer if fire suppression, hood, grease interceptor, or occupancy issues need resubmittal.'}"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Houston Permitting Center",
+        "source_url": "https://www.houstonpermittingcenter.org/",
+        "value": "[{'stage': 'Building / Framing / Rough-In', 'description': 'Inspector checks tenant improvement framing, rated wall and ceiling assemblies, hood support framing, penetrations through fire-rated assemblies, egress path, and any structural changes tied to the restaurant buildout.', 'timing': 'Before drywall close-in and before any rated assemblies are concealed'}, {'stage': 'Plumbing Rough-In', 'description': 'Inspector verifies grease interceptor location and sizing, drain slope, venting, cleanouts, trap primer if used, and that kitchen waste lines are routed correctly before concealment.', 'timing': 'Before slab patching, backfill, or wall/ceiling concealment'}, {'stage': 'Mechanical Rough-In', 'description': 'Inspector checks hood exhaust duct routing, duct material and clearances, make-up air provisions, appliance venting, combustion air, and gas appliance clearances from combustibles.', 'timing': 'Before insulation, ceiling closure, or equipment startup'}, {'stage': 'Fire Suppression Final', 'description': 'Inspector verifies hood suppression nozzles are aimed correctly, fusible links or detection devices are installed, manual pull station is accessible, system is tagged, and the system is tied to the hood/appliance shutdown as required.', 'timing': 'After hood, appliances, and suppression are fully installed and ready for test'}, {'stage': 'Final Building / MEP', 'description': 'Inspector confirms all equipment is installed per approved plans, access panels are in place, labels and clearances are correct, grease interceptor is operational, gas appliances are connected, and the space is ready for occupancy and any certificate of occupancy sign-off.', 'timing': 'After all trades are complete and before opening'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the restaurant TI as a single trade permit instead of a commercial building permit plus the required plumbing, mechanical, and fire suppression permits",
+      "Forgetting the grease interceptor permit or undersizing the interceptor for the kitchen fixture load",
+      "Installing hood suppression without a separate fire permit and final acceptance test",
+      "Missing gas appliance venting, combustion air, or make-up air details on the plan set",
+      "Starting work before plan review approval and permit issuance",
+      "Assuming Houston city rules apply everywhere in the metro area \u2014 some addresses in unincorporated Harris County may have different permit handling, so verify the exact jurisdiction before filing"
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Health Department / Food Establishment Review is triggered for this project when the building department confirms the relevant health scope condition.",
+        "permit_type": "Health Department / Food Establishment Review",
+        "rationale": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.",
+        "reason": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.",
+        "trigger_condition": "Verify whether Health Department / Food Establishment Review is triggered for this project when the building department confirms the relevant health scope condition."
+      },
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Grease Interceptor / FOG Approval is triggered for this project when the building department confirms the relevant wastewater scope condition.",
+        "permit_type": "Grease Interceptor / FOG Approval",
+        "rationale": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.",
+        "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.",
+        "trigger_condition": "Verify whether Grease Interceptor / FOG Approval is triggered for this project when the building department confirms the relevant wastewater scope condition."
+      },
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Houston Permitting Center",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with Houston Permitting Center: Commercial Building / Tenant Improvement Permit, Plumbing Permit, Mechanical Permit \u2014 Commercial Tenant Improvement, Electrical Permit, Wastewater / FOG / Pretreatment Approval, Fire Suppression / Fire Prevention Review, Health Plan Review / Food Establishment Permit, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 9 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Commercial Building / Tenant Improvement Permit.",
+    "customer_next_step": "File the required permit categories with Houston Permitting Center: Commercial Building / Tenant Improvement Permit, Plumbing Permit, Mechanical Permit \u2014 Commercial Tenant Improvement, Electrical Permit, Wastewater / FOG / Pretreatment Approval, Fire Suppression / Fire Prevention Review, Health Plan Review / Food Establishment Permit, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Houston Permitting Center",
+      "fee_cost_caveat": "Fee Estimate: $300 - $1,500+ in permit fees for the full commercial TI set; Houston building minimum is $89.81, plumbing minimum is $96.22, electrical minimum is $91.06, plus administrative fee $33.10, but a $260,000 commercial restaurant buildout will usually price above minimums and be valuation-based \u2014 verify with the building department before quoting",
+      "freshness_label": "Checked 2026-07-01",
+      "jurisdiction": "Houston, TX",
+      "next_step": "File the required permit categories with Houston Permitting Center: Commercial Building / Tenant Improvement Permit, Plumbing Permit, Mechanical Permit \u2014 Commercial Tenant Improvement, Electrical Permit, Wastewater / FOG / Pretreatment Approval, Fire Suppression / Fire Prevention Review, Health Plan Review / Food Establishment Permit, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+      "source_cue": "Official sources attached for 9 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $300 - $1,500+ in permit fees for the full commercial TI set; Houston building minimum is $89.81, plumbing minimum is $96.22, electrical minimum is $91.06, plus administrative fee $33.10, but a $260,000 commercial restaurant buildout will usually price above minimums and be valuation-based \u2014 verify with the building department before quoting",
+    "inspection_booking": "Schedule inspections through the Houston Permitting Center online permitting portal: Phone: (832) 394-8880. For commercial work, plan on advance scheduling and coordination with the assigned plan reviewer/inspection desk; do not assume same-day inspection availability. Verify the inspection request cutoff time with HPC before calling for rough-in or final inspections.",
+    "inspections": [
+      {
+        "description": "Inspector checks tenant improvement framing, rated wall and ceiling assemblies, hood support framing, penetrations through fire-rated assemblies, egress path, and any structural changes tied to the restaurant buildout.",
+        "stage": "Building / Framing / Rough-In",
+        "timing": "Before drywall close-in and before any rated assemblies are concealed"
+      },
+      {
+        "description": "Inspector verifies grease interceptor location and sizing, drain slope, venting, cleanouts, trap primer if used, and that kitchen waste lines are routed correctly before concealment.",
+        "stage": "Plumbing Rough-In",
+        "timing": "Before slab patching, backfill, or wall/ceiling concealment"
+      },
+      {
+        "description": "Inspector checks hood exhaust duct routing, duct material and clearances, make-up air provisions, appliance venting, combustion air, and gas appliance clearances from combustibles.",
+        "stage": "Mechanical Rough-In",
+        "timing": "Before insulation, ceiling closure, or equipment startup"
+      },
+      {
+        "description": "Inspector verifies hood suppression nozzles are aimed correctly, fusible links or detection devices are installed, manual pull station is accessible, system is tagged, and the system is tied to the hood/appliance shutdown as required.",
+        "stage": "Fire Suppression Final",
+        "timing": "After hood, appliances, and suppression are fully installed and ready for test"
+      },
+      {
+        "description": "Inspector confirms all equipment is installed per approved plans, access panels are in place, labels and clearances are correct, grease interceptor is operational, gas appliances are connected, and the space is ready for occupancy and any certificate of occupancy sign-off.",
+        "stage": "Final Building / MEP",
+        "timing": "After all trades are complete and before opening"
+      }
+    ],
+    "job_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Plumbing Permit; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit; Wastewater / FOG / Pretreatment Approval; Fire Suppression / Fire Prevention Review; Health Plan Review / Food Establishment Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "local_form_known": true,
+    "online_application_url": "https://www.houstonpermittingcenter.org/",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "ahj_name": "Houston permit office",
+        "application_authority_name": "Houston permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "rationale": "Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Houston permit office",
+        "application_authority_name": "Houston permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Houston permit office",
+        "application_authority_name": "Houston permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope is stated and commonly requires mechanical review. Required because the described scope triggers Mechanical Permit.",
+        "permit_name": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+        "permit_type": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+        "portal_selection": "Mechanical Permit - Commercial Interior Alteration",
+        "rationale": "Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope is stated and commonly requires mechanical review. Required because the described scope triggers Mechanical Permit.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Electrical Permit",
+        "condition_text": "When the described scope includes electrical work or building department confirms the electrical trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_electrical",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes electrical work or building department confirms the electrical trigger from the request text."
+      },
+      {
+        "ahj_name": "Houston permit office",
+        "application_authority_name": "Houston permit office",
+        "approval_type": "Wastewater / FOG / Pretreatment Approval",
+        "decision": "REQUIRED",
+        "display_family": "Wastewater/FOG",
+        "family": "wastewater",
+        "filing_family": "wastewater",
+        "kind": "Wastewater/FOG",
+        "notes": "Required because the described scope triggers Wastewater / FOG / Pretreatment Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Wastewater / FOG / Pretreatment Approval",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "rationale": "Required because the described scope triggers Wastewater / FOG / Pretreatment Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Houston permit office",
+        "application_authority_name": "Houston permit office",
+        "approval_type": "Fire Suppression / Fire Prevention Review",
+        "decision": "REQUIRED",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "notes": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "rationale": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Houston permit office",
+        "application_authority_name": "Houston permit office",
+        "approval_type": "Food Establishment Health Plan Review / Permit",
+        "decision": "REQUIRED",
+        "display_family": "Health",
+        "family": "health",
+        "filing_family": "health",
+        "kind": "Health",
+        "notes": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "permit_name": "Health Plan Review / Food Establishment Permit",
+        "permit_type": "Health Plan Review / Food Establishment Permit",
+        "portal_selection": "Commercial Building Permit - Tenant Improvement / Interior Alteration",
+        "rationale": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Houston permit office",
+        "application_authority_name": "Houston permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Houston permit office",
+        "application_authority_name": "Houston permit office",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "decision": "REQUIRED",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "notes": "Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "rationale": "Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope is stated and commonly requires mechanical review. Required because the described scope triggers Mechanical Permit.",
+        "permit_type": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "scope_signal_floor_electrical",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "wastewater",
+        "included_because": "Official permit rule: Required because the described scope triggers Wastewater / FOG / Pretreatment Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "scope_trigger": "wastewater_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "fire",
+        "included_because": "Official permit rule: Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "scope_trigger": "fire_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "health",
+        "included_because": "Official permit rule: Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "permit_type": "Health Plan Review / Food Establishment Permit",
+        "scope_trigger": "health_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "planning",
+        "included_because": "Official permit rule: Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "co",
+        "included_because": "Official permit rule: Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "co_scope",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "For Houston commercial TI work, submit a complete plan set the first time: hood, suppression, grease interceptor, gas piping, and equipment schedules all need to line up or plan review will bounce it.",
+      "Bring the project valuation breakdown with labor and material numbers ready; valuation-based fees move faster when the reviewer can see the scope clearly.",
+      "If the suite is in a flood-prone area, check whether Harris County Flood Control District review or additional drainage requirements apply before you finalize the kitchen layout.",
+      "Have the fire suppression contractor coordinate with the hood installer before submittal so the suppression nozzle locations and hood dimensions match the approved drawings."
+    ],
+    "related_permit_families": [
+      "Wastewater/FOG",
+      "Health",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Grease Interceptor / FOG Approval",
+      "Health Department / Food Establishment Review",
+      "Accessibility / ADA path-of-travel verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Grease Interceptor / FOG Approval",
+        "condition_text": "Verify whether Grease Interceptor / FOG Approval is triggered for this project when the building department confirms the relevant wastewater scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Wastewater/FOG",
+        "family": "wastewater",
+        "filing_family": "wastewater",
+        "kind": "Wastewater/FOG",
+        "permit_name": "Grease Interceptor / FOG Approval",
+        "permit_type": "Grease Interceptor / FOG Approval",
+        "rationale": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.",
+        "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Grease Interceptor / FOG Approval is triggered for this project when the building department confirms the relevant wastewater scope condition."
+      },
+      {
+        "approval_type": "Health Department / Food Establishment Review",
+        "condition_text": "Verify whether Health Department / Food Establishment Review is triggered for this project when the building department confirms the relevant health scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Health",
+        "family": "health",
+        "filing_family": "health",
+        "kind": "Health",
+        "permit_name": "Health Department / Food Establishment Review",
+        "permit_type": "Health Department / Food Establishment Review",
+        "rationale": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.",
+        "reason": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Health Department / Food Establishment Review is triggered for this project when the building department confirms the relevant health scope condition."
+      },
+      {
+        "approval_type": "Accessibility / ADA path-of-travel verification",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Accessibility / ADA path-of-travel verification",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical",
+      "Wastewater/FOG",
+      "Fire",
+      "Health",
+      "Planning/Zoning",
+      "Certificate of Occupancy"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Plumbing Permit",
+      "Mechanical Permit \u2014 Commercial Tenant Improvement",
+      "Electrical Permit",
+      "Wastewater / FOG / Pretreatment Approval",
+      "Fire Suppression / Fire Prevention Review",
+      "Health Plan Review / Food Establishment Permit",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy / Change-of-Occupancy Approval"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Plumbing Permit; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit; Wastewater / FOG / Pretreatment Approval; Fire Suppression / Fire Prevention Review; Health Plan Review / Food Establishment Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 5,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 4,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.houstonpermittingcenter.org/",
+        "https://www.houstonpermittingcenter.org/plan-review",
+        "https://www.houstonpermittingcenter.org",
+        "https://www.houstonpermittingcenter.org/online-permitting"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 5,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 5
+    },
+    "source_urls": [
+      "https://www.houstonpermittingcenter.org/",
+      "https://www.houstonpermittingcenter.org/plan-review",
+      "https://www.houstonpermittingcenter.org",
+      "https://www.houstonpermittingcenter.org/online-permitting",
+      "https://www.tdlr.texas.gov"
+    ],
+    "sources": [
+      {
+        "publisher": "Houston Permitting Center",
+        "title": "Houston Permitting Center",
+        "url": "https://www.houstonpermittingcenter.org/"
+      },
+      {
+        "publisher": "Houston Permitting Center",
+        "snippet": "<!DOCTYPE html> <html lang=\"en\" dir=\"ltr\" prefix=\"content: http://purl.org/rss/1.0/modules/content/ dc: http://purl.org/dc/terms/ foaf: http://xmlns.com/foaf/0.1/ og: http://ogp.me/ns# rdfs: http://www.w3.org/2000/01/rdf-schema# schema: http://schema.org/ sioc: http://rdfs.org/sioc/ns# sioct: http://rdfs.org/sioc/types# skos: http://www.w3.org/2004/02/skos/core# xsd: http://www.w3.org/2001/XMLSchema# \"> <head> <meta charset=\"utf-8\" /> <script async src=\"https://www.googletagmanager.com/gtag/js?i",
+        "title": "Official Houston source",
+        "url": "https://www.houstonpermittingcenter.org/plan-review"
+      },
+      {
+        "publisher": "Houston Permitting Center",
+        "title": "Official Houston source",
+        "url": "https://www.houstonpermittingcenter.org"
+      },
+      {
+        "publisher": "Houston Permitting Center",
+        "title": "Official Houston source",
+        "url": "https://www.houstonpermittingcenter.org/online-permitting"
+      },
+      {
+        "publisher": "Houston Permitting Center",
+        "title": "Texas state reference",
+        "url": "https://www.tdlr.texas.gov"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Plumbing Permit; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit; Wastewater / FOG / Pretreatment Approval; Fire Suppression / Fire Prevention Review; Health Plan Review / Food Establishment Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "total_cost_estimate": "$260,000 - $340,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing, fire, hood.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them.",
+      "Customer-boundary filing rows were normalized so only hard scope-triggered permits appear as required; address-dependent companion reviews are shown separately."
+    ],
+    "what_to_bring": [
+      "Completed commercial tenant improvement permit application and project address",
+      "Stamped plan set showing floor plan, hood layout, grease interceptor details, gas appliance schedule, and suppression system layout",
+      "Contractor license numbers and expiration dates for plumbing, HVAC/mechanical, and fire suppression trades",
+      "Equipment cut sheets for hood, exhaust fan, make-up air unit, grease interceptor, and all gas appliances",
+      "Tenant lease or owner authorization letter for the suite",
+      "Project valuation breakdown for the $260,000 scope"
+    ],
+    "zoning_hoa_flag": "Houston has no zoning, so HOA/zoning-style use restrictions are usually not the issue inside the city. For a commercial restaurant, the bigger blockers are occupancy classification, fire code, grease interceptor sizing, and any lease or shopping-center landlord design criteria. If the suite is in a historic district or subject to deed restrictions/private covenants, those can still delay exterior work or signage, but they usually do not control the interior permit itself."
+  },
+  "response_sha256": "af8563d9ab898e42cb79799ab56e51b00548ff2971c0840382d04bbf76868bd3",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "E2kRvhF1eDI",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/E2kRvhF1eDI",
+  "source_urls": [
+    "https://www.houstonpermittingcenter.org",
+    "https://www.houstonpermittingcenter.org/",
+    "https://www.houstonpermittingcenter.org/online-permitting",
+    "https://www.houstonpermittingcenter.org/plan-review",
+    "https://www.tdlr.texas.gov"
+  ],
+  "started_at_utc": "2026-07-01T23:59:27.839698+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

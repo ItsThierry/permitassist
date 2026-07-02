@@ -1,0 +1,16 @@
+{
+  "case_id": "C-039",
+  "min_fee_amounts": 0,
+  "must_keep_required": [
+    "Commercial Building / Tenant Improvement Permit Commercial Building / Tenant Improvement Permit Building",
+    "Plumbing Permit Plumbing Permit Plumbing",
+    "Mechanical Permit Mechanical Permit Mechanical",
+    "Electrical Permit \u2014 New Circuit / Equipment Connection Electrical Permit \u2014 New Circuit / Equipment Connection Electrical",
+    "Food Establishment Health Plan Review / Permit Food Establishment Health Plan Review / Permit Health",
+    "Planning / Zoning Use Clearance Planning / Zoning Use Clearance Planning/Zoning",
+    "Certificate of Occupancy / Change-of-Occupancy Approval Certificate of Occupancy / Change-of-Occupancy Approval Certificate of Occupancy",
+    "Liquor License / Local Alcohol Routing Liquor License / Local Alcohol Routing Liquor",
+    "Fire  Fire"
+  ],
+  "protection": true
+}

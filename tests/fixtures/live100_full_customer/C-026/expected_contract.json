@@ -1,0 +1,11 @@
+{
+  "case_id": "C-026",
+  "min_fee_amounts": 2,
+  "must_keep_required": [
+    "Commercial Building / Tenant Improvement Permit Commercial Building / Tenant Improvement Permit Building",
+    "Mechanical Permit \u2014 HVAC System Work (Commercial) Mechanical Permit \u2014 HVAC System Work (Commercial) Mechanical",
+    "Plumbing Permit \u2014 New Fixture Work Plumbing Permit \u2014 New Fixture Work Plumbing",
+    "Electrical Permit Electrical Permit Electrical"
+  ],
+  "protection": true
+}

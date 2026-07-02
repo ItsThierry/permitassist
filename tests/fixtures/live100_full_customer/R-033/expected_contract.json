@@ -1,0 +1,12 @@
+{
+  "case_id": "R-033",
+  "contract_note": "",
+  "must_add": [],
+  "must_demote": [],
+  "must_keep_required": [
+    "electrical"
+  ],
+  "must_not_required": [
+    "wastewater_pretreatment_fog"
+  ]
+}

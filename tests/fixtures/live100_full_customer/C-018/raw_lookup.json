@@ -1,0 +1,581 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Use/occupant load change",
+    "bucket": "warehouse to assembly",
+    "city": "Portland",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "Change of occupancy",
+      "Fire",
+      "Planning/Zoning possible"
+    ],
+    "id": "C-018",
+    "job_type": "change use from warehouse to indoor pickleball facility with occupant load increase, job value 300000",
+    "job_value": 300000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "OR",
+    "zip_code": "97204"
+  },
+  "completed_at_utc": "2026-07-02T00:00:43.033548+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 5.92,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://devhub.portlandoregon.gov/",
+    "applying_office": "Bureau of Development Services (BDS)",
+    "confidence": "high",
+    "customer_headline": "Permit required: Required permit package \u2014 Commercial Building / Change-of-Use Permit.",
+    "customer_next_step": "File the required permit categories with Bureau of Development Services (BDS): Commercial Building / Change-of-Use Permit, Plumbing Permit, Mechanical Permit, Electrical Permit, Planning / Zoning Use Clearance, Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge \u2014 verify in before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Commercial Building / Change-of-Use Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 5
+  },
+  "permit_elapsed_seconds": 3.96,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Portland",
+    "job_category": "commercial",
+    "job_type": "change use from warehouse to indoor pickleball facility with occupant load increase, job value 300000",
+    "job_value": 300000,
+    "state": "OR",
+    "vertical": "commercial",
+    "zip_code": "97204"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Bureau of Development Services (BDS)",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Commercial Building / Change-of-Use Permit",
+      "platform": "Accela / Citizen Access",
+      "portal_url": "https://devhub.portlandoregon.gov/",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Commercial Building / Change-of-Use Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "official source verified",
+      "verification_note": "Official filing path repaired from an offline verified AHJ source; confirm the exact portal subcategory before final submission."
+    },
+    "apply_url": "https://devhub.portlandoregon.gov/",
+    "apply_url_known": true,
+    "applying_office": "Bureau of Development Services (BDS)",
+    "approval_timeline": {
+      "complex": "6-8 weeks minimum for commercial plan review in Portland; longer if fire/life-safety, accessibility, or structural revisions are needed",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in OR",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Bring 2 copies of all documents to Bureau of Development Services (BDS)"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.portland.gov/bds",
+        "value": "Electrical Permit"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.portland.gov/bds",
+        "value": "https://aca-prod.accela.com/PORTLAND"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.portland.gov/bds",
+        "value": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge \u2014 verify in https://www.portland.gov/ppd/news/2026/4/27/permitting-development-fee-changes-take-effect-july-10 before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.portland.gov/bds",
+        "value": "{'simple': 'Not OTC \u2014 commercial change-of-use projects are plan review only; expect initial intake plus corrections before permit issuance', 'complex': '6-8 weeks minimum for commercial plan review in Portland; longer if fire/life-safety, accessibility, or structural revisions are needed'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.portland.gov/bds",
+        "value": "[{'stage': 'Building Rough-In / Framing', 'description': 'Inspector checks new walls, openings, rated assemblies, accessibility clearances, exit access paths, door swings, and any structural framing tied to the new occupancy before concealment.', 'timing': 'Before insulation, drywall, ceiling closure, or finish materials are installed'}, {'stage': 'Fire/Life-Safety Final', 'description': 'Inspector verifies occupant load signage, exit signage and emergency lighting, panic hardware where required, accessible routes, door hardware, and that the final layout matches approved plans.', 'timing': 'After all finishes, signage, and life-safety devices are installed'}, {'stage': 'Final Building', 'description': 'Inspector confirms the space matches the approved change-of-occupancy plans, including accessible restrooms, egress width, ceiling heights, guard conditions, and any required separations or rated construction.', 'timing': 'After all work is complete and ready for occupancy'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the project as a simple tenant improvement and not calling out the change of occupancy and occupant load increase \u2014 that will get bounced in plan review",
+      "Forgetting accessibility and egress upgrades for the new assembly/recreation use",
+      "Assuming the building permit covers electrical, mechanical, and plumbing work inside the tenant space",
+      "Starting demolition before the permit is issued and posted",
+      "Submitting permit application without verifying current contractor registration status \u2014 an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting."
+    ],
+    "companion_permits": [
+      {
+        "certainty": "conditional",
+        "condition_text": "Verify whether Fire Permit \u2014 Fire Alarm / Sprinkler Modification is triggered for this project when the building department confirms the relevant fire scope condition.",
+        "permit_type": "Fire Permit \u2014 Fire Alarm / Sprinkler Modification",
+        "rationale": "is conditional only when the listed condition applies if: fire alarm, sprinkler, or fire protection system modifications are required by code review.",
+        "reason": "is conditional only when the listed condition applies if: fire alarm, sprinkler, or fire protection system modifications are required by code review.",
+        "required_if": "fire alarm, sprinkler, or fire protection system modifications are required by code review",
+        "requirement_label": "is conditional only when the listed condition applies based on scope",
+        "trigger_condition": "Verify whether Fire Permit \u2014 Fire Alarm / Sprinkler Modification is triggered for this project when the building department confirms the relevant fire scope condition."
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Bureau of Development Services (BDS)",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with Bureau of Development Services (BDS): Commercial Building / Change-of-Use Permit, Plumbing Permit, Mechanical Permit, Electrical Permit, Planning / Zoning Use Clearance, Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 6 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Commercial Building / Change-of-Use Permit.",
+    "customer_next_step": "File the required permit categories with Bureau of Development Services (BDS): Commercial Building / Change-of-Use Permit, Plumbing Permit, Mechanical Permit, Electrical Permit, Planning / Zoning Use Clearance, Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Bureau of Development Services (BDS)",
+      "fee_cost_caveat": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge \u2014 verify in before quoting",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Portland, OR",
+      "next_step": "File the required permit categories with Bureau of Development Services (BDS): Commercial Building / Change-of-Use Permit, Plumbing Permit, Mechanical Permit, Electrical Permit, Planning / Zoning Use Clearance, Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Commercial Building / Change-of-Use Permit",
+      "source_cue": "Official sources attached for 6 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": [
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://aca-prod.accela.com/PORTLAND"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://aca-prod.accela.com/PORTLAND"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://aca-prod.accela.com/PORTLAND"
+      }
+    ],
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge \u2014 verify in before quoting",
+    "inspection_booking": "Schedule inspections through Portland BDS in the Accela portal: Use the permit record to request inspections; commercial work should be scheduled with enough lead time for plan-review conditions. Call (503) 823-7300 if the portal does not show the correct inspection type. Portland commercial projects commonly need at least 24 hours advance notice, and you should expect delays if the permit has unresolved corrections.",
+    "inspections": [
+      {
+        "description": "Inspector checks new walls, openings, rated assemblies, accessibility clearances, exit access paths, door swings, and any structural framing tied to the new occupancy before concealment.",
+        "stage": "Building Rough-In / Framing",
+        "timing": "Before insulation, drywall, ceiling closure, or finish materials are installed"
+      },
+      {
+        "description": "Inspector verifies occupant load signage, exit signage and emergency lighting, panic hardware where required, accessible routes, door hardware, and that the final layout matches approved plans.",
+        "stage": "Fire/Life-Safety Final",
+        "timing": "After all finishes, signage, and life-safety devices are installed"
+      },
+      {
+        "description": "Inspector confirms the space matches the approved change-of-occupancy plans, including accessible restrooms, egress width, ceiling heights, guard conditions, and any required separations or rated construction.",
+        "stage": "Final Building",
+        "timing": "After all work is complete and ready for occupancy"
+      }
+    ],
+    "job_summary": "Required permit package: Commercial Building / Change-of-Use Permit; Plumbing Permit; Mechanical Permit; Electrical Permit; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement.",
+    "local_form_known": true,
+    "online_application_url": "https://devhub.portlandoregon.gov/",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Commercial Building / Change-of-Use Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Commercial Building / Change-of-Use Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Commercial Building / Change-of-Use Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_name": "Commercial Building / Change-of-Use Permit",
+        "permit_type": "Commercial Building / Change-of-Use Permit",
+        "rationale": "Synthesized governing building/TI row from deterministic scope facts; confirm the exact local form title, but do not omit the governing building/change/addition permit.",
+        "required": true,
+        "segment": "commercial",
+        "source_binding": "synthesized_governing_row_from_scope_facts",
+        "source_floor_exempt": true,
+        "source_url": "https://www.portland.gov/bds",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Portland permit office",
+        "application_authority_name": "Portland permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Portland permit office",
+        "application_authority_name": "Portland permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "rationale": "Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Portland permit office",
+        "application_authority_name": "Portland permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Portland permit office",
+        "application_authority_name": "Portland permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Portland permit office",
+        "application_authority_name": "Portland permit office",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "decision": "REQUIRED",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "notes": "Required for warehouse-to-indoor pickleball facility conversion with occupant load increase.",
+        "permit_name": "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+        "permit_type": "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+        "portal_selection": "Commercial Building Permit - Change of Occupancy / Tenant Improvement",
+        "rationale": "Required for warehouse-to-indoor pickleball facility conversion with occupant load increase.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Synthesized governing building/TI row from deterministic scope facts; confirm the exact local form title, but do not omit the governing building/change/addition permit.",
+        "permit_type": "Commercial Building / Change-of-Use Permit",
+        "scope_trigger": "building_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "planning",
+        "included_because": "Official permit rule: Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "co",
+        "included_because": "Official permit rule: Required for warehouse-to-indoor pickleball facility conversion with occupant load increase.",
+        "permit_type": "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+        "scope_trigger": "co_scope",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Portland BDS is slow on commercial plan review \u2014 build in at least 6-8 weeks and expect correction cycles",
+      "Have the occupant load calculation and egress plan ready before submittal; that is usually where commercial change-of-use reviews stall",
+      "Check your Portland contractor registration renewal date before starting any permit application \u2014 registration lapses are the #1 avoidable rejection reason.",
+      "If the tenant space needs new HVAC or restroom ventilation, get those drawings coordinated before first submittal so you do not create a second review cycle"
+    ],
+    "related_permit_families": [
+      "Fire"
+    ],
+    "related_permit_names": [
+      "Fire Permit \u2014 Fire Alarm / Sprinkler Modification",
+      "Fire Suppression / Fire Prevention Review"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Fire Permit \u2014 Fire Alarm / Sprinkler Modification",
+        "condition_text": "Verify whether Fire Permit \u2014 Fire Alarm / Sprinkler Modification is triggered for this project when the building department confirms the relevant fire scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "permit_name": "Fire Permit \u2014 Fire Alarm / Sprinkler Modification",
+        "permit_type": "Fire Permit \u2014 Fire Alarm / Sprinkler Modification",
+        "rationale": "is conditional only when the listed condition applies if: fire alarm, sprinkler, or fire protection system modifications are required by code review.",
+        "reason": "is conditional only when the listed condition applies if: fire alarm, sprinkler, or fire protection system modifications are required by code review.",
+        "required": false,
+        "required_if": "fire alarm, sprinkler, or fire protection system modifications are required by code review",
+        "requirement_label": "is conditional only when the listed condition applies based on scope",
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Fire Permit \u2014 Fire Alarm / Sprinkler Modification is triggered for this project when the building department confirms the relevant fire scope condition."
+      },
+      {
+        "ahj_name": "Portland permit office",
+        "application_authority_name": "Portland permit office",
+        "approval_type": "Fire Suppression / Fire Prevention Review",
+        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "decision": "CONDITIONAL",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "notes": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "required": false,
+        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "segment": "commercial",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical",
+      "Planning/Zoning",
+      "Certificate of Occupancy"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Change-of-Use Permit",
+      "Plumbing Permit",
+      "Mechanical Permit",
+      "Electrical Permit",
+      "Planning / Zoning Use Clearance",
+      "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building / Change-of-Use Permit; Plumbing Permit; Mechanical Permit; Electrical Permit; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 5,
+      "filing_path_evidence": "Official Portland.gov Apply for permits page links to DevHub for online permit applications.",
+      "filing_path_reachability": "ok",
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_path_status": "repaired_official_fallback",
+      "filing_path_verified_on": "2026-07-01",
+      "filing_source_count": 5,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://devhub.portlandoregon.gov/",
+        "https://www.portland.gov/ppd/get-permit/apply-permits",
+        "https://www.portland.gov/bds",
+        "https://www.portland.gov/ppd/news/2026/4/27/permitting-development-fee-changes-take-effect-july-10",
+        "https://www.portland.gov/ppd/change-use-or-occupancy"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 5,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 4
+    },
+    "source_urls": [
+      "https://devhub.portlandoregon.gov/",
+      "https://www.portland.gov/ppd/get-permit/apply-permits",
+      "https://www.portland.gov/bds",
+      "https://www.portland.gov/ppd/news/2026/4/27/permitting-development-fee-changes-take-effect-july-10",
+      "https://www.portland.gov/ppd/change-use-or-occupancy"
+    ],
+    "sources": [
+      {
+        "date": "2026-07-01",
+        "jurisdiction": "Portland, OR",
+        "publisher": "City of Portland Permitting & Development",
+        "snippet": "Official Portland.gov Apply for permits page links to DevHub for online permit applications.",
+        "source_type": "official_local",
+        "title": "City of Portland Permitting & Development",
+        "url": "https://www.portland.gov/ppd/get-permit/apply-permits"
+      },
+      {
+        "date": "2026-07-01",
+        "jurisdiction": "Portland, OR",
+        "publisher": "City of Portland Permitting & Development",
+        "snippet": "Official Portland.gov Apply for permits page links to DevHub for online permit applications.",
+        "source_type": "official_local",
+        "title": "City of Portland Permitting & Development",
+        "url": "https://devhub.portlandoregon.gov/"
+      },
+      {
+        "jurisdiction": "Portland, OR",
+        "publisher": "Official Portland source",
+        "source_type": "official_local",
+        "title": "Official Portland source",
+        "url": "https://www.portland.gov/bds"
+      },
+      {
+        "jurisdiction": "Portland, OR",
+        "publisher": "Official Portland source",
+        "source_type": "official_local",
+        "title": "Official Portland source",
+        "url": "https://www.portland.gov/ppd/news/2026/4/27/permitting-development-fee-changes-take-effect-july-10"
+      },
+      {
+        "jurisdiction": "Portland, OR",
+        "publisher": "Official Portland source",
+        "source_type": "official_local",
+        "title": "Official Portland source",
+        "url": "https://www.portland.gov/ppd/change-use-or-occupancy"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building / Change-of-Use Permit; Plumbing Permit; Mechanical Permit; Electrical Permit; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement.",
+    "total_cost_estimate": "$325,000 - $425,000",
+    "warnings": [
+      "Commercial scope detected, but the primary permit name is building department-specific or not in the commercial allow-list; confirm the exact permit name and form title with the building department before filing.",
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed commercial building permit application in Accela",
+      "Current Oregon CCB license number and contractor business information",
+      "Existing and proposed floor plans showing warehouse layout and new pickleball court layout",
+      "Occupant load calculations, egress plan, and accessibility details",
+      "Code analysis for change of occupancy and any fire/life-safety upgrades",
+      "Structural details if any walls, roof framing, or mezzanine/loading changes are proposed"
+    ],
+    "zoning_hoa_flag": "Commercial zoning and use approval may be a major issue for a warehouse-to-indoor recreation conversion. Verify the site is allowed for indoor pickleball/recreation use, parking, accessibility, and any conditional use or design review requirements. HOA restrictions are usually not the issue for commercial property, but zoning overlays, downtown design standards, and any historic district rules can delay or block the project."
+  },
+  "response_sha256": "a05497504be4554ed619e4fcbe94f17844075c4aa0d92c6c04cf8b3ea1bd563b",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "p1E35XEexIY",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/p1E35XEexIY",
+  "source_urls": [
+    "https://devhub.portlandoregon.gov/",
+    "https://www.portland.gov/bds",
+    "https://www.portland.gov/ppd/change-use-or-occupancy",
+    "https://www.portland.gov/ppd/get-permit/apply-permits",
+    "https://www.portland.gov/ppd/news/2026/4/27/permitting-development-fee-changes-take-effect-july-10"
+  ],
+  "started_at_utc": "2026-07-02T00:00:37.115800+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

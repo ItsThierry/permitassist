@@ -1,0 +1,17 @@
+{
+  "case_id": "C-002",
+  "contract_note": "",
+  "must_add": [],
+  "must_demote": [
+    "plumbing",
+    "planning_zoning"
+  ],
+  "must_keep_required": [
+    "building_ti",
+    "mechanical",
+    "electrical"
+  ],
+  "must_not_required": [
+    "co_change_of_occupancy"
+  ]
+}

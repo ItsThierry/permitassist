@@ -1,0 +1,593 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Trade-heavy conversion",
+    "bucket": "laundromat conversion",
+    "city": "Kansas City",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "Plumbing",
+      "Fuel gas/Mechanical",
+      "Electrical",
+      "CO"
+    ],
+    "id": "C-033",
+    "job_type": "commercial laundromat conversion from retail with gas dryers floor drains 600 amp service and RTU, job value 500000",
+    "job_value": 500000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "MO",
+    "zip_code": "64106"
+  },
+  "completed_at_utc": "2026-07-02T00:02:42.808723+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 6.49,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+    "applying_office": "Kansas City City Planning & Development",
+    "confidence": "high",
+    "customer_headline": "Permit required: Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement.",
+    "customer_next_step": "File the required permit categories with Kansas City City Planning & Development: Mechanical Permit \u2014 Rooftop Unit Replacement, Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains, Planning/Zoning Use Verification, Certificate of Occupancy / Change-of-Occupancy Review. Confirm exact portal subcategories before final submission.",
+    "fee_range": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 4
+  },
+  "permit_elapsed_seconds": 3.09,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Kansas City",
+    "job_category": "commercial",
+    "job_type": "commercial laundromat conversion from retail with gas dryers floor drains 600 amp service and RTU, job value 500000",
+    "job_value": 500000,
+    "state": "MO",
+    "vertical": "commercial",
+    "zip_code": "64106"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Kansas City City Planning & Development",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "portal_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+    "apply_url_known": true,
+    "applying_office": "Kansas City City Planning & Development",
+    "approval_timeline": {
+      "complex": "Longer plan-review cycle if structural, accessibility, fire/life-safety, health, zoning, or trade-plan corrections are triggered.",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in MO",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Confirm the required license is active and matches the application: Commercial contractor pulls the permit on behalf of the owner; the contractor's license and registration information must appear on the application. For the gas dryer and plumbing portions, a licensed plumbing/gas contractor should be listed for that scope. For the 600 amp service, a licensed electrical contractor should be listed. The permit is still required for the project even when a licensed contractor submits it.",
+      "Bring 2 copies of all documents to Kansas City City Planning & Development"
+    ],
+    "city_contractor_registration": "Kansas City requires local contractor registration/authorization for permit work in many cases. Verify the contractor's current city registration status before submitting the application, because an expired or lapsed city registration can block the permit. Renewal frequency and exact registration workflow were not confirmed in the current source context and should be verified with Kansas City City Planning & Development.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "value": "Building Permit \u2014 Commercial Interior Alteration / Change of Use"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "value": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "value": "{'simple': 'Over-the-counter intake is possible for permit submission, but this scope is not a simple OTC trade job; expect intake plus routing to plan review.'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "value": "[{'stage': 'Underground / Rough Plumbing', 'description': 'Inspector verifies floor drain locations, drain slope, trap primers if used, venting, cleanouts, approved materials, and that any new sanitary or waste lines are installed before slab or wall closure.', 'timing': 'Before slab pour, backfill, or concealment of drain piping'}, {'stage': 'Rough Mechanical / Gas', 'description': 'Inspector checks gas dryer piping, gas shutoff valves at each appliance, sediment traps where required, venting termination, combustion air, RTU curb/roof support, condensate disposal, and equipment clearances.', 'timing': 'Before drywall, ceiling closure, or equipment startup'}, {'stage': 'Rough Electrical', 'description': 'Inspector verifies 600 amp service equipment, feeder sizing, grounding and bonding, working clearances, panel labeling, disconnects, dedicated circuits for laundry equipment, and any required AFCI/GFCI protection.', 'timing': 'Before walls/ceilings are closed and before final energization'}, {'stage': 'Final Commercial Building / MEP', 'description': 'Inspector verifies the completed laundromat buildout, equipment installation, accessibility clearances, emergency egress, fixture counts, signage, final gas and electrical connections, RTU operation, and that all prior corrections are closed.', 'timing': 'After all equipment is installed and the space is fully complete'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the project as a simple trade replacement instead of a commercial change-of-use tenant improvement \u2014 that will get bounced because retail-to-laundromat is a use change with multiple code disciplines",
+      "Under-sizing or omitting the electrical load calculation for the 600 amp service \u2014 laundromat equipment loads are heavy and reviewers will flag missing demand calculations",
+      "Forgetting that gas dryers need both gas piping review and venting/exhaust review, not just a mechanical note",
+      "Leaving out floor drain details, trap primers, or sanitary routing \u2014 plumbing review will not pass without a complete drainage plan",
+      "Submitting permit application without verifying current contractor registration status \u2014 an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting."
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Kansas City City Planning & Development",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with Kansas City City Planning & Development: Mechanical Permit \u2014 Rooftop Unit Replacement, Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains, Planning/Zoning Use Verification, Certificate of Occupancy / Change-of-Occupancy Review. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement.",
+    "customer_next_step": "File the required permit categories with Kansas City City Planning & Development: Mechanical Permit \u2014 Rooftop Unit Replacement, Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains, Planning/Zoning Use Verification, Certificate of Occupancy / Change-of-Occupancy Review. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Kansas City City Planning & Development",
+      "fee_cost_caveat": "$500,000 - $575,000",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Kansas City, MO",
+      "next_step": "File the required permit categories with Kansas City City Planning & Development: Mechanical Permit \u2014 Rooftop Unit Replacement, Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains, Planning/Zoning Use Verification, Certificate of Occupancy / Change-of-Occupancy Review. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "source_cue": "Official sources attached for 4 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "inspection_booking": "Schedule inspections through the Kansas City online permit portal at Use the inspection request function tied to the permit record. Advance notice requirement was not found in the current source context, so verify with the inspector assigned to the permit. If you need help, contact Kansas City City Planning & Development through the city website before covering any work.",
+    "inspections": [
+      {
+        "description": "Inspector verifies floor drain locations, drain slope, trap primers if used, venting, cleanouts, approved materials, and that any new sanitary or waste lines are installed before slab or wall closure.",
+        "stage": "Underground / Rough Plumbing",
+        "timing": "Before slab pour, backfill, or concealment of drain piping"
+      },
+      {
+        "description": "Inspector checks gas dryer piping, gas shutoff valves at each appliance, sediment traps where required, venting termination, combustion air, RTU curb/roof support, condensate disposal, and equipment clearances.",
+        "stage": "Rough Mechanical / Gas",
+        "timing": "Before drywall, ceiling closure, or equipment startup"
+      },
+      {
+        "description": "Inspector verifies 600 amp service equipment, feeder sizing, grounding and bonding, working clearances, panel labeling, disconnects, dedicated circuits for laundry equipment, and any required AFCI/GFCI protection.",
+        "stage": "Rough Electrical",
+        "timing": "Before walls/ceilings are closed and before final energization"
+      },
+      {
+        "description": "Inspector verifies the completed laundromat buildout, equipment installation, accessibility clearances, emergency egress, fixture counts, signage, final gas and electrical connections, RTU operation, and that all prior corrections are closed.",
+        "stage": "Final Commercial Building / MEP",
+        "timing": "After all equipment is installed and the space is fully complete"
+      }
+    ],
+    "job_summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains; Planning/Zoning Use Verification; Certificate of Occupancy / Change-of-Occupancy Review.",
+    "local_form_known": true,
+    "online_application_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Mechanical Permit \u2014 Rooftop Unit Replacement",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "condition_text": "When the described scope includes building work or AHJ confirms the building trigger from the request text.",
+        "decision": "REQUIRED",
+        "derived_from": [
+          "scope_signals_family_floor"
+        ],
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_type": "Building Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a building trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_building",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes building work or AHJ confirms the building trigger from the request text."
+      },
+      {
+        "approval_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "permit_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "rationale": "Same-capacity RTU/rooftop-unit replacement is mechanically primary.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Kansas City permit office",
+        "application_authority_name": "Kansas City permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Commercial fuel-gas piping, gas manifold, gas appliance connection, or gas-dryer scope is stated and commonly requires gas piping review and pressure-test inspection.",
+        "permit_name": "Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains",
+        "permit_type": "Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains",
+        "portal_selection": "Gas Permit - Commercial Fuel Gas",
+        "rationale": "Commercial fuel-gas piping, gas manifold, gas appliance connection, or gas-dryer scope is stated and commonly requires gas piping review and pressure-test inspection.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Planning/Zoning Use Verification",
+        "decision": "REQUIRED",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning/Zoning Use Verification",
+        "permit_type": "Planning/Zoning Use Verification",
+        "rationale": "Commercial use or occupancy changes require zoning/use compatibility verification before filing.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Review",
+        "decision": "REQUIRED",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Review",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Review",
+        "rationale": "Commercial change-of-use, conversion, assembly, restaurant, clinic, or tenant buildout scope requires occupancy/use classification review.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Same-capacity RTU/rooftop-unit replacement is mechanically primary.",
+        "permit_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "scope_trigger": "mechanical_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Commercial fuel-gas piping, gas manifold, gas appliance connection, or gas-dryer scope is stated and commonly requires gas piping review and pressure-test inspection.",
+        "permit_type": "Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "planning",
+        "included_because": "Official permit rule: Commercial use or occupancy changes require zoning/use compatibility verification before filing.",
+        "permit_type": "Planning/Zoning Use Verification",
+        "scope_trigger": "planning_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "co",
+        "included_because": "Official permit rule: Commercial change-of-use, conversion, assembly, restaurant, clinic, or tenant buildout scope requires occupancy/use classification review.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Review",
+        "scope_trigger": "co_scope",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Kansas City bundles building and trade permits into one valuation-based fee, so submit one complete commercial package instead of trying to split the scope into separate permits.",
+      "Put the 600 amp service load calc, RTU cut sheet, and gas dryer venting details in the first plan submittal \u2014 that cuts down on correction cycles.",
+      "Check your Kansas City contractor registration renewal date before starting any permit application \u2014 registration lapses are the #1 avoidable rejection reason.",
+      "If the laundromat will have any water heating or backflow-related equipment, show the plumbing fixture schedule and backflow protection on the first submittal so plumbing review does not stall the whole permit."
+    ],
+    "related_permit_families": [
+      "Building",
+      "Electrical",
+      "Wastewater/FOG",
+      "Fire",
+      "Planning/Zoning",
+      "Certificate of Occupancy",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Building Permit",
+      "Electrical Permit",
+      "Wastewater / FOG / Pretreatment Approval",
+      "Fire Suppression / Fire Prevention Review",
+      "Planning / Zoning Use Clearance",
+      "Building Permit \u2014 Commercial Interior Alteration / Change of Use",
+      "Accessibility / ADA path-of-travel verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Building Permit",
+        "condition_text": "Verify building/TI only if same-capacity RTU replacement changes structure, curb, occupancy, walls, or use.",
+        "decision": "VERIFY",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "rationale": "Verify building/TI only if same-capacity RTU replacement changes structure, curb, occupancy, walls, or use.",
+        "required": false,
+        "required_if": "Verify building/TI only if same-capacity RTU replacement changes structure, curb, occupancy, walls, or use.",
+        "scope_trigger": "scope_signal_floor_building",
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "When the described scope includes building work or building department confirms the building trigger from the request text."
+      },
+      {
+        "ahj_name": "Kansas City permit office",
+        "application_authority_name": "Kansas City permit office",
+        "approval_type": "Electrical Permit",
+        "condition_text": "Verify electrical filing only if the same-capacity RTU replacement includes new/altered circuit, disconnect, wiring, or service work.",
+        "decision": "VERIFY",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "Verify electrical filing only if the same-capacity RTU replacement includes new/altered circuit, disconnect, wiring, or service work.",
+        "required": false,
+        "required_if": "Verify electrical filing only if the same-capacity RTU replacement includes new/altered circuit, disconnect, wiring, or service work.",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "approval_type": "Wastewater / FOG / Pretreatment Approval",
+        "condition_text": "Verify wastewater/FOG pretreatment approval for grease-interceptor, floor-drain, or FOG-producing scope.",
+        "decision": "CONDITIONAL",
+        "display_family": "Wastewater/FOG",
+        "family": "wastewater",
+        "filing_family": "wastewater",
+        "kind": "Wastewater/FOG",
+        "permit_name": "Wastewater / FOG / Pretreatment Approval",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "rationale": "Verify wastewater/FOG pretreatment approval for grease-interceptor, floor-drain, or FOG-producing scope.",
+        "required": false,
+        "required_if": "Verify wastewater/FOG pretreatment approval for grease-interceptor, floor-drain, or FOG-producing scope.",
+        "segment": "commercial",
+        "source_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "status": "CONDITIONAL"
+      },
+      {
+        "ahj_name": "Kansas City permit office",
+        "application_authority_name": "Kansas City permit office",
+        "approval_type": "Fire Suppression / Fire Prevention Review",
+        "decision": "VERIFY",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "notes": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "rationale": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "required": false,
+        "required_if": "Required only if parcel/address/use review confirms this companion review.",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "ahj_name": "Kansas City permit office",
+        "application_authority_name": "Kansas City permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "VERIFY",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "required": false,
+        "required_if": "Required only if parcel/address/use review confirms this companion review.",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "ahj_name": "Kansas City permit office",
+        "application_authority_name": "Kansas City permit office",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "decision": "VERIFY",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "notes": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "permit_name": "Building Permit \u2014 Commercial Interior Alteration / Change of Use",
+        "permit_type": "Building Permit \u2014 Commercial Interior Alteration / Change of Use",
+        "portal_selection": "Commercial Building Permit - Tenant Improvement / Interior Alteration",
+        "rationale": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "required": false,
+        "required_if": "Required only if parcel/address/use review confirms this companion review.",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "approval_type": "Accessibility / ADA path-of-travel verification",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Accessibility / ADA path-of-travel verification",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Mechanical",
+      "Plumbing",
+      "Planning/Zoning",
+      "Certificate of Occupancy"
+    ],
+    "required_permit_names": [
+      "Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains",
+      "Planning/Zoning Use Verification",
+      "Certificate of Occupancy / Change-of-Occupancy Review"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains; Planning/Zoning Use Verification; Certificate of Occupancy / Change-of-Occupancy Review.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 4,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 4,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule",
+        "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division",
+        "https://www.kcmo.gov/city-hall/departments/city-planning-development/electrical-plumbing-and-mechanical-permits"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 4,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 4
+    },
+    "source_urls": [
+      "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+      "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule",
+      "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division",
+      "https://www.kcmo.gov/city-hall/departments/city-planning-development/electrical-plumbing-and-mechanical-permits"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Kansas City, MO",
+        "publisher": "Official Kansas City source",
+        "source_type": "official_local",
+        "title": "Official Kansas City source",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development"
+      },
+      {
+        "jurisdiction": "Kansas City, MO",
+        "publisher": "Official Kansas City source",
+        "source_type": "official_local",
+        "title": "Official Kansas City source",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule"
+      },
+      {
+        "jurisdiction": "Kansas City, MO",
+        "publisher": "Official Kansas City source",
+        "source_type": "official_local",
+        "title": "Official Kansas City source",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division"
+      },
+      {
+        "jurisdiction": "Kansas City, MO",
+        "publisher": "Official Kansas City source",
+        "source_type": "official_local",
+        "title": "Official Kansas City source",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/electrical-plumbing-and-mechanical-permits"
+      }
+    ],
+    "summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit \u2014 Commercial Laundry Fixtures / Floor Drains; Planning/Zoning Use Verification; Certificate of Occupancy / Change-of-Occupancy Review.",
+    "total_cost_estimate": "$500,000 - $575,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed commercial permit application in the ACA portal",
+      "Full plan set showing existing and proposed floor plan, occupancy/use change, equipment layout, and code compliance notes",
+      "Mechanical schedule for RTU and gas dryers, including make/model, tonnage/BTU, and ventilation details",
+      "Electrical one-line diagram and load calculation for the 600 amp service",
+      "any trap primer details",
+      "Contractor license and city registration information for the submitting contractor"
+    ],
+    "zoning_hoa_flag": "Commercial laundromat conversions can trigger zoning review for change of use, parking, accessibility, signage, and any exterior equipment or vent penetrations. If the building is in a historic district or overlay, exterior RTU placement, roof penetrations, and signage may need additional approval. HOA restrictions are usually not the issue for commercial property, but lease and site-control restrictions can still delay work."
+  },
+  "response_sha256": "dacb8b9f034ea5e9cec12164ac83eed748040f84765c98b1a8fb6049725bd58c",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "1rVNmlPyMWM",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/1rVNmlPyMWM",
+  "source_urls": [
+    "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+    "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule",
+    "https://www.kcmo.gov/city-hall/departments/city-planning-development/electrical-plumbing-and-mechanical-permits",
+    "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division"
+  ],
+  "started_at_utc": "2026-07-02T00:02:36.315412+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

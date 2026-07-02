@@ -1,0 +1,394 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Residential conversion/addition permit expected",
+    "bucket": "garage conversion",
+    "city": "Dallas",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Building",
+      "Electrical",
+      "Mechanical conditional"
+    ],
+    "id": "R-005",
+    "job_type": "convert garage into bedroom with new window insulation electrical outlets and HVAC extension, job value 42000",
+    "job_value": 42000,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "TX",
+    "zip_code": "75201"
+  },
+  "completed_at_utc": "2026-07-01T23:52:56.875897+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 4.56,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://developdallas.dallascityhall.com/PermitDallas/",
+    "applying_office": "Dallas Development Services Department",
+    "confidence": "high",
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Detached Garage / Accessory Structure.",
+    "customer_next_step": "File the required permit categories with Dallas Development Services Department: Building Permit \u2014 Detached Garage / Accessory Structure, Plumbing Permit, Mechanical Permit \u2014 HVAC System Replacement (Residential), Electrical Permit. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building permit package",
+    "permit_name": "Required permit package \u2014 Building Permit \u2014 Detached Garage / Accessory Structure",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 2
+  },
+  "permit_elapsed_seconds": 2.25,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Dallas",
+    "job_category": "residential",
+    "job_type": "convert garage into bedroom with new window insulation electrical outlets and HVAC extension, job value 42000",
+    "job_value": 42000,
+    "state": "TX",
+    "vertical": "residential",
+    "zip_code": "75201"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Dallas Development Services Department",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Building Permit \u2014 Detached Garage / Accessory Structure",
+      "portal_url": "https://developdallas.dallascityhall.com/PermitDallas/",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "state",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Building Permit \u2014 Detached Garage / Accessory Structure",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://developdallas.dallascityhall.com/PermitDallas/",
+    "apply_url_known": true,
+    "applying_office": "Dallas Development Services Department",
+    "approval_timeline": {
+      "simple": "Most residential trade permits are same-day through the PermitDallas portal if the application is complete and no plan review is triggered."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in TX",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Panel schedule showing existing and proposed circuits",
+      "Wire gauge and breaker size for each new circuit",
+      "Electrical diagram or one-line drawing (required for panel upgrades)",
+      "Utility disconnect location marked on plans",
+      "Confirm the required license is active and matches the application: The appropriate licensed contractor pulls each trade permit on the homeowner's behalf: a Texas-licensed electrical contractor/master electrician for the electrical permit, a TACL-licensed HVAC contractor for the mechanical permit, and the general contractor or owner-builder for the building permit if Dallas allows owner-builder filing for this scope. The contractor's license number must appear on the application where required.",
+      "Bring 2 copies of all documents to Dallas Development Services Department"
+    ],
+    "city_contractor_registration": "Dallas requires annual city contractor registration. Verify the registration is current before submitting any permit application, because an expired registration can block the permit silently. Renewal is yearly through Dallas Development Services.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-01",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.tdlr.texas.gov",
+        "value": "Mechanical Permit \u2014 HVAC System Replacement (Residential)"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.tdlr.texas.gov",
+        "value": "https://developdallas.dallascityhall.com/PermitDallas/"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.tdlr.texas.gov",
+        "value": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the permit application without verifying current Dallas contractor registration status \u2014 an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting.",
+      "Undervaluing the project on the permit application \u2014 Dallas uses a permit valuation system and low valuations can trigger audit or penalty fees.",
+      "Missing bedroom egress requirements on the new window \u2014 if the opening is too small or the sill is too high, the plan review will get kicked back.",
+      "Skipping AFCI protection on the new bedroom circuit(s) \u2014 bedrooms are a common inspection fail.",
+      "Assuming the HVAC extension can be done without a mechanical permit because it is only a duct add-on."
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Dallas Development Services Department",
+      "decision": "REQUIRED",
+      "kind_category": "Building permit package",
+      "next_action": "File the required permit categories with Dallas Development Services Department: Building Permit \u2014 Detached Garage / Accessory Structure, Plumbing Permit, Mechanical Permit \u2014 HVAC System Replacement (Residential), Electrical Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Detached Garage / Accessory Structure.",
+    "customer_next_step": "File the required permit categories with Dallas Development Services Department: Building Permit \u2014 Detached Garage / Accessory Structure, Plumbing Permit, Mechanical Permit \u2014 HVAC System Replacement (Residential), Electrical Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Dallas Development Services Department",
+      "fee_cost_caveat": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+      "freshness_label": "Checked 2026-07-01",
+      "jurisdiction": "Dallas, TX",
+      "next_step": "File the required permit categories with Dallas Development Services Department: Building Permit \u2014 Detached Garage / Accessory Structure, Plumbing Permit, Mechanical Permit \u2014 HVAC System Replacement (Residential), Electrical Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building permit package",
+      "permit_name": "Required permit package \u2014 Building Permit \u2014 Detached Garage / Accessory Structure",
+      "source_cue": "Official sources attached for 4 required permit categories.",
+      "timeline": "Most residential trade permits are same-day through the PermitDallas portal if the application is complete and no plan review is triggered."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+    "inspection_booking": "Schedule inspections through the Dallas PermitDallas portal: Dallas typically allows online inspection requests for permitted work; call (214) 948-4480 if the portal is unavailable or you need to confirm the inspection queue. Plan on at least 24 hours advance notice for inspection scheduling, and book rough-in inspections before drywall is installed.",
+    "inspections": [
+      {
+        "description": "Inspector checks: wall framing for the new bedroom, window opening size and egress compliance, insulation installation, fireblocking, drywall backing, and any structural changes from garage door infill or new openings.",
+        "stage": "Building Framing / Rough-In",
+        "timing": "Before insulation is covered and before drywall is installed"
+      },
+      {
+        "stage": "Electrical Rough-In",
+        "timing": "Before insulation and drywall cover the wiring"
+      },
+      {
+        "description": "Inspector checks: duct extension routing, supply/return sizing, register placement, insulation on ducts in unconditioned spaces, and proper airflow to the new bedroom.",
+        "stage": "Mechanical Rough-In",
+        "timing": "Before drywall closes the ceiling or walls"
+      },
+      {
+        "description": "Inspector verifies: bedroom is finished as habitable space, window opens for emergency egress, outlets and switches are installed and working, HVAC serves the room, and all required smoke alarms are present.",
+        "stage": "Final Building / Trade",
+        "timing": "After all finishes, trim, devices, and HVAC are complete"
+      }
+    ],
+    "job_summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Plumbing Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Electrical Permit.",
+    "local_form_known": true,
+    "online_application_url": "https://developdallas.dallascityhall.com/PermitDallas/",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building permit package",
+    "permit_name": "Required permit package \u2014 Building Permit \u2014 Detached Garage / Accessory Structure",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Building Permit \u2014 Detached Garage / Accessory Structure",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit \u2014 Detached Garage / Accessory Structure",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_name": "Building Permit \u2014 Detached Garage / Accessory Structure",
+        "permit_type": "Building Permit \u2014 Detached Garage / Accessory Structure",
+        "rationale": "Required because the described scope triggers Building review; confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Plumbing Permit",
+        "condition_text": "When the described scope includes plumbing work or building department confirms the plumbing trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a plumbing trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_plumbing",
+        "segment": "residential",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes plumbing work or building department confirms the plumbing trigger from the request text."
+      },
+      {
+        "ahj_name": "Dallas permit office",
+        "application_authority_name": "Dallas permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Required for HVAC equipment replacement/changeout; confirm any equipment-connection details with the building department before submittal. Required because the described scope triggers Mechanical Permit.",
+        "permit_name": "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+        "permit_type": "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+        "portal_selection": "Mechanical - HVAC Changeout / Replacement",
+        "rationale": "Required for HVAC equipment replacement/changeout; confirm any equipment-connection details with the building department before submittal. Required because the described scope triggers Mechanical Permit.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Dallas permit office",
+        "application_authority_name": "Dallas permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review; confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Building Permit \u2014 Detached Garage / Accessory Structure",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a plumbing trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "scope_signal_floor_plumbing",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Required for HVAC equipment replacement/changeout; confirm any equipment-connection details with the building department before submittal. Required because the described scope triggers Mechanical Permit.",
+        "permit_type": "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential"
+      }
+    ],
+    "pro_tips": [
+      "Dallas PermitDallas can issue many residential trade permits same day, but garage conversions usually go faster if you upload a clean floor plan with dimensions and window sizes on the first submittal.",
+      "Use the correct project valuation up front. Dallas flags undervalued permits, and a realistic valuation reduces the chance of an audit or correction notice.",
+      "If the new bedroom window requires cutting a larger opening, show the header size and framing details on the plan set before you submit \u2014 that avoids a structural correction cycle.",
+      "Check your Dallas contractor registration renewal date before starting any permit application \u2014 registration lapses are one of the most avoidable rejection reasons.",
+      "If the garage slab or grading is being altered to match the new bedroom floor, ask Dallas whether a separate grading/drainage permit is needed before you start."
+    ],
+    "related_permits": [],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 Detached Garage / Accessory Structure",
+      "Plumbing Permit",
+      "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+      "Electrical Permit"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Plumbing Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Electrical Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 2,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 1,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://developdallas.dallascityhall.com/PermitDallas/"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "state",
+      "requirement_source_count": 2,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.tdlr.texas.gov",
+      "https://developdallas.dallascityhall.com/PermitDallas/"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Dallas, TX",
+        "publisher": "Texas state reference",
+        "source_type": "official_state",
+        "title": "Texas state reference",
+        "url": "https://www.tdlr.texas.gov"
+      },
+      {
+        "jurisdiction": "Dallas, TX",
+        "publisher": "Dallas Development Services Department",
+        "snippet": "Local online filing or permit portal accepted by source-locality checks.",
+        "source_type": "official_local",
+        "title": "Dallas Development Services Department",
+        "url": "https://developdallas.dallascityhall.com/PermitDallas/"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Plumbing Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Electrical Permit.",
+    "total_cost_estimate": "$42,000 - $58,000",
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed permit application for the building, electrical, and mechanical scopes",
+      "Dallas contractor registration number and current expiration date",
+      "Property address, scope description, and job value of $42,000",
+      "Floor plan showing the converted garage, new bedroom window, outlet locations, and HVAC extension",
+      "Equipment and material specs if any HVAC components or new electrical devices are being added",
+      "Owner authorization letter if the contractor is filing on behalf of the homeowner"
+    ]
+  },
+  "response_sha256": "f9cedcac55739af53469e6e2db6618c722902b347047f8782667e8b84caba17d",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "8tDh4OE30hk",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/8tDh4OE30hk",
+  "source_urls": [
+    "https://developdallas.dallascityhall.com/PermitDallas/",
+    "https://www.tdlr.texas.gov"
+  ],
+  "started_at_utc": "2026-07-01T23:52:52.311655+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

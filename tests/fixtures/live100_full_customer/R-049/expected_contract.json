@@ -1,0 +1,14 @@
+{
+  "case_id": "R-049",
+  "contract_note": "",
+  "must_add": [],
+  "must_demote": [],
+  "must_keep_required": [
+    "plumbing"
+  ],
+  "must_not_required": [
+    "wastewater_pretreatment_fog",
+    "electrical"
+  ],
+  "source_must_contain": "jacksonms.gov"
+}

@@ -1,0 +1,12 @@
+{
+  "case_id": "R-003",
+  "contract_note": "",
+  "must_add": [],
+  "must_demote": [],
+  "must_keep_required": [
+    "plumbing"
+  ],
+  "must_not_required": [
+    "mechanical"
+  ]
+}

@@ -6987,7 +6987,26 @@ def apply_fee_verify_caveat(result: dict) -> dict:
         return result
 
     def _fee_verify_caveat(source_url: str = "") -> str:
+        source_url = str(source_url or "").strip()
         return f" — verify in {source_url} before quoting" if source_url else " — verify with the building department before quoting"
+
+    def _dedupe_fee_caveats(text: str) -> str:
+        if not text:
+            return text
+        value = re.sub(r"\s+", " ", text).strip()
+        value = re.sub(r"\s+—\s+verify\s+in\s+before\s+quoting\b", " — verify with the building department before quoting", value, flags=re.I)
+        value = re.sub(r"\s+—\s+verify\s+(?:in|at)\s+([^—]+?)\s+before\s+quoting\b", lambda m: f" — verify in {m.group(1).strip()} before quoting", value, flags=re.I)
+        value = re.sub(r"\s+—\s+verify\s+current\s+fees\s+at\s+([^—]+?)\s+before\s+quoting\b", lambda m: f" — verify in {m.group(1).strip()} before quoting", value, flags=re.I)
+        value = re.sub(r"\s+—\s+verify\s+current\s+fees\s+with\s+the\s+issuing\s+office\s+before\s+quoting\b", " — verify with the building department before quoting", value, flags=re.I)
+        caveat_re = re.compile(r"\s+—\s+(?:verify\s+in\s+[^—]+?|verify\s+with\s+the\s+building\s+department)\s+before\s+quoting", re.I)
+        seen = False
+        def repl(match):
+            nonlocal seen
+            if seen:
+                return ""
+            seen = True
+            return match.group(0)
+        return caveat_re.sub(repl, value)
 
     verify_caveat = _fee_verify_caveat()
 
@@ -7000,17 +7019,17 @@ def apply_fee_verify_caveat(result: dict) -> dict:
         if source_url:
             verify_caveat = _fee_verify_caveat(source_url)
         if source_url and "verify in" not in formula_text.lower():
-            result["fee_range"] = f"{formula_text}{verify_caveat}"
+            result["fee_range"] = _dedupe_fee_caveats(f"{formula_text}{verify_caveat}")
         elif source_url and "verify in" in formula_text.lower():
             # Replace any existing verify URL
-            result["fee_range"] = re.sub(
+            result["fee_range"] = _dedupe_fee_caveats(re.sub(
                 r"\s+—\s+verify\s+(?:in|at)\s+.+?(?:\s+before quoting)?$",
                 verify_caveat,
                 formula_text,
                 flags=re.I,
-            )
+            ))
         else:
-            result["fee_range"] = f"{formula_text}{verify_caveat}"
+            result["fee_range"] = _dedupe_fee_caveats(f"{formula_text}{verify_caveat}")
         return result
 
     def _strip_fee_markdown(text: str) -> str:
@@ -7044,17 +7063,17 @@ def apply_fee_verify_caveat(result: dict) -> dict:
             updated_fee_text,
             flags=re.I,
         )
-        result["fee_range"] = updated_fee_text
+        result["fee_range"] = _dedupe_fee_caveats(updated_fee_text)
         return result
     fee_lower = fee_text.lower()
     if verify_caveat.lower() in fee_lower:
-        result["fee_range"] = _strip_fee_markdown(fee_text)
+        result["fee_range"] = _strip_fee_markdown(_dedupe_fee_caveats(fee_text))
         return result
     if fee_lower.startswith("fee estimate:") or fee_lower.startswith("fee planning estimate:"):
         base = fee_text
     else:
         base = f"Fee Estimate: {fee_text}"
-    result["fee_range"] = f"{base}{verify_caveat}"
+    result["fee_range"] = _dedupe_fee_caveats(f"{base}{verify_caveat}")
     result["fee_range"] = _strip_fee_markdown(result["fee_range"])
     return result
 

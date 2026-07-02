@@ -1,0 +1,16 @@
+{
+  "case_id": "C-050",
+  "contract_note": "",
+  "must_add": [],
+  "must_demote": [],
+  "must_keep_required": [
+    "building_ti",
+    "plumbing",
+    "mechanical",
+    "electrical",
+    "fire_suppression"
+  ],
+  "must_not_required": [],
+  "source_must_contain": "cheyennecity.org",
+  "source_must_not_contain": "laramiecountywy.gov"
+}

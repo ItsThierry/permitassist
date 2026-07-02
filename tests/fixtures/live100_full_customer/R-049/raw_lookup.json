@@ -1,0 +1,398 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "New gas piping",
+    "bucket": "gas line",
+    "city": "Jackson",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Fuel gas/Plumbing/Mechanical"
+    ],
+    "id": "R-049",
+    "job_type": "install new gas line to outdoor kitchen and grill, job value 6000",
+    "job_value": 6000,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "MS",
+    "zip_code": "39201"
+  },
+  "completed_at_utc": "2026-07-01T23:58:03.108608+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 4.5,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/",
+    "applying_office": "City of Jackson Office of Code Services",
+    "confidence": "high",
+    "customer_headline": "Permit required: Plumbing Permit \u2014 Gas Piping Installation (Residential).",
+    "customer_next_step": "File the required permit categories with City of Jackson Office of Code Services: Plumbing Permit \u2014 Gas Piping Installation (Residential). Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: $100 minimum alteration/remodel fee, or 50% of calculated fee if greater; application fee is $90 (Jackson permit fee schedule). For a $6,000 gas line job, expect roughly $100 - $250 total permit cost depending on valuation calculation. \u2014 verify in before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Plumbing",
+    "permit_name": "Plumbing Permit \u2014 Gas Piping Installation (Residential)",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 4
+  },
+  "permit_elapsed_seconds": 2.37,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Jackson",
+    "job_category": "residential",
+    "job_type": "install new gas line to outdoor kitchen and grill, job value 6000",
+    "job_value": 6000,
+    "state": "MS",
+    "vertical": "residential",
+    "zip_code": "39201"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Jackson Office of Code Services",
+      "permit_category": "Plumbing",
+      "permit_type": "Plumbing Permit \u2014 Gas Piping Installation (Residential)",
+      "portal_url": "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Plumbing Permit \u2014 Gas Piping Installation (Residential)",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/",
+    "apply_url_known": true,
+    "applying_office": "City of Jackson Office of Code Services",
+    "approval_timeline": {
+      "complex": "1-3 weeks if plan review is required or if the gas line routing needs clarification",
+      "simple": "1-5 business days for over-the-counter residential trade permit review if no plan issues"
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in MS",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Confirm the required license is active and matches the application: Licensed plumbing/gas contractor pulls the permit on the homeowner's behalf \u2014 their license number must appear on the application. Mississippi does not have statewide contractor licensing, so Jackson/local requirements should be verified before filing. Owner-builder status does not remove the permit requirement for gas piping work.",
+      "Bring 2 copies of all documents to City of Jackson Office of Code Services"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-01",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "National code reference",
+        "source_url": "https://www.iccsafe.org/building-safety-journal/bsj-technical/code-requirements-for-outdoor-kitchens/",
+        "value": "Plumbing Permit \u2014 Gas Piping Installation (Residential)"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "National code reference",
+        "source_url": "https://www.iccsafe.org/building-safety-journal/bsj-technical/code-requirements-for-outdoor-kitchens/",
+        "value": "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "National code reference",
+        "source_url": "https://www.iccsafe.org/building-safety-journal/bsj-technical/code-requirements-for-outdoor-kitchens/",
+        "value": "Fee Estimate: $100 minimum alteration/remodel fee, or 50% of calculated fee if greater; application fee is $90 (Jackson permit fee schedule). For a $6,000 gas line job, expect roughly $100 - $250 total permit cost depending on valuation calculation. \u2014 verify in https://www.co.jackson.ms.us/DocumentCenter/View/167/Building-Permit-Fee-Schedule-Applications-A-D-PDF before quoting"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "National code reference",
+        "source_url": "https://www.iccsafe.org/building-safety-journal/bsj-technical/code-requirements-for-outdoor-kitchens/",
+        "value": "{'simple': '1-5 business days for over-the-counter residential trade permit review if no plan issues', 'complex': '1-3 weeks if plan review is required or if the gas line routing needs clarification'}"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "National code reference",
+        "source_url": "https://www.iccsafe.org/building-safety-journal/bsj-technical/code-requirements-for-outdoor-kitchens/",
+        "value": "[{'stage': 'Gas Piping Rough-In', 'description': 'Inspector checks pipe material and sizing, routing, support spacing, protection from physical damage, approved shutoff valve location, pressure test results, and that all joints are accessible before concealment.', 'timing': 'Before covering piping, backfilling trenches, or closing walls/ceilings'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Starting the gas line work before the permit is issued and posted \u2014 the city can stop the job and require corrections before inspection",
+      "Using the wrong permit type \u2014 this is gas piping work, so it should not be filed as a building permit",
+      "Burying or concealing the gas line before the rough-in/pressure test inspection is approved",
+      "Not providing the actual project valuation \u2014 Jackson uses valuation-based fees, so underreporting the job value can delay approval"
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Jackson Office of Code Services",
+      "decision": "REQUIRED",
+      "kind_category": "Plumbing",
+      "next_action": "File the required permit categories with City of Jackson Office of Code Services: Plumbing Permit \u2014 Gas Piping Installation (Residential). Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official source: Official Jackson source"
+    },
+    "customer_headline": "Permit required: Plumbing Permit \u2014 Gas Piping Installation (Residential).",
+    "customer_next_step": "File the required permit categories with City of Jackson Office of Code Services: Plumbing Permit \u2014 Gas Piping Installation (Residential). Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Jackson Office of Code Services",
+      "fee_cost_caveat": "Fee Estimate: $100 minimum alteration/remodel fee, or 50% of calculated fee if greater; application fee is $90 (Jackson permit fee schedule). For a $6,000 gas line job, expect roughly $100 - $250 total permit cost depending on valuation calculation. \u2014 verify in before quoting",
+      "freshness_label": "Checked 2026-07-01",
+      "jurisdiction": "Jackson, MS",
+      "next_step": "File the required permit categories with City of Jackson Office of Code Services: Plumbing Permit \u2014 Gas Piping Installation (Residential). Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Plumbing",
+      "permit_name": "Plumbing Permit \u2014 Gas Piping Installation (Residential)",
+      "source_cue": "Official source: Official Jackson source",
+      "timeline": "1-5 business days for over-the-counter residential trade permit review if no plan issues"
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $100 minimum alteration/remodel fee, or 50% of calculated fee if greater; application fee is $90 (Jackson permit fee schedule). For a $6,000 gas line job, expect roughly $100 - $250 total permit cost depending on valuation calculation. \u2014 verify in before quoting",
+    "inspection_booking": "Schedule inspections through the City of Jackson Office of Code Services at the permit office phone number (601) 960-1167. City hours are Mon-Fri 8:00 am - 5:00 pm. Advance notice requirement was not clearly stated in the source context, so call ahead before covering piping or requesting final approval.",
+    "inspections": [
+      {
+        "description": "Inspector checks pipe material and sizing, routing, support spacing, protection from physical damage, approved shutoff valve location, pressure test results, and that all joints are accessible before concealment.",
+        "stage": "Gas Piping Rough-In",
+        "timing": "Before covering piping, backfilling trenches, or closing walls/ceilings"
+      }
+    ],
+    "job_summary": "Permit required: Plumbing Permit \u2014 Gas Piping Installation (Residential).",
+    "local_form_known": true,
+    "online_application_url": "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Plumbing",
+    "permit_name": "Plumbing Permit \u2014 Gas Piping Installation (Residential)",
+    "permit_required": true,
+    "permit_type": "Plumbing Permit \u2014 Gas Piping Installation (Residential)",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "ahj_name": "Jackson permit office",
+        "application_authority_name": "Jackson permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "The city uses a plumbing permit structure with a $90 application fee plus valuation-based calculation; minimum alteration/remodel fee is $100 or 50% of the calculated fee, whichever is greater. Required because the described scope triggers Plumbing Permit.",
+        "permit_name": "Plumbing Permit \u2014 Gas Piping Installation (Residential)",
+        "permit_type": "Plumbing Permit \u2014 Gas Piping Installation (Residential)",
+        "portal_selection": "Plumbing Permit - Gas Line Installation",
+        "rationale": "The city uses a plumbing permit structure with a $90 application fee plus valuation-based calculation; minimum alteration/remodel fee is $100 or 50% of the calculated fee, whichever is greater. Required because the described scope triggers Plumbing Permit.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: The city uses a plumbing permit structure with a $90 application fee plus valuation-based calculation; minimum alteration/remodel fee is $100 or 50% of the calculated fee, whichever is greater. Required because the described scope triggers Plumbing Permit.",
+        "permit_type": "Plumbing Permit \u2014 Gas Piping Installation (Residential)",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "residential"
+      }
+    ],
+    "pro_tips": [
+      "Have the gas line route and appliance connection point drawn out before you submit \u2014 Jackson's valuation-based review goes faster when the scope is clear",
+      "any electrical outlets or lighting, pull those as separate permits only if they are actually part of the scope",
+      "Keep the pressure test gauge reading and test duration documented for the inspector \u2014 it saves time at rough-in"
+    ],
+    "related_permit_families": [
+      "Mechanical",
+      "Electrical",
+      "Health"
+    ],
+    "related_permit_names": [
+      "Mechanical / Fuel-Gas Permit",
+      "Electrical Permit / Disconnect-Circuit Verification",
+      "Health Department Review"
+    ],
+    "related_permit_segments": [
+      "residential"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Mechanical / Fuel-Gas Permit",
+        "condition_text": "Mechanical, HVAC, ventilation, or fuel-gas equipment in the request triggers mechanical/fuel-gas review.",
+        "decision": "CONDITIONAL",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "permit_name": "Mechanical / Fuel-Gas Permit",
+        "permit_type": "Mechanical / Fuel-Gas Permit",
+        "rationale": "Mechanical, HVAC, ventilation, or fuel-gas equipment in the request triggers mechanical/fuel-gas review.",
+        "required": false,
+        "required_if": "Mechanical, HVAC, ventilation, or fuel-gas equipment in the request triggers mechanical/fuel-gas review.",
+        "segment": "residential",
+        "source_url": "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Electrical Permit / Disconnect-Circuit Verification",
+        "condition_text": "Verify electrical filing if the mechanical/HVAC equipment includes a new or altered circuit, disconnect, receptacle, wiring, or service work.",
+        "decision": "CONDITIONAL",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit / Disconnect-Circuit Verification",
+        "permit_type": "Electrical Permit / Disconnect-Circuit Verification",
+        "rationale": "Verify electrical filing if the mechanical/HVAC equipment includes a new or altered circuit, disconnect, receptacle, wiring, or service work.",
+        "required": false,
+        "required_if": "Verify electrical filing if the mechanical/HVAC equipment includes a new or altered circuit, disconnect, receptacle, wiring, or service work.",
+        "segment": "residential",
+        "source_url": "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Health Department Review",
+        "condition_text": "Food, clinic, daycare, or grease/FOG scope can trigger health-department review.",
+        "decision": "CONDITIONAL",
+        "display_family": "Health",
+        "family": "health",
+        "filing_family": "health",
+        "kind": "Health",
+        "permit_name": "Health Department Review",
+        "permit_type": "Health Department Review",
+        "rationale": "Food, clinic, daycare, or grease/FOG scope can trigger health-department review.",
+        "required": false,
+        "required_if": "Food, clinic, daycare, or grease/FOG scope can trigger health-department review.",
+        "segment": "residential",
+        "source_url": "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Plumbing"
+    ],
+    "required_permit_names": [
+      "Plumbing Permit \u2014 Gas Piping Installation (Residential)"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Permit required: Plumbing Permit \u2014 Gas Piping Installation (Residential).",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 1,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 4,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 3,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/",
+        "https://www.co.jackson.ms.us/DocumentCenter/View/167/Building-Permit-Fee-Schedule-Applications-A-D-PDF",
+        "https://jacksonms.gov/residents/residential-building-and-permits/"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 3,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/",
+      "https://www.co.jackson.ms.us/DocumentCenter/View/167/Building-Permit-Fee-Schedule-Applications-A-D-PDF",
+      "https://jacksonms.gov/residents/residential-building-and-permits/",
+      "https://www.iccsafe.org/building-safety-journal/bsj-technical/code-requirements-for-outdoor-kitchens/"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Jackson, MS",
+        "publisher": "Official Jackson source",
+        "source_type": "official_local",
+        "title": "Official Jackson source",
+        "url": "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/"
+      },
+      {
+        "jurisdiction": "Jackson, MS",
+        "publisher": "Official Jackson source",
+        "source_type": "official_local",
+        "title": "Official Jackson source",
+        "url": "https://www.co.jackson.ms.us/DocumentCenter/View/167/Building-Permit-Fee-Schedule-Applications-A-D-PDF"
+      },
+      {
+        "jurisdiction": "Jackson, MS",
+        "publisher": "Official Jackson source",
+        "source_type": "official_local",
+        "title": "Official Jackson source",
+        "url": "https://jacksonms.gov/residents/residential-building-and-permits/"
+      },
+      {
+        "jurisdiction": "Jackson, MS",
+        "publisher": "National code reference",
+        "source_type": "national_reference",
+        "title": "National code reference",
+        "url": "https://www.iccsafe.org/building-safety-journal/bsj-technical/code-requirements-for-outdoor-kitchens/"
+      }
+    ],
+    "summary": "Permit required: Plumbing Permit \u2014 Gas Piping Installation (Residential).",
+    "total_cost_estimate": "$1,200 - $3,500",
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed permit application with job address and scope description",
+      "Contractor business information and any local registration or license details used by the City of Jackson",
+      "Gas line layout showing route, pipe size, shutoff valve location, and appliance connection point",
+      "Job value documentation showing the $6,000 project valuation",
+      "Property owner authorization if the contractor is filing on the owner's behalf"
+    ],
+    "zoning_hoa_flag": "grill installations can trigger setback, easement, and HOA restrictions.any subdivision or HOA rules before installation."
+  },
+  "response_sha256": "a1e28b86190c5dc2b32769b4794c64f972c4ee20987da07f42842a1bbb22d8d5",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "GfuCEZtUp_8",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/GfuCEZtUp_8",
+  "source_urls": [
+    "https://jacksonms.gov/government/city-departments/planning-and-development/office-of-code-services/building-permits/",
+    "https://jacksonms.gov/residents/residential-building-and-permits/",
+    "https://www.co.jackson.ms.us/DocumentCenter/View/167/Building-Permit-Fee-Schedule-Applications-A-D-PDF",
+    "https://www.iccsafe.org/building-safety-journal/bsj-technical/code-requirements-for-outdoor-kitchens/"
+  ],
+  "started_at_utc": "2026-07-01T23:57:58.607840+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

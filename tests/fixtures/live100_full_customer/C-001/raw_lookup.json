@@ -1,0 +1,703 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Full restaurant packet",
+    "bucket": "restaurant TI hood",
+    "city": "Phoenix",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "Mechanical",
+      "Plumbing",
+      "Electrical",
+      "Fire/hood suppression",
+      "Health"
+    ],
+    "id": "C-001",
+    "job_type": "commercial restaurant tenant improvement adding Type I hood gas line grease interceptor electrical panel and fire suppression, job value 180000",
+    "job_value": 180000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "AZ",
+    "zip_code": "85004"
+  },
+  "completed_at_utc": "2026-07-01T23:52:29.568086+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 6.65,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://www.phoenix.gov/business/construction-permits-planning.html",
+    "applying_office": "City of Phoenix Planning and Development Department",
+    "confidence": "high",
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit.",
+    "customer_next_step": "File the required permit categories with City of Phoenix Planning and Development Department: Building Permit, Gas Permit \u2014 Commercial Fuel Gas Piping, Mechanical Permit \u2014 Commercial Tenant Improvement, Electrical Permit \u2014 Commercial Tenant Improvement, Wastewater / FOG / Pretreatment Approval, Fire Suppression / Fire Prevention Review, Health Plan Review / Food Establishment Permit, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+    "fee_range": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Building Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 7
+  },
+  "permit_elapsed_seconds": 2.82,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Phoenix",
+    "job_category": "commercial",
+    "job_type": "commercial restaurant tenant improvement adding Type I hood gas line grease interceptor electrical panel and fire suppression, job value 180000",
+    "job_value": 180000,
+    "state": "AZ",
+    "vertical": "commercial",
+    "zip_code": "85004"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Phoenix Planning and Development Department",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Building Permit",
+      "portal_url": "https://www.phoenix.gov/business/construction-permits-planning.html",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.phoenix.gov/business/construction-permits-planning.html",
+    "apply_url_known": true,
+    "applying_office": "City of Phoenix Planning and Development Department",
+    "approval_timeline": {
+      "complex": "About 28 days for initial plan review, longer if corrections are required or if fire/life-safety coordination adds review cycles.",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in AZ",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Type I commercial exhaust hood listed/labeled per UL 710 with NFPA 96 compliance and building department-approved capture velocity per IMC 507",
+      "ANSUL R-102 (or equivalent UL 300) hood suppression: post-install discharge test certificate + every-6-month cleaning + annual inspection per NFPA 96 \u00a711",
+      "ANSUL discharge auto-shutoffs all hood gas + electric fuel sources per IMC 507.7 \u2014 use the listed building department source during witness test",
+      "Grease interceptor sized per IPC 1003.3.4 by drainage fixture units (4-comp + mop typically 50+ GPM hydromechanical OR 750\u20131,500 gal exterior gravity); located \u226425 ft developed length from fixtures",
+      "Makeup air system balanced to \u00b110% of hood exhaust per IMC 506.3.4; tempered if > 35\u00b0F differential to prevent backdraft",
+      "ADA fixture counts per IBC Table 2902.1 + 60 in turning radius + lavatory pipe wrap insulation per ADA \u00a7606.5 + mirror reflective edge \u226440 in AFF per ADA \u00a7603.3",
+      "Local health department food establishment plan review + final inspection sign-off REQUIRED before Certificate of Occupancy (parallel filing \u2014 file early)",
+      "Walk-in cooler envelope per IECC 403.10.1 (\u2265R-25 medium-temp panels, \u2265R-32 freezer panels); door gasket seal verification at final",
+      "Existing sprinkler system reuse: hydraulic recalc for new layout + current 5-year cert per NFPA 25; new heads in cooking equipment area must be K-25+ per NFPA 13",
+      "Floor drains within 5 ft of kitchen equipment per IPC 411 with backwater valves where required",
+      "Fire alarm + emergency lighting per NFPA 72/101 with current battery capacity test on file",
+      "Change of occupancy memo (B/M \u2192 A-2): include occupant load + exits + restroom count + sprinkler/fire-alarm impacts per IEBC \u00a71001.2/1001.3 + IBC \u00a7303.3 (Group A-2)",
+      "Maricopa County (or local equivalent) Environmental Services Department food-establishment plan review + final inspection sign-off REQUIRED before opening \u2014 coordinate with City CO schedule (MCESD: maricopa.gov)",
+      "Outdoor patio / sidewalk dining: verify city zoning (use permit may apply, e.g. Phoenix ZO \u00a71207); include patio in occupant load + exiting + accessible route + sprinkler/awning review",
+      "Phoenix-specific (or equivalent local rule): contractor must be AZ ROC licensed AND associated with the Phoenix SHAPE PHX permit account before submittal (A.R.S. Title 32 Ch. 10) \u2014 frequently-missed pre-submittal blocker",
+      "Realistic fee warning: a 3,200 sq ft restaurant TI in Phoenix typically lands $8K\u2013$25K+ across plan review + permit + fire + utility + health + zoning. Reject token min-fee outputs; calculate from the live fee schedule before quoting",
+      "Bring 2 copies of all documents to City of Phoenix Planning & Development Department (PDD)"
+    ],
+    "city_contractor_registration": "Phoenix requires a separate City Contractor Registration in addition to the Arizona ROC license. Verify the city registration is current before submitting any permit application; an expired or missing city registration can block the permit. Renewal is handled through the City of Phoenix contractor registration process and should be checked before filing.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-01",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "City of Phoenix Planning and Development Department official permit page",
+        "source_url": "https://www.phoenix.gov/business/construction-permits-planning.html",
+        "value": "Building Permit \u2014 Tenant Improvement / Restaurant Interior Alteration"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "City of Phoenix Planning and Development Department official permit page",
+        "source_url": "https://www.phoenix.gov/business/construction-permits-planning.html",
+        "value": "https://www.phoenix.gov/business/construction-permits-planning.html"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "City of Phoenix Planning and Development Department official permit page",
+        "source_url": "https://www.phoenix.gov/business/construction-permits-planning.html",
+        "value": "{'simple': 'Over-the-counter intake is not typical for this scope; expect plan review. Phoenix initial plan review is about 28 days, with express services available for qualifying submittals.', 'complex': 'About 28 days for initial plan review, longer if corrections are required or if fire/life-safety coordination adds review cycles.'}"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "City of Phoenix Planning and Development Department official permit page",
+        "source_url": "https://www.phoenix.gov/business/construction-permits-planning.html",
+        "value": "[{'stage': 'Building / TI Rough-In', 'description': 'Inspector checks framing or wall modifications, fire-resistance-rated assemblies, accessibility clearances, and that approved plans match field conditions before concealment.', 'timing': 'Before drywall, ceiling closure, or finish installation'}, {'stage': 'Mechanical Hood Rough-In', 'description': 'Inspector verifies Type I hood placement, exhaust duct routing, grease duct clearances, makeup air coordination, and that penetrations and supports match approved plans.', 'timing': 'Before duct concealment and before hood final trim-out'}, {'stage': 'Plumbing Rough-In', 'description': 'Inspector checks grease interceptor location, drain slope, cleanouts, venting, and that kitchen waste piping is installed per approved plans before concealment.', 'timing': 'Before slab patching, backfill, or wall/ceiling closure'}, {'stage': 'Electrical Rough-In', 'description': 'Inspector verifies panel work, feeder sizing, breaker protection, grounding/bonding, equipment disconnects, and any new circuits serving kitchen equipment.', 'timing': 'Before walls/ceilings are closed'}, {'stage': 'Fire Suppression Final', 'description': 'Inspector checks nozzle placement, cylinder mounting, manual pull station, fusible links or detection interface, and system activation/labeling for the hood suppression system.', 'timing': 'After hood, appliances, and suppression components are fully installed'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the permit without current Phoenix city contractor registration \u2014 Phoenix can reject the application even if the ROC license is valid",
+      "Trying to file this as a single trade permit only \u2014 a restaurant TI with hood, grease interceptor, panel work, and suppression needs coordinated commercial review",
+      "Missing fire suppression submittal details for the hood system \u2014 the hood permit and suppression permit are not the same thing",
+      "Under-sizing the electrical service or panel for kitchen equipment loads \u2014 plan review will flag missing load calculations",
+      "Forgetting grease interceptor sizing and fixture count documentation \u2014 plumbing review commonly stops the submittal",
+      "Starting demolition before the permit is issued and posted \u2014 Phoenix can issue stop-work orders and require re-review"
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Health Department / Food Establishment Review is triggered for this project when the building department confirms the relevant health scope condition.",
+        "permit_type": "Health Department / Food Establishment Review",
+        "rationale": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.",
+        "reason": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.",
+        "trigger_condition": "Verify whether Health Department / Food Establishment Review is triggered for this project when the building department confirms the relevant health scope condition."
+      },
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Grease Interceptor / FOG Approval is triggered for this project when the building department confirms the relevant wastewater scope condition.",
+        "permit_type": "Grease Interceptor / FOG Approval",
+        "rationale": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.",
+        "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.",
+        "trigger_condition": "Verify whether Grease Interceptor / FOG Approval is triggered for this project when the building department confirms the relevant wastewater scope condition."
+      },
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Phoenix Planning and Development Department",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with City of Phoenix Planning and Development Department: Building Permit, Gas Permit \u2014 Commercial Fuel Gas Piping, Mechanical Permit \u2014 Commercial Tenant Improvement, Electrical Permit \u2014 Commercial Tenant Improvement, Wastewater / FOG / Pretreatment Approval, Fire Suppression / Fire Prevention Review, Health Plan Review / Food Establishment Permit, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 9 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit.",
+    "customer_next_step": "File the required permit categories with City of Phoenix Planning and Development Department: Building Permit, Gas Permit \u2014 Commercial Fuel Gas Piping, Mechanical Permit \u2014 Commercial Tenant Improvement, Electrical Permit \u2014 Commercial Tenant Improvement, Wastewater / FOG / Pretreatment Approval, Fire Suppression / Fire Prevention Review, Health Plan Review / Food Establishment Permit, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Phoenix Planning and Development Department",
+      "fee_cost_caveat": "$180,000 - $240,000",
+      "freshness_label": "Checked 2026-07-01",
+      "jurisdiction": "Phoenix, AZ",
+      "next_step": "File the required permit categories with City of Phoenix Planning and Development Department: Building Permit, Gas Permit \u2014 Commercial Fuel Gas Piping, Mechanical Permit \u2014 Commercial Tenant Improvement, Electrical Permit \u2014 Commercial Tenant Improvement, Wastewater / FOG / Pretreatment Approval, Fire Suppression / Fire Prevention Review, Health Plan Review / Food Establishment Permit, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Building Permit",
+      "source_cue": "Official sources attached for 9 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "inspection_booking": "Schedule inspections through the City of Phoenix permit/inspection portal associated with PDD. Phoenix requires a minimum 24-hour advance notice; same-day requests are not accepted. Use the city portal for inspection requests and have the permit number ready. Phone: (602) 262-7811. Verify current portal routing on the PDD website before booking.",
+    "inspections": [
+      {
+        "description": "Inspector checks framing or wall modifications, fire-resistance-rated assemblies, accessibility clearances, and that approved plans match field conditions before concealment.",
+        "stage": "Building / TI Rough-In",
+        "timing": "Before drywall, ceiling closure, or finish installation"
+      },
+      {
+        "description": "Inspector verifies Type I hood placement, exhaust duct routing, grease duct clearances, makeup air coordination, and that penetrations and supports match approved plans.",
+        "stage": "Mechanical Hood Rough-In",
+        "timing": "Before duct concealment and before hood final trim-out"
+      },
+      {
+        "description": "Inspector checks grease interceptor location, drain slope, cleanouts, venting, and that kitchen waste piping is installed per approved plans before concealment.",
+        "stage": "Plumbing Rough-In",
+        "timing": "Before slab patching, backfill, or wall/ceiling closure"
+      },
+      {
+        "description": "Inspector verifies panel work, feeder sizing, breaker protection, grounding/bonding, equipment disconnects, and any new circuits serving kitchen equipment.",
+        "stage": "Electrical Rough-In",
+        "timing": "Before walls/ceilings are closed"
+      },
+      {
+        "description": "Inspector checks nozzle placement, cylinder mounting, manual pull station, fusible links or detection interface, and system activation/labeling for the hood suppression system.",
+        "stage": "Fire Suppression Final",
+        "timing": "After hood, appliances, and suppression components are fully installed"
+      }
+    ],
+    "job_summary": "Required permit package: Building Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit \u2014 Commercial Tenant Improvement; Wastewater / FOG / Pretreatment Approval; Fire Suppression / Fire Prevention Review; Health Plan Review / Food Establishment Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "local_form_known": true,
+    "online_application_url": "https://www.phoenix.gov/business/construction-permits-planning.html",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Building Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "rationale": "Required because the original request explicitly includes building scope; confirm the exact portal subcategory with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "City of Phoenix Planning & Development Department",
+        "application_authority_name": "City of Phoenix Planning & Development Department",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "department_url": "https://www.phoenix.gov/pdd",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Commercial fuel-gas piping, gas manifold, gas appliance connection, or gas-dryer scope is stated and commonly requires gas piping review and pressure-test inspection.",
+        "permit_name": "Gas Permit \u2014 Commercial Fuel Gas Piping",
+        "permit_type": "Gas Permit \u2014 Commercial Fuel Gas Piping",
+        "portal_selection": "Gas Permit - Commercial Fuel Gas",
+        "rationale": "Commercial fuel-gas piping, gas manifold, gas appliance connection, or gas-dryer scope is stated and commonly requires gas piping review and pressure-test inspection.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "source_url": "https://www.phoenix.gov/pdd",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "City of Phoenix Planning & Development Department",
+        "application_authority_name": "City of Phoenix Planning & Development Department",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "department_url": "https://www.phoenix.gov/pdd",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope is stated and commonly requires mechanical review. Required because the described scope triggers Mechanical Permit.",
+        "permit_name": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+        "permit_type": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+        "portal_selection": "Mechanical Permit - Commercial Interior Alteration",
+        "rationale": "Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope is stated and commonly requires mechanical review. Required because the described scope triggers Mechanical Permit.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial",
+        "source_url": "https://www.phoenix.gov/pdd",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "City of Phoenix Planning & Development Department",
+        "application_authority_name": "City of Phoenix Planning & Development Department",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "department_url": "https://www.phoenix.gov/pdd",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Commercial lighting, panels, branch circuits, equipment, emergency lighting, controls, or low-voltage/electrical scope is stated and commonly requires electrical review. Required because the described scope triggers Electrical Permit.",
+        "permit_name": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "permit_type": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "portal_selection": "Electrical Permit - Commercial Interior Alteration",
+        "rationale": "Commercial lighting, panels, branch circuits, equipment, emergency lighting, controls, or low-voltage/electrical scope is stated and commonly requires electrical review. Required because the described scope triggers Electrical Permit.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial",
+        "source_url": "https://www.phoenix.gov/pdd",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "City of Phoenix Water Services / Wastewater Pretreatment",
+        "application_authority_name": "City of Phoenix Water Services / Wastewater Pretreatment",
+        "approval_type": "Wastewater / FOG / Pretreatment Approval",
+        "decision": "REQUIRED",
+        "department_url": "https://www.phoenix.gov/waterservices",
+        "display_family": "Wastewater/FOG",
+        "family": "wastewater",
+        "filing_family": "wastewater",
+        "kind": "Wastewater/FOG",
+        "notes": "Required because the described scope triggers Wastewater / FOG / Pretreatment Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Wastewater / FOG / Pretreatment Approval",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "rationale": "Required because the described scope triggers Wastewater / FOG / Pretreatment Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "segment": "commercial",
+        "source_url": "https://www.phoenix.gov/waterservices",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Phoenix Fire Department / Fire Prevention",
+        "application_authority_name": "Phoenix Fire Department / Fire Prevention",
+        "approval_type": "Fire Suppression / Fire Prevention Review",
+        "decision": "REQUIRED",
+        "department_url": "https://www.phoenix.gov/fire",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "notes": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "rationale": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "segment": "commercial",
+        "source_url": "https://www.phoenix.gov/fire",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Maricopa County Environmental Services",
+        "application_authority_name": "Maricopa County Environmental Services",
+        "approval_type": "Food Establishment Health Plan Review / Permit",
+        "decision": "REQUIRED",
+        "department_url": "https://www.maricopa.gov/EnvSvc",
+        "display_family": "Health",
+        "family": "health",
+        "filing_family": "health",
+        "kind": "Health",
+        "notes": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "permit_name": "Health Plan Review / Food Establishment Permit",
+        "permit_type": "Health Plan Review / Food Establishment Permit",
+        "portal_selection": "Commercial Building Permit - Tenant Improvement / Interior Alteration",
+        "rationale": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "required": true,
+        "segment": "commercial",
+        "source_url": "https://www.maricopa.gov/EnvSvc",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "City of Phoenix Planning & Development Department / Planning & Zoning",
+        "application_authority_name": "City of Phoenix Planning & Development Department / Planning & Zoning",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "department_url": "https://www.phoenix.gov/pdd",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial",
+        "source_url": "https://www.phoenix.gov/pdd",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "City of Phoenix Planning & Development Department",
+        "application_authority_name": "City of Phoenix Planning & Development Department",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "decision": "REQUIRED",
+        "department_url": "https://www.phoenix.gov/pdd",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "notes": "Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "rationale": "Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "segment": "commercial",
+        "source_url": "https://www.phoenix.gov/pdd",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the original request explicitly includes building scope; confirm the exact portal subcategory with the listed permit office before filing.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Commercial fuel-gas piping, gas manifold, gas appliance connection, or gas-dryer scope is stated and commonly requires gas piping review and pressure-test inspection.",
+        "permit_type": "Gas Permit \u2014 Commercial Fuel Gas Piping",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Commercial HVAC, ventilation, exhaust, diffuser/RTU, or air-balance scope is stated and commonly requires mechanical review. Required because the described scope triggers Mechanical Permit.",
+        "permit_type": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Commercial lighting, panels, branch circuits, equipment, emergency lighting, controls, or low-voltage/electrical scope is stated and commonly requires electrical review. Required because the described scope triggers Electrical Permit.",
+        "permit_type": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "wastewater",
+        "included_because": "Official permit rule: Required because the described scope triggers Wastewater / FOG / Pretreatment Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "scope_trigger": "wastewater_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "fire",
+        "included_because": "Official permit rule: Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "scope_trigger": "fire_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "health",
+        "included_because": "Official permit rule: Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
+        "permit_type": "Health Plan Review / Food Establishment Permit",
+        "scope_trigger": "health_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "planning",
+        "included_because": "Official permit rule: Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "co",
+        "included_because": "Official permit rule: Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "co_scope",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Check your Phoenix contractor registration renewal date before starting any permit application \u2014 registration lapses are one of the most avoidable rejection reasons.",
+      "Phoenix uses a single-permit workflow for some trade combinations, so confirm whether your submittal can be bundled before paying for duplicate filings.",
+      "Bring a complete equipment schedule with hood CFM, appliance list, panel schedule, and grease interceptor sizing on the first submittal to avoid correction cycles.",
+      "Use the city portal to request inspections at least 24 hours ahead; build that into your schedule so the hood and suppression finals do not stall opening day.",
+      "For restaurant TI work, coordinate the hood, suppression, and electrical loads before finalizing the plan set \u2014 late equipment changes are what usually blow up plan review."
+    ],
+    "related_permit_families": [
+      "Wastewater/FOG",
+      "Health",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Grease Interceptor / FOG Approval",
+      "Health Department / Food Establishment Review",
+      "Accessibility / ADA path-of-travel verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Grease Interceptor / FOG Approval",
+        "condition_text": "Verify whether Grease Interceptor / FOG Approval is triggered for this project when the building department confirms the relevant wastewater scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Wastewater/FOG",
+        "family": "wastewater",
+        "filing_family": "wastewater",
+        "kind": "Wastewater/FOG",
+        "permit_name": "Grease Interceptor / FOG Approval",
+        "permit_type": "Grease Interceptor / FOG Approval",
+        "rationale": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.",
+        "reason": "Commercial kitchen plumbing often requires grease interceptor/FOG approval.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Grease Interceptor / FOG Approval is triggered for this project when the building department confirms the relevant wastewater scope condition."
+      },
+      {
+        "approval_type": "Health Department / Food Establishment Review",
+        "condition_text": "Verify whether Health Department / Food Establishment Review is triggered for this project when the building department confirms the relevant health scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Health",
+        "family": "health",
+        "filing_family": "health",
+        "kind": "Health",
+        "permit_name": "Health Department / Food Establishment Review",
+        "permit_type": "Health Department / Food Establishment Review",
+        "rationale": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.",
+        "reason": "Restaurant scopes with food-prep, kitchen, bar, sink, dishwashing, or opening work commonly require health review before opening.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Health Department / Food Establishment Review is triggered for this project when the building department confirms the relevant health scope condition."
+      },
+      {
+        "approval_type": "Accessibility / ADA path-of-travel verification",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Accessibility / ADA path-of-travel verification",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical",
+      "Wastewater/FOG",
+      "Fire",
+      "Health",
+      "Planning/Zoning",
+      "Certificate of Occupancy"
+    ],
+    "required_permit_names": [
+      "Building Permit",
+      "Gas Permit \u2014 Commercial Fuel Gas Piping",
+      "Mechanical Permit \u2014 Commercial Tenant Improvement",
+      "Electrical Permit \u2014 Commercial Tenant Improvement",
+      "Wastewater / FOG / Pretreatment Approval",
+      "Fire Suppression / Fire Prevention Review",
+      "Health Plan Review / Food Establishment Permit",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy / Change-of-Occupancy Approval"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit \u2014 Commercial Tenant Improvement; Wastewater / FOG / Pretreatment Approval; Fire Suppression / Fire Prevention Review; Health Plan Review / Food Establishment Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 1,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 6,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 5,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.phoenix.gov/business/construction-permits-planning.html",
+        "https://www.phoenix.gov/pdd/development/permits/commercial",
+        "https://www.phoenix.gov/pdd",
+        "https://www.phoenix.gov/residents/residential-building-permits.html",
+        "https://www.phoenix.gov/fire",
+        "https://www.phoenix.gov/waterservices"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 5,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 4
+    },
+    "source_urls": [
+      "https://www.phoenix.gov/business/construction-permits-planning.html",
+      "https://www.phoenix.gov/pdd/development/permits/commercial",
+      "https://www.phoenix.gov/pdd",
+      "https://www.phoenix.gov/residents/residential-building-permits.html",
+      "https://www.phoenix.gov/fire",
+      "https://www.phoenix.gov/waterservices"
+    ],
+    "sources": [
+      {
+        "publisher": "City of Phoenix Planning and Development Department",
+        "title": "City of Phoenix Planning and Development Department official permit page",
+        "url": "https://www.phoenix.gov/business/construction-permits-planning.html"
+      },
+      {
+        "publisher": "City of Phoenix Planning and Development Department",
+        "snippet": "A commercial building permit is required for residential construction involving multi-family projects of three or more units, condominiums, and apartment buildings as well as non-residential construction including new construction, remodels, additions, tenant improvements and changes of use. The permit is issued when structures are designed in accordance with the building codes and all other applicable codes and ordinances, to ensure the safety of the building and its inhabitants. The links in t",
+        "title": "Official Phoenix source",
+        "url": "https://www.phoenix.gov/pdd/development/permits/commercial"
+      },
+      {
+        "publisher": "City of Phoenix Planning and Development Department",
+        "title": "Official Phoenix source",
+        "url": "https://www.phoenix.gov/pdd"
+      },
+      {
+        "publisher": "City of Phoenix Planning and Development Department",
+        "title": "Official Phoenix source",
+        "url": "https://www.phoenix.gov/residents/residential-building-permits.html"
+      },
+      {
+        "publisher": "City of Phoenix Planning and Development Department",
+        "snippet": "Local official URL discovered in customer-facing permit guidance and accepted by source-locality checks.",
+        "title": "City of Phoenix Planning and Development Department",
+        "url": "https://www.phoenix.gov/fire"
+      },
+      {
+        "publisher": "City of Phoenix Planning and Development Department",
+        "snippet": "Local official URL discovered in customer-facing permit guidance and accepted by source-locality checks.",
+        "title": "City of Phoenix Planning and Development Department",
+        "url": "https://www.phoenix.gov/waterservices"
+      }
+    ],
+    "summary": "Required permit package: Building Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit \u2014 Commercial Tenant Improvement; Wastewater / FOG / Pretreatment Approval; Fire Suppression / Fire Prevention Review; Health Plan Review / Food Establishment Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "total_cost_estimate": "$180,000 - $240,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing, fire, hood.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them.",
+      "Customer-boundary filing rows were normalized so only hard scope-triggered permits appear as required; address-dependent companion reviews are shown separately."
+    ],
+    "what_to_bring": [
+      "Completed commercial permit application and project address",
+      "Arizona ROC license number and current city contractor registration information",
+      "Stamped plan set showing architectural, plumbing, electrical, mechanical, and fire suppression sheets",
+      "Equipment cut sheets for the Type I hood, exhaust fan, suppression system, and electrical panel",
+      "Grease interceptor sizing data and plumbing fixture schedule",
+      "Tenant improvement scope letter and valuation breakdown"
+    ],
+    "zoning_hoa_flag": "Commercial restaurant tenant improvements can still be delayed by zoning, use, parking, grease interceptor, and outdoor venting constraints. In Phoenix, verify that the tenant use is allowed in the zoning district and that rooftop or wall exhaust discharge locations comply with zoning and fire code. HOA restrictions are usually not the issue for a commercial tenant space, but landlord approval and any center-specific design criteria can still block the work."
+  },
+  "response_sha256": "0b5eb652aab71aa67a18b8b50440e8d98c551fbf7b77d3ed4a85f3d9d046194b",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "XmfFZ_IYGio",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/XmfFZ_IYGio",
+  "source_urls": [
+    "https://www.maricopa.gov/EnvSvc",
+    "https://www.phoenix.gov/business/construction-permits-planning.html",
+    "https://www.phoenix.gov/fire",
+    "https://www.phoenix.gov/pdd",
+    "https://www.phoenix.gov/pdd/development/permits/commercial",
+    "https://www.phoenix.gov/residents/residential-building-permits.html",
+    "https://www.phoenix.gov/waterservices"
+  ],
+  "started_at_utc": "2026-07-01T23:52:22.913930+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

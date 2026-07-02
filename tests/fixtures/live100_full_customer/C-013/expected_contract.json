@@ -1,0 +1,14 @@
+{
+  "case_id": "C-013",
+  "min_fee_amounts": 0,
+  "must_keep_required": [
+    "Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration Building",
+    "Plumbing Permit \u2014 Commercial Tenant Improvement Plumbing Permit \u2014 Commercial Tenant Improvement Plumbing",
+    "Mechanical Permit Mechanical Permit Mechanical",
+    "Electrical Permit Electrical Permit Electrical",
+    "Certificate of Occupancy / Change-of-Occupancy Approval Certificate of Occupancy / Change-of-Occupancy Approval Certificate of Occupancy",
+    "Fire  Fire",
+    "Health  Health"
+  ],
+  "protection": true
+}

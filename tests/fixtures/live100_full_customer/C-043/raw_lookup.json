@@ -1,0 +1,561 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Historic design review",
+    "bucket": "historic sign/awning",
+    "city": "Charleston",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Sign",
+      "Historic/ARB",
+      "Building possible"
+    ],
+    "id": "C-043",
+    "job_type": "commercial exterior sign and awning in historic district no electrical, job value 18000",
+    "job_value": 18000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "SC",
+    "zip_code": "29401"
+  },
+  "completed_at_utc": "2026-07-02T00:04:06.327816+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 6.59,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+    "applying_office": "City of Charleston Inspections & Legal Department",
+    "confidence": "medium",
+    "customer_headline": "Permit required: Required permit package \u2014 Sign Permit.",
+    "customer_next_step": "File the required permit categories with City of Charleston Inspections & Legal Department: Sign Permit, Electrical Permit \u2014 Illuminated Sign, Historic / HDLC Certificate of Appropriateness Review. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: $20 base plus $4 per $1,000 over $5,000 for building permit review; sign permit and BAR review fees need verification with Charleston before filing \u2014 verify in before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Sign Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 6
+  },
+  "permit_elapsed_seconds": 3.55,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Charleston",
+    "job_category": "commercial",
+    "job_type": "commercial exterior sign and awning in historic district no electrical, job value 18000",
+    "job_value": 18000,
+    "state": "SC",
+    "vertical": "commercial",
+    "zip_code": "29401"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Charleston Inspections & Legal Department",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Sign Permit",
+      "portal_url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Commercial Building / Tenant Improvement Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "official source verified",
+      "verification_note": "Official filing path repaired from an offline verified AHJ source; confirm the exact portal subcategory before final submission."
+    },
+    "apply_url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+    "apply_url_known": true,
+    "applying_office": "City of Charleston Inspections & Legal Department",
+    "approval_timeline": {
+      "complex": "1-3 weeks for plan review; longer if BAR/historic district review is required or revisions are requested",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in SC",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Panel schedule showing existing and proposed circuits",
+      "Wire gauge and breaker size for each new circuit",
+      "Electrical diagram or one-line drawing (required for panel upgrades)",
+      "Utility disconnect location marked on plans",
+      "Confirm the required license is active and matches the application: Commercial contractor pulls the permit on the owner's behalf \u2014 the contractor's license and business information must appear on the application. No electrical contractor permit is needed for this scope because the job description says no electrical work.",
+      "Bring 2 copies of all documents to City of Charleston Inspections & Legal Department"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.charleston-sc.gov/1075/Inspections",
+        "value": "Building Permit \u2014 Commercial Awning Installation"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.charleston-sc.gov/1075/Inspections",
+        "value": "https://www.charleston-sc.gov/1075/Inspections"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.charleston-sc.gov/1075/Inspections",
+        "value": "Fee Estimate: $20 base plus $4 per $1,000 over $5,000 for building permit review; sign permit and BAR review fees need verification with Charleston before filing \u2014 verify in https://www.charleston-sc.gov/DocumentCenter/View/17002/Building--Trade-Permit-Fee-Schedule before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.charleston-sc.gov/1075/Inspections",
+        "value": "{'simple': '1-5 business days for over-the-counter review if the submittal is complete; historic district exterior work can take longer', 'complex': '1-3 weeks for plan review; longer if BAR/historic district review is required or revisions are requested'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.charleston-sc.gov/1075/Inspections",
+        "value": "[{'stage': 'Pre-Installation / Plan Review', 'description': 'Reviewer checks awning attachment details, fastener schedule, wind-load design, sign dimensions, mounting method, and historic district compatibility before permit issuance.', 'timing': 'Before fabrication or field installation'}, {'stage': 'Final Building Inspection', 'description': 'Inspector verifies the awning is installed per approved plans, attachment points are secure, required clearances are maintained, and the sign matches the approved size, location, and materials.', 'timing': 'After installation is complete'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Starting exterior work before BAR/historic district approval is issued \u2014 Charleston can hold or reject the permit if the facade change was not reviewed first",
+      "Submitting the sign and awning as a generic building permit only \u2014 the sign usually needs its own permit/review path",
+      "Leaving out wind-load and attachment details for the awning \u2014 coastal Charleston reviewers will kick back incomplete structural submittals",
+      "Assuming Permit required for the resolved scope; confirm exact filing details with City of Charleston Inspections & Legal Department before starting work. because there is no electrical work \u2014 exterior signs and awnings still trigger permit review",
+      "Submitting permit application without verifying current contractor registration status \u2014 an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting."
+    ],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Charleston Inspections & Legal Department",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with City of Charleston Inspections & Legal Department: Sign Permit, Electrical Permit \u2014 Illuminated Sign, Historic / HDLC Certificate of Appropriateness Review. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 3 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Sign Permit.",
+    "customer_next_step": "File the required permit categories with City of Charleston Inspections & Legal Department: Sign Permit, Electrical Permit \u2014 Illuminated Sign, Historic / HDLC Certificate of Appropriateness Review. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Charleston Inspections & Legal Department",
+      "fee_cost_caveat": "Fee Estimate: $20 base plus $4 per $1,000 over $5,000 for building permit review; sign permit and BAR review fees need verification with Charleston before filing \u2014 verify in before quoting",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Charleston, SC",
+      "next_step": "File the required permit categories with City of Charleston Inspections & Legal Department: Sign Permit, Electrical Permit \u2014 Illuminated Sign, Historic / HDLC Certificate of Appropriateness Review. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Sign Permit",
+      "source_cue": "Official sources attached for 3 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": [
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.charleston-sc.gov/1075/Inspections"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.charleston-sc.gov/1075/Inspections"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.charleston-sc.gov/1075/Inspections"
+      }
+    ],
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $20 base plus $4 per $1,000 over $5,000 for building permit review; sign permit and BAR review fees need verification with Charleston before filing \u2014 verify in before quoting",
+    "inspection_booking": "Schedule inspections through the City of Charleston Inspections & Legal Department at or by phone at (843) 724-3765. Use the city permit office for inspection requests; historic district jobs may need plan approval before inspection can be booked. Advance notice requirement was not listed in the source and should be verified with the department before scheduling.",
+    "inspections": [
+      {
+        "description": "Reviewer checks awning attachment details, fastener schedule, wind-load design, sign dimensions, mounting method, and historic district compatibility before permit issuance.",
+        "stage": "Pre-Installation / Plan Review",
+        "timing": "Before fabrication or field installation"
+      },
+      {
+        "description": "Inspector verifies the awning is installed per approved plans, attachment points are secure, required clearances are maintained, and the sign matches the approved size, location, and materials.",
+        "stage": "Final Building Inspection",
+        "timing": "After installation is complete"
+      }
+    ],
+    "job_summary": "Required permit package: Sign Permit; Electrical Permit \u2014 Illuminated Sign; Historic / HDLC Certificate of Appropriateness Review.",
+    "local_form_known": true,
+    "online_application_url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Sign Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Sign Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Sign Permit",
+        "condition_text": "When the described scope includes sign work or building department confirms the sign trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Sign",
+        "family": "sign",
+        "filing_family": "sign",
+        "kind": "Sign",
+        "permit_name": "Sign Permit",
+        "permit_type": "Sign Permit",
+        "rationale": "ScopeSignals family floor: the request text includes a sign trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_sign",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes sign work or building department confirms the sign trigger from the request text."
+      },
+      {
+        "approval_type": "Electrical Permit \u2014 Illuminated Sign",
+        "condition_text": "When the described scope includes electrical work or building department confirms the electrical trigger from the request text.",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit \u2014 Illuminated Sign",
+        "permit_type": "Electrical Permit \u2014 Illuminated Sign",
+        "rationale": "ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_electrical",
+        "segment": "commercial",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes electrical work or building department confirms the electrical trigger from the request text."
+      },
+      {
+        "approval_type": "Historic / HDLC Certificate of Appropriateness Review",
+        "decision": "REQUIRED",
+        "display_family": "Historic/Planning",
+        "family": "historic",
+        "filing_family": "historic",
+        "kind": "Historic/Planning",
+        "permit_name": "Historic / HDLC Certificate of Appropriateness Review",
+        "permit_type": "Historic / HDLC Certificate of Appropriateness Review",
+        "rationale": "Explicit historic/French Quarter/HDLC district plus physical exterior alteration requires historic design review / Certificate of Appropriateness handling.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "condition_text": "When the described scope includes planning work or AHJ confirms the planning trigger from the request text.",
+        "decision": "REQUIRED",
+        "derived_from": [
+          "scope_signals_family_floor"
+        ],
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "ScopeSignals family floor: the request text includes a planning trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_planning",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes planning work or AHJ confirms the planning trigger from the request text."
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "sign",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a sign trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Sign Permit",
+        "scope_trigger": "scope_signal_floor_sign",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a electrical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "permit_type": "Electrical Permit \u2014 Illuminated Sign",
+        "scope_trigger": "scope_signal_floor_electrical",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "historic",
+        "included_because": "Official permit rule: Explicit historic/French Quarter/HDLC district plus physical exterior alteration requires historic design review / Certificate of Appropriateness handling.",
+        "permit_type": "Historic / HDLC Certificate of Appropriateness Review",
+        "scope_trigger": "historic_scope",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "For Charleston historic district jobs, get BAR approval first or in parallel with permit prep so you do not lose a week waiting on a resubmittal.",
+      "Bring a clean facade elevation with the sign dimensions called out in inches \u2014 that is usually what gets reviewed fastest.",
+      "Have the awning manufacturer's wind-load and anchorage data ready; coastal reviewers care about attachment details more than the brochure photo.",
+      "Check your Charleston contractor registration renewal date before starting any permit application \u2014 registration lapses are the #1 avoidable rejection reason."
+    ],
+    "related_permit_families": [
+      "Sign",
+      "Building",
+      "Planning/Zoning"
+    ],
+    "related_permit_names": [
+      "Historic Preservation Review",
+      "Building / Awning Attachment Verification",
+      "Commercial Building / Tenant Improvement Permit",
+      "Planning / Zoning Use Clearance",
+      "Planning/Zoning Projection or Historic-District Verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "ahj_name": "Charleston permit office",
+        "application_authority_name": "Charleston permit office",
+        "approval_type": "Historic Preservation Review",
+        "condition_text": "Verify whether Historic Preservation Review is triggered for this project when the building department confirms the relevant historic scope condition.",
+        "decision": "CONDITIONAL",
+        "display_family": "Sign",
+        "family": "sign",
+        "filing_family": "sign",
+        "kind": "Sign",
+        "notes": "Required for the exterior sign. In the historic district, sign design, size, materials, illumination status, and mounting details are reviewed before issuance. Conditional Required because the described scope triggers Historic Preservation Review.",
+        "permit_name": "Historic Preservation Review",
+        "permit_type": "Historic Preservation Review",
+        "portal_selection": "Sign Permit - Commercial",
+        "rationale": "Required for the exterior sign. In the historic district, sign design, size, materials, illumination status, and mounting details are reviewed before issuance. Conditional Required because the described scope triggers Historic Preservation Review.",
+        "required": false,
+        "segment": "commercial",
+        "status": "CONDITIONAL",
+        "trigger_condition": "Verify whether Historic Preservation Review is triggered for this project when the building department confirms the relevant historic scope condition."
+      },
+      {
+        "approval_type": "Building / Awning Attachment Verification",
+        "condition_text": "Verify building review only if awning attachment or structural support details require it.",
+        "decision": "VERIFY",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_name": "Building / Awning Attachment Verification",
+        "permit_type": "Building / Awning Attachment Verification",
+        "rationale": "Verify building review only if awning attachment or structural support details require it.",
+        "required": false,
+        "required_if": "Verify building review only if awning attachment or structural support details require it.",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "ahj_name": "Charleston permit office",
+        "application_authority_name": "Charleston permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "condition_text": "Verify building/TI only if the sign work also changes structure, walls, fa\u00e7ade, occupancy, or tenant-improvement scope.",
+        "decision": "VERIFY",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "rationale": "Verify building/TI only if the sign work also changes structure, walls, fa\u00e7ade, occupancy, or tenant-improvement scope.",
+        "required": false,
+        "required_if": "Verify building/TI only if the sign work also changes structure, walls, fa\u00e7ade, occupancy, or tenant-improvement scope.",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "VERIFY"
+      },
+      {
+        "ahj_name": "Charleston permit office",
+        "application_authority_name": "Charleston permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "CONDITIONAL",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Conditional Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "Conditional Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "required": false,
+        "segment": "commercial",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Planning/Zoning Projection or Historic-District Verification",
+        "condition_text": "Verify planning, historic, encroachment, or zoning approval only if the sign projection/location triggers it.",
+        "decision": "VERIFY",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning/Zoning Projection or Historic-District Verification",
+        "permit_type": "Planning/Zoning Projection or Historic-District Verification",
+        "rationale": "Verify planning, historic, encroachment, or zoning approval only if the sign projection/location triggers it.",
+        "required": false,
+        "required_if": "Verify planning, historic, encroachment, or zoning approval only if the sign projection/location triggers it.",
+        "segment": "commercial",
+        "status": "VERIFY"
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Sign",
+      "Electrical",
+      "Historic/Planning"
+    ],
+    "required_permit_names": [
+      "Sign Permit",
+      "Electrical Permit \u2014 Illuminated Sign",
+      "Historic / HDLC Certificate of Appropriateness Review"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Sign Permit; Electrical Permit \u2014 Illuminated Sign; Historic / HDLC Certificate of Appropriateness Review.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 6,
+      "exact_form_known": true,
+      "filing_path_evidence": "Official Charleston Permit Center page links to Customer Self Service for permit submittal and inspections.",
+      "filing_path_reachability": "ok",
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_path_status": "repaired_official_fallback",
+      "filing_path_verified_on": "2026-07-01",
+      "filing_source_count": 6,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+        "https://www.charleston-sc.gov/856/Permit-Center",
+        "https://www.charleston-sc.gov/DocumentCenter/View/17002/Building--Trade-Permit-Fee-Schedule",
+        "https://www.charleston-sc.gov/324/Building-Inspections",
+        "https://www.charleston-sc.gov/93/Fees-Permits",
+        "https://www.charleston-sc.gov/DocumentCenter/View/40705"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 6,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+      "https://www.charleston-sc.gov/856/Permit-Center",
+      "https://www.charleston-sc.gov/DocumentCenter/View/17002/Building--Trade-Permit-Fee-Schedule",
+      "https://www.charleston-sc.gov/324/Building-Inspections",
+      "https://www.charleston-sc.gov/93/Fees-Permits",
+      "https://www.charleston-sc.gov/DocumentCenter/View/40705"
+    ],
+    "sources": [
+      {
+        "date": "2026-07-01",
+        "jurisdiction": "Charleston, SC",
+        "publisher": "City of Charleston Permit Center / Customer Self Service",
+        "snippet": "Official Charleston Permit Center page links to Customer Self Service for permit submittal and inspections.",
+        "source_type": "official_local",
+        "title": "City of Charleston Permit Center / Customer Self Service",
+        "url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home"
+      },
+      {
+        "jurisdiction": "Charleston, SC",
+        "publisher": "Official Charleston source",
+        "source_type": "official_local",
+        "title": "Official Charleston source",
+        "url": "https://www.charleston-sc.gov/DocumentCenter/View/17002/Building--Trade-Permit-Fee-Schedule"
+      },
+      {
+        "jurisdiction": "Charleston, SC",
+        "publisher": "Official Charleston source",
+        "source_type": "official_local",
+        "title": "Official Charleston source",
+        "url": "https://www.charleston-sc.gov/324/Building-Inspections"
+      },
+      {
+        "jurisdiction": "Charleston, SC",
+        "publisher": "Official Charleston source",
+        "source_type": "official_local",
+        "title": "Official Charleston source",
+        "url": "https://www.charleston-sc.gov/93/Fees-Permits"
+      },
+      {
+        "jurisdiction": "Charleston, SC",
+        "publisher": "Official Charleston source",
+        "source_type": "official_local",
+        "title": "Official Charleston source",
+        "url": "https://www.charleston-sc.gov/DocumentCenter/View/40705"
+      },
+      {
+        "jurisdiction": "Charleston, SC",
+        "publisher": "Official Charleston source",
+        "source_type": "official_local",
+        "title": "Official Charleston source",
+        "url": "https://www.charleston-sc.gov/856/Permit-Center"
+      }
+    ],
+    "summary": "Required permit package: Sign Permit; Electrical Permit \u2014 Illuminated Sign; Historic / HDLC Certificate of Appropriateness Review.",
+    "total_cost_estimate": "$18,500 - $32,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them.",
+      "Customer-boundary filing rows were normalized so only hard scope-triggered permits appear as required; address-dependent companion reviews are shown separately."
+    ],
+    "what_to_bring": [
+      "Completed commercial permit application for the awning and sign scope",
+      "Scaled site/facade drawing showing exact sign location, awning projection, and mounting height",
+      "Product cut sheets for the awning and sign, including dimensions, materials, and attachment details",
+      "Historic district / BAR submittal package with color photos of the existing facade",
+      "Contractor license information and business contact details",
+      "Job value documentation showing the $18,000 project value"
+    ],
+    "zoning_hoa_flag": "Yes. Charleston historic district exterior work can be restricted by BAR/historic design rules, and sign size, placement, materials, and illumination may be limited. HOA rules, if applicable, do not replace city historic district approval."
+  },
+  "response_sha256": "c68538c55fd57ae097c45dc7ea7a27284aeed2ca188dca140e1254a929c47f68",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "rPNjU5OMaRo",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/rPNjU5OMaRo",
+  "source_urls": [
+    "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+    "https://www.charleston-sc.gov/324/Building-Inspections",
+    "https://www.charleston-sc.gov/856/Permit-Center",
+    "https://www.charleston-sc.gov/93/Fees-Permits",
+    "https://www.charleston-sc.gov/DocumentCenter/View/17002/Building--Trade-Permit-Fee-Schedule",
+    "https://www.charleston-sc.gov/DocumentCenter/View/40705"
+  ],
+  "started_at_utc": "2026-07-02T00:03:59.732746+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

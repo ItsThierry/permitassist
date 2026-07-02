@@ -1,0 +1,654 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Bar occupancy",
+    "bucket": "bar TI occupancy",
+    "city": "Nashville",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "Plumbing",
+      "Electrical",
+      "Health/Fire possible",
+      "CO"
+    ],
+    "id": "C-025",
+    "job_type": "commercial bar tenant improvement adding plumbing fixtures electrical panel hoodless warming equipment and occupancy change, job value 225000",
+    "job_value": 225000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "TN",
+    "zip_code": "37219"
+  },
+  "completed_at_utc": "2026-07-02T00:01:38.178481+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 6.42,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://epermits.nashville.gov/",
+    "applying_office": "Metro Nashville Codes Administration",
+    "confidence": "medium",
+    "customer_headline": "Permit required: Required permit package \u2014 Commercial Building / Tenant Improvement Permit.",
+    "customer_next_step": "File the required permit categories with Metro Nashville Codes Administration: Commercial Building / Tenant Improvement Permit, Plumbing Permit \u2014 Commercial Fixture Installation, Mechanical Permit, Electrical Permit \u2014 Service Upgrade, Planning/Zoning Use Verification, Certificate of Occupancy / Change-of-Occupancy Review. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: Fee not confirmed \u2014 call the Metro Nashville Codes Administration or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 2
+  },
+  "permit_elapsed_seconds": 3.03,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Nashville",
+    "job_category": "commercial",
+    "job_type": "commercial bar tenant improvement adding plumbing fixtures electrical panel hoodless warming equipment and occupancy change, job value 225000",
+    "job_value": 225000,
+    "state": "TN",
+    "vertical": "commercial",
+    "zip_code": "37219"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Metro Nashville Codes Administration",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+      "platform": "Accela / Citizen Access",
+      "portal_url": "https://epermits.nashville.gov/",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "official source verified",
+      "verification_note": "Official filing path repaired from an offline verified AHJ source; confirm the exact portal subcategory before final submission."
+    },
+    "apply_url": "https://epermits.nashville.gov/",
+    "apply_url_known": true,
+    "applying_office": "Metro Nashville Codes Administration",
+    "approval_timeline": {
+      "complex": "5-15 business days or longer depending on plan review backlog, life-safety review, and whether expedited review is requested.",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in TN",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Panel schedule showing existing and proposed circuits",
+      "Wire gauge and breaker size for each new circuit",
+      "Electrical diagram or one-line drawing (required for panel upgrades)",
+      "Utility disconnect location marked on plans",
+      "Confirm the required license is active and matches the application: Licensed commercial contractor pulls the permit on behalf of the owner, and the contractor's Metro Nashville registration/license information must appear on the application. For electrical work, Nashville uses its own Metro electrical license/registration process; Tennessee does not use a state electrical license for this city permit path.",
+      "Bring 2 copies of all documents to Metro Nashville Codes Administration"
+    ],
+    "city_contractor_registration": "Nashville Metro Codes requires contractor registration before pulling permits. Registration is annual, and an expired registration can block permit submission without a clear error. Verify current registration status at nashville.gov/departments/codes before applying.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://aca-prod.accela.com/NASHVILLE",
+        "value": "Commercial Building / Tenant Improvement Permit"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://aca-prod.accela.com/NASHVILLE",
+        "value": "https://aca-prod.accela.com/NASHVILLE"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://aca-prod.accela.com/NASHVILLE",
+        "value": "Fee Estimate: Fee not confirmed \u2014 call the Metro Nashville Codes Administration or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://aca-prod.accela.com/NASHVILLE",
+        "value": "{'simple': 'Same day to a few business days for intake, but this scope is not a simple OTC job because of the occupancy change and commercial TI review.', 'complex': '5-15 business days or longer depending on plan review backlog, life-safety review, and whether expedited review is requested.'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://aca-prod.accela.com/NASHVILLE",
+        "value": "[{'stage': 'Building Plan Review / Intake', 'description': 'Reviewer checks occupancy classification, occupant load, egress paths, accessibility, fire separation, finish materials, and whether the proposed bar layout matches the code path for the new use.', 'timing': 'Before permit issuance'}, {'stage': 'Plumbing Rough-In', 'description': 'Inspector verifies fixture locations, drain/waste/vent sizing, vent routing, water supply routing, trap arm lengths, cleanouts, and that any required backflow or shutoff provisions are in place before walls are closed.', 'timing': 'Before concealment of piping and wall finishes'}, {'stage': 'Electrical Rough-In / Panel Inspection', 'description': 'Inspector checks panel installation, circuit sizing, conductor fill, grounding and bonding, breaker labeling, working clearances, and that any new circuits for the bar equipment are properly protected and routed.', 'timing': 'Before insulation, drywall, or ceiling closure'}, {'stage': 'Final Building / MEP', 'description': 'Inspector verifies the completed tenant space matches approved plans, all fixtures and equipment are installed, required labels and clearances are present, life-safety items are complete, and the occupancy change is ready for approval.', 'timing': 'After all work is complete and before opening for use'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the permit application without verifying current Metro Nashville contractor registration status \u2014 an expired or lapsed city registration will block your application silently.",
+      "Trying to pull only trade permits and skipping the building permit for the occupancy change and tenant improvement.",
+      "Under-scoping the electrical work \u2014 panel changes and any new circuits must be shown on the electrical permit and plans.",
+      "any ventilation or heat-producing equipment requirements.",
+      "Starting demolition before the building permit and trade permits are issued and posted."
+    ],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Metro Nashville Codes Administration",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with Metro Nashville Codes Administration: Commercial Building / Tenant Improvement Permit, Plumbing Permit \u2014 Commercial Fixture Installation, Mechanical Permit, Electrical Permit \u2014 Service Upgrade, Planning/Zoning Use Verification, Certificate of Occupancy / Change-of-Occupancy Review. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 6 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Commercial Building / Tenant Improvement Permit.",
+    "customer_next_step": "File the required permit categories with Metro Nashville Codes Administration: Commercial Building / Tenant Improvement Permit, Plumbing Permit \u2014 Commercial Fixture Installation, Mechanical Permit, Electrical Permit \u2014 Service Upgrade, Planning/Zoning Use Verification, Certificate of Occupancy / Change-of-Occupancy Review. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Metro Nashville Codes Administration",
+      "fee_cost_caveat": "Fee Estimate: Fee not confirmed \u2014 call the Metro Nashville Codes Administration or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Nashville, TN",
+      "next_step": "File the required permit categories with Metro Nashville Codes Administration: Commercial Building / Tenant Improvement Permit, Plumbing Permit \u2014 Commercial Fixture Installation, Mechanical Permit, Electrical Permit \u2014 Service Upgrade, Planning/Zoning Use Verification, Certificate of Occupancy / Change-of-Occupancy Review. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+      "source_cue": "Official sources attached for 6 required permit categories.",
+      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "data_source": "city_database",
+    "degraded_sources": [
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://aca-prod.accela.com/NASHVILLE"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://aca-prod.accela.com/NASHVILLE"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://aca-prod.accela.com/NASHVILLE"
+      }
+    ],
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Fee not confirmed \u2014 call the Metro Nashville Codes Administration or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+    "inspection_booking": "Schedule inspections through the Metro Nashville Accela portal at If portal scheduling is unavailable for a specific inspection type, call (615) 862-6590. Nashville Metro requires contractor registration to be current before scheduling/submitting; verify registration before booking. Advance notice requirement was not stated in the source context, so confirm with the inspector assigned to your permit.",
+    "inspections": [
+      {
+        "description": "Reviewer checks occupancy classification, occupant load, egress paths, accessibility, fire separation, finish materials, and whether the proposed bar layout matches the code path for the new use.",
+        "stage": "Building Plan Review / Intake",
+        "timing": "Before permit issuance"
+      },
+      {
+        "description": "Inspector verifies fixture locations, drain/waste/vent sizing, vent routing, water supply routing, trap arm lengths, cleanouts, and that any required backflow or shutoff provisions are in place before walls are closed.",
+        "stage": "Plumbing Rough-In",
+        "timing": "Before concealment of piping and wall finishes"
+      },
+      {
+        "description": "Inspector checks panel installation, circuit sizing, conductor fill, grounding and bonding, breaker labeling, working clearances, and that any new circuits for the bar equipment are properly protected and routed.",
+        "stage": "Electrical Rough-In / Panel Inspection",
+        "timing": "Before insulation, drywall, or ceiling closure"
+      },
+      {
+        "description": "Inspector verifies the completed tenant space matches approved plans, all fixtures and equipment are installed, required labels and clearances are present, life-safety items are complete, and the occupancy change is ready for approval.",
+        "stage": "Final Building / MEP",
+        "timing": "After all work is complete and before opening for use"
+      }
+    ],
+    "job_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Plumbing Permit \u2014 Commercial Fixture Installation; Mechanical Permit; Electrical Permit \u2014 Service Upgrade; Planning/Zoning Use Verification; Certificate of Occupancy / Change-of-Occupancy Review.",
+    "local_form_known": true,
+    "online_application_url": "https://epermits.nashville.gov/",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "ahj_name": "Nashville permit office",
+        "application_authority_name": "Nashville permit office",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "rationale": "Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Nashville permit office",
+        "application_authority_name": "Nashville permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Required for adding plumbing fixtures in a commercial tenant space. Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Plumbing Permit \u2014 Commercial Fixture Installation",
+        "permit_type": "Plumbing Permit \u2014 Commercial Fixture Installation",
+        "portal_selection": "Plumbing Permit - Commercial Fixtures",
+        "rationale": "Required for adding plumbing fixtures in a commercial tenant space. Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Nashville permit office",
+        "application_authority_name": "Nashville permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "rationale": "Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Nashville permit office",
+        "application_authority_name": "Nashville permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Required for electrical panel replacement, upgrade, or modification associated with the TI. Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Electrical Permit \u2014 Service Upgrade",
+        "permit_type": "Electrical Permit \u2014 Service Upgrade",
+        "portal_selection": "Electrical Permit - Panel Upgrade",
+        "rationale": "Required for electrical panel replacement, upgrade, or modification associated with the TI. Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Planning/Zoning Use Verification",
+        "decision": "REQUIRED",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning/Zoning Use Verification",
+        "permit_type": "Planning/Zoning Use Verification",
+        "rationale": "Commercial use or occupancy changes require zoning/use compatibility verification before filing.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Review",
+        "decision": "REQUIRED",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Review",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Review",
+        "rationale": "Commercial change-of-use, conversion, assembly, restaurant, clinic, or tenant buildout scope requires occupancy/use classification review.",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "condition_text": "When the described scope includes health work or AHJ confirms the health trigger from the request text.",
+        "decision": "REQUIRED",
+        "derived_from": [
+          "scope_signals_family_floor"
+        ],
+        "display_family": "Health",
+        "family": "health",
+        "filing_family": "health",
+        "kind": "Health",
+        "permit_type": "Health",
+        "rationale": "ScopeSignals family floor: the request text includes a health trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_health",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes health work or AHJ confirms the health trigger from the request text."
+      },
+      {
+        "condition_text": "When the described scope includes fire work or AHJ confirms the fire trigger from the request text.",
+        "decision": "REQUIRED",
+        "derived_from": [
+          "scope_signals_family_floor"
+        ],
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "permit_type": "Fire",
+        "rationale": "ScopeSignals family floor: the request text includes a fire trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_fire",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes fire work or AHJ confirms the fire trigger from the request text."
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Required for adding plumbing fixtures in a commercial tenant space. Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Plumbing Permit \u2014 Commercial Fixture Installation",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Required for electrical panel replacement, upgrade, or modification associated with the TI. Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Electrical Permit \u2014 Service Upgrade",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "planning",
+        "included_because": "Official permit rule: Commercial use or occupancy changes require zoning/use compatibility verification before filing.",
+        "permit_type": "Planning/Zoning Use Verification",
+        "scope_trigger": "planning_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "co",
+        "included_because": "Official permit rule: Commercial change-of-use, conversion, assembly, restaurant, clinic, or tenant buildout scope requires occupancy/use classification review.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Review",
+        "scope_trigger": "co_scope",
+        "segment": "commercial"
+      }
+    ],
+    "pro_tips": [
+      "Check your Nashville Metro contractor registration renewal date before starting any permit application \u2014 registration lapses are one of the most common avoidable rejection reasons.",
+      "Because Nashville has permit backlogs during growth periods, ask whether expedited review is available; the city notes expedited review is typically 50% of the permit fee.",
+      "Bring a clean, coordinated plan set that shows the occupancy change, fixture count, and panel schedule together \u2014 that cuts down on correction cycles.",
+      "If the electrical panel work affects load, include a load calculation up front so the reviewer does not kick it back for missing capacity data."
+    ],
+    "related_permit_families": [
+      "Wastewater/FOG",
+      "Fire",
+      "Health",
+      "Planning/Zoning",
+      "Historic/Planning",
+      "Certificate of Occupancy"
+    ],
+    "related_permit_names": [
+      "Wastewater/FOG",
+      "Fire Suppression / Fire Prevention Review",
+      "Health",
+      "Planning / Zoning Use Clearance",
+      "Historic Preservation / COA Verification",
+      "Certificate of Occupancy"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Wastewater/FOG",
+        "condition_text": "When the described scope includes wastewater work or building department confirms the wastewater trigger from the request text.",
+        "decision": "VERIFY",
+        "display_family": "Wastewater/FOG",
+        "family": "wastewater",
+        "filing_family": "wastewater",
+        "kind": "Wastewater/FOG",
+        "permit_name": "Wastewater/FOG",
+        "permit_type": "Wastewater/FOG",
+        "rationale": "ScopeSignals family floor: the request text includes a wastewater trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": false,
+        "scope_trigger": "scope_signal_floor_wastewater",
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "When the described scope includes wastewater work or building department confirms the wastewater trigger from the request text."
+      },
+      {
+        "ahj_name": "Nashville permit office",
+        "application_authority_name": "Nashville permit office",
+        "approval_type": "Fire Suppression / Fire Prevention Review",
+        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "decision": "CONDITIONAL",
+        "display_family": "Fire",
+        "family": "fire",
+        "filing_family": "fire",
+        "kind": "Fire",
+        "notes": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "required": false,
+        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "segment": "commercial",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Health",
+        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "decision": "CONDITIONAL",
+        "display_family": "Health",
+        "family": "health",
+        "filing_family": "health",
+        "kind": "Health",
+        "permit_name": "Health",
+        "permit_type": "Health",
+        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "required": false,
+        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
+        "scope_trigger": "scope_signal_floor_health",
+        "segment": "commercial",
+        "status": "CONDITIONAL",
+        "trigger_condition": "When the described scope includes health work or building department confirms the health trigger from the request text."
+      },
+      {
+        "approval_type": "Planning / Zoning Use Clearance",
+        "condition_text": "When the described scope includes planning work or building department confirms the planning trigger from the request text.",
+        "decision": "VERIFY",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "ScopeSignals family floor: the request text includes a planning trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": false,
+        "scope_trigger": "scope_signal_floor_planning",
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "When the described scope includes planning work or building department confirms the planning trigger from the request text."
+      },
+      {
+        "approval_type": "Historic Preservation / COA Verification",
+        "condition_text": "Verify historic/COA applicability because the request includes a historic-district cue, but the physical exterior trigger may be paint-only or address-dependent.",
+        "decision": "VERIFY",
+        "display_family": "Historic/Planning",
+        "family": "historic",
+        "filing_family": "historic",
+        "kind": "Historic/Planning",
+        "permit_name": "Historic Preservation / COA Verification",
+        "permit_type": "Historic Preservation / COA Verification",
+        "rationale": "Verify historic/COA applicability because the request includes a historic-district cue, but the physical exterior trigger may be paint-only or address-dependent.",
+        "required": false,
+        "required_if": "Verify historic/COA applicability because the request includes a historic-district cue, but the physical exterior trigger may be paint-only or address-dependent.",
+        "segment": "commercial",
+        "source_url": "https://aca-prod.accela.com/NASHVILLE",
+        "status": "VERIFY"
+      },
+      {
+        "approval_type": "Certificate of Occupancy",
+        "condition_text": "When the described scope includes co work or building department confirms the co trigger from the request text.",
+        "decision": "VERIFY",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy",
+        "permit_type": "Certificate of Occupancy",
+        "rationale": "ScopeSignals family floor: the request text includes a co trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
+        "required": false,
+        "scope_trigger": "scope_signal_floor_co",
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "When the described scope includes co work or building department confirms the co trigger from the request text."
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical",
+      "Planning/Zoning",
+      "Certificate of Occupancy"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Plumbing Permit \u2014 Commercial Fixture Installation",
+      "Mechanical Permit",
+      "Electrical Permit \u2014 Service Upgrade",
+      "Planning/Zoning Use Verification",
+      "Certificate of Occupancy / Change-of-Occupancy Review"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Plumbing Permit \u2014 Commercial Fixture Installation; Mechanical Permit; Electrical Permit \u2014 Service Upgrade; Planning/Zoning Use Verification; Certificate of Occupancy / Change-of-Occupancy Review.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 2,
+      "filing_path_evidence": "Official Nashville.gov Codes E-Permits page links to epermits.nashville.gov for permit applications/inquiry.",
+      "filing_path_reachability": "ok",
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_path_status": "repaired_official_fallback",
+      "filing_path_verified_on": "2026-07-01",
+      "filing_source_count": 2,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://epermits.nashville.gov/",
+        "https://www.nashville.gov/departments/codes/construction-and-permits/e-permits-system"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 2,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 1
+    },
+    "source_urls": [
+      "https://epermits.nashville.gov/",
+      "https://www.nashville.gov/departments/codes/construction-and-permits/e-permits-system"
+    ],
+    "sources": [
+      {
+        "date": "2026-07-01",
+        "jurisdiction": "Nashville, TN",
+        "publisher": "Metro Nashville Codes ePermits",
+        "snippet": "Official Nashville.gov Codes E-Permits page links to epermits.nashville.gov for permit applications/inquiry.",
+        "source_type": "official_local",
+        "title": "Metro Nashville Codes ePermits",
+        "url": "https://www.nashville.gov/departments/codes/construction-and-permits/e-permits-system"
+      },
+      {
+        "date": "2026-07-01",
+        "jurisdiction": "Nashville, TN",
+        "publisher": "Metro Nashville Codes ePermits",
+        "snippet": "Official Nashville.gov Codes E-Permits page links to epermits.nashville.gov for permit applications/inquiry.",
+        "source_type": "official_local",
+        "title": "Metro Nashville Codes ePermits",
+        "url": "https://epermits.nashville.gov/"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Plumbing Permit \u2014 Commercial Fixture Installation; Mechanical Permit; Electrical Permit \u2014 Service Upgrade; Planning/Zoning Use Verification; Certificate of Occupancy / Change-of-Occupancy Review.",
+    "total_cost_estimate": "$225,000 - $320,000",
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed commercial permit application in the Accela portal",
+      "Current Metro Nashville contractor registration and license information",
+      "Stamped plans showing the bar layout, fixture locations, panel work, and occupancy change",
+      "Equipment cut sheets/spec sheets for any new electrical equipment and plumbing fixtures",
+      "Project valuation and contractor contact information",
+      "Tenant/owner authorization letter if the contractor is filing on behalf of the tenant"
+    ],
+    "zoning_hoa_flag": "For a commercial bar tenant improvement and occupancy change, zoning and use approval can be a major issue. Verify the space is zoned for bar/alcohol service, confirm any parking or occupancy limits, and check whether a zoning letter or use approval is needed before permit issuance. HOA restrictions are usually not the issue for a commercial tenant space, but historic district or overlay rules may still apply."
+  },
+  "response_sha256": "4bf5fbef0579de7dd40a793ce74fa9030340abe9777b80194f7ad7909df02b97",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "-8cO_fsOr04",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/-8cO_fsOr04",
+  "source_urls": [
+    "https://epermits.nashville.gov/",
+    "https://www.nashville.gov/departments/codes/construction-and-permits/e-permits-system"
+  ],
+  "started_at_utc": "2026-07-02T00:01:31.755049+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

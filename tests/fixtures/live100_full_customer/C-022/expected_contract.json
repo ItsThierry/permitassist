@@ -1,0 +1,10 @@
+{
+  "case_id": "C-022",
+  "min_fee_amounts": 0,
+  "must_keep_required": [
+    "Solar / PV Solar / PV Solar / PV",
+    "Commercial Building / Tenant Improvement Permit Commercial Building / Tenant Improvement Permit Building",
+    "Electrical Permit \u2014 Solar PV / Battery System Electrical Permit \u2014 Solar PV / Battery System Electrical"
+  ],
+  "protection": true
+}

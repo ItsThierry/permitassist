@@ -1,0 +1,466 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Historic exterior review",
+    "bucket": "historic exterior",
+    "city": "Charleston",
+    "expected_decision_pre_registered": "SOURCE_ADJUDICATE",
+    "expected_permit_families_pre_registered": [
+      "Historic/ARB possible",
+      "Building possible"
+    ],
+    "id": "R-043",
+    "job_type": "replace exterior front door same size in historic district, job value 4500",
+    "job_value": 4500,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_needs_targeted_official_source_check",
+    "state": "SC",
+    "zip_code": "29401"
+  },
+  "completed_at_utc": "2026-07-01T23:57:17.195619+00:00",
+  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
+  "elapsed_seconds": 4.52,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+    "applying_office": "City of Charleston Inspections & Legal Department",
+    "confidence": "high",
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit.",
+    "customer_next_step": "File the required permit categories with City of Charleston Inspections & Legal Department: Building Permit, Historic Preservation Verification. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: $20 base permit fee for $0-$5,000 job value; historic review fee needs verification with BAR/Inspections \u2014 verify in before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building permit package",
+    "permit_name": "Required permit package \u2014 Building Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 6
+  },
+  "permit_elapsed_seconds": 2.8,
+  "provisional_grade": "B",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Charleston",
+    "job_category": "residential",
+    "job_type": "replace exterior front door same size in historic district, job value 4500",
+    "job_value": 4500,
+    "state": "SC",
+    "vertical": "residential",
+    "zip_code": "29401"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Charleston Inspections & Legal Department",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package \u2014 Building Permit",
+      "portal_url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "official source verified",
+      "verification_note": "Official filing path repaired from an offline verified AHJ source; confirm the exact portal subcategory before final submission."
+    },
+    "apply_url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+    "apply_url_known": true,
+    "applying_office": "City of Charleston Inspections & Legal Department",
+    "approval_timeline": {
+      "complex": "1-3 weeks, and longer if Historic District / BAR review is required",
+      "simple": "1-5 business days for over-the-counter review if no historic design issues are flagged"
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in SC",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Confirm the required license is active and matches the application: A licensed residential contractor pulls the building permit on the homeowner's behalf if the homeowner is not acting as owner-builder. The contractor's license information must appear on the application. This job does not require a separate electrical, plumbing, or mechanical permit based on the stated scope.",
+      "Bring 2 copies of all documents to City of Charleston Inspections & Legal Department"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.charleston-sc.gov/1075/Inspections",
+        "value": "https://www.charleston-sc.gov/1075/Inspections"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.charleston-sc.gov/1075/Inspections",
+        "value": "Fee Estimate: $20 base permit fee for $0-$5,000 job value; historic review fee needs verification with BAR/Inspections \u2014 verify in https://www.charleston-sc.gov/93/Fees-Permits before quoting"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.charleston-sc.gov/1075/Inspections",
+        "value": "{'simple': '1-5 business days for over-the-counter review if no historic design issues are flagged', 'complex': '1-3 weeks, and longer if Historic District / BAR review is required'}"
+      },
+      {
+        "checked_at": "2026-07-01",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.charleston-sc.gov/1075/Inspections",
+        "value": "[{'stage': 'Final Building Inspection', 'description': 'Inspector verifies the new exterior door is installed plumb and square, operates properly, has correct weather sealing, proper latch/lock function, required egress width if applicable, and that the opening/frame/sill were not altered in a way that creates structural or water-intrusion issues.', 'timing': 'After the door is fully installed, trim is complete, and any exterior caulking/flashing is finished'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Starting the exterior door replacement before Historic District / BAR approval is issued \u2014 Charleston can stop the job if the exterior change is done first",
+      "Assuming same-size door replacement is exempt because the opening is not changing \u2014 exterior envelope work still needs a permit in this historic district context",
+      "Submitting a modern replacement door that does not match the approved historic profile, lite pattern, material, or finish",
+      "Failing to verify whether the existing frame, sill, or trim repair crosses into structural or water-resistive barrier work that could expand the permit scope"
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Charleston Inspections & Legal Department",
+      "decision": "REQUIRED",
+      "kind_category": "Building permit package",
+      "next_action": "File the required permit categories with City of Charleston Inspections & Legal Department: Building Permit, Historic Preservation Verification. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 2 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package \u2014 Building Permit.",
+    "customer_next_step": "File the required permit categories with City of Charleston Inspections & Legal Department: Building Permit, Historic Preservation Verification. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Charleston Inspections & Legal Department",
+      "fee_cost_caveat": "Fee Estimate: $20 base permit fee for $0-$5,000 job value; historic review fee needs verification with BAR/Inspections \u2014 verify in before quoting",
+      "freshness_label": "Checked 2026-07-01",
+      "jurisdiction": "Charleston, SC",
+      "next_step": "File the required permit categories with City of Charleston Inspections & Legal Department: Building Permit, Historic Preservation Verification. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building permit package",
+      "permit_name": "Required permit package \u2014 Building Permit",
+      "source_cue": "Official sources attached for 2 required permit categories.",
+      "timeline": "1-5 business days for over-the-counter review if no historic design issues are flagged"
+    },
+    "data_source": "city_database",
+    "degraded_sources": [
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.charleston-sc.gov/1075/Inspections"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.charleston-sc.gov/1075/Inspections"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.charleston-sc.gov/1075/Inspections"
+      }
+    ],
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $20 base permit fee for $0-$5,000 job value; historic review fee needs verification with BAR/Inspections \u2014 verify in before quoting",
+    "inspection_booking": "Schedule inspections through the City of Charleston Inspections & Legal Department using the city permit portal at or by calling (843) 724-3765. Use the permit number when booking. Advance notice requirement was not published in the provided city data; call ahead to confirm the current cutoff time before requesting the final inspection.",
+    "inspections": [
+      {
+        "description": "Inspector verifies the new exterior door is installed plumb and square, operates properly, has correct weather sealing, proper latch/lock function, required egress width if applicable, and that the opening/frame/sill were not altered in a way that creates structural or water-intrusion issues.",
+        "stage": "Final Building Inspection",
+        "timing": "After the door is fully installed, trim is complete, and any exterior caulking/flashing is finished"
+      }
+    ],
+    "job_summary": "Required permit package: Building Permit; Historic Preservation Verification.",
+    "local_form_known": true,
+    "online_application_url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building permit package",
+    "permit_name": "Required permit package \u2014 Building Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package \u2014 Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "rationale": "Required because the original request explicitly includes building scope; confirm the exact portal subcategory with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Historic Preservation Verification",
+        "decision": "REQUIRED",
+        "display_family": "Historic/Planning",
+        "family": "historic",
+        "filing_family": "historic",
+        "kind": "Historic/Planning",
+        "permit_name": "Historic Preservation Verification",
+        "permit_type": "Historic Preservation Verification",
+        "rationale": "Dominant standalone scope family selected from deterministic request facts.",
+        "required": true,
+        "segment": "residential",
+        "source_url": "https://www.charleston-sc.gov/1075/Inspections",
+        "status": "REQUIRED"
+      },
+      {
+        "condition_text": "When the described scope includes planning work or AHJ confirms the planning trigger from the request text.",
+        "decision": "REQUIRED",
+        "derived_from": [
+          "scope_signals_family_floor"
+        ],
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "ScopeSignals family floor: the request text includes a planning trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
+        "required": true,
+        "scope_trigger": "scope_signal_floor_planning",
+        "status": "REQUIRED",
+        "trigger_condition": "When the described scope includes planning work or AHJ confirms the planning trigger from the request text."
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the original request explicitly includes building scope; confirm the exact portal subcategory with the listed permit office before filing.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "historic",
+        "included_because": "Official permit rule: Dominant standalone scope family selected from deterministic request facts.",
+        "permit_type": "Historic Preservation Verification",
+        "scope_trigger": "historic_scope",
+        "segment": "residential"
+      }
+    ],
+    "pro_tips": [
+      "Bring a photo of the existing front elevation and the proposed door cut sheet to the historic reviewer \u2014 it speeds up BAR review on exterior changes",
+      "If you are matching the existing opening exactly, keep the manufacturer spec sheet showing no size change, because that helps the reviewer and inspector see it is a like-for-like replacement",
+      "Charleston is strict on exterior historic details; getting BAR signoff before you order the door can save you from a costly re-order",
+      "Use the city permit office phone number before submitting if the property is in a local historic overlay and you are unsure whether the door is a repair or alteration"
+    ],
+    "related_permit_families": [
+      "Planning/Zoning",
+      "Historic/Planning"
+    ],
+    "related_permit_names": [
+      "Planning / Zoning Use Clearance",
+      "Building Permit \u2014 Residential Door Replacement (Exterior Opening)",
+      "Historic Preservation Review"
+    ],
+    "related_permit_segments": [
+      "residential"
+    ],
+    "related_permits": [
+      {
+        "ahj_name": "Charleston permit office",
+        "application_authority_name": "Charleston permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "CONDITIONAL",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Conditional review; file this only if the building department or parcel/address review confirms a specific planning/zoning trigger.",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "Conditional review; file this only if the building department or parcel/address review confirms a specific planning/zoning trigger.",
+        "required": false,
+        "required_if": "the exact property/scope has a planning/zoning trigger confirmed by the building department or parcel/address review",
+        "segment": "residential",
+        "status": "CONDITIONAL"
+      },
+      {
+        "ahj_name": "Charleston permit office",
+        "application_authority_name": "Charleston permit office",
+        "approval_type": "Historic Preservation Review",
+        "decision": "CONDITIONAL",
+        "display_family": "Historic/Planning",
+        "family": "historic",
+        "filing_family": "historic",
+        "kind": "Historic/Planning",
+        "notes": "Required for replacement of an exterior front door, even when the new door is the same size, because it is an exterior alteration. In Charleston's historic district, exterior changes also need historic review before or with permit processing. Conditional Required because the described scope triggers Historic Preservation Review. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Building Permit \u2014 Residential Door Replacement (Exterior Opening)",
+        "permit_type": "Building Permit \u2014 Residential Door Replacement (Exterior Opening)",
+        "portal_selection": "Building Permit - Residential Alteration / Repair",
+        "required": false,
+        "segment": "residential",
+        "status": "CONDITIONAL"
+      },
+      {
+        "ahj_name": "Charleston permit office",
+        "application_authority_name": "Charleston permit office",
+        "approval_type": "Historic Preservation Review",
+        "decision": "CONDITIONAL",
+        "display_family": "Historic/Planning",
+        "family": "historic",
+        "filing_family": "historic",
+        "kind": "Historic/Planning",
+        "notes": "Required for replacement of an exterior front door, even when the new door is the same size, because it is an exterior alteration. In Charleston's historic district, exterior changes also need historic review before or with permit processing.",
+        "permit_name": "Historic Preservation Review",
+        "permit_type": "Historic Preservation Review",
+        "portal_selection": "Building Permit - Residential Alteration / Repair",
+        "rationale": "Required for replacement of an exterior front door, even when the new door is the same size, because it is an exterior alteration. In Charleston's historic district, exterior changes also need historic review before or with permit processing.",
+        "required": false,
+        "segment": "residential",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [
+      "Building",
+      "Historic/Planning"
+    ],
+    "required_permit_names": [
+      "Building Permit",
+      "Historic Preservation Verification"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit; Historic Preservation Verification.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 5,
+      "exact_form_known": true,
+      "filing_path_evidence": "Official Charleston Permit Center page links to Customer Self Service for permit submittal and inspections.",
+      "filing_path_reachability": "ok",
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_path_status": "repaired_official_fallback",
+      "filing_path_verified_on": "2026-07-01",
+      "filing_source_count": 5,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+        "https://www.charleston-sc.gov/856/Permit-Center",
+        "https://www.charleston-sc.gov/324/Building-Inspections",
+        "https://www.charleston-sc.gov/93/Fees-Permits",
+        "https://www.charleston-sc.gov/DocumentCenter/View/31256/Permit-Requirements---Window-Replacement---Residential"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 5,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+      "https://www.charleston-sc.gov/856/Permit-Center",
+      "https://www.charleston-sc.gov/324/Building-Inspections",
+      "https://www.charleston-sc.gov/93/Fees-Permits",
+      "https://www.charleston-sc.gov/DocumentCenter/View/31256/Permit-Requirements---Window-Replacement---Residential"
+    ],
+    "sources": [
+      {
+        "date": "2026-07-01",
+        "jurisdiction": "Charleston, SC",
+        "publisher": "City of Charleston Permit Center / Customer Self Service",
+        "snippet": "Official Charleston Permit Center page links to Customer Self Service for permit submittal and inspections.",
+        "source_type": "official_local",
+        "title": "City of Charleston Permit Center / Customer Self Service",
+        "url": "https://www.charleston-sc.gov/856/Permit-Center"
+      },
+      {
+        "date": "2026-07-01",
+        "jurisdiction": "Charleston, SC",
+        "publisher": "City of Charleston Permit Center / Customer Self Service",
+        "snippet": "Official Charleston Permit Center page links to Customer Self Service for permit submittal and inspections.",
+        "source_type": "official_local",
+        "title": "City of Charleston Permit Center / Customer Self Service",
+        "url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home"
+      },
+      {
+        "jurisdiction": "Charleston, SC",
+        "publisher": "Official Charleston source",
+        "source_type": "official_local",
+        "title": "Official Charleston source",
+        "url": "https://www.charleston-sc.gov/324/Building-Inspections"
+      },
+      {
+        "jurisdiction": "Charleston, SC",
+        "publisher": "Official Charleston source",
+        "source_type": "official_local",
+        "title": "Official Charleston source",
+        "url": "https://www.charleston-sc.gov/93/Fees-Permits"
+      },
+      {
+        "jurisdiction": "Charleston, SC",
+        "publisher": "Official Charleston source",
+        "source_type": "official_local",
+        "title": "Official Charleston source",
+        "url": "https://www.charleston-sc.gov/DocumentCenter/View/31256/Permit-Requirements---Window-Replacement---Residential"
+      }
+    ],
+    "summary": "Required permit package: Building Permit; Historic Preservation Verification.",
+    "total_cost_estimate": "$1,200 - $3,500",
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them.",
+      "Customer-boundary filing rows were normalized so only hard scope-triggered permits appear as required; address-dependent companion reviews are shown separately."
+    ],
+    "what_to_bring": [
+      "Completed building permit application for residential exterior door replacement",
+      "Historic District / BAR approval or stamped review documents if already issued",
+      "Property address and parcel information for 75 Calhoun Street area job site",
+      "Door product cut sheet showing exact size, material, swing, and finish",
+      "Contractor license information and contact details if a contractor is pulling the permit",
+      "Photos of existing front door and exterior elevation if the reviewer asks for context"
+    ],
+    "zoning_hoa_flag": "This is a historic district exterior alteration, so BAR/historic design review is the main extra hurdle. HOA rules, if any, can also restrict door style, color, and material. If the property is in an additional overlay or landmark district, that can add another review layer before permit issuance."
+  },
+  "response_sha256": "286a511cd35b47c8f1b5177b35bf7e15941d4f5bb6f7c0c949d8b1230617f808",
+  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
+  "share_slug": "_jTFOeU-m3M",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/_jTFOeU-m3M",
+  "source_urls": [
+    "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
+    "https://www.charleston-sc.gov/1075/Inspections",
+    "https://www.charleston-sc.gov/324/Building-Inspections",
+    "https://www.charleston-sc.gov/856/Permit-Center",
+    "https://www.charleston-sc.gov/93/Fees-Permits",
+    "https://www.charleston-sc.gov/DocumentCenter/View/31256/Permit-Requirements---Window-Replacement---Residential"
+  ],
+  "started_at_utc": "2026-07-01T23:57:12.679540+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}
