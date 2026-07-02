@@ -1,8 +1,8 @@
 {
-  "attempt": 1,
   "case": {
     "adjudication_hint": "Minor electrical permit rules vary",
     "bucket": "minor electrical",
+    "case_id": "R-033",
     "city": "St. Louis",
     "expected_decision_pre_registered": "SOURCE_ADJUDICATE",
     "expected_permit_families_pre_registered": [
@@ -16,47 +16,17 @@
     "state": "MO",
     "zip_code": "63103"
   },
-  "completed_at_utc": "2026-07-01T23:56:02.409440+00:00",
-  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
-  "elapsed_seconds": 3.39,
-  "http_status": 200,
-  "issues": [],
-  "key_fields": {
-    "apply_url": "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
-    "applying_office": "City of St. Louis Building Division",
-    "confidence": "high",
-    "customer_headline": "Permit required: Electrical Permit.",
-    "customer_next_step": "File the required permit categories with City of St. Louis Building Division: Electrical Permit. Confirm exact portal subcategories before final submission.",
-    "fee_range": "Fee Estimate: $85 flat residential electrical permit fee (City of St. Louis) \u2014 verify in before quoting",
-    "permit_decision": "REQUIRED",
-    "permit_kind": "Electrical",
-    "permit_name": "Electrical Permit",
-    "permit_required": true,
-    "permit_verdict": "YES",
-    "sources_count": 4
-  },
-  "permit_elapsed_seconds": 1.9,
-  "provisional_grade": "B",
-  "report_status": 200,
-  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
-  "request_payload": {
-    "city": "St. Louis",
-    "job_category": "residential",
-    "job_type": "replace 12 kitchen outlets with GFCI in existing boxes no new circuits, job value 1200",
-    "job_value": 1200,
-    "state": "MO",
-    "vertical": "residential",
-    "zip_code": "63103"
-  },
   "response_body": {
     "apply_path": {
       "channel": "online_portal",
       "documents_to_prepare": [
-        "scope of work",
-        "plans/drawings if required",
-        "contractor license",
-        "valuation",
-        "owner authorization"
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Statement that work uses existing boxes/circuits with no new circuit",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
       ],
       "filing_sources": [
         "https://www.stlouis-mo.gov/government/departments/public-safety/building",
@@ -68,9 +38,9 @@
       "permit_category": "Electrical",
       "permit_type": "Electrical Permit",
       "portal_selection_path": [
-        "Open the city portal / building department website start URL",
-        "Create or sign into the contractor/applicant account if required",
-        "Look for the closest permit category to: Electrical Permit \u2014 Residential Receptacle/GFCI Replacement"
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Electrical Permit",
+        "Prepare the listed documents before final submission"
       ],
       "portal_url": "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
       "primary_filing_source_tier": "local_ahj",
@@ -100,17 +70,51 @@
       "complex": "1-2 weeks if the application is routed for review or if the scope is unclear.",
       "simple": "1-5 business days for simple residential electrical work; many small jobs are handled online or over the counter."
     },
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Electrical Permit",
+          "source_urls": [
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "CONDITIONAL",
+          "family": "plumbing",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "source_urls": [
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+          ],
+          "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
     "checklist": [
-      "Verify your contractor license is current and valid in MO",
-      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
-      "Have the property address and legal parcel number ready",
-      "Know the project value/cost \u2014 required on most permit applications",
-      "Confirm the required license is active and matches the application: Licensed electrical contractor pulls the permit \u2014 the contractor's license information must appear on the application. The homeowner should not assume this is permit-exempt just because the work is device replacement.",
-      "Bring 2 copies of all documents to City of St. Louis Building Division"
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Statement that work uses existing boxes/circuits with no new circuit",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
     ],
     "claim_citations": [
       {
-        "checked_at": "2026-07-01",
+        "checked_at": "2026-07-02",
         "claim": "primary permit category",
         "confidence": "source attached; quoted snippet unavailable",
         "field": "permit_type",
@@ -120,7 +124,7 @@
         "value": "Electrical Permit \u2014 Residential Receptacle/GFCI Replacement"
       },
       {
-        "checked_at": "2026-07-01",
+        "checked_at": "2026-07-02",
         "claim": "Where to start the application",
         "confidence": "source attached; quoted snippet unavailable",
         "field": "apply_url",
@@ -130,7 +134,7 @@
         "value": "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits"
       },
       {
-        "checked_at": "2026-07-01",
+        "checked_at": "2026-07-02",
         "claim": "Estimated fee range",
         "confidence": "source attached; quoted snippet unavailable",
         "field": "fee_range",
@@ -140,7 +144,7 @@
         "value": "Fee Estimate: $85 flat residential electrical permit fee (City of St. Louis) \u2014 verify in https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm before quoting"
       },
       {
-        "checked_at": "2026-07-01",
+        "checked_at": "2026-07-02",
         "claim": "Estimated approval timeline",
         "confidence": "source attached; quoted snippet unavailable",
         "field": "approval_timeline",
@@ -156,71 +160,252 @@
       "Installing GFCI devices without verifying line/load wiring, which causes nuisance trips and failed inspection.",
       "Submitting the application with the wrong jurisdiction \u2014 St. Louis city is not St. Louis County."
     ],
+    "conditional_permits": [
+      {
+        "decision": "CONDITIONAL",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "lead_eligible": true,
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "reason": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "required_if": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "source_urls": [
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+        ],
+        "status": "CONDITIONAL",
+        "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+      }
+    ],
     "confidence": "high",
     "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
-    "customer_first_screen_summary": {
-      "ahj_department": "City of St. Louis Building Division",
-      "decision": "REQUIRED",
-      "kind_category": "Electrical",
-      "next_action": "File the required permit categories with City of St. Louis Building Division: Electrical Permit. Confirm exact portal subcategories before final submission.",
-      "source_cue": "Official source: Official St. Louis source"
-    },
+    "customer_first_screen_summary": "Required permit package: Electrical Permit; Food Establishment Health Plan Review / Permit.",
     "customer_headline": "Permit required: Electrical Permit.",
     "customer_next_step": "File the required permit categories with City of St. Louis Building Division: Electrical Permit. Confirm exact portal subcategories before final submission.",
-    "customer_result_summary": {
-      "ahj_department": "City of St. Louis Building Division",
-      "fee_cost_caveat": "Fee Estimate: $85 flat residential electrical permit fee (City of St. Louis) \u2014 verify in before quoting",
-      "freshness_label": "Checked 2026-07-01",
-      "jurisdiction": "St. Louis, MO",
-      "next_step": "File the required permit categories with City of St. Louis Building Division: Electrical Permit. Confirm exact portal subcategories before final submission.",
-      "permit_decision": "REQUIRED",
-      "permit_kind": "Electrical",
-      "permit_name": "Electrical Permit",
-      "source_cue": "Official source: Official St. Louis source",
-      "timeline": "1-5 business days for simple residential electrical work; many small jobs are handled online or over the counter."
-    },
+    "customer_result_summary": "Required permit package: Electrical Permit; Food Establishment Health Plan Review / Permit.",
     "data_source": "city_database",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule",
+            "Statement that work uses existing boxes/circuits with no new circuit"
+          ],
+          "family": "electrical",
+          "filing_family": "electrical",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "kind": "Electrical",
+          "lead_eligible": true,
+          "permit_name": "Electrical Permit",
+          "permit_type": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "CONDITIONAL",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "filing_family": "plumbing",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "kind": "Plumbing",
+          "lead_eligible": true,
+          "permit_name": "Plumbing Permit",
+          "permit_type": "Plumbing Permit",
+          "reason": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+          "required_if": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+          "source_urls": [
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+          ],
+          "status": "CONDITIONAL",
+          "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+        }
+      ],
+      "lead_family": "electrical",
+      "lead_permit_name": "Electrical Permit",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "false",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "residential"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "unknown",
+        "food_service": "false",
+        "negative_facts": [
+          "existing_circuits",
+          "no_food_service_change"
+        ],
+        "new_solar_panels": "unknown",
+        "occupancy": "residential",
+        "positive_facts": [
+          "electrical",
+          "like_for_like_replacement"
+        ],
+        "project_features": [],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "n/a",
+        "structural_mounting": "unknown",
+        "trades": [
+          "electrical"
+        ],
+        "unknowns": [
+          "exterior_envelope"
+        ],
+        "work_nature": "like_for_like_replacement"
+      }
+    },
     "degraded_sources": false,
     "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Statement that work uses existing boxes/circuits with no new circuit",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
     "fee_calculator": {
       "confidence": "none",
       "note": "Provide job_value to calculate an exact fee where formulas are available."
     },
-    "fee_range": "Fee Estimate: $85 flat residential electrical permit fee (City of St. Louis) \u2014 verify in before quoting",
+    "fee_range": "Fee Estimate: $85 flat residential electrical permit fee (City of St. Louis) \u2014 verify with the building department before quoting",
+    "fees_typed": [
+      {
+        "family": "electrical",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "Fee Estimate: $85 flat residential electrical permit fee (City of St. Louis) \u2014 verify with the building department before quoting"
+      }
+    ],
     "inspection_booking": "Schedule inspections through the City of St. Louis Building Division permit portal: Phone: (314) 622-3313. Use the online inspection request function in the portal if available for your permit record; otherwise call the Building Division. Advance notice requirement was not clearly stated in the source context, so verify when booking.",
-    "job_summary": "Permit required: Electrical Permit.",
+    "inspections": [
+      "Electrical final inspection",
+      "Plumbing final inspection"
+    ],
+    "job_summary": "Required permit package: Electrical Permit; Food Establishment Health Plan Review / Permit.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.stlouis-mo.gov/government/departments/public-safety/building"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+      }
+    ],
     "local_form_known": true,
     "online_application_url": "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
     "permit_decision": "REQUIRED",
     "permit_kind": "Electrical",
     "permit_name": "Electrical Permit",
     "permit_required": true,
+    "permit_summary": "Required permit package: Electrical Permit; Food Establishment Health Plan Review / Permit.",
     "permit_type": "Electrical Permit",
     "permit_verdict": "YES",
     "permits_required": [
       {
-        "approval_type": "Electrical Permit",
         "decision": "REQUIRED",
-        "display_family": "Electrical",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule",
+          "Statement that work uses existing boxes/circuits with no new circuit"
+        ],
         "family": "electrical",
         "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
         "kind": "Electrical",
+        "lead_eligible": true,
         "permit_name": "Electrical Permit",
         "permit_type": "Electrical Permit",
-        "rationale": "Dominant standalone scope family selected from deterministic request facts.",
-        "required": true,
-        "segment": "residential",
-        "source_url": "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+        ],
         "status": "REQUIRED"
       }
     ],
     "permits_required_logic": [
       {
         "filing_family": "electrical",
-        "included_because": "Official permit rule: Dominant standalone scope family selected from deterministic request facts.",
+        "included_because": "The described scope includes this required permit family.",
         "permit_type": "Electrical Permit",
-        "scope_trigger": "electrical_scope",
-        "segment": "residential"
+        "scope_trigger": "Project scope"
       }
     ],
     "pro_tips": [
@@ -228,6 +413,103 @@
       "Label the existing circuit before swapping devices so you can keep line/load straight on each GFCI and avoid callbacks.",
       "Take a photo of each existing box before replacement in case the inspector asks whether the boxes were already in place and undisturbed.",
       "unprotected outlets."
+    ],
+    "project_scope_attributes": {
+      "change_of_use": "false",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "residential"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "unknown",
+      "food_service": "false",
+      "negative_facts": [
+        "existing_circuits",
+        "no_food_service_change"
+      ],
+      "new_solar_panels": "unknown",
+      "occupancy": "residential",
+      "positive_facts": [
+        "electrical",
+        "like_for_like_replacement"
+      ],
+      "project_features": [],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "n/a",
+      "structural_mounting": "unknown",
+      "trades": [
+        "electrical"
+      ],
+      "unknowns": [
+        "exterior_envelope"
+      ],
+      "work_nature": "like_for_like_replacement"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Electrical Permit",
+          "source_urls": [
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "CONDITIONAL",
+          "family": "plumbing",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "source_urls": [
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+            "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+          ],
+          "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "electrical",
+        "fees": [],
+        "lead": true,
+        "permit_name": "Electrical Permit",
+        "source_urls": [
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "CONDITIONAL",
+        "family": "plumbing",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Plumbing Permit",
+        "source_urls": [
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+        ],
+        "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+      }
     ],
     "related_permit_families": [
       "Health"
@@ -240,26 +522,41 @@
     ],
     "related_permits": [
       {
-        "approval_type": "Health Department Review",
-        "condition_text": "Food, clinic, daycare, or grease/FOG scope can trigger health-department review.",
         "decision": "CONDITIONAL",
-        "display_family": "Health",
-        "family": "health",
-        "filing_family": "health",
-        "kind": "Health",
-        "permit_name": "Health Department Review",
-        "permit_type": "Health Department Review",
-        "rationale": "Food, clinic, daycare, or grease/FOG scope can trigger health-department review.",
-        "required": false,
-        "required_if": "Food, clinic, daycare, or grease/FOG scope can trigger health-department review.",
-        "segment": "residential",
-        "source_url": "https://www.stlouis-mo.gov/government/departments/public-safety/building",
-        "status": "CONDITIONAL"
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "lead_eligible": true,
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "reason": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "required_if": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "source_urls": [
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
+          "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
+        ],
+        "status": "CONDITIONAL",
+        "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
       }
     ],
     "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
     "required_permit_families": [
-      "Electrical"
+      "electrical"
     ],
     "required_permit_names": [
       "Electrical Permit"
@@ -267,7 +564,16 @@
     "required_permit_segments": [
       "residential"
     ],
-    "required_permit_summary": "Permit required: Electrical Permit.",
+    "required_permit_summary": "Electrical Permit; Food Establishment Health Plan Review / Permit",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Statement that work uses existing boxes/circuits with no new circuit",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
     "source_confidence": "AHJ_DIRECT",
     "source_support": {
       "apply_url_known": true,
@@ -302,59 +608,40 @@
     ],
     "sources": [
       {
-        "jurisdiction": "St. Louis, MO",
-        "publisher": "Official St. Louis source",
-        "source_type": "official_local",
-        "title": "Official St. Louis source",
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
         "url": "https://www.stlouis-mo.gov/government/departments/public-safety/building"
       },
       {
-        "jurisdiction": "St. Louis, MO",
-        "publisher": "Official St. Louis source",
-        "source_type": "official_local",
-        "title": "Official St. Louis source",
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
         "url": "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits"
       },
       {
-        "jurisdiction": "St. Louis, MO",
-        "publisher": "Official St. Louis source",
-        "source_type": "official_local",
-        "title": "Official St. Louis source",
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
         "url": "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm"
       },
       {
-        "jurisdiction": "St. Louis, MO",
-        "publisher": "Official St. Louis source",
-        "source_type": "official_local",
-        "title": "Official St. Louis source",
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
         "url": "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
       }
     ],
-    "summary": "Permit required: Electrical Permit.",
+    "summary": "Required permit package: Electrical Permit; Food Establishment Health Plan Review / Permit.",
     "total_cost_estimate": "$1,300 - $2,100",
     "warnings": [
       "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
     ],
     "what_to_bring": [
-      "Property address and unit number if applicable",
-      "Contractor license information and contact details",
-      "Estimated job value of $1,200",
-      "Device information if requested by the reviewer: GFCI receptacle brand/model and amperage rating",
-      "Owner authorization if the contractor is filing on behalf of the homeowner"
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Statement that work uses existing boxes/circuits with no new circuit",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
     ]
   },
-  "response_sha256": "08d7a6ac6da47db93b6a81f2b3974aada2bcde4fc98059037e72ec7d0f877f5d",
-  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
-  "share_slug": "KWfh_XcvYDU",
-  "share_status": 200,
-  "share_url": "https://permitassist.io/report/KWfh_XcvYDU",
-  "source_urls": [
-    "https://www.stlouis-mo.gov/government/departments/public-safety/building",
-    "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits",
-    "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/electrical-permit-fees.cfm",
-    "https://www.stlouis-mo.gov/government/departments/public-safety/building/permits/index.cfm"
-  ],
-  "started_at_utc": "2026-07-01T23:55:59.016471+00:00",
-  "status_label": "PASS",
-  "visible_report_excerpt": "PermitAssist Report"
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
 }

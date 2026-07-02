@@ -1,0 +1,530 @@
+{
+  "case": {
+    "adjudication_hint": "Threshold and local exemption disputed",
+    "bucket": "same-size windows",
+    "case_id": "R-032",
+    "city": "Kansas City",
+    "expected_decision_pre_registered": "SOURCE_ADJUDICATE",
+    "expected_permit_families_pre_registered": [
+      "Building possible"
+    ],
+    "id": "R-032",
+    "job_type": "same size window replacement in single family home no structural opening changes, job value 9000",
+    "job_value": 9000,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_needs_targeted_official_source_check",
+    "state": "MO",
+    "zip_code": "64106"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information"
+      ],
+      "office_name": "Kansas City City Planning & Development",
+      "permit_category": "Building",
+      "permit_type": "Building Permit \u2014 Residential Window Replacement",
+      "portal_selection_path": [
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Building Permit \u2014 Residential Window Replacement",
+        "Prepare the listed documents before final submission"
+      ],
+      "portal_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Building Permit \u2014 Residential Window Replacement",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+    "apply_url_known": true,
+    "applying_office": "Kansas City City Planning & Development",
+    "approval_timeline": {
+      "complex": "3-10 business days if plan review is triggered by egress, energy-code questions, or any opening/header modification.",
+      "simple": "Same-day or OTC review is possible for straightforward like-for-like residential window replacement if the application is complete and no structural changes are shown."
+    },
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: $101 permit fee (Kansas City residential building permit for window replacement) plus project cost; typical total project cost for same-size residential window replacement is about $9,150 - $10,250 for a $9,000 job value with permit and minor admin costs \u2014 verify with the building department before quoting"
+            }
+          ],
+          "lead": true,
+          "permit_name": "Building Permit \u2014 Residential Window Replacement",
+          "source_urls": [
+            "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-permit-exempt-work",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/development-concierge/code-questions"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "checklist": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "city_contractor_registration": "Kansas City contractor registration requirements were not confirmed in the current source context. Verify whether the contractor account or registration tied to the ACA portal is current before submitting the permit application.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "value": "Building Permit \u2014 Residential Window Replacement"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "value": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "value": "Fee Estimate: $101 permit fee (Kansas City residential building permit for window replacement) plus project cost; typical total project cost for same-size residential window replacement is about $9,150 - $10,250 for a $9,000 job value with permit and minor admin costs \u2014 verify in https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "value": "{'simple': 'Same-day or OTC review is possible for straightforward like-for-like residential window replacement if the application is complete and no structural changes are shown.', 'complex': '3-10 business days if plan review is triggered by egress, energy-code questions, or any opening/header modification.'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "value": "[{'stage': 'Final Building Inspection', 'description': 'Inspector verifies the installed windows match the approved scope: same-size openings, proper fastening, weatherproof flashing, intact exterior water management, correct glazing labels/U-factor/SHGC, and bedroom egress compliance if any bedroom window was replaced.', 'timing': 'After installation is complete and trim/finish work does not hide the window frame, flashing, or labels'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Installing windows with the wrong U-factor or SHGC for the approved energy-code path \u2014 the inspector will check the label on the glass/frame",
+      "Replacing a bedroom window without confirming egress dimensions \u2014 minimum clear opening requirements still apply",
+      "Assuming same-size replacement is automatically exempt \u2014 Kansas City still expects permit review for residential window replacement",
+      "Starting work before the permit is issued and posted/available for inspection"
+    ],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Building Permit \u2014 Residential Window Replacement; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "customer_headline": "Permit required: Building Permit \u2014 Residential Window Replacement.",
+    "customer_next_step": "File the required permit categories with Kansas City City Planning & Development: Building Permit \u2014 Residential Window Replacement. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": "Required permit package: Building Permit \u2014 Residential Window Replacement; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "data_source": "city_database",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: $101 permit fee (Kansas City residential building permit for window replacement) plus project cost; typical total project cost for same-size residential window replacement is about $9,150 - $10,250 for a $9,000 job value with permit and minor admin costs \u2014 verify with the building department before quoting"
+            }
+          ],
+          "filing_family": "building",
+          "kind": "Building",
+          "lead_eligible": true,
+          "permit_name": "Building Permit \u2014 Residential Window Replacement",
+          "permit_type": "Building Permit \u2014 Residential Window Replacement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-permit-exempt-work",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/development-concierge/code-questions"
+          ],
+          "status": "REQUIRED"
+        }
+      ],
+      "lead_family": "building",
+      "lead_permit_name": "Building Permit \u2014 Residential Window Replacement",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "false",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "residential"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "true",
+        "food_service": "false",
+        "negative_facts": [
+          "no_food_service_change"
+        ],
+        "new_solar_panels": "unknown",
+        "occupancy": "residential",
+        "positive_facts": [
+          "exterior",
+          "like_for_like_replacement",
+          "structural"
+        ],
+        "project_features": [
+          "building_envelope",
+          "exterior_envelope"
+        ],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "n/a",
+        "structural_mounting": "unknown",
+        "trades": [
+          "structural"
+        ],
+        "unknowns": [],
+        "work_nature": "like_for_like_replacement"
+      }
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $101 permit fee (Kansas City residential building permit for window replacement) plus project cost; typical total project cost for same-size residential window replacement is about $9,150 - $10,250 for a $9,000 job value with permit and minor admin costs \u2014 verify with the building department before quoting",
+    "fees_typed": [
+      {
+        "family": "building",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "Fee Estimate: $101 permit fee (Kansas City residential building permit for window replacement) plus project cost; typical total project cost for same-size residential window replacement is about $9,150 - $10,250 for a $9,000 job value with permit and minor admin costs \u2014 verify with the building department before quoting"
+      },
+      {
+        "family": "building",
+        "fee_type": "project_cost_estimate",
+        "source_url": null,
+        "text": "$101 permit fee (Kansas City residential building permit for window replacement) plus project cost"
+      }
+    ],
+    "inspection_booking": "Schedule inspections through the Kansas City online permit portal at Use the inspection request function tied to the permit record. If portal scheduling is unavailable for your permit type, call the City Planning & Development office and request a final building inspection. Advance notice requirement was not found in the current source context, so verify before closing up the job.",
+    "inspections": [],
+    "job_summary": "Required permit package: Building Permit \u2014 Residential Window Replacement; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-permit-exempt-work"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/development-concierge/code-questions"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Building Permit \u2014 Residential Window Replacement",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Building Permit \u2014 Residential Window Replacement; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "permit_type": "Building Permit \u2014 Residential Window Replacement",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fees": [
+          {
+            "family": "building",
+            "fee_type": "permit_fee",
+            "source_url": null,
+            "text": "Fee Estimate: $101 permit fee (Kansas City residential building permit for window replacement) plus project cost; typical total project cost for same-size residential window replacement is about $9,150 - $10,250 for a $9,000 job value with permit and minor admin costs \u2014 verify with the building department before quoting"
+          }
+        ],
+        "filing_family": "building",
+        "kind": "Building",
+        "lead_eligible": true,
+        "permit_name": "Building Permit \u2014 Residential Window Replacement",
+        "permit_type": "Building Permit \u2014 Residential Window Replacement",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+          "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule",
+          "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division",
+          "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-permit-exempt-work",
+          "https://www.kcmo.gov/city-hall/departments/city-planning-development/development-concierge/code-questions"
+        ],
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Building Permit \u2014 Residential Window Replacement",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "pro_tips": [
+      "Keep the window label or manufacturer sticker available for inspection \u2014 inspectors often want to verify the exact U-factor and SHGC from the product label",
+      "If any opening is in a bedroom, measure the clear opening before ordering the unit so you do not fail egress on final",
+      "Kansas City uses a combined permit structure, so do not waste time looking for separate electrical or mechanical permits for a plain window swap",
+      "Submit the permit with the exact window schedule and product cut sheets up front to avoid a plan review bounce"
+    ],
+    "project_scope_attributes": {
+      "change_of_use": "false",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "residential"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "true",
+      "food_service": "false",
+      "negative_facts": [
+        "no_food_service_change"
+      ],
+      "new_solar_panels": "unknown",
+      "occupancy": "residential",
+      "positive_facts": [
+        "exterior",
+        "like_for_like_replacement",
+        "structural"
+      ],
+      "project_features": [
+        "building_envelope",
+        "exterior_envelope"
+      ],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "n/a",
+      "structural_mounting": "unknown",
+      "trades": [
+        "structural"
+      ],
+      "unknowns": [],
+      "work_nature": "like_for_like_replacement"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: $101 permit fee (Kansas City residential building permit for window replacement) plus project cost; typical total project cost for same-size residential window replacement is about $9,150 - $10,250 for a $9,000 job value with permit and minor admin costs \u2014 verify with the building department before quoting"
+            }
+          ],
+          "lead": true,
+          "permit_name": "Building Permit \u2014 Residential Window Replacement",
+          "source_urls": [
+            "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-permit-exempt-work",
+            "https://www.kcmo.gov/city-hall/departments/city-planning-development/development-concierge/code-questions"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "building",
+        "fees": [
+          {
+            "family": "building",
+            "fee_type": "permit_fee",
+            "source_url": null,
+            "text": "Fee Estimate: $101 permit fee (Kansas City residential building permit for window replacement) plus project cost; typical total project cost for same-size residential window replacement is about $9,150 - $10,250 for a $9,000 job value with permit and minor admin costs \u2014 verify with the building department before quoting"
+          }
+        ],
+        "lead": true,
+        "permit_name": "Building Permit \u2014 Residential Window Replacement",
+        "source_urls": [
+          "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+          "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule",
+          "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division",
+          "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-permit-exempt-work",
+          "https://www.kcmo.gov/city-hall/departments/city-planning-development/development-concierge/code-questions"
+        ],
+        "trigger": null
+      }
+    ],
+    "related_permits": [],
+    "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "building"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 Residential Window Replacement"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Building Permit \u2014 Residential Window Replacement; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 5,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 5,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+        "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule",
+        "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division",
+        "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-permit-exempt-work",
+        "https://www.kcmo.gov/city-hall/departments/city-planning-development/development-concierge/code-questions"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 5,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.kcmo.gov/city-hall/departments/city-planning-and-development",
+      "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule",
+      "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division",
+      "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-permit-exempt-work",
+      "https://www.kcmo.gov/city-hall/departments/city-planning-development/development-concierge/code-questions"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-and-development"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-and-development-fee-schedule"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/permits-division"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/building-permit-exempt-work"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.kcmo.gov/city-hall/departments/city-planning-development/development-concierge/code-questions"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 Residential Window Replacement; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "total_cost_estimate": "$9,150 - $10,250",
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "zoning_hoa_flag": "For residential window replacement, HOA or historic-district rules may still control exterior appearance, grille patterns, frame color, or sash style. If the home is in a historic overlay or conservation district, verify design review before ordering windows."
+  },
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
+}

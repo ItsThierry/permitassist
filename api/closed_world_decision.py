@@ -12,6 +12,7 @@ from project_scope_attributes import (
     Occupancy,
     ProjectScopeAttributes,
     SignIllumination,
+    WorkNature,
     extract_project_scope_attributes,
 )
 
@@ -211,6 +212,7 @@ _FAMILY_NAMES = {
     "sign": "Sign Permit",
     "battery_storage": "Electrical Permit — Battery Energy Storage System (ESS)",
     "solar_pv": "Solar / PV",
+    "refrigeration": "Refrigeration Permit",
 }
 
 _LEAD_PRIORITY = [
@@ -322,6 +324,8 @@ def _docs_for_family(family: str, attrs: ProjectScopeAttributes) -> tuple[str, .
         return tuple(base + ["Sign drawings", "Site/elevation plan", "Mounting details"])
     if family == "mechanical":
         return tuple(base + ["Equipment specifications", "Mechanical layout"])
+    if family == "refrigeration":
+        return tuple(base + ["Refrigerant-line / refrigeration piping details", "Equipment specifications"])
     if family == "plumbing":
         return tuple(base + ["Plumbing fixture/equipment schedule", "Plumbing layout if required"])
     if family == "gas":
@@ -342,6 +346,8 @@ def _inspections_for_family(family: str) -> tuple[str, ...]:
         return ("Electrical final inspection", "ESS equipment inspection if required")
     if family == "mechanical":
         return ("Mechanical final inspection",)
+    if family == "refrigeration":
+        return ("Refrigeration final inspection",)
     if family == "plumbing":
         return ("Plumbing final inspection",)
     return ()
@@ -479,6 +485,12 @@ def compose_decision_object(
     for trade in ("mechanical", "plumbing", "fire_alarm", "fire_suppression"):
         if trade in attrs.trades:
             required(trade)
+    if (
+        city.strip().lower() == "seattle"
+        and state.strip().upper() == "WA"
+        and re.search(r"\b(?:mini[- ]split|ductless|split[- ]system|heat\s+pump|air\s+conditioner|condenser|refrigerant|line[- ]set)\b", _norm(job_type))
+    ):
+        required("refrigeration", "Refrigeration Permit — Split-System Heat Pump / Mini-Split")
     if "gas" in attrs.trades or "gas" in attrs.positive_facts:
         required("gas")
 
@@ -510,23 +522,24 @@ def compose_decision_object(
         if "mechanical" not in items and "no_mechanical" not in attrs.negative_facts:
             required("mechanical")
     if attrs.food_service == AttributeValue.TRUE and re.search(r"\b(tenant improvement|buildout|restaurant|bar|brewery|commissary)\b", job_l):
+        same_location_replacement = attrs.work_nature == WorkNature.LIKE_FOR_LIKE_REPLACEMENT or bool(re.search(r"\b(same location|replace(?:ment)?\b.*\bsame location|same curb|same capacity)\b", job_l))
         if "plumbing" not in items and "no_plumbing" not in attrs.negative_facts:
             required("plumbing")
-        if "planning_zoning" not in items:
-            required("planning_zoning")
-        if "co_change_of_occupancy" not in items and not re.search(r"\b(no change of use|no change of occupancy)\b", job_l):
-            required("co_change_of_occupancy")
-        if "fire_suppression" not in items and re.search(r"\b(hood|suppression|bar|brewery|restaurant|cooking)\b", job_l):
-            required("fire_suppression")
+        if not same_location_replacement:
+            if "planning_zoning" not in items:
+                required("planning_zoning")
+            if "co_change_of_occupancy" not in items and not re.search(r"\b(no change of use|no change of occupancy)\b", job_l):
+                required("co_change_of_occupancy")
+            if "fire_suppression" not in items and re.search(r"\b(hood|suppression|bar|brewery|restaurant|cooking)\b", job_l):
+                required("fire_suppression")
     if "planning_zoning" not in items and attrs.occupancy == Occupancy.COMMERCIAL and "building" in items and re.search(r"\b(storefront|exterior|facade|fa[cç]ade|sign|awning)\b", job_l):
         required("planning_zoning")
-    if "co_change_of_occupancy" not in items and attrs.occupancy == Occupancy.COMMERCIAL and "building" in items and re.search(r"\b(dental|medical|clinic|veterinary|vet clinic|procedure rooms?|retail tenant improvement)\b", job_l):
+    if "co_change_of_occupancy" not in items and attrs.occupancy == Occupancy.COMMERCIAL and "building" in items and re.search(r"\b(retail\s+to|office\s+to|warehouse\s+to|change\s+of\s+(?:use|occupancy)|occupancy\s+change|convert(?:ing|ed)?\b|conversion\b|retail\s+tenant\s+improvement)\b", job_l):
         required("co_change_of_occupancy")
-    if attrs.occupancy == Occupancy.COMMERCIAL and re.search(r"\b(dental|medical|clinic|veterinary|vet clinic|procedure rooms?)\b", job_l):
-        if "health_food" not in items:
-            required("health_food", "Health")
-        if "fire_suppression" not in items:
-            required("fire_suppression", "Fire")
+    # Medical/dental/veterinary tenant improvements can require building/trade
+    # permits, but they are not food-establishment or generic fire-suppression
+    # permits unless the request has food, hood, sprinkler, alarm, or use-change
+    # facts.  Keep those families gated by the closed-world attributes above.
     if attrs.occupancy == Occupancy.COMMERCIAL and re.search(r"\b(bar|wine bar|brewery|alcohol|liquor)\b", job_l):
         required("liquor", "Liquor License / Local Alcohol Routing")
     if attrs.occupancy == Occupancy.COMMERCIAL and re.search(r"\b(daycare|child care|childcare)\b", job_l):
@@ -577,6 +590,7 @@ def _kind_for_family(family: str | None) -> str:
         "battery_storage": "Electrical",
         "electrical": "Electrical",
         "mechanical": "Mechanical",
+        "refrigeration": "Refrigeration",
         "plumbing": "Plumbing",
         "gas": "Gas",
         "solar_pv": "Solar / PV",

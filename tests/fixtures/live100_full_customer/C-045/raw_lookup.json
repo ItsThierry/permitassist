@@ -1,0 +1,1436 @@
+{
+  "case": {
+    "adjudication_hint": "Vet clinic",
+    "bucket": "vet clinic TI",
+    "case_id": "C-045",
+    "city": "Anchorage",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "Plumbing",
+      "Electrical",
+      "Mechanical",
+      "Health/state verify"
+    ],
+    "id": "C-045",
+    "job_type": "commercial tenant improvement for veterinary clinic with x ray room plumbing kennels and ventilation, job value 350000",
+    "job_value": 350000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "AK",
+    "zip_code": "99501"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description"
+      ],
+      "office_name": "Municipality of Anchorage Development Services",
+      "permit_category": "Building",
+      "permit_type": "Commercial Building / Tenant Improvement Permit",
+      "portal_selection_path": [
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Commercial Building / Tenant Improvement Permit",
+        "Prepare the listed documents before final submission"
+      ],
+      "portal_url": "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+    "apply_url_known": true,
+    "applying_office": "Municipality of Anchorage Development Services",
+    "approval_timeline": {
+      "complex": "3-8+ weeks if architectural, MEP, fire/life-safety, accessibility, or x-ray-related review comments are issued; longer if radiation-control or utility coordination is needed",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building_ti",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: $1,800 - $4,500 in permit fees and inspections, plus plan review if required; Anchorage commercial building permits over $40,000 are valuation-based at $0.009 \u00d7 project valuation, so a $350,000 project is about $3,150 for the building permit valuation fee alone, before trade permit fees/inspection charges \u2014 verify with the building department before quoting"
+            }
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "mechanical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "plumbing",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "health_food",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Health",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "fire_suppression",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Fire",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "co_change_of_occupancy",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "CONDITIONAL",
+          "family": "planning_zoning",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "checklist": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "city_contractor_registration": "Anchorage uses Municipality of Anchorage permit processing plus Alaska contractor licensing/registration requirements. Verify the contractor's Alaska Division of Corporations & Business Licensing status before applying; if the applicant is acting as the contractor, current state registration/licensing information must be valid and match the permit application.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Municipality of Anchorage Development Services official permit requirement source",
+        "source_url": "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+        "value": "Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Municipality of Anchorage Development Services official permit requirement source",
+        "source_url": "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+        "value": "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Municipality of Anchorage Development Services official permit requirement source",
+        "source_url": "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+        "value": "Fee Estimate: $1,800 - $4,500 in permit fees and inspections, plus plan review if required; Anchorage commercial building permits over $40,000 are valuation-based at $0.009 \u00d7 project valuation, so a $350,000 project is about $3,150 for the building permit valuation fee alone, before trade permit fees/inspection charges \u2014 verify with the building department before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Municipality of Anchorage Development Services official permit requirement source",
+        "source_url": "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+        "value": "{'simple': 'Over-the-counter intake is not typical for a $350,000 commercial TI; expect initial completeness check and routing to plan review, usually 1-3 weeks if the submittal is clean', 'complex': '3-8+ weeks if architectural, MEP, fire/life-safety, accessibility, or x-ray-related review comments are issued; longer if radiation-control or utility coordination is needed'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Municipality of Anchorage Development Services official permit requirement source",
+        "source_url": "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+        "value": "[{'stage': 'Building Framing / Rough-In', 'description': 'Inspector checks wall framing, rated assemblies, door swings/clearances, accessibility clearances, fireblocking, penetrations, and that the x-ray room shielding details match approved plans before concealment.', 'timing': 'Before drywall, insulation, or ceiling closure'}, {'stage': 'Mechanical Rough-In', 'description': 'Inspector verifies duct routing, exhaust fan installation, make-up air, equipment clearances, condensate drainage, outside air provisions, and that kennel ventilation is separated/adequate for odor control and air changes.', 'timing': 'Before ducts are covered and before equipment startup'}, {'stage': 'Plumbing Rough-In', 'description': 'Inspector checks water and drain line routing, trap/venting, fixture rough-ins, floor drain locations, cleanouts, and leak test results before walls and floors are closed.', 'timing': 'Before insulation and wall/floor concealment'}, {'stage': 'Electrical Rough-In', 'description': 'Inspector verifies branch circuits, conductor sizing, panel schedule, dedicated x-ray equipment circuits, disconnects, grounding/bonding, box fill, and GFCI/AFCI where applicable before concealment.', 'timing': 'Before drywall and ceiling closure'}, {'stage': 'Final Commercial Inspection', 'description': 'Inspector checks that all fixtures, equipment, ventilation, lighting, labels, accessibility items, and life-safety items are installed and operational; x-ray room work must match approved plans and any required shielding documentation.', 'timing': 'After all trade work is complete and the space is ready for occupancy'}, 'certificate-of-occupancy conditions.', 'fixture counts.', 'Mechanical balance / infection-control verification \u2014 confirm ventilation, exhaust, pressure relationships, filtration', 'Fire alarm / sprinkler / life-safety final \u2014 verify notification appliance coverage, sprinkler head layout, emergency lighting, exit signs', 'Radiology/x-ray shielding or state radiation registration verification if radiation-producing equipment is installed.']"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the TI as only a building permit and forgetting separate plumbing, mechanical",
+      "Starting demolition or rough-in before the commercial permit is issued and posted",
+      "Failing to include x-ray room shielding, dedicated electrical requirements, or equipment cut sheets in the first plan submittal",
+      "Understating the project valuation to try to avoid the valuation-based commercial fee structure",
+      "Not coordinating ventilation and exhaust for kennels early, which causes plan review corrections and rework",
+      "verifier paperwork out of the permit package.",
+      "Using ordinary office HVAC assumptions instead of confirming ventilation, exhaust, pressure relationships, filtration, and infection-control needs for procedure/sterilization/lab rooms.",
+      "check-in counters."
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Health-care licensing / local health review is triggered for this project when the building department confirms the relevant health scope condition.",
+        "permit_type": "Health-care licensing / local health review",
+        "rationale": "Clinic opening may require licensing or health-care approval separate from building permit final.",
+        "reason": "Clinic opening may require licensing or health-care approval separate from building permit final.",
+        "trigger_condition": "Verify whether Health-care licensing / local health review is triggered for this project when the building department confirms the relevant health scope condition."
+      },
+      {
+        "certainty": "conditional",
+        "condition_text": "Verify whether Medical gas / x-ray specialty review if included is triggered for this project when the building department confirms the relevant other scope condition.",
+        "permit_type": "Medical gas / x-ray specialty review if included",
+        "rationale": "Medical gas, nitrous/oxygen/vacuum, or radiology equipment can require specialty documentation and verification.",
+        "reason": "Medical gas, nitrous/oxygen/vacuum, or radiology equipment can require specialty documentation and verification.",
+        "trigger_condition": "Verify whether Medical gas / x-ray specialty review if included is triggered for this project when the building department confirms the relevant other scope condition."
+      },
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
+      }
+    ],
+    "conditional_permits": [
+      {
+        "decision": "CONDITIONAL",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "filing_family": "planning_zoning",
+        "kind": "Permit",
+        "lead_eligible": true,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "required_if": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "status": "CONDITIONAL",
+        "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Alarm Permit; Fire / Life-Safety Permit; Food Establishment Health Plan Review / Permit.",
+    "customer_headline": "Permit required: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit \u2014 Commercial Tenant Improvement, Plumbing Permit \u2014 Commercial Tenant Improvement, Health, Fire, Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "customer_next_step": "File the required permit categories with Municipality of Anchorage Development Services: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit \u2014 Commercial Tenant Improvement, Plumbing Permit \u2014 Commercial Tenant Improvement, Health, Fire, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Alarm Permit; Fire / Life-Safety Permit; Food Establishment Health Plan Review / Permit.",
+    "data_source": "city_database",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building_ti",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: $1,800 - $4,500 in permit fees and inspections, plus plan review if required; Anchorage commercial building permits over $40,000 are valuation-based at $0.009 \u00d7 project valuation, so a $350,000 project is about $3,150 for the building permit valuation fee alone, before trade permit fees/inspection charges \u2014 verify with the building department before quoting"
+            }
+          ],
+          "filing_family": "building_ti",
+          "kind": "Building",
+          "lead_eligible": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "permit_type": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "filing_family": "electrical",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "kind": "Electrical",
+          "lead_eligible": true,
+          "permit_name": "Electrical Permit",
+          "permit_type": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "filing_family": "mechanical",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "kind": "Mechanical",
+          "lead_eligible": true,
+          "permit_name": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+          "permit_type": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "filing_family": "plumbing",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "kind": "Plumbing",
+          "lead_eligible": true,
+          "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+          "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "filing_family": "health_food",
+          "kind": "Health",
+          "lead_eligible": true,
+          "permit_name": "Health",
+          "permit_type": "Health",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "filing_family": "fire_suppression",
+          "kind": "Fire",
+          "lead_eligible": true,
+          "permit_name": "Fire",
+          "permit_type": "Fire",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "CONDITIONAL",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "filing_family": "planning_zoning",
+          "kind": "Permit",
+          "lead_eligible": true,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "permit_type": "Planning / Zoning Use Clearance",
+          "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "required_if": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "status": "CONDITIONAL",
+          "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "filing_family": "co_change_of_occupancy",
+          "kind": "Permit",
+          "lead_eligible": true,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "status": "REQUIRED"
+        }
+      ],
+      "lead_family": "building",
+      "lead_permit_name": "Commercial Building / Tenant Improvement Permit",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "false",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "commercial"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "unknown",
+        "food_service": "false",
+        "negative_facts": [
+          "no_food_service_change"
+        ],
+        "new_solar_panels": "unknown",
+        "occupancy": "commercial",
+        "positive_facts": [
+          "mechanical",
+          "plumbing",
+          "structural"
+        ],
+        "project_features": [
+          "building_work"
+        ],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "n/a",
+        "structural_mounting": "unknown",
+        "trades": [
+          "mechanical",
+          "plumbing",
+          "structural"
+        ],
+        "unknowns": [
+          "exterior_envelope"
+        ],
+        "work_nature": "alteration"
+      }
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $1,800 - $4,500 in permit fees and inspections, plus plan review if required; Anchorage commercial building permits over $40,000 are valuation-based at $0.009 \u00d7 project valuation, so a $350,000 project is about $3,150 for the building permit valuation fee alone, before trade permit fees/inspection charges \u2014 verify with the building department before quoting",
+    "fees_typed": [
+      {
+        "family": "building",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "Fee Estimate: $1,800 - $4,500 in permit fees and inspections, plus plan review if required; Anchorage commercial building permits over $40,000 are valuation-based at $0.009 \u00d7 project valuation, so a $350,000 project is about $3,150 for the building permit valuation fee alone, before trade permit fees/inspection charges \u2014 verify with the building department before quoting"
+      },
+      {
+        "family": "building",
+        "fee_type": "project_cost_estimate",
+        "source_url": null,
+        "text": "$350,000 project is about $3,150 for the building permit valuation fee alone, before trade permit fees/inspection charges \u2014 verify with the building department before quoting"
+      }
+    ],
+    "inspection_booking": "Schedule inspections through the Anchorage Accela portal: Phone: (907) 343-8211. For commercial TI work, book each trade inspection separately and do not cover work until rough inspections pass. Advance notice is typically at least 24 hours; for a project this size, plan ahead because plan-review corrections can delay inspection availability.",
+    "inspections": [
+      "Electrical final inspection",
+      "Mechanical final inspection",
+      "Plumbing final inspection"
+    ],
+    "job_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Alarm Permit; Fire / Life-Safety Permit; Food Establishment Health Plan Review / Permit.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://aca-prod.accela.com/ANCHORAGE"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Commercial Building / Tenant Improvement Permit",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Alarm Permit; Fire / Life-Safety Permit; Food Establishment Health Plan Review / Permit.",
+    "permit_type": "Commercial Building / Tenant Improvement Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building_ti",
+        "fees": [
+          {
+            "family": "building",
+            "fee_type": "permit_fee",
+            "source_url": null,
+            "text": "Fee Estimate: $1,800 - $4,500 in permit fees and inspections, plus plan review if required; Anchorage commercial building permits over $40,000 are valuation-based at $0.009 \u00d7 project valuation, so a $350,000 project is about $3,150 for the building permit valuation fee alone, before trade permit fees/inspection charges \u2014 verify with the building department before quoting"
+          }
+        ],
+        "filing_family": "building_ti",
+        "kind": "Building",
+        "lead_eligible": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "lead_eligible": true,
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "lead_eligible": true,
+        "permit_name": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+        "permit_type": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "lead_eligible": true,
+        "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "filing_family": "health_food",
+        "kind": "Health",
+        "lead_eligible": true,
+        "permit_name": "Health",
+        "permit_type": "Health",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "filing_family": "fire_suppression",
+        "kind": "Fire",
+        "lead_eligible": true,
+        "permit_name": "Fire",
+        "permit_type": "Fire",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "filing_family": "co_change_of_occupancy",
+        "kind": "Permit",
+        "lead_eligible": true,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building_ti",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "health_food",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Health",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_suppression",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Fire",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "co_change_of_occupancy",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "pro_tips": [
+      "For a $350,000 Anchorage commercial TI, build the permit valuation carefully because the building permit fee is valuation-based over $40,000 at $0.009 \u00d7 valuation.",
+      "Submit the full MEP package together with the architectural TI set so plan review does not bounce the job between disciplines.",
+      "If the x-ray room has shielding or special electrical requirements, get the equipment vendor's stamped specs before submittal; that is where these jobs usually stall.",
+      "Check the tenant space's existing occupancy and egress corrections.",
+      "Use the Accela portal for intake and keep the permit number handy for inspection scheduling so trade inspections can be booked without delay.",
+      "health-care licensing paths before pricing.",
+      "health/licensing reviewer before submitting so room names, fixture schedules, ventilation, and equipment utility loads match.",
+      "verify B vs I-2/ambulatory-care status with the building department if any procedure, sedation, recovery, or self-preservation issue exists."
+    ],
+    "project_scope_attributes": {
+      "change_of_use": "false",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "commercial"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "unknown",
+      "food_service": "false",
+      "negative_facts": [
+        "no_food_service_change"
+      ],
+      "new_solar_panels": "unknown",
+      "occupancy": "commercial",
+      "positive_facts": [
+        "mechanical",
+        "plumbing",
+        "structural"
+      ],
+      "project_features": [
+        "building_work"
+      ],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "n/a",
+      "structural_mounting": "unknown",
+      "trades": [
+        "mechanical",
+        "plumbing",
+        "structural"
+      ],
+      "unknowns": [
+        "exterior_envelope"
+      ],
+      "work_nature": "alteration"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building_ti",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: $1,800 - $4,500 in permit fees and inspections, plus plan review if required; Anchorage commercial building permits over $40,000 are valuation-based at $0.009 \u00d7 project valuation, so a $350,000 project is about $3,150 for the building permit valuation fee alone, before trade permit fees/inspection charges \u2014 verify with the building department before quoting"
+            }
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "mechanical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "plumbing",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "health_food",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Health",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "fire_suppression",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Fire",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "co_change_of_occupancy",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "CONDITIONAL",
+          "family": "planning_zoning",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "source_urls": [
+            "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+            "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+            "https://aca-prod.accela.com/ANCHORAGE",
+            "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+            "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+          ],
+          "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "building_ti",
+        "fees": [
+          {
+            "family": "building",
+            "fee_type": "permit_fee",
+            "source_url": null,
+            "text": "Fee Estimate: $1,800 - $4,500 in permit fees and inspections, plus plan review if required; Anchorage commercial building permits over $40,000 are valuation-based at $0.009 \u00d7 project valuation, so a $350,000 project is about $3,150 for the building permit valuation fee alone, before trade permit fees/inspection charges \u2014 verify with the building department before quoting"
+          }
+        ],
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "electrical",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Electrical Permit",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "mechanical",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Mechanical Permit \u2014 Commercial Tenant Improvement",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "plumbing",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "health_food",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Health",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "fire_suppression",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Fire",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "co_change_of_occupancy",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "CONDITIONAL",
+        "family": "planning_zoning",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+      }
+    ],
+    "related_permit_families": [
+      "Fire",
+      "Health",
+      "Historic/Planning",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Fire Suppression / Fire Prevention Review",
+      "Health-care licensing / local health review",
+      "Historic Preservation Review",
+      "Accessibility / ADA path-of-travel verification",
+      "Medical gas / x-ray specialty review if included"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "decision": "CONDITIONAL",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "filing_family": "planning_zoning",
+        "kind": "Permit",
+        "lead_eligible": true,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "required_if": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "source_urls": [
+          "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+          "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+          "https://aca-prod.accela.com/ANCHORAGE",
+          "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+          "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+        ],
+        "status": "CONDITIONAL",
+        "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+      }
+    ],
+    "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "building_ti",
+      "electrical",
+      "mechanical",
+      "plumbing",
+      "health_food",
+      "fire_suppression",
+      "co_change_of_occupancy"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Electrical Permit",
+      "Mechanical Permit \u2014 Commercial Tenant Improvement",
+      "Plumbing Permit \u2014 Commercial Tenant Improvement",
+      "Health",
+      "Fire",
+      "Certificate of Occupancy / Change-of-Occupancy Approval"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Alarm Permit; Fire / Life-Safety Permit; Food Establishment Health Plan Review / Permit",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 6,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 6,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+        "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+        "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+        "https://aca-prod.accela.com/ANCHORAGE",
+        "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+        "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 6,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 6
+    },
+    "source_urls": [
+      "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf",
+      "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx",
+      "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx",
+      "https://aca-prod.accela.com/ANCHORAGE",
+      "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx",
+      "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.muni.org/departments/ocpd/development-services/about/building%20board%20documents/title%2023-rev2.pdf"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.muni.org/Departments/OCPD/development-services/Pages/default.aspx"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://aca-prod.accela.com/ANCHORAGE"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/default.aspx"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://bsd.muni.org/Inspandreview/ViewReviewComments.aspx?apbldgreviewkey=290907"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit \u2014 Commercial Tenant Improvement; Electrical Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Alarm Permit; Fire / Life-Safety Permit; Food Establishment Health Plan Review / Permit.",
+    "total_cost_estimate": "$350,000 - $425,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "watch_out": [
+      "Health-care licensing or state/local health review may control opening even after the building permit is final; verify this path before promising an opening date.",
+      "x-ray shielding often need specialty documentation and third-party verification; missing it can block final inspection or equipment operation."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "zoning_hoa_flag": "Commercial tenant improvements can still be delayed by zoning, parking, signage, and use-specific approvals.any exterior signage approvals. If the building is in a historic or overlay district, additional review may apply."
+  },
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
+}

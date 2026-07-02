@@ -1,0 +1,19 @@
+{
+  "expected_decision": "REQUIRED",
+  "fee_must_not_contain": "",
+  "forbidden_visible": [
+    "No permit submission needed",
+    "No permit fee expected",
+    "No permit required for the described scope",
+    "Plumbing final inspection"
+  ],
+  "must_demote": [],
+  "must_keep_required": [
+    "building"
+  ],
+  "must_not_required": [
+    "plumbing"
+  ],
+  "protection": false,
+  "source_must_not_contain": ""
+}

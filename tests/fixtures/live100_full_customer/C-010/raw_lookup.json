@@ -1,0 +1,624 @@
+{
+  "case": {
+    "adjudication_hint": "Sign/electrical",
+    "bucket": "signage illuminated",
+    "case_id": "C-010",
+    "city": "Gilbert",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Sign",
+      "Electrical"
+    ],
+    "id": "C-010",
+    "job_type": "install monument sign and illuminated wall sign for retail tenant, job value 22000",
+    "job_value": 22000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "AZ",
+    "zip_code": "85234"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Sign drawings",
+        "Site/elevation plan",
+        "Mounting details",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule"
+      ],
+      "office_name": "Town of Gilbert Development Services",
+      "permit_category": "Sign",
+      "permit_type": "Sign Permit",
+      "portal_selection_path": [
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Sign Permit",
+        "Prepare the listed documents before final submission"
+      ],
+      "portal_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Sign Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+    "apply_url_known": true,
+    "applying_office": "Town of Gilbert Development Services",
+    "approval_timeline": {
+      "complex": "5-15 business days if zoning, structural, or electrical plan review is required",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "sign",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Sign Permit",
+          "source_urls": [
+            "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+            "https://roc.az.gov",
+            "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+            "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Electrical Permit \u2014 Illuminated Sign",
+          "source_urls": [
+            "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+            "https://roc.az.gov",
+            "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+            "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "checklist": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Sign drawings",
+      "Site/elevation plan",
+      "Mounting details",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "value": "Building Permit \u2014 Commercial Sign Installation"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "value": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "value": "Fee Estimate: Permit fees need verification with Gilbert Development Services; budget roughly $300 - $900 for permit/plan review fees plus $4,200 - $11,600 for fabrication, electrical, and installation \u2014 verify in https://www.gilbertaz.gov/departments/development-services/planning/signs before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "value": "{'simple': 'Typically 1-3 business days for sign permit intake if submittal is complete; over-the-counter only if the city accepts the sign package without corrections', 'complex': '5-15 business days if zoning, structural, or electrical plan review is required'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "value": "[{'stage': 'Sign Footing / Foundation Inspection', 'description': 'Inspector checks footing depth, rebar, anchor bolts, base dimensions, and that the monument sign foundation matches the approved plans before concrete is covered.', 'timing': 'Before concrete is poured or before the footing is backfilled'}, {'stage': 'Sign Structural / Final Building Inspection', 'description': 'Inspector verifies sign height, setback, mounting, structural attachment, wind resistance, copy area, and that the installed sign matches the approved permit drawings.', 'timing': 'After sign installation is complete'}, {'stage': 'Electrical Final Inspection', 'description': 'Inspector checks sign lighting wiring, disconnecting means, conductor protection, grounding/bonding, fixture listing, and that the illuminated sign operates safely.', 'timing': 'After electrical work is complete and before final approval'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting only a building permit and forgetting the separate electrical permit for the illuminated wall sign",
+      "Installing the monument sign before footing approval or before the permit is issued",
+      "Missing setback, height, or visibility requirements on the site plan",
+      "Using a sign contractor without a current ROC license number on the application",
+      "Not matching the installed sign size, copy area, or illumination to the approved drawings"
+    ],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Sign Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Electrical Permit \u2014 Illuminated Sign.",
+    "customer_headline": "Permit required: Sign Permit, Electrical Permit \u2014 Illuminated Sign.",
+    "customer_next_step": "File the required permit categories with Town of Gilbert Development Services: Sign Permit, Electrical Permit \u2014 Illuminated Sign. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": "Required permit package: Sign Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Electrical Permit \u2014 Illuminated Sign.",
+    "data_source": "web_search",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Sign drawings",
+            "Site/elevation plan",
+            "Mounting details"
+          ],
+          "family": "sign",
+          "filing_family": "sign",
+          "kind": "Sign",
+          "lead_eligible": true,
+          "permit_name": "Sign Permit",
+          "permit_type": "Sign Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+            "https://roc.az.gov",
+            "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+            "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "filing_family": "electrical",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "kind": "Electrical",
+          "lead_eligible": true,
+          "permit_name": "Electrical Permit \u2014 Illuminated Sign",
+          "permit_type": "Electrical Permit \u2014 Illuminated Sign",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+            "https://roc.az.gov",
+            "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+            "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+          ],
+          "status": "REQUIRED"
+        }
+      ],
+      "lead_family": "sign",
+      "lead_permit_name": "Sign Permit",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "false",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "commercial"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "true",
+        "food_service": "false",
+        "negative_facts": [
+          "no_food_service_change"
+        ],
+        "new_solar_panels": "unknown",
+        "occupancy": "commercial",
+        "positive_facts": [
+          "electrical",
+          "exterior",
+          "sign",
+          "sign_illuminated"
+        ],
+        "project_features": [
+          "exterior_envelope",
+          "sign"
+        ],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "true",
+        "structural_mounting": "unknown",
+        "trades": [
+          "electrical"
+        ],
+        "unknowns": [],
+        "work_nature": "alteration"
+      }
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Sign drawings",
+      "Site/elevation plan",
+      "Mounting details",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Permit fees need verification with Gilbert Development Services; budget roughly $300 - $900 for permit/plan review fees",
+    "fees_typed": [
+      {
+        "family": "sign",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "Fee Estimate: Permit fees need verification with Gilbert Development Services; budget roughly $300 - $900 for permit/plan review fees"
+      },
+      {
+        "family": "sign",
+        "fee_type": "project_cost_estimate",
+        "source_url": null,
+        "text": "$300 - $900 for permit/plan review fees plus $4,200 - $11,600 for fabrication, electrical, and installation \u2014 verify with the building department before quoting"
+      }
+    ],
+    "inspection_booking": "Schedule inspections through the Town of Gilbert Development Services permit portal at If the portal routes you to inspection scheduling, book the footing inspection before concrete and the final inspections after installation. Phone number was not found in the provided city data; verify the current inspection line with Development Services before starting work. Advance notice requirement not confirmed in the provided sources.",
+    "inspections": [
+      "Electrical final inspection"
+    ],
+    "job_summary": "Required permit package: Sign Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Electrical Permit \u2014 Illuminated Sign.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://roc.az.gov"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.gilbertaz.gov/departments/development-services/planning/signs"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Sign",
+    "permit_name": "Sign Permit",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Sign Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Electrical Permit \u2014 Illuminated Sign.",
+    "permit_type": "Sign Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Sign drawings",
+          "Site/elevation plan",
+          "Mounting details"
+        ],
+        "family": "sign",
+        "filing_family": "sign",
+        "kind": "Sign",
+        "lead_eligible": true,
+        "permit_name": "Sign Permit",
+        "permit_type": "Sign Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+          "https://roc.az.gov",
+          "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+          "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "lead_eligible": true,
+        "permit_name": "Electrical Permit \u2014 Illuminated Sign",
+        "permit_type": "Electrical Permit \u2014 Illuminated Sign",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+          "https://roc.az.gov",
+          "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+          "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+        ],
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "sign",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Sign Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Electrical Permit \u2014 Illuminated Sign",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "pro_tips": [
+      "Have the sign cabinet cut sheet and the exact wattage/load data ready before you open the portal \u2014 sign permits get kicked back fast when the electrical details are vague.",
+      "For commercial tenant signs, get landlord written approval before submittal; Gilbert reviewers often want proof the tenant can install exterior signage.",
+      "If the monument sign needs a new footing, schedule that inspection before concrete day so you do not lose a pour and pay a reinspection delay.",
+      "Keep the ROC license number and contractor business name exactly matching the permit application \u2014 mismatches are a common rejection point."
+    ],
+    "project_scope_attributes": {
+      "change_of_use": "false",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "commercial"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "true",
+      "food_service": "false",
+      "negative_facts": [
+        "no_food_service_change"
+      ],
+      "new_solar_panels": "unknown",
+      "occupancy": "commercial",
+      "positive_facts": [
+        "electrical",
+        "exterior",
+        "sign",
+        "sign_illuminated"
+      ],
+      "project_features": [
+        "exterior_envelope",
+        "sign"
+      ],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "true",
+      "structural_mounting": "unknown",
+      "trades": [
+        "electrical"
+      ],
+      "unknowns": [],
+      "work_nature": "alteration"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "sign",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Sign Permit",
+          "source_urls": [
+            "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+            "https://roc.az.gov",
+            "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+            "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Electrical Permit \u2014 Illuminated Sign",
+          "source_urls": [
+            "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+            "https://roc.az.gov",
+            "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+            "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "sign",
+        "fees": [],
+        "lead": true,
+        "permit_name": "Sign Permit",
+        "source_urls": [
+          "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+          "https://roc.az.gov",
+          "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+          "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "electrical",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Electrical Permit \u2014 Illuminated Sign",
+        "source_urls": [
+          "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+          "https://roc.az.gov",
+          "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+          "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+        ],
+        "trigger": null
+      }
+    ],
+    "related_permit_families": [
+      "Building",
+      "Planning/Zoning"
+    ],
+    "related_permit_names": [
+      "Building Permit \u2014 Commercial Sign Installation",
+      "Planning / Zoning Use Clearance"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [],
+    "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "sign",
+      "electrical"
+    ],
+    "required_permit_names": [
+      "Sign Permit",
+      "Electrical Permit \u2014 Illuminated Sign"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Sign Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Sign drawings",
+      "Site/elevation plan",
+      "Mounting details",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ],
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 4,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 3,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+        "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 4,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+      "https://roc.az.gov",
+      "https://www.gilbertaz.gov/departments/development-services/planning/signs",
+      "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://roc.az.gov"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.gilbertaz.gov/departments/development-services/planning/signs"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+      }
+    ],
+    "summary": "Required permit package: Sign Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Electrical Permit \u2014 Illuminated Sign.",
+    "total_cost_estimate": "$4,500 - $12,500",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: mechanical.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Sign drawings",
+      "Site/elevation plan",
+      "Mounting details",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ],
+    "zoning_hoa_flag": "Commercial sign work can still be delayed by zoning, sign code, and landlord/center approval. Verify monument sign placement, height, area, and illumination rules with Gilbert zoning. If the site is in a planned area, overlay district, or shopping center with a master sign program, the sign must match that program. HOA rules usually do not control commercial tenant signage, but private lease and center rules often do."
+  },
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
+}

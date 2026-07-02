@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-"""Canonical public packet DTO for PermitAssist report/API parity."""
+"""Locked public packet DTO for PermitAssist customer/report parity.
+
+The report renderer must be a pure projection of this packet.  It may format
+fields, but it must not add permit families, documents, inspections, fees, or
+authority text from older top-level/template fields.
+"""
 
 from dataclasses import dataclass, asdict, field
 from typing import Any, Literal
 import copy
+import re
 
 try:
     from family_reconciliation_gate import family_from_row
@@ -12,6 +18,15 @@ except Exception:  # pragma: no cover
     from api.family_reconciliation_gate import family_from_row
 
 Decision = Literal["REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY"]
+
+
+@dataclass
+class PacketAuthority:
+    name: str
+    state: str = ""
+    apply_url: str = ""
+    source_urls: list[str] = field(default_factory=list)
+    segment: str = ""
 
 
 @dataclass
@@ -26,118 +41,218 @@ class PacketRow:
     fees: str = ""
     documents: list[str] = field(default_factory=list)
     inspections: list[str] = field(default_factory=list)
+    lead: bool = False
 
 
 @dataclass
 class PublicPacketDTO:
-    jurisdiction: dict[str, Any]
+    segment: str
+    authority: PacketAuthority
+    decision: Literal["REQUIRED", "NOT_REQUIRED"]
     rows: list[PacketRow]
     headline: str
     summary: str
     checklist: list[str]
+    documents: list[str] = field(default_factory=list)
+    inspections: list[str] = field(default_factory=list)
+    fees: list[str] = field(default_factory=list)
+    required_families: list[str] = field(default_factory=list)
+    conditional_families: list[str] = field(default_factory=list)
+    scope_facts: dict[str, Any] = field(default_factory=dict)
+    schema_version: str = "final_public_permit_packet.v1"
     gate_audit: list[dict[str, Any]] = field(default_factory=list)
 
+    def validate(self) -> None:
+        if self.segment not in {"residential", "commercial", "general"}:
+            raise ValueError(f"invalid segment={self.segment!r}")
+        if not isinstance(self.authority, PacketAuthority):
+            raise ValueError("exactly one authority object is required")
+        required = set(self.required_families)
+        conditional = set(self.conditional_families)
+        overlap = required & conditional
+        if overlap:
+            raise ValueError(f"required/conditional family overlap: {sorted(overlap)}")
+        row_families = required | conditional | ({"not_required"} if self.decision == "NOT_REQUIRED" else set())
+        for row in self.rows:
+            if row.family not in row_families:
+                raise ValueError(f"row family {row.family!r} missing from packet families")
+        if self.decision == "NOT_REQUIRED":
+            if self.required_families or self.conditional_families:
+                raise ValueError("NOT_REQUIRED packet cannot contain permit families")
+            if self.documents or self.inspections or self.fees:
+                raise ValueError("NOT_REQUIRED packet cannot contain required documents, inspections, or permit fees")
+            if any(re.search(r"\b(?:pull|file|submit|pay)\b.*\bpermit\b", item, re.I) for item in self.checklist):
+                raise ValueError("NOT_REQUIRED packet cannot contain pull/file/pay permit checklist items")
+        valid_families = required | conditional
+        for row in self.rows:
+            if row.decision in {"REQUIRED", "CONDITIONAL"} and row.family not in valid_families:
+                raise ValueError(f"visible row {row.permit_name!r} references family outside packet")
+
     def public_dict(self) -> dict[str, Any]:
+        self.validate()
         data = asdict(self)
+        # Scope facts and gate audit are invariant/debug inputs, not customer-visible
+        # report content. Keeping them in the serialized packet re-leaks phrases such
+        # as negative food/use facts into the share page JSON blob.
         data.pop("gate_audit", None)
+        data.pop("scope_facts", None)
         return data
+
+
+# Alias requested by the Fable locked-packet handoff.
+FinalPublicPermitPacket = PublicPacketDTO
+
+
+FAMILY_DEFAULT_DOCUMENTS: dict[str, tuple[str, ...]] = {
+    "building": ("Project scope description", "Site address / parcel information"),
+    "building_ti": ("Project scope description", "Site address / parcel information", "Construction drawings / floor plan"),
+    "building_adu": ("Project scope description", "Site address / parcel information", "ADU plans showing life-safety and utility details"),
+    "electrical": ("Electrical contractor/license information", "Electrical fixture/equipment schedule"),
+    "mechanical": ("Equipment specifications", "Mechanical layout"),
+    "refrigeration": ("Equipment specifications", "Refrigerant-line / refrigeration piping details"),
+    "plumbing": ("Plumbing fixture/equipment schedule", "Plumbing layout if required"),
+    "gas": ("Gas piping diagram", "Pressure test documentation"),
+    "fire_alarm": ("Fire alarm device layout",),
+    "fire_suppression": ("Fire/life-safety system drawings",),
+    "sign": ("Sign drawings", "Site/elevation plan", "Mounting details"),
+    "solar_pv": ("Electrical one-line diagram", "Solar/PV equipment specifications"),
+    "battery_storage": ("Battery/ESS equipment specifications", "Electrical one-line diagram"),
+    "health_food": ("Food-service floor plan", "Equipment schedule", "Menu/process description"),
+    "wastewater_pretreatment_fog": ("Grease interceptor sizing/details", "Wastewater pretreatment application"),
+    "planning_zoning": ("Site plan / zoning review materials",),
+    "co_change_of_occupancy": ("Occupancy/use-change description",),
+    "historic_review": ("Historic/exterior alteration photos and elevations",),
+    "historic": ("Historic/exterior alteration photos and elevations",),
+}
+
+FAMILY_DEFAULT_INSPECTIONS: dict[str, tuple[str, ...]] = {
+    "electrical": ("Electrical final inspection",),
+    "mechanical": ("Mechanical final inspection",),
+    "refrigeration": ("Refrigeration final inspection",),
+    "plumbing": ("Plumbing final inspection",),
+    "gas": ("Gas pressure test", "Final gas inspection"),
+    "building": ("Building final inspection",),
+    "building_ti": ("Building final inspection",),
+    "building_adu": ("Building final inspection",),
+}
+
+PUBLIC_ROW_KEYS = {
+    "permit_type", "permit_name", "name", "kind", "family", "filing_family", "decision", "status", "required",
+    "conditional_text", "required_if", "source_url", "source", "apply_url", "fee", "fees", "documents", "inspections",
+    "portal_selection", "approval_type", "lead", "trigger",
+}
+
+INTERNAL_NOTE_TOKENS = (
+    "deterministic implication", "positive scope fact", "source-backed row", "veto", "demote", "family gate",
+    "metadata", "decision cell", "resolver", "provenance",
+)
+
+
+def _dedupe_text(items: list[Any]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        text = ""
+        if isinstance(item, str):
+            text = item.strip()
+        elif isinstance(item, dict):
+            text = str(item.get("label") or item.get("name") or item.get("title") or item.get("stage") or item.get("description") or "").strip()
+        if not text:
+            continue
+        key = re.sub(r"\s+", " ", text).strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(text)
+    return out
 
 
 def _name(row: dict[str, Any]) -> str:
     return str(row.get("permit_name") or row.get("permit_type") or row.get("name") or "Permit").strip()
 
 
-def _text_list(value: Any) -> list[str]:
-    if not isinstance(value, list):
-        return []
-    out: list[str] = []
-    for item in value:
-        if isinstance(item, str) and item.strip():
-            out.append(item.strip())
-        elif isinstance(item, dict):
-            text = str(item.get("label") or item.get("name") or item.get("title") or item.get("stage") or item.get("description") or "").strip()
-            if text:
-                out.append(text)
-    return list(dict.fromkeys(out))
-
-
 def _safe_reason(row: dict[str, Any]) -> str:
-    reason = str(row.get("reason") or row.get("customer_reason") or "").strip()
-    if reason:
+    reason = str(row.get("reason") or row.get("customer_reason") or row.get("trigger") or "").strip()
+    if reason and not any(token in reason.lower() for token in INTERNAL_NOTE_TOKENS):
         return reason
     notes = str(row.get("notes") or "").strip()
-    if notes and not any(token in notes.lower() for token in ("deterministic implication", "positive scope fact", "source-backed row", "veto", "demote", "family gate")):
+    if notes and not any(token in notes.lower() for token in INTERNAL_NOTE_TOKENS):
         return notes
     return ""
 
 
-def _packet_row(row: dict[str, Any], result: dict[str, Any], decision: Decision) -> PacketRow:
+def _source_urls_from_result(data: dict[str, Any]) -> list[str]:
+    urls: list[str] = []
+    raw = data.get("source_urls")
+    if isinstance(raw, list):
+        urls.extend(str(u) for u in raw if isinstance(u, str) and u.startswith("http"))
+    sources = data.get("sources")
+    if isinstance(sources, list):
+        for src in sources:
+            if isinstance(src, dict):
+                url = src.get("url") or src.get("source_url")
+                if isinstance(url, str) and url.startswith("http"):
+                    urls.append(url)
+            elif isinstance(src, str) and src.startswith("http"):
+                urls.append(src)
+    return list(dict.fromkeys(urls))
+
+
+def _authority(data: dict[str, Any], segment: str) -> PacketAuthority:
+    name = str(data.get("applying_office") or data.get("jurisdiction") or data.get("office_name") or "Local permit office").strip()
+    apply_url = str(data.get("apply_url") or data.get("online_application_url") or "").strip()
+    if isinstance(data.get("apply_path"), dict):
+        apply_url = apply_url or str(data["apply_path"].get("portal_url") or data["apply_path"].get("url") or "").strip()
+        name = str(data["apply_path"].get("authority") or data["apply_path"].get("office") or name).strip()
+    return PacketAuthority(name=name or "Local permit office", state=str(data.get("state") or "").upper(), apply_url=apply_url, source_urls=_source_urls_from_result(data), segment=segment)
+
+
+def _family(row: dict[str, Any]) -> str:
+    fam = str(row.get("family") or row.get("filing_family") or "").strip()
+    return fam or str(family_from_row(row) or "building")
+
+
+def _row_docs(row: dict[str, Any], family: str) -> list[str]:
+    docs = _dedupe_text(list(row.get("documents") or [])) if isinstance(row.get("documents"), list) else []
+    return docs or list(FAMILY_DEFAULT_DOCUMENTS.get(family, ()))
+
+
+def _row_inspections(row: dict[str, Any], family: str) -> list[str]:
+    inspections = _dedupe_text(list(row.get("inspections") or [])) if isinstance(row.get("inspections"), list) else []
+    return inspections or list(FAMILY_DEFAULT_INSPECTIONS.get(family, ()))
+
+
+def _row_fee_text(row: dict[str, Any], data: dict[str, Any]) -> str:
+    fees = row.get("fees")
+    if isinstance(fees, list):
+        parts = []
+        for fee in fees:
+            if isinstance(fee, dict):
+                parts.append(str(fee.get("text") or fee.get("amount") or "").strip())
+            elif fee:
+                parts.append(str(fee).strip())
+        return "; ".join(_dedupe_text(parts))
+    value = str(row.get("fee") or data.get("fee_range") or data.get("fee") or "").strip()
+    if re.search(r"\bno\s+permit\s+fee\b|\bno\s+permit\s+submission\b|\bno\s+permit\s+required\b", value, re.I):
+        return "Permit fee not confirmed; verify the current AHJ fee schedule before quoting."
+    return value
+
+
+def _packet_row(row: dict[str, Any], data: dict[str, Any], decision: Decision) -> PacketRow:
+    family = _family(row)
     return PacketRow(
         permit_name=_name(row),
-        family=str(row.get("family") or family_from_row(row)),
+        family=family,
         decision=decision,
         reason=_safe_reason(row),
-        conditional_text=str(row.get("conditional_text") or row.get("required_if") or ""),
+        conditional_text=str(row.get("conditional_text") or row.get("required_if") or row.get("trigger") or ""),
         source=str(row.get("source_url") or row.get("source") or ""),
-        action_url=str(row.get("apply_url") or result.get("apply_url") or result.get("online_application_url") or ""),
-        fees=str(row.get("fee") or result.get("fee_range") or result.get("fee") or ""),
-        documents=_text_list(row.get("documents") or result.get("what_to_bring") or result.get("requirements") or result.get("documents_needed"))[:8],
-        inspections=_text_list(row.get("inspections") or result.get("inspections") or result.get("inspection_checklist"))[:8],
+        action_url=str(row.get("apply_url") or data.get("apply_url") or data.get("online_application_url") or ""),
+        fees=_row_fee_text(row, data) if decision == "REQUIRED" else "",
+        documents=_row_docs(row, family) if decision == "REQUIRED" else [],
+        inspections=_row_inspections(row, family) if decision == "REQUIRED" else [],
+        lead=bool(row.get("lead")) or bool(row.get("lead_eligible") and _name(row) == str(data.get("permit_name") or "")),
     )
-
-
-def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> PublicPacketDTO:
-    data = copy.deepcopy(result) if isinstance(result, dict) else {}
-    required_rows = [r for r in data.get("permits_required") or [] if isinstance(r, dict) and r.get("required") is not False and str(r.get("decision") or "REQUIRED").upper() != "CONDITIONAL"]
-    conditional_rows = [r for r in data.get("conditional_permits") or [] if isinstance(r, dict)]
-    rows = [_packet_row(r, data, "REQUIRED") for r in required_rows]
-    rows.extend(_packet_row(r, data, "CONDITIONAL") for r in conditional_rows)
-    if not rows and (data.get("permit_required") is False or str(data.get("permit_decision") or "").upper() == "NOT_REQUIRED"):
-        rows.append(PacketRow("No permit required", "not_required", "NOT_REQUIRED", reason=str(data.get("not_required_reason") or data.get("summary") or "")))
-    segment = str(getattr(facts, "segment", "") or data.get("segment") or "").strip().lower()
-    prefix = "Commercial" if segment == "commercial" else ("Residential" if segment == "residential" else "Permit")
-    required_names = [row.permit_name for row in rows if row.decision == "REQUIRED"]
-    conditional_names = [row.permit_name for row in rows if row.decision == "CONDITIONAL"]
-    if required_names:
-        headline = f"{prefix} permit required: {required_names[0]}"
-        summary = "Required permit package: " + "; ".join(required_names) + "."
-        if conditional_names:
-            summary += " Conditional guidance: " + "; ".join(conditional_names) + "."
-    else:
-        headline = f"{prefix} no permit required for the stated scope"
-        summary = str(data.get("summary") or data.get("not_required_reason") or "No permit required for the stated scope.")
-    checklist: list[str] = []
-    for row in rows:
-        if row.decision == "REQUIRED":
-            checklist.append(f"Pull {row.permit_name} before starting work")
-        elif row.decision == "CONDITIONAL":
-            checklist.append(f"{row.conditional_text or 'If triggered'} — if triggered, pull {row.permit_name}")
-        elif row.decision == "NOT_REQUIRED":
-            checklist.append("No permit is required for this scope — keep this report with the job record")
-    return PublicPacketDTO(
-        jurisdiction={"name": data.get("applying_office") or data.get("jurisdiction") or "", "state": data.get("state") or "", "source_domain": ""},
-        rows=rows,
-        headline=headline,
-        summary=summary,
-        checklist=checklist,
-        gate_audit=list(data.get("_family_gate_audit") or []),
-    )
-
-
-PUBLIC_ROW_KEYS = {
-    "permit_type", "permit_name", "name", "kind", "family", "filing_family", "decision", "status", "required",
-    "conditional_text", "required_if", "source_url", "source", "apply_url", "fee", "documents", "inspections",
-    "portal_selection", "approval_type",
-}
-
-
-def _public_row_dict(row: dict[str, Any]) -> dict[str, Any]:
-    cleaned = {k: copy.deepcopy(v) for k, v in row.items() if k in PUBLIC_ROW_KEYS and not str(k).startswith("_")}
-    cleaned.pop("source_status", None)
-    cleaned.pop("rationale", None)
-    if "notes" in cleaned and any(token in str(cleaned.get("notes") or "").lower() for token in ("deterministic implication", "positive scope fact", "source-backed row", "veto", "demote", "family gate")):
-        cleaned.pop("notes", None)
-    return cleaned
 
 
 def _clean_fee_text(text: str, facts: Any | None = None) -> str:
@@ -151,23 +266,353 @@ def _clean_fee_text(text: str, facts: Any | None = None) -> str:
     return value
 
 
+def _public_row_dict(row: dict[str, Any]) -> dict[str, Any]:
+    cleaned = {k: copy.deepcopy(v) for k, v in row.items() if k in PUBLIC_ROW_KEYS and not str(k).startswith("_")}
+    cleaned.pop("source_status", None)
+    cleaned.pop("rationale", None)
+    if "notes" in cleaned and any(token in str(cleaned.get("notes") or "").lower() for token in INTERNAL_NOTE_TOKENS):
+        cleaned.pop("notes", None)
+    return cleaned
+
+
+def _packet_row_to_legacy(row: dict[str, Any]) -> dict[str, Any]:
+    decision = str(row.get("decision") or "REQUIRED").upper()
+    required = decision == "REQUIRED"
+    name = str(row.get("permit_name") or row.get("permit_type") or "Permit").strip()
+    family = str(row.get("family") or family_from_row({"permit_type": name}) or "building").strip()
+    legacy_family = "building" if family in {"building_ti", "building_adu", "demolition", "racking"} else family
+    out = {
+        "permit_type": name,
+        "permit_name": name,
+        "approval_type": name,
+        "family": legacy_family,
+        "filing_family": legacy_family,
+        "kind": _kind_for_family(family),
+        "decision": decision,
+        "status": decision,
+        "required": required,
+        "documents": list(row.get("documents") or []),
+        "inspections": list(row.get("inspections") or []),
+    }
+    if row.get("fees"):
+        out["fee"] = row.get("fees")
+    if row.get("conditional_text"):
+        out["conditional_text"] = row.get("conditional_text")
+        out["required_if"] = row.get("conditional_text")
+    if row.get("action_url"):
+        out["apply_url"] = row.get("action_url")
+    if row.get("source"):
+        out["source_url"] = row.get("source")
+    if row.get("lead"):
+        out["lead"] = True
+    return out
+
+
+def _kind_for_family(family: str) -> str:
+    return {
+        "building": "Building", "building_ti": "Building", "building_adu": "Building", "demolition": "Building", "racking": "Building",
+        "electrical": "Electrical", "mechanical": "Mechanical", "refrigeration": "Refrigeration", "plumbing": "Plumbing", "gas": "Gas",
+        "solar_pv": "Solar / PV", "battery_storage": "Electrical", "fire_alarm": "Fire", "fire_suppression": "Fire",
+        "health_food": "Health", "wastewater_pretreatment_fog": "Wastewater/FOG", "planning_zoning": "Planning/Zoning",
+        "co_change_of_occupancy": "Certificate of Occupancy", "historic_review": "Historic/Planning", "historic": "Historic/Planning", "liquor": "Liquor",
+        "sign": "Sign",
+    }.get(str(family or ""), "Permit")
+
+
+def _authority_name(data: dict[str, Any], authority: PacketAuthority) -> str:
+    name = authority.name or "Local permit office"
+    city = str(data.get("_request_city") or data.get("city") or "").strip()
+    state = str(data.get("_request_state") or data.get("state") or authority.state or "").strip().upper()
+    urls = " ".join([authority.apply_url, *authority.source_urls]).lower()
+    if city.lower() == "orlando" and ("orlando.gov" in urls or "orange county" in name.lower()):
+        return "City of Orlando Permitting Services"
+    if city and "orange county" in name.lower() and "orlando.gov" in urls:
+        return f"City of {city} permit office"
+    if city and state and name.lower() in {"local permit office", "the permitting office"}:
+        return f"{city} {state} permit office"
+    return name
+
+
+def _decision(data: dict[str, Any]) -> Literal["REQUIRED", "NOT_REQUIRED"]:
+    raw = str(data.get("permit_decision") or "").upper().strip()
+    if raw == "NOT_REQUIRED" or data.get("permit_required") is False or str(data.get("permit_verdict") or "").upper() in {"NO", "NOT_REQUIRED"}:
+        return "NOT_REQUIRED"
+    return "REQUIRED"
+
+
+def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> PublicPacketDTO:
+    data = copy.deepcopy(result) if isinstance(result, dict) else {}
+    segment = str(getattr(facts, "segment", "") or data.get("segment") or "").strip().lower()
+    if segment not in {"residential", "commercial"}:
+        permit_kind_text = str(data.get("permit_kind") or data.get("permit_type") or data.get("permit_name") or "").lower()
+        if "residential" in permit_kind_text or "adu" in permit_kind_text:
+            segment = "residential"
+        elif "commercial" in permit_kind_text or "tenant improvement" in permit_kind_text or "ti" in permit_kind_text:
+            segment = "commercial"
+        else:
+            segment = "general"
+    decision = _decision(data)
+    scope_facts = facts.as_dict() if facts is not None and hasattr(facts, "as_dict") else (copy.deepcopy(facts) if isinstance(facts, dict) else {})
+
+    rows: list[PacketRow] = []
+    if decision == "REQUIRED":
+        required_rows = [
+            r for r in data.get("permits_required") or []
+            if isinstance(r, dict) and r.get("required") is not False and str(r.get("decision") or r.get("status") or "REQUIRED").upper() != "CONDITIONAL"
+        ]
+        conditional_rows = [r for r in data.get("conditional_permits") or [] if isinstance(r, dict)]
+        negative_facts = set(getattr(facts, "negative_facts", []) or []) if facts is not None else set(scope_facts.get("negative_facts") or [])
+        request_text = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or "").lower()
+        def _condition_allowed(row: dict[str, Any]) -> bool:
+            fam = _family(row)
+            if fam in {"health_food", "wastewater_pretreatment_fog"} and "no_food_service_change" in negative_facts:
+                return False
+            if fam == "co_change_of_occupancy" and "no_use_change" in negative_facts:
+                return False
+            if fam in {"electrical", "plumbing", "mechanical"} and "no_utilities" in negative_facts and not re.search(r"\b(electrical|plumbing|mechanical|gas|hvac|wiring|fixture|utility|utilities)\b", request_text):
+                return False
+            return True
+        conditional_rows = [r for r in conditional_rows if _condition_allowed(r)]
+        rows.extend(_packet_row(r, data, "REQUIRED") for r in required_rows)
+        rows.extend(_packet_row(r, data, "CONDITIONAL") for r in conditional_rows)
+        if rows and not any(row.lead for row in rows if row.decision == "REQUIRED"):
+            for row in rows:
+                if row.decision == "REQUIRED":
+                    row.lead = True
+                    break
+    else:
+        rows = [PacketRow("No permit required", "not_required", "NOT_REQUIRED", reason=str(data.get("not_required_reason") or data.get("summary") or ""))]
+
+    required_families = list(dict.fromkeys(row.family for row in rows if row.decision == "REQUIRED"))
+    conditional_families = [fam for fam in dict.fromkeys(row.family for row in rows if row.decision == "CONDITIONAL") if fam not in required_families]
+    rows = [row for row in rows if row.decision != "CONDITIONAL" or row.family in conditional_families]
+
+    prefix = "Commercial" if segment == "commercial" else ("Residential" if segment == "residential" else "")
+    required_names = [row.permit_name for row in rows if row.decision == "REQUIRED"]
+    conditional_names = [row.permit_name for row in rows if row.decision == "CONDITIONAL"]
+    if required_names:
+        headline = f"{prefix + ' ' if prefix else ''}permit required: {required_names[0]}"
+        summary = "Required permit package: " + "; ".join(required_names) + "."
+        if conditional_names:
+            summary += " Conditional guidance: " + "; ".join(conditional_names) + "."
+    else:
+        headline = f"{prefix + ' ' if prefix else ''}no permit required for the stated scope"
+        summary = str(data.get("not_required_reason") or data.get("summary") or "No permit required for the stated scope.")
+
+    documents = _dedupe_text([doc for row in rows if row.decision == "REQUIRED" for doc in row.documents])
+    inspections = _dedupe_text([item for row in rows if row.decision == "REQUIRED" for item in row.inspections])
+    fees = _dedupe_text([row.fees for row in rows if row.decision == "REQUIRED" and row.fees])
+    if decision == "NOT_REQUIRED":
+        documents = []
+        inspections = []
+        fees = []
+
+    checklist: list[str] = []
+    if decision == "NOT_REQUIRED":
+        checklist.append("Keep this no-permit report with the job record and verify before expanding the scope.")
+    else:
+        for row in rows:
+            if row.decision == "REQUIRED":
+                checklist.append(f"Pull {row.permit_name} before starting work")
+            elif row.decision == "CONDITIONAL":
+                checklist.append(f"{row.conditional_text or 'Only if triggered'} — if triggered, pull {row.permit_name}")
+
+    packet = PublicPacketDTO(
+        segment=segment,
+        authority=_authority(data, segment),
+        decision=decision,
+        rows=rows,
+        headline=headline,
+        summary=summary,
+        checklist=_dedupe_text(checklist),
+        documents=documents,
+        inspections=inspections,
+        fees=fees,
+        required_families=required_families,
+        conditional_families=conditional_families,
+        scope_facts=scope_facts,
+        gate_audit=list(data.get("_family_gate_audit") or []),
+    )
+    packet.validate()
+    return packet
+
+
 def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = None) -> dict[str, Any]:
     out = copy.deepcopy(result) if isinstance(result, dict) else {}
+    original_permit_kind = str(out.get("permit_kind") or "").strip()
+    legacy_apply_path_obj = out.get("apply_path")
+    legacy_apply_path = legacy_apply_path_obj if isinstance(legacy_apply_path_obj, dict) else {}
+    legacy_documents = legacy_apply_path.get("likely_documents") or out.get("_legacy_apply_documents") or []
+    if not isinstance(legacy_documents, list):
+        legacy_documents = []
+    legacy_documents = [str(item).strip() for item in legacy_documents if str(item or "").strip()]
     if out.get("fee_range"):
         out["fee_range"] = _clean_fee_text(out.get("fee_range"), facts)
     packet = build_public_packet(out, facts)
     public_packet = packet.public_dict()
+    original_decision_schema = None
+    if isinstance(out.get("decision_object"), dict):
+        original_decision_schema = out["decision_object"].get("schema_version")
+    original_render_pass = out.get("render_fidelity", {}).get("pass") if isinstance(out.get("render_fidelity"), dict) else None
+    authority_name = _authority_name(out, packet.authority)
+    public_packet["authority"]["name"] = authority_name
     out.pop("_family_gate_audit", None)
-    for row_key in ("permits_required", "conditional_permits", "related_permits"):
-        if isinstance(out.get(row_key), list):
-            out[row_key] = [_public_row_dict(row) if isinstance(row, dict) else row for row in out[row_key]]
+
+    # The locked packet is now the sole customer-visible row source.  Old lookup
+    # artifacts may still contain stale required/related/checklist/scope fields;
+    # rewrite every report-facing mirror from packet rows and purge debug/source
+    # structures that can leak suppressed families through serialized JSON.
+    packet_rows = list(public_packet.get("rows") or [])
+    required_public_rows = [_packet_row_to_legacy(row) for row in packet_rows if row.get("decision") == "REQUIRED"]
+    conditional_public_rows = [_packet_row_to_legacy(row) for row in packet_rows if row.get("decision") == "CONDITIONAL"]
     out["public_packet"] = public_packet
     out["canonical_public_packet"] = public_packet
-    out["public_packet_rows"] = public_packet.get("rows") or []
+    out["segment"] = packet.segment
+    out["public_packet_rows"] = packet_rows
+    out["permits_required"] = required_public_rows
+    out["conditional_permits"] = conditional_public_rows
+    out["related_permits"] = conditional_public_rows
+    out["companion_permits"] = []
+    out["trade_permits"] = []
+    packet_family_names = list(public_packet.get("required_families") or [])
+    display_family_names = [_kind_for_family(str(fam)) for fam in packet_family_names]
+    out["required_permit_families"] = list(dict.fromkeys(packet_family_names + display_family_names))
+    out["required_permit_names"] = [row.get("permit_name") for row in packet_rows if row.get("decision") == "REQUIRED"]
+    out["permits_required_logic"] = [
+        {"filing_family": row.get("family"), "permit_type": row.get("permit_name"), "scope_trigger": "Project scope", "included_because": "The locked public packet includes this required permit family."}
+        for row in packet_rows if row.get("decision") == "REQUIRED"
+    ]
     out["customer_headline"] = packet.headline
     out["summary"] = packet.summary
     out["job_summary"] = packet.summary
     out["permit_summary"] = packet.summary
-    out["customer_result_summary"] = packet.summary
+    out["customer_result_summary"] = {"summary": packet.summary}
     out["customer_first_screen_summary"] = packet.summary
+    out["what_to_bring"] = list(packet.documents)
+    out["requirements"] = list(packet.documents)
+    out["documents_needed"] = list(packet.documents)
+    out["documents_to_prepare"] = list(packet.documents)
+    out["checklist"] = list(packet.checklist)
+    out["inspections"] = list(packet.inspections)
+    if required_public_rows:
+        lead = next((row for row in required_public_rows if row.get("lead")), required_public_rows[0])
+        package_name = ""
+        if len(required_public_rows) > 1:
+            package_name = "Permit package: " + "; ".join(str(name) for name in out.get("required_permit_names") or [] if name)
+        out["permit_required"] = True
+        out["permit_decision"] = "REQUIRED"
+        out["permit_verdict"] = "YES"
+        out["permit_name"] = package_name or lead.get("permit_name")
+        out["permit_type"] = package_name or lead.get("permit_name")
+        computed_kind = "Permit package" if package_name else _kind_for_family(str(lead.get("family") or ""))
+        generic_kinds = {"building", "electrical", "mechanical", "plumbing", "fire", "refrigeration", "sign", "planning", "zoning", "permit package", "not required"}
+        candidate_kind = original_permit_kind if original_permit_kind and not re.search(r"\b(?:unknown|likely|required\?)\b", original_permit_kind, re.I) else ""
+        if package_name and candidate_kind.lower().strip() in generic_kinds:
+            candidate_kind = ""
+        if candidate_kind and not ((packet.segment == "commercial" and "residential" in candidate_kind.lower()) or (packet.segment == "residential" and "commercial" in candidate_kind.lower())):
+            out["permit_kind"] = candidate_kind
+        else:
+            out["permit_kind"] = computed_kind
+        if packet.authority.apply_url:
+            out["customer_next_step"] = f"File the required permit categories with {authority_name}: {', '.join(out['required_permit_names'])}. Confirm exact portal subcategories before final submission."
+        else:
+            out["customer_next_step"] = f"Contact {authority_name} to confirm the filing path for: {', '.join(out['required_permit_names'])}. Confirm exact portal subcategories before final submission."
+    else:
+        out["permit_required"] = False
+        out["permit_decision"] = "NOT_REQUIRED"
+        out["permit_verdict"] = "NO"
+        out["permit_name"] = "No permit required"
+        out["permit_type"] = "No permit required"
+        out["permit_kind"] = "Not Required"
+        out["customer_next_step"] = "Keep this no-permit report with the job record and verify with the permit office before expanding the scope."
+    if packet.fees:
+        out["fee_range"] = packet.fees[0]
+    elif packet.decision == "NOT_REQUIRED":
+        out["fee_range"] = "No permit fee expected for the resolved no-permit scope; verify with the permit office if the scope changes"
+    if packet.authority.apply_url and packet.decision == "REQUIRED":
+        out["apply_url"] = packet.authority.apply_url
+        out["online_application_url"] = packet.authority.apply_url
+    elif packet.decision == "NOT_REQUIRED":
+        out["apply_url"] = ""
+        out["online_application_url"] = ""
+    out["applying_office"] = authority_name
+    if packet.authority.source_urls:
+        out["source_urls"] = list(packet.authority.source_urls)
+        out["sources"] = [{"url": url, "title": "Official permit source", "source_tier": "local_permit_source"} for url in packet.authority.source_urls]
+    if packet.decision == "REQUIRED":
+        out["apply_path"] = {
+            "state": "resolved_portal" if packet.authority.apply_url else "verify_with_permit_office",
+            "channel": "online_portal" if packet.authority.apply_url else "office_verification",
+            "portal_url": packet.authority.apply_url,
+            "office_name": authority_name,
+            "authority": authority_name,
+            "permit_type": out.get("permit_name"),
+            "permit_category": out.get("permit_kind"),
+            "documents_to_prepare": list(legacy_documents or packet.documents),
+            "steps": [
+                "Open the listed permit portal or contact the permit office",
+                f"Select the closest category to: {out.get('permit_name')}",
+                "Confirm exact portal subcategories before final submission",
+            ],
+        }
+    else:
+        out["apply_path"] = {
+            "state": "not_applicable",
+            "channel": "no_permit_required",
+            "office_name": authority_name,
+            "permit_type": "No permit required",
+            "documents_to_prepare": [],
+            "steps": ["Keep the described scope limited; verify before adding regulated work."],
+        }
+    for key in (
+        "decision_object", "project_scope_attributes", "render_fidelity", "scope_facts", "scope_contract", "_scope_contract",
+        "_request_city", "_request_state", "negative_facts", "positive_facts", "city_contractor_registration", "pro_tips", "common_mistakes", "watch_out",
+        "inspection_requirements", "inspect_checklist", "inspection_checklist", "inspections_required",
+        "companion_reviews", "companion_permits_or_reviews", "primary_permit", "description", "next_steps",
+        "permit_notes", "inspection_notes", "zoning_hoa_flag",
+        "claim_citations", "related_permit_names", "related_permit_segments", "required_permit_segments",
+        "required_permit_summary", "source_support", "source_confidence", "remaining_lookups",
+        "related_permit_families", "suggested_permit_families", "possible_permit_families", "other_permits",
+        "cost_estimate", "fee_estimate", "fees_typed", "permit_fee", "fee_notes",
+        "timeline", "approval_timeline", "inspection_booking",
+    ):
+        out.pop(key, None)
+    if original_decision_schema:
+        out["decision_object"] = {"schema_version": original_decision_schema}
+    if original_render_pass is not None:
+        out["render_fidelity"] = {"pass": bool(original_render_pass), "issues": [] if original_render_pass else ["pre-lock render fidelity reported failure"]}
+    if isinstance(out.get("customer_result_summary"), dict):
+        out["customer_result_summary"]["permit_kind"] = str(out.get("permit_kind") or "")
+        out["customer_result_summary"]["next_step"] = str(out.get("customer_next_step") or "")
+        out["customer_result_summary"]["source_cue"] = "Official source path found" if out.get("sources") or out.get("source_urls") else "Permit office verification path included"
+    out["required_permit_summary"] = packet.summary
+    if out.get("degraded_sources"):
+        out["source_support"] = {"decision_mutation_allowed": False}
     return out
+
+
+def validate_public_packet(packet: PublicPacketDTO | dict[str, Any]) -> None:
+    if isinstance(packet, PublicPacketDTO):
+        packet.validate()
+        return
+    if not isinstance(packet, dict):
+        raise ValueError("packet must be a PublicPacketDTO or dict")
+    authority_data: dict[str, Any] = dict(packet.get("authority") or {"name": "Local permit office"})
+    if not isinstance(authority_data.get("source_urls"), list):
+        authority_data["source_urls"] = []
+    dto = PublicPacketDTO(
+        segment=str(packet.get("segment") or "general"),
+        authority=PacketAuthority(**authority_data),
+        decision=packet.get("decision") or "REQUIRED",
+        rows=[PacketRow(**row) for row in packet.get("rows") or []],
+        headline=str(packet.get("headline") or ""),
+        summary=str(packet.get("summary") or ""),
+        checklist=list(packet.get("checklist") or []),
+        documents=list(packet.get("documents") or []),
+        inspections=list(packet.get("inspections") or []),
+        fees=list(packet.get("fees") or []),
+        required_families=list(packet.get("required_families") or []),
+        conditional_families=list(packet.get("conditional_families") or []),
+        scope_facts=dict(packet.get("scope_facts") or {}),
+    )
+    dto.validate()

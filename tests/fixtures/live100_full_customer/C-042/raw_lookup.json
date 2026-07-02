@@ -1,0 +1,1343 @@
+{
+  "case": {
+    "adjudication_hint": "Use change",
+    "bucket": "gallery to wine bar",
+    "case_id": "C-042",
+    "city": "Santa Fe",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "CO",
+      "Plumbing",
+      "Electrical",
+      "Health/Fire"
+    ],
+    "id": "C-042",
+    "job_type": "commercial art gallery change to wine bar with occupant load increase plumbing fixtures and hoodless food prep, job value 190000",
+    "job_value": 190000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "NM",
+    "zip_code": "87501"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description"
+      ],
+      "office_name": "City of Santa Fe Community Development Department",
+      "permit_category": "Building",
+      "permit_type": "Commercial Building / Tenant Improvement Permit",
+      "portal_selection_path": [
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Commercial Building / Tenant Improvement Permit",
+        "Prepare the listed documents before final submission"
+      ],
+      "portal_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Commercial Building / Tenant Improvement Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "official source verified",
+      "verification_note": "Official filing path repaired from an offline verified AHJ source; confirm the exact portal subcategory before final submission."
+    },
+    "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+    "apply_url_known": true,
+    "applying_office": "City of Santa Fe Community Development Department",
+    "approval_timeline": {
+      "complex": "1-3 weeks for plan review, and longer if occupancy, accessibility, fire/life-safety, or historic district review is triggered.",
+      "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
+    },
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building_ti",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "mechanical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "plumbing",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "health_food",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Health",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "fire_suppression",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Fire",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "planning_zoning",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "co_change_of_occupancy",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "liquor",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Liquor License / Local Alcohol Routing",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "checklist": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.santafenm.gov/community_development",
+        "value": "Commercial Building / Tenant Improvement Permit"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.santafenm.gov/community_development",
+        "value": "https://www.santafenm.gov/community_development/permits"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.santafenm.gov/community_development",
+        "value": "Fee estimate not confirmed; verify the current building department fee schedule before quoting."
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.santafenm.gov/community_development",
+        "value": "{'simple': '1-5 business days for over-the-counter intake/initial review if the submittal is complete; commercial TI usually still goes to plan review.', 'complex': '1-3 weeks for plan review, and longer if occupancy, accessibility, fire/life-safety, or historic district review is triggered.'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.santafenm.gov/community_development",
+        "value": "[{'stage': 'Plan Review / Permit Intake', 'description': 'Reviewer checks occupancy classification, occupant load calculation, egress widths and exit count, accessibility path, restroom fixture count, and whether any fire/life-safety upgrades are required for the wine bar use.', 'timing': 'Before permit issuance'}, {'stage': 'Plumbing Rough-In', 'description': 'Inspector verifies new or relocated supply and drain lines, fixture rough-in locations, venting, trap arm lengths, cleanouts, and that any added fixtures match the approved plan set.', 'timing': 'Before walls are closed and before fixtures are set'}, {'stage': 'Final Building / Life Safety', 'description': 'Inspector verifies final occupancy use, occupant load posting, exit signage and lighting, accessible route, door hardware, restroom accessibility, and that the space matches the approved commercial TI plans.', 'timing': 'After all work is complete and before opening to the public'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Submitting the project as a simple remodel instead of a commercial change-of-use TI \u2014 that can delay plan review because occupant load and egress must be checked",
+      "Forgetting that added plumbing fixtures need a separate plumbing permit even when the building permit is already in process",
+      "Starting demolition before the permit is issued and posted \u2014 commercial stop-work orders are expensive and can slow the project hard",
+      "Submitting permit application without verifying current contractor registration status \u2014 an expired or lapsed city registration will block your application silently. Verify your registration is current BEFORE submitting."
+    ],
+    "companion_permits": [
+      {
+        "certainty": "conditional",
+        "condition_text": "Verify whether Fire Permit / Fire Marshal Review is triggered for this project when the building department confirms the relevant fire scope condition.",
+        "permit_type": "Fire Permit / Fire Marshal Review",
+        "rationale": "is conditional only when the listed condition applies if: Fire/life-safety upgrades are required by plan review or the fire marshal.",
+        "reason": "is conditional only when the listed condition applies if: Fire/life-safety upgrades are required by plan review or the fire marshal.",
+        "required_if": "Fire/life-safety upgrades are required by plan review or the fire marshal",
+        "requirement_label": "is conditional only when the listed condition applies based on scope",
+        "trigger_condition": "Verify whether Fire Permit / Fire Marshal Review is triggered for this project when the building department confirms the relevant fire scope condition."
+      }
+    ],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Mechanical Permit; Electrical Permit; Health; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Fire Alarm Permit. Conditional guidance: Commercial Building / Tenant Improvement Permit.",
+    "customer_headline": "Permit required: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit, Plumbing Permit \u2014 Commercial Fixture Addition / Relocation, Health, Fire, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Liquor License / Local Alcohol Routing.",
+    "customer_next_step": "File the required permit categories with City of Santa Fe Community Development Department: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit, Plumbing Permit \u2014 Commercial Fixture Addition / Relocation, Health, Fire, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Liquor License / Local Alcohol Routing. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": "Required permit package: Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Mechanical Permit; Electrical Permit; Health; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Fire Alarm Permit. Conditional guidance: Commercial Building / Tenant Improvement Permit.",
+    "data_source": "city_database",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building_ti",
+          "filing_family": "building_ti",
+          "kind": "Building",
+          "lead_eligible": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "permit_type": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "filing_family": "electrical",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "kind": "Electrical",
+          "lead_eligible": true,
+          "permit_name": "Electrical Permit",
+          "permit_type": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "filing_family": "mechanical",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "kind": "Mechanical",
+          "lead_eligible": true,
+          "permit_name": "Mechanical Permit",
+          "permit_type": "Mechanical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "filing_family": "plumbing",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "kind": "Plumbing",
+          "lead_eligible": true,
+          "permit_name": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+          "permit_type": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "filing_family": "health_food",
+          "kind": "Health",
+          "lead_eligible": true,
+          "permit_name": "Health",
+          "permit_type": "Health",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "filing_family": "fire_suppression",
+          "kind": "Fire",
+          "lead_eligible": true,
+          "permit_name": "Fire",
+          "permit_type": "Fire",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "filing_family": "planning_zoning",
+          "kind": "Permit",
+          "lead_eligible": true,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "permit_type": "Planning / Zoning Use Clearance",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "filing_family": "co_change_of_occupancy",
+          "kind": "Permit",
+          "lead_eligible": true,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "liquor",
+          "filing_family": "liquor",
+          "kind": "Permit",
+          "lead_eligible": true,
+          "permit_name": "Liquor License / Local Alcohol Routing",
+          "permit_type": "Liquor License / Local Alcohol Routing",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "status": "REQUIRED"
+        }
+      ],
+      "lead_family": "building",
+      "lead_permit_name": "Commercial Building / Tenant Improvement Permit",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "true",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "commercial"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "unknown",
+        "food_service": "true",
+        "negative_facts": [],
+        "new_solar_panels": "unknown",
+        "occupancy": "commercial",
+        "positive_facts": [
+          "change_of_use",
+          "food_service",
+          "plumbing",
+          "structural"
+        ],
+        "project_features": [
+          "building_work"
+        ],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "n/a",
+        "structural_mounting": "unknown",
+        "trades": [
+          "plumbing",
+          "structural"
+        ],
+        "unknowns": [
+          "exterior_envelope"
+        ],
+        "work_nature": "change_of_use"
+      }
+    },
+    "degraded_sources": [
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.santafenm.gov/community_development/permits"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.santafenm.gov/community_development/permits"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.santafenm.gov/community_development/permits"
+      }
+    ],
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "fees_typed": [
+      {
+        "family": "building",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      }
+    ],
+    "inspection_booking": "Schedule inspections through the City of Santa Fe Community Development Department permit process at or by calling (505) 955-6949. Advance notice requirement was not published in the provided city data; call ahead before covering work. Use the permit portal for inspection requests if the project is in the online system.",
+    "inspections": [
+      "Electrical final inspection",
+      "Mechanical final inspection",
+      "Plumbing final inspection"
+    ],
+    "job_summary": "Required permit package: Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Mechanical Permit; Electrical Permit; Health; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Fire Alarm Permit. Conditional guidance: Commercial Building / Tenant Improvement Permit.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://santafenm.gov/land-use/building-permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.santafenm.gov/community_development"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Commercial Building / Tenant Improvement Permit",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Mechanical Permit; Electrical Permit; Health; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Fire Alarm Permit. Conditional guidance: Commercial Building / Tenant Improvement Permit.",
+    "permit_type": "Commercial Building / Tenant Improvement Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building_ti",
+        "filing_family": "building_ti",
+        "kind": "Building",
+        "lead_eligible": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "lead_eligible": true,
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "lead_eligible": true,
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "lead_eligible": true,
+        "permit_name": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+        "permit_type": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "filing_family": "health_food",
+        "kind": "Health",
+        "lead_eligible": true,
+        "permit_name": "Health",
+        "permit_type": "Health",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "filing_family": "fire_suppression",
+        "kind": "Fire",
+        "lead_eligible": true,
+        "permit_name": "Fire",
+        "permit_type": "Fire",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "filing_family": "planning_zoning",
+        "kind": "Permit",
+        "lead_eligible": true,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "filing_family": "co_change_of_occupancy",
+        "kind": "Permit",
+        "lead_eligible": true,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "liquor",
+        "filing_family": "liquor",
+        "kind": "Permit",
+        "lead_eligible": true,
+        "permit_name": "Liquor License / Local Alcohol Routing",
+        "permit_type": "Liquor License / Local Alcohol Routing",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building_ti",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "health_food",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Health",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_suppression",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Fire",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "planning_zoning",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "co_change_of_occupancy",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "liquor",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Liquor License / Local Alcohol Routing",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "pro_tips": [
+      "Bring a clean occupant load calculation with the floor plan; that is one of the first things plan review will check on a wine bar conversion.",
+      "Because Santa Fe is at about 7,000 feet elevation, any gas-fired equipment serving the new use needs altitude derating checked before submittal.",
+      "If the space is in the historic district or has exterior sign changes, ask Community Development early so you do not get stuck in a second review cycle.",
+      "Check your Santa Fe contractor registration renewal date before starting any permit application \u2014 registration lapses are the #1 avoidable rejection reason."
+    ],
+    "project_scope_attributes": {
+      "change_of_use": "true",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "commercial"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "unknown",
+      "food_service": "true",
+      "negative_facts": [],
+      "new_solar_panels": "unknown",
+      "occupancy": "commercial",
+      "positive_facts": [
+        "change_of_use",
+        "food_service",
+        "plumbing",
+        "structural"
+      ],
+      "project_features": [
+        "building_work"
+      ],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "n/a",
+      "structural_mounting": "unknown",
+      "trades": [
+        "plumbing",
+        "structural"
+      ],
+      "unknowns": [
+        "exterior_envelope"
+      ],
+      "work_nature": "change_of_use"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building_ti",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "mechanical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "plumbing",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "health_food",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Health",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "fire_suppression",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Fire",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "planning_zoning",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "co_change_of_occupancy",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "liquor",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Liquor License / Local Alcohol Routing",
+          "source_urls": [
+            "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+            "https://santafenm.gov/land-use/building-permits",
+            "https://www.santafenm.gov/community_development",
+            "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "building_ti",
+        "fees": [],
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "electrical",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Electrical Permit",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "mechanical",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Mechanical Permit",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "plumbing",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "health_food",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Health",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "fire_suppression",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Fire",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "planning_zoning",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "co_change_of_occupancy",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "liquor",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Liquor License / Local Alcohol Routing",
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+        ],
+        "trigger": null
+      }
+    ],
+    "related_permit_families": [
+      "Wastewater/FOG",
+      "Fire",
+      "Historic/Planning"
+    ],
+    "related_permit_names": [
+      "Wastewater/FOG",
+      "Fire Permit / Fire Marshal Review",
+      "Fire Suppression / Fire Prevention Review",
+      "Historic Preservation Review"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [],
+    "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "building_ti",
+      "electrical",
+      "mechanical",
+      "plumbing",
+      "health_food",
+      "fire_suppression",
+      "planning_zoning",
+      "co_change_of_occupancy",
+      "liquor"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Electrical Permit",
+      "Mechanical Permit",
+      "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+      "Health",
+      "Fire",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy / Change-of-Occupancy Approval",
+      "Liquor License / Local Alcohol Routing"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Mechanical Permit; Electrical Permit; Health; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Fire Alarm Permit",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 4,
+      "filing_path_evidence": "Official City of Santa Fe Building Permits page links to Citizen Self-Service for online permitting.",
+      "filing_path_reachability": "ok",
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_path_status": "repaired_official_fallback",
+      "filing_path_verified_on": "2026-07-01",
+      "filing_source_count": 4,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "https://santafenm.gov/land-use/building-permits",
+        "https://www.santafenm.gov/community_development",
+        "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 4,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 4
+    },
+    "source_urls": [
+      "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+      "https://santafenm.gov/land-use/building-permits",
+      "https://www.santafenm.gov/community_development",
+      "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://santafenm.gov/land-use/building-permits"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.santafenm.gov/community_development"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+      }
+    ],
+    "summary": "Required permit package: Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Mechanical Permit; Electrical Permit; Health; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Fire Alarm Permit. Conditional guidance: Commercial Building / Tenant Improvement Permit.",
+    "total_cost_estimate": "$190,000 - $235,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "zoning_hoa_flag": "Commercial change of use in Santa Fe may trigger zoning review, parking/occupancy limits, and historic district exterior review if the building is in an overlay district. Any exterior signage, fa\u00e7ade changes, or patio/service area changes should be checked against local zoning and historic preservation rules before permit submittal."
+  },
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
+}

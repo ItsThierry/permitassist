@@ -8,8 +8,9 @@ API = ROOT / "api"
 if str(API) not in sys.path:
     sys.path.insert(0, str(API))
 
+import pytest
 from family_reconciliation_gate import apply_family_reconciliation_gate
-from public_packet import apply_public_packet_projection, build_public_packet
+from public_packet import apply_public_packet_projection, build_public_packet, validate_public_packet, PublicPacketDTO, PacketAuthority, PacketRow
 from scope_contract import build_scope_facts_v2
 from server import build_checklist_fallback, render_share_page
 
@@ -20,6 +21,29 @@ def test_headline_segment_matches_occupancy():
     packet = build_public_packet(result, facts)
     assert packet.headline.startswith("Commercial")
     assert "Residential" not in packet.headline
+
+
+def test_packet_invariants_reject_not_required_with_required_docs():
+    bad = PublicPacketDTO(
+        segment="residential",
+        authority=PacketAuthority(name="Test office"),
+        decision="NOT_REQUIRED",
+        rows=[PacketRow("No permit required", "not_required", "NOT_REQUIRED")],
+        headline="No permit required",
+        summary="No permit required",
+        checklist=["No permit is required for this scope"],
+        documents=["Food-service floor plan"],
+    )
+    with pytest.raises(ValueError):
+        validate_public_packet(bad)
+
+
+def test_report_template_reads_documents_and_inspections_from_packet_only():
+    template = (ROOT / "frontend" / "report.html").read_text(encoding="utf-8")
+    assert "...safeArray(d.what_to_bring)" not in template
+    assert "d.inspections || d.inspections_required || d.inspection_checklist" not in template
+    assert "const docs = packetDocs;" in template
+    assert "const inspections = packetInspections;" in template
 
 
 def test_checklist_fallback_not_required():

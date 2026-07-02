@@ -1,14 +1,21 @@
 {
-  "case_id": "R-049",
-  "contract_note": "",
-  "must_add": [],
+  "expected_decision": "REQUIRED",
+  "fee_must_not_contain": "",
+  "forbidden_visible": [
+    "Food",
+    "FOG",
+    "Wastewater",
+    "Grease interceptor"
+  ],
   "must_demote": [],
   "must_keep_required": [
-    "plumbing"
+    "plumbing",
+    "gas"
   ],
   "must_not_required": [
-    "wastewater_pretreatment_fog",
-    "electrical"
+    "health_food",
+    "wastewater_pretreatment_fog"
   ],
-  "source_must_contain": "jacksonms.gov"
+  "protection": false,
+  "source_must_not_contain": ""
 }

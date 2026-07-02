@@ -4665,6 +4665,14 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
+    original_display_permit_kind = str(working.get("permit_kind") or "").strip()
+    original_apply_path_source = working.get("apply_path")
+    original_apply_path_obj = original_apply_path_source if isinstance(original_apply_path_source, dict) else {}
+    original_legacy_documents = original_apply_path_obj.get("likely_documents") or []
+    if not isinstance(original_legacy_documents, list):
+        original_legacy_documents = []
+    original_legacy_documents = [str(item).strip() for item in original_legacy_documents if str(item or "").strip()]
+    original_companion_rows_for_legacy_contract = [copy.deepcopy(row) for row in (working.get("companion_permits") or []) if isinstance(row, dict)]
     original_required_rows_for_companion_contract = [
         copy.deepcopy(row)
         for row in (working.get("permits_required") or [])
@@ -5063,9 +5071,9 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 else:
                     full_customer_gate_enabled = not os.environ.get("PYTEST_CURRENT_TEST")
                 if full_customer_gate_enabled:
+                    final_scope_facts = build_scope_facts_v2(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract)
                     final_public = apply_family_reconciliation_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract)
                     final_public = apply_ahj_identity_guard(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
-                    final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, build_scope_facts_v2(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract))
                     final_public = apply_closed_world_customer_contract(
                         final_public if isinstance(final_public, dict) else {},
                         job_type,
@@ -5073,9 +5081,29 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                         state,
                         job_category=request_job_category,
                     )
+                    # Final lock happens after closed-world reconciliation so the
+                    # packet is the last source of truth before serialization.
+                    if isinstance(final_public, dict):
+                        final_public["_request_city"] = city
+                        final_public["_request_state"] = state
+                        if original_legacy_documents:
+                            final_public["_legacy_apply_documents"] = list(original_legacy_documents)
+                    final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts)
             except Exception as exc:
                 print(f"[customer-view] closed_world_contract_skipped error_type={exc.__class__.__name__} error={exc}")
             final_public = _apply_residential_commercial_timeline_veto(final_public if isinstance(final_public, dict) else {}, job_type, job_category=request_job_category, scope_contract=scope_contract)
+            if isinstance(final_public, dict):
+                specific_kind = original_display_permit_kind and original_display_permit_kind.lower() not in {"building", "electrical", "mechanical", "plumbing", "fire", "refrigeration", "sign", "planning", "zoning", "permit package", "not required"}
+                if specific_kind and str(final_public.get("permit_decision") or "").upper() == "REQUIRED":
+                    final_public["permit_kind"] = original_display_permit_kind
+                    if isinstance(final_public.get("apply_path"), dict):
+                        final_public["apply_path"]["permit_category"] = original_display_permit_kind
+                    if isinstance(final_public.get("customer_result_summary"), dict):
+                        final_public["customer_result_summary"]["permit_kind"] = original_display_permit_kind
+                if original_legacy_documents and isinstance(final_public.get("apply_path"), dict):
+                    final_public["apply_path"]["documents_to_prepare"] = list(original_legacy_documents)
+                if original_companion_rows_for_legacy_contract and not final_public.get("companion_permits"):
+                    final_public["companion_permits"] = copy.deepcopy(original_companion_rows_for_legacy_contract)
         return final_public if isinstance(final_public, dict) else {}
     return {}
 
@@ -7735,6 +7763,14 @@ def create_share(job_type: str, city: str, state: str, result: dict) -> str:
     # Store only the public customer ViewModel; old internal/debug fields never
     # enter shared JSON, report HTML, or embedded report data.
     clean = build_customer_permit_view_model(result, job_type, city, state)
+    if isinstance(result, dict) and isinstance(clean, dict) and result.get("permit_kind"):
+        # Preserve the customer's display category through the DB/share/report
+        # round-trip. The locked packet may use canonical families internally,
+        # but public saved reports should not collapse a label such as
+        # "Commercial Building / Tenant Improvement" to "Building".
+        clean["permit_kind"] = result.get("permit_kind")
+        if str(clean.get("permit_decision") or "").upper() == "REQUIRED":
+            clean["customer_headline"] = result.get("customer_headline") or f"Permit required: {clean.get('permit_kind')}"
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
@@ -7821,52 +7857,75 @@ def _checklist_dict_text(value: dict, *keys: str) -> str:
     return ""
 
 
+def _checklist_inspection_text(value) -> str:
+    if isinstance(value, dict):
+        label = _checklist_dict_text(value, "label", "name", "inspection", "stage", "type", "description")
+        timing = _checklist_dict_text(value, "timing", "when", "phase")
+        if label and timing:
+            return f"{label} — {timing}"
+        return label or timing
+    return _checklist_text(value)
+
+
 def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
-    permits = _checklist_list(result.get("permits_required"))
-    first_permit = permits[0] if permits else {}
-    permit_name = result.get("permit_name")
-    if not permit_name and isinstance(first_permit, dict):
-        permit_name = first_permit.get("permit_type")
-    elif not permit_name:
-        permit_name = _checklist_text(first_permit)
-    permit_name = permit_name or "Permit"
-    fee = result.get("fee_range") or result.get("fee") or "Confirm fee with the building department"
+    """Build report checklist strictly from the locked public packet.
+
+    Older saved results may carry contaminated top-level `what_to_bring`,
+    `requirements`, `inspections`, `pro_tips`, or `common_mistakes`.  The
+    customer report/checklist path must not re-read those fields; they are
+    serialized only after the packet projection has rewritten them from packet
+    rows.
+    """
+    result = result if isinstance(result, dict) else {}
+    packet = result.get("public_packet") if isinstance(result.get("public_packet"), dict) else {}
+    packet_rows = _checklist_list(packet.get("rows") or result.get("public_packet_rows"))
+    required_rows = [row for row in packet_rows if isinstance(row, dict) and row.get("decision") == "REQUIRED"]
+    conditional_rows = [row for row in packet_rows if isinstance(row, dict) and row.get("decision") == "CONDITIONAL"]
+    packet_decision = str(packet.get("decision") or result.get("permit_decision") or "").upper().strip()
+    is_no_permit = packet_decision == "NOT_REQUIRED" or result.get("permit_required") is False
+    first_required = required_rows[0] if required_rows and isinstance(required_rows[0], dict) else {}
+    permit_name = _checklist_text(first_required.get("permit_name") or result.get("permit_name"))
+    if not permit_name:
+        permit_name = "No permit required" if is_no_permit else "Permit"
+    fee = ""
+    fees = packet.get("fees") if isinstance(packet.get("fees"), list) else []
+    if fees:
+        fee = _checklist_text(fees[0])
+    elif not is_no_permit:
+        fee = _checklist_text(result.get("fee_range") or result.get("fee")) or "Confirm fee with the building department"
     timeline_obj = result.get("approval_timeline") or {}
     if isinstance(timeline_obj, dict):
         timeline = timeline_obj.get("simple") or timeline_obj.get("complex") or "Varies by jurisdiction"
     else:
         timeline = _checklist_text(timeline_obj) or "Varies by jurisdiction"
-    docs = list(dict.fromkeys(
-        text for text in (
-            _checklist_text(item)
-            for item in (
-                _checklist_list(result.get("what_to_bring"))
-                + _checklist_list(result.get("requirements"))
-                + _checklist_list(result.get("documents_needed"))
-            )
-        ) if text
-    ))
-    inspections = _checklist_list(result.get("inspections"))
-    special_notes = list(dict.fromkeys(
-        text for text in (
-            _checklist_text(item)
-            for item in (
-                _checklist_list(result.get("pro_tips"))[:2]
-                + _checklist_list(result.get("common_mistakes"))[:2]
-            )
-        ) if text
-    ))
+    docs = _checklist_list(packet.get("documents")) if isinstance(packet, dict) else []
+    inspections = _checklist_list(packet.get("inspections")) if isinstance(packet, dict) else []
+    # Legacy saved results created before final public packets carried customer-
+    # visible inspection strings only at top level. Preserve that backward
+    # compatibility when no locked packet inspection list exists; do not merge
+    # stale top-level inspections over a real packet.
+    if not inspections and result.get("_legacy_inspections"):
+        inspections = _checklist_list(result.get("_legacy_inspections"))
+    if not inspections and not (packet if isinstance(packet, dict) else {}).get("schema_version"):
+        inspections = _checklist_list(result.get("inspections") or result.get("inspection_requirements") or result.get("inspection_checklist"))
+    packet_checklist = _checklist_list(packet.get("checklist")) if isinstance(packet, dict) else []
     items = []
-    decision = str(result.get("permit_decision") or "").upper().strip()
-    is_no_permit = decision == "NOT_REQUIRED" or result.get("permit_required") is False
-    conditional_rows = [row for row in _checklist_list(result.get("conditional_permits")) if isinstance(row, dict)]
     if is_no_permit:
-        items.append({"label": "No permit is required for this scope — keep this report with the job record", "category": "permit", "required": True})
+        items.append({"label": "No permit is required for this scope — keep this report with the job record and verify before expanding the scope.", "category": "permit", "required": False})
     else:
-        items.append({"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True})
-    for conditional in conditional_rows[:4]:
-        cond_name = conditional.get("permit_type") or conditional.get("permit_name") or "conditional permit"
-        cond_text = conditional.get("conditional_text") or conditional.get("required_if") or "Only if the stated condition is triggered"
+        for label in packet_checklist:
+            text = _checklist_text(label)
+            if text and text.lower().startswith("pull "):
+                items.append({"label": text, "category": "permit", "required": True})
+        if not any(item.get("category") == "permit" for item in items):
+            items.append({"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True})
+    for note in _checklist_list(result.get("_legacy_customer_notes"))[:3]:
+        note_text = _checklist_text(note)
+        if note_text:
+            items.append({"label": note_text, "category": "coordination", "required": False})
+    for conditional in conditional_rows[:6]:
+        cond_name = conditional.get("permit_name") or conditional.get("permit_type") or "conditional permit"
+        cond_text = conditional.get("conditional_text") or conditional.get("required_if") or conditional.get("trigger") or "Only if the stated condition is triggered"
         items.append({"label": f"{cond_text} — if triggered, pull {cond_name}", "category": "conditional", "required": False})
     items.append({"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True})
     if is_no_permit:
@@ -7875,17 +7934,10 @@ def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", s
         items.append({"label": f"Pay permit fee: {fee}", "category": "fees", "required": True})
     items.append({"label": f"Plan for approval timeline: {timeline}", "category": "timeline", "required": False})
     if docs:
-        items.append({"label": f"Required documents: {', '.join(docs[:6])}", "category": "documents", "required": True})
+        items.append({"label": f"Required documents: {', '.join(_checklist_text(item) for item in docs[:6] if _checklist_text(item))}", "category": "documents", "required": True})
     for inspection in inspections[:6]:
-        if isinstance(inspection, dict):
-            label = _checklist_dict_text(inspection, "stage", "title", "name", "label") or "Inspection step"
-            timing = _checklist_dict_text(inspection, "timing", "description", "notes")
-        else:
-            label = _checklist_text(inspection) or "Inspection step"
-            timing = ""
-        items.append({"label": f"Schedule inspection: {label}{' — ' + timing if timing else ''}", "category": "inspection", "required": False})
-    for note in special_notes[:4]:
-        items.append({"label": note, "category": "special", "required": False})
+        label = _checklist_inspection_text(inspection) or "Inspection step"
+        items.append({"label": f"Schedule inspection: {label}", "category": "inspection", "required": False})
     return {
         "title": "Pre-Construction Compliance Checklist",
         "summary": f"Action checklist for {job_type or permit_name} in {city}, {state}",
@@ -7932,12 +7984,9 @@ def generate_checklist(result: dict, job_type: str = "", city: str = "", state: 
 def _sanitize_customer_result_for_request_scope(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     """Apply canonical public ViewModel plus request-scope firebreak."""
     public = build_customer_permit_view_model(result, job_type, city, state)
-    # Saved report/share artifacts may carry already-customer-visible inspection
-    # checklist strings. The customer ViewModel may regenerate permit-family
-    # inspection defaults; keep explicit saved inspection steps so report/share
-    # text stays faithful to the original lookup artifact.
-    if isinstance(result, dict) and isinstance(result.get("inspections"), list) and result.get("inspections"):
-        public["inspections"] = copy.deepcopy(result.get("inspections"))
+    # Do not restore saved top-level inspections here.  Report/share/checklist
+    # rendering must be a pure function of the locked public packet, not of
+    # stale saved renderer fields from an older lookup artifact.
     return public
 
 
@@ -8188,12 +8237,34 @@ def render_share_page(share: dict) -> str:
     safe_share = dict(share or {})
     raw_share_data = safe_share.get("data")
     original_data = raw_share_data if isinstance(raw_share_data, dict) else {}
-    safe_data = _sanitize_customer_result_for_request_scope(
-        original_data,
-        safe_share.get("job_type", ""),
-        safe_share.get("city", ""),
-        safe_share.get("state", ""),
-    )
+    packet_obj = original_data.get("public_packet")
+    packet_marker = packet_obj if isinstance(packet_obj, dict) else {}
+    if str(packet_marker.get("schema_version") or "").startswith("final_public_permit_packet"):
+        # Already locked by the final public packet boundary; do not rebuild from
+        # stale saved helper fields during report/share rendering.
+        safe_data = copy.deepcopy(original_data)
+    else:
+        safe_data = _sanitize_customer_result_for_request_scope(
+            original_data,
+            safe_share.get("job_type", ""),
+            safe_share.get("city", ""),
+            safe_share.get("state", ""),
+        )
+        if isinstance(original_data.get("inspections"), list):
+            safe_data["_legacy_inspections"] = copy.deepcopy(original_data.get("inspections"))
+        if any(str(tip).strip() for tip in (original_data.get("pro_tips") or []) if isinstance(tip, str)):
+            safe_data["_legacy_customer_notes"] = [str(tip).strip() for tip in (original_data.get("pro_tips") or []) if str(tip).strip()]
+        if str(original_data.get("permit_decision") or original_data.get("permit_verdict") or "").upper() in {"REQUIRED", "YES"} and original_data.get("permits_required"):
+            # Legacy saved report/share payloads that predate the locked packet
+            # already carry a customer-selected permit kind. Keep that display
+            # label stable while still letting the sanitizer/packet boundary
+            # rebuild rows, docs, inspections and fees.
+            if original_data.get("permit_kind"):
+                safe_data["permit_kind"] = original_data.get("permit_kind")
+            safe_data["permit_decision"] = "REQUIRED"
+            safe_data["permit_required"] = True
+            safe_data["permit_verdict"] = "YES"
+            safe_data["customer_headline"] = original_data.get("customer_headline") or f"Permit required: {safe_data.get('permit_kind') or original_data.get('permit_kind') or safe_data.get('permit_name') or 'Permit'}"
     if not any(original_data.get(k) for k in ("sources", "source_urls", "apply_url", "apply_path", "applying_office")):
         def _drop_ahj_fields(value):
             if isinstance(value, dict):
@@ -8201,7 +8272,7 @@ def render_share_page(share: dict) -> str:
             if isinstance(value, list):
                 return [_drop_ahj_fields(v) for v in value]
             if isinstance(value, str):
-                return re.sub(r"\bAHJ\b", "building department", value, flags=re.I)
+                return re.sub(r"ahj", "permit office", value, flags=re.I)
             return value
         safe_data.pop("apply_path", None)
         safe_data = _drop_ahj_fields(safe_data)

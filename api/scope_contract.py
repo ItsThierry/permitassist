@@ -184,7 +184,7 @@ _SPECIAL_SIGNAL_PATTERNS: dict[str, tuple[str, ...]] = {
     "coastal": ("coastal", "shoreline", "windstorm", "twia"),
     "flood": ("flood", "floodplain", "fema", "sfha"),
     "hazardous": ("hazardous", "fuel dispenser", "gas station", "service station", "fuel system", "cannabis", "co2 system", "compressed air"),
-    "health": ("restaurant", "food", "kitchen", "daycare", "clinic", "grease interceptor", "commissary", "brewery"),
+    "health": ("restaurant", "food service", "food establishment", "commercial kitchen", "commissary", "brewery", "grease interceptor"),
     "row": ("right of way", "right-of-way", "sidewalk", "curb cut", "driveway", "encroachment"),
     "environmental": ("fuel dispenser", "gas station", "service station", "underground tank", "ust", "environmental"),
 }
@@ -350,7 +350,7 @@ def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
     if v1.segment == "commercial" and re.search(r"\b(?:restaurant|bar|brewery|food\s+service|commercial kitchen)\b", job, re.I) and not rtu_like_for_like_food_unchanged:
         facts.update({"food_service", "grease_generating", "fire_suppression", "health_food", "co_change_of_occupancy", "planning_zoning", "mechanical", "plumbing", "electrical"})
     if v1.segment == "commercial" and re.search(r"\b(?:dental|medical|clinic|x[- ]?ray|exam room)\b", job, re.I):
-        facts.update({"electrical", "mechanical", "plumbing", "fire_suppression", "health_food"})
+        facts.update({"electrical", "mechanical", "plumbing"})
     if v1.segment == "commercial" and re.search(r"\b(?:auto\s+repair|repair\s+shop|garage|vehicle\s+repair|lifts?)\b", job, re.I):
         facts.update({"fire_suppression", "planning_zoning"})
     if re.search(r"\b(?:solar|pv|photovoltaic)\b", job, re.I):
@@ -363,6 +363,7 @@ def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
         facts.add("sign")
     if re.search(r"\b(?:illuminated|lit|lighting|electric sign)\b", job, re.I) and not re.search(r"\b(?:non[- ]?electric|no\s+electrical|no\s+illumination|not\s+illuminated)\b", job, re.I):
         facts.add("sign_illuminated")
+        facts.add("electrical")
     if re.search(r"\b(?:rack|racking|high[- ]pile|storage rack)\b", job, re.I):
         facts.add("racking")
         facts.add("building")

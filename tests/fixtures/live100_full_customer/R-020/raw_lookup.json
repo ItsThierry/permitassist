@@ -1,0 +1,579 @@
+{
+  "case": {
+    "adjudication_hint": "Exterior siding permit common; source-adjudicate",
+    "bucket": "siding",
+    "case_id": "R-020",
+    "city": "Boston",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Building"
+    ],
+    "id": "R-020",
+    "job_type": "replace existing exterior siding on two family house, job value 26000",
+    "job_value": 26000,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "MA",
+    "zip_code": "02108"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information"
+      ],
+      "office_name": "Boston Inspectional Services Department (ISD)",
+      "permit_category": "Building",
+      "permit_type": "Short-Form Building Permit \u2014 Exterior Siding",
+      "portal_selection_path": [
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Short-Form Building Permit \u2014 Exterior Siding",
+        "Prepare the listed documents before final submission"
+      ],
+      "portal_url": "https://www.boston.gov/boston-permitting",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Short-Form Building Permit \u2014 Exterior Siding",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "official source verified",
+      "verification_note": "Official filing path repaired from an offline verified AHJ source; confirm the exact portal subcategory before final submission."
+    },
+    "apply_url": "https://www.boston.gov/boston-permitting",
+    "apply_url_known": true,
+    "applying_office": "Boston Inspectional Services Department (ISD)",
+    "approval_timeline": {
+      "complex": "2-4 weeks if Boston ISD requires plan review due to sheathing replacement, structural repairs, window/door changes, or historic district review",
+      "simple": "1-3 business days for straightforward residential exterior siding replacement if submitted as a Short Form Building permit and no plan review is triggered"
+    },
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: Fee not confirmed \u2014 call the Boston Inspectional Services Department (ISD) or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+            }
+          ],
+          "lead": true,
+          "permit_name": "Short-Form Building Permit \u2014 Exterior Siding",
+          "source_urls": [
+            "https://www.boston.gov/boston-permitting",
+            "https://onlinepermitsandlicenses.boston.gov/isdpermits/",
+            "https://www.boston.gov/departments/inspectional-services",
+            "https://www.boston.gov/sites/default/files/file/2021/10/Building%20Division%20Fees.pdf",
+            "https://www.boston.gov/departments/inspectional-services/inspectional-services-contacts",
+            "https://www.boston.gov/boston-permitting/permits/long-form-permits",
+            "https://www.boston.gov/boston-permitting/install-or-replace/install-or-replace-siding"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "checklist": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "city_contractor_registration": "Boston does not use a separate city contractor registration for this scope beyond state licensing/HIC requirements, but the contractor must be properly licensed/registered in Massachusetts and should verify any Boston ISD account requirements before filing.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.boston.gov/departments/inspectional-services",
+        "value": "https://www.boston.gov/departments/inspectional-services/apply-permit-online"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.boston.gov/departments/inspectional-services",
+        "value": "Fee Estimate: Fee not confirmed \u2014 call the Boston Inspectional Services Department (ISD) or check their online fee schedule before applying. \u2014 verify in https://www.boston.gov/sites/default/files/file/2021/10/Building%20Division%20Fees.pdf before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.boston.gov/departments/inspectional-services",
+        "value": "{'simple': '1-3 business days for straightforward residential exterior siding replacement if submitted as a Short Form Building permit and no plan review is triggered', 'complex': '2-4 weeks if Boston ISD requires plan review due to sheathing replacement, structural repairs, window/door changes, or historic district review'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.boston.gov/departments/inspectional-services",
+        "value": "[{'stage': 'Building Inspection - Exterior Siding Replacement', 'description': 'Inspector verifies: approved siding material matches permit, weather-resistive barrier/flashing details at openings and transitions, proper fastening pattern, clearances to grade/roof lines, and that any exposed sheathing or framing repairs were done correctly before concealment.', 'timing': 'Before final trim closure if sheathing, flashing, or WRB is exposed; final inspection after siding is fully installed and site is complete'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Starting siding removal before the building permit is issued and posted \u2014 Boston can stop the job and require re-submittal",
+      "Using a trade permit instead of a building permit \u2014 siding replacement is an exterior building scope, not electrical/plumbing/mechanical",
+      "Failing to disclose sheathing or framing repairs discovered after demo \u2014 that can trigger additional review and delay final approval"
+    ],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Short-Form Building Permit \u2014 Exterior Siding; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "customer_headline": "Permit required: Short-Form Building Permit \u2014 Exterior Siding.",
+    "customer_next_step": "File the required permit categories with Boston Inspectional Services Department (ISD): Short-Form Building Permit \u2014 Exterior Siding. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": "Required permit package: Short-Form Building Permit \u2014 Exterior Siding; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "data_source": "city_database",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: Fee not confirmed \u2014 call the Boston Inspectional Services Department (ISD) or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+            }
+          ],
+          "filing_family": "building",
+          "kind": "Building",
+          "lead_eligible": true,
+          "permit_name": "Short-Form Building Permit \u2014 Exterior Siding",
+          "permit_type": "Short-Form Building Permit \u2014 Exterior Siding",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.boston.gov/boston-permitting",
+            "https://onlinepermitsandlicenses.boston.gov/isdpermits/",
+            "https://www.boston.gov/departments/inspectional-services",
+            "https://www.boston.gov/sites/default/files/file/2021/10/Building%20Division%20Fees.pdf",
+            "https://www.boston.gov/departments/inspectional-services/inspectional-services-contacts",
+            "https://www.boston.gov/boston-permitting/permits/long-form-permits",
+            "https://www.boston.gov/boston-permitting/install-or-replace/install-or-replace-siding"
+          ],
+          "status": "REQUIRED"
+        }
+      ],
+      "lead_family": "building",
+      "lead_permit_name": "Short-Form Building Permit \u2014 Exterior Siding",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "false",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "residential"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "true",
+        "food_service": "false",
+        "negative_facts": [
+          "no_food_service_change"
+        ],
+        "new_solar_panels": "unknown",
+        "occupancy": "residential",
+        "positive_facts": [
+          "exterior",
+          "structural"
+        ],
+        "project_features": [
+          "building_envelope",
+          "exterior_envelope"
+        ],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "n/a",
+        "structural_mounting": "unknown",
+        "trades": [
+          "structural"
+        ],
+        "unknowns": [],
+        "work_nature": "replacement"
+      }
+    },
+    "degraded_sources": [
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.boston.gov/departments/inspectional-services/apply-permit-online"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.boston.gov/departments/inspectional-services/apply-permit-online"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.boston.gov/departments/inspectional-services/apply-permit-online"
+      }
+    ],
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Fee not confirmed \u2014 call the Boston Inspectional Services Department (ISD) or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+    "fees_typed": [
+      {
+        "family": "building",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "Fee Estimate: Fee not confirmed \u2014 call the Boston Inspectional Services Department (ISD) or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+      }
+    ],
+    "inspection_booking": "Schedule inspections through Boston ISD's online permit/inspection system from the Boston.gov Inspectional Services page. Phone: (617) 635-5300. Boston commonly requires at least 24 hours advance notice for inspection requests; book early because exterior work inspections can queue up. Verify the current inspection request method on the ISD portal before calling for a slot.",
+    "inspections": [],
+    "job_summary": "Required permit package: Short-Form Building Permit \u2014 Exterior Siding; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.boston.gov/boston-permitting"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://onlinepermitsandlicenses.boston.gov/isdpermits/"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.boston.gov/departments/inspectional-services"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.boston.gov/sites/default/files/file/2021/10/Building%20Division%20Fees.pdf"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.boston.gov/departments/inspectional-services/inspectional-services-contacts"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.boston.gov/boston-permitting/permits/long-form-permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.boston.gov/boston-permitting/install-or-replace/install-or-replace-siding"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.boston.gov/boston-permitting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Short-Form Building Permit \u2014 Exterior Siding",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Short-Form Building Permit \u2014 Exterior Siding; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "permit_type": "Short-Form Building Permit \u2014 Exterior Siding",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fees": [
+          {
+            "family": "building",
+            "fee_type": "permit_fee",
+            "source_url": null,
+            "text": "Fee Estimate: Fee not confirmed \u2014 call the Boston Inspectional Services Department (ISD) or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+          }
+        ],
+        "filing_family": "building",
+        "kind": "Building",
+        "lead_eligible": true,
+        "permit_name": "Short-Form Building Permit \u2014 Exterior Siding",
+        "permit_type": "Short-Form Building Permit \u2014 Exterior Siding",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.boston.gov/boston-permitting",
+          "https://onlinepermitsandlicenses.boston.gov/isdpermits/",
+          "https://www.boston.gov/departments/inspectional-services",
+          "https://www.boston.gov/sites/default/files/file/2021/10/Building%20Division%20Fees.pdf",
+          "https://www.boston.gov/departments/inspectional-services/inspectional-services-contacts",
+          "https://www.boston.gov/boston-permitting/permits/long-form-permits",
+          "https://www.boston.gov/boston-permitting/install-or-replace/install-or-replace-siding"
+        ],
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Short-Form Building Permit \u2014 Exterior Siding",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "pro_tips": [
+      "Use the Short Form Building permit route if the work is truly siding-only with no structural changes; that is usually the fastest path in Boston",
+      "Have the exact siding square footage and job value ready before applying \u2014 Boston's fee is valuation-based, so an accurate value keeps the permit fee from getting kicked back",
+      "If the house is in a historic district, check that siding material and profile are allowed before ordering materials; that is a common delay point in Boston",
+      "Take photos of any rotten sheathing or framing before covering it up \u2014 inspectors may want proof of repairs if hidden damage is found"
+    ],
+    "project_scope_attributes": {
+      "change_of_use": "false",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "residential"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "true",
+      "food_service": "false",
+      "negative_facts": [
+        "no_food_service_change"
+      ],
+      "new_solar_panels": "unknown",
+      "occupancy": "residential",
+      "positive_facts": [
+        "exterior",
+        "structural"
+      ],
+      "project_features": [
+        "building_envelope",
+        "exterior_envelope"
+      ],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "n/a",
+      "structural_mounting": "unknown",
+      "trades": [
+        "structural"
+      ],
+      "unknowns": [],
+      "work_nature": "replacement"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: Fee not confirmed \u2014 call the Boston Inspectional Services Department (ISD) or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+            }
+          ],
+          "lead": true,
+          "permit_name": "Short-Form Building Permit \u2014 Exterior Siding",
+          "source_urls": [
+            "https://www.boston.gov/boston-permitting",
+            "https://onlinepermitsandlicenses.boston.gov/isdpermits/",
+            "https://www.boston.gov/departments/inspectional-services",
+            "https://www.boston.gov/sites/default/files/file/2021/10/Building%20Division%20Fees.pdf",
+            "https://www.boston.gov/departments/inspectional-services/inspectional-services-contacts",
+            "https://www.boston.gov/boston-permitting/permits/long-form-permits",
+            "https://www.boston.gov/boston-permitting/install-or-replace/install-or-replace-siding"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "building",
+        "fees": [
+          {
+            "family": "building",
+            "fee_type": "permit_fee",
+            "source_url": null,
+            "text": "Fee Estimate: Fee not confirmed \u2014 call the Boston Inspectional Services Department (ISD) or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+          }
+        ],
+        "lead": true,
+        "permit_name": "Short-Form Building Permit \u2014 Exterior Siding",
+        "source_urls": [
+          "https://www.boston.gov/boston-permitting",
+          "https://onlinepermitsandlicenses.boston.gov/isdpermits/",
+          "https://www.boston.gov/departments/inspectional-services",
+          "https://www.boston.gov/sites/default/files/file/2021/10/Building%20Division%20Fees.pdf",
+          "https://www.boston.gov/departments/inspectional-services/inspectional-services-contacts",
+          "https://www.boston.gov/boston-permitting/permits/long-form-permits",
+          "https://www.boston.gov/boston-permitting/install-or-replace/install-or-replace-siding"
+        ],
+        "trigger": null
+      }
+    ],
+    "related_permit_families": [
+      "Planning/Zoning",
+      "Historic/Planning"
+    ],
+    "related_permit_names": [
+      "Planning / Zoning Use Clearance",
+      "Historic Preservation Review"
+    ],
+    "related_permit_segments": [
+      "residential"
+    ],
+    "related_permits": [],
+    "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "building"
+    ],
+    "required_permit_names": [
+      "Short-Form Building Permit \u2014 Exterior Siding"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Short-Form Building Permit \u2014 Exterior Siding; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 7,
+      "exact_form_known": true,
+      "filing_path_evidence": "Official Boston permitting page links to the Inspectional Services Online Portal.",
+      "filing_path_reachability": "ok",
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_path_status": "repaired_official_fallback",
+      "filing_path_verified_on": "2026-07-01",
+      "filing_source_count": 7,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.boston.gov/boston-permitting",
+        "https://onlinepermitsandlicenses.boston.gov/isdpermits/",
+        "https://www.boston.gov/departments/inspectional-services",
+        "https://www.boston.gov/sites/default/files/file/2021/10/Building%20Division%20Fees.pdf",
+        "https://www.boston.gov/departments/inspectional-services/inspectional-services-contacts",
+        "https://www.boston.gov/boston-permitting/permits/long-form-permits",
+        "https://www.boston.gov/boston-permitting/install-or-replace/install-or-replace-siding"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 7,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.boston.gov/boston-permitting",
+      "https://onlinepermitsandlicenses.boston.gov/isdpermits/",
+      "https://www.boston.gov/departments/inspectional-services",
+      "https://www.boston.gov/sites/default/files/file/2021/10/Building%20Division%20Fees.pdf",
+      "https://www.boston.gov/departments/inspectional-services/inspectional-services-contacts",
+      "https://www.boston.gov/boston-permitting/permits/long-form-permits",
+      "https://www.boston.gov/boston-permitting/install-or-replace/install-or-replace-siding"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.boston.gov/boston-permitting"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://onlinepermitsandlicenses.boston.gov/isdpermits/"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.boston.gov/departments/inspectional-services"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.boston.gov/sites/default/files/file/2021/10/Building%20Division%20Fees.pdf"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.boston.gov/departments/inspectional-services/inspectional-services-contacts"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.boston.gov/boston-permitting/permits/long-form-permits"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.boston.gov/boston-permitting/install-or-replace/install-or-replace-siding"
+      }
+    ],
+    "summary": "Required permit package: Short-Form Building Permit \u2014 Exterior Siding; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "total_cost_estimate": "$26,500 - $38,500",
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them.",
+      "Customer-boundary filing rows were normalized so only hard scope-triggered permits appear as required; address-dependent companion reviews are shown separately."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "zoning_hoa_flag": "If the property is in a designated historic district, material, color, and profile changes may require additional review before the building permit is finalized."
+  },
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
+}

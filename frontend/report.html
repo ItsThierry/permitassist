@@ -54,20 +54,20 @@
     const packetRows = safeArray(d.public_packet_rows || (d.public_packet && d.public_packet.rows));
     const requiredPacketRows = packetRows.filter(r => r && r.decision === 'REQUIRED');
     const conditionalPacketRows = packetRows.filter(r => r && r.decision === 'CONDITIONAL');
-    const packetDocs = [...new Set(packetRows.flatMap(r => safeArray(r && r.documents)).map(x => textValue(x)).filter(Boolean))];
-    const packetInspections = [...new Set(packetRows.flatMap(r => safeArray(r && r.inspections)).map(x => textValue(x)).filter(Boolean))];
+    const packetDocs = [...new Set(safeArray(d.public_packet && d.public_packet.documents).map(x => textValue(x)).filter(Boolean))];
+    const packetInspections = [...new Set(safeArray(d.public_packet && d.public_packet.inspections).map(x => textValue(x)).filter(Boolean))];
     const permitName = textValue((requiredPacketRows[0] && requiredPacketRows[0].permit_name) || d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type, 'Permit details');
     const rawVerdict = textValue(d.permit_verdict).toUpperCase();
     const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'VERIFY');
     const verdictLabel = verdict === 'YES' ? 'Permit required: Yes' : (verdict === 'NO' ? 'Permit required: No' : 'Permit status: Verify');
     const timeline = textValue((d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || d.timeline, 'Varies by jurisdiction');
-    const docs = [...new Set([...packetDocs, ...safeArray(d.what_to_bring), ...safeArray(d.requirements), ...safeArray(d.documents_needed), ...safeArray(d.checklist)].map(x => textValue(x)).filter(Boolean))];
+    const docs = packetDocs;
     const inspectionLabel = (item) => {
       if (typeof item === 'string') return item;
       if (!item || typeof item !== 'object') return '';
       return textValue(item.stage || item.title || item.name || item.description);
     };
-    const inspections = [...new Set([...packetInspections, ...safeArray(d.inspections || d.inspections_required || d.inspection_checklist).map(inspectionLabel)].filter(Boolean))];
+    const inspections = packetInspections;
     const sources = safeArray(d.sources);
     const sourceUrl = (src) => typeof src === 'string' ? src : ((src && src.url) || '');
     const safeExternalUrl = (url, fallback = '') => {
@@ -166,7 +166,7 @@
     grid.appendChild(listCard('Required documents', docs, 'Scope of work'));
     const conditionalItems = conditionalPacketRows.map(r => `${textValue(r.conditional_text || 'Only if triggered')} — ${textValue(r.permit_name)}`).filter(Boolean);
     if (conditionalItems.length) grid.appendChild(listCard('Conditional guidance', conditionalItems, 'No conditional permits identified.'));
-    const inspectionFallback = safeArray(checklist.items).filter(i => i && i.category === 'inspection').map(i => i.label).filter(Boolean).slice(0, 8);
+    const inspectionFallback = [];
     grid.appendChild(listCard('Inspection checklist', inspections.length ? inspections : inspectionFallback, 'Confirm inspection phases with the jurisdiction.'));
     const preconstructionItems = safeArray(checklist.items).map(item => item && item.label).filter(Boolean);
     const preconstructionFallback = verdict === 'NO'

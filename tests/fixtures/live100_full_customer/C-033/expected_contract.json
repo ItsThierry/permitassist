@@ -1,16 +1,23 @@
 {
-  "case_id": "C-033",
-  "contract_note": "",
-  "must_add": [
-    "electrical",
-    "building_ti"
+  "expected_decision": "REQUIRED",
+  "fee_must_not_contain": "",
+  "forbidden_visible": [
+    "Food-service floor plan",
+    "Menu/process description",
+    "Food Establishment Health"
   ],
   "must_demote": [],
   "must_keep_required": [
     "building_ti",
     "electrical",
     "mechanical",
-    "plumbing"
+    "plumbing",
+    "gas",
+    "co_change_of_occupancy"
   ],
-  "must_not_required": []
+  "must_not_required": [
+    "health_food"
+  ],
+  "protection": false,
+  "source_must_not_contain": ""
 }

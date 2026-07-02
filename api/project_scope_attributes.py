@@ -140,9 +140,11 @@ def extract_project_scope_attributes(
 
     if _has(job, r"\b(no new circuits?|existing circuits?|existing boxes|no panel work|no service upgrade)\b"):
         negatives.add("existing_circuits")
-    if _has(job, r"\bno\b[^.;,]{0,80}\b(electrical|electric|wiring|illumination|illuminated|lighting)\b|\bwithout\b[^.;,]{0,80}\b(electrical|electric|wiring|illumination|lighting)\b|\bnon[- ]electric\b|\bnot illuminated\b|\bno lighting\b"):
+    if _has(job, r"\bno\b[^.;,]{0,80}\b(electrical|electric|wiring|illumination|illuminated|lighting|utilities)\b|\bwithout\b[^.;,]{0,80}\b(electrical|electric|wiring|illumination|lighting|utilities)\b|\bnon[- ]electric\b|\bnot illuminated\b|\bno lighting\b"):
         negatives.add("no_electrical")
         negatives.add("no_illumination")
+    if _has(job, r"\bno\s+utilities\b|\bwithout\s+utilities\b"):
+        negatives.update({"no_electrical", "no_plumbing", "no_mechanical", "no_utilities"})
     if _has(job, r"\bno\b[^.;,]{0,80}\b(plumbing|pipes?|drains?|fixtures?|water|sewer)\b|\bwithout\b[^.;,]{0,80}\b(plumbing|pipes?|drains?|fixtures?|water|sewer)\b"):
         negatives.add("no_plumbing")
     if _has(job, r"\bbut\b[^.;,]{0,60}\bplumbing\b"):
@@ -156,6 +158,8 @@ def extract_project_scope_attributes(
         negatives.add("no_use_change")
     if _has(job, r"\b(no|without)\s+(battery|ess|energy storage)\b"):
         negatives.add("no_battery")
+    if _has(job, r"\bno\s+sprinklers?\s+(?:altered|modified|changed)|\bno\s+fire\s+sprinkler\s+work\b"):
+        negatives.add("no_sprinkler_alteration")
 
     change_of_use = AttributeValue.UNKNOWN
     if "no_use_change" in negatives:
@@ -213,7 +217,7 @@ def extract_project_scope_attributes(
         food_service = AttributeValue.UNKNOWN
         unknowns.add("food_service")
 
-    if _has(job, r"\b(gfci|outlets?|receptacles?|electrical|electric|wiring|circuits?|lighting|panel|service upgrade|ev charger|generator|transfer switch|disconnect|solar|photovoltaic|pv|\d+\s*(?:a|amp)\s+service|utilities)\b") and "no_electrical" not in negatives:
+    if _has(job, r"\b(gfci|outlets?|receptacles?|electrical|electric|wiring|circuits?|lighting|panel|service upgrade|ev charger|generator|transfer switch|disconnect|solar|photovoltaic|pv|\d+\s*(?:a|amp)\s+service)\b") and "no_electrical" not in negatives:
         trades.add("electrical")
         positives.add("electrical")
         if _has(job, r"\b(panel|service upgrade|main panel|service panel|\d+\s*(?:a|amp)\s+service)\b"):
@@ -221,7 +225,7 @@ def extract_project_scope_attributes(
     if _has(job, r"\b(battery|ess|energy storage)\b") and "no_battery" not in negatives and "no_electrical" not in negatives:
         trades.add("electrical")
         positives.add("electrical")
-    if _has(job, r"\b(plumbing|water heater|fixture|fixtures|sink|sinks|toilet|toilets|bath|bathroom|restroom|restrooms|shower|shower drain|tub valve|shampoo bowls?|sewer|water line|floor drains?|grease interceptor|laundry|washer|disposal|faucet|utilities)\b") and "no_plumbing" not in negatives:
+    if _has(job, r"\b(plumbing|water heater|fixture|fixtures|sink|sinks|toilet|toilets|bath|bathroom|restroom|restrooms|shower|shower drain|tub valve|shampoo bowls?|sewer|water line|floor drains?|grease interceptor|laundry|washer|disposal|faucet)\b") and "no_plumbing" not in negatives:
         trades.add("plumbing")
         positives.add("plumbing")
     if _has(job, r"\b(gas\s+(?:line|piping|reconnection|connection|dryer|fired|water heater|furnace)|fuel\s+gas|radiant\s+heat|compressed\s+air|gas dryers?|gas equipment|gas piping|pressure test)\b"):
@@ -229,13 +233,13 @@ def extract_project_scope_attributes(
         trades.add("plumbing")
         positives.add("gas")
         positives.add("plumbing")
-    if _has(job, r"\b(mechanical|hvac|rtu|rooftop unit|furnace|heat pump|mini[- ]split|air conditioner|condenser|air handler|coil|ductwork|ducts?|ventilation|exhaust|hood|makeup air|fume hood|fireplace|chimney liner|compressed air|auto repair|vehicle repair|lifts?|utilities)\b") and "no_mechanical" not in negatives:
+    if _has(job, r"\b(mechanical|hvac|rtu|rooftop unit|furnace|heat pump|mini[- ]split|air conditioner|condenser|air handler|coil|ductwork|ducts?|ventilation|exhaust|hood|makeup air|fume hood|fireplace|chimney liner|compressed air|auto repair|vehicle repair|lifts?)\b") and "no_mechanical" not in negatives:
         trades.add("mechanical")
         positives.add("mechanical")
     if _has(job, r"\b(fire alarm|alarm panel)\b"):
         trades.add("fire_alarm")
         positives.add("fire_alarm")
-    if _has(job, r"\b(sprinkler|sprinklers|hood suppression|ansul|wet[- ]chemical|fire suppression|type i hood|type 1 hood)\b"):
+    if _has(job, r"\b(sprinkler|sprinklers|hood suppression|ansul|wet[- ]chemical|fire suppression|type i hood|type 1 hood)\b") and "no_sprinkler_alteration" not in negatives:
         trades.add("fire_suppression")
         positives.add("fire_suppression")
 
@@ -248,6 +252,13 @@ def extract_project_scope_attributes(
     if _has(job, r"\b(historic district|historic preservation|landmark|arb|hdlc)\b"):
         features.add("historic")
         positives.add("historic")
+
+    if _has(job, r"\b(?:adu|accessory dwelling|detached dwelling|garage conversion|kitchen\s+bath\s+and\s+utilities)\b"):
+        features.add("dwelling_unit")
+        positives.add("new_dwelling_unit")
+        if _has(job, r"\b(?:utilities|kitchen|bath|bathroom|water|sewer|electrical|panel|gas)\b"):
+            trades.update({"electrical", "plumbing", "mechanical"})
+            positives.update({"electrical", "plumbing", "mechanical", "utilities_connected"})
 
     existing_solar_context = AttributeValue.UNKNOWN
     new_solar_panels = AttributeValue.UNKNOWN

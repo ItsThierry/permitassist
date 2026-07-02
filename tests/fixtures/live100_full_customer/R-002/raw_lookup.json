@@ -1,0 +1,654 @@
+{
+  "case": {
+    "adjudication_hint": "Seattle SDCI mini-split refrigeration lesson",
+    "bucket": "mini-split multi-permit",
+    "case_id": "R-002",
+    "city": "Seattle",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Mechanical/HVAC",
+      "Refrigeration",
+      "Electrical conditional/likely"
+    ],
+    "id": "R-002",
+    "job_type": "install ductless mini split heat pump with exterior condenser and new electrical disconnect, job value 12000",
+    "job_value": 12000,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "WA",
+    "zip_code": "98104"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout"
+      ],
+      "office_name": "Seattle Department of Construction & Inspections (SDCI)",
+      "permit_category": "Electrical",
+      "permit_type": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+      "platform": "Accela / Citizen Access",
+      "portal_selection_path": [
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+        "Prepare the listed documents before final submission"
+      ],
+      "portal_url": "https://cosaccela.seattle.gov",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://cosaccela.seattle.gov",
+    "apply_url_known": true,
+    "applying_office": "Seattle Department of Construction & Inspections (SDCI)",
+    "approval_timeline": {
+      "complex": "2-4 weeks if plan review is required for the combined mechanical/electrical scope",
+      "simple": "1-5 days for simple OTC residential permits in Seattle"
+    },
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+          "source_urls": [
+            "https://www.seattle.gov/sdci",
+            "https://cosaccela.seattle.gov",
+            "https://lni.wa.gov/licensing-permits",
+            "https://www.seattle.gov/sdci/permits",
+            "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+            "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "mechanical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation",
+          "source_urls": [
+            "https://www.seattle.gov/sdci",
+            "https://cosaccela.seattle.gov",
+            "https://lni.wa.gov/licensing-permits",
+            "https://www.seattle.gov/sdci/permits",
+            "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+            "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "checklist": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout"
+    ],
+    "city_contractor_registration": "Seattle uses SDCI permitting, and contractors should verify they are properly registered/licensed for the trade work before applying. Washington electrical work requires the appropriate WA L&I electrical license (EL01A/EL02A), and HVAC work requires the proper state contractor registration/licensing. No separate Seattle city contractor registration was confirmed in the provided data for this scope.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.seattle.gov/sdci",
+        "value": "Mechanical Permit \u2014 HVAC Equipment Changeout (Residential)"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.seattle.gov/sdci",
+        "value": "https://cosaccela.seattle.gov"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.seattle.gov/sdci",
+        "value": "Fee Estimate: Fee not confirmed \u2014 call the Seattle Department of Construction & Inspections (SDCI) or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.seattle.gov/sdci",
+        "value": "{'simple': '1-5 days for simple OTC residential permits in Seattle', 'complex': '2-4 weeks if plan review is required for the combined mechanical/electrical scope'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.seattle.gov/sdci",
+        "value": "[{'stage': 'Mechanical Rough-In', 'description': 'Inspector checks refrigerant line routing and support, line-set penetration sealing, condensate drain slope and termination, outdoor condenser clearances, equipment mounting, and that the unit matches the approved scope and nameplate data.', 'timing': 'Before wall penetrations are concealed and before final startup'}, {'stage': 'Electrical Rough-In / Final', 'description': 'Inspector verifies the new disconnect is installed correctly, conductor sizing matches the equipment nameplate, breaker sizing is correct, grounding/bonding is proper, working clearances are maintained, and the disconnect is within sight of the condenser.', 'timing': 'Before energizing the unit and before final approval'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Pulling only the mechanical permit and forgetting the separate electrical permit for the new disconnect",
+      "Installing the condenser before the permit is issued and posted \u2014 Seattle can stop the job and require corrections",
+      "Using the wrong electrical license or missing the WA L&I license number on the application",
+      "Failing to seal the wall penetration and support the line set properly, which can fail inspection",
+      "Submitting the permit without verifying contractor licensing/registration status before filing"
+    ],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Electrical Permit \u2014 HVAC Equipment Connection / Disconnect; Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation; Refrigeration Permit \u2014 Split-System Heat Pump / Mini-Split; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "customer_headline": "Permit required: Electrical Permit \u2014 HVAC Equipment Connection / Disconnect, Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation.",
+    "customer_next_step": "File the required permit categories with Seattle Department of Construction & Inspections (SDCI): Electrical Permit \u2014 HVAC Equipment Connection / Disconnect, Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": "Required permit package: Electrical Permit \u2014 HVAC Equipment Connection / Disconnect; Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation; Refrigeration Permit \u2014 Split-System Heat Pump / Mini-Split; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "data_source": "city_database",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "filing_family": "electrical",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "kind": "Electrical",
+          "lead_eligible": true,
+          "permit_name": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+          "permit_type": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.seattle.gov/sdci",
+            "https://cosaccela.seattle.gov",
+            "https://lni.wa.gov/licensing-permits",
+            "https://www.seattle.gov/sdci/permits",
+            "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+            "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "filing_family": "mechanical",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "kind": "Mechanical",
+          "lead_eligible": true,
+          "permit_name": "Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation",
+          "permit_type": "Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.seattle.gov/sdci",
+            "https://cosaccela.seattle.gov",
+            "https://lni.wa.gov/licensing-permits",
+            "https://www.seattle.gov/sdci/permits",
+            "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+            "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+          ],
+          "status": "REQUIRED"
+        }
+      ],
+      "lead_family": "electrical",
+      "lead_permit_name": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "false",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "residential"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "true",
+        "food_service": "false",
+        "negative_facts": [
+          "no_food_service_change"
+        ],
+        "new_solar_panels": "unknown",
+        "occupancy": "residential",
+        "positive_facts": [
+          "electrical",
+          "exterior",
+          "mechanical"
+        ],
+        "project_features": [
+          "exterior_envelope"
+        ],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "n/a",
+        "structural_mounting": "unknown",
+        "trades": [
+          "electrical",
+          "mechanical"
+        ],
+        "unknowns": [],
+        "work_nature": "alteration"
+      }
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Fee not confirmed \u2014 call the Seattle Department of Construction & Inspections (SDCI) or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+    "fees_typed": [
+      {
+        "family": "electrical",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "Fee Estimate: Fee not confirmed \u2014 call the Seattle Department of Construction & Inspections (SDCI) or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+      }
+    ],
+    "inspection_booking": "Schedule inspections through the Seattle Services Portal at Use the permit record to request inspections online; Seattle also allows status/search through the Services Portal. Phone: (206) 684-8850. Plan ahead for at least 24 hours notice; Seattle is typically 1-5 days for simple OTC inspections, and inspection slots can fill quickly.",
+    "inspections": [
+      "Electrical final inspection",
+      "Mechanical final inspection"
+    ],
+    "job_summary": "Required permit package: Electrical Permit \u2014 HVAC Equipment Connection / Disconnect; Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation; Refrigeration Permit \u2014 Split-System Heat Pump / Mini-Split; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.seattle.gov/sdci"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://cosaccela.seattle.gov"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://lni.wa.gov/licensing-permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.seattle.gov/sdci/permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://cosaccela.seattle.gov",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Electrical",
+    "permit_name": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Electrical Permit \u2014 HVAC Equipment Connection / Disconnect; Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation; Refrigeration Permit \u2014 Split-System Heat Pump / Mini-Split; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "permit_type": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "lead_eligible": true,
+        "permit_name": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+        "permit_type": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.seattle.gov/sdci",
+          "https://cosaccela.seattle.gov",
+          "https://lni.wa.gov/licensing-permits",
+          "https://www.seattle.gov/sdci/permits",
+          "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+          "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "lead_eligible": true,
+        "permit_name": "Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation",
+        "permit_type": "Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.seattle.gov/sdci",
+          "https://cosaccela.seattle.gov",
+          "https://lni.wa.gov/licensing-permits",
+          "https://www.seattle.gov/sdci/permits",
+          "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+          "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+        ],
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "electrical",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "pro_tips": [
+      "Seattle's mechanical permit for this kind of job is relatively cheap at about $70, but the electrical permit is a separate cost \u2014 budget both up front.",
+      "Have the mini-split submittal sheet ready before you open the portal; Seattle reviewers want the exact equipment model and efficiency data.",
+      "Because Seattle is in a seismic zone, use proper mounting hardware and anchorage for the outdoor condenser and line-set supports.",
+      "Check your contractor license status before starting the application \u2014 Seattle and WA L&I will block or delay filings if the trade license is not current.",
+      "If the condenser location is tight to property lines or windows, verify setback and noise constraints before final placement."
+    ],
+    "project_scope_attributes": {
+      "change_of_use": "false",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "residential"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "true",
+      "food_service": "false",
+      "negative_facts": [
+        "no_food_service_change"
+      ],
+      "new_solar_panels": "unknown",
+      "occupancy": "residential",
+      "positive_facts": [
+        "electrical",
+        "exterior",
+        "mechanical"
+      ],
+      "project_features": [
+        "exterior_envelope"
+      ],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "n/a",
+      "structural_mounting": "unknown",
+      "trades": [
+        "electrical",
+        "mechanical"
+      ],
+      "unknowns": [],
+      "work_nature": "alteration"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+          "source_urls": [
+            "https://www.seattle.gov/sdci",
+            "https://cosaccela.seattle.gov",
+            "https://lni.wa.gov/licensing-permits",
+            "https://www.seattle.gov/sdci/permits",
+            "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+            "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "mechanical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation",
+          "source_urls": [
+            "https://www.seattle.gov/sdci",
+            "https://cosaccela.seattle.gov",
+            "https://lni.wa.gov/licensing-permits",
+            "https://www.seattle.gov/sdci/permits",
+            "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+            "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "electrical",
+        "fees": [],
+        "lead": true,
+        "permit_name": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+        "source_urls": [
+          "https://www.seattle.gov/sdci",
+          "https://cosaccela.seattle.gov",
+          "https://lni.wa.gov/licensing-permits",
+          "https://www.seattle.gov/sdci/permits",
+          "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+          "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "mechanical",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation",
+        "source_urls": [
+          "https://www.seattle.gov/sdci",
+          "https://cosaccela.seattle.gov",
+          "https://lni.wa.gov/licensing-permits",
+          "https://www.seattle.gov/sdci/permits",
+          "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+          "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+        ],
+        "trigger": null
+      }
+    ],
+    "related_permits": [],
+    "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "electrical",
+      "mechanical"
+    ],
+    "required_permit_names": [
+      "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect",
+      "Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Electrical Permit \u2014 HVAC Equipment Connection / Disconnect; Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation; Refrigeration Permit \u2014 Split-System Heat Pump / Mini-Split; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout"
+    ],
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 6,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 5,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.seattle.gov/sdci",
+        "https://cosaccela.seattle.gov",
+        "https://www.seattle.gov/sdci/permits",
+        "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+        "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 6,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.seattle.gov/sdci",
+      "https://cosaccela.seattle.gov",
+      "https://lni.wa.gov/licensing-permits",
+      "https://www.seattle.gov/sdci/permits",
+      "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx",
+      "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.seattle.gov/sdci"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://cosaccela.seattle.gov"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://lni.wa.gov/licensing-permits"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.seattle.gov/sdci/permits"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://services.seattle.gov/Portal/Customization/pages/recordindex.aspx"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+      }
+    ],
+    "summary": "Required permit package: Electrical Permit \u2014 HVAC Equipment Connection / Disconnect; Mechanical Permit \u2014 Ductless Mini-Split / Heat Pump Installation; Refrigeration Permit \u2014 Split-System Heat Pump / Mini-Split; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "total_cost_estimate": "$4,500 - $12,500",
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout"
+    ],
+    "zoning_hoa_flag": "Seattle projects can be affected by HOA rules, historic district review, and site-specific zoning or noise limits for exterior condenser placement. Verify condenser setback, visibility, and sound impacts before installation. Seattle also has local review issues on some properties that may require additional land-use review."
+  },
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
+}

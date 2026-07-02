@@ -1,0 +1,562 @@
+{
+  "case": {
+    "adjudication_hint": "Threshold/local-rule dependent; source-adjudicate",
+    "bucket": "drywall repair",
+    "case_id": "R-013",
+    "city": "Chicago",
+    "expected_decision_pre_registered": "SOURCE_ADJUDICATE",
+    "expected_permit_families_pre_registered": [
+      "Building possible"
+    ],
+    "id": "R-013",
+    "job_type": "replace drywall in one bedroom after leak no structural no electrical no plumbing, job value 3500",
+    "job_value": 3500,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_needs_targeted_official_source_check",
+    "state": "IL",
+    "zip_code": "60602"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "no_permit_required",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "login_required": null,
+      "permit_category": "Building",
+      "permit_type": "Building Permit",
+      "platform": null,
+      "portal_selection_path": [
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Building Permit",
+        "Prepare the listed documents before final submission"
+      ],
+      "portal_url": null,
+      "state": "NOT_APPLICABLE",
+      "support_level": "not applicable",
+      "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope."
+    },
+    "apply_url": "",
+    "apply_url_known": true,
+    "applying_office": "Chicago Department of Buildings (DOB)",
+    "approval_timeline": "No permit submission needed for the resolved scope as described.",
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Building Permit",
+          "source_urls": [
+            "https://chicago.gov/permits",
+            "https://www.chicago.gov/city/en/depts/bldgs",
+            "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+            "https://www.chicago.gov/city/en/depts/bldgs.html",
+            "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "CONDITIONAL",
+          "family": "plumbing",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "source_urls": [
+            "https://chicago.gov/permits",
+            "https://www.chicago.gov/city/en/depts/bldgs",
+            "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+            "https://www.chicago.gov/city/en/depts/bldgs.html",
+            "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+          ],
+          "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "checklist": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "city_contractor_registration": "Chicago requires city-level contractor licensing/registration for permit work. Illinois state licensing alone is not enough for Chicago DOB permit applications. Verify the contractor's Chicago license status before submitting; expired city credentials can block the application.",
+    "claim_citations": [],
+    "common_mistakes": [
+      "Letting the scope expand into trade, framing, occupancy, fire/life-safety, exterior, or accessibility work without checking the permit office first."
+    ],
+    "companion_permits": [],
+    "conditional_permits": [
+      {
+        "decision": "CONDITIONAL",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "lead_eligible": true,
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "reason": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "required_if": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "source_urls": [
+          "https://chicago.gov/permits",
+          "https://www.chicago.gov/city/en/depts/bldgs",
+          "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+          "https://www.chicago.gov/city/en/depts/bldgs.html",
+          "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+        ],
+        "status": "CONDITIONAL",
+        "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "No permit required for the described scope in Chicago, IL as long as the work stays within the stated limits.",
+    "customer_headline": "Permit required: Building Permit.",
+    "customer_next_step": "File the required permit categories with Chicago Department of Buildings (DOB): Building Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": "No permit required for the described scope in Chicago, IL as long as the work stays within the stated limits.",
+    "data_source": "city_database",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building",
+          "filing_family": "building",
+          "kind": "Building",
+          "lead_eligible": true,
+          "permit_name": "Building Permit",
+          "permit_type": "Building Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://chicago.gov/permits",
+            "https://www.chicago.gov/city/en/depts/bldgs",
+            "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+            "https://www.chicago.gov/city/en/depts/bldgs.html",
+            "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "CONDITIONAL",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "filing_family": "plumbing",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "kind": "Plumbing",
+          "lead_eligible": true,
+          "permit_name": "Plumbing Permit",
+          "permit_type": "Plumbing Permit",
+          "reason": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+          "required_if": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+          "source_urls": [
+            "https://chicago.gov/permits",
+            "https://www.chicago.gov/city/en/depts/bldgs",
+            "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+            "https://www.chicago.gov/city/en/depts/bldgs.html",
+            "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+          ],
+          "status": "CONDITIONAL",
+          "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+        }
+      ],
+      "lead_family": "building",
+      "lead_permit_name": "Building Permit",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "false",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "residential"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "unknown",
+        "food_service": "false",
+        "negative_facts": [
+          "no_electrical",
+          "no_food_service_change",
+          "no_illumination",
+          "no_plumbing"
+        ],
+        "new_solar_panels": "unknown",
+        "occupancy": "residential",
+        "positive_facts": [
+          "structural"
+        ],
+        "project_features": [],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "n/a",
+        "structural_mounting": "unknown",
+        "trades": [
+          "structural"
+        ],
+        "unknowns": [
+          "exterior_envelope"
+        ],
+        "work_nature": "replacement"
+      }
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Nothing for permit filing because this resolved scope does not require a permit.",
+      "Keep photos/invoices showing the work stayed within the described no-permit scope."
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_estimate": "No permit fee expected for the resolved no-permit scope; verify with the permit office if the scope changes.",
+    "fee_range": "No permit fee expected for the resolved no-permit scope; verify with the permit office if the scope changes",
+    "fees_typed": [
+      {
+        "family": "building",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "No permit fee expected for the resolved no-permit scope; verify with the permit office if the scope changes"
+      }
+    ],
+    "inspect_checklist": [],
+    "inspection_booking": "No permit inspection is scheduled for the resolved no-permit scope.",
+    "inspection_requirements": [],
+    "inspections": [
+      "Plumbing final inspection"
+    ],
+    "job_summary": "No permit required for the described scope in Chicago, IL as long as the work stays within the stated limits.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://chicago.gov/permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.chicago.gov/city/en/depts/bldgs"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.chicago.gov/city/en/depts/bldgs.html"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Building Permit",
+    "permit_required": true,
+    "permit_summary": "No permit required for the described scope in Chicago, IL as long as the work stays within the stated limits.",
+    "permit_type": "Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "lead_eligible": true,
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://chicago.gov/permits",
+          "https://www.chicago.gov/city/en/depts/bldgs",
+          "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+          "https://www.chicago.gov/city/en/depts/bldgs.html",
+          "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+        ],
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "pro_tips": [
+      "Keep the scope tight and document that no trade, framing, occupancy, fire/life-safety, exterior, or accessibility work was added."
+    ],
+    "project_scope_attributes": {
+      "change_of_use": "false",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "residential"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "unknown",
+      "food_service": "false",
+      "negative_facts": [
+        "no_electrical",
+        "no_food_service_change",
+        "no_illumination",
+        "no_plumbing"
+      ],
+      "new_solar_panels": "unknown",
+      "occupancy": "residential",
+      "positive_facts": [
+        "structural"
+      ],
+      "project_features": [],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "n/a",
+      "structural_mounting": "unknown",
+      "trades": [
+        "structural"
+      ],
+      "unknowns": [
+        "exterior_envelope"
+      ],
+      "work_nature": "replacement"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Building Permit",
+          "source_urls": [
+            "https://chicago.gov/permits",
+            "https://www.chicago.gov/city/en/depts/bldgs",
+            "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+            "https://www.chicago.gov/city/en/depts/bldgs.html",
+            "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "CONDITIONAL",
+          "family": "plumbing",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "source_urls": [
+            "https://chicago.gov/permits",
+            "https://www.chicago.gov/city/en/depts/bldgs",
+            "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+            "https://www.chicago.gov/city/en/depts/bldgs.html",
+            "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+          ],
+          "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "building",
+        "fees": [],
+        "lead": true,
+        "permit_name": "Building Permit",
+        "source_urls": [
+          "https://chicago.gov/permits",
+          "https://www.chicago.gov/city/en/depts/bldgs",
+          "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+          "https://www.chicago.gov/city/en/depts/bldgs.html",
+          "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "CONDITIONAL",
+        "family": "plumbing",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Plumbing Permit",
+        "source_urls": [
+          "https://chicago.gov/permits",
+          "https://www.chicago.gov/city/en/depts/bldgs",
+          "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+          "https://www.chicago.gov/city/en/depts/bldgs.html",
+          "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+        ],
+        "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+      }
+    ],
+    "related_permits": [
+      {
+        "decision": "CONDITIONAL",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "lead_eligible": true,
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "reason": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "required_if": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "source_urls": [
+          "https://chicago.gov/permits",
+          "https://www.chicago.gov/city/en/depts/bldgs",
+          "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+          "https://www.chicago.gov/city/en/depts/bldgs.html",
+          "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+        ],
+        "status": "CONDITIONAL",
+        "trigger": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping."
+      }
+    ],
+    "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "building"
+    ],
+    "required_permit_names": [
+      "Building Permit"
+    ],
+    "required_permit_summary": "No permit required for the described scope.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 5,
+      "local_decision_evidence_urls": [
+        "https://chicago.gov/permits",
+        "https://www.chicago.gov/city/en/depts/bldgs",
+        "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+        "https://www.chicago.gov/city/en/depts/bldgs.html",
+        "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+      ],
+      "local_form_known": true,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://chicago.gov/permits",
+      "https://www.chicago.gov/city/en/depts/bldgs",
+      "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html",
+      "https://www.chicago.gov/city/en/depts/bldgs.html",
+      "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://chicago.gov/permits"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.chicago.gov/city/en/depts/bldgs"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.chicago.gov/city/en/sites/guide-to-building-permits/home/help/faq/DOB/bldg-permit-not-required/all.html"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.chicago.gov/city/en/depts/bldgs.html"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.chicago.gov/city/en/depts/bldgs/provdrs/permits/svcs/permit_fee_calculator.html"
+      }
+    ],
+    "summary": "No permit required for the described scope in Chicago, IL as long as the work stays within the stated limits.",
+    "timeline": "No permit submission needed for the resolved scope as described.",
+    "total_cost_estimate": "$3,800 - $6,500",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: mechanical.",
+      "Source snippets are incomplete; source support is degraded."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ]
+  },
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
+}

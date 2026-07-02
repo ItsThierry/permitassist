@@ -1,0 +1,1042 @@
+{
+  "case": {
+    "adjudication_hint": "Grease/wastewater",
+    "bucket": "grease interceptor",
+    "case_id": "C-046",
+    "city": "Honolulu",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Plumbing",
+      "Health/wastewater",
+      "Building possible"
+    ],
+    "id": "C-046",
+    "job_type": "commercial restaurant grease interceptor replacement in same location with plumbing work, job value 65000",
+    "job_value": 65000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "HI",
+    "zip_code": "96813"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description",
+        "Grease interceptor sizing/details",
+        "Wastewater pretreatment application"
+      ],
+      "office_name": "Department of Planning and Permitting (DPP)",
+      "permit_category": "Plumbing",
+      "permit_type": "Plumbing Permit",
+      "portal_selection_path": [
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Plumbing Permit",
+        "Prepare the listed documents before final submission"
+      ],
+      "portal_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package \u2014 Plumbing Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+    "apply_url_known": true,
+    "applying_office": "Department of Planning and Permitting (DPP)",
+    "approval_timeline": {
+      "complex": "Plan review commonly takes 6-16 weeks for commercial work in Honolulu, especially if grease interceptor sizing, accessibility, or plumbing layout changes must be reviewed.",
+      "simple": "If DPP accepts it as a straightforward plumbing alteration, allow same-day to 1-3 business days for intake/issuance; commercial jobs are less often instant than residential."
+    },
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "plumbing",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Plumbing Permit",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "health_food",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Food Establishment Health Plan Review / Permit",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "fire_suppression",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Fire",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "planning_zoning",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "co_change_of_occupancy",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "wastewater_pretreatment_fog",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Wastewater / FOG / Pretreatment Approval",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "checklist": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.honolulu.gov/dpp",
+        "value": "Commercial Building / Tenant Improvement Permit"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.honolulu.gov/dpp",
+        "value": "https://www.honolulu.gov/dpp/permitting/building-permits-home"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.honolulu.gov/dpp",
+        "value": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.honolulu.gov/dpp",
+        "value": "{'simple': 'If DPP accepts it as a straightforward plumbing alteration, allow same-day to 1-3 business days for intake/issuance; commercial jobs are less often instant than residential.', 'complex': 'Plan review commonly takes 6-16 weeks for commercial work in Honolulu, especially if grease interceptor sizing, accessibility, or plumbing layout changes must be reviewed.'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.honolulu.gov/dpp",
+        "value": "[{'stage': 'Plumbing Rough-In / Underground', 'description': 'Inspector checks interceptor location, piping slope, pipe material, cleanouts, venting, trap arrangement, and that any underground or concealed piping is installed before backfill or cover-up.', 'timing': 'Before backfill, slab patching, or concealment of piping'}, {'stage': 'Set / Final Plumbing Inspection', 'description': 'Inspector verifies the grease interceptor is installed in the approved location, accessible for maintenance, properly connected, leak-free, and that all associated plumbing work is complete and operational.', 'timing': 'After installation, testing, and before the system is put back into service'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Starting demolition or piping changes before the plumbing permit is issued and posted",
+      "Treating a commercial grease interceptor swap like a simple repair \u2014 DPP may require plan review if piping, sizing, or access changes are involved",
+      "Failing to show cleanout access and maintenance clearance for the interceptor",
+      "Not coordinating shutdown timing with the restaurant operator, which can create an inspection failure if the system is not ready for test",
+      "Submitting the application without a clear valuation \u2014 Honolulu uses valuation-based fees, so an incomplete declared value can delay intake"
+    ],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Plumbing Permit; Mechanical Permit; Electrical Permit; Wastewater / FOG / Pretreatment Approval; Food Establishment Health Plan Review / Permit; Fire; Fire Alarm Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Building Permit.",
+    "customer_headline": "Permit required: Plumbing Permit, Food Establishment Health Plan Review / Permit, Fire, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Wastewater / FOG / Pretreatment Approval.",
+    "customer_next_step": "File the required permit categories with Department of Planning and Permitting (DPP): Plumbing Permit, Food Establishment Health Plan Review / Permit, Fire, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Wastewater / FOG / Pretreatment Approval. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": "Required permit package: Plumbing Permit; Mechanical Permit; Electrical Permit; Wastewater / FOG / Pretreatment Approval; Food Establishment Health Plan Review / Permit; Fire; Fire Alarm Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Building Permit.",
+    "data_source": "city_database",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "filing_family": "plumbing",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "kind": "Plumbing",
+          "lead_eligible": true,
+          "permit_name": "Plumbing Permit",
+          "permit_type": "Plumbing Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "filing_family": "health_food",
+          "kind": "Health",
+          "lead_eligible": true,
+          "permit_name": "Food Establishment Health Plan Review / Permit",
+          "permit_type": "Food Establishment Health Plan Review / Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "filing_family": "fire_suppression",
+          "kind": "Fire",
+          "lead_eligible": true,
+          "permit_name": "Fire",
+          "permit_type": "Fire",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "filing_family": "planning_zoning",
+          "kind": "Permit",
+          "lead_eligible": true,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "permit_type": "Planning / Zoning Use Clearance",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "filing_family": "co_change_of_occupancy",
+          "kind": "Permit",
+          "lead_eligible": true,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Grease interceptor sizing/details",
+            "Wastewater pretreatment application"
+          ],
+          "family": "wastewater_pretreatment_fog",
+          "filing_family": "wastewater_pretreatment_fog",
+          "kind": "Wastewater/FOG",
+          "lead_eligible": true,
+          "permit_name": "Wastewater / FOG / Pretreatment Approval",
+          "permit_type": "Wastewater / FOG / Pretreatment Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "status": "REQUIRED"
+        }
+      ],
+      "lead_family": "plumbing",
+      "lead_permit_name": "Plumbing Permit",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "false",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "commercial"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "unknown",
+        "food_service": "true",
+        "negative_facts": [],
+        "new_solar_panels": "unknown",
+        "occupancy": "commercial",
+        "positive_facts": [
+          "food_service",
+          "grease_generating",
+          "like_for_like_replacement",
+          "plumbing"
+        ],
+        "project_features": [],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "n/a",
+        "structural_mounting": "unknown",
+        "trades": [
+          "plumbing"
+        ],
+        "unknowns": [
+          "exterior_envelope"
+        ],
+        "work_nature": "like_for_like_replacement"
+      }
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+    "fees_typed": [
+      {
+        "family": "plumbing",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting"
+      }
+    ],
+    "inspection_booking": "Schedule inspections through Honolulu DPP / HNL Build using the online user portal at or the DPP permit portal. Phone: (808) 768-8000. Advance notice is not clearly published in the provided sources; in practice, book as early as possible because commercial inspections can backlog. Verify current inspection request cutoff times with DPP before closing any walls or backfilling.",
+    "inspections": [
+      "Plumbing final inspection"
+    ],
+    "job_summary": "Required permit package: Plumbing Permit; Mechanical Permit; Electrical Permit; Wastewater / FOG / Pretreatment Approval; Food Establishment Health Plan Review / Permit; Fire; Fire Alarm Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Building Permit.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.honolulu.gov/dpp"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.honolulu.gov/dpp/permitting/building-permits-home"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.honolulu.gov/dpp/home/organization-contacts/"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Plumbing",
+    "permit_name": "Plumbing Permit",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Plumbing Permit; Mechanical Permit; Electrical Permit; Wastewater / FOG / Pretreatment Approval; Food Establishment Health Plan Review / Permit; Fire; Fire Alarm Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Building Permit.",
+    "permit_type": "Plumbing Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "lead_eligible": true,
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "filing_family": "health_food",
+        "kind": "Health",
+        "lead_eligible": true,
+        "permit_name": "Food Establishment Health Plan Review / Permit",
+        "permit_type": "Food Establishment Health Plan Review / Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "filing_family": "fire_suppression",
+        "kind": "Fire",
+        "lead_eligible": true,
+        "permit_name": "Fire",
+        "permit_type": "Fire",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "filing_family": "planning_zoning",
+        "kind": "Permit",
+        "lead_eligible": true,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "filing_family": "co_change_of_occupancy",
+        "kind": "Permit",
+        "lead_eligible": true,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Grease interceptor sizing/details",
+          "Wastewater pretreatment application"
+        ],
+        "family": "wastewater_pretreatment_fog",
+        "filing_family": "wastewater_pretreatment_fog",
+        "kind": "Wastewater/FOG",
+        "lead_eligible": true,
+        "permit_name": "Wastewater / FOG / Pretreatment Approval",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "plumbing",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "health_food",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Food Establishment Health Plan Review / Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_suppression",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Fire",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "planning_zoning",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "co_change_of_occupancy",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "wastewater_pretreatment_fog",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "pro_tips": [
+      "For Honolulu commercial plumbing, submit a clean one-page scope sheet with the interceptor size, location, and whether any piping is being rerouted \u2014 that speeds intake review.",
+      "If the interceptor is being replaced in the same footprint, keep the old and new dimensions handy; inspectors care about access and maintenance clearance as much as the pipe connections.",
+      "Call DPP before filing if the job touches any floor slab or underground piping \u2014 that is where commercial plumbing permits get slowed down.",
+      "Bring the manufacturer spec sheet showing capacity and installation requirements; it helps the reviewer confirm the interceptor matches the restaurant load."
+    ],
+    "project_scope_attributes": {
+      "change_of_use": "false",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "commercial"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "unknown",
+      "food_service": "true",
+      "negative_facts": [],
+      "new_solar_panels": "unknown",
+      "occupancy": "commercial",
+      "positive_facts": [
+        "food_service",
+        "grease_generating",
+        "like_for_like_replacement",
+        "plumbing"
+      ],
+      "project_features": [],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "n/a",
+      "structural_mounting": "unknown",
+      "trades": [
+        "plumbing"
+      ],
+      "unknowns": [
+        "exterior_envelope"
+      ],
+      "work_nature": "like_for_like_replacement"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "plumbing",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Plumbing Permit",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "health_food",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Food Establishment Health Plan Review / Permit",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "fire_suppression",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Fire",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "planning_zoning",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "co_change_of_occupancy",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "wastewater_pretreatment_fog",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Wastewater / FOG / Pretreatment Approval",
+          "source_urls": [
+            "https://www.honolulu.gov/dpp",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+            "https://www.honolulu.gov/dpp/home/organization-contacts/",
+            "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+            "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "plumbing",
+        "fees": [],
+        "lead": true,
+        "permit_name": "Plumbing Permit",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "health_food",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Food Establishment Health Plan Review / Permit",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "fire_suppression",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Fire",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "planning_zoning",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "co_change_of_occupancy",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "wastewater_pretreatment_fog",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Wastewater / FOG / Pretreatment Approval",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "trigger": null
+      }
+    ],
+    "related_permit_families": [
+      "Fire",
+      "Planning/Zoning",
+      "Certificate of Occupancy"
+    ],
+    "related_permit_names": [
+      "Fire Suppression / Fire Prevention Review",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy / Change-of-Occupancy Approval"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [],
+    "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "plumbing",
+      "health_food",
+      "fire_suppression",
+      "planning_zoning",
+      "co_change_of_occupancy",
+      "wastewater_pretreatment_fog"
+    ],
+    "required_permit_names": [
+      "Plumbing Permit",
+      "Food Establishment Health Plan Review / Permit",
+      "Fire",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy / Change-of-Occupancy Approval",
+      "Wastewater / FOG / Pretreatment Approval"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Plumbing Permit; Mechanical Permit; Electrical Permit; Wastewater / FOG / Pretreatment Approval; Food Establishment Health Plan Review / Permit; Fire; Fire Alarm Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ],
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 5,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 5,
+      "has_live_source": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.honolulu.gov/dpp",
+        "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+        "https://www.honolulu.gov/dpp/home/organization-contacts/",
+        "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+        "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 5,
+      "source_confidence": "AHJ_DIRECT",
+      "source_count": 5
+    },
+    "source_urls": [
+      "https://www.honolulu.gov/dpp",
+      "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+      "https://www.honolulu.gov/dpp/home/organization-contacts/",
+      "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+      "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.honolulu.gov/dpp"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.honolulu.gov/dpp/permitting/building-permits-home"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.honolulu.gov/dpp/home/organization-contacts/"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+      }
+    ],
+    "summary": "Required permit package: Plumbing Permit; Mechanical Permit; Electrical Permit; Wastewater / FOG / Pretreatment Approval; Food Establishment Health Plan Review / Permit; Fire; Fire Alarm Permit; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Building Permit.",
+    "total_cost_estimate": "$8,500 - $18,000",
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: mechanical.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ],
+    "zoning_hoa_flag": "For a commercial restaurant in Honolulu, zoning and tenant-improvement approvals can matter if the work changes grease waste routing, occupancy operations, or exterior equipment access. If the interceptor is in a shared easement, lease area, or near a historic district or shoreline overlay, additional approvals may be needed. HOA issues are usually not the main issue for commercial sites, but landlord approval often is."
+  },
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
+}

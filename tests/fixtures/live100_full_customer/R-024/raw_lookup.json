@@ -1,0 +1,253 @@
+{
+  "case": {
+    "adjudication_hint": "Minor like-for-like; source-adjudicate if permit required",
+    "bucket": "minor plumbing fixture",
+    "case_id": "R-024",
+    "city": "Flagstaff",
+    "expected_decision_pre_registered": "NOT_REQUIRED",
+    "expected_permit_families_pre_registered": [],
+    "id": "R-024",
+    "job_type": "replace kitchen faucet and garbage disposal no pipe relocation, job value 900",
+    "job_value": 900,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "AZ",
+    "zip_code": "86001"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "no_permit_required",
+      "permit_type": "No permit required",
+      "state": "NOT_APPLICABLE",
+      "support_level": "not applicable",
+      "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope unless the scope changes"
+    },
+    "apply_url": "",
+    "apply_url_known": false,
+    "applying_office": "City of Flagstaff Planning and Development Services",
+    "approval_timeline": {
+      "complex": "3-10 business days if the city routes it for review or if the scope expands to include electrical, drain, or supply-line changes.",
+      "simple": "Often same day or over-the-counter for a simple fixture/appliance replacement if the application is complete and no plan review is needed."
+    },
+    "checklist": [
+      "Verify your contractor license is current and valid in AZ",
+      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
+      "Have the property address and legal parcel number ready",
+      "Know the project value/cost \u2014 required on most permit applications",
+      "Confirm the required license is active and matches the application: ROC-licensed plumber pulls the permit \u2014 the contractor's ROC license number must appear on the application. In Arizona, contractor work requires an ROC license; homeowners should not assume they can pull a plumbing permit for contractor-performed work.",
+      "Bring 2 copies of all documents to City of Flagstaff Planning and Development Services"
+    ],
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "primary permit category",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "permit_type",
+        "id": "C1",
+        "source_title": "Source",
+        "source_url": "https://www.flagstaff.az.gov/5140/Building-Permits",
+        "value": "Electrical Permit"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://www.flagstaff.az.gov/5140/Building-Permits",
+        "value": "https://www.flagstaff.az.gov/5140/Building-Permits"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://www.flagstaff.az.gov/5140/Building-Permits",
+        "value": "Fee Estimate: Fee not confirmed \u2014 call the City of Flagstaff Planning and Development Services or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://www.flagstaff.az.gov/5140/Building-Permits",
+        "value": "{'simple': 'Often same day or over-the-counter for a simple fixture/appliance replacement if the application is complete and no plan review is needed.', 'complex': '3-10 business days if the city routes it for review or if the scope expands to include electrical, drain, or supply-line changes.'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://www.flagstaff.az.gov/5140/Building-Permits",
+        "value": "[{'stage': 'Final Plumbing Inspection', 'description': 'Inspector verifies the garbage disposal is installed correctly, the sink drain connections are tight and leak-free, the trap and tailpiece are properly assembled, the disposal is securely mounted, the dishwasher connection is properly capped or connected if present, the faucet supply connections do not leak, and the installation is code-compliant with no unapproved pipe relocation.', 'timing': 'After installation is complete, water is turned on, and all connections are accessible for inspection'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Assuming a faucet swap is always exempt and skipping the permit when the garbage disposal is also being replaced",
+      "Starting work before the permit is issued or posted if the city requires it",
+      "Not verifying whether the disposal is hardwired or cord-and-plug connected before starting, which can trigger an electrical permit if wiring changes are needed",
+      "Changing the drain, trap, or supply layout during the job without updating the permit scope"
+    ],
+    "companion_permits": [],
+    "confidence": "low",
+    "confidence_reason": "City-specific match supported by live web research. Verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Flagstaff Planning and Development Services",
+      "decision": "NOT_REQUIRED",
+      "kind_category": "Not Required",
+      "next_action": "Keep the scope limited to the described no-permit work; verify with City of Flagstaff Planning and Development Services if the scope changes.",
+      "source_cue": "Official source: Official Flagstaff source"
+    },
+    "customer_headline": "No permit required for the described scope.",
+    "customer_next_step": "Keep the scope limited to the described no-permit work; verify with City of Flagstaff Planning and Development Services if the scope changes.",
+    "customer_result_summary": {
+      "ahj_department": "City of Flagstaff Planning and Development Services",
+      "fee_cost_caveat": "Fee Estimate: Fee not confirmed \u2014 call the City of Flagstaff Planning and Development Services or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+      "freshness_label": "Checked 2026-07-02",
+      "jurisdiction": "Flagstaff, AZ",
+      "next_step": "Keep the scope limited to the described no-permit work; verify with City of Flagstaff Planning and Development Services if the scope changes.",
+      "permit_decision": "NOT_REQUIRED",
+      "permit_kind": "Not Required",
+      "permit_name": "No permit required",
+      "source_cue": "Official source: Official Flagstaff source",
+      "timeline": "Often same day or over-the-counter for a simple fixture/appliance replacement if the application is complete and no plan review is needed."
+    },
+    "data_source": "city_database",
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Fee not confirmed \u2014 call the City of Flagstaff Planning and Development Services or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+    "inspection_booking": "Schedule inspections through the City of Flagstaff Planning and Development Services permit process on the city building permits page. Use the online permit portal linked from the Building Permits page or call (928) 213-2610 to request inspection scheduling instructions. Advance notice requirement was not stated in the source material and should be verified with the inspector when the permit is issued.",
+    "inspections": [
+      {
+        "description": "Inspector verifies the garbage disposal is installed correctly, the sink drain connections are tight and leak-free, the trap and tailpiece are properly assembled, the disposal is securely mounted, the dishwasher connection is properly capped or connected if present, the faucet supply connections do not leak, and the installation is code-compliant with no unapproved pipe relocation.",
+        "stage": "Final Plumbing Inspection",
+        "timing": "After installation is complete, water is turned on, and all connections are accessible for inspection"
+      }
+    ],
+    "job_summary": "This is a plumbing fixture/appliance swap. Based on Flagstaff's permit rules, the faucet replacement may be exempt if it is truly a like-for-like replacement on the existing supply lines with no pipe work, but the garbage disposal replacement is still plumbing/mechanical-adjacent work that Flagstaff treats under its plumbing permit process when a regulated plumbing system is being altered or replaced. For this scope, the safe permit call is a Plumbing Permit for the disposal replacement; no separate building, electrical, or mechanical permit is triggered by the stated scope unless new wiring, a new circuit, or drain/supply relocation is added.",
+    "local_form_known": true,
+    "online_application_url": "",
+    "permit_decision": "NOT_REQUIRED",
+    "permit_kind": "Not Required",
+    "permit_name": "No permit required",
+    "permit_required": false,
+    "permit_type": "No permit required",
+    "permit_verdict": "NO",
+    "permits_required": [],
+    "permits_required_logic": [],
+    "pro_tips": [
+      "If the faucet is truly a like-for-like swap with no pipe relocation, keep it separate in your scope notes so the city sees the disposal replacement as the only permit-triggering item.",
+      "Have the disposal model number ready before you apply; inspectors often want to know the unit is listed and properly installed.",
+      "In Arizona, ROC license information should be entered exactly as it appears on the contractor record \u2014 mismatched license numbers are a common portal rejection."
+    ],
+    "related_permit_families": [
+      "Health"
+    ],
+    "related_permit_names": [
+      "Health Department Review"
+    ],
+    "related_permit_segments": [
+      "residential"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Health Department Review",
+        "condition_text": "Food, clinic, daycare, or grease/FOG scope can trigger health-department review.",
+        "decision": "CONDITIONAL",
+        "display_family": "Health",
+        "family": "health",
+        "filing_family": "health",
+        "kind": "Health",
+        "permit_name": "Health Department Review",
+        "permit_type": "Health Department Review",
+        "rationale": "Food, clinic, daycare, or grease/FOG scope can trigger health-department review.",
+        "required": false,
+        "required_if": "Food, clinic, daycare, or grease/FOG scope can trigger health-department review.",
+        "segment": "residential",
+        "source_url": "https://www.flagstaff.az.gov/5140/Building-Permits",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "remaining_lookups": -1,
+    "required_permit_families": [],
+    "required_permit_names": [],
+    "required_permit_summary": "No permit required for the described scope.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": false,
+      "confidence_tier": "AHJ_DIRECT",
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 4,
+      "exact_form_known": true,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.flagstaff.az.gov/5140/Building-Permits",
+        "https://www.flagstaff.az.gov/DocumentCenter/View/90461/Revised-Over-Counter-Permit06102025",
+        "https://www.flagstaff.az.gov/DocumentCenter/View/14750"
+      ],
+      "local_form_known": true,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.flagstaff.az.gov/5140/Building-Permits",
+      "https://roc.az.gov",
+      "https://www.flagstaff.az.gov/DocumentCenter/View/90461/Revised-Over-Counter-Permit06102025",
+      "https://www.flagstaff.az.gov/DocumentCenter/View/14750"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Flagstaff, AZ",
+        "publisher": "Official Flagstaff source",
+        "source_type": "official_local",
+        "title": "Official Flagstaff source",
+        "url": "https://www.flagstaff.az.gov/5140/Building-Permits"
+      },
+      {
+        "jurisdiction": "Flagstaff, AZ",
+        "publisher": "Arizona state reference",
+        "source_type": "official_state",
+        "title": "Arizona state reference",
+        "url": "https://roc.az.gov"
+      },
+      {
+        "jurisdiction": "Flagstaff, AZ",
+        "publisher": "Official Flagstaff source",
+        "source_type": "official_local",
+        "title": "Official Flagstaff source",
+        "url": "https://www.flagstaff.az.gov/DocumentCenter/View/90461/Revised-Over-Counter-Permit06102025"
+      },
+      {
+        "jurisdiction": "Flagstaff, AZ",
+        "publisher": "Official Flagstaff source",
+        "source_type": "official_local",
+        "title": "Official Flagstaff source",
+        "url": "https://www.flagstaff.az.gov/DocumentCenter/View/14750"
+      }
+    ],
+    "total_cost_estimate": "$250 - $650",
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Completed plumbing permit application through the City of Flagstaff portal",
+      "Contractor ROC license number and business information",
+      "Fixture/appliance details for the garbage disposal, including make and model",
+      "Photos of the existing sink base area and current plumbing connections",
+      "Owner authorization if the contractor is submitting on behalf of the homeowner"
+    ]
+  },
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
+}

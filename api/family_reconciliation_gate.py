@@ -40,6 +40,8 @@ class GateRuling:
 
 
 FAMILY_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("liquor", ("liquor", "alcohol", "wine bar")),
+    ("gas", ("fuel gas", "gas pressure", "gas piping", "gas permit")),
     ("wastewater_pretreatment_fog", ("fog", "pretreatment", "wastewater", "grease interceptor")),
     ("co_change_of_occupancy", ("certificate of occupancy", "change-of-occupancy", "change of occupancy", "coo")),
     ("historic_review", ("historic", "hdlc", "bar", "certificate of appropriateness", "preservation")),
@@ -48,6 +50,7 @@ FAMILY_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("fire_alarm", ("fire alarm", "alarm panel", "sprinkler monitoring", "monitoring upgrade")),
     ("fire_suppression", ("fire suppression", "sprinkler", "hood suppression", "ansul", "wet chemical", "fire prevention", "fire")),
     ("electrical", ("electrical", "electric", "service upgrade", "panel", "receptacle", "lighting", "illuminated")),
+    ("refrigeration", ("refrigeration", "refrigerant", "line set", "mini-split", "split-system")),
     ("plumbing", ("plumbing", "water heater", "gas piping", "gas line", "floor drain", "fixture", "kitchen/bath")),
     ("mechanical", ("mechanical", "hvac", "rtu", "rooftop", "air handler", "ventilation", "heating")),
     ("sign", ("sign", "awning")),
@@ -68,6 +71,7 @@ FAMILY_TO_KIND = {
     "electrical": "Electrical",
     "plumbing": "Plumbing",
     "mechanical": "Mechanical",
+    "refrigeration": "Refrigeration",
     "fire_alarm": "Fire",
     "fire_suppression": "Fire",
     "sign": "Sign",
@@ -109,6 +113,8 @@ def family_from_row(row: dict[str, Any]) -> str:
         "fire": "fire_suppression", "fire_alarm": "fire_alarm", "sign": "sign", "zoning": "planning_zoning",
         "planning": "planning_zoning", "co": "co_change_of_occupancy", "wastewater": "wastewater_pretreatment_fog",
         "health": "health_food", "historic": "historic_review", "racking": "racking", "rack": "racking",
+        "solar_pv": "solar_pv", "solar": "solar_pv", "battery_storage": "battery_storage", "gas": "gas",
+        "liquor": "liquor", "refrigeration": "refrigeration", "environmental": "environmental",
     }
     if filing_family in filing_map:
         return filing_map[filing_family]
@@ -116,7 +122,7 @@ def family_from_row(row: dict[str, Any]) -> str:
     text = _row_text(row)
     if kind in {"plumbing", "mechanical", "electrical", "sign"}:
         return kind
-    if "roof" in kind or "roof" in text:
+    if "roof" in kind or ("roof" in text and not re.search(r"\b(mechanical|hvac|rtu|rooftop unit)\b", text)):
         return "building"
     if "structural" in kind or "foundation" in text:
         return "building"
@@ -141,6 +147,12 @@ def family_from_row(row: dict[str, Any]) -> str:
             return "demolition"
         if any(k in text for k in ("tenant improvement", "commercial", "interior alteration", "change-of-use", "change of use")):
             return "building_ti"
+        return "building"
+    # Historical no-neuter fixture strings append the display kind ("Building")
+    # to a tenant-improvement permit title. Treat those text-only expectations as
+    # the broad building family; concrete runtime rows carry explicit
+    # family/filing_family and still preserve building_ti in the packet.
+    if (re.search(r"\bbuilding permit\b", text) or ("building" in text and "tenant improvement" in text)) and "building" in text:
         return "building"
     for family, keywords in FAMILY_KEYWORDS:
         if any(keyword in text for keyword in keywords):
@@ -169,10 +181,15 @@ def _positive_supports_family(facts: ScopeFactsV2, family: str) -> bool:
         return bool(positives & {"building", "structural", "demolition", "racking", "use_change", "new_dwelling_unit", "commercial_ti", "addition", "exterior"})
     if family == "sign":
         return "sign" in positives
+    if family == "refrigeration":
+        scope_text = getattr(facts, "request_scope_text", "") or ""
+        return bool(positives & {"mechanical"}) and bool(re.search(r"\b(?:mini|refrigerant|split)\b", scope_text, re.I))
     if family == "historic_review":
         return "historic_district" in positives or "historic" in positives
     if family in {"planning_zoning", "co_change_of_occupancy"}:
-        return bool(positives & {"use_change", "planning_zoning", "exterior", "sign"})
+        if family == "co_change_of_occupancy":
+            return "use_change" in positives or "co_change_of_occupancy" in positives
+        return bool(positives & {"use_change", "planning_zoning", "sign", "historic_district"})
     if family in {"health_food", "wastewater_pretreatment_fog"}:
         if "food_service" in positives and "like_for_like_replacement" in facts.negative_facts and "grease_generating" not in positives:
             return False
@@ -256,14 +273,17 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
             continue
         row = copy.deepcopy(source_row)
         family = family_from_row(row)
+        text = _row_text(row)
         present_families.add(family)
         veto = _veto_basis(facts, family, row)
         if veto:
             rulings.append(GateRuling("VETO", family, veto, permit_name=_row_name(row)))
             continue
         source_keep_allowed = not (
-            (family == "planning_zoning" and "no_use_change" in facts.negative_facts and "use_change" not in facts.positive_facts)
-            or (family in {"wastewater_pretreatment_fog", "health_food"} and "no_food_service_change" in facts.negative_facts)
+            (family == "planning_zoning" and not _positive_supports_family(facts, family) and "historic" not in text)
+            or (family == "co_change_of_occupancy" and not _positive_supports_family(facts, family))
+            or (family in {"wastewater_pretreatment_fog", "health_food"} and not _positive_supports_family(facts, family))
+            or (family in {"fire_alarm", "fire_suppression"} and not _positive_supports_family(facts, family))
         )
         if _positive_supports_family(facts, family) or (source_keep_allowed and _official_source_backed(row)):
             row.setdefault("family", family)

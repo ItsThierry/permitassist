@@ -1,0 +1,473 @@
+{
+  "case": {
+    "adjudication_hint": "Deck over common threshold/attached",
+    "bucket": "deck height threshold",
+    "case_id": "R-038",
+    "city": "Pittsburgh",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Building"
+    ],
+    "id": "R-038",
+    "job_type": "install new exterior deck 28 inches above grade attached to house, job value 14000",
+    "job_value": 14000,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "PA",
+    "zip_code": "15219"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information"
+      ],
+      "office_name": "Pittsburgh Bureau of Building Inspection",
+      "permit_category": "Building",
+      "permit_type": "Building Permit \u2014 Residential Deck",
+      "portal_selection_path": [
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Building Permit \u2014 Residential Deck",
+        "Prepare the listed documents before final submission"
+      ],
+      "portal_url": "https://onestoppgh.pittsburghpa.gov",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Building Permit \u2014 Residential Deck",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://onestoppgh.pittsburghpa.gov",
+    "apply_url_known": true,
+    "applying_office": "Pittsburgh Bureau of Building Inspection",
+    "approval_timeline": {
+      "complex": "5-15 business days typical for residential deck plan review, longer if footing, ledger, or guardrail details are incomplete.",
+      "simple": "Not typically over-the-counter for an attached deck; expect plan review rather than same-day issuance."
+    },
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: $130 minimum building permit fee; at $14,000 job value the permit fee is about $84 by the $6/$1,000 formula, but Pittsburgh's minimum applies, so budget at least $130 for the permit. Total project cost including labor/materials commonly runs $14,500 - $18,500. \u2014 verify with the building department before quoting"
+            }
+          ],
+          "lead": true,
+          "permit_name": "Building Permit \u2014 Residential Deck",
+          "source_urls": [
+            "https://onestoppgh.pittsburghpa.gov",
+            "https://pittsburghpa.gov/dpw/building-inspection"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "checklist": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "city_contractor_registration": "Pittsburgh uses the city permit portal, but the key registration issue for this scope is Pennsylvania Home Improvement Contractor (HIC) registration for work over $5,000. Separate city contractor registration was not confirmed in the provided city data for this deck scope.",
+    "claim_citations": [
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Where to start the application",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "apply_url",
+        "id": "C2",
+        "source_title": "Source",
+        "source_url": "https://onestoppgh.pittsburghpa.gov",
+        "value": "https://onestoppgh.pittsburghpa.gov"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated fee range",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "fee_range",
+        "id": "C3",
+        "source_title": "Source",
+        "source_url": "https://onestoppgh.pittsburghpa.gov",
+        "value": "Fee Estimate: $130 minimum building permit fee; at $14,000 job value the permit fee is about $84 by the $6/$1,000 formula, but Pittsburgh's minimum applies, so budget at least $130 for the permit. Total project cost including labor/materials commonly runs $14,500 - $18,500. \u2014 verify in https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/Permits/Residential-Permits/Deck-Information before quoting"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "Estimated approval timeline",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "approval_timeline",
+        "id": "C4",
+        "source_title": "Source",
+        "source_url": "https://onestoppgh.pittsburghpa.gov",
+        "value": "{'simple': 'Not typically over-the-counter for an attached deck; expect plan review rather than same-day issuance.', 'complex': '5-15 business days typical for residential deck plan review, longer if footing, ledger, or guardrail details are incomplete.'}"
+      },
+      {
+        "checked_at": "2026-07-02",
+        "claim": "inspection requirements",
+        "confidence": "source attached; quoted snippet unavailable",
+        "field": "inspections",
+        "id": "C5",
+        "source_title": "Source",
+        "source_url": "https://onestoppgh.pittsburghpa.gov",
+        "value": "[{'stage': 'Footing / Post Hole Inspection', 'description': 'Inspector verifies footing hole size, depth below frost line, soil bearing, post base placement, and that holes are open before concrete is poured. This is the big one \u2014 if you pour before inspection, you can get failed work and rework.', 'timing': 'Before pouring concrete footings'}, {'stage': 'Framing / Ledger Inspection', 'description': 'Inspector checks ledger board attachment to the house, flashing at the ledger, fastener pattern, beam and joist sizing, post-to-beam connections, lateral load connectors, and overall framing layout.', 'timing': 'After framing is complete but before decking boards and trim cover connections'}, {'stage': 'Final Deck Inspection', 'description': 'Inspector verifies guardrail height and opening limits, stair rise/run and handrails if stairs are included, deck board installation, structural stability, and that all required hardware is installed and corrosion-resistant.', 'timing': 'After all framing, decking, guards, and stairs are complete'}]"
+      }
+    ],
+    "common_mistakes": [
+      "Pouring footings before the footing inspection \u2014 Pittsburgh inspectors will want to see open holes before concrete goes in",
+      "Submitting a deck plan without ledger flashing and attachment details \u2014 this is one of the most common review delays",
+      "Using undersized or non-approved connectors/fasteners instead of corrosion-resistant hardware approved for exterior deck framing",
+      "Assuming the $14,000 job value means the permit fee will be $84 \u2014 Pittsburgh's $130 minimum applies, so the minimum fee still controls",
+      "Skipping Pennsylvania HIC registration verification for a contractor on a job over $5,000"
+    ],
+    "conditional_permits": [],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Building Permit \u2014 Residential Deck; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "customer_headline": "Permit required: Building Permit \u2014 Residential Deck.",
+    "customer_next_step": "File the required permit categories with Pittsburgh Bureau of Building Inspection: Building Permit \u2014 Residential Deck. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": "Required permit package: Building Permit \u2014 Residential Deck; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "data_source": "city_database",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: $130 minimum building permit fee; at $14,000 job value the permit fee is about $84 by the $6/$1,000 formula, but Pittsburgh's minimum applies, so budget at least $130 for the permit. Total project cost including labor/materials commonly runs $14,500 - $18,500. \u2014 verify with the building department before quoting"
+            }
+          ],
+          "filing_family": "building",
+          "kind": "Building",
+          "lead_eligible": true,
+          "permit_name": "Building Permit \u2014 Residential Deck",
+          "permit_type": "Building Permit \u2014 Residential Deck",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://onestoppgh.pittsburghpa.gov",
+            "https://pittsburghpa.gov/dpw/building-inspection"
+          ],
+          "status": "REQUIRED"
+        }
+      ],
+      "lead_family": "building",
+      "lead_permit_name": "Building Permit \u2014 Residential Deck",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "false",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "residential"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "true",
+        "food_service": "false",
+        "negative_facts": [
+          "no_food_service_change"
+        ],
+        "new_solar_panels": "unknown",
+        "occupancy": "residential",
+        "positive_facts": [
+          "exterior",
+          "structural"
+        ],
+        "project_features": [
+          "building_envelope",
+          "exterior_envelope"
+        ],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "n/a",
+        "structural_mounting": "unknown",
+        "trades": [
+          "structural"
+        ],
+        "unknowns": [],
+        "work_nature": "alteration"
+      }
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $130 minimum building permit fee; at $14,000 job value the permit fee is about $84 by the $6/$1,000 formula, but Pittsburgh's minimum applies, so budget at least $130 for the permit. Total project cost including labor/materials commonly runs $14,500 - $18,500. \u2014 verify with the building department before quoting",
+    "fees_typed": [
+      {
+        "family": "building",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "Fee Estimate: $130 minimum building permit fee; at $14,000 job value the permit fee is about $84 by the $6/$1,000 formula, but Pittsburgh's minimum applies, so budget at least $130 for the permit. Total project cost including labor/materials commonly runs $14,500 - $18,500. \u2014 verify with the building department before quoting"
+      }
+    ],
+    "inspection_booking": "Schedule inspections through the Pittsburgh OneStop portal at If the portal requires a permit number, use the issued permit record to request footing, framing, and final inspections. Advance notice requirement was not clearly published in the source context, so verify current lead time with the Bureau before pouring footings or covering framing.",
+    "inspections": [],
+    "job_summary": "Required permit package: Building Permit \u2014 Residential Deck; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://onestoppgh.pittsburghpa.gov"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://pittsburghpa.gov/dpw/building-inspection"
+      },
+      {
+        "reason": "segment_mismatch_commercial_url",
+        "renderable": false,
+        "status": "offline_static_check",
+        "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/Permits/Residential-Permits/Deck-Information"
+      },
+      {
+        "reason": "segment_mismatch_commercial_url",
+        "renderable": false,
+        "status": "offline_static_check",
+        "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/OneStopPGH"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://onestoppgh.pittsburghpa.gov",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Building Permit \u2014 Residential Deck",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Building Permit \u2014 Residential Deck; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "permit_type": "Building Permit \u2014 Residential Deck",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fees": [
+          {
+            "family": "building",
+            "fee_type": "permit_fee",
+            "source_url": null,
+            "text": "Fee Estimate: $130 minimum building permit fee; at $14,000 job value the permit fee is about $84 by the $6/$1,000 formula, but Pittsburgh's minimum applies, so budget at least $130 for the permit. Total project cost including labor/materials commonly runs $14,500 - $18,500. \u2014 verify with the building department before quoting"
+          }
+        ],
+        "filing_family": "building",
+        "kind": "Building",
+        "lead_eligible": true,
+        "permit_name": "Building Permit \u2014 Residential Deck",
+        "permit_type": "Building Permit \u2014 Residential Deck",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://onestoppgh.pittsburghpa.gov",
+          "https://pittsburghpa.gov/dpw/building-inspection"
+        ],
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Building Permit \u2014 Residential Deck",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "pro_tips": [
+      "Open the footing holes and call for inspection before any concrete is poured \u2014 this saves the most time and avoids the most common failed inspection.",
+      "Submit a complete deck framing package up front: ledger, flashing, footing depth, beam/post sizes, and guard details. Missing ledger details are the #1 reason deck permits stall.",
+      "Because the job value is over $5,000, verify the contractor's Pennsylvania HIC registration before you submit anything \u2014 it is a common rejection point for residential work.",
+      "If the deck will ever support a roof, pergola, hot tub, or heavy planters, include that load in the design now; retrofitting later usually means a new permit revision."
+    ],
+    "project_scope_attributes": {
+      "change_of_use": "false",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "residential"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "true",
+      "food_service": "false",
+      "negative_facts": [
+        "no_food_service_change"
+      ],
+      "new_solar_panels": "unknown",
+      "occupancy": "residential",
+      "positive_facts": [
+        "exterior",
+        "structural"
+      ],
+      "project_features": [
+        "building_envelope",
+        "exterior_envelope"
+      ],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "n/a",
+      "structural_mounting": "unknown",
+      "trades": [
+        "structural"
+      ],
+      "unknowns": [],
+      "work_nature": "alteration"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building",
+          "fees": [
+            {
+              "family": "building",
+              "fee_type": "permit_fee",
+              "source_url": null,
+              "text": "Fee Estimate: $130 minimum building permit fee; at $14,000 job value the permit fee is about $84 by the $6/$1,000 formula, but Pittsburgh's minimum applies, so budget at least $130 for the permit. Total project cost including labor/materials commonly runs $14,500 - $18,500. \u2014 verify with the building department before quoting"
+            }
+          ],
+          "lead": true,
+          "permit_name": "Building Permit \u2014 Residential Deck",
+          "source_urls": [
+            "https://onestoppgh.pittsburghpa.gov",
+            "https://pittsburghpa.gov/dpw/building-inspection"
+          ],
+          "trigger": null
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "building",
+        "fees": [
+          {
+            "family": "building",
+            "fee_type": "permit_fee",
+            "source_url": null,
+            "text": "Fee Estimate: $130 minimum building permit fee; at $14,000 job value the permit fee is about $84 by the $6/$1,000 formula, but Pittsburgh's minimum applies, so budget at least $130 for the permit. Total project cost including labor/materials commonly runs $14,500 - $18,500. \u2014 verify with the building department before quoting"
+          }
+        ],
+        "lead": true,
+        "permit_name": "Building Permit \u2014 Residential Deck",
+        "source_urls": [
+          "https://onestoppgh.pittsburghpa.gov",
+          "https://pittsburghpa.gov/dpw/building-inspection"
+        ],
+        "trigger": null
+      }
+    ],
+    "related_permits": [],
+    "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "building"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 Residential Deck"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Building Permit \u2014 Residential Deck; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 4,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 4,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://onestoppgh.pittsburghpa.gov",
+        "https://pittsburghpa.gov/dpw/building-inspection",
+        "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/Permits/Residential-Permits/Deck-Information",
+        "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/OneStopPGH"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 4,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://onestoppgh.pittsburghpa.gov",
+      "https://pittsburghpa.gov/dpw/building-inspection"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://onestoppgh.pittsburghpa.gov"
+      },
+      {
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
+        "url": "https://pittsburghpa.gov/dpw/building-inspection"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 Residential Deck; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "total_cost_estimate": "$14,500 - $18,500",
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information"
+    ],
+    "zoning_hoa_flag": "A new attached deck can still be affected by zoning setbacks, lot coverage, easements, historic district rules, and HOA restrictions. In Pittsburgh, verify rear-yard setback and any overlay district requirements before finalizing the deck footprint."
+  },
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
+}

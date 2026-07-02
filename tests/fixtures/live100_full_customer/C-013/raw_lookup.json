@@ -1,8 +1,8 @@
 {
-  "attempt": 1,
   "case": {
     "adjudication_hint": "Dental TI",
     "bucket": "dental office TI",
+    "case_id": "C-013",
     "city": "Austin",
     "expected_decision_pre_registered": "REQUIRED",
     "expected_permit_families_pre_registered": [
@@ -20,51 +20,30 @@
     "state": "TX",
     "zip_code": "78701"
   },
-  "completed_at_utc": "2026-07-01T23:59:57.896192+00:00",
-  "deployed_sha": "433d2f988f6b7e08d0f73e0b005a7a4e69bbd025",
-  "elapsed_seconds": 8.23,
-  "http_status": 200,
-  "issues": [],
-  "key_fields": {
-    "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
-    "applying_office": "City of Austin Development Services Department",
-    "confidence": "medium",
-    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration.",
-    "customer_next_step": "File the required permit categories with City of Austin Development Services Department: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration, Plumbing Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Electrical Permit, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
-    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting.",
-    "permit_decision": "REQUIRED",
-    "permit_kind": "Commercial Building / Tenant Improvement",
-    "permit_name": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration",
-    "permit_required": true,
-    "permit_verdict": "YES",
-    "sources_count": 6
-  },
-  "permit_elapsed_seconds": 3.78,
-  "provisional_grade": "A",
-  "report_status": 200,
-  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
-  "request_payload": {
-    "city": "Austin",
-    "job_category": "commercial",
-    "job_type": "commercial dental office tenant improvement with exam rooms nitrous lines plumbing sinks and X ray equipment, job value 310000",
-    "job_value": 310000,
-    "state": "TX",
-    "vertical": "commercial",
-    "zip_code": "78701"
-  },
   "response_body": {
     "apply_path": {
       "channel": "online_portal",
       "documents_to_prepare": [
-        "scope of work",
-        "plans/drawings if required",
-        "contractor license",
-        "valuation",
-        "owner authorization"
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description"
       ],
       "office_name": "City of Austin Development Services Department",
-      "permit_category": "Permit package",
-      "permit_type": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration",
+      "permit_category": "Building",
+      "permit_type": "Commercial Building / Tenant Improvement Permit",
+      "portal_selection_path": [
+        "Open the verified AHJ portal or department start URL",
+        "Choose the closest permit category to: Commercial Building / Tenant Improvement Permit",
+        "Prepare the listed documents before final submission"
+      ],
       "portal_url": "https://www.austintexas.gov/development-services/forms-applications",
       "primary_filing_source_tier": "local_ahj",
       "primary_requirement_source_tier": "local_ahj",
@@ -84,26 +63,156 @@
       "complex": "Commercial tenant improvement plan review typically takes 3-6 weeks in Austin, longer if corrections, fire review, or MEP coordination are needed.",
       "simple": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
     },
+    "canonical_public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building_ti",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "mechanical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "plumbing",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "health_food",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Health",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "fire_suppression",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Fire",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "co_change_of_occupancy",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "CONDITIONAL",
+          "family": "planning_zoning",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
     "checklist": [
-      "Verify your contractor license is current and valid in TX",
-      "Confirm your liability insurance is active (certificate is conditional only when the listed condition applies at permit office)",
-      "Have the property address and legal parcel number ready",
-      "Know the project value/cost \u2014 required on most permit applications",
-      "Commercial clinic TI building permit: identify B / ambulatory-care / outpatient occupancy basis, suite size, occupant load, egress, rated corridors, and certificate-of-occupancy conditions before submittal.",
-      "Exam-room plumbing: show hand sinks, accessible restroom fixture count, backflow protection, indirect waste, sterilization-room fixtures, and dental/medical equipment utility connections.",
-      "Medical gas / nitrous / oxygen: submit NFPA 99-style outlet schedule, alarms, zone valves, source equipment, pressure test, and verifier documentation when gas systems are in scope.",
-      "Clinic HVAC / infection-control: provide room-by-room ventilation schedule, exhaust, pressure relationships, filtration, and construction infection-control notes where procedure/sterilization/lab spaces exist.",
-      "ADA path-of-travel: verify accessible route, reception/check-in counter, exam-room door/turning clearances, toilet rooms, parking/passenger loading, signage, and 20% disproportionality cap documentation.",
-      "X-ray / radiology: obtain shielding design or state radiation-control registration where equipment is installed; coordinate lead-lined assemblies, warning lights/signage, and electrical requirements.",
-      "Fire/life-safety: coordinate fire alarm notification appliances, sprinkler head layout, emergency lighting/exit signs, suite separation, and storage/oxygen hazards with Fire Prevention.",
-      "Health-care licensing / local health review: confirm whether the clinic type needs state or local health-care licensing approval separate from the building permit before opening.",
-      "Confirm the required license is active and matches the application: Licensed Texas contractors pull the trade permits: a Texas Master Plumber pulls the plumbing permit, and a Texas-licensed electrical contractor/master electrician pulls the electrical permit. The commercial building permit is typically pulled by the GC or authorized permit expediter on the tenant improvement. The contractor's license number must appear on the application.",
-      "Bring 2 copies of all documents to Austin Development Services Department (DSD)"
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
     ],
     "city_contractor_registration": "Austin uses the AB+C permitting system and DSD review process; separate city contractor registration is not generally the same as a Dallas/Phoenix-style contractor registration program. Verify current contractor account access and any business registration requirements before submitting.",
     "claim_citations": [
       {
-        "checked_at": "2026-07-01",
+        "checked_at": "2026-07-02",
         "claim": "primary permit category",
         "confidence": "source attached; quoted snippet unavailable",
         "field": "permit_type",
@@ -113,7 +222,7 @@
         "value": "Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration"
       },
       {
-        "checked_at": "2026-07-01",
+        "checked_at": "2026-07-02",
         "claim": "Where to start the application",
         "confidence": "source attached; quoted snippet unavailable",
         "field": "apply_url",
@@ -123,7 +232,7 @@
         "value": "https://www.austintexas.gov/development-services/forms-applications"
       },
       {
-        "checked_at": "2026-07-01",
+        "checked_at": "2026-07-02",
         "claim": "Estimated fee range",
         "confidence": "source attached; quoted snippet unavailable",
         "field": "fee_range",
@@ -133,7 +242,7 @@
         "value": "Fee estimate not confirmed; verify the current building department fee schedule before quoting."
       },
       {
-        "checked_at": "2026-07-01",
+        "checked_at": "2026-07-02",
         "claim": "Estimated approval timeline",
         "confidence": "source attached; quoted snippet unavailable",
         "field": "approval_timeline",
@@ -143,7 +252,7 @@
         "value": "{'simple': 'Over-the-counter trade permits can be same day if the scope is limited and no plan review is triggered; commercial TI building review is not OTC.', 'complex': 'Commercial tenant improvement plan review typically takes 3-6 weeks in Austin, longer if corrections, fire review, or MEP coordination are needed.'}"
       },
       {
-        "checked_at": "2026-07-01",
+        "checked_at": "2026-07-02",
         "claim": "inspection requirements",
         "confidence": "source attached; quoted snippet unavailable",
         "field": "inspections",
@@ -191,236 +300,605 @@
         "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
       }
     ],
+    "conditional_permits": [
+      {
+        "decision": "CONDITIONAL",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "filing_family": "planning_zoning",
+        "kind": "Permit",
+        "lead_eligible": true,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "required_if": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "status": "CONDITIONAL",
+        "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+      }
+    ],
     "confidence": "medium",
     "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
-    "customer_first_screen_summary": {
-      "ahj_department": "City of Austin Development Services Department",
-      "decision": "REQUIRED",
-      "kind_category": "Commercial Building / Tenant Improvement",
-      "next_action": "File the required permit categories with City of Austin Development Services Department: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration, Plumbing Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Electrical Permit, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
-      "source_cue": "Official sources attached for 5 required permit categories."
-    },
-    "customer_headline": "Permit required: Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration.",
-    "customer_next_step": "File the required permit categories with City of Austin Development Services Department: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration, Plumbing Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Electrical Permit, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
-    "customer_result_summary": {
-      "ahj_department": "City of Austin Development Services Department",
-      "fee_cost_caveat": "Fee estimate not confirmed; verify the current building department fee schedule before quoting.",
-      "freshness_label": "Checked 2026-07-01",
-      "jurisdiction": "Austin, TX",
-      "next_step": "File the required permit categories with City of Austin Development Services Department: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration, Plumbing Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Electrical Permit, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
-      "permit_decision": "REQUIRED",
-      "permit_kind": "Commercial Building / Tenant Improvement",
-      "permit_name": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration",
-      "source_cue": "Official sources attached for 5 required permit categories.",
-      "timeline": "Commercial TI/addition/remodel scopes usually require plan review; expect at least several business days to a few weeks depending on completeness, valuation, and local queue."
-    },
+    "customer_first_screen_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Health; Fire Alarm Permit; Planning / Zoning Use Clearance.",
+    "customer_headline": "Permit required: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit, Plumbing Permit \u2014 Commercial Tenant Improvement, Health, Fire, Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "customer_next_step": "File the required permit categories with City of Austin Development Services Department: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit, Plumbing Permit \u2014 Commercial Tenant Improvement, Health, Fire, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Health; Fire Alarm Permit; Planning / Zoning Use Clearance.",
     "data_source": "city_database",
+    "decision_object": {
+      "invariants": [
+        "I1_closed_world_required",
+        "I2_occupancy_gate",
+        "I3_co_only_change_of_use",
+        "I4_bidirectional_trade_rule",
+        "I5_food_fog_only_food_service",
+        "I6_typed_fees_only",
+        "I7_renderable_links_only",
+        "I8_render_fidelity",
+        "I9_conditional_concrete_trigger",
+        "I10_deterministic_lead_rule",
+        "I11_dedup_one_entry_per_family"
+      ],
+      "items": [
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building_ti",
+          "filing_family": "building_ti",
+          "kind": "Building",
+          "lead_eligible": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "permit_type": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "filing_family": "electrical",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "kind": "Electrical",
+          "lead_eligible": true,
+          "permit_name": "Electrical Permit",
+          "permit_type": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "filing_family": "mechanical",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "kind": "Mechanical",
+          "lead_eligible": true,
+          "permit_name": "Mechanical Permit",
+          "permit_type": "Mechanical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "filing_family": "plumbing",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "kind": "Plumbing",
+          "lead_eligible": true,
+          "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+          "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "filing_family": "health_food",
+          "kind": "Health",
+          "lead_eligible": true,
+          "permit_name": "Health",
+          "permit_type": "Health",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "filing_family": "fire_suppression",
+          "kind": "Fire",
+          "lead_eligible": true,
+          "permit_name": "Fire",
+          "permit_type": "Fire",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "status": "REQUIRED"
+        },
+        {
+          "decision": "CONDITIONAL",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "filing_family": "planning_zoning",
+          "kind": "Permit",
+          "lead_eligible": true,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "permit_type": "Planning / Zoning Use Clearance",
+          "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "required_if": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "status": "CONDITIONAL",
+          "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+        },
+        {
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "filing_family": "co_change_of_occupancy",
+          "kind": "Permit",
+          "lead_eligible": true,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "status": "REQUIRED"
+        }
+      ],
+      "lead_family": "building",
+      "lead_permit_name": "Commercial Building / Tenant Improvement Permit",
+      "schema_version": "decision_object.v1",
+      "scope_attributes": {
+        "change_of_use": "false",
+        "confidence": "high",
+        "evidence": {
+          "occupancy": [
+            "commercial"
+          ]
+        },
+        "existing_solar_context": "unknown",
+        "exterior_envelope": "unknown",
+        "food_service": "false",
+        "negative_facts": [
+          "no_food_service_change"
+        ],
+        "new_solar_panels": "unknown",
+        "occupancy": "commercial",
+        "positive_facts": [
+          "plumbing",
+          "structural"
+        ],
+        "project_features": [
+          "building_work"
+        ],
+        "roof_penetrations": "unknown",
+        "schema_version": "project_scope_attributes.v1",
+        "sign_illuminated": "n/a",
+        "structural_mounting": "unknown",
+        "trades": [
+          "plumbing",
+          "structural"
+        ],
+        "unknowns": [
+          "exterior_envelope"
+        ],
+        "work_nature": "alteration"
+      }
+    },
     "degraded_sources": false,
     "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
     "fee_calculator": {
       "confidence": "none",
       "note": "Provide job_value to calculate an exact fee where formulas are available."
     },
-    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting.",
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "fees_typed": [
+      {
+        "family": "building",
+        "fee_type": "permit_fee",
+        "source_url": null,
+        "text": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      }
+    ],
     "inspection_booking": "Schedule inspections through Austin Build + Connect (AB+C) at Austin DSD is appointment-only for permit submittals, and inspections are typically scheduled online in the portal. Use the permit number in AB+C; if you need help, call (512) 978-4000. Plan ahead and book at least 24 hours in advance; verify the specific inspection cutoff time in the portal before closing walls.",
     "inspections": [
-      {
-        "description": "Inspector checks wall framing, fireblocking, rated assemblies, door swings/clearances, accessibility clearances, and that any structural changes match the approved plans before insulation or drywall.",
-        "stage": "Building Rough-In / Framing",
-        "timing": "Before insulation, drywall, or ceiling closure"
-      },
-      {
-        "description": "Inspector verifies sink rough-in locations, drain slope, venting, trap arm lengths, pipe support, test caps, and that any medical/dental sink plumbing matches the approved layout before walls are closed.",
-        "stage": "Plumbing Rough-In",
-        "timing": "Before covering piping"
-      },
-      {
-        "description": "Inspector checks branch-circuit routing, box fill, conductor sizing, GFCI/AFCI where applicable, dedicated circuits for X-ray equipment, panel schedule updates, grounding/bonding, and equipment disconnects if required.",
-        "stage": "Electrical Rough-In",
-        "timing": "Before insulation, drywall, or ceiling closure"
-      },
-      {
-        "description": "Inspector verifies fixtures are installed, equipment is labeled, required clearances are maintained, receptacles and lighting work, plumbing fixtures hold water and drain properly, and all approved tenant-improvement work matches the permit set.",
-        "stage": "Final Building / MEP",
-        "timing": "After all finish work and equipment installation"
-      },
-      "Building rough/final \u2014 verify clinic layout, occupancy basis, egress, corridors, accessibility, fire-rated assemblies, and certificate-of-occupancy conditions.",
-      "Plumbing rough/final \u2014 verify exam-room hand sinks, accessible restrooms, backflow protection, indirect waste, dental/medical equipment connections, and fixture counts.",
-      "Mechanical balance / infection-control verification \u2014 confirm ventilation, exhaust, pressure relationships, filtration, and room-use assumptions where clinic functions require them.",
-      "Medical gas pressure test / verifier final if oxygen, nitrous, vacuum, alarms, zone valves, or gas outlets are installed or modified.",
-      "Fire alarm / sprinkler / life-safety final \u2014 verify notification appliance coverage, sprinkler head layout, emergency lighting, exit signs, and any oxygen/medical-gas hazard coordination.",
-      "Radiology/x-ray shielding or state radiation registration verification if radiation-producing equipment is installed."
+      "Electrical final inspection",
+      "Mechanical final inspection",
+      "Plumbing final inspection"
     ],
-    "job_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "job_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Health; Fire Alarm Permit; Planning / Zoning Use Clearance.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.austintexas.gov/development-services/forms-applications"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.austintexas.gov/department/development-services"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://abc.austintexas.gov"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://abc.austintexas.gov/citizenportal/app/#"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.austintexas.gov/development-services"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+      }
+    ],
     "local_form_known": true,
     "online_application_url": "https://www.austintexas.gov/development-services/forms-applications",
     "permit_decision": "REQUIRED",
-    "permit_kind": "Commercial Building / Tenant Improvement",
-    "permit_name": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration",
+    "permit_kind": "Building",
+    "permit_name": "Commercial Building / Tenant Improvement Permit",
     "permit_required": true,
-    "permit_type": "Required permit package \u2014 Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration",
+    "permit_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Health; Fire Alarm Permit; Planning / Zoning Use Clearance.",
+    "permit_type": "Commercial Building / Tenant Improvement Permit",
     "permit_verdict": "YES",
     "permits_required": [
       {
-        "ahj_name": "Austin permit office",
-        "application_authority_name": "Austin permit office",
-        "approval_type": "Commercial Building / Tenant Improvement Permit",
         "decision": "REQUIRED",
-        "display_family": "Building",
-        "family": "building",
-        "filing_family": "building",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building_ti",
+        "filing_family": "building_ti",
         "kind": "Building",
-        "notes": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
-        "permit_name": "Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration",
-        "permit_type": "Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration",
-        "portal_selection": "Commercial Building Permit - Tenant Improvement / Interior Alteration",
-        "rationale": "Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
-        "required": true,
-        "scope_trigger": "building_explicit_scope",
-        "segment": "commercial",
+        "lead_eligible": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
         "status": "REQUIRED"
       },
       {
-        "ahj_name": "Austin permit office",
-        "application_authority_name": "Austin permit office",
-        "approval_type": "Plumbing Permit",
         "decision": "REQUIRED",
-        "display_family": "Plumbing",
-        "family": "plumbing",
-        "filing_family": "plumbing",
-        "kind": "Plumbing",
-        "notes": "Commercial clinic fixtures, hand sinks, medical/dental equipment connections, restrooms, and DWV changes commonly require plumbing review when stated in the scope. Required because the described scope triggers Plumbing Permit.",
-        "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
-        "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
-        "portal_selection": "Plumbing Permit - Commercial Interior Alteration",
-        "rationale": "Commercial clinic fixtures, hand sinks, medical/dental equipment connections, restrooms, and DWV changes commonly require plumbing review when stated in the scope. Required because the described scope triggers Plumbing Permit.",
-        "required": true,
-        "scope_trigger": "plumbing_explicit_scope",
-        "segment": "commercial",
-        "status": "REQUIRED"
-      },
-      {
-        "approval_type": "Mechanical Permit",
-        "condition_text": "When the described scope includes mechanical work or building department confirms the mechanical trigger from the request text.",
-        "decision": "REQUIRED",
-        "display_family": "Mechanical",
-        "family": "mechanical",
-        "filing_family": "mechanical",
-        "kind": "Mechanical",
-        "permit_name": "Mechanical Permit",
-        "permit_type": "Mechanical Permit",
-        "rationale": "ScopeSignals family floor: the request text includes a mechanical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
-        "required": true,
-        "scope_trigger": "scope_signal_floor_mechanical",
-        "segment": "commercial",
-        "status": "REQUIRED",
-        "trigger_condition": "When the described scope includes mechanical work or building department confirms the mechanical trigger from the request text."
-      },
-      {
-        "ahj_name": "Austin permit office",
-        "application_authority_name": "Austin permit office",
-        "approval_type": "Electrical Permit",
-        "decision": "REQUIRED",
-        "display_family": "Electrical",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
         "family": "electrical",
         "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
         "kind": "Electrical",
-        "notes": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "lead_eligible": true,
         "permit_name": "Electrical Permit",
         "permit_type": "Electrical Permit",
-        "rationale": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
-        "required": true,
-        "scope_trigger": "electrical_explicit_scope",
-        "segment": "commercial",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
         "status": "REQUIRED"
       },
       {
-        "ahj_name": "Austin permit office",
-        "application_authority_name": "Austin permit office",
-        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
         "decision": "REQUIRED",
-        "display_family": "Certificate of Occupancy",
-        "family": "co",
-        "filing_family": "co",
-        "kind": "Certificate of Occupancy",
-        "notes": "Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "lead_eligible": true,
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "lead_eligible": true,
+        "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "filing_family": "health_food",
+        "kind": "Health",
+        "lead_eligible": true,
+        "permit_name": "Health",
+        "permit_type": "Health",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "filing_family": "fire_suppression",
+        "kind": "Fire",
+        "lead_eligible": true,
+        "permit_name": "Fire",
+        "permit_type": "Fire",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "status": "REQUIRED"
+      },
+      {
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "filing_family": "co_change_of_occupancy",
+        "kind": "Permit",
+        "lead_eligible": true,
         "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
         "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
-        "rationale": "Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
-        "required": true,
-        "segment": "commercial",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
         "status": "REQUIRED"
-      },
-      {
-        "condition_text": "When the described scope includes fire work or AHJ confirms the fire trigger from the request text.",
-        "decision": "REQUIRED",
-        "derived_from": [
-          "scope_signals_family_floor"
-        ],
-        "display_family": "Fire",
-        "family": "fire",
-        "filing_family": "fire",
-        "kind": "Fire",
-        "permit_type": "Fire",
-        "rationale": "ScopeSignals family floor: the request text includes a fire trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
-        "required": true,
-        "scope_trigger": "scope_signal_floor_fire",
-        "status": "REQUIRED",
-        "trigger_condition": "When the described scope includes fire work or AHJ confirms the fire trigger from the request text."
-      },
-      {
-        "condition_text": "When the described scope includes health work or AHJ confirms the health trigger from the request text.",
-        "decision": "REQUIRED",
-        "derived_from": [
-          "scope_signals_family_floor"
-        ],
-        "display_family": "Health",
-        "family": "health",
-        "filing_family": "health",
-        "kind": "Health",
-        "permit_type": "Health",
-        "rationale": "ScopeSignals family floor: the request text includes a health trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the AHJ.",
-        "required": true,
-        "scope_trigger": "scope_signal_floor_health",
-        "status": "REQUIRED",
-        "trigger_condition": "When the described scope includes health work or AHJ confirms the health trigger from the request text."
       }
     ],
     "permits_required_logic": [
       {
-        "filing_family": "building",
-        "included_because": "Official permit rule: Primary commercial building/TI permit for occupancy, life-safety, accessibility, plan review, and interior alteration scope. confirm the exact permit requirements with the building department portal label before submittal.",
-        "permit_type": "Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration",
-        "scope_trigger": "building_explicit_scope",
-        "segment": "commercial"
-      },
-      {
-        "filing_family": "plumbing",
-        "included_because": "Official permit rule: Commercial clinic fixtures, hand sinks, medical/dental equipment connections, restrooms, and DWV changes commonly require plumbing review when stated in the scope. Required because the described scope triggers Plumbing Permit.",
-        "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
-        "scope_trigger": "plumbing_explicit_scope",
-        "segment": "commercial"
-      },
-      {
-        "filing_family": "mechanical",
-        "included_because": "Official permit rule: ScopeSignals family floor: the request text includes a mechanical trigger; preserve this family as visible filing guidance and confirm exact local subcategory with the building department.",
-        "permit_type": "Mechanical Permit",
-        "scope_trigger": "scope_signal_floor_mechanical",
-        "segment": "commercial"
+        "filing_family": "building_ti",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "Project scope"
       },
       {
         "filing_family": "electrical",
-        "included_because": "Official permit rule: Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "included_because": "The described scope includes this required permit family.",
         "permit_type": "Electrical Permit",
-        "scope_trigger": "electrical_explicit_scope",
-        "segment": "commercial"
+        "scope_trigger": "Project scope"
       },
       {
-        "filing_family": "co",
-        "included_because": "Official permit rule: Required because the described scope triggers Certificate of Occupancy / Change-of-Occupancy Approval. Confirm the exact portal category with the listed permit office before filing.",
+        "filing_family": "mechanical",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "health_food",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Health",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_suppression",
+        "included_because": "The described scope includes this required permit family.",
+        "permit_type": "Fire",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "co_change_of_occupancy",
+        "included_because": "The described scope includes this required permit family.",
         "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
-        "scope_trigger": "co_scope",
-        "segment": "commercial"
+        "scope_trigger": "Project scope"
       }
     ],
     "pro_tips": [
@@ -446,6 +924,305 @@
       "Coordinate architect/MEP, medical-gas verifier, equipment vendor, and health/licensing reviewer before submitting so room names, fixture schedules, ventilation, and equipment utility loads match.",
       "Likely outpatient Business Group B clinic basis, but verify B vs I-2/ambulatory-care status with the building department if any procedure, sedation, recovery, or self-preservation issue exists."
     ],
+    "project_scope_attributes": {
+      "change_of_use": "false",
+      "confidence": "high",
+      "evidence": {
+        "occupancy": [
+          "commercial"
+        ]
+      },
+      "existing_solar_context": "unknown",
+      "exterior_envelope": "unknown",
+      "food_service": "false",
+      "negative_facts": [
+        "no_food_service_change"
+      ],
+      "new_solar_panels": "unknown",
+      "occupancy": "commercial",
+      "positive_facts": [
+        "plumbing",
+        "structural"
+      ],
+      "project_features": [
+        "building_work"
+      ],
+      "roof_penetrations": "unknown",
+      "schema_version": "project_scope_attributes.v1",
+      "sign_illuminated": "n/a",
+      "structural_mounting": "unknown",
+      "trades": [
+        "plumbing",
+        "structural"
+      ],
+      "unknowns": [
+        "exterior_envelope"
+      ],
+      "work_nature": "alteration"
+    },
+    "public_packet": {
+      "rows": [
+        {
+          "decision": "REQUIRED",
+          "family": "building_ti",
+          "fees": [],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "electrical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "mechanical",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "plumbing",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "health_food",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Health",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "fire_suppression",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Fire",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "REQUIRED",
+          "family": "co_change_of_occupancy",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": null
+        },
+        {
+          "decision": "CONDITIONAL",
+          "family": "planning_zoning",
+          "fees": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "source_urls": [
+            "https://www.austintexas.gov/development-services/forms-applications",
+            "https://www.austintexas.gov/department/development-services",
+            "https://abc.austintexas.gov",
+            "https://abc.austintexas.gov/citizenportal/app/#",
+            "https://www.austintexas.gov/development-services",
+            "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+          ],
+          "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+        }
+      ],
+      "schema_version": "public_packet.v2"
+    },
+    "public_packet_rows": [
+      {
+        "decision": "REQUIRED",
+        "family": "building_ti",
+        "fees": [],
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "electrical",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Electrical Permit",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "mechanical",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Mechanical Permit",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "plumbing",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "health_food",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Health",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "fire_suppression",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Fire",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "REQUIRED",
+        "family": "co_change_of_occupancy",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "trigger": null
+      },
+      {
+        "decision": "CONDITIONAL",
+        "family": "planning_zoning",
+        "fees": [],
+        "lead": false,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
+      }
+    ],
     "related_permit_families": [
       "Fire",
       "Health",
@@ -467,150 +1244,71 @@
     ],
     "related_permits": [
       {
-        "ahj_name": "Austin permit office",
-        "application_authority_name": "Austin permit office",
-        "approval_type": "Fire Suppression / Fire Prevention Review",
-        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
         "decision": "CONDITIONAL",
-        "display_family": "Fire",
-        "family": "fire",
-        "filing_family": "fire",
-        "kind": "Fire",
-        "notes": "Required because the described scope triggers Fire Suppression / Fire Prevention Review. Confirm the exact portal category with the listed permit office before filing.",
-        "permit_name": "Fire Suppression / Fire Prevention Review",
-        "permit_type": "Fire Suppression / Fire Prevention Review",
-        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
-        "required": false,
-        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
-        "segment": "commercial",
-        "status": "CONDITIONAL"
-      },
-      {
-        "approval_type": "Health",
-        "condition_text": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
-        "decision": "CONDITIONAL",
-        "display_family": "Health",
-        "family": "health",
-        "filing_family": "health",
-        "kind": "Health",
-        "permit_name": "Health",
-        "permit_type": "Health",
-        "rationale": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
-        "required": false,
-        "required_if": "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval.",
-        "scope_trigger": "scope_signal_floor_health",
-        "segment": "commercial",
-        "status": "CONDITIONAL",
-        "trigger_condition": "When the described scope includes health work or building department confirms the health trigger from the request text."
-      },
-      {
-        "approval_type": "Health-care licensing / local health review",
-        "condition_text": "Verify whether Health-care licensing / local health review is triggered for this project when the building department confirms the relevant health scope condition.",
-        "decision": "VERIFY",
-        "display_family": "Health",
-        "family": "health",
-        "filing_family": "health",
-        "kind": "Health",
-        "permit_name": "Health-care licensing / local health review",
-        "permit_type": "Health-care licensing / local health review",
-        "rationale": "Clinic opening may require licensing or health-care approval separate from building permit final.",
-        "reason": "Clinic opening may require licensing or health-care approval separate from building permit final.",
-        "required": false,
-        "segment": "commercial",
-        "status": "VERIFY",
-        "trigger_condition": "Verify whether Health-care licensing / local health review is triggered for this project when the building department confirms the relevant health scope condition."
-      },
-      {
-        "ahj_name": "Austin permit office",
-        "application_authority_name": "Austin permit office",
-        "approval_type": "Planning / Zoning Use Clearance",
-        "condition_text": "Verify this companion review only if parcel/use/structural details independently trigger it; the stated scope does not support a hard REQUIRED row.",
-        "decision": "VERIFY",
-        "display_family": "Planning/Zoning",
-        "family": "planning",
-        "filing_family": "planning",
-        "kind": "Planning/Zoning",
-        "notes": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "filing_family": "planning_zoning",
+        "kind": "Permit",
+        "lead_eligible": true,
         "permit_name": "Planning / Zoning Use Clearance",
         "permit_type": "Planning / Zoning Use Clearance",
-        "rationale": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
-        "required": false,
-        "scope_trigger": "planning_explicit_scope",
-        "segment": "commercial",
-        "status": "VERIFY",
-        "trigger_condition": "Verify this companion review only if parcel/use/structural details independently trigger it; the stated scope does not support a hard REQUIRED row."
-      },
-      {
-        "ahj_name": "Austin permit office",
-        "application_authority_name": "Austin permit office",
-        "approval_type": "Historic Preservation Review",
-        "decision": "CONDITIONAL",
-        "display_family": "Historic/Planning",
-        "family": "historic",
-        "filing_family": "historic",
-        "kind": "Historic/Planning",
-        "notes": "Conditional Required because the described scope triggers Historic Preservation Review. Confirm the exact portal category with the listed permit office before filing.",
-        "permit_name": "Historic Preservation Review",
-        "permit_type": "Historic Preservation Review",
-        "rationale": "Conditional Required because the described scope triggers Historic Preservation Review. Confirm the exact portal category with the listed permit office before filing.",
-        "required": false,
-        "segment": "commercial",
-        "status": "CONDITIONAL"
-      },
-      {
-        "approval_type": "Accessibility / ADA path-of-travel verification",
-        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition.",
-        "decision": "VERIFY",
-        "display_family": "Other",
-        "family": "other",
-        "filing_family": "other",
-        "kind": "Other",
-        "permit_name": "Accessibility / ADA path-of-travel verification",
-        "permit_type": "Accessibility / ADA path-of-travel verification",
-        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
-        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
-        "required": false,
-        "segment": "commercial",
-        "status": "VERIFY",
-        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant other scope condition."
-      },
-      {
-        "approval_type": "Medical gas / x-ray specialty review if included",
-        "condition_text": "Verify whether Medical gas / x-ray specialty review if included is triggered for this project when the building department confirms the relevant other scope condition.",
-        "decision": "VERIFY",
-        "display_family": "Other",
-        "family": "other",
-        "filing_family": "other",
-        "kind": "Other",
-        "permit_name": "Medical gas / x-ray specialty review if included",
-        "permit_type": "Medical gas / x-ray specialty review if included",
-        "rationale": "Medical gas, nitrous/oxygen/vacuum, or radiology equipment can require specialty documentation and verification.",
-        "reason": "Medical gas, nitrous/oxygen/vacuum, or radiology equipment can require specialty documentation and verification.",
-        "required": false,
-        "segment": "commercial",
-        "status": "VERIFY",
-        "trigger_condition": "Verify whether Medical gas / x-ray specialty review if included is triggered for this project when the building department confirms the relevant other scope condition."
+        "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "required_if": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "status": "CONDITIONAL",
+        "trigger": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies."
       }
     ],
     "remaining_lookups": -1,
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
     "required_permit_families": [
-      "Building",
-      "Plumbing",
-      "Mechanical",
-      "Electrical",
-      "Certificate of Occupancy"
+      "building_ti",
+      "electrical",
+      "mechanical",
+      "plumbing",
+      "health_food",
+      "fire_suppression",
+      "co_change_of_occupancy"
     ],
     "required_permit_names": [
-      "Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration",
-      "Plumbing Permit \u2014 Commercial Tenant Improvement",
-      "Mechanical Permit",
+      "Commercial Building / Tenant Improvement Permit",
       "Electrical Permit",
+      "Mechanical Permit",
+      "Plumbing Permit \u2014 Commercial Tenant Improvement",
+      "Health",
+      "Fire",
       "Certificate of Occupancy / Change-of-Occupancy Approval"
     ],
     "required_permit_segments": [
       "commercial"
     ],
-    "required_permit_summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "required_permit_summary": "Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Health; Fire Alarm Permit; Planning / Zoning Use Clearance",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
     "source_confidence": "AHJ_DIRECT",
     "source_support": {
       "apply_url_known": true,
@@ -649,37 +1347,37 @@
     ],
     "sources": [
       {
-        "publisher": "City of Austin Development Services Department",
-        "title": "Forms & Applications | Austin Development Services | AustinTexas.gov",
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
         "url": "https://www.austintexas.gov/development-services/forms-applications"
       },
       {
-        "publisher": "City of Austin Development Services Department",
-        "title": "Official Austin source",
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
         "url": "https://www.austintexas.gov/department/development-services"
       },
       {
-        "publisher": "City of Austin Development Services Department",
-        "title": "Official Austin source",
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
         "url": "https://abc.austintexas.gov"
       },
       {
-        "publisher": "City of Austin Development Services Department",
-        "title": "Official Austin source",
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
         "url": "https://abc.austintexas.gov/citizenportal/app/#"
       },
       {
-        "publisher": "City of Austin Development Services Department",
-        "title": "Official Austin source",
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
         "url": "https://www.austintexas.gov/development-services"
       },
       {
-        "publisher": "City of Austin Development Services Department",
-        "title": "Texas state reference",
+        "source_tier": "local_ahj",
+        "title": "Official AHJ source",
         "url": "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
       }
     ],
-    "summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "summary": "Required permit package: Building Permit \u2014 Tenant Improvement / Medical Clinic Interior Alteration; Plumbing Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Electrical Permit; Certificate of Occupancy / Change-of-Occupancy Approval; Fire; Health; Fire Alarm Permit; Planning / Zoning Use Clearance.",
     "total_cost_estimate": "$310,000 - $365,000",
     "warnings": [
       "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
@@ -695,32 +1393,19 @@
       "Medical gas and x-ray shielding often need specialty documentation and third-party verification; missing it can block final inspection or equipment operation."
     ],
     "what_to_bring": [
-      "Completed commercial tenant finish-out permit application in AB+C",
-      "Wet-stamped plan set for the tenant improvement, including architectural, plumbing, electrical, and any mechanical sheets",
-      "Scope of work and valuation breakdown for the $310,000 project",
-      "Contractor license numbers and expiration dates for GC, plumbing, and electrical trades",
-      "Equipment cut sheets for X-ray equipment and any specialty electrical loads",
-      "Tenant authorization letter or lease exhibit showing permission to improve the suite",
-      "Confirm no surgery/ASC program, anesthesia/sedation, PACU/recovery bays, inpatient/overnight care, or patient self-preservation issue is in scope.",
-      "Show occupancy basis, occupant load, suite separation, egress, accessibility, and certificate-of-occupancy path on the permit set.",
-      "If sedation/procedure scope appears later, reclassify for possible I-2/IBC 422 review before pricing."
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
     ],
     "zoning_hoa_flag": "For a commercial dental office TI in downtown Austin, verify zoning, use compatibility, and any downtown overlay or historic district requirements. If the suite is in a historic building or district, exterior changes, signage, or window work may need additional review. HOA restrictions are usually not the issue for a commercial suite, but landlord and building management approvals often are."
   },
-  "response_sha256": "c8720dcc977310c49b1ec4c2df12f98be149df9dfc5db2dc84082c3a7a918410",
-  "run_id": "live_customer_100_fable5_customer_pov_20260701T234354Z",
-  "share_slug": "1Xlsekio8NU",
-  "share_status": 200,
-  "share_url": "https://permitassist.io/report/1Xlsekio8NU",
-  "source_urls": [
-    "https://abc.austintexas.gov",
-    "https://abc.austintexas.gov/citizenportal/app/#",
-    "https://www.austintexas.gov/department/development-services",
-    "https://www.austintexas.gov/development-services",
-    "https://www.austintexas.gov/development-services/forms-applications",
-    "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
-  ],
-  "started_at_utc": "2026-07-01T23:59:49.660883+00:00",
-  "status_label": "PASS",
-  "visible_report_excerpt": "PermitAssist Report"
+  "source_artifact": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_customer_pov_after_bb61d8f_20260702T180255Z/cases.jsonl"
 }

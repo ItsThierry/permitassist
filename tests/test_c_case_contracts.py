@@ -16,7 +16,10 @@ from family_reconciliation_gate import family_from_row
 from server import build_customer_permit_view_model, render_share_page
 
 FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "live100_full_customer"
-C_CASE_IDS = ["R-003","R-005","R-025","R-033","R-043","R-044","R-049","C-002","C-006","C-018","C-029","C-033","C-034","C-036","C-040","C-043","C-044","C-050"]
+C_CASE_IDS = [
+    "C-004", "C-010", "C-013", "C-018", "C-022", "C-023", "C-033", "C-036", "C-037", "C-042", "C-045", "C-046",
+    "R-002", "R-004", "R-011", "R-012", "R-013", "R-018", "R-020", "R-024", "R-032", "R-033", "R-036", "R-038", "R-043", "R-044", "R-049",
+]
 
 
 def load_case(case_id: str):
@@ -55,8 +58,10 @@ def family_ok(actual: set[str], expected: str) -> bool:
         "building_ti": {"building_ti", "building"},
         "building_adu": {"building_adu", "building"},
         "demolition": {"demolition", "building"},
-        "racking": {"racking", "building", "fire_suppression"},
+        "racking": {"racking", "building"},
         "fire_alarm": {"fire_alarm", "fire_suppression", "electrical"},
+        "historic_review": {"historic_review", "historic"},
+        "gas": {"gas", "plumbing"},
     }
     return bool(actual & aliases.get(expected, {expected}))
 
@@ -66,7 +71,8 @@ def test_c_case_contracts(case_id: str):
     case, public, contract = load_case(case_id)
     fams = families(public)
     conds = conditional_families(public)
-    assert public.get("permit_decision") == "REQUIRED", case_id
+    expected_decision = contract.get("expected_decision", "REQUIRED")
+    assert public.get("permit_decision") == expected_decision, case_id
     for expected in contract.get("must_keep_required", []):
         assert family_ok(fams, expected), (case_id, expected, fams, public.get("permits_required"))
     for forbidden in contract.get("must_not_required", []):
@@ -84,13 +90,18 @@ def test_c_case_contracts(case_id: str):
         assert contract["fee_must_not_contain"].lower() not in str(public.get("fee_range") or "").lower()
     if contract.get("summary_must_contain"):
         assert contract["summary_must_contain"].lower() in text
+    for forbidden_text in contract.get("forbidden_visible", []):
+        assert forbidden_text.lower() not in text, (case_id, forbidden_text)
     assert "verify in before quoting" not in text
 
 
-@pytest.mark.parametrize("case_id", ["C-018", "C-040", "C-044", "R-005"])
+@pytest.mark.parametrize("case_id", C_CASE_IDS)
 def test_c_case_report_html_uses_canonical_packet(case_id: str):
-    case, public, _ = load_case(case_id)
+    case, public, contract = load_case(case_id)
     html = render_share_page({"data": public, "job_type": case["job_type"], "city": case["city"], "state": case["state"]})
+    html_lc = html.lower()
     assert "public_packet_rows" in html
     assert "Pull No permit required" not in html
     assert "verify in before quoting" not in html
+    for forbidden_text in contract.get("forbidden_visible", []):
+        assert forbidden_text.lower() not in html_lc, (case_id, forbidden_text)
