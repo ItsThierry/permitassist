@@ -10,6 +10,7 @@ unless an explicit negative fact contradicts their trigger.
 
 import copy
 from dataclasses import dataclass
+import json
 import re
 from typing import Any, Iterable, Literal
 
@@ -198,6 +199,8 @@ def _positive_supports_family(facts: ScopeFactsV2, family: str) -> bool:
         return bool(positives & {"food_service", "grease_generating"})
     if family in {"fire_alarm", "fire_suppression"}:
         return bool(positives & {"fire_alarm", "fire_suppression", "racking", "hood_wet_chemical"})
+    if family == "gas":
+        return "gas" in positives or bool(re.search(r"\b(?:gas\s+(?:line|piping|equipment)|fuel\s+gas)\b", getattr(facts, "request_scope_text", "") or "", re.I))
     return bool(
         positives & {bucket}
         or (bucket in {"electrical", "plumbing", "mechanical"} and {"new_dwelling_unit", "utilities_connected"}.issubset(positives))
@@ -239,17 +242,68 @@ def _official_source_backed(row: dict[str, Any]) -> bool:
     return bool(blob) and ("official" in blob or ".gov" in blob or ".us" in blob or "http" in blob)
 
 
+def _canonical_row_name(family: str, facts: ScopeFactsV2) -> str:
+    text = getattr(facts, "request_scope_text", "") or ""
+    if family == "building_ti":
+        if re.search(r"\b(?:window|door|storefront|facade|fa[cç]ade)\b", text, re.I):
+            return "Commercial Building Permit — Exterior Storefront / Window-Door Alteration"
+        if re.search(r"\b(?:change\s+of\s+(?:use|occupancy)|warehouse\s+to|assembly|pickleball)\b", text, re.I):
+            return "Commercial Building Permit — Tenant Improvement / Change of Use"
+        return "Commercial Building / Tenant Improvement Permit"
+    if family == "gas":
+        return "Fuel Gas / Plumbing Gas Permit"
+    if family == "plumbing":
+        return "Plumbing Permit"
+    if family == "planning_zoning":
+        return "Planning / Zoning Use Clearance"
+    if family == "co_change_of_occupancy":
+        return "Certificate of Occupancy / Change-of-Occupancy Approval"
+    if family == "fire_suppression":
+        return "Fire / Life-Safety Review"
+    return f"{FAMILY_TO_KIND.get(family, family.replace('_', ' ').title())} Permit"
+
+
+def _canonicalize_family_for_facts(family: str, row: dict[str, Any], facts: ScopeFactsV2) -> str:
+    text = _row_text(row)
+    if facts.segment == "commercial" and family == "building" and ("use_change" in facts.positive_facts or "commercial_ti" in facts.positive_facts or "exterior" in facts.positive_facts or re.search(r"\b(?:tenant improvement|change[- ]of[- ]use|storefront|window|door)\b", text)):
+        return "building_ti"
+    return family
+
+
+def _merge_row_details(target: dict[str, Any], source: dict[str, Any]) -> dict[str, Any]:
+    merged = copy.deepcopy(target)
+    for key in ("documents", "inspections", "source_urls", "sources"):
+        values: list[Any] = []
+        for row in (target, source):
+            raw = row.get(key)
+            if isinstance(raw, list):
+                values.extend(raw)
+            elif raw:
+                values.append(raw)
+        if values:
+            deduped: list[Any] = []
+            seen: set[str] = set()
+            for item in values:
+                marker = json.dumps(item, sort_keys=True, default=str) if isinstance(item, (dict, list)) else str(item)
+                if marker not in seen:
+                    seen.add(marker)
+                    deduped.append(item)
+            merged[key] = deduped
+    for key in ("fee", "fees", "apply_url", "source_url", "notes", "rationale"):
+        if not merged.get(key) and source.get(key):
+            merged[key] = source.get(key)
+    return merged
+
+
 def _dedupe_rows(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
-    seen: set[tuple[str, str]] = set()
+    by_family: dict[str, dict[str, Any]] = {}
     for row in rows:
         fam = family_from_row(row)
-        key = (fam, _row_name(row).lower())
-        if key in seen:
-            continue
-        seen.add(key)
-        out.append(row)
-    return out
+        if fam in by_family:
+            by_family[fam] = _merge_row_details(by_family[fam], row)
+        else:
+            by_family[fam] = copy.deepcopy(row)
+    return list(by_family.values())
 
 
 def _conditionalize_row(row: dict[str, Any], family: str | None = None) -> dict[str, Any]:
@@ -274,7 +328,17 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
         if not isinstance(source_row, dict):
             continue
         row = copy.deepcopy(source_row)
-        family = family_from_row(row)
+        family = _canonicalize_family_for_facts(family_from_row(row), row, facts)
+        if family != family_from_row(row):
+            row["family"] = family
+            row["filing_family"] = family
+            row["permit_name"] = _canonical_row_name(family, facts)
+            row["permit_type"] = row["permit_name"]
+            row["kind"] = FAMILY_TO_KIND.get(family, row.get("kind") or "Building")
+        elif family in {"plumbing", "gas", "building_ti"} and re.search(r"\bcommercial building\b|\btenant improvement\b", _row_name(row), re.I) and family != "building_ti":
+            row["permit_name"] = _canonical_row_name(family, facts)
+            row["permit_type"] = row["permit_name"]
+            row["kind"] = FAMILY_TO_KIND.get(family, row.get("kind") or "Permit")
         text = _row_text(row)
         present_families.add(family)
         veto = _veto_basis(facts, family, row)
@@ -328,8 +392,9 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
             return "Commercial Building Permit — Addition"
         names = {
             "building": "Building Permit",
-            "building_ti": "Commercial Building / Tenant Improvement Permit",
+            "building_ti": _canonical_row_name("building_ti", facts),
             "plumbing": "Plumbing Permit — Shower / Floor Drain / Fixture Work",
+            "gas": "Fuel Gas / Plumbing Gas Permit",
             "electrical": "Electrical Permit",
             "mechanical": "Mechanical Permit",
             "fire_alarm": "Fire Alarm Permit",

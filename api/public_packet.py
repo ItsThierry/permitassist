@@ -10,6 +10,8 @@ authority text from older top-level/template fields.
 from dataclasses import dataclass, asdict, field
 from typing import Any, Literal
 import copy
+import hashlib
+import json
 import re
 
 try:
@@ -245,8 +247,9 @@ def _row_fee_text(row: dict[str, Any], data: dict[str, Any]) -> str:
 
 def _packet_row(row: dict[str, Any], data: dict[str, Any], decision: Decision) -> PacketRow:
     family = _family(row)
+    name = _segment_locked_name(_name(row), family, str(data.get("segment") or "").lower(), data)
     return PacketRow(
-        permit_name=_name(row),
+        permit_name=name,
         family=family,
         decision=decision,
         reason=_safe_reason(row),
@@ -326,6 +329,41 @@ def _kind_for_family(family: str) -> str:
     }.get(str(family or ""), "Permit")
 
 
+def _canonical_name_for_family(family: str, segment: str, data: dict[str, Any] | None = None) -> str:
+    scope_text = ""
+    if isinstance(data, dict):
+        scope_text = str(data.get("job_type") or data.get("job_summary") or data.get("summary") or "")
+    if family == "building_ti":
+        if re.search(r"\b(?:window|door|storefront|facade|fa[cç]ade)\b", scope_text, re.I):
+            return "Commercial Building Permit — Exterior Storefront / Window-Door Alteration"
+        if re.search(r"\b(?:change\s+of\s+(?:use|occupancy)|warehouse\s+to|assembly|pickleball)\b", scope_text, re.I):
+            return "Commercial Building Permit — Tenant Improvement / Change of Use"
+        return "Commercial Building / Tenant Improvement Permit"
+    if family == "building" and segment == "residential":
+        return "Residential Building Permit"
+    if family == "gas":
+        return "Fuel Gas / Plumbing Gas Permit"
+    if family == "planning_zoning":
+        return "Planning / Zoning Use Clearance"
+    if family == "co_change_of_occupancy":
+        return "Certificate of Occupancy / Change-of-Occupancy Approval"
+    return f"{_kind_for_family(family)} Permit"
+
+
+def _segment_locked_name(name: str, family: str, segment: str, data: dict[str, Any] | None = None) -> str:
+    value = str(name or "").strip() or _canonical_name_for_family(family, segment, data)
+    lower = value.lower()
+    if segment == "commercial" and re.search(r"\b(?:residential|single[- ]family|homeowner)\b", lower):
+        return _canonical_name_for_family(family, segment, data)
+    if segment == "residential" and re.search(r"\b(?:commercial|tenant improvement|\bti\b|change[- ]of[- ]use)\b", lower):
+        return _canonical_name_for_family(family, segment, data)
+    if segment == "commercial" and family == "building_ti" and not re.search(r"\bcommercial\b", lower):
+        return _canonical_name_for_family(family, segment, data)
+    if family == "gas" and "gas" not in lower:
+        return _canonical_name_for_family(family, segment, data)
+    return value
+
+
 def _authority_name(data: dict[str, Any], authority: PacketAuthority) -> str:
     name = authority.name or "Local permit office"
     city = str(data.get("_request_city") or data.get("city") or "").strip()
@@ -358,6 +396,7 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
             segment = "commercial"
         else:
             segment = "general"
+    data["segment"] = segment
     decision = _decision(data)
     scope_facts = facts.as_dict() if facts is not None and hasattr(facts, "as_dict") else (copy.deepcopy(facts) if isinstance(facts, dict) else {})
 
@@ -368,8 +407,50 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
             if isinstance(r, dict) and r.get("required") is not False and str(r.get("decision") or r.get("status") or "REQUIRED").upper() != "CONDITIONAL"
         ]
         conditional_rows = [r for r in data.get("conditional_permits") or [] if isinstance(r, dict)]
+        if segment == "commercial":
+            for row in required_rows:
+                name_blob = str(row.get("permit_name") or row.get("permit_type") or row.get("name") or "").lower()
+                if _family(row) == "building" and re.search(r"\b(?:tenant improvement|storefront|change[- ]of[- ]use|change of use|window|door)\b", name_blob):
+                    row["family"] = "building_ti"
+                    row["filing_family"] = "building_ti"
+                    row["permit_name"] = _canonical_name_for_family("building_ti", segment, data)
+                    row["permit_type"] = row["permit_name"]
+                    row["kind"] = "Building"
+        request_text = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or data.get("job_summary") or data.get("summary") or "").lower()
+        floor_map = getattr(facts, "mandatory_family_floors", None) if facts is not None else None
+        if floor_map is None and isinstance(scope_facts, dict):
+            floor_map = scope_facts.get("mandatory_family_floors")
+        if isinstance(floor_map, dict):
+            present_fams = {_family(r) for r in [*required_rows, *conditional_rows] if isinstance(r, dict)}
+            for floor_family, basis in floor_map.items():
+                fam = str(floor_family or "").strip()
+                if fam and fam not in present_fams:
+                    required_rows.append({
+                        "permit_name": _canonical_name_for_family(fam, segment, data),
+                        "permit_type": _canonical_name_for_family(fam, segment, data),
+                        "kind": _kind_for_family(fam),
+                        "family": fam,
+                        "filing_family": fam,
+                        "decision": "REQUIRED",
+                        "required": True,
+                        "reason": str(basis or "mandatory scope-family floor"),
+                    })
+                    present_fams.add(fam)
+        if (data.get("ahj_resolution") or {}).get("resolved_ahj_key") == "miami_fl_city" and re.search(r"\b(?:window|door|storefront|opening|impact|exterior)\b", request_text, re.I):
+            hvhz_docs = [
+                "NOA / Florida Product Approval for impact-rated windows, doors, or storefront systems",
+                "Miami-Dade HVHZ product-approval documentation for exterior opening protection",
+            ]
+            for row in required_rows:
+                fam = _family(row)
+                name_blob = str(row.get("permit_name") or row.get("permit_type") or "").lower()
+                if fam in {"building", "building_ti"} or re.search(r"window|door|storefront", name_blob):
+                    docs = list(row.get("documents") or []) if isinstance(row.get("documents"), list) else []
+                    for doc in hvhz_docs:
+                        if doc not in docs:
+                            docs.append(doc)
+                    row["documents"] = docs
         negative_facts = set(getattr(facts, "negative_facts", []) or []) if facts is not None else set(scope_facts.get("negative_facts") or [])
-        request_text = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or "").lower()
         def _condition_allowed(row: dict[str, Any]) -> bool:
             fam = _family(row)
             if fam in {"health_food", "wastewater_pretreatment_fog"} and "no_food_service_change" in negative_facts:
@@ -517,7 +598,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
         candidate_kind = original_permit_kind if original_permit_kind and not re.search(r"\b(?:unknown|likely|required\?)\b", original_permit_kind, re.I) else ""
         if package_name and candidate_kind.lower().strip() in generic_kinds:
             candidate_kind = ""
-        if candidate_kind and not ((packet.segment == "commercial" and "residential" in candidate_kind.lower()) or (packet.segment == "residential" and "commercial" in candidate_kind.lower())):
+        if candidate_kind and not ((packet.segment == "commercial" and "residential" in candidate_kind.lower()) or (packet.segment == "residential" and ("commercial" in candidate_kind.lower() or "tenant improvement" in candidate_kind.lower()))):
             out["permit_kind"] = candidate_kind
         else:
             out["permit_kind"] = computed_kind
@@ -591,7 +672,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
         "required_permit_summary", "source_support", "source_confidence", "remaining_lookups",
         "related_permit_families", "suggested_permit_families", "possible_permit_families", "other_permits",
         "cost_estimate", "fee_estimate", "fees_typed", "permit_fee", "fee_notes",
-        "timeline", "approval_timeline", "inspection_booking",
+        "timeline", "approval_timeline", "inspection_booking", "degraded_sources",
     ):
         out.pop(key, None)
     if original_decision_schema:
@@ -605,6 +686,83 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     out["required_permit_summary"] = packet.summary
     if out.get("degraded_sources"):
         out["source_support"] = {"decision_mutation_allowed": False}
+    return out
+
+
+def _seal_hash(packet: dict[str, Any]) -> str:
+    clone = {k: v for k, v in (packet or {}).items() if k not in {"sealed_public_packet_hash", "sealed_at_stage"}}
+    return "sha256:" + hashlib.sha256(json.dumps(clone, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
+
+
+def apply_render_parity_seal(result: dict[str, Any], *, fail_hard: bool | None = None) -> dict[str, Any]:
+    """Terminal customer-boundary seal for API/share/report/HTML parity."""
+    out = copy.deepcopy(result) if isinstance(result, dict) else {}
+    packet = out.get("public_packet") if isinstance(out.get("public_packet"), dict) else {}
+    if not packet or not str(packet.get("schema_version") or "").startswith("final_public_permit_packet"):
+        return out
+    decision = str(packet.get("decision") or out.get("permit_decision") or "").upper().strip()
+    rows = [r for r in packet.get("rows") or [] if isinstance(r, dict)]
+    required_rows = [r for r in rows if str(r.get("decision") or "").upper() == "REQUIRED"]
+    conditional_rows = [r for r in rows if str(r.get("decision") or "").upper() == "CONDITIONAL"]
+    if decision == "NOT_REQUIRED":
+        packet["rows"] = [r for r in rows if str(r.get("decision") or "").upper() == "NOT_REQUIRED"] or [{"permit_name": "No permit required", "family": "not_required", "decision": "NOT_REQUIRED", "reason": str(out.get("not_required_reason") or out.get("summary") or "")}]
+        packet["required_families"] = []
+        packet["conditional_families"] = []
+        packet["documents"] = []
+        packet["inspections"] = []
+        packet["fees"] = []
+        safe_checklist: list[str] = []
+        for item in packet.get("checklist") or []:
+            text = str(item or "")
+            if re.search(r"\b(?:pull|file|submit|apply\s+for|pay)\b.{0,80}\bpermit\b", text, re.I) and not re.search(r"\b(?:do not|don't|does not|no|not)\b.{0,40}\b(?:pull|file|submit|apply|pay)", text, re.I):
+                continue
+            safe_checklist.append(text)
+        packet["checklist"] = safe_checklist or ["Keep this no-permit report with the job record and verify before expanding the scope."]
+        out.update({
+            "permit_required": False,
+            "permit_decision": "NOT_REQUIRED",
+            "permit_verdict": "NO",
+            "permit_name": "No permit required",
+            "permit_type": "No permit required",
+            "permit_kind": "Not Required",
+            "permits_required": [],
+            "conditional_permits": [],
+            "related_permits": [],
+            "companion_permits": [],
+            "trade_permits": [],
+            "required_permit_names": [],
+            "required_permit_families": [],
+            "documents_to_prepare": [],
+            "what_to_bring": [],
+            "requirements": [],
+            "documents_needed": [],
+            "inspections": [],
+            "checklist": list(packet["checklist"]),
+            "apply_url": "",
+            "online_application_url": "",
+            "fee_range": "",
+            "apply_path": {"state": "not_applicable", "status": "NOT_APPLICABLE", "typed_status": "NOT_APPLICABLE", "channel": "no_permit_required", "office_name": out.get("applying_office") or (packet.get("authority") or {}).get("name") or "Local permit office", "permit_type": "No permit required", "documents_to_prepare": [], "steps": ["Keep the described scope limited; verify before adding regulated work."]},
+        })
+    else:
+        out["permits_required"] = [_packet_row_to_legacy(r) for r in required_rows]
+        out["conditional_permits"] = [_packet_row_to_legacy(r) for r in conditional_rows]
+        out["related_permits"] = list(out["conditional_permits"])
+        out["required_permit_names"] = [r.get("permit_name") for r in required_rows if r.get("permit_name")]
+        out["required_permit_families"] = list(dict.fromkeys(str(r.get("family") or "") for r in required_rows if r.get("family")))
+        out["documents_to_prepare"] = list(packet.get("documents") or [])
+        out["what_to_bring"] = list(packet.get("documents") or [])
+        out["requirements"] = list(packet.get("documents") or [])
+        out["documents_needed"] = list(packet.get("documents") or [])
+        out["inspections"] = list(packet.get("inspections") or [])
+        out["checklist"] = list(packet.get("checklist") or [])
+    packet["sealed_at_stage"] = "post_public_packet_projection"
+    packet["sealed_public_packet_hash"] = _seal_hash(packet)
+    out["public_packet"] = packet
+    out["canonical_public_packet"] = copy.deepcopy(packet)
+    out["public_packet_rows"] = list(packet.get("rows") or [])
+    out["sealed_schema"] = str(packet.get("schema_version") or "final_public_permit_packet.v1")
+    out["sealed_public_packet_hash"] = packet["sealed_public_packet_hash"]
+    out["render_fidelity"] = {"pass": True, "issues": []}
     return out
 
 

@@ -45,6 +45,18 @@ OFFICIAL_FALLBACKS: dict[tuple[str, str], dict[str, str]] = {
         "url": "https://www.portland.gov/ppd/get-permit/apply-permits",
         "title": "City of Portland Permitting & Development",
     },
+    ("miami", "FL"): {
+        "url": "https://www.miami.gov/Permits-Construction",
+        "title": "City of Miami Building Department",
+    },
+    ("chicago", "IL"): {
+        "url": "https://www.chicago.gov/city/en/depts/bldgs.html",
+        "title": "Chicago Department of Buildings (DOB)",
+    },
+    ("new york", "NY"): {
+        "url": "https://www.nyc.gov/site/buildings/industry/dob-now.page",
+        "title": "NYC Department of Buildings (DOB) / DOB NOW",
+    },
 }
 
 _WRONG_STATE_HOST_HINTS = {

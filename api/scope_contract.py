@@ -348,6 +348,9 @@ def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
         facts.add("food_service")
     if re.search(r"\b(?:change\s+of\s+(?:use|occupancy)|occupancy\s+change|convert(?:ing|ed)?\b|conversion\b|retail\s+to|office\s+to|warehouse\s+to)\b", job, re.I):
         facts.add("use_change")
+        if v1.segment == "commercial":
+            facts.add("commercial_ti")
+            facts.add("building")
     if re.search(r"\b(?:tenant improvement|tenant buildout|tenant finish|commercial interior|white box|demolition|demo)\b", job, re.I):
         facts.add("commercial_ti")
         facts.add("building")
@@ -395,6 +398,7 @@ def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
         facts.add("mechanical")
     if re.search(r"\b(?:gas\s+(?:line|piping|reconnection|connection|dryer)|fuel\s+gas|radiant\s+heat|compressed\s+air)\b", job, re.I):
         facts.add("plumbing")
+        facts.add("gas")
     if re.search(r"\b(?:plumbing(?:\s+and\s+electrical)?\s+upgrades?|electrical(?:\s+and\s+plumbing)?\s+upgrades?)\b", job, re.I):
         facts.update({"plumbing", "electrical"})
     if re.search(r"\b(?:standby\s+generator|automatic\s+transfer\s+switch|transfer\s+switch|generator\s+(?:install|installation))\b", job, re.I):
@@ -473,8 +477,18 @@ def _scope_facts_v2_family_floors(job: str, v1: ScopeFacts, positives: set[str])
     if v1.segment == "commercial" and re.search(r"\bfloor\s+drains?\b", job, re.I):
         floors["plumbing"] = "commercial TI with floor drains requires plumbing floor"
     if v1.segment == "commercial" and re.search(r"\b(?:warehouse\s+to|assembly|pickleball|occupant\s+load)\b", job, re.I) and "use_change" in positives:
+        floors["building_ti"] = "commercial change-of-use/assembly conversion requires building/TI filing floor"
         floors["fire_suppression"] = "assembly/change-of-use occupant-load increase requires fire/life-safety floor"
         floors["planning_zoning"] = "commercial change-of-use requires zoning/use clearance floor"
+        floors["co_change_of_occupancy"] = "commercial change-of-use requires certificate/change-of-occupancy floor"
+    if v1.segment == "commercial" and "use_change" in positives:
+        floors.setdefault("building_ti", "commercial change-of-use requires building/TI filing floor")
+        floors.setdefault("planning_zoning", "commercial change-of-use requires zoning/use clearance floor")
+        floors.setdefault("co_change_of_occupancy", "commercial change-of-use requires certificate/change-of-occupancy floor")
+    if v1.segment == "commercial" and re.search(r"\b(?:restaurant|commercial kitchen|cooking equipment)\b", job, re.I) and re.search(r"\b(?:gas\s+(?:line|piping|equipment)|fuel\s+gas|gas)\b", job, re.I):
+        if re.search(r"\b(?:alteration|alter|cooking equipment|hood|ductwork|fire alarm|tenant improvement|buildout)\b", job, re.I) and not re.search(r"\b(?:rtu|rooftop unit)\b", job, re.I):
+            floors.setdefault("building_ti", "commercial restaurant alteration requires DOB/building alteration filing floor")
+        floors["gas"] = "restaurant/commercial cooking scope with explicit gas requires fuel-gas/plumbing-gas permit floor"
     return floors
 
 

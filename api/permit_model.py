@@ -941,6 +941,14 @@ def _wrong_jurisdiction_url(url: str, city: str, state: str) -> bool:
     city_lc = (city or "").lower()
     if state_up == "KS" and "kansas city" in city_lc and ("kcmo" in u or "missouri" in u or "mo.gov" in u):
         return True
+    if state_up == "FL" and city_lc.strip() == "miami" and (
+        "ecobuilt.miamidade.gov" in u
+        or "miamidade.gov/buildingpermit" in u
+        or "miamidade.gov/global/economy/building/building-permit-fees" in u
+        or "solicitationdetails" in u
+        or "stratproc" in u
+    ):
+        return True
     if state_up and re.search(r"\b(?:ca|tx|fl|wa|or|pa|ny|nc|mt|ks|mo)\.gov\b", u):
         # Keep only the specific known false-positive hard block for now; broad
         # state inference from domains is noisy and can reject regional portals.

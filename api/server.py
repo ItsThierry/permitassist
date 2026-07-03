@@ -65,8 +65,9 @@ from permit_decision import apply_permit_decision_contract, _get_decision_cell_p
 from trade_authority_routing import apply_trade_authority_routing
 from decision_resolver import is_input_rejection, resolve_customer_decision
 from family_reconciliation_gate import apply_family_reconciliation_gate
+from ahj_locality_resolver import apply_ahj_locality_resolution
 from ahj_identity_guard import apply_ahj_identity_guard
-from public_packet import apply_public_packet_projection
+from public_packet import apply_public_packet_projection, apply_render_parity_seal
 from closed_world_decision import apply_closed_world_customer_contract
 try:
     from v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
@@ -5086,6 +5087,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     full_customer_gate_enabled = not os.environ.get("PYTEST_CURRENT_TEST")
                 if full_customer_gate_enabled:
                     final_scope_facts = build_scope_facts_v2(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract)
+                    final_public = apply_ahj_locality_resolution(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
                     final_public = apply_family_reconciliation_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract, job_category=request_job_category)
                     final_public = apply_ahj_identity_guard(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
                     final_public = apply_closed_world_customer_contract(
@@ -5109,7 +5111,10 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             final_public = _apply_residential_commercial_timeline_veto(final_public if isinstance(final_public, dict) else {}, job_type, job_category=request_job_category, scope_contract=scope_contract)
             if isinstance(final_public, dict):
                 specific_kind = original_display_permit_kind and original_display_permit_kind.lower() not in {"building", "electrical", "mechanical", "plumbing", "fire", "refrigeration", "sign", "planning", "zoning", "permit package", "not required"}
-                if specific_kind and str(final_public.get("permit_decision") or "").upper() == "REQUIRED":
+                segment_value = str(final_public.get("segment") or "").lower()
+                kind_lc = str(original_display_permit_kind or "").lower()
+                segment_kind_safe = not ((segment_value == "residential" and ("commercial" in kind_lc or "tenant improvement" in kind_lc)) or (segment_value == "commercial" and "residential" in kind_lc))
+                if specific_kind and segment_kind_safe and str(final_public.get("permit_decision") or "").upper() == "REQUIRED":
                     final_public["permit_kind"] = original_display_permit_kind
                     if isinstance(final_public.get("apply_path"), dict):
                         final_public["apply_path"]["permit_category"] = original_display_permit_kind
@@ -5119,6 +5124,22 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     final_public["apply_path"]["documents_to_prepare"] = list(original_legacy_documents)
                 if original_companion_rows_for_legacy_contract and not final_public.get("companion_permits"):
                     final_public["companion_permits"] = copy.deepcopy(original_companion_rows_for_legacy_contract)
+                # Segment/kind lock must also protect pytest/legacy paths where
+                # the full customer gate is disabled; stale commercial anchors
+                # must never survive in a residential customer header/action.
+                if str(request_job_category or final_public.get("segment") or "").lower() == "residential":
+                    if re.search(r"\b(?:commercial|tenant improvement)\b", str(final_public.get("permit_kind") or ""), re.I):
+                        first_row = next((r for r in (final_public.get("permits_required") or []) if isinstance(r, dict)), {})
+                        final_public["permit_kind"] = str(first_row.get("kind") or "Building")
+                    replacement_name = str(final_public.get("permit_name") or final_public.get("permit_type") or "permit")
+                    for _key in ("customer_headline", "customer_next_step"):
+                        if isinstance(final_public.get(_key), str):
+                            final_public[_key] = re.sub(r"Commercial Building\s*/\s*Tenant Improvement", replacement_name, final_public[_key], flags=re.I)
+                    if isinstance(final_public.get("apply_path"), dict) and re.search(r"\b(?:commercial|tenant improvement)\b", str(final_public["apply_path"].get("permit_category") or ""), re.I):
+                        final_public["apply_path"]["permit_category"] = final_public.get("permit_kind") or "Building"
+                seal_enabled = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower() in {"1", "true", "yes", "on"} or not os.environ.get("PYTEST_CURRENT_TEST")
+                if seal_enabled:
+                    final_public = apply_render_parity_seal(final_public if isinstance(final_public, dict) else {})
         return final_public if isinstance(final_public, dict) else {}
     return {}
 
@@ -8166,6 +8187,9 @@ PUBLIC_REPORT_RESULT_FIELDS = frozenset({
     "apply_phone",
     "source_urls",
     "sources",
+    "ahj_resolution",
+    "sealed_schema",
+    "sealed_public_packet_hash",
 })
 PUBLIC_CHECKLIST_FIELDS = frozenset({"title", "summary", "items"})
 PUBLIC_REPORT_INTERNAL_FIELDS = frozenset({

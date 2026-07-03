@@ -1,11 +1,12 @@
 {
   "baseline_conditional_family_multiset": [],
-  "baseline_required_count": 9,
+  "baseline_required_count": 10,
   "baseline_required_family_multiset": [
     "building",
     "co_change_of_occupancy",
     "electrical",
     "fire_suppression",
+    "gas",
     "health_food",
     "mechanical",
     "planning_zoning",
