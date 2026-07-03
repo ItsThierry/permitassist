@@ -778,7 +778,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
 
 
 def _seal_hash(packet: dict[str, Any]) -> str:
-    clone = {k: v for k, v in (packet or {}).items() if k not in {"sealed_public_packet_hash", "sealed_at_stage"}}
+    clone = {k: v for k, v in (packet or {}).items() if k not in {"sealed_public_packet_hash", "sealed_at_stage", "render_seal_hash"}}
     return "sha256:" + hashlib.sha256(json.dumps(clone, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
 
 
@@ -807,9 +807,11 @@ def seal_packet(packet: dict[str, Any], *, facts: Any | None = None, fail_hard: 
         if auth.get("apply_url"):
             errors.append("NOT_REQUIRED packet contains apply URL")
     if decision == "REQUIRED":
-        auth = out.get("authority") if isinstance(out.get("authority"), dict) else {}
+        auth_raw = out.get("authority")
+        auth = auth_raw if isinstance(auth_raw, dict) else {}
         contact_fallback = bool(re.search(r"\b(?:phone|call|contact|office|address)\b", json.dumps(auth, default=str), re.I))
-        if not (auth.get("apply_url") or contact_fallback):
+        official_source_fallback = bool(str(auth.get("name") or "").strip() and auth.get("source_urls"))
+        if not (auth.get("apply_url") or contact_fallback or official_source_fallback):
             errors.append("REQUIRED packet missing apply URL or verified AHJ contact fallback")
     segment = str(out.get("segment") or "").lower()
     lead_label = str(out.get("lead_label") or "")
@@ -837,7 +839,7 @@ def seal_packet(packet: dict[str, Any], *, facts: Any | None = None, fail_hard: 
     return out
 
 
-def apply_render_parity_seal(result: dict[str, Any], *, fail_hard: bool | None = None) -> dict[str, Any]:
+def apply_render_parity_seal(result: dict[str, Any], *, facts: Any | None = None, fail_hard: bool | None = None) -> dict[str, Any]:
     """Terminal customer-boundary seal for API/share/report/HTML parity."""
     out = copy.deepcopy(result) if isinstance(result, dict) else {}
     packet = out.get("public_packet") if isinstance(out.get("public_packet"), dict) else {}
@@ -899,13 +901,15 @@ def apply_render_parity_seal(result: dict[str, Any], *, fail_hard: bool | None =
         out["inspections"] = list(packet.get("inspections") or [])
         out["checklist"] = list(packet.get("checklist") or [])
     packet["sealed_at_stage"] = "post_public_packet_projection"
-    packet["sealed_public_packet_hash"] = _seal_hash(packet)
+    packet = seal_packet(packet, facts=facts, fail_hard=bool(fail_hard))
     out["public_packet"] = packet
     out["canonical_public_packet"] = copy.deepcopy(packet)
     out["public_packet_rows"] = list(packet.get("rows") or [])
     out["sealed_schema"] = str(packet.get("schema_version") or "final_public_permit_packet.v1")
     out["sealed_public_packet_hash"] = packet["sealed_public_packet_hash"]
-    out["render_fidelity"] = {"pass": True, "issues": []}
+    out["render_seal_hash"] = packet.get("render_seal_hash")
+    invariant_errors = list(packet.get("packet_invariant_errors") or [])
+    out["render_fidelity"] = {"pass": not invariant_errors, "issues": invariant_errors}
     return out
 
 

@@ -10,7 +10,7 @@ API = ROOT / "api"
 if str(API) not in sys.path:
     sys.path.insert(0, str(API))
 
-from public_packet import PacketInvariantError, seal_packet
+from public_packet import PacketInvariantError, apply_render_parity_seal, seal_packet
 from scope_contract import build_scope_facts_v3
 
 
@@ -106,3 +106,34 @@ def test_i6_non_official_source_cannot_carry_official_badge():
     }
     with pytest.raises(PacketInvariantError, match="Official"):
         seal_packet(packet, facts=facts, fail_hard=True)
+
+
+def test_terminal_render_parity_seal_runs_packet_invariants_and_render_hash():
+    facts = build_scope_facts_v3("install new gas line to outdoor kitchen and grill", "Jackson", "MS", job_category="residential")
+    result = {
+        "permit_decision": "REQUIRED",
+        "public_packet": {
+            "schema_version": "final_public_permit_packet.v1",
+            "segment": "residential",
+            "decision": "REQUIRED",
+            "permit_required_verdict": "REQUIRED",
+            "lead_label": "Residential Gas Piping Permit — Outdoor Appliance / Grill Line",
+            "authority": {"name": "Jackson permit office", "apply_url": "https://www.jacksonms.gov/building-permits/", "source_urls": []},
+            "sources": [{"url": "https://www.iccsafe.org/building-safety-journal/", "title": "Official permit source", "source_role": "PUBLISHER_CONTEXT"}],
+            "rows": [{"permit_name": "Residential Gas Piping Permit — Outdoor Appliance / Grill Line", "family": "gas", "decision": "REQUIRED", "lead": True, "action_url": "https://www.jacksonms.gov/building-permits/"}],
+            "required_families": ["gas"],
+            "conditional_families": [],
+            "checklist": [],
+            "documents": [],
+            "inspections": [],
+            "fees": [],
+        },
+    }
+    sealed = apply_render_parity_seal(result, facts=facts)
+    packet = sealed["public_packet"]
+    assert packet.get("render_seal_hash", "").startswith("sha256:")
+    assert packet["sealed_public_packet_hash"] == packet["render_seal_hash"] == sealed["render_seal_hash"]
+    assert sealed["render_fidelity"]["pass"] is False
+    assert any("Official badge" in issue for issue in packet.get("packet_invariant_errors", []))
+    with pytest.raises(PacketInvariantError, match="Official"):
+        apply_render_parity_seal(result, facts=facts, fail_hard=True)

@@ -81,7 +81,7 @@ def _packet(public: dict[str, Any]) -> dict[str, Any]:
 
 
 def _packet_hash(packet: dict[str, Any]) -> str:
-    clone = {k: v for k, v in packet.items() if k not in {"sealed_public_packet_hash", "sealed_at_stage"}}
+    clone = {k: v for k, v in packet.items() if k not in {"sealed_public_packet_hash", "sealed_at_stage", "render_seal_hash"}}
     digest = hashlib.sha256(json.dumps(clone, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
     return f"sha256:{digest}"
 

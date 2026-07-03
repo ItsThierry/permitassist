@@ -5139,7 +5139,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                         final_public["apply_path"]["permit_category"] = final_public.get("permit_kind") or "Building"
                 seal_enabled = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower() in {"1", "true", "yes", "on"} or not os.environ.get("PYTEST_CURRENT_TEST")
                 if seal_enabled:
-                    final_public = apply_render_parity_seal(final_public if isinstance(final_public, dict) else {})
+                    final_public = apply_render_parity_seal(final_public if isinstance(final_public, dict) else {}, facts=locals().get("final_scope_facts"))
         return final_public if isinstance(final_public, dict) else {}
     return {}
 
