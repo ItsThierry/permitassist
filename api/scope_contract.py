@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
+from enum import Enum
 import os
 import re
 from typing import Any
@@ -158,6 +159,76 @@ class ScopeFactsV2(ScopeFacts):
             "required_documents_floor": dict(self.required_documents_floor),
             "repair_exemption_candidate": self.repair_exemption_candidate,
             "source": "request_scope_facts_v2",
+        })
+        return data
+
+
+class TriFact(str, Enum):
+    TRUE = "TRUE"
+    FALSE = "FALSE"
+    UNKNOWN = "UNKNOWN"
+
+
+@dataclass(frozen=True)
+class Fact:
+    value: TriFact = TriFact.UNKNOWN
+    evidence: tuple[str, ...] = field(default_factory=tuple)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"value": self.value.value, "evidence": list(self.evidence)}
+
+
+@dataclass(frozen=True)
+class ChangeOfUse:
+    from_use: str = ""
+    to_use: str = ""
+    to_occupancy_group: str = ""
+    evidence: tuple[str, ...] = field(default_factory=tuple)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "from_use": self.from_use,
+            "to_use": self.to_use,
+            "to_occupancy_group": self.to_occupancy_group,
+            "evidence": list(self.evidence),
+        }
+
+
+@dataclass(frozen=True)
+class ScopeFactsV3(ScopeFactsV2):
+    """Evidence-bearing tri-state request facts for the Fable5 packet seal."""
+
+    food_establishment: Fact = field(default_factory=Fact)
+    grease_discharge: Fact = field(default_factory=Fact)
+    co2_enrichment: Fact = field(default_factory=Fact)
+    hazardous_materials: Fact = field(default_factory=Fact)
+    hazmat_kinds: tuple[str, ...] = field(default_factory=tuple)
+    structural_work: Fact = field(default_factory=Fact)
+    structural_kinds: tuple[str, ...] = field(default_factory=tuple)
+    facade_scope: str = "none"
+    change_of_use: ChangeOfUse | None = None
+    assembly_occupancy: Fact = field(default_factory=Fact)
+    electrical_new_circuits: Fact = field(default_factory=Fact)
+    residential_outdoor_cooking: Fact = field(default_factory=Fact)
+    gas_fuel_work: Fact = field(default_factory=Fact)
+
+    def as_dict(self) -> dict[str, Any]:
+        data = super().as_dict()
+        data.update({
+            "source": "request_scope_facts_v3",
+            "food_establishment": self.food_establishment.as_dict(),
+            "grease_discharge": self.grease_discharge.as_dict(),
+            "co2_enrichment": self.co2_enrichment.as_dict(),
+            "hazardous_materials": self.hazardous_materials.as_dict(),
+            "hazmat_kinds": list(self.hazmat_kinds),
+            "structural_work": self.structural_work.as_dict(),
+            "structural_kinds": list(self.structural_kinds),
+            "facade_scope": self.facade_scope,
+            "change_of_use": self.change_of_use.as_dict() if self.change_of_use else None,
+            "assembly_occupancy": self.assembly_occupancy.as_dict(),
+            "electrical_new_circuits": self.electrical_new_circuits.as_dict(),
+            "residential_outdoor_cooking": self.residential_outdoor_cooking.as_dict(),
+            "gas_fuel_work": self.gas_fuel_work.as_dict(),
         })
         return data
 
@@ -559,6 +630,130 @@ def build_scope_facts_v2(job_type: str, city: str = "", state: str = "", *, job_
         forbidden_families=forbidden_families,
         required_documents_floor=document_floors,
         repair_exemption_candidate=repair_exemption_candidate,
+    )
+
+
+def _evidence_spans(job: str, pattern: str) -> tuple[str, ...]:
+    out: list[str] = []
+    for match in re.finditer(pattern, job, re.I):
+        text = re.sub(r"\s+", " ", match.group(0)).strip()
+        if text and text.lower() not in {x.lower() for x in out}:
+            out.append(text)
+    return tuple(out)
+
+
+def _fact(value: TriFact, evidence: tuple[str, ...] = ()) -> Fact:
+    return Fact(value, evidence if value in {TriFact.TRUE, TriFact.FALSE} else ())
+
+
+def _detect_change_of_use(job: str) -> ChangeOfUse | None:
+    patterns = (
+        (r"\bwarehouse\s+to\s+(?:indoor\s+)?(pickleball|assembly|gym|fitness|church|event|recreation)", "warehouse", "pickleball", "A-3"),
+        (r"\bchange\s+(?:use|of\s+use|of\s+occupancy)\s+from\s+([a-z\s]+?)\s+to\s+([a-z\s]+?)(?:\s+with|,|$)", "", "", ""),
+        (r"\b(retail|storefront|office|warehouse)\s+(?:to|into)\s+(restaurant|bar|brewery|fitness|gym|assembly|pickleball)", "", "", ""),
+    )
+    for pattern, default_from, default_to, default_group in patterns:
+        match = re.search(pattern, job, re.I)
+        if not match:
+            continue
+        from_use = default_from or (match.group(1).strip().split()[0] if match.lastindex and match.lastindex >= 1 else "")
+        to_use = default_to or (match.group(2).strip().split()[0] if match.lastindex and match.lastindex >= 2 else "")
+        if to_use == "pickleball":
+            group = "A-3"
+        elif to_use in {"assembly", "gym", "fitness", "church", "event", "recreation"}:
+            group = "A"
+        elif to_use in {"restaurant", "bar", "brewery"}:
+            group = "A-2"
+        else:
+            group = default_group
+        return ChangeOfUse(from_use=from_use, to_use=to_use, to_occupancy_group=group, evidence=(match.group(0),))
+    return None
+
+
+def build_scope_facts_v3(job_type: str, city: str = "", state: str = "", *, job_category: str | None = None, vertical: str | None = None, scope_contract: dict[str, Any] | None = None) -> ScopeFactsV3:
+    v2 = build_scope_facts_v2(job_type, city, state, job_category=job_category, vertical=vertical, scope_contract=scope_contract)
+    job = _norm(job_type)
+    segment = v2.segment
+
+    residential_outdoor = _evidence_spans(job, r"\b(?:outdoor\s+kitchen|grill|barbecue|bbq)\b") if segment == "residential" else ()
+    food_true = _evidence_spans(job, r"\b(?:restaurant|commercial\s+kitchen|food\s+service|food\s+establishment|commissary|brewery|bar|cafe|catering)\b") if segment == "commercial" else ()
+    no_food = _evidence_spans(job, r"\b(?:no\s+food\s+service|residential\s+(?:outdoor\s+)?kitchen|homeowner|single[- ]family|grill)\b")
+    grease_true = _evidence_spans(job, r"\b(?:grease\s+interceptor|fog|commercial\s+cooking|type\s*i\s+hood|type\s*1\s+hood|hood\s+suppression)\b") if segment == "commercial" else ()
+    co2 = _evidence_spans(job, r"\b(?:co2|co₂|carbon\s+dioxide)\s+(?:enrichment|system|tank|generator|piping)?\b")
+    haz = list(co2)
+    haz.extend(_evidence_spans(job, r"\b(?:hazmat|hazardous\s+materials?|compressed\s+gas|flammable|pesticide|cannabis\s+cultivation)\b"))
+    structural_true = _evidence_spans(job, r"\b(?:structural|masonry|lintel|load[- ]bearing|foundation|facade\s+repair|fa[cç]ade\s+repair|scaffolding|structural\s+repair)\b")
+    structural_false = _evidence_spans(job, r"\b(?:no\s+structural(?:\s+changes?)?|non[- ]structural|cosmetic\s+only)\b")
+    facade_ctx = bool(re.search(r"\b(?:facade|fa[cç]ade|storefront|exterior)\b", job, re.I))
+    structural_kinds = tuple(k for k, pat in (
+        ("masonry", r"\bmasonry\b"), ("lintel", r"\blintel\b"), ("load_bearing", r"\bload[- ]bearing\b"),
+        ("foundation", r"\bfoundation\b"), ("facade", r"\bfa[cç]ade|facade\b"),
+    ) if re.search(pat, job, re.I))
+    change = _detect_change_of_use(job)
+    assembly_evidence = tuple(change.evidence) if change and (change.to_occupancy_group or "").startswith("A") else _evidence_spans(job, r"\b(?:assembly|occupant\s+load|pickleball|fitness\s+studio|gym)\b")
+    new_circuit_evidence = _evidence_spans(job, r"\b(?:new\s+circuit|add\s+(?:a\s+)?circuit|panel\s+upgrade|service\s+upgrade|new\s+equipment\s+feed|600\s*(?:amp|a))\b")
+    existing_circuit_evidence = _evidence_spans(job, r"\b(?:existing\s+boxes|existing\s+circuits?|no\s+new\s+circuits?|no\s+panel\s+work|replace\s+\d*\s*(?:kitchen\s+)?(?:outlets?|receptacles?)|gfci)\b")
+    gas_evidence = _evidence_spans(job, r"\b(?:gas\s+(?:line|piping|permit|pressure|appliance)|fuel\s+gas|propane)\b")
+
+    haz_kinds: list[str] = []
+    if co2:
+        haz_kinds.append("co2")
+    if re.search(r"\b(?:compressed\s+gas)\b", job, re.I):
+        haz_kinds.append("compressed_gas")
+    if re.search(r"\b(?:cannabis|pesticide)\b", job, re.I):
+        haz_kinds.append("pesticide")
+
+    floors = dict(v2.mandatory_family_floors)
+    docs = dict(v2.required_documents_floor)
+    if co2:
+        floors["fire_hazmat_co2"] = "CO2 enrichment / hazardous gas system requires fire-prevention review"
+        docs["co2_system"] = "CO2 enrichment/hazardous gas system requires design, detection, and disclosure documents"
+    if assembly_evidence:
+        floors["fire_life_safety_assembly"] = "assembly/change-of-use occupant-load scope requires fire/life-safety review"
+        floors.setdefault("co_change_of_occupancy", "change of use/occupancy requires certificate-of-occupancy review")
+        docs["assembly_life_safety"] = "assembly/change-of-use scope requires life-safety and occupant-load documents"
+    if structural_true and not structural_false:
+        docs["structural_engineering"] = "structural masonry/lintel/facade scope requires engineering details"
+    if gas_evidence:
+        docs["gas_pressure_test"] = "fuel-gas scope requires pressure-test documentation"
+
+    forbidden = dict(v2.forbidden_families)
+    if segment == "residential" and not food_true:
+        forbidden["health_food"] = "residential non-food scope has FALSE food-establishment fact"
+        forbidden["wastewater_pretreatment_fog"] = "residential non-food scope has FALSE commercial grease/FOG fact"
+
+    return ScopeFactsV3(
+        segment=v2.segment,
+        construction_class=v2.construction_class,
+        trade_signals=v2.trade_signals,
+        special_signals=v2.special_signals,
+        negative_scope_facts=v2.negative_scope_facts,
+        dominant_family=v2.dominant_family,
+        vertical=v2.vertical,
+        request_scope_text=v2.request_scope_text,
+        positive_facts=v2.positive_facts,
+        negative_facts=v2.negative_facts,
+        occupancy_change=v2.occupancy_change,
+        service_amperage=v2.service_amperage,
+        valuation_usd=v2.valuation_usd,
+        rack_height_ft=v2.rack_height_ft,
+        mandatory_family_floors=floors,
+        forbidden_families=forbidden,
+        required_documents_floor=docs,
+        repair_exemption_candidate=v2.repair_exemption_candidate,
+        food_establishment=_fact(TriFact.TRUE, food_true) if food_true else (_fact(TriFact.FALSE, no_food or residential_outdoor) if no_food or residential_outdoor or segment == "residential" else _fact(TriFact.UNKNOWN)),
+        grease_discharge=_fact(TriFact.TRUE, grease_true) if grease_true else (_fact(TriFact.FALSE, no_food or residential_outdoor) if no_food or residential_outdoor or segment == "residential" else _fact(TriFact.UNKNOWN)),
+        co2_enrichment=_fact(TriFact.TRUE, co2) if co2 else _fact(TriFact.UNKNOWN),
+        hazardous_materials=_fact(TriFact.TRUE, tuple(haz)) if haz else _fact(TriFact.UNKNOWN),
+        hazmat_kinds=tuple(dict.fromkeys(haz_kinds)),
+        structural_work=_fact(TriFact.TRUE, structural_true) if structural_true and not structural_false else (_fact(TriFact.FALSE, structural_false) if structural_false else _fact(TriFact.UNKNOWN)),
+        structural_kinds=structural_kinds,
+        facade_scope="structural_facade" if facade_ctx and structural_true and not structural_false else ("storefront_glazing_only" if facade_ctx else "none"),
+        change_of_use=change,
+        assembly_occupancy=_fact(TriFact.TRUE, assembly_evidence) if assembly_evidence else _fact(TriFact.UNKNOWN),
+        electrical_new_circuits=_fact(TriFact.TRUE, new_circuit_evidence) if new_circuit_evidence else (_fact(TriFact.FALSE, existing_circuit_evidence) if existing_circuit_evidence else _fact(TriFact.UNKNOWN)),
+        residential_outdoor_cooking=_fact(TriFact.TRUE, residential_outdoor) if residential_outdoor else _fact(TriFact.UNKNOWN),
+        gas_fuel_work=_fact(TriFact.TRUE, gas_evidence) if gas_evidence else _fact(TriFact.UNKNOWN),
     )
 
 

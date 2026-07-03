@@ -60,7 +60,7 @@ except (TypeError, ValueError):
     from api.research_engine import classify_scope_required_permits as _real_classify_scope_required_permits
     classify_scope_required_permits = _real_classify_scope_required_permits
 
-from scope_contract import build_scope_contract, build_scope_facts_v2, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
+from scope_contract import build_scope_contract, build_scope_facts_v2, build_scope_facts_v3, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
 from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
 from trade_authority_routing import apply_trade_authority_routing
 from decision_resolver import is_input_rejection, resolve_customer_decision
@@ -5086,7 +5086,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 else:
                     full_customer_gate_enabled = not os.environ.get("PYTEST_CURRENT_TEST")
                 if full_customer_gate_enabled:
-                    final_scope_facts = build_scope_facts_v2(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract)
+                    final_scope_facts = build_scope_facts_v3(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract)
                     final_public = apply_ahj_locality_resolution(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
                     final_public = apply_family_reconciliation_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract, job_category=request_job_category)
                     final_public = apply_ahj_identity_guard(final_public if isinstance(final_public, dict) else {}, city, state, job_type)

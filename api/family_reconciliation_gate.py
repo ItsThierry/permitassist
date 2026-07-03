@@ -15,9 +15,11 @@ import re
 from typing import Any, Iterable, Literal
 
 try:  # package/import-path compatibility in tests and server runtime
-    from scope_contract import ScopeFactsV2, build_scope_facts_v2
+    from scope_contract import ScopeFactsV2, ScopeFactsV3, TriFact, build_scope_facts_v2, build_scope_facts_v3
+    from family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
 except Exception:  # pragma: no cover
-    from api.scope_contract import ScopeFactsV2, build_scope_facts_v2
+    from api.scope_contract import ScopeFactsV2, ScopeFactsV3, TriFact, build_scope_facts_v2, build_scope_facts_v3
+    from api.family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
 
 GateAction = Literal["KEEP", "DEMOTE", "VETO", "ADD", "CONDITIONAL_FALLBACK"]
 
@@ -75,6 +77,8 @@ FAMILY_TO_KIND = {
     "refrigeration": "Refrigeration",
     "fire_alarm": "Fire",
     "fire_suppression": "Fire",
+    "fire_life_safety_assembly": "Fire",
+    "fire_hazmat_co2": "Fire",
     "sign": "Sign",
     "historic_review": "Historic/Planning",
     "planning_zoning": "Planning/Zoning",
@@ -197,8 +201,8 @@ def _positive_supports_family(facts: ScopeFactsV2, family: str) -> bool:
         if family == "health_food" and "health_food" in positives:
             return True
         return bool(positives & {"food_service", "grease_generating"})
-    if family in {"fire_alarm", "fire_suppression"}:
-        return bool(positives & {"fire_alarm", "fire_suppression", "racking", "hood_wet_chemical"})
+    if family in {"fire_alarm", "fire_suppression", "fire_life_safety_assembly", "fire_hazmat_co2"}:
+        return bool(positives & {"fire_alarm", "fire_suppression", "racking", "hood_wet_chemical"}) or family in matrix_mandatory_families(facts)
     if family == "gas":
         return "gas" in positives or bool(re.search(r"\b(?:gas\s+(?:line|piping|equipment)|fuel\s+gas)\b", getattr(facts, "request_scope_text", "") or "", re.I))
     return bool(
@@ -208,8 +212,8 @@ def _positive_supports_family(facts: ScopeFactsV2, family: str) -> bool:
 
 
 def _veto_basis(facts: ScopeFactsV2, family: str, row: dict[str, Any]) -> str | None:
-    if family in getattr(facts, "forbidden_families", {}):
-        return facts.forbidden_families[family]
+    if family in matrix_forbidden_families(facts):
+        return matrix_forbidden_families(facts)[family]
     negatives = set(facts.negative_facts)
     text = _row_text(row)
     bucket = family_bucket(family)
@@ -242,14 +246,36 @@ def _official_source_backed(row: dict[str, Any]) -> bool:
     return bool(blob) and ("official" in blob or ".gov" in blob or ".us" in blob or "http" in blob)
 
 
+def resolve_lead_label(segment: str, category: str, facts: ScopeFactsV2) -> str:
+    text = getattr(facts, "request_scope_text", "") or ""
+    if segment == "commercial" and getattr(facts, "facade_scope", "") == "structural_facade":
+        return "Commercial Building Permit — Structural Facade / Masonry Repair"
+    structural = getattr(getattr(facts, "structural_work", None), "value", None) == TriFact.TRUE
+    if segment == "commercial" and structural and re.search(r"\b(?:facade|fa[cç]ade|masonry|lintel)\b", text, re.I):
+        return "Commercial Building Permit — Structural Facade / Masonry Repair"
+    change = getattr(facts, "change_of_use", None)
+    assembly = getattr(getattr(facts, "assembly_occupancy", None), "value", None) == TriFact.TRUE
+    if segment == "commercial" and change and assembly:
+        return "Commercial Building Permit — Change of Use / Tenant Improvement (Assembly)"
+    if segment == "commercial" and (change or re.search(r"\b(?:change\s+of\s+(?:use|occupancy)|warehouse\s+to)\b", text, re.I)):
+        return "Commercial Building Permit — Tenant Improvement / Change of Use"
+    if segment == "commercial" and re.search(r"\b(?:window|door|storefront|facade|fa[cç]ade)\b", text, re.I):
+        return "Commercial Building Permit — Exterior Storefront / Window-Door Alteration"
+    return "Commercial Building / Tenant Improvement Permit"
+
+
 def _canonical_row_name(family: str, facts: ScopeFactsV2) -> str:
     text = getattr(facts, "request_scope_text", "") or ""
     if family == "building_ti":
-        if re.search(r"\b(?:window|door|storefront|facade|fa[cç]ade)\b", text, re.I):
-            return "Commercial Building Permit — Exterior Storefront / Window-Door Alteration"
-        if re.search(r"\b(?:change\s+of\s+(?:use|occupancy)|warehouse\s+to|assembly|pickleball)\b", text, re.I):
-            return "Commercial Building Permit — Tenant Improvement / Change of Use"
-        return "Commercial Building / Tenant Improvement Permit"
+        return resolve_lead_label(getattr(facts, "segment", ""), "building_ti", facts)
+    if family == "electrical" and getattr(getattr(facts, "electrical_new_circuits", None), "value", None) == TriFact.FALSE:
+        return "Residential Electrical Permit — Device / Receptacle Replacement (Existing Circuits)"
+    if family == "fire_life_safety_assembly":
+        return "Fire Department — Assembly Occupancy / Life-Safety Review"
+    if family == "fire_hazmat_co2":
+        return "Fire Department — CO2 Enrichment / Hazardous Gas System Review"
+    if family == "gas" and getattr(getattr(facts, "residential_outdoor_cooking", None), "value", None) == TriFact.TRUE:
+        return "Residential Gas Piping Permit — Outdoor Appliance / Grill Line"
     if family == "gas":
         return "Fuel Gas / Plumbing Gas Permit"
     if family == "plumbing":
@@ -364,8 +390,8 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
 
     def add_row(family: str, name: str, basis: str) -> None:
         nonlocal kept, conditional, rulings, present_families
-        if family in getattr(facts, "forbidden_families", {}):
-            rulings.append(GateRuling("VETO", family, facts.forbidden_families[family], permit_name=name))
+        if family in matrix_forbidden_families(facts):
+            rulings.append(GateRuling("VETO", family, matrix_forbidden_families(facts)[family], permit_name=name))
             return
         if any(family_from_row(r) == family for r in kept):
             return
@@ -399,6 +425,8 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
             "mechanical": "Mechanical Permit",
             "fire_alarm": "Fire Alarm Permit",
             "fire_suppression": "Fire / Life-Safety Review",
+            "fire_life_safety_assembly": "Fire Department — Assembly Occupancy / Life-Safety Review",
+            "fire_hazmat_co2": "Fire Department — CO2 Enrichment / Hazardous Gas System Review",
             "planning_zoning": "Planning / Zoning Use Clearance",
             "co_change_of_occupancy": "Certificate of Occupancy / Change-of-Occupancy Approval",
             "health_food": "Health Plan Review / Food Establishment Permit",
@@ -406,7 +434,7 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
         }
         return names.get(family, f"{FAMILY_TO_KIND.get(family, family.replace('_', ' ').title())} Permit")
 
-    for floor_family, basis in getattr(facts, "mandatory_family_floors", {}).items():
+    for floor_family, basis in matrix_mandatory_families(facts).items():
         add_row(floor_family, floor_name(floor_family), f"mandatory family floor: {basis}")
 
     if (facts.service_amperage or 0) >= 100:
@@ -466,7 +494,7 @@ def apply_family_reconciliation_gate(result: dict[str, Any], job_type: str = "",
     out = copy.deepcopy(result) if isinstance(result, dict) else {}
     if str(out.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED" or out.get("permit_required") is False:
         return out
-    facts = build_scope_facts_v2(job_type or out.get("job_summary") or "", city, state, job_category=job_category, scope_contract=scope_contract if isinstance(scope_contract, dict) else out.get("_scope_contract"))
+    facts = build_scope_facts_v3(job_type or out.get("job_summary") or "", city, state, job_category=job_category, scope_contract=scope_contract if isinstance(scope_contract, dict) else out.get("_scope_contract"))
     rows = [r for r in out.get("permits_required") or [] if isinstance(r, dict)]
     kept, conditional, rulings = reconcile_rows(rows, facts)
     if rows:
