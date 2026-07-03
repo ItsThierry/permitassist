@@ -1,0 +1,24 @@
+{
+  "case_id": "R-013",
+  "conditional_families_must_not_include": [
+    "plumbing"
+  ],
+  "expected_decision": "NOT_REQUIRED",
+  "forbidden_visible": [
+    "plumbing permit"
+  ],
+  "if_required_apply_path_nonempty": true,
+  "protection": false,
+  "required_families_must_not_include": [
+    "plumbing"
+  ],
+  "visible_must_include": [
+    "not required"
+  ],
+  "visible_must_include_any": [
+    [
+      "permit-not-required",
+      "no permit required"
+    ]
+  ]
+}

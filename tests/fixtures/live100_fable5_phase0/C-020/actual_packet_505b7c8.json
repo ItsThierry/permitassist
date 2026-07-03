@@ -1,0 +1,65 @@
+{
+  "api_apply_url": "https://www.atlantaga.gov/government/departments/city-planning/zoning-development-permitting-services/online-permitting",
+  "api_decision": "REQUIRED",
+  "api_permit_name": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit; Health / Childcare Licensing Review; Fire / Life Safety Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval",
+  "api_source_urls": [
+    "https://www.atlantaga.gov/government/departments/city-planning",
+    "https://www.atlantaga.gov/government/departments/city-planning/zoning-development-permitting-services/contact-zoning-development-and-permits-staff",
+    "https://www.atlantaga.gov/government/departments/city-planning/zoning-development-permitting-services/getting-started-with-our-zd-p-services",
+    "https://www.atlantaga.gov/government/departments/city-planning/zoning-development-permitting-services/getting-started-with-our-zd-p-services/learn-about-zoning-building-codes",
+    "https://www.atlantaga.gov/government/departments/city-planning/zoning-development-permitting-services/online-permitting",
+    "https://www.atlantaga.gov/i-want-to/obtain-a-building-permit"
+  ],
+  "body_text": "PA\nPermitAssist\nPermit Intelligence Report\nCommercial Building / Tenant Improvement Permit\ncommercial daycare tenant improvement with classrooms toilets kitchen warming area and fenced play yard, job value 280000 in Atlanta, GA\nPermit required: Yes\n\ud83d\udda8\ufe0f Print / Save PDF\nCORE DETAILS\nJurisdiction\nAtlanta, GA\nPermit\nCommercial Building / Tenant Improvement Permit\nFees\nFee Estimate: Fee not confirmed \u2014 call the City of Atlanta Department of City Planning / Office of Buildings or check their online fee schedule before applying. \u2014 verify with the building department before quoting\nTimeline\nVaries by jurisdiction\nWhere to apply\nAtlanta online permitting / Accela\nSUMMARY\nRequired permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit; Health / Childcare Licensing Review; Fire / Life Safety Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Wastewater / FOG / Pretreatment Approval.\nREQUIRED DOCUMENTS\nProject scope description\nSite address / parcel information\nElectrical contractor/license information\nElectrical fixture/equipment schedule\nEquipment specifications\nMechanical layout\nPlumbing fixture/equipment schedule\nPlumbing layout if required\nFood-service floor plan\nEquipment schedule\nMenu/process description\nCONDITIONAL GUIDANCE\nOnly needed if the project includes grease-generating fixtures, floor drains, or a grease interceptor. \u2014 Wastewater / FOG / Pretreatment Approval\nINSPECTION CHECKLIST\nBuilding final inspection\nElectrical final inspection\nMechanical final inspection\nPlumbing final inspection\nPRE-CONSTRUCTION CHECKLIST\nPull Commercial Building / Tenant Improvement Permit before starting work\nPull Electrical Permit before starting work\nPull Mechanical Permit before starting work\nPull Plumbing Permit before starting work\nPull Health / Childcare Licensing Review before starting work\nPull Fire / Life Safety Review before starting work\nPull Planning / Zoning Use Clearance before starting work\nPull Certificate of Occupancy / Change-of-Occupancy Approval before starting work\nOnly needed if the project includes grease-generating fixtures, floor drains, or a grease interceptor. \u2014 if triggered, pull Wastewater / FOG / Pretreatment Approval\nConfirm jurisdiction for Atlanta, GA\nPay permit fee: Fee Estimate: Fee not confirmed \u2014 call the City of Atlanta Department of City Planning / Office of Buildings or check their online fee schedule before applying. \u2014 verify with the building department before quoting\nPlan for approval timeline: Varies by jurisdiction\nSOURCES CHECKED\nOfficial permit source\nOfficial permit source\nOfficial permit source\nOfficial permit source\nOfficial permit source\nOfficial permit source\nGet your own permits instantly at permitassist.io\nShareable permit reports, contractor checklists, and faster office handoffs.\nTry PermitAssist",
+  "body_text_len": 2913,
+  "bucket": "daycare TI",
+  "case_id": "C-020",
+  "city": "Atlanta",
+  "expected_decision": "REQUIRED",
+  "has_core_details": true,
+  "has_preconstruction_checklist": true,
+  "has_print_save_pdf": true,
+  "has_required_documents": true,
+  "index": 70,
+  "job_type": "commercial daycare tenant improvement with classrooms toilets kitchen warming area and fenced play yard, job value 280000",
+  "links": [
+    {
+      "href": "https://www.atlantaga.gov/government/departments/city-planning/zoning-development-permitting-services/getting-started-with-our-zd-p-services/learn-about-zoning-building-codes",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://www.atlantaga.gov/government/departments/city-planning/zoning-development-permitting-services/online-permitting",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://www.atlantaga.gov/government/departments/city-planning/zoning-development-permitting-services/getting-started-with-our-zd-p-services",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://www.atlantaga.gov/government/departments/city-planning",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://www.atlantaga.gov/i-want-to/obtain-a-building-permit",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://www.atlantaga.gov/government/departments/city-planning/zoning-development-permitting-services/contact-zoning-development-and-permits-staff",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://permitassist.io/",
+      "text": "Try PermitAssist"
+    }
+  ],
+  "provisional_grade": "A",
+  "render_elapsed_seconds": 3.38,
+  "render_ok": true,
+  "screenshot": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_locked_packet_postdeploy_20260702T232436Z/screenshots_all_100/070_C-020_commercial_Atlanta_GA.png",
+  "segment": "commercial",
+  "share_url": "https://permitassist.io/report/b0gSW1_fVQA",
+  "state": "GA",
+  "title": "Commercial Building / Tenant Improvement Permit | PermitAssist Report",
+  "visible_decision_no": false,
+  "visible_decision_yes": true
+}

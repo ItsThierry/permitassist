@@ -1,0 +1,26 @@
+{
+  "case_id": "R-049",
+  "conditional_families_must_not_include": [
+    "health_food",
+    "wastewater_pretreatment_fog"
+  ],
+  "expected_decision": "REQUIRED",
+  "forbidden_visible": [
+    "food establishment",
+    "wastewater / fog",
+    "pretreatment approval"
+  ],
+  "protection": false,
+  "required_families_must_include": [
+    "plumbing",
+    "gas"
+  ],
+  "required_families_must_not_include": [
+    "health_food",
+    "wastewater_pretreatment_fog"
+  ],
+  "required_name_must_include": [
+    "Gas Piping",
+    "Gas Pressure Test"
+  ]
+}

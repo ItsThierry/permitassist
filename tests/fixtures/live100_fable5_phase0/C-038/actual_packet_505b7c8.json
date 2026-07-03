@@ -1,0 +1,55 @@
+{
+  "api_apply_url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections",
+  "api_decision": "REQUIRED",
+  "api_permit_name": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit; Health; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Wastewater / FOG / Pretreatment Approval",
+  "api_source_urls": [
+    "https://onestoppgh.pittsburghpa.gov",
+    "https://pittsburghpa.gov/dpw/building-inspection",
+    "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections",
+    "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/OneStopPGH"
+  ],
+  "body_text": "PA\nPermitAssist\nPermit Intelligence Report\nCommercial Building / Tenant Improvement Permit\ncommercial food truck commissary kitchen buildout with sinks hood and grease interceptor, job value 180000 in Pittsburgh, PA\nPermit required: Yes\n\ud83d\udda8\ufe0f Print / Save PDF\nCORE DETAILS\nJurisdiction\nPittsburgh, PA\nPermit\nCommercial Building / Tenant Improvement Permit\nFees\nFee Estimate: $1,080 minimum building permit fee based on $180,000 value at $6 per $1,000, plus separate mechanical and plumbing permit fees; expect roughly $1,300 - $2,000 total in city permit fees before plan review or trade-specific add-ons \u2014 verify with the building department before quoting\nTimeline\nVaries by jurisdiction\nWhere to apply\nCity of Pittsburgh Department of Permits, Licenses and Inspections\nSUMMARY\nRequired permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit; Health; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Wastewater / FOG / Pretreatment Approval.\nREQUIRED DOCUMENTS\nProject scope description\nSite address / parcel information\nElectrical contractor/license information\nElectrical fixture/equipment schedule\nEquipment specifications\nMechanical layout\nPlumbing fixture/equipment schedule\nPlumbing layout if required\nFood-service floor plan\nEquipment schedule\nMenu/process description\nGrease interceptor sizing/details\nWastewater pretreatment application\nINSPECTION CHECKLIST\nBuilding final inspection\nElectrical final inspection\nMechanical final inspection\nPlumbing final inspection\nPRE-CONSTRUCTION CHECKLIST\nPull Commercial Building / Tenant Improvement Permit before starting work\nPull Electrical Permit before starting work\nPull Mechanical Permit before starting work\nPull Plumbing Permit before starting work\nPull Health before starting work\nPull Fire Suppression / Fire Prevention Review before starting work\nPull Planning / Zoning Use Clearance before starting work\nPull Certificate of Occupancy / Change-of-Occupancy Approval before starting work\nPull Wastewater / FOG / Pretreatment Approval before starting work\nConfirm jurisdiction for Pittsburgh, PA\nPay permit fee: Fee Estimate: $1,080 minimum building permit fee based on $180,000 value at $6 per $1,000, plus separate mechanical and plumbing permit fees; expect roughly $1,300 - $2,000 total in city permit fees before plan review or trade-specific add-ons \u2014 verify with the building department before quoting\nPlan for approval timeline: Varies by jurisdiction\nSOURCES CHECKED\nOfficial permit source\nOfficial permit source\nOfficial permit source\nOfficial permit source\nGet your own permits instantly at permitassist.io\nShareable permit reports, contractor checklists, and faster office handoffs.\nTry PermitAssist",
+  "body_text_len": 2816,
+  "bucket": "commissary kitchen",
+  "case_id": "C-038",
+  "city": "Pittsburgh",
+  "expected_decision": "REQUIRED",
+  "has_core_details": true,
+  "has_preconstruction_checklist": true,
+  "has_print_save_pdf": true,
+  "has_required_documents": true,
+  "index": 88,
+  "job_type": "commercial food truck commissary kitchen buildout with sinks hood and grease interceptor, job value 180000",
+  "links": [
+    {
+      "href": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://onestoppgh.pittsburghpa.gov/",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://pittsburghpa.gov/dpw/building-inspection",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/OneStopPGH",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://permitassist.io/",
+      "text": "Try PermitAssist"
+    }
+  ],
+  "provisional_grade": "A",
+  "render_elapsed_seconds": 1.91,
+  "render_ok": true,
+  "screenshot": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_locked_packet_postdeploy_20260702T232436Z/screenshots_all_100/088_C-038_commercial_Pittsburgh_PA.png",
+  "segment": "commercial",
+  "share_url": "https://permitassist.io/report/Ge0kmGNkQSg",
+  "state": "PA",
+  "title": "Commercial Building / Tenant Improvement Permit | PermitAssist Report",
+  "visible_decision_no": false,
+  "visible_decision_yes": true
+}

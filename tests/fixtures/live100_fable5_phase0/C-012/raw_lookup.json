@@ -1,0 +1,273 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Commercial cosmetic/no MEP; source-backed exemption needed",
+    "bucket": "office cosmetic",
+    "city": "Dallas",
+    "expected_decision_pre_registered": "SOURCE_ADJUDICATE",
+    "expected_permit_families_pre_registered": [],
+    "id": "C-012",
+    "job_type": "commercial office suite refresh repaint carpet only no wall changes no MEP, job value 22000",
+    "job_value": 22000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_needs_targeted_official_source_check",
+    "state": "TX",
+    "zip_code": "75201"
+  },
+  "cases_plan_sha256": "5dad1e70762ea993d26fdbd07fe9c931364884c960259e4aea9c4e0b881a0453",
+  "completed_at_utc": "2026-07-02T23:41:56.793630+00:00",
+  "deployed_sha": "505b7c8bb373bf00ece3a3e6bf88a7126d3a3505",
+  "elapsed_seconds": 4.15,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "",
+    "applying_office": "Dallas Development Services Department",
+    "confidence": "low",
+    "customer_headline": "Commercial no permit required for the stated scope",
+    "customer_next_step": "Keep this no-permit report with the job record and verify with the permit office before expanding the scope.",
+    "fee_range": "No permit fee expected for the resolved no-permit scope; verify with the permit office if the scope changes",
+    "permit_decision": "NOT_REQUIRED",
+    "permit_kind": "Not Required",
+    "permit_name": "No permit required",
+    "permit_required": false,
+    "permit_verdict": "NO",
+    "sources_count": 2
+  },
+  "permit_elapsed_seconds": 2.82,
+  "provisional_grade": "B",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Dallas",
+    "job_category": "commercial",
+    "job_type": "commercial office suite refresh repaint carpet only no wall changes no MEP, job value 22000",
+    "job_value": 22000,
+    "state": "TX",
+    "vertical": "commercial",
+    "zip_code": "75201"
+  },
+  "response_body": {
+    "apply_path": {
+      "channel": "no_permit_required",
+      "documents_to_prepare": [],
+      "office_name": "Dallas Development Services Department",
+      "permit_type": "No permit required",
+      "state": "not_applicable",
+      "steps": [
+        "Keep the described scope limited; verify before adding regulated work."
+      ]
+    },
+    "apply_url": "",
+    "apply_url_known": true,
+    "applying_office": "Dallas Development Services Department",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "Dallas Development Services Department",
+        "segment": "commercial",
+        "source_urls": [
+          "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+          "https://developdallas.dallascityhall.com/PermitDallas/"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Keep this no-permit report with the job record and verify before expanding the scope."
+      ],
+      "conditional_families": [],
+      "decision": "NOT_REQUIRED",
+      "documents": [],
+      "fees": [],
+      "headline": "Commercial no permit required for the stated scope",
+      "inspections": [],
+      "required_families": [],
+      "rows": [
+        {
+          "action_url": "",
+          "conditional_text": "",
+          "decision": "NOT_REQUIRED",
+          "documents": [],
+          "family": "not_required",
+          "fees": "",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "No permit required",
+          "reason": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "commercial",
+      "summary": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope."
+    },
+    "checklist": [
+      "Keep this no-permit report with the job record and verify before expanding the scope."
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "permit_type": "Low-voltage / data cabling permit if cabling, access control, AV, or security systems are installed",
+        "reason": "Office TIs commonly include telecom/data/access-control work that may be permitted separately or inspected by electrical/fire reviewers."
+      },
+      {
+        "certainty": "likely",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review."
+      }
+    ],
+    "conditional_permits": [],
+    "confidence": "low",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope.",
+    "customer_headline": "Commercial no permit required for the stated scope",
+    "customer_next_step": "Keep this no-permit report with the job record and verify with the permit office before expanding the scope.",
+    "customer_result_summary": {
+      "next_step": "Keep this no-permit report with the job record and verify with the permit office before expanding the scope.",
+      "permit_kind": "Not Required",
+      "source_cue": "Official source path found",
+      "summary": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [],
+    "documents_to_prepare": [],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "No permit fee expected for the resolved no-permit scope; verify with the permit office if the scope changes",
+    "inspections": [],
+    "job_summary": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://aca-prod.accela.com/DALLASTX/Default.aspx"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://developdallas.dallascityhall.com/PermitDallas/"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "",
+    "permit_decision": "NOT_REQUIRED",
+    "permit_kind": "Not Required",
+    "permit_name": "No permit required",
+    "permit_required": false,
+    "permit_summary": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope.",
+    "permit_type": "No permit required",
+    "permit_verdict": "NO",
+    "permits_required": [],
+    "permits_required_logic": [],
+    "public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "Dallas Development Services Department",
+        "segment": "commercial",
+        "source_urls": [
+          "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+          "https://developdallas.dallascityhall.com/PermitDallas/"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Keep this no-permit report with the job record and verify before expanding the scope."
+      ],
+      "conditional_families": [],
+      "decision": "NOT_REQUIRED",
+      "documents": [],
+      "fees": [],
+      "headline": "Commercial no permit required for the stated scope",
+      "inspections": [],
+      "required_families": [],
+      "rows": [
+        {
+          "action_url": "",
+          "conditional_text": "",
+          "decision": "NOT_REQUIRED",
+          "documents": [],
+          "family": "not_required",
+          "fees": "",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "No permit required",
+          "reason": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "commercial",
+      "summary": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope."
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "",
+        "conditional_text": "",
+        "decision": "NOT_REQUIRED",
+        "documents": [],
+        "family": "not_required",
+        "fees": "",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "No permit required",
+        "reason": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope.",
+        "source": ""
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [],
+    "required_permit_names": [],
+    "required_permit_summary": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope.",
+    "requirements": [],
+    "segment": "commercial",
+    "source_urls": [
+      "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+      "https://developdallas.dallascityhall.com/PermitDallas/"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://aca-prod.accela.com/DALLASTX/Default.aspx"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://developdallas.dallascityhall.com/PermitDallas/"
+      }
+    ],
+    "summary": "No permit required for cosmetic finish work only in Dallas, TX as long as the work stays limited to the stated finish-only scope.",
+    "total_cost_estimate": "$22,500 - $28,500",
+    "trade_permits": [],
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": []
+  },
+  "response_sha256": "16840167ab2703075835474cf95cf6eb8072a9845a38379ea1dffe06eebf7ceb",
+  "run_id": "live_customer_100_fable5_locked_packet_postdeploy_20260702T232436Z",
+  "share_slug": "OhNyQgvoKks",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/OhNyQgvoKks",
+  "source_urls": [
+    "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+    "https://developdallas.dallascityhall.com/PermitDallas/"
+  ],
+  "started_at_utc": "2026-07-02T23:41:52.639890+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

@@ -1,0 +1,716 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "ADU multi-permit",
+    "bucket": "detached ADU",
+    "city": "Portland",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Building",
+      "Planning/Zoning",
+      "Plumbing",
+      "Electrical",
+      "Mechanical"
+    ],
+    "id": "R-044",
+    "job_type": "build detached ADU in backyard with kitchen bath and utilities, job value 180000",
+    "job_value": 180000,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "ME",
+    "zip_code": "04101"
+  },
+  "cases_plan_sha256": "5dad1e70762ea993d26fdbd07fe9c931364884c960259e4aea9c4e0b881a0453",
+  "completed_at_utc": "2026-07-02T23:40:13.448971+00:00",
+  "deployed_sha": "505b7c8bb373bf00ece3a3e6bf88a7126d3a3505",
+  "elapsed_seconds": 3.66,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://www.portlandmaine.gov/pay-apply",
+    "applying_office": "City of Portland Maine online payments and applications",
+    "confidence": "medium",
+    "customer_headline": "Residential permit required: Building Permit \u2014 ADU / Dwelling Conversion",
+    "customer_next_step": "File the required permit categories with City of Portland Maine online payments and applications: Building Permit \u2014 ADU / Dwelling Conversion, Electrical Permit, Mechanical Permit \u2014 ADU Ventilation / Heating, Plumbing Permit \u2014 ADU Kitchen/Bath. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "ADU / Accessory Dwelling Unit",
+    "permit_name": "Permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 3
+  },
+  "permit_elapsed_seconds": 2.39,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Portland",
+    "job_category": "residential",
+    "job_type": "build detached ADU in backyard with kitchen bath and utilities, job value 180000",
+    "job_value": 180000,
+    "state": "ME",
+    "vertical": "residential",
+    "zip_code": "04101"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "City of Portland Maine online payments and applications",
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "office_name": "City of Portland Maine online payments and applications",
+      "permit_category": "ADU / Accessory Dwelling Unit",
+      "permit_type": "Permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath",
+      "portal_url": "https://www.portlandmaine.gov/pay-apply",
+      "state": "resolved_portal",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "Confirm exact portal subcategories before final submission"
+      ]
+    },
+    "apply_url": "https://www.portlandmaine.gov/pay-apply",
+    "apply_url_known": true,
+    "applying_office": "City of Portland Maine online payments and applications",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "https://www.portlandmaine.gov/pay-apply",
+        "name": "City of Portland Maine online payments and applications",
+        "segment": "residential",
+        "source_urls": [
+          "https://www.portlandmaine.gov/pay-apply",
+          "https://www.portlandmaine.gov/151/Planning-Development",
+          "https://www.portlandmaine.gov/permitting-inspections"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Building Permit \u2014 ADU / Dwelling Conversion before starting work",
+        "Pull Electrical Permit before starting work",
+        "Pull Mechanical Permit \u2014 ADU Ventilation / Heating before starting work",
+        "Pull Plumbing Permit \u2014 ADU Kitchen/Bath before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Residential permit required: Building Permit \u2014 ADU / Dwelling Conversion",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection"
+      ],
+      "required_families": [
+        "building",
+        "electrical",
+        "mechanical",
+        "plumbing"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.portlandmaine.gov/pay-apply",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Building Permit \u2014 ADU / Dwelling Conversion",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.portlandmaine.gov/pay-apply",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.portlandmaine.gov/pay-apply",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.portlandmaine.gov/pay-apply",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "residential",
+      "summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath."
+    },
+    "checklist": [
+      "Pull Building Permit \u2014 ADU / Dwelling Conversion before starting work",
+      "Pull Electrical Permit before starting work",
+      "Pull Mechanical Permit \u2014 ADU Ventilation / Heating before starting work",
+      "Pull Plumbing Permit \u2014 ADU Kitchen/Bath before starting work"
+    ],
+    "companion_permits": [],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath.",
+    "customer_headline": "Residential permit required: Building Permit \u2014 ADU / Dwelling Conversion",
+    "customer_next_step": "File the required permit categories with City of Portland Maine online payments and applications: Building Permit \u2014 ADU / Dwelling Conversion, Electrical Permit, Mechanical Permit \u2014 ADU Ventilation / Heating, Plumbing Permit \u2014 ADU Kitchen/Bath. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "File the required permit categories with City of Portland Maine online payments and applications: Building Permit \u2014 ADU / Dwelling Conversion, Electrical Permit, Mechanical Permit \u2014 ADU Ventilation / Heating, Plumbing Permit \u2014 ADU Kitchen/Bath. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "ADU / Accessory Dwelling Unit",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "inspections": [
+      "Building final inspection",
+      "Electrical final inspection",
+      "Mechanical final inspection",
+      "Plumbing final inspection"
+    ],
+    "job_summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.portlandmaine.gov/pay-apply"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.portlandmaine.gov/151/Planning-Development"
+      },
+      {
+        "reason": "placeholder_pattern",
+        "renderable": false,
+        "status": "offline_static_check",
+        "url": "https://www.portlandmaine.gov/DocumentCenter/View/12345/Current-Fee-Schedules"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.portlandmaine.gov/permitting-inspections"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.portlandmaine.gov/pay-apply",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "ADU / Accessory Dwelling Unit",
+    "permit_name": "Permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath.",
+    "permit_type": "Permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://www.portlandmaine.gov/pay-apply",
+        "approval_type": "Building Permit \u2014 ADU / Dwelling Conversion",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "building",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "kind": "Building",
+        "lead": true,
+        "permit_name": "Building Permit \u2014 ADU / Dwelling Conversion",
+        "permit_type": "Building Permit \u2014 ADU / Dwelling Conversion",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.portlandmaine.gov/pay-apply",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.portlandmaine.gov/pay-apply",
+        "approval_type": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+        "permit_type": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.portlandmaine.gov/pay-apply",
+        "approval_type": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "permit_type": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "required": true,
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Building Permit \u2014 ADU / Dwelling Conversion",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "https://www.portlandmaine.gov/pay-apply",
+        "name": "City of Portland Maine online payments and applications",
+        "segment": "residential",
+        "source_urls": [
+          "https://www.portlandmaine.gov/pay-apply",
+          "https://www.portlandmaine.gov/151/Planning-Development",
+          "https://www.portlandmaine.gov/permitting-inspections"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Building Permit \u2014 ADU / Dwelling Conversion before starting work",
+        "Pull Electrical Permit before starting work",
+        "Pull Mechanical Permit \u2014 ADU Ventilation / Heating before starting work",
+        "Pull Plumbing Permit \u2014 ADU Kitchen/Bath before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Residential permit required: Building Permit \u2014 ADU / Dwelling Conversion",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection"
+      ],
+      "required_families": [
+        "building",
+        "electrical",
+        "mechanical",
+        "plumbing"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.portlandmaine.gov/pay-apply",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Building Permit \u2014 ADU / Dwelling Conversion",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.portlandmaine.gov/pay-apply",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.portlandmaine.gov/pay-apply",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.portlandmaine.gov/pay-apply",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "residential",
+      "summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath."
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://www.portlandmaine.gov/pay-apply",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Building Permit \u2014 ADU / Dwelling Conversion",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://www.portlandmaine.gov/pay-apply",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Electrical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://www.portlandmaine.gov/pay-apply",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://www.portlandmaine.gov/pay-apply",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "building",
+      "electrical",
+      "mechanical",
+      "plumbing",
+      "Building",
+      "Electrical",
+      "Mechanical",
+      "Plumbing"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 ADU / Dwelling Conversion",
+      "Electrical Permit",
+      "Mechanical Permit \u2014 ADU Ventilation / Heating",
+      "Plumbing Permit \u2014 ADU Kitchen/Bath"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "segment": "residential",
+    "source_urls": [
+      "https://www.portlandmaine.gov/pay-apply",
+      "https://www.portlandmaine.gov/151/Planning-Development",
+      "https://www.portlandmaine.gov/permitting-inspections"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.portlandmaine.gov/pay-apply"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.portlandmaine.gov/151/Planning-Development"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.portlandmaine.gov/permitting-inspections"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath.",
+    "total_cost_estimate": "$180,000 - $240,000",
+    "trade_permits": [],
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ]
+  },
+  "response_sha256": "079d68c33bb2409842926ee815b41c3759ef6cb111604d2bfac366e1542f3ddb",
+  "run_id": "live_customer_100_fable5_locked_packet_postdeploy_20260702T232436Z",
+  "share_slug": "0diDvE1IJlE",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/0diDvE1IJlE",
+  "source_urls": [
+    "https://www.portlandmaine.gov/151/Planning-Development",
+    "https://www.portlandmaine.gov/pay-apply",
+    "https://www.portlandmaine.gov/permitting-inspections"
+  ],
+  "started_at_utc": "2026-07-02T23:40:09.783979+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

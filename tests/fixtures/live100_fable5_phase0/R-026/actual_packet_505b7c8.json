@@ -1,0 +1,50 @@
+{
+  "api_apply_url": "",
+  "api_decision": "NOT_REQUIRED",
+  "api_permit_name": "No permit required",
+  "api_source_urls": [
+    "https://aca.tucsonaz.gov",
+    "https://www.tucsonaz.gov/Departments/Planning-Development-Services",
+    "https://www.tucsonaz.gov/Departments/Planning-Development-Services/Permits/Residential-Permits"
+  ],
+  "body_text": "PA\nPermitAssist\nPermit Intelligence Report\nNo permit required\ninterior repaint and replace carpet only no electrical no plumbing no walls, job value 4500 in Tucson, AZ\nPermit required: No\n\ud83d\udda8\ufe0f Print / Save PDF\nCORE DETAILS\nJurisdiction\nTucson, AZ\nPermit\nNo permit required\nFees\nNo permit fee expected for the resolved no-permit scope; verify with the permit office if the scope changes\nTimeline\nVaries by jurisdiction\nWhere to apply\nCity of Tucson Development Services Center\nSUMMARY\nNo permit required for cosmetic finish work only in Tucson, AZ as long as the work stays limited to the stated finish-only scope.\nREQUIRED DOCUMENTS\nScope of work\nINSPECTION CHECKLIST\nConfirm inspection phases with the jurisdiction.\nPRE-CONSTRUCTION CHECKLIST\nNo permit is required for this scope \u2014 keep this report with the job record and verify before expanding the scope\nConfirm jurisdiction for Tucson, AZ\nNo permit fee applies for this resolved no-permit scope\nPlan for approval timeline: Varies by jurisdiction\nSOURCES CHECKED\nOfficial permit source\nOfficial permit source\nOfficial permit source\nGet your own permits instantly at permitassist.io\nShareable permit reports, contractor checklists, and faster office handoffs.\nTry PermitAssist",
+  "body_text_len": 1227,
+  "bucket": "cosmetic paint/carpet",
+  "case_id": "R-026",
+  "city": "Tucson",
+  "expected_decision": "NOT_REQUIRED",
+  "has_core_details": true,
+  "has_preconstruction_checklist": true,
+  "has_print_save_pdf": true,
+  "has_required_documents": true,
+  "index": 28,
+  "job_type": "interior repaint and replace carpet only no electrical no plumbing no walls, job value 4500",
+  "links": [
+    {
+      "href": "https://www.tucsonaz.gov/Departments/Planning-Development-Services",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://aca.tucsonaz.gov/",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://www.tucsonaz.gov/Departments/Planning-Development-Services/Permits/Residential-Permits",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://permitassist.io/",
+      "text": "Try PermitAssist"
+    }
+  ],
+  "provisional_grade": "A",
+  "render_elapsed_seconds": 0.99,
+  "render_ok": true,
+  "screenshot": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_locked_packet_postdeploy_20260702T232436Z/screenshots_all_100/028_R-026_residential_Tucson_AZ.png",
+  "segment": "residential",
+  "share_url": "https://permitassist.io/report/H_5-mJfOUBs",
+  "state": "AZ",
+  "title": "No permit required | PermitAssist Report",
+  "visible_decision_no": true,
+  "visible_decision_yes": false
+}

@@ -1,0 +1,12 @@
+{
+  "baseline_conditional_family_multiset": [],
+  "baseline_required_count": 3,
+  "baseline_required_family_multiset": [
+    "health_food",
+    "plumbing",
+    "wastewater_pretreatment_fog"
+  ],
+  "case_id": "C-046",
+  "expected_decision": "REQUIRED",
+  "protection": true
+}

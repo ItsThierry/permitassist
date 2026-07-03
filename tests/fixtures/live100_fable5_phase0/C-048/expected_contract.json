@@ -1,0 +1,24 @@
+{
+  "case_id": "C-048",
+  "expected_decision": "REQUIRED",
+  "fee_family_terms_must_have_rows": [
+    "electrical"
+  ],
+  "inspections_must_include": [
+    "electrical"
+  ],
+  "protection": false,
+  "required_docs_must_include": [
+    "electrical"
+  ],
+  "required_families_must_include": [
+    "building",
+    "electrical",
+    "mechanical",
+    "plumbing",
+    "fire_alarm"
+  ],
+  "required_name_must_include": [
+    "Electrical Permit"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "baseline_conditional_family_multiset": [
+    "planning_zoning",
+    "plumbing"
+  ],
+  "baseline_required_count": 3,
+  "baseline_required_family_multiset": [
+    "building",
+    "electrical",
+    "mechanical"
+  ],
+  "case_id": "C-017",
+  "expected_decision": "REQUIRED",
+  "protection": true
+}

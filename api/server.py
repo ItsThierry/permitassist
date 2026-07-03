@@ -1338,6 +1338,14 @@ _LIVE100_OFFICIAL_FILING_PATH_REPAIRS: dict[tuple[str, str], dict[str, object]] 
         "verified_on": "2026-07-01",
         "reachability_status": "unknown",
     },
+    ("cheyenne", "wy"): {
+        "apply_url": "https://www.cheyennecity.org/Your-Government/Departments/Compliance-Department/Building-Permitting-Licensing",
+        "source_urls": ["https://www.cheyennecity.org/Your-Government/Departments/Compliance-Department/Building-Permitting-Licensing"],
+        "title": "City of Cheyenne Building Permitting & Licensing",
+        "evidence": "Official Cheyenne Building Permitting & Licensing page is the local filing/permit office path for commercial building, electrical, mechanical, plumbing, gas, and fire/environmental permit coordination.",
+        "verified_on": "2026-07-03",
+        "reachability_status": "unknown",
+    },
 }
 
 
@@ -1385,6 +1393,12 @@ def _apply_live100_official_filing_path_repair(result: dict, city: str, state: s
     if not should_repair and (city or "").lower().strip() == "kansas city" and (state or "").upper().strip() == "KS":
         text = _result_text_inventory(result)
         should_repair = (not has_primary) and ("wyandotte" in text or "kansas city, kansas" in text or "kck" in text or "water heater" in (job_type or "").lower())
+    if not should_repair:
+        text = _result_text_inventory(result).lower()
+        raw_entry_sources = entry.get("source_urls")
+        entry_source_urls = raw_entry_sources if isinstance(raw_entry_sources, list) else []
+        entry_urls = [str(entry.get("apply_url") or "").lower(), *[str(u or "").lower() for u in entry_source_urls]]
+        should_repair = (not has_primary) and any(url and url in text for url in entry_urls)
     if not should_repair:
         return result
 
@@ -5072,7 +5086,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     full_customer_gate_enabled = not os.environ.get("PYTEST_CURRENT_TEST")
                 if full_customer_gate_enabled:
                     final_scope_facts = build_scope_facts_v2(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract)
-                    final_public = apply_family_reconciliation_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract)
+                    final_public = apply_family_reconciliation_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract, job_category=request_job_category)
                     final_public = apply_ahj_identity_guard(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
                     final_public = apply_closed_world_customer_contract(
                         final_public if isinstance(final_public, dict) else {},
@@ -5080,6 +5094,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                         city,
                         state,
                         job_category=request_job_category,
+                        scope_facts_v2=final_scope_facts,
                     )
                     # Final lock happens after closed-world reconciliation so the
                     # packet is the last source of truth before serialization.
@@ -8212,12 +8227,21 @@ def to_public_share_payload(share: dict, checklist: dict | None = None) -> dict:
     public_share = _public_allowlist(share, PUBLIC_SHARE_FIELDS)
     public_share["data"] = _public_allowlist(share.get("data") or {}, PUBLIC_REPORT_RESULT_FIELDS)
     public_checklist = _public_allowlist(checklist or {}, PUBLIC_CHECKLIST_FIELDS)
-    return {
+    payload = {
         "share": public_share,
         "app_base_url": APP_BASE_URL,
         "generated_at": utc_now().isoformat(),
         "checklist": public_checklist,
     }
+    def _scrub(value):
+        if isinstance(value, dict):
+            return {k: _scrub(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [_scrub(v) for v in value]
+        if isinstance(value, str):
+            return re.sub(r"\bno\s+new\s+circuits?\b", "existing circuits only", value, flags=re.I)
+        return value
+    return _scrub(payload)
 
 
 def html_safe_json_dumps(value: object) -> str:
@@ -8235,6 +8259,8 @@ def html_safe_json_dumps(value: object) -> str:
 def render_share_page(share: dict) -> str:
     template = load_report_template()
     safe_share = dict(share or {})
+    if isinstance(safe_share.get("job_type"), str):
+        safe_share["job_type"] = re.sub(r"\bno\s+new\s+circuits?\b", "existing circuits only", safe_share["job_type"], flags=re.I)
     raw_share_data = safe_share.get("data")
     original_data = raw_share_data if isinstance(raw_share_data, dict) else {}
     packet_obj = original_data.get("public_packet")

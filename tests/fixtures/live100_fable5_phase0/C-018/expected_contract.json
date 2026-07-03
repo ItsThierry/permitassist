@@ -1,0 +1,19 @@
+{
+  "case_id": "C-018",
+  "expected_decision": "REQUIRED",
+  "forbidden_visible": [
+    "residential building permit"
+  ],
+  "no_residential_label_on_commercial": true,
+  "protection": false,
+  "required_families_must_include": [
+    "building",
+    "fire_suppression",
+    "planning_zoning",
+    "co_change_of_occupancy"
+  ],
+  "required_name_must_include": [
+    "Fire",
+    "Planning / Zoning"
+  ]
+}

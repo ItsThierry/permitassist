@@ -200,11 +200,16 @@ def _source_urls_from_result(data: dict[str, Any]) -> list[str]:
 
 def _authority(data: dict[str, Any], segment: str) -> PacketAuthority:
     name = str(data.get("applying_office") or data.get("jurisdiction") or data.get("office_name") or "Local permit office").strip()
+    source_urls = _source_urls_from_result(data)
     apply_url = str(data.get("apply_url") or data.get("online_application_url") or "").strip()
     if isinstance(data.get("apply_path"), dict):
         apply_url = apply_url or str(data["apply_path"].get("portal_url") or data["apply_path"].get("url") or "").strip()
         name = str(data["apply_path"].get("authority") or data["apply_path"].get("office") or name).strip()
-    return PacketAuthority(name=name or "Local permit office", state=str(data.get("state") or "").upper(), apply_url=apply_url, source_urls=_source_urls_from_result(data), segment=segment)
+    if not apply_url and source_urls and str(data.get("permit_decision") or "").upper().strip() != "NOT_REQUIRED":
+        first_source = source_urls[0]
+        if not re.search(r"\b(?:iccsafe|up\.codes|wikipedia|google|bing|yelp|angi|homeadvisor|permitplace|buildzoom)\b", first_source, re.I):
+            apply_url = first_source
+    return PacketAuthority(name=name or "Local permit office", state=str(data.get("state") or "").upper(), apply_url=apply_url, source_urls=source_urls, segment=segment)
 
 
 def _family(row: dict[str, Any]) -> str:
@@ -263,6 +268,8 @@ def _clean_fee_text(text: str, facts: Any | None = None) -> str:
         value = value.replace(" + $4,000 fire-sprinkler-modify adder", "")
         value = value.replace(" + $4000 fire-sprinkler-modify adder", "")
         value = value.replace("fire-sprinkler-modify adder", "fire/life-safety review component (no sprinkler-modification adder)")
+    if re.search(r"\b(?:national[- ]scope benchmark|not a quoted ahj fee schedule|not a jurisdiction-specific building department fee)\b", value, re.I):
+        return "Permit fee not confirmed; verify the current AHJ fee schedule before quoting."
     return value
 
 
@@ -442,6 +449,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     original_permit_kind = str(out.get("permit_kind") or "").strip()
     legacy_apply_path_obj = out.get("apply_path")
     legacy_apply_path = legacy_apply_path_obj if isinstance(legacy_apply_path_obj, dict) else {}
+    input_apply_url = str(out.get("apply_url") or out.get("online_application_url") or "").strip()
     legacy_documents = legacy_apply_path.get("likely_documents") or out.get("_legacy_apply_documents") or []
     if not isinstance(legacy_documents, list):
         legacy_documents = []
@@ -540,9 +548,16 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
         out["source_urls"] = list(packet.authority.source_urls)
         out["sources"] = [{"url": url, "title": "Official permit source", "source_tier": "local_permit_source"} for url in packet.authority.source_urls]
     if packet.decision == "REQUIRED":
+        original_apply_url = input_apply_url
+        legacy_portal_url = str(legacy_apply_path.get("portal_url") or legacy_apply_path.get("url") or "").strip()
+        fallback_source_url = bool(packet.authority.apply_url and not (original_apply_url or legacy_portal_url))
+        path_state = "official_source_fallback" if fallback_source_url else ("resolved_portal" if packet.authority.apply_url else "verify_with_permit_office")
+        typed_status = "OFFICIAL_SOURCE_FALLBACK" if fallback_source_url else ("RESOLVED_PORTAL" if packet.authority.apply_url else "VERIFY_WITH_PERMIT_OFFICE")
         out["apply_path"] = {
-            "state": "resolved_portal" if packet.authority.apply_url else "verify_with_permit_office",
-            "channel": "online_portal" if packet.authority.apply_url else "office_verification",
+            "state": path_state,
+            "status": typed_status,
+            "typed_status": typed_status,
+            "channel": "official_source" if fallback_source_url else ("online_portal" if packet.authority.apply_url else "office_verification"),
             "portal_url": packet.authority.apply_url,
             "office_name": authority_name,
             "authority": authority_name,
@@ -558,6 +573,8 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     else:
         out["apply_path"] = {
             "state": "not_applicable",
+            "status": "NOT_APPLICABLE",
+            "typed_status": "NOT_APPLICABLE",
             "channel": "no_permit_required",
             "office_name": authority_name,
             "permit_type": "No permit required",

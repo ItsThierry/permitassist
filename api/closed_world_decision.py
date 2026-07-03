@@ -311,12 +311,13 @@ def _renderable_sources(result: dict[str, Any], city: str, state: str, occupancy
     return tuple(dict.fromkeys(urls)), [s.as_dict() for s in statuses]
 
 
-def _docs_for_family(family: str, attrs: ProjectScopeAttributes) -> tuple[str, ...]:
+def _docs_for_family(family: str, attrs: ProjectScopeAttributes, job_type: str = "") -> tuple[str, ...]:
     base = ["Project scope description", "Site address / parcel information"]
+    job_l = _norm(job_type)
     if family == "electrical":
         docs = base + ["Electrical contractor/license information", "Electrical fixture/equipment schedule"]
         if "existing_circuits" in attrs.negative_facts:
-            docs.append("Statement that work uses existing boxes/circuits with no new circuit")
+            docs.append("Statement that work stays within existing boxes/circuits")
         return tuple(docs)
     if family == "battery_storage":
         return tuple(base + ["Battery/ESS equipment specifications", "Electrical one-line diagram", "Manufacturer installation instructions"])
@@ -327,9 +328,21 @@ def _docs_for_family(family: str, attrs: ProjectScopeAttributes) -> tuple[str, .
     if family == "refrigeration":
         return tuple(base + ["Refrigerant-line / refrigeration piping details", "Equipment specifications"])
     if family == "plumbing":
-        return tuple(base + ["Plumbing fixture/equipment schedule", "Plumbing layout if required"])
+        docs = base + ["Plumbing fixture/equipment schedule", "Plumbing layout if required"]
+        if re.search(r"\bshowers?\b", job_l):
+            docs.append("Shower fixture/drain plan")
+        if re.search(r"\bfloor\s+drains?\b", job_l):
+            docs.append("Floor drain plan")
+        return tuple(docs)
     if family == "gas":
         return tuple(base + ["Gas piping diagram", "Pressure test documentation"])
+    if family == "building":
+        docs = list(base)
+        if re.search(r"\b(?:basement|bedroom)\b", job_l):
+            docs.append("Bedroom egress compliance item")
+        if re.search(r"\b(?:foundation|addition|structural)\b", job_l):
+            docs.append("Structural/foundation drawings")
+        return tuple(docs)
     if family == "health_food":
         return tuple(base + ["Food-service floor plan", "Equipment schedule", "Menu/process description"])
     if family == "wastewater_pretreatment_fog":
@@ -416,6 +429,40 @@ def _add_item(items: dict[str, DecisionItem], item: DecisionItem) -> None:
         items[item.family] = item
 
 
+def _scope_fact_mapping(scope_facts_v2: Any, key: str) -> dict[str, str]:
+    if scope_facts_v2 is None:
+        return {}
+    value = getattr(scope_facts_v2, key, None)
+    if value is None and isinstance(scope_facts_v2, dict):
+        value = scope_facts_v2.get(key)
+    if isinstance(value, dict):
+        return {canonical_family(k): str(v) for k, v in value.items() if str(k or "").strip()}
+    return {}
+
+
+def _scope_fact_bool(scope_facts_v2: Any, key: str) -> bool:
+    if scope_facts_v2 is None:
+        return False
+    if isinstance(scope_facts_v2, dict):
+        return bool(scope_facts_v2.get(key))
+    return bool(getattr(scope_facts_v2, key, False))
+
+
+def _floor_permit_name(family: str, basis: str, attrs: ProjectScopeAttributes, job_type: str) -> str:
+    job_l = _norm(job_type)
+    if family == "building" and attrs.occupancy == Occupancy.RESIDENTIAL and "basement" in job_l:
+        return "Residential Building Permit — Basement Finish / Alteration"
+    if family == "building" and attrs.occupancy == Occupancy.COMMERCIAL and ("structural" in basis.lower() or re.search(r"\b(?:addition|structural\s+steel|equipment\s+platform|foundation)\b", job_l)):
+        return "Building/Structural Permit / Building Permit — Commercial Structural Work"
+    if family == "plumbing" and re.search(r"\bshowers?\b", job_l):
+        return "Plumbing Permit — Shower / Fixture Work"
+    if family == "plumbing" and re.search(r"\bfloor\s+drains?\b", job_l):
+        return "Plumbing Permit — Floor Drain / Fixture Work"
+    if family == "fire_suppression" and "life-safety" in basis:
+        return "Fire / Life-Safety Review"
+    return _FAMILY_NAMES.get(family, family.replace("_", " ").title())
+
+
 def _existing_required_names(result: dict[str, Any]) -> dict[str, str]:
     names: dict[str, str] = {}
     for row in result.get("permits_required") or []:
@@ -436,6 +483,7 @@ def compose_decision_object(
     *,
     job_category: str | None = None,
     structured_fields: dict[str, Any] | None = None,
+    scope_facts_v2: Any | None = None,
 ) -> DecisionObject:
     source_result = result if isinstance(result, dict) else {}
     attrs = extract_project_scope_attributes(job_type, city, state, job_category=job_category, structured_fields=structured_fields)
@@ -451,11 +499,16 @@ def compose_decision_object(
             chosen_name = "Demolition / Building Permit"
         if not chosen_name and family == "building" and attrs.occupancy == Occupancy.COMMERCIAL and re.search(r"\b(tenant improvement|buildout|upfit|first generation|shell building interior|clinic|salon|bar|brewery|lab|veterinary|vet clinic|restaurant)\b", _norm(job_type)):
             chosen_name = "Commercial Building / Tenant Improvement Permit"
-        _add_item(items, DecisionItem(family=family, status=DecisionStatus.REQUIRED, permit_name=chosen_name or existing_names.get(family) or _FAMILY_NAMES.get(family, family.replace("_", " ").title()), fees=fam_fees, source_urls=sources, documents=_docs_for_family(family, attrs), inspections=_inspections_for_family(family)))
+        existing_name = existing_names.get(family)
+        if family == "health_food" and existing_name and not re.search(r"\b(plan review|food establishment|permit|license)\b", existing_name, re.I):
+            existing_name = None
+        if family == "fire_suppression" and existing_name and not re.search(r"\b(suppression|prevention|life[- ]safety|review|permit)\b", existing_name, re.I):
+            existing_name = None
+        _add_item(items, DecisionItem(family=family, status=DecisionStatus.REQUIRED, permit_name=chosen_name or existing_name or _FAMILY_NAMES.get(family, family.replace("_", " ").title()), fees=fam_fees, source_urls=sources, documents=_docs_for_family(family, attrs, job_type), inspections=_inspections_for_family(family)))
 
     def conditional(family: str, trigger: str, name: str | None = None) -> None:
         if family not in items:
-            _add_item(items, DecisionItem(family=family, status=DecisionStatus.CONDITIONAL, permit_name=name or _FAMILY_NAMES.get(family, family.replace("_", " ").title()), trigger=trigger, source_urls=sources, documents=_docs_for_family(family, attrs), inspections=_inspections_for_family(family)))
+            _add_item(items, DecisionItem(family=family, status=DecisionStatus.CONDITIONAL, permit_name=name or _FAMILY_NAMES.get(family, family.replace("_", " ").title()), trigger=trigger, source_urls=sources, documents=_docs_for_family(family, attrs, job_type), inspections=_inspections_for_family(family)))
 
     if "sign" in attrs.project_features:
         required("sign")
@@ -552,7 +605,7 @@ def compose_decision_object(
         required("fire_suppression", "Fire / Environmental Review — Fuel System Work")
 
     if "plumbing" not in items and any(fam in items for fam in ("building", "electrical", "mechanical")):
-        if re.search(r"\b(bedroom|tenant improvement|office|clinic|salon|laundromat|bar|restaurant|adu|bath|kitchen|restrooms?)\b", job_l):
+        if re.search(r"\b(bedroom|tenant improvement|office|clinic|salon|laundromat|bar|restaurant|commercial\s+kitchen|adu|bath|restrooms?|kitchen\s+(?:remodel|renovation|sink|plumbing|fixtures?))\b", job_l):
             conditional("plumbing", "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.")
     if "planning_zoning" not in items and attrs.occupancy == Occupancy.COMMERCIAL and "building" in items:
         conditional("planning_zoning", "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.")
@@ -562,6 +615,40 @@ def compose_decision_object(
     if attrs.occupancy == Occupancy.COMMERCIAL and "auto repair" in job_l and "fire_suppression" not in items:
         required("fire_suppression", "Fire / Environmental Review — Auto Repair Use")
 
+    floors = _scope_fact_mapping(scope_facts_v2, "mandatory_family_floors")
+    forbids = _scope_fact_mapping(scope_facts_v2, "forbidden_families")
+    if _scope_fact_bool(scope_facts_v2, "repair_exemption_candidate") and city.strip().lower() == "chicago" and state.strip().upper() == "IL" and attrs.occupancy == Occupancy.RESIDENTIAL:
+        items.clear()
+        forbids.update({
+            "building": "Chicago narrow drywall/plaster repair exemption candidate without structural, electrical, or plumbing work",
+            "electrical": "Chicago narrow drywall/plaster repair exemption candidate without electrical work",
+            "plumbing": "Chicago narrow drywall/plaster repair exemption candidate without plumbing work",
+        })
+    for family in list(forbids):
+        items.pop(family, None)
+    for family, basis in floors.items():
+        if family not in forbids:
+            existing = items.get(family)
+            existing_name = str(existing.permit_name if existing else "")
+            generic_existing = bool(
+                re.fullmatch(r"(?:building|plumbing|electrical|mechanical|fire|permit)\s*permit", existing_name, re.I)
+                or (family == "building" and ("building" not in existing_name.lower() or ("tenant improvement" in existing_name.lower() and "structural" in basis.lower())))
+                or (family == "plumbing" and "plumbing" not in existing_name.lower())
+                or (family == "electrical" and "electrical" not in existing_name.lower())
+                or (family == "mechanical" and "mechanical" not in existing_name.lower())
+            )
+            name = existing_name if existing_name and not generic_existing else _floor_permit_name(family, basis, attrs, job_type)
+            fam_fees = _fees_for_family(fees, family)
+            items[family] = DecisionItem(
+                family=family,
+                status=DecisionStatus.REQUIRED,
+                permit_name=name,
+                fees=fam_fees or (existing.fees if existing else ()),
+                source_urls=sources,
+                documents=tuple(dict.fromkeys([*(existing.documents if existing else ()), *_docs_for_family(family, attrs, job_type)])),
+                inspections=tuple(dict.fromkeys([*(existing.inspections if existing else ()), *_inspections_for_family(family)])),
+                provenance="scope_facts_v2.mandatory_family_floor",
+            )
     # A plain building/TI row is only allowed from explicit structural/building
     # or change-of-use facts; there is no association-based REQUIRED fallback.
     if not items:
@@ -609,9 +696,10 @@ def apply_closed_world_customer_contract(
     *,
     job_category: str | None = None,
     structured_fields: dict[str, Any] | None = None,
+    scope_facts_v2: Any | None = None,
 ) -> dict[str, Any]:
     public = copy.deepcopy(result) if isinstance(result, dict) else {}
-    decision = compose_decision_object(public, job_type, city, state, job_category=job_category, structured_fields=structured_fields)
+    decision = compose_decision_object(public, job_type, city, state, job_category=job_category, structured_fields=structured_fields, scope_facts_v2=scope_facts_v2)
     required_rows = _status_rows(decision, DecisionStatus.REQUIRED)
     conditional_rows = _status_rows(decision, DecisionStatus.CONDITIONAL)
     sources, link_statuses = _renderable_sources(public, city, state, decision.attrs.occupancy)

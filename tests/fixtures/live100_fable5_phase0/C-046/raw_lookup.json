@@ -1,0 +1,637 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Grease/wastewater",
+    "bucket": "grease interceptor",
+    "city": "Honolulu",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Plumbing",
+      "Health/wastewater",
+      "Building possible"
+    ],
+    "id": "C-046",
+    "job_type": "commercial restaurant grease interceptor replacement in same location with plumbing work, job value 65000",
+    "job_value": 65000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "HI",
+    "zip_code": "96813"
+  },
+  "cases_plan_sha256": "5dad1e70762ea993d26fdbd07fe9c931364884c960259e4aea9c4e0b881a0453",
+  "completed_at_utc": "2026-07-02T23:45:59.333254+00:00",
+  "deployed_sha": "505b7c8bb373bf00ece3a3e6bf88a7126d3a3505",
+  "elapsed_seconds": 6.71,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+    "applying_office": "Department of Planning and Permitting (DPP)",
+    "confidence": "medium",
+    "customer_headline": "Commercial permit required: Plumbing Permit",
+    "customer_next_step": "File the required permit categories with Department of Planning and Permitting (DPP): Plumbing Permit, Food Establishment Health Plan Review / Permit, Wastewater / FOG / Pretreatment Approval. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 5
+  },
+  "permit_elapsed_seconds": 3.2,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Honolulu",
+    "job_category": "commercial",
+    "job_type": "commercial restaurant grease interceptor replacement in same location with plumbing work, job value 65000",
+    "job_value": 65000,
+    "state": "HI",
+    "vertical": "commercial",
+    "zip_code": "96813"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "Department of Planning and Permitting (DPP)",
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description",
+        "Grease interceptor sizing/details",
+        "Wastewater pretreatment application"
+      ],
+      "office_name": "Department of Planning and Permitting (DPP)",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval",
+      "portal_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+      "state": "resolved_portal",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval",
+        "Confirm exact portal subcategories before final submission"
+      ]
+    },
+    "apply_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+    "apply_url_known": true,
+    "applying_office": "Department of Planning and Permitting (DPP)",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+        "name": "Department of Planning and Permitting (DPP)",
+        "segment": "commercial",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Plumbing Permit before starting work",
+        "Pull Food Establishment Health Plan Review / Permit before starting work",
+        "Pull Wastewater / FOG / Pretreatment Approval before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description",
+        "Grease interceptor sizing/details",
+        "Wastewater pretreatment application"
+      ],
+      "fees": [
+        "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting"
+      ],
+      "headline": "Commercial permit required: Plumbing Permit",
+      "inspections": [
+        "Plumbing final inspection"
+      ],
+      "required_families": [
+        "plumbing",
+        "health_food",
+        "wastewater_pretreatment_fog"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Plumbing Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "fees": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Food Establishment Health Plan Review / Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Grease interceptor sizing/details",
+            "Wastewater pretreatment application"
+          ],
+          "family": "wastewater_pretreatment_fog",
+          "fees": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Wastewater / FOG / Pretreatment Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "commercial",
+      "summary": "Required permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval."
+    },
+    "checklist": [
+      "Pull Plumbing Permit before starting work",
+      "Pull Food Establishment Health Plan Review / Permit before starting work",
+      "Pull Wastewater / FOG / Pretreatment Approval before starting work"
+    ],
+    "companion_permits": [],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval.",
+    "customer_headline": "Commercial permit required: Plumbing Permit",
+    "customer_next_step": "File the required permit categories with Department of Planning and Permitting (DPP): Plumbing Permit, Food Establishment Health Plan Review / Permit, Wastewater / FOG / Pretreatment Approval. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "File the required permit categories with Department of Planning and Permitting (DPP): Plumbing Permit, Food Establishment Health Plan Review / Permit, Wastewater / FOG / Pretreatment Approval. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+    "inspections": [
+      "Plumbing final inspection"
+    ],
+    "job_summary": "Required permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.honolulu.gov/dpp"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.honolulu.gov/dpp/permitting/building-permits-home"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.honolulu.gov/dpp/home/organization-contacts/"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval.",
+    "permit_type": "Permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fee": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "lead": true,
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+        "approval_type": "Food Establishment Health Plan Review / Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "fee": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+        "filing_family": "health_food",
+        "inspections": [],
+        "kind": "Health",
+        "permit_name": "Food Establishment Health Plan Review / Permit",
+        "permit_type": "Food Establishment Health Plan Review / Permit",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+        "approval_type": "Wastewater / FOG / Pretreatment Approval",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Grease interceptor sizing/details",
+          "Wastewater pretreatment application"
+        ],
+        "family": "wastewater_pretreatment_fog",
+        "fee": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+        "filing_family": "wastewater_pretreatment_fog",
+        "inspections": [],
+        "kind": "Wastewater/FOG",
+        "permit_name": "Wastewater / FOG / Pretreatment Approval",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "required": true,
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "plumbing",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "health_food",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Food Establishment Health Plan Review / Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "wastewater_pretreatment_fog",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+        "name": "Department of Planning and Permitting (DPP)",
+        "segment": "commercial",
+        "source_urls": [
+          "https://www.honolulu.gov/dpp",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "https://www.honolulu.gov/dpp/home/organization-contacts/",
+          "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+          "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Plumbing Permit before starting work",
+        "Pull Food Establishment Health Plan Review / Permit before starting work",
+        "Pull Wastewater / FOG / Pretreatment Approval before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description",
+        "Grease interceptor sizing/details",
+        "Wastewater pretreatment application"
+      ],
+      "fees": [
+        "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting"
+      ],
+      "headline": "Commercial permit required: Plumbing Permit",
+      "inspections": [
+        "Plumbing final inspection"
+      ],
+      "required_families": [
+        "plumbing",
+        "health_food",
+        "wastewater_pretreatment_fog"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Plumbing Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "fees": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Food Establishment Health Plan Review / Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Grease interceptor sizing/details",
+            "Wastewater pretreatment application"
+          ],
+          "family": "wastewater_pretreatment_fog",
+          "fees": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Wastewater / FOG / Pretreatment Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "commercial",
+      "summary": "Required permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval."
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fees": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Plumbing Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "fees": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Food Establishment Health Plan Review / Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Grease interceptor sizing/details",
+          "Wastewater pretreatment application"
+        ],
+        "family": "wastewater_pretreatment_fog",
+        "fees": "Fee Estimate: Valuation-based; for a $65,000 commercial plumbing job in Honolulu, expect roughly $500 - $1,500 in permit/plan-review fees, but exact DPP fee must be verified against current valuation tables \u2014 verify with the building department before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Wastewater / FOG / Pretreatment Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "plumbing",
+      "health_food",
+      "wastewater_pretreatment_fog",
+      "Plumbing",
+      "Health",
+      "Wastewater/FOG"
+    ],
+    "required_permit_names": [
+      "Plumbing Permit",
+      "Food Establishment Health Plan Review / Permit",
+      "Wastewater / FOG / Pretreatment Approval"
+    ],
+    "required_permit_summary": "Required permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ],
+    "segment": "commercial",
+    "source_urls": [
+      "https://www.honolulu.gov/dpp",
+      "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+      "https://www.honolulu.gov/dpp/home/organization-contacts/",
+      "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf",
+      "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.honolulu.gov/dpp"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.honolulu.gov/dpp/permitting/building-permits-home"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.honolulu.gov/dpp/home/organization-contacts/"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/"
+      }
+    ],
+    "summary": "Required permit package: Plumbing Permit; Food Establishment Health Plan Review / Permit; Wastewater / FOG / Pretreatment Approval.",
+    "total_cost_estimate": "$8,500 - $18,000",
+    "trade_permits": [],
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: mechanical.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ]
+  },
+  "response_sha256": "707b5bcfad9cdf6f4d6f1171c1f73ce07555ed358ee3f47f59781de26f2b7efe",
+  "run_id": "live_customer_100_fable5_locked_packet_postdeploy_20260702T232436Z",
+  "share_slug": "nGYBy5fIcWI",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/nGYBy5fIcWI",
+  "source_urls": [
+    "https://www.honolulu.gov/dpp",
+    "https://www.honolulu.gov/dpp/home/organization-contacts/",
+    "https://www.honolulu.gov/dpp/permitting/building-permits-home",
+    "https://www.honolulu.gov/dpp/permitting/building-permits-home/building-permit-requriements/",
+    "https://www.honolulu.gov/env/wp-content/uploads/sites/29/2025/05/wwm_RulesRelatingtoGreaseInterceptorProgramCompliance2002.pdf"
+  ],
+  "started_at_utc": "2026-07-02T23:45:52.617648+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

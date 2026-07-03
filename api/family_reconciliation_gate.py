@@ -205,6 +205,8 @@ def _positive_supports_family(facts: ScopeFactsV2, family: str) -> bool:
 
 
 def _veto_basis(facts: ScopeFactsV2, family: str, row: dict[str, Any]) -> str | None:
+    if family in getattr(facts, "forbidden_families", {}):
+        return facts.forbidden_families[family]
     negatives = set(facts.negative_facts)
     text = _row_text(row)
     bucket = family_bucket(family)
@@ -297,9 +299,13 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
         rulings.append(GateRuling("DEMOTE", family, "plausible extra lacks positive request fact/source support", cond["conditional_text"], _row_name(row)))
 
     def add_row(family: str, name: str, basis: str) -> None:
-        nonlocal kept, rulings, present_families
-        if family in present_families or any(family_from_row(r) == family for r in kept):
+        nonlocal kept, conditional, rulings, present_families
+        if family in getattr(facts, "forbidden_families", {}):
+            rulings.append(GateRuling("VETO", family, facts.forbidden_families[family], permit_name=name))
             return
+        if any(family_from_row(r) == family for r in kept):
+            return
+        conditional = [r for r in conditional if family_from_row(r) != family]
         row = {
             "permit_type": name,
             "permit_name": name,
@@ -313,6 +319,30 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
         kept.append(row)
         present_families.add(family)
         rulings.append(GateRuling("ADD", family, basis, permit_name=name))
+
+    def floor_name(family: str) -> str:
+        text = getattr(facts, "request_scope_text", "") or ""
+        if family == "building" and facts.segment == "residential" and "basement" in text:
+            return "Residential Building Permit — Basement Finish / Alteration"
+        if family == "building" and facts.segment == "commercial" and "addition" in text:
+            return "Commercial Building Permit — Addition"
+        names = {
+            "building": "Building Permit",
+            "building_ti": "Commercial Building / Tenant Improvement Permit",
+            "plumbing": "Plumbing Permit — Shower / Floor Drain / Fixture Work",
+            "electrical": "Electrical Permit",
+            "mechanical": "Mechanical Permit",
+            "fire_alarm": "Fire Alarm Permit",
+            "fire_suppression": "Fire / Life-Safety Review",
+            "planning_zoning": "Planning / Zoning Use Clearance",
+            "co_change_of_occupancy": "Certificate of Occupancy / Change-of-Occupancy Approval",
+            "health_food": "Health Plan Review / Food Establishment Permit",
+            "wastewater_pretreatment_fog": "Wastewater / FOG / Pretreatment Approval",
+        }
+        return names.get(family, f"{FAMILY_TO_KIND.get(family, family.replace('_', ' ').title())} Permit")
+
+    for floor_family, basis in getattr(facts, "mandatory_family_floors", {}).items():
+        add_row(floor_family, floor_name(floor_family), f"mandatory family floor: {basis}")
 
     if (facts.service_amperage or 0) >= 100:
         add_row("electrical", "Electrical Permit — Service / Panel Upgrade", f"deterministic implication: service_amperage={facts.service_amperage}")
@@ -367,11 +397,11 @@ def _sync_required_mirrors(result: dict[str, Any]) -> None:
         result["permit_verdict"] = "YES"
 
 
-def apply_family_reconciliation_gate(result: dict[str, Any], job_type: str = "", city: str = "", state: str = "", scope_contract: dict[str, Any] | None = None) -> dict[str, Any]:
+def apply_family_reconciliation_gate(result: dict[str, Any], job_type: str = "", city: str = "", state: str = "", scope_contract: dict[str, Any] | None = None, job_category: str | None = None) -> dict[str, Any]:
     out = copy.deepcopy(result) if isinstance(result, dict) else {}
     if str(out.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED" or out.get("permit_required") is False:
         return out
-    facts = build_scope_facts_v2(job_type or out.get("job_summary") or "", city, state, scope_contract=scope_contract if isinstance(scope_contract, dict) else out.get("_scope_contract"))
+    facts = build_scope_facts_v2(job_type or out.get("job_summary") or "", city, state, job_category=job_category, scope_contract=scope_contract if isinstance(scope_contract, dict) else out.get("_scope_contract"))
     rows = [r for r in out.get("permits_required") or [] if isinstance(r, dict)]
     kept, conditional, rulings = reconcile_rows(rows, facts)
     if rows:

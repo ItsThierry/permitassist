@@ -1,0 +1,40 @@
+{
+  "api_apply_url": "https://www.slc.gov/building/",
+  "api_decision": "REQUIRED",
+  "api_permit_name": "Permit package: Structural; Electrical Permit \u2014 Commercial Panel / Service Upgrade",
+  "api_source_urls": [
+    "https://www.slc.gov/building/"
+  ],
+  "body_text": "PA\nPermitAssist\nPermit Intelligence Report\nStructural\ncommercial industrial equipment platform with structural steel and electrical connections, job value 275000 in Salt Lake City, UT\nPermit required: Yes\n\ud83d\udda8\ufe0f Print / Save PDF\nCORE DETAILS\nJurisdiction\nSalt Lake City, UT\nPermit\nStructural\nFees\nFee estimate not confirmed; verify the current AHJ fee schedule before quoting\nTimeline\nVaries by jurisdiction\nWhere to apply\nSalt Lake City Building Services\nSUMMARY\nRequired permit package: Structural; Electrical Permit \u2014 Commercial Panel / Service Upgrade. Conditional guidance: Planning / Zoning Use Clearance.\nREQUIRED DOCUMENTS\nProject scope description\nSite address / parcel information\nElectrical contractor/license information\nElectrical fixture/equipment schedule\nCONDITIONAL GUIDANCE\nOnly needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies. \u2014 Planning / Zoning Use Clearance\nINSPECTION CHECKLIST\nBuilding final inspection\nElectrical final inspection\nPRE-CONSTRUCTION CHECKLIST\nPull Structural before starting work\nPull Electrical Permit \u2014 Commercial Panel / Service Upgrade before starting work\nOnly needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies. \u2014 if triggered, pull Planning / Zoning Use Clearance\nConfirm jurisdiction for Salt Lake City, UT\nPay permit fee: Fee estimate not confirmed; verify the current building department fee schedule before quoting\nPlan for approval timeline: Varies by jurisdiction\nRequired documents: Project scope description, Site address / parcel information, Electrical contractor/license information, Electrical fixture/equipment schedule\nSchedule inspection: Building final inspection\nSchedule inspection: Electrical final inspection\nSOURCES CHECKED\nOfficial permit source\nGet your own permits instantly at permitassist.io\nShareable permit reports, contractor checklists, and faster office handoffs.\nTry PermitAssist",
+  "body_text_len": 2000,
+  "bucket": "equipment platform",
+  "case_id": "C-028",
+  "city": "Salt Lake City",
+  "expected_decision": "REQUIRED",
+  "has_core_details": true,
+  "has_preconstruction_checklist": true,
+  "has_print_save_pdf": true,
+  "has_required_documents": true,
+  "index": 78,
+  "job_type": "commercial industrial equipment platform with structural steel and electrical connections, job value 275000",
+  "links": [
+    {
+      "href": "https://www.slc.gov/building/",
+      "text": "Official permit source"
+    },
+    {
+      "href": "https://permitassist.io/",
+      "text": "Try PermitAssist"
+    }
+  ],
+  "provisional_grade": "A",
+  "render_elapsed_seconds": 1.37,
+  "render_ok": true,
+  "screenshot": "/home/boban/projects/permitassist/artifacts/live_customer_100_fable5_locked_packet_postdeploy_20260702T232436Z/screenshots_all_100/078_C-028_commercial_Salt_Lake_City_UT.png",
+  "segment": "commercial",
+  "share_url": "https://permitassist.io/report/X5Epdq_zoJQ",
+  "state": "UT",
+  "title": "Structural | PermitAssist Report",
+  "visible_decision_no": false,
+  "visible_decision_yes": true
+}

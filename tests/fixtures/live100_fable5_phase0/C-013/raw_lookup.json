@@ -1,0 +1,852 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Dental TI",
+    "bucket": "dental office TI",
+    "city": "Austin",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "Plumbing",
+      "Electrical",
+      "Mechanical",
+      "Health/State verify"
+    ],
+    "id": "C-013",
+    "job_type": "commercial dental office tenant improvement with exam rooms nitrous lines plumbing sinks and X ray equipment, job value 310000",
+    "job_value": 310000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "TX",
+    "zip_code": "78701"
+  },
+  "cases_plan_sha256": "5dad1e70762ea993d26fdbd07fe9c931364884c960259e4aea9c4e0b881a0453",
+  "completed_at_utc": "2026-07-02T23:42:05.857035+00:00",
+  "deployed_sha": "505b7c8bb373bf00ece3a3e6bf88a7126d3a3505",
+  "elapsed_seconds": 7.05,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
+    "applying_office": "City of Austin Development Services Department",
+    "confidence": "medium",
+    "customer_headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+    "customer_next_step": "File the required permit categories with City of Austin Development Services Department: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit, Plumbing Permit \u2014 Commercial Tenant Improvement. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 6
+  },
+  "permit_elapsed_seconds": 3.41,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Austin",
+    "job_category": "commercial",
+    "job_type": "commercial dental office tenant improvement with exam rooms nitrous lines plumbing sinks and X ray equipment, job value 310000",
+    "job_value": 310000,
+    "state": "TX",
+    "vertical": "commercial",
+    "zip_code": "78701"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "City of Austin Development Services Department",
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "office_name": "City of Austin Development Services Department",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement",
+      "portal_url": "https://www.austintexas.gov/development-services/forms-applications",
+      "state": "resolved_portal",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "Confirm exact portal subcategories before final submission"
+      ]
+    },
+    "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
+    "apply_url_known": true,
+    "applying_office": "City of Austin Development Services Department",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "name": "City of Austin Development Services Department",
+        "segment": "commercial",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building / Tenant Improvement Permit before starting work",
+        "Pull Electrical Permit before starting work",
+        "Pull Mechanical Permit before starting work",
+        "Pull Plumbing Permit \u2014 Commercial Tenant Improvement before starting work",
+        "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies. \u2014 if triggered, pull Planning / Zoning Use Clearance"
+      ],
+      "conditional_families": [
+        "planning_zoning"
+      ],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection"
+      ],
+      "required_families": [
+        "building_ti",
+        "electrical",
+        "mechanical",
+        "plumbing"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building_ti",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+          "conditional_text": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "decision": "CONDITIONAL",
+          "documents": [],
+          "family": "planning_zoning",
+          "fees": "",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement. Conditional guidance: Planning / Zoning Use Clearance."
+    },
+    "checklist": [
+      "Pull Commercial Building / Tenant Improvement Permit before starting work",
+      "Pull Electrical Permit before starting work",
+      "Pull Mechanical Permit before starting work",
+      "Pull Plumbing Permit \u2014 Commercial Tenant Improvement before starting work",
+      "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies. \u2014 if triggered, pull Planning / Zoning Use Clearance"
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "permit_type": "Health-care licensing / local health review",
+        "reason": "Clinic opening may require licensing or health-care approval separate from building permit final."
+      },
+      {
+        "certainty": "conditional",
+        "permit_type": "Medical gas / x-ray specialty review if included",
+        "reason": "Medical gas, nitrous/oxygen/vacuum, or radiology equipment can require specialty documentation and verification."
+      },
+      {
+        "certainty": "likely",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review."
+      }
+    ],
+    "conditional_permits": [
+      {
+        "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "conditional_text": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "planning_zoning",
+        "filing_family": "planning_zoning",
+        "inspections": [],
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "required": false,
+        "required_if": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "confidence": "medium",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement. Conditional guidance: Planning / Zoning Use Clearance.",
+    "customer_headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+    "customer_next_step": "File the required permit categories with City of Austin Development Services Department: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit, Plumbing Permit \u2014 Commercial Tenant Improvement. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "File the required permit categories with City of Austin Development Services Department: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit, Plumbing Permit \u2014 Commercial Tenant Improvement. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement. Conditional guidance: Planning / Zoning Use Clearance."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "inspections": [
+      "Building final inspection",
+      "Electrical final inspection",
+      "Mechanical final inspection",
+      "Plumbing final inspection"
+    ],
+    "job_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement. Conditional guidance: Planning / Zoning Use Clearance.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.austintexas.gov/development-services/forms-applications"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.austintexas.gov/department/development-services"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://abc.austintexas.gov"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://abc.austintexas.gov/citizenportal/app/#"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.austintexas.gov/development-services"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.austintexas.gov/development-services/forms-applications",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement. Conditional guidance: Planning / Zoning Use Clearance.",
+    "permit_type": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "building",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "kind": "Building",
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "approval_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "required": true,
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building_ti",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "name": "City of Austin Development Services Department",
+        "segment": "commercial",
+        "source_urls": [
+          "https://www.austintexas.gov/development-services/forms-applications",
+          "https://www.austintexas.gov/department/development-services",
+          "https://abc.austintexas.gov",
+          "https://abc.austintexas.gov/citizenportal/app/#",
+          "https://www.austintexas.gov/development-services",
+          "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building / Tenant Improvement Permit before starting work",
+        "Pull Electrical Permit before starting work",
+        "Pull Mechanical Permit before starting work",
+        "Pull Plumbing Permit \u2014 Commercial Tenant Improvement before starting work",
+        "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies. \u2014 if triggered, pull Planning / Zoning Use Clearance"
+      ],
+      "conditional_families": [
+        "planning_zoning"
+      ],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection"
+      ],
+      "required_families": [
+        "building_ti",
+        "electrical",
+        "mechanical",
+        "plumbing"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building_ti",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+          "conditional_text": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "decision": "CONDITIONAL",
+          "documents": [],
+          "family": "planning_zoning",
+          "fees": "",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement. Conditional guidance: Planning / Zoning Use Clearance."
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building_ti",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Electrical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Mechanical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Plumbing Permit \u2014 Commercial Tenant Improvement",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "conditional_text": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "planning_zoning",
+        "fees": "",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "source": ""
+      }
+    ],
+    "related_permits": [
+      {
+        "apply_url": "https://www.austintexas.gov/development-services/forms-applications",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "conditional_text": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "planning_zoning",
+        "filing_family": "planning_zoning",
+        "inspections": [],
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "required": false,
+        "required_if": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "building_ti",
+      "electrical",
+      "mechanical",
+      "plumbing",
+      "Building",
+      "Electrical",
+      "Mechanical",
+      "Plumbing"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Electrical Permit",
+      "Mechanical Permit",
+      "Plumbing Permit \u2014 Commercial Tenant Improvement"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement. Conditional guidance: Planning / Zoning Use Clearance.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "segment": "commercial",
+    "source_urls": [
+      "https://www.austintexas.gov/development-services/forms-applications",
+      "https://www.austintexas.gov/department/development-services",
+      "https://abc.austintexas.gov",
+      "https://abc.austintexas.gov/citizenportal/app/#",
+      "https://www.austintexas.gov/development-services",
+      "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.austintexas.gov/development-services/forms-applications"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.austintexas.gov/department/development-services"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://abc.austintexas.gov"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://abc.austintexas.gov/citizenportal/app/#"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.austintexas.gov/development-services"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Tenant Improvement. Conditional guidance: Planning / Zoning Use Clearance.",
+    "total_cost_estimate": "$310,000 - $365,000",
+    "trade_permits": [],
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ]
+  },
+  "response_sha256": "0ffb51c05bc50a44988e4119e97812edf1f4bdf4b8d19f3da47bda0b3c93e2dd",
+  "run_id": "live_customer_100_fable5_locked_packet_postdeploy_20260702T232436Z",
+  "share_slug": "VkAugZQfFPU",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/VkAugZQfFPU",
+  "source_urls": [
+    "https://abc.austintexas.gov",
+    "https://abc.austintexas.gov/citizenportal/app/#",
+    "https://www.austintexas.gov/department/development-services",
+    "https://www.austintexas.gov/development-services",
+    "https://www.austintexas.gov/development-services/forms-applications",
+    "https://www.dshs.texas.gov/texas-radiation-control/x-ray-machines-x-ray-services/dental-x-ray-machine"
+  ],
+  "started_at_utc": "2026-07-02T23:41:58.804761+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

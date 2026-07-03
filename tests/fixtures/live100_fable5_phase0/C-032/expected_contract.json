@@ -1,0 +1,18 @@
+{
+  "baseline_conditional_family_multiset": [],
+  "baseline_required_count": 9,
+  "baseline_required_family_multiset": [
+    "building",
+    "co_change_of_occupancy",
+    "electrical",
+    "fire_suppression",
+    "health_food",
+    "mechanical",
+    "planning_zoning",
+    "plumbing",
+    "wastewater_pretreatment_fog"
+  ],
+  "case_id": "C-032",
+  "expected_decision": "REQUIRED",
+  "protection": true
+}

@@ -1,0 +1,14 @@
+{
+  "action_path_must_not_be_hard_dead": true,
+  "case_id": "R-028",
+  "expected_decision": "REQUIRED",
+  "protection": false,
+  "required_docs_must_include": [
+    "structural"
+  ],
+  "required_families_must_include": [
+    "building",
+    "electrical"
+  ],
+  "typed_apply_status_required": true
+}

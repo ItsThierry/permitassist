@@ -1,0 +1,792 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Educational occupancy",
+    "bucket": "school addition",
+    "city": "Little Rock",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building",
+      "Plumbing",
+      "Electrical",
+      "Mechanical",
+      "Fire",
+      "State education verify"
+    ],
+    "id": "C-048",
+    "job_type": "commercial school classroom addition with restrooms fire alarm and HVAC, job value 900000",
+    "job_value": 900000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "AR",
+    "zip_code": "72201"
+  },
+  "cases_plan_sha256": "5dad1e70762ea993d26fdbd07fe9c931364884c960259e4aea9c4e0b881a0453",
+  "completed_at_utc": "2026-07-02T23:46:11.798909+00:00",
+  "deployed_sha": "505b7c8bb373bf00ece3a3e6bf88a7126d3a3505",
+  "elapsed_seconds": 5.05,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+    "applying_office": "City of Little Rock \u2014 Building Codes Division",
+    "confidence": "high",
+    "customer_headline": "Commercial permit required: Commercial Building Permit \u2014 Addition",
+    "customer_next_step": "File the required permit categories with City of Little Rock \u2014 Building Codes Division: Commercial Building Permit \u2014 Addition, Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork, Plumbing Permit, Fire Alarm Permit. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 4
+  },
+  "permit_elapsed_seconds": 2.64,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Little Rock",
+    "job_category": "commercial",
+    "job_type": "commercial school classroom addition with restrooms fire alarm and HVAC, job value 900000",
+    "job_value": 900000,
+    "state": "AR",
+    "vertical": "commercial",
+    "zip_code": "72201"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "City of Little Rock \u2014 Building Codes Division",
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "office_name": "City of Little Rock \u2014 Building Codes Division",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit",
+      "portal_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+      "state": "resolved_portal",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit",
+        "Confirm exact portal subcategories before final submission"
+      ]
+    },
+    "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+    "apply_url_known": true,
+    "applying_office": "City of Little Rock \u2014 Building Codes Division",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "name": "City of Little Rock \u2014 Building Codes Division",
+        "segment": "commercial",
+        "source_urls": [
+          "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "https://www.littlerock.gov/city-administration/departments/planning-and-development",
+          "https://www.littlerock.gov/media/19234/ord-22204-fees.pdf",
+          "https://web.littlerock.state.ar.us/WebLink/DocView.aspx?id=325939&dbid=0&repo=CityofLittleRock"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building Permit \u2014 Addition before starting work",
+        "Pull Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork before starting work",
+        "Pull Plumbing Permit before starting work",
+        "Pull Fire Alarm Permit before starting work",
+        "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies. \u2014 if triggered, pull Planning / Zoning Use Clearance"
+      ],
+      "conditional_families": [
+        "planning_zoning"
+      ],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "fees": [
+        "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal"
+      ],
+      "headline": "Commercial permit required: Commercial Building Permit \u2014 Addition",
+      "inspections": [
+        "Building final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection"
+      ],
+      "required_families": [
+        "building",
+        "mechanical",
+        "plumbing",
+        "fire_alarm"
+      ],
+      "rows": [
+        {
+          "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building",
+          "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building Permit \u2014 Addition",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_alarm",
+          "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Fire Alarm Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "conditional_text": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "decision": "CONDITIONAL",
+          "documents": [],
+          "family": "planning_zoning",
+          "fees": "",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit. Conditional guidance: Planning / Zoning Use Clearance."
+    },
+    "checklist": [
+      "Pull Commercial Building Permit \u2014 Addition before starting work",
+      "Pull Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork before starting work",
+      "Pull Plumbing Permit before starting work",
+      "Pull Fire Alarm Permit before starting work",
+      "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies. \u2014 if triggered, pull Planning / Zoning Use Clearance"
+    ],
+    "companion_permits": [],
+    "conditional_permits": [
+      {
+        "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "conditional_text": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "planning_zoning",
+        "filing_family": "planning_zoning",
+        "inspections": [],
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "required": false,
+        "required_if": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit. Conditional guidance: Planning / Zoning Use Clearance.",
+    "customer_headline": "Commercial permit required: Commercial Building Permit \u2014 Addition",
+    "customer_next_step": "File the required permit categories with City of Little Rock \u2014 Building Codes Division: Commercial Building Permit \u2014 Addition, Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork, Plumbing Permit, Fire Alarm Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "File the required permit categories with City of Little Rock \u2014 Building Codes Division: Commercial Building Permit \u2014 Addition, Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork, Plumbing Permit, Fire Alarm Permit. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit. Conditional guidance: Planning / Zoning Use Clearance."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "degraded_sources": [
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.littlerock.gov/city-administration/departments/planning-and-development/building-codes"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.littlerock.gov/city-administration/departments/planning-and-development/building-codes"
+      },
+      {
+        "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
+        "status": "broken",
+        "url": "https://www.littlerock.gov/city-administration/departments/planning-and-development/building-codes"
+      }
+    ],
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+    "inspections": [
+      "Building final inspection",
+      "Mechanical final inspection",
+      "Plumbing final inspection"
+    ],
+    "job_summary": "Required permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit. Conditional guidance: Planning / Zoning Use Clearance.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.littlerock.gov/city-administration/departments/planning-and-development"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.littlerock.gov/media/19234/ord-22204-fees.pdf"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://web.littlerock.state.ar.us/WebLink/DocView.aspx?id=325939&dbid=0&repo=CityofLittleRock"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit. Conditional guidance: Planning / Zoning Use Clearance.",
+    "permit_type": "Permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "approval_type": "Commercial Building Permit \u2014 Addition",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fee": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+        "filing_family": "building",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "kind": "Building",
+        "lead": true,
+        "permit_name": "Commercial Building Permit \u2014 Addition",
+        "permit_type": "Commercial Building Permit \u2014 Addition",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "approval_type": "Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fee": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork",
+        "permit_type": "Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fee": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "approval_type": "Fire Alarm Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_alarm",
+        "fee": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+        "filing_family": "fire_alarm",
+        "inspections": [],
+        "kind": "Fire",
+        "permit_name": "Fire Alarm Permit",
+        "permit_type": "Fire Alarm Permit",
+        "required": true,
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Commercial Building Permit \u2014 Addition",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_alarm",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Fire Alarm Permit",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "name": "City of Little Rock \u2014 Building Codes Division",
+        "segment": "commercial",
+        "source_urls": [
+          "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "https://www.littlerock.gov/city-administration/departments/planning-and-development",
+          "https://www.littlerock.gov/media/19234/ord-22204-fees.pdf",
+          "https://web.littlerock.state.ar.us/WebLink/DocView.aspx?id=325939&dbid=0&repo=CityofLittleRock"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building Permit \u2014 Addition before starting work",
+        "Pull Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork before starting work",
+        "Pull Plumbing Permit before starting work",
+        "Pull Fire Alarm Permit before starting work",
+        "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies. \u2014 if triggered, pull Planning / Zoning Use Clearance"
+      ],
+      "conditional_families": [
+        "planning_zoning"
+      ],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "fees": [
+        "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal"
+      ],
+      "headline": "Commercial permit required: Commercial Building Permit \u2014 Addition",
+      "inspections": [
+        "Building final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection"
+      ],
+      "required_families": [
+        "building",
+        "mechanical",
+        "plumbing",
+        "fire_alarm"
+      ],
+      "rows": [
+        {
+          "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building",
+          "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building Permit \u2014 Addition",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_alarm",
+          "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Fire Alarm Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+          "conditional_text": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "decision": "CONDITIONAL",
+          "documents": [],
+          "family": "planning_zoning",
+          "fees": "",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit. Conditional guidance: Planning / Zoning Use Clearance."
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Commercial Building Permit \u2014 Addition",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Plumbing Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_alarm",
+        "fees": "Fee Estimate: Building permit minimum $51.50 plus valuation-based fee; electrical minimum $50.00 plus valuation-based fee; plumbing minimum $50.00 plus valuation-based fee; mechanical minimum $32.55 per unit plus $5.00 data processing on residential forms, commercial higher; commercial plan review fee is 50% of the building permit fee with a $55 minimum. For a $900,000 commercial school addition, total permit fees will be valuation-based and should be verified with the Building Codes Division before submittal",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Fire Alarm Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "conditional_text": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "planning_zoning",
+        "fees": "",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "reason": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "source": ""
+      }
+    ],
+    "related_permits": [
+      {
+        "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "conditional_text": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "planning_zoning",
+        "filing_family": "planning_zoning",
+        "inspections": [],
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "required": false,
+        "required_if": "Only needed if zoning/use clearance, address-specific planning review, exterior work, parking, signage, or use approval applies.",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "building",
+      "mechanical",
+      "plumbing",
+      "fire_alarm",
+      "Building",
+      "Mechanical",
+      "Plumbing",
+      "Fire"
+    ],
+    "required_permit_names": [
+      "Commercial Building Permit \u2014 Addition",
+      "Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork",
+      "Plumbing Permit",
+      "Fire Alarm Permit"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit. Conditional guidance: Planning / Zoning Use Clearance.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "segment": "commercial",
+    "source_support": {
+      "decision_mutation_allowed": false
+    },
+    "source_urls": [
+      "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+      "https://www.littlerock.gov/city-administration/departments/planning-and-development",
+      "https://www.littlerock.gov/media/19234/ord-22204-fees.pdf",
+      "https://web.littlerock.state.ar.us/WebLink/DocView.aspx?id=325939&dbid=0&repo=CityofLittleRock"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.littlerock.gov/city-administration/departments/planning-and-development"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.littlerock.gov/media/19234/ord-22204-fees.pdf"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://web.littlerock.state.ar.us/WebLink/DocView.aspx?id=325939&dbid=0&repo=CityofLittleRock"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building Permit \u2014 Addition; Mechanical Permit \u2014 Commercial HVAC / RTU / Ductwork; Plumbing Permit; Fire Alarm Permit. Conditional guidance: Planning / Zoning Use Clearance.",
+    "total_cost_estimate": "$900,000 - $1,250,000",
+    "trade_permits": [],
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ]
+  },
+  "response_sha256": "6c21d20cc1f39b0d0c39494f0cff21ac7619b145574954f9e1f2cabfd1433a51",
+  "run_id": "live_customer_100_fable5_locked_packet_postdeploy_20260702T232436Z",
+  "share_slug": "28odISWBc1c",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/28odISWBc1c",
+  "source_urls": [
+    "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
+    "https://web.littlerock.state.ar.us/WebLink/DocView.aspx?id=325939&dbid=0&repo=CityofLittleRock",
+    "https://www.littlerock.gov/city-administration/departments/planning-and-development",
+    "https://www.littlerock.gov/media/19234/ord-22204-fees.pdf"
+  ],
+  "started_at_utc": "2026-07-02T23:46:06.746068+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

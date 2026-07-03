@@ -12,6 +12,34 @@ from family_reconciliation_gate import apply_family_reconciliation_gate, family_
 from scope_contract import build_scope_facts_v2
 
 
+def test_fable5_phase2_floor_adds_after_conditional_alias_and_forbidden_veto():
+    facts = build_scope_facts_v2(
+        "change of occupancy from retail store to fitness studio with showers and new mechanical ventilation, job value 175000",
+        "Glendale",
+        "AZ",
+        job_category="commercial",
+    )
+    rows = [
+        {"permit_type": "Commercial Building / Tenant Improvement Permit", "required": True, "source_url": "https://example.gov"},
+        {"permit_type": "Mechanical Permit — Commercial Tenant Improvement", "required": True, "source_url": "https://example.gov"},
+        {"permit_type": "Plumbing Permit", "required": False, "decision": "CONDITIONAL"},
+    ]
+    kept, _conditional, rulings = reconcile_rows(rows, facts)
+    assert any(family_from_row(r) == "plumbing" and r.get("required") is True for r in kept)
+    assert all(family_from_row(r) != "plumbing" for r in _conditional)
+    assert any(r.action == "ADD" and r.family == "plumbing" for r in rulings)
+
+    residential = build_scope_facts_v2("install new gas line to outdoor kitchen and grill, job value 6000", "Jackson", "MS", job_category="residential")
+    rows = [
+        {"permit_type": "Plumbing Permit — Gas Piping Installation (Residential)", "required": True},
+        {"permit_type": "Wastewater / FOG / Pretreatment Approval", "required": False, "decision": "CONDITIONAL"},
+        {"permit_type": "Health Plan Review / Food Establishment Permit", "required": False, "decision": "CONDITIONAL"},
+    ]
+    kept, conditional, rulings = reconcile_rows(rows, residential)
+    assert all(family_from_row(r) not in {"health_food", "wastewater_pretreatment_fog"} for r in kept + conditional)
+    assert any(r.action == "VETO" and r.family in {"health_food", "wastewater_pretreatment_fog"} for r in rulings)
+
+
 def test_precedence_negative_fact_beats_source_backed_trigger():
     facts = build_scope_facts_v2("commercial exterior wall sign face change only no electrical work", "Minneapolis", "MN")
     rows = [{"permit_type": "Electrical Permit — Illuminated Sign", "source_url": "https://www.minneapolismn.gov/permits", "required": True}]

@@ -1,0 +1,1434 @@
+{
+  "attempt": 1,
+  "case": {
+    "adjudication_hint": "Brewery multi-authority",
+    "bucket": "brewery TI",
+    "city": "Denver",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "Plumbing",
+      "Mechanical/Fuel gas",
+      "Electrical",
+      "Fire",
+      "Health possible"
+    ],
+    "id": "C-016",
+    "job_type": "brewery tenant improvement adding floor drains gas fired equipment fermentation tanks and electrical, job value 420000",
+    "job_value": 420000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "CO",
+    "zip_code": "80202"
+  },
+  "cases_plan_sha256": "5dad1e70762ea993d26fdbd07fe9c931364884c960259e4aea9c4e0b881a0453",
+  "completed_at_utc": "2026-07-02T23:42:26.821624+00:00",
+  "deployed_sha": "505b7c8bb373bf00ece3a3e6bf88a7126d3a3505",
+  "elapsed_seconds": 5.85,
+  "http_status": 200,
+  "issues": [],
+  "key_fields": {
+    "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+    "applying_office": "City and County of Denver Community Planning and Development (CPD)",
+    "confidence": "medium",
+    "customer_headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+    "customer_next_step": "File the required permit categories with City and County of Denver Community Planning and Development (CPD): Commercial Building / Tenant Improvement Permit, Electrical Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Gas Permit \u2014 Commercial Fuel Gas Piping, Gas Pressure Test / Fuel Gas Permit, Health, Fire, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Liquor License / Local Alcohol Routing, Wastewater / FOG / Pretreatment Approval. Confirm exact portal subcategories before final submission.",
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "sources_count": 7
+  },
+  "permit_elapsed_seconds": 2.67,
+  "provisional_grade": "A",
+  "report_status": 200,
+  "report_text_sha256": "77a429c82e5ac22627f1d0369429a16ec8cfbdac541ed9b582ac6bb823446c27",
+  "request_payload": {
+    "city": "Denver",
+    "job_category": "commercial",
+    "job_type": "brewery tenant improvement adding floor drains gas fired equipment fermentation tanks and electrical, job value 420000",
+    "job_value": 420000,
+    "state": "CO",
+    "vertical": "commercial",
+    "zip_code": "80202"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "City and County of Denver Community Planning and Development (CPD)",
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Gas piping diagram",
+        "Pressure test documentation",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description",
+        "Grease interceptor sizing/details",
+        "Wastewater pretreatment application"
+      ],
+      "office_name": "City and County of Denver Community Planning and Development (CPD)",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval",
+      "portal_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+      "state": "resolved_portal",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval",
+        "Confirm exact portal subcategories before final submission"
+      ]
+    },
+    "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+    "apply_url_known": true,
+    "applying_office": "City and County of Denver Community Planning and Development (CPD)",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "name": "City and County of Denver Community Planning and Development (CPD)",
+        "segment": "commercial",
+        "source_urls": [
+          "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Commercial-and-Multifamily-Projects",
+          "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "https://www.denvergov.org/CPD",
+          "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections",
+          "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Quick-Permits",
+          "https://aca-prod.accela.com/denver/default.aspx",
+          "https://denvergov.org/files/assets/public/v/1/community-planning-and-development/documents/ds/building-codes/2025_denver_building_code.pdf"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building / Tenant Improvement Permit before starting work",
+        "Pull Electrical Permit \u2014 Commercial Tenant Improvement before starting work",
+        "Pull Mechanical Permit before starting work",
+        "Pull Gas Permit \u2014 Commercial Fuel Gas Piping before starting work",
+        "Pull Gas Pressure Test / Fuel Gas Permit before starting work",
+        "Pull Health before starting work",
+        "Pull Fire before starting work",
+        "Pull Planning / Zoning Use Clearance before starting work",
+        "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+        "Pull Liquor License / Local Alcohol Routing before starting work",
+        "Pull Wastewater / FOG / Pretreatment Approval before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Gas piping diagram",
+        "Pressure test documentation",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description",
+        "Grease interceptor sizing/details",
+        "Wastewater pretreatment application"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection",
+        "Gas pressure test",
+        "Final gas inspection"
+      ],
+      "required_families": [
+        "building_ti",
+        "electrical",
+        "mechanical",
+        "plumbing",
+        "gas",
+        "health_food",
+        "fire_suppression",
+        "planning_zoning",
+        "co_change_of_occupancy",
+        "liquor",
+        "wastewater_pretreatment_fog"
+      ],
+      "rows": [
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building_ti",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit \u2014 Commercial Tenant Improvement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Gas Permit \u2014 Commercial Fuel Gas Piping",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Gas piping diagram",
+            "Pressure test documentation"
+          ],
+          "family": "gas",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Gas pressure test",
+            "Final gas inspection"
+          ],
+          "lead": false,
+          "permit_name": "Gas Pressure Test / Fuel Gas Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Health",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Fire",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "liquor",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Liquor License / Local Alcohol Routing",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Grease interceptor sizing/details",
+            "Wastewater pretreatment application"
+          ],
+          "family": "wastewater_pretreatment_fog",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Wastewater / FOG / Pretreatment Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval."
+    },
+    "checklist": [
+      "Pull Commercial Building / Tenant Improvement Permit before starting work",
+      "Pull Electrical Permit \u2014 Commercial Tenant Improvement before starting work",
+      "Pull Mechanical Permit before starting work",
+      "Pull Gas Permit \u2014 Commercial Fuel Gas Piping before starting work",
+      "Pull Gas Pressure Test / Fuel Gas Permit before starting work",
+      "Pull Health before starting work",
+      "Pull Fire before starting work",
+      "Pull Planning / Zoning Use Clearance before starting work",
+      "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+      "Pull Liquor License / Local Alcohol Routing before starting work",
+      "Pull Wastewater / FOG / Pretreatment Approval before starting work"
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review."
+      }
+    ],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval.",
+    "customer_headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+    "customer_next_step": "File the required permit categories with City and County of Denver Community Planning and Development (CPD): Commercial Building / Tenant Improvement Permit, Electrical Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Gas Permit \u2014 Commercial Fuel Gas Piping, Gas Pressure Test / Fuel Gas Permit, Health, Fire, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Liquor License / Local Alcohol Routing, Wastewater / FOG / Pretreatment Approval. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "File the required permit categories with City and County of Denver Community Planning and Development (CPD): Commercial Building / Tenant Improvement Permit, Electrical Permit \u2014 Commercial Tenant Improvement, Mechanical Permit, Gas Permit \u2014 Commercial Fuel Gas Piping, Gas Pressure Test / Fuel Gas Permit, Health, Fire, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Liquor License / Local Alcohol Routing, Wastewater / FOG / Pretreatment Approval. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "degraded_sources": false,
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "inspections": [
+      "Building final inspection",
+      "Electrical final inspection",
+      "Mechanical final inspection",
+      "Plumbing final inspection",
+      "Gas pressure test",
+      "Final gas inspection"
+    ],
+    "job_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Commercial-and-Multifamily-Projects"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://aca-prod.accela.com/DENVER/Default.aspx"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.denvergov.org/CPD"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Quick-Permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://aca-prod.accela.com/denver/default.aspx"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://denvergov.org/files/assets/public/v/1/community-planning-and-development/documents/ds/building-codes/2025_denver_building_code.pdf"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval.",
+    "permit_type": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "building",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "kind": "Building",
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "permit_type": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Gas Permit \u2014 Commercial Fuel Gas Piping",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "permit_name": "Gas Permit \u2014 Commercial Fuel Gas Piping",
+        "permit_type": "Gas Permit \u2014 Commercial Fuel Gas Piping",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Gas Pressure Test / Fuel Gas Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Gas piping diagram",
+          "Pressure test documentation"
+        ],
+        "family": "gas",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "gas",
+        "inspections": [
+          "Gas pressure test",
+          "Final gas inspection"
+        ],
+        "kind": "Gas",
+        "permit_name": "Gas Pressure Test / Fuel Gas Permit",
+        "permit_type": "Gas Pressure Test / Fuel Gas Permit",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Health",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "health_food",
+        "inspections": [],
+        "kind": "Health",
+        "permit_name": "Health",
+        "permit_type": "Health",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Fire",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "fire_suppression",
+        "inspections": [],
+        "kind": "Fire",
+        "permit_name": "Fire",
+        "permit_type": "Fire",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "planning_zoning",
+        "inspections": [],
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "co_change_of_occupancy",
+        "inspections": [],
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Liquor License / Local Alcohol Routing",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "liquor",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "liquor",
+        "inspections": [],
+        "kind": "Liquor",
+        "permit_name": "Liquor License / Local Alcohol Routing",
+        "permit_type": "Liquor License / Local Alcohol Routing",
+        "required": true,
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "approval_type": "Wastewater / FOG / Pretreatment Approval",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Grease interceptor sizing/details",
+          "Wastewater pretreatment application"
+        ],
+        "family": "wastewater_pretreatment_fog",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "wastewater_pretreatment_fog",
+        "inspections": [],
+        "kind": "Wastewater/FOG",
+        "permit_name": "Wastewater / FOG / Pretreatment Approval",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "required": true,
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building_ti",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Gas Permit \u2014 Commercial Fuel Gas Piping",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "gas",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Gas Pressure Test / Fuel Gas Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "health_food",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Health",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_suppression",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Fire",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "planning_zoning",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "co_change_of_occupancy",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "liquor",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Liquor License / Local Alcohol Routing",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "wastewater_pretreatment_fog",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Wastewater / FOG / Pretreatment Approval",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "name": "City and County of Denver Community Planning and Development (CPD)",
+        "segment": "commercial",
+        "source_urls": [
+          "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Commercial-and-Multifamily-Projects",
+          "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "https://www.denvergov.org/CPD",
+          "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections",
+          "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Quick-Permits",
+          "https://aca-prod.accela.com/denver/default.aspx",
+          "https://denvergov.org/files/assets/public/v/1/community-planning-and-development/documents/ds/building-codes/2025_denver_building_code.pdf"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building / Tenant Improvement Permit before starting work",
+        "Pull Electrical Permit \u2014 Commercial Tenant Improvement before starting work",
+        "Pull Mechanical Permit before starting work",
+        "Pull Gas Permit \u2014 Commercial Fuel Gas Piping before starting work",
+        "Pull Gas Pressure Test / Fuel Gas Permit before starting work",
+        "Pull Health before starting work",
+        "Pull Fire before starting work",
+        "Pull Planning / Zoning Use Clearance before starting work",
+        "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+        "Pull Liquor License / Local Alcohol Routing before starting work",
+        "Pull Wastewater / FOG / Pretreatment Approval before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Gas piping diagram",
+        "Pressure test documentation",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description",
+        "Grease interceptor sizing/details",
+        "Wastewater pretreatment application"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection",
+        "Gas pressure test",
+        "Final gas inspection"
+      ],
+      "required_families": [
+        "building_ti",
+        "electrical",
+        "mechanical",
+        "plumbing",
+        "gas",
+        "health_food",
+        "fire_suppression",
+        "planning_zoning",
+        "co_change_of_occupancy",
+        "liquor",
+        "wastewater_pretreatment_fog"
+      ],
+      "rows": [
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building_ti",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit \u2014 Commercial Tenant Improvement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Gas Permit \u2014 Commercial Fuel Gas Piping",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Gas piping diagram",
+            "Pressure test documentation"
+          ],
+          "family": "gas",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Gas pressure test",
+            "Final gas inspection"
+          ],
+          "lead": false,
+          "permit_name": "Gas Pressure Test / Fuel Gas Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Health",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Fire",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "liquor",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Liquor License / Local Alcohol Routing",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Grease interceptor sizing/details",
+            "Wastewater pretreatment application"
+          ],
+          "family": "wastewater_pretreatment_fog",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Wastewater / FOG / Pretreatment Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": ""
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval."
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building_ti",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Electrical Permit \u2014 Commercial Tenant Improvement",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Mechanical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Gas Permit \u2014 Commercial Fuel Gas Piping",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Gas piping diagram",
+          "Pressure test documentation"
+        ],
+        "family": "gas",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Gas pressure test",
+          "Final gas inspection"
+        ],
+        "lead": false,
+        "permit_name": "Gas Pressure Test / Fuel Gas Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Health",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Fire",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "liquor",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Liquor License / Local Alcohol Routing",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/DENVER/Default.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Grease interceptor sizing/details",
+          "Wastewater pretreatment application"
+        ],
+        "family": "wastewater_pretreatment_fog",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Wastewater / FOG / Pretreatment Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": ""
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "required_permit_families": [
+      "building_ti",
+      "electrical",
+      "mechanical",
+      "plumbing",
+      "gas",
+      "health_food",
+      "fire_suppression",
+      "planning_zoning",
+      "co_change_of_occupancy",
+      "liquor",
+      "wastewater_pretreatment_fog",
+      "Building",
+      "Electrical",
+      "Mechanical",
+      "Plumbing",
+      "Gas",
+      "Health",
+      "Fire",
+      "Planning/Zoning",
+      "Certificate of Occupancy",
+      "Liquor",
+      "Wastewater/FOG"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Electrical Permit \u2014 Commercial Tenant Improvement",
+      "Mechanical Permit",
+      "Gas Permit \u2014 Commercial Fuel Gas Piping",
+      "Gas Pressure Test / Fuel Gas Permit",
+      "Health",
+      "Fire",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy / Change-of-Occupancy Approval",
+      "Liquor License / Local Alcohol Routing",
+      "Wastewater / FOG / Pretreatment Approval"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ],
+    "segment": "commercial",
+    "source_urls": [
+      "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Commercial-and-Multifamily-Projects",
+      "https://aca-prod.accela.com/DENVER/Default.aspx",
+      "https://www.denvergov.org/CPD",
+      "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections",
+      "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Quick-Permits",
+      "https://aca-prod.accela.com/denver/default.aspx",
+      "https://denvergov.org/files/assets/public/v/1/community-planning-and-development/documents/ds/building-codes/2025_denver_building_code.pdf"
+    ],
+    "sources": [
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Commercial-and-Multifamily-Projects"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://aca-prod.accela.com/DENVER/Default.aspx"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.denvergov.org/CPD"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Quick-Permits"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://aca-prod.accela.com/denver/default.aspx"
+      },
+      {
+        "source_tier": "local_permit_source",
+        "title": "Official permit source",
+        "url": "https://denvergov.org/files/assets/public/v/1/community-planning-and-development/documents/ds/building-codes/2025_denver_building_code.pdf"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 Commercial Tenant Improvement; Mechanical Permit; Gas Permit \u2014 Commercial Fuel Gas Piping; Gas Pressure Test / Fuel Gas Permit; Health; Fire; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing; Wastewater / FOG / Pretreatment Approval.",
+    "total_cost_estimate": "$420,000 - $470,000",
+    "trade_permits": [],
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing, fire.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them.",
+      "Customer-boundary filing rows were normalized so only hard scope-triggered permits appear as required; address-dependent companion reviews are shown separately."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description",
+      "Grease interceptor sizing/details",
+      "Wastewater pretreatment application"
+    ]
+  },
+  "response_sha256": "ba82dd90535256ac6b675f3e097b276c249d7e515bfa7209ddef0ef50ffd9075",
+  "run_id": "live_customer_100_fable5_locked_packet_postdeploy_20260702T232436Z",
+  "share_slug": "6U8_pdfnWzk",
+  "share_status": 200,
+  "share_url": "https://permitassist.io/report/6U8_pdfnWzk",
+  "source_urls": [
+    "https://aca-prod.accela.com/DENVER/Default.aspx",
+    "https://aca-prod.accela.com/denver/default.aspx",
+    "https://denvergov.org/files/assets/public/v/1/community-planning-and-development/documents/ds/building-codes/2025_denver_building_code.pdf",
+    "https://www.denvergov.org/CPD",
+    "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections",
+    "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Commercial-and-Multifamily-Projects",
+    "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Quick-Permits"
+  ],
+  "started_at_utc": "2026-07-02T23:42:20.967591+00:00",
+  "status_label": "PASS",
+  "visible_report_excerpt": "PermitAssist Report"
+}

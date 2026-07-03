@@ -15,6 +15,8 @@ from closed_world_decision import (  # noqa: E402
     apply_closed_world_customer_contract,
     compose_decision_object,
 )
+from scope_contract import build_scope_facts_v2  # noqa: E402
+from public_packet import apply_public_packet_projection  # noqa: E402
 
 
 def _record(case_id: str) -> dict:
@@ -47,6 +49,74 @@ def _apply(case_id: str) -> dict:
         case["state"],
         job_category=case.get("segment"),
     )
+
+
+def test_fable5_public_packet_apply_path_fallback_status_is_honest_and_generic_sources_not_promoted():
+    official = apply_public_packet_projection(
+        {
+            "permit_decision": "REQUIRED",
+            "permit_required": True,
+            "permits_required": [{"permit_name": "Building Permit", "family": "building"}],
+            "source_urls": ["https://www.examplecity.gov/building-permits"],
+            "applying_office": "Example City Building Department",
+        },
+        {"segment": "commercial"},
+    )
+    assert official.get("apply_url") == "https://www.examplecity.gov/building-permits"
+    assert official["apply_path"]["typed_status"] == "OFFICIAL_SOURCE_FALLBACK"
+    assert official["apply_path"]["channel"] == "official_source"
+
+    generic = apply_public_packet_projection(
+        {
+            "permit_decision": "REQUIRED",
+            "permit_required": True,
+            "permits_required": [{"permit_name": "Building Permit", "family": "building"}],
+            "source_urls": ["https://codes.iccsafe.org/content/IBC2024P1"],
+            "applying_office": "Local Building Department",
+        },
+        {"segment": "commercial"},
+    )
+    assert not generic.get("apply_url")
+    assert not generic["apply_path"].get("portal_url")
+    assert generic["apply_path"]["typed_status"] == "VERIFY_WITH_PERMIT_OFFICE"
+
+
+def test_fable5_closed_world_consumes_scope_floor_and_forbid_contracts():
+    job = "change of occupancy from retail store to fitness studio with showers and new mechanical ventilation, job value 175000"
+    facts = build_scope_facts_v2(job, "Glendale", "AZ", job_category="commercial")
+    public = apply_closed_world_customer_contract(
+        {"permit_decision": "REQUIRED", "permit_required": True, "permits_required": [{"permit_name": "Commercial Building / Tenant Improvement Permit", "family": "building"}]},
+        job,
+        "Glendale",
+        "AZ",
+        job_category="commercial",
+        scope_facts_v2=facts,
+    )
+    assert "plumbing" in _families(public)
+    assert "plumbing" not in _families(public, "CONDITIONAL")
+
+    residential_job = "install new gas line to outdoor kitchen and grill, job value 6000"
+    residential_facts = build_scope_facts_v2(residential_job, "Jackson", "MS", job_category="residential")
+    public = apply_closed_world_customer_contract(
+        {
+            "permit_decision": "REQUIRED",
+            "permit_required": True,
+            "permits_required": [
+                {"permit_name": "Plumbing Permit — Gas Piping Installation (Residential)", "family": "plumbing"},
+                {"permit_name": "Health Plan Review / Food Establishment Permit", "family": "health_food"},
+                {"permit_name": "Wastewater / FOG / Pretreatment Approval", "family": "wastewater_pretreatment_fog"},
+            ],
+        },
+        residential_job,
+        "Jackson",
+        "MS",
+        job_category="residential",
+        scope_facts_v2=residential_facts,
+    )
+    assert "health_food" not in _families(public)
+    assert "wastewater_pretreatment_fog" not in _families(public)
+    assert "health_food" not in _families(public, "CONDITIONAL")
+    assert "wastewater_pretreatment_fog" not in _families(public, "CONDITIONAL")
 
 
 def test_decision_object_r033_keeps_electrical_and_blocks_food_fog_required():

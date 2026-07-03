@@ -1,0 +1,21 @@
+{
+  "apply_path_nonempty": true,
+  "case_id": "C-050",
+  "dedupe_name_contains_max": {
+    "Gas Pressure Test": 1
+  },
+  "expected_decision": "REQUIRED",
+  "first_required_name_must_not_include": [
+    "Gas Pressure Test"
+  ],
+  "protection": false,
+  "required_name_must_include": [
+    "Building Permit",
+    "Electrical",
+    "Mechanical",
+    "Plumbing",
+    "Gas Pressure Test",
+    "Fire / Environmental"
+  ],
+  "source_labels_no_blank": true
+}

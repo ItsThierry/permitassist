@@ -139,6 +139,10 @@ class ScopeFactsV2(ScopeFacts):
     service_amperage: int | None = None
     valuation_usd: int | None = None
     rack_height_ft: float | None = None
+    mandatory_family_floors: dict[str, str] = field(default_factory=dict)
+    forbidden_families: dict[str, str] = field(default_factory=dict)
+    required_documents_floor: dict[str, str] = field(default_factory=dict)
+    repair_exemption_candidate: bool = False
 
     def as_dict(self) -> dict[str, Any]:
         data = super().as_dict()
@@ -149,6 +153,10 @@ class ScopeFactsV2(ScopeFacts):
             "service_amperage": self.service_amperage,
             "valuation_usd": self.valuation_usd,
             "rack_height_ft": self.rack_height_ft,
+            "mandatory_family_floors": dict(self.mandatory_family_floors),
+            "forbidden_families": dict(self.forbidden_families),
+            "required_documents_floor": dict(self.required_documents_floor),
+            "repair_exemption_candidate": self.repair_exemption_candidate,
             "source": "request_scope_facts_v2",
         })
         return data
@@ -444,11 +452,77 @@ def _scope_facts_v2_negative(job: str, v1: ScopeFacts) -> set[str]:
     return facts
 
 
+def _scope_facts_v2_family_floors(job: str, v1: ScopeFacts, positives: set[str]) -> dict[str, str]:
+    floors: dict[str, str] = {}
+    if re.search(r"\bbasement\b", job, re.I) and re.search(r"\b(?:finish|finished|finishing|bedroom|bath(?:room)?)\b", job, re.I):
+        floors["building"] = "basement finish with habitable room/bathroom requires residential building alteration floor"
+        if re.search(r"\b(?:bath|bathroom|toilet|sink|shower|plumbing)\b", job, re.I):
+            floors["plumbing"] = "basement finish with bathroom/plumbing scope requires plumbing floor"
+    if re.search(r"\b(?:change\s+of\s+(?:use|occupancy)|occupancy\s+change|retail\s+store\s+to|retail\s+to|warehouse\s+to)\b", job, re.I) and re.search(r"\b(?:fitness|gym|showers?|locker)\b", job, re.I):
+        floors["plumbing"] = "fitness/change-of-use scope with showers/locker rooms requires plumbing floor"
+    if re.search(r"\b(?:school|classroom)\b", job, re.I) and re.search(r"\baddition\b", job, re.I):
+        floors["building"] = "school/classroom addition requires commercial building addition floor"
+        if re.search(r"\b(?:fire\s+alarm|hvac|rtu|mechanical|circuits?)\b", job, re.I):
+            floors["electrical"] = "school/classroom addition with fire alarm/HVAC requires electrical floor"
+    commercial_structural_addition = bool(
+        re.search(r"\b(?:metal\s+building|structural\s+steel|new\s+foundation|foundation\s+work|foundations?\s+for|building\s+addition)\b", job, re.I)
+        or re.search(r"\baddition\s+(?:to|of|for)\s+(?:the\s+)?(?:building|structure|warehouse|shop|school|classroom|auto\s+repair)\b", job, re.I)
+    )
+    if v1.segment == "commercial" and commercial_structural_addition:
+        floors["building"] = "commercial structural/addition scope requires commercial building floor"
+    if v1.segment == "commercial" and re.search(r"\bfloor\s+drains?\b", job, re.I):
+        floors["plumbing"] = "commercial TI with floor drains requires plumbing floor"
+    if v1.segment == "commercial" and re.search(r"\b(?:warehouse\s+to|assembly|pickleball|occupant\s+load)\b", job, re.I) and "use_change" in positives:
+        floors["fire_suppression"] = "assembly/change-of-use occupant-load increase requires fire/life-safety floor"
+        floors["planning_zoning"] = "commercial change-of-use requires zoning/use clearance floor"
+    return floors
+
+
+def _scope_facts_v2_forbidden_families(job: str, v1: ScopeFacts, negatives: set[str], positives: set[str]) -> dict[str, str]:
+    forbidden: dict[str, str] = {}
+    commercial_food_operation = bool(re.search(r"\b(?:restaurant|food\s+service|food\s+establishment|commercial\s+kitchen|commissary|brewery|bar|cafe|catering|food\s+truck|daycare|child\s*care)\b", job, re.I))
+    if v1.segment == "residential" and not commercial_food_operation:
+        forbidden["health_food"] = "residential non-food scope must not include commercial health/food review"
+        forbidden["wastewater_pretreatment_fog"] = "residential non-food scope must not include commercial FOG/pretreatment review"
+    if ("no_plumbing" in negatives or "no_mep" in negatives) and "plumbing" not in positives:
+        forbidden["plumbing"] = "explicit no-plumbing/no-MEP request fact forbids plumbing family/conditional"
+        forbidden["wastewater_pretreatment_fog"] = "explicit no-plumbing/no-MEP request fact forbids FOG/pretreatment family"
+    if "no_electrical" in negatives and "electrical" not in positives:
+        forbidden["electrical"] = "explicit no-electrical request fact forbids electrical family"
+    if "no_mechanical" in negatives and "mechanical" not in positives:
+        forbidden["mechanical"] = "explicit no-mechanical request fact forbids mechanical family"
+    return forbidden
+
+
+def _scope_facts_v2_required_document_floors(job: str, v1: ScopeFacts) -> dict[str, str]:
+    docs: dict[str, str] = {}
+    if v1.segment == "residential" and re.search(r"\b(?:addition|new\s+foundation|foundation)\b", job, re.I):
+        docs["structural"] = "residential addition/foundation scope requires structural/foundation drawings in the packet"
+    return docs
+
+
+def _scope_facts_v2_repair_exemption_candidate(job: str) -> bool:
+    has_repair = bool(re.search(r"\b(?:drywall|plaster)\b", job, re.I) and re.search(r"\b(?:repair|replace|replacement|patch)\b", job, re.I))
+    guarded_out = bool(
+        re.search(r"\b(?:fire[- ]rated|rated\s+assembly|framing|rewire|new\s+circuit)\b", job, re.I)
+        or (re.search(r"\bstructural\b", job, re.I) and not re.search(r"\bno\s+structural\b", job, re.I))
+        or (re.search(r"\belectrical\b", job, re.I) and not re.search(r"\bno\s+electrical\b", job, re.I))
+        or (re.search(r"\bplumbing\b", job, re.I) and not re.search(r"\bno\s+plumbing\b", job, re.I))
+        or re.search(r"\b(?:mechanical|mep)\b", job, re.I)
+    )
+    explicit_negatives = bool(re.search(r"\bno\s+structural\b", job, re.I) and re.search(r"\bno\s+electrical\b", job, re.I) and re.search(r"\bno\s+plumbing\b", job, re.I))
+    return has_repair and explicit_negatives and not guarded_out
+
+
 def build_scope_facts_v2(job_type: str, city: str = "", state: str = "", *, job_category: str | None = None, vertical: str | None = None, scope_contract: dict[str, Any] | None = None) -> ScopeFactsV2:
     v1 = build_scope_facts(job_type, city, state, job_category=job_category, vertical=vertical, scope_contract=scope_contract if isinstance(scope_contract, dict) else None)
     job = _norm(job_type)
     positives = _scope_facts_v2_positive(job, v1)
     negatives = _scope_facts_v2_negative(job, v1)
+    floors = _scope_facts_v2_family_floors(job, v1, positives)
+    forbidden_families = _scope_facts_v2_forbidden_families(job, v1, negatives, positives)
+    document_floors = _scope_facts_v2_required_document_floors(job, v1)
+    repair_exemption_candidate = _scope_facts_v2_repair_exemption_candidate(job)
     service_amperage = _extract_service_amperage(job)
     valuation = _extract_int_money_or_plain(job, value_words=("job value", "valuation", "project value", "value"))
     rack_height = _extract_rack_height(job)
@@ -467,6 +541,10 @@ def build_scope_facts_v2(job_type: str, city: str = "", state: str = "", *, job_
         service_amperage=service_amperage,
         valuation_usd=valuation,
         rack_height_ft=rack_height,
+        mandatory_family_floors=floors,
+        forbidden_families=forbidden_families,
+        required_documents_floor=document_floors,
+        repair_exemption_candidate=repair_exemption_candidate,
     )
 
 
