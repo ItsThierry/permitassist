@@ -233,6 +233,35 @@ class ScopeFactsV3(ScopeFactsV2):
         return data
 
 
+@dataclass(frozen=True)
+class ScopeFactsV4(ScopeFactsV3):
+    """V4 request facts: scope-aware packet axes and family support sets."""
+
+    occupancy_class: str = "unknown"
+    use_change: bool = False
+    request_positive_families: frozenset[str] = field(default_factory=frozenset)
+    request_negative_families: frozenset[str] = field(default_factory=frozenset)
+    electrical_work: Fact = field(default_factory=Fact)
+    mechanical_work: Fact = field(default_factory=Fact)
+    plumbing_work: Fact = field(default_factory=Fact)
+    building_work: Fact = field(default_factory=Fact)
+
+    def as_dict(self) -> dict[str, Any]:
+        data = super().as_dict()
+        data.update({
+            "source": "request_scope_facts_v4",
+            "occupancy_class": self.occupancy_class,
+            "use_change": self.use_change,
+            "request_positive_families": sorted(self.request_positive_families),
+            "request_negative_families": sorted(self.request_negative_families),
+            "electrical_work": self.electrical_work.as_dict(),
+            "mechanical_work": self.mechanical_work.as_dict(),
+            "plumbing_work": self.plumbing_work.as_dict(),
+            "building_work": self.building_work.as_dict(),
+        })
+        return data
+
+
 _CONSTRUCTION_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("change_of_use", ("change of use", "change in use", "change of occupancy", "occupancy change", "retail to", "office to", "warehouse to", "gallery change to", "convert from", "conversion from")),
     ("conversion", ("convert garage", "garage into", "garage to", "basement adu", "basement apartment", "laundromat conversion", "conversion", "converted into", "convert into", "convert vacant", "convert office", "convert retail", "convert warehouse", "convert space", "convert suite")),
@@ -754,6 +783,207 @@ def build_scope_facts_v3(job_type: str, city: str = "", state: str = "", *, job_
         electrical_new_circuits=_fact(TriFact.TRUE, new_circuit_evidence) if new_circuit_evidence else (_fact(TriFact.FALSE, existing_circuit_evidence) if existing_circuit_evidence else _fact(TriFact.UNKNOWN)),
         residential_outdoor_cooking=_fact(TriFact.TRUE, residential_outdoor) if residential_outdoor else _fact(TriFact.UNKNOWN),
         gas_fuel_work=_fact(TriFact.TRUE, gas_evidence) if gas_evidence else _fact(TriFact.UNKNOWN),
+    )
+
+
+def _family_support_sets_v4(job: str, v3: ScopeFactsV3) -> tuple[set[str], set[str], set[str], dict[str, str], set[str]]:
+    positives = set(v3.positive_facts)
+    negatives = set(v3.negative_facts)
+    positive_families: set[str] = set()
+    negative_families: set[str] = set()
+    forbidden = dict(v3.forbidden_families)
+
+    if v3.segment == "commercial" and ("commercial_ti" in positives or "use_change" in positives):
+        positive_families.add("building_ti")
+    if positives & {"building", "addition", "structural", "demolition", "racking", "new_dwelling_unit", "exterior"}:
+        positive_families.add("building")
+    if "racking" in positives:
+        positive_families.add("racking")
+    if "electrical" in positives:
+        positive_families.add("electrical")
+    if "mechanical" in positives:
+        positive_families.add("mechanical")
+    if "plumbing" in positives:
+        positive_families.add("plumbing")
+    if "gas" in positives:
+        positive_families.add("gas")
+    if positives & {"fire_alarm"}:
+        positive_families.add("fire_alarm")
+    if positives & {"fire_suppression", "hood_wet_chemical"}:
+        positive_families.add("fire_suppression")
+    if positives & {"food_service", "health_food"}:
+        positive_families.add("health_food")
+    if positives & {"grease_generating"}:
+        positive_families.add("wastewater_pretreatment_fog")
+    if positives & {"planning_zoning", "sign", "historic_district"}:
+        positive_families.add("planning_zoning")
+    if positives & {"historic_district"}:
+        positive_families.add("historic_review")
+    if positives & {"co_change_of_occupancy", "use_change"}:
+        positive_families.add("co_change_of_occupancy")
+    if "sign" in positives:
+        positive_families.add("sign")
+    if "sign_illuminated" in positives:
+        positive_families.add("electrical")
+    if re.search(r"\b(?:solar|pv|photovoltaic)\b", job, re.I):
+        positives.add("solar_pv")
+        positive_families.add("solar_pv")
+    if re.search(r"\b(?:battery|ess|energy\s+storage|backup)\b", job, re.I):
+        positives.add("battery_storage")
+        positives.add("electrical")
+        positive_families.add("battery_storage")
+        positive_families.add("electrical")
+    if re.search(r"\b(?:gas\s+(?:line|piping|equipment)|gas[- ]fired|gas\s+dryers?|fuel\s+gas)\b", job, re.I):
+        positives.add("gas")
+        positives.add("plumbing")
+        positive_families.add("gas")
+        positive_families.add("plumbing")
+    if re.search(r"\b(?:medical|dental|clinic|veterinary|x[- ]?ray|exam\s+rooms?|kennels?)\b", job, re.I):
+        positives.add("electrical")
+        positives.add("mechanical")
+        positive_families.add("electrical")
+        positive_families.add("mechanical")
+    if re.search(r"\b(?:ductless|mini[- ]?split|split[- ]system|heat\s+pump|refrigerant|condenser)\b", job, re.I):
+        positives.add("refrigeration")
+        positive_families.add("refrigeration")
+    if re.search(r"\b(?:change\s+(?:to|from)|convert(?:ing|ed)?\s+(?:to|from)|conversion\s+(?:to|from)|occupant\s+load)\b", job, re.I) and v3.segment == "commercial":
+        positives.update({"use_change", "commercial_ti", "building"})
+        positive_families.update({"building_ti", "co_change_of_occupancy", "planning_zoning"})
+    if re.search(r"\b(?:wine\s+bar|bar|restaurant|food\s+prep|hoodless\s+food)\b", job, re.I) and v3.segment == "commercial" and "use_change" in positives:
+        positives.update({"electrical", "mechanical"})
+        positive_families.update({"electrical", "mechanical"})
+    if re.search(r"\b(?:laundromat|laundry|gas\s+dryers?)\b", job, re.I):
+        for fam in ("food_service", "health_food"):
+            positives.discard(fam)
+        positive_families.discard("health_food")
+    if re.search(r"\bgrease\s+interceptor\s+replacement\b", job, re.I) and re.search(r"\bsame\s+location\b", job, re.I):
+        for fam in ("fire_suppression", "hood_wet_chemical"):
+            positives.discard(fam)
+            positive_families.discard(fam)
+    if re.search(r"\b(?:brewery|wine\s+bar|bar|liquor)\b", job, re.I):
+        positives.add("liquor")
+        positive_families.add("liquor")
+    positive_families.update(v3.mandatory_family_floors.keys())
+
+    negative_map = {
+        "no_electrical": "electrical",
+        "no_mechanical": "mechanical",
+        "no_plumbing": "plumbing",
+        "no_use_change": "co_change_of_occupancy",
+        "no_food_service_change": "health_food",
+        "no_sprinkler_alteration": "fire_suppression",
+    }
+    for neg, fam in negative_map.items():
+        if neg in negatives:
+            negative_families.add(fam)
+            if fam not in positive_families:
+                forbidden[fam] = f"explicit request negative fact {neg} forbids {fam} hard-required row"
+    if "no_use_change" in negatives:
+        positives.discard("use_change")
+        positives.discard("co_change_of_occupancy")
+        positive_families.discard("co_change_of_occupancy")
+    if "no_mechanical" in negatives:
+        positives.discard("mechanical")
+        positive_families.discard("mechanical")
+    if "no_electrical" in negatives:
+        positives.discard("electrical")
+        positive_families.discard("electrical")
+    if "no_plumbing" in negatives:
+        positives.discard("plumbing")
+        positive_families.discard("plumbing")
+    # V3 may add a broad no_mep sentinel for "only/no mechanical" wording.
+    # Preserve explicit positive trade facts instead of letting that broad
+    # sentinel veto electrical/plumbing rows that the user actually asked for.
+    if positives & {"electrical", "plumbing", "mechanical"}:
+        negatives.discard("no_mep")
+    if re.search(r"\b(?:ev\s+charger|electric\s+vehicle\s+charger|level\s*(?:2|ii)\s+charger)\b", job, re.I) and not re.search(r"\b(?:structural|framing|trench|new\s+building|addition|wall|foundation)\b", job, re.I):
+        positive_families.discard("building")
+        positives.discard("building")
+    # V4 is emission-time scope-aware: generic commercial TI/building rows do
+    # not hard-require every MEP/planning/CO family. Preserve only families with
+    # explicit request evidence or a true use-change/sign/historic trigger.
+    explicit_electrical = bool(_evidence_spans(job, r"\b(?:electrical|wiring|circuits?|service|panel|lighting|lights?|grow\s+lights?|x[- ]?ray|receptacles?|outlets?|power|generator|ev\s+charger|emergency\s+power|solar|pv|photovoltaic|battery|ess|illuminated|lit|wine\s+bar|bar|food\s+prep)\b"))
+    explicit_mechanical = bool(_evidence_spans(job, r"\b(?:mechanical|hvac|ventilation|diffuser|duct(?:work)?|rtu|rooftop|fume\s+hoods?|hood|exhaust|odor\s+control|fermentation\s+tanks?|gas[- ]fired\s+equipment|cooking\s+equipment|mini[- ]?split|ductless|heat\s+pump|condenser|air\s+conditioner|medical|dental|clinic|veterinary|x[- ]?ray|exam\s+rooms?|kennels?|wine\s+bar|bar|food\s+prep)\b"))
+    explicit_plumbing = bool(_evidence_spans(job, r"\b(?:plumbing|fixtures?|sinks?|drains?|floor\s+drains?|water|sewer|kitchen|bath(?:room)?|showers?|gas\s+piping|gas\s+line|gas|grease\s+interceptor|nitrous\s+lines?|utilities?)\b"))
+    if not explicit_electrical:
+        positives.discard("electrical")
+        positive_families.discard("electrical")
+    if not explicit_mechanical:
+        positives.discard("mechanical")
+        positive_families.discard("mechanical")
+    if not explicit_plumbing:
+        positives.discard("plumbing")
+        positives.discard("gas")
+        positive_families.discard("plumbing")
+        positive_families.discard("gas")
+    if "use_change" not in positives:
+        positive_families.discard("co_change_of_occupancy")
+        positives.discard("co_change_of_occupancy")
+        if not (positives & {"sign", "historic_district"}):
+            positive_families.discard("planning_zoning")
+            positives.discard("planning_zoning")
+    if v3.segment != "commercial":
+        positive_families.discard("co_change_of_occupancy")
+        positives.discard("co_change_of_occupancy")
+    if {"new_dwelling_unit", "utilities_connected"}.issubset(positives):
+        positives.update({"electrical", "plumbing", "mechanical"})
+        positive_families.update({"electrical", "plumbing", "mechanical"})
+    if re.search(r"\b(?:same[- ]size\s+windows?|replace\s+same[- ]size\s+windows?)\b", job, re.I) and re.search(r"\b(?:no\s+structural|no\s+wall\s+framing|same[- ]size)\b", job, re.I):
+        negative_families.add("structural")
+    return positives, positive_families, negative_families, forbidden, negatives
+
+
+def build_scope_facts_v4(job_type: str, city: str = "", state: str = "", *, job_category: str | None = None, vertical: str | None = None, scope_contract: dict[str, Any] | None = None) -> ScopeFactsV4:
+    v3 = build_scope_facts_v3(job_type, city, state, job_category=job_category, vertical=vertical, scope_contract=scope_contract)
+    job = _norm(job_type)
+    positives, positive_families, negative_families, forbidden, negatives = _family_support_sets_v4(job, v3)
+    mechanical_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:mechanical|hvac|ventilation|duct|ductwork)\b")
+    electrical_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:electric(?:al)?|wiring|circuits?|panel|illumination)\b")
+    plumbing_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:plumbing|pipes?|drains?|fixtures?|water|sewer)\b")
+    building_false = _evidence_spans(job, r"\b(?:no\s+structural(?:\s+changes?)?|non[- ]structural|non\s+load\s+bearing|no\s+wall\s+framing)\b")
+    occupancy_class = "commercial" if v3.segment == "commercial" else ("residential" if v3.segment == "residential" else "unknown")
+    if v3.change_of_use and v3.change_of_use.to_occupancy_group:
+        occupancy_class = f"commercial:{v3.change_of_use.to_occupancy_group}" if v3.segment == "commercial" else occupancy_class
+    return ScopeFactsV4(
+        segment=v3.segment,
+        construction_class=v3.construction_class,
+        trade_signals=v3.trade_signals,
+        special_signals=v3.special_signals,
+        negative_scope_facts=v3.negative_scope_facts,
+        dominant_family=v3.dominant_family,
+        vertical=v3.vertical,
+        request_scope_text=v3.request_scope_text,
+        positive_facts=frozenset(positives),
+        negative_facts=frozenset(negatives),
+        occupancy_change=v3.occupancy_change,
+        service_amperage=v3.service_amperage,
+        valuation_usd=v3.valuation_usd,
+        rack_height_ft=v3.rack_height_ft,
+        mandatory_family_floors=v3.mandatory_family_floors,
+        forbidden_families=forbidden,
+        required_documents_floor=v3.required_documents_floor,
+        repair_exemption_candidate=v3.repair_exemption_candidate,
+        food_establishment=v3.food_establishment,
+        grease_discharge=v3.grease_discharge,
+        co2_enrichment=v3.co2_enrichment,
+        hazardous_materials=v3.hazardous_materials,
+        hazmat_kinds=v3.hazmat_kinds,
+        structural_work=_fact(TriFact.FALSE, building_false) if building_false else v3.structural_work,
+        structural_kinds=v3.structural_kinds,
+        facade_scope=v3.facade_scope,
+        change_of_use=v3.change_of_use,
+        assembly_occupancy=v3.assembly_occupancy,
+        electrical_new_circuits=v3.electrical_new_circuits,
+        residential_outdoor_cooking=v3.residential_outdoor_cooking,
+        gas_fuel_work=v3.gas_fuel_work,
+        occupancy_class=occupancy_class,
+        use_change=bool(v3.change_of_use or "use_change" in positives) and "no_use_change" not in negatives,
+        request_positive_families=frozenset(positive_families),
+        request_negative_families=frozenset(negative_families),
+        electrical_work=_fact(TriFact.FALSE, electrical_false) if electrical_false and "electrical" not in positive_families else (_fact(TriFact.TRUE, _evidence_spans(job, r"\b(?:electrical|wiring|circuits?|panel|service|lighting|receptacles?|ev\s+charger)\b")) if "electrical" in positive_families else _fact(TriFact.UNKNOWN)),
+        mechanical_work=_fact(TriFact.FALSE, mechanical_false) if mechanical_false and "mechanical" not in positive_families else (_fact(TriFact.TRUE, _evidence_spans(job, r"\b(?:mechanical|hvac|ventilation|diffuser|duct|rtu|rooftop|fume\s+hood|exhaust)\b")) if "mechanical" in positive_families else _fact(TriFact.UNKNOWN)),
+        plumbing_work=_fact(TriFact.FALSE, plumbing_false) if plumbing_false and "plumbing" not in positive_families else (_fact(TriFact.TRUE, _evidence_spans(job, r"\b(?:plumbing|fixtures?|sinks?|drains?|water|sewer|gas\s+line)\b")) if "plumbing" in positive_families else _fact(TriFact.UNKNOWN)),
+        building_work=_fact(TriFact.FALSE, building_false) if building_false and "building" not in positive_families else (_fact(TriFact.TRUE, _evidence_spans(job, r"\b(?:tenant\s+improvement|building|structural|foundation|framing|facade|window|garage\s+conversion)\b")) if positive_families & {"building", "building_ti"} else _fact(TriFact.UNKNOWN)),
     )
 
 

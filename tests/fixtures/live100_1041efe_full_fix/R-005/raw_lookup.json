@@ -1,0 +1,800 @@
+{
+  "case": {
+    "adjudication_hint": "Residential conversion/addition permit expected",
+    "bucket": "garage conversion",
+    "city": "Dallas",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Building",
+      "Electrical",
+      "Mechanical conditional"
+    ],
+    "id": "R-005",
+    "job_type": "convert garage into bedroom with new window insulation electrical outlets and HVAC extension, job value 42000",
+    "job_value": 42000,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "TX",
+    "zip_code": "75201"
+  },
+  "request_payload": {
+    "city": "Dallas",
+    "job_category": "residential",
+    "job_type": "convert garage into bedroom with new window insulation electrical outlets and HVAC extension, job value 42000",
+    "job_value": 42000,
+    "state": "TX",
+    "vertical": "residential",
+    "zip_code": "75201"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "City of Dallas Building Inspection / Permit Center",
+      "channel": "office_verification",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Bedroom egress compliance item",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout"
+      ],
+      "office_name": "City of Dallas Building Inspection / Permit Center",
+      "permit_category": "Permit package",
+      "permit_type": "Permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval",
+      "portal_url": "",
+      "state": "verify_with_permit_office",
+      "status": "VERIFY_WITH_PERMIT_OFFICE",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "typed_status": "VERIFY_WITH_PERMIT_OFFICE"
+    },
+    "apply_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+    "apply_url_known": true,
+    "applying_office": "City of Dallas Building Inspection / Permit Center",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "City of Dallas Building Inspection / Permit Center",
+        "segment": "residential",
+        "source_roles": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "source_urls": [
+          "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "https://www.tdlr.texas.gov",
+          "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+          "https://developdallas.dallascityhall.com/PermitDallas/"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Building Permit \u2014 Detached Garage / Accessory Structure before starting work",
+        "Pull Electrical Permit before starting work",
+        "Pull Mechanical Permit \u2014 HVAC System Replacement (Residential) before starting work",
+        "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+        "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping. \u2014 if triggered, pull Plumbing Permit"
+      ],
+      "conditional_families": [
+        "plumbing"
+      ],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Bedroom egress compliance item",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout"
+      ],
+      "fees": [
+        "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting"
+      ],
+      "headline": "Residential permit required: Building Permit \u2014 Detached Garage / Accessory Structure",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection"
+      ],
+      "lead_label": "Building Permit \u2014 Detached Garage / Accessory Structure",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building",
+        "electrical",
+        "mechanical",
+        "co_change_of_occupancy"
+      ],
+      "rows": [
+        {
+          "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Bedroom egress compliance item"
+          ],
+          "family": "building",
+          "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Building Permit \u2014 Detached Garage / Accessory Structure",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "conditional_text": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+          "decision": "CONDITIONAL",
+          "documents": [],
+          "family": "plumbing",
+          "fees": "",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "reason": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "residential",
+      "summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Plumbing Permit.",
+      "verdict_basis": ""
+    },
+    "checklist": [
+      "Pull Building Permit \u2014 Detached Garage / Accessory Structure before starting work",
+      "Pull Electrical Permit before starting work",
+      "Pull Mechanical Permit \u2014 HVAC System Replacement (Residential) before starting work",
+      "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+      "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping. \u2014 if triggered, pull Plumbing Permit"
+    ],
+    "companion_permits": [],
+    "conditional_permits": [
+      {
+        "apply_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "approval_type": "Plumbing Permit",
+        "conditional_text": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "inspections": [],
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "required": false,
+        "required_if": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "source_role": "UNKNOWN",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Plumbing Permit.",
+    "customer_headline": "Residential permit required: Building Permit \u2014 Detached Garage / Accessory Structure",
+    "customer_next_step": "Contact City of Dallas Building Inspection / Permit Center to confirm the filing path for: Building Permit \u2014 Detached Garage / Accessory Structure, Electrical Permit, Mechanical Permit \u2014 HVAC System Replacement (Residential), Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "Contact City of Dallas Building Inspection / Permit Center to confirm the filing path for: Building Permit \u2014 Detached Garage / Accessory Structure, Electrical Permit, Mechanical Permit \u2014 HVAC System Replacement (Residential), Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Permit package",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Plumbing Permit."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Bedroom egress compliance item",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Bedroom egress compliance item",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+    "inspections": [
+      "Building final inspection",
+      "Electrical final inspection",
+      "Mechanical final inspection"
+    ],
+    "job_summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Plumbing Permit.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.tdlr.texas.gov"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://aca-prod.accela.com/DALLASTX/Default.aspx"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://developdallas.dallascityhall.com/PermitDallas/"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Permit package",
+    "permit_name": "Permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Plumbing Permit.",
+    "permit_type": "Permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "approval_type": "Building Permit \u2014 Detached Garage / Accessory Structure",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Bedroom egress compliance item"
+        ],
+        "family": "building",
+        "fee": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+        "filing_family": "building",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "kind": "Building",
+        "lead": true,
+        "permit_name": "Building Permit \u2014 Detached Garage / Accessory Structure",
+        "permit_type": "Building Permit \u2014 Detached Garage / Accessory Structure",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fee": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "approval_type": "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fee": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+        "permit_type": "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fee": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+        "filing_family": "co_change_of_occupancy",
+        "inspections": [],
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Building Permit \u2014 Detached Garage / Accessory Structure",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "co_change_of_occupancy",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "City of Dallas Building Inspection / Permit Center",
+        "segment": "residential",
+        "source_roles": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "source_urls": [
+          "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "https://www.tdlr.texas.gov",
+          "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+          "https://developdallas.dallascityhall.com/PermitDallas/"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Building Permit \u2014 Detached Garage / Accessory Structure before starting work",
+        "Pull Electrical Permit before starting work",
+        "Pull Mechanical Permit \u2014 HVAC System Replacement (Residential) before starting work",
+        "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+        "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping. \u2014 if triggered, pull Plumbing Permit"
+      ],
+      "conditional_families": [
+        "plumbing"
+      ],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Bedroom egress compliance item",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout"
+      ],
+      "fees": [
+        "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting"
+      ],
+      "headline": "Residential permit required: Building Permit \u2014 Detached Garage / Accessory Structure",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection"
+      ],
+      "lead_label": "Building Permit \u2014 Detached Garage / Accessory Structure",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building",
+        "electrical",
+        "mechanical",
+        "co_change_of_occupancy"
+      ],
+      "rows": [
+        {
+          "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Bedroom egress compliance item"
+          ],
+          "family": "building",
+          "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Building Permit \u2014 Detached Garage / Accessory Structure",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+          "conditional_text": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+          "decision": "CONDITIONAL",
+          "documents": [],
+          "family": "plumbing",
+          "fees": "",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "reason": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "residential",
+      "summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Plumbing Permit.",
+      "verdict_basis": ""
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Bedroom egress compliance item"
+        ],
+        "family": "building",
+        "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Building Permit \u2014 Detached Garage / Accessory Structure",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Electrical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fees": "Fee Estimate: $501 - $1,000 in permit fees for the three permits based on Dallas minimum trade fees and likely plan review; total project cost $42,000 - $58,000 including labor/materials/permit \u2014 verify with the building department before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "conditional_text": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "plumbing",
+        "fees": "",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Plumbing Permit",
+        "reason": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      }
+    ],
+    "related_permits": [
+      {
+        "apply_url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+        "approval_type": "Plumbing Permit",
+        "conditional_text": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "inspections": [],
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "required": false,
+        "required_if": "Only needed if the final scope adds, relocates, or reconnects plumbing fixtures, drains, water, sewer, or gas piping.",
+        "source_role": "UNKNOWN",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "render_seal_hash": "sha256:[REDACTED]",
+    "required_permit_families": [
+      "building",
+      "electrical",
+      "mechanical",
+      "co_change_of_occupancy"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 Detached Garage / Accessory Structure",
+      "Electrical Permit",
+      "Mechanical Permit \u2014 HVAC System Replacement (Residential)",
+      "Certificate of Occupancy / Change-of-Occupancy Approval"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Plumbing Permit.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Bedroom egress compliance item",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout"
+    ],
+    "sealed_public_packet_hash": "sha256:[REDACTED]",
+    "sealed_schema": "final_public_permit_packet.v1",
+    "segment": "residential",
+    "source_urls": [
+      "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx",
+      "https://www.tdlr.texas.gov",
+      "https://aca-prod.accela.com/DALLASTX/Default.aspx",
+      "https://developdallas.dallascityhall.com/PermitDallas/"
+    ],
+    "sources": [
+      {
+        "label": "Source",
+        "role_evidence": "source role not classified as local/state/model/publisher",
+        "source_role": "UNKNOWN",
+        "source_tier": "context",
+        "title": "Source",
+        "url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/EPlan%20Rev/BP_Req_Docs.aspx"
+      },
+      {
+        "label": "Source",
+        "role_evidence": "source role not classified as local/state/model/publisher",
+        "source_role": "UNKNOWN",
+        "source_tier": "context",
+        "title": "Source",
+        "url": "https://www.tdlr.texas.gov"
+      },
+      {
+        "label": "Source",
+        "role_evidence": "source role not classified as local/state/model/publisher",
+        "source_role": "UNKNOWN",
+        "source_tier": "context",
+        "title": "Source",
+        "url": "https://aca-prod.accela.com/DALLASTX/Default.aspx"
+      },
+      {
+        "label": "Source",
+        "role_evidence": "source role not classified as local/state/model/publisher",
+        "source_role": "UNKNOWN",
+        "source_tier": "context",
+        "title": "Source",
+        "url": "https://developdallas.dallascityhall.com/PermitDallas/"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 Detached Garage / Accessory Structure; Electrical Permit; Mechanical Permit \u2014 HVAC System Replacement (Residential); Certificate of Occupancy / Change-of-Occupancy Approval. Conditional guidance: Plumbing Permit.",
+    "total_cost_estimate": "$42,000 - $58,000",
+    "trade_permits": [],
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Bedroom egress compliance item",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout"
+    ]
+  },
+  "share_url": "https://permitassist.io/report/kgVPaxXWexw"
+}

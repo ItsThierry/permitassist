@@ -15,10 +15,10 @@ import re
 from typing import Any, Iterable, Literal
 
 try:  # package/import-path compatibility in tests and server runtime
-    from scope_contract import ScopeFactsV2, ScopeFactsV3, TriFact, build_scope_facts_v2, build_scope_facts_v3
+    from scope_contract import ScopeFactsV2, ScopeFactsV3, ScopeFactsV4, TriFact, build_scope_facts_v2, build_scope_facts_v3, build_scope_facts_v4
     from family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
 except Exception:  # pragma: no cover
-    from api.scope_contract import ScopeFactsV2, ScopeFactsV3, TriFact, build_scope_facts_v2, build_scope_facts_v3
+    from api.scope_contract import ScopeFactsV2, ScopeFactsV3, ScopeFactsV4, TriFact, build_scope_facts_v2, build_scope_facts_v3, build_scope_facts_v4
     from api.family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
 
 GateAction = Literal["KEEP", "DEMOTE", "VETO", "ADD", "CONDITIONAL_FALLBACK"]
@@ -212,8 +212,15 @@ def _positive_supports_family(facts: ScopeFactsV2, family: str) -> bool:
 
 
 def _veto_basis(facts: ScopeFactsV2, family: str, row: dict[str, Any]) -> str | None:
-    if family in matrix_forbidden_families(facts):
-        return matrix_forbidden_families(facts)[family]
+    fact_forbidden = getattr(facts, "forbidden_families", None)
+    if isinstance(fact_forbidden, dict) and family in fact_forbidden:
+        return str(fact_forbidden[family])
+    forbidden_map = matrix_forbidden_families(facts)
+    fact_forbidden = getattr(facts, "forbidden_families", None)
+    if isinstance(fact_forbidden, dict):
+        forbidden_map = {**forbidden_map, **fact_forbidden}
+    if family in forbidden_map:
+        return forbidden_map[family]
     negatives = set(facts.negative_facts)
     text = _row_text(row)
     bucket = family_bucket(family)
@@ -268,7 +275,7 @@ def _canonical_row_name(family: str, facts: ScopeFactsV2) -> str:
     text = getattr(facts, "request_scope_text", "") or ""
     if family == "building_ti":
         return resolve_lead_label(getattr(facts, "segment", ""), "building_ti", facts)
-    if family == "electrical" and getattr(getattr(facts, "electrical_new_circuits", None), "value", None) == TriFact.FALSE:
+    if family == "electrical" and getattr(facts, "segment", "") != "commercial" and getattr(getattr(facts, "electrical_new_circuits", None), "value", None) == TriFact.FALSE:
         return "Residential Electrical Permit — Device / Receptacle Replacement (Existing Circuits)"
     if family == "fire_life_safety_assembly":
         return "Fire Department — Assembly Occupancy / Life-Safety Review"
@@ -372,7 +379,8 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
             rulings.append(GateRuling("VETO", family, veto, permit_name=_row_name(row)))
             continue
         source_keep_allowed = not (
-            (family == "planning_zoning" and not _positive_supports_family(facts, family) and "historic" not in text)
+            (hasattr(facts, "request_positive_families") and family not in set(getattr(facts, "request_positive_families", []) or []))
+            or (family == "planning_zoning" and not _positive_supports_family(facts, family) and "historic" not in text)
             or (family == "co_change_of_occupancy" and not _positive_supports_family(facts, family))
             or (family in {"wastewater_pretreatment_fog", "health_food"} and not _positive_supports_family(facts, family))
             or (family in {"fire_alarm", "fire_suppression"} and not _positive_supports_family(facts, family))
@@ -431,6 +439,10 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
             "co_change_of_occupancy": "Certificate of Occupancy / Change-of-Occupancy Approval",
             "health_food": "Health Plan Review / Food Establishment Permit",
             "wastewater_pretreatment_fog": "Wastewater / FOG / Pretreatment Approval",
+            "solar_pv": "Solar PV Permit / Review",
+            "battery_storage": "Battery / Energy Storage Permit",
+            "historic_review": "Historic District / Exterior Review",
+            "liquor": "Liquor License / Alcohol Service Review",
         }
         return names.get(family, f"{FAMILY_TO_KIND.get(family, family.replace('_', ' ').title())} Permit")
 
@@ -453,6 +465,11 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
         ("planning_zoning", "Planning / Zoning Use Clearance"),
         ("co_change_of_occupancy", "Certificate of Occupancy / Change-of-Occupancy Approval"),
         ("health_food", "Food Establishment Health Plan Review / Permit"),
+        ("wastewater_pretreatment_fog", "Wastewater / FOG / Pretreatment Approval"),
+        ("solar_pv", "Solar PV Permit / Review"),
+        ("battery_storage", "Battery / Energy Storage Permit"),
+        ("historic_review", "Historic District / Exterior Review"),
+        ("liquor", "Liquor License / Alcohol Service Review"),
     ):
         if _positive_supports_family(facts, fam) and not any(family_from_row(r) == fam for r in kept):
             add_row(fam, name, f"deterministic implication: request scope triggers {fam.replace('_', ' ')}")
@@ -494,7 +511,7 @@ def apply_family_reconciliation_gate(result: dict[str, Any], job_type: str = "",
     out = copy.deepcopy(result) if isinstance(result, dict) else {}
     if str(out.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED" or out.get("permit_required") is False:
         return out
-    facts = build_scope_facts_v3(job_type or out.get("job_summary") or "", city, state, job_category=job_category, scope_contract=scope_contract if isinstance(scope_contract, dict) else out.get("_scope_contract"))
+    facts = build_scope_facts_v4(job_type or out.get("job_summary") or "", city, state, job_category=job_category, scope_contract=scope_contract if isinstance(scope_contract, dict) else out.get("_scope_contract"))
     rows = [r for r in out.get("permits_required") or [] if isinstance(r, dict)]
     kept, conditional, rulings = reconcile_rows(rows, facts)
     if rows:

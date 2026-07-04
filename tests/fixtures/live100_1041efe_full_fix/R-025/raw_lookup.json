@@ -1,0 +1,475 @@
+{
+  "case": {
+    "adjudication_hint": "Service/panel permit",
+    "bucket": "panel upgrade",
+    "city": "Gilbert",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Electrical"
+    ],
+    "id": "R-025",
+    "job_type": "200 amp electrical panel upgrade for single family home, job value 6500",
+    "job_value": 6500,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "AZ",
+    "zip_code": "85234"
+  },
+  "request_payload": {
+    "city": "Gilbert",
+    "job_category": "residential",
+    "job_type": "200 amp electrical panel upgrade for single family home, job value 6500",
+    "job_value": 6500,
+    "state": "AZ",
+    "vertical": "residential",
+    "zip_code": "85234"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "Town of Gilbert Development Services",
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule"
+      ],
+      "office_name": "Town of Gilbert Development Services",
+      "permit_category": "Electrical",
+      "permit_type": "Electrical Permit \u2014 Service Upgrade (200A)",
+      "portal_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+      "state": "resolved_portal",
+      "status": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Electrical Permit \u2014 Service Upgrade (200A)",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "typed_status": "RESOLVED_PORTAL"
+    },
+    "apply_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+    "apply_url_known": true,
+    "applying_office": "Town of Gilbert Development Services",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "name": "Town of Gilbert Development Services",
+        "segment": "residential",
+        "source_roles": [
+          "LOCAL_OFFICIAL_FILING",
+          "STATE_OFFICIAL",
+          "LOCAL_OFFICIAL_INFO"
+        ],
+        "source_urls": [
+          "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+          "https://roc.az.gov",
+          "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Electrical Permit \u2014 Service Upgrade (200A) before starting work",
+        "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ. \u2014 if triggered, pull Building Permit"
+      ],
+      "conditional_families": [
+        "building"
+      ],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule"
+      ],
+      "fees": [
+        "Fee Estimate: $75 - $300 (exact Gilbert fee schedule not found in provided sources; verify current fee at permit counter/portal) \u2014 verify with the building department before quoting"
+      ],
+      "headline": "Residential permit required: Electrical Permit \u2014 Service Upgrade (200A)",
+      "inspections": [
+        "Electrical final inspection"
+      ],
+      "lead_label": "Electrical Permit \u2014 Service Upgrade (200A)",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "electrical"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee Estimate: $75 - $300 (exact Gilbert fee schedule not found in provided sources; verify current fee at permit counter/portal) \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Electrical Permit \u2014 Service Upgrade (200A)",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+          "conditional_text": "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ.",
+          "decision": "CONDITIONAL",
+          "documents": [],
+          "family": "building",
+          "fees": "",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Building Permit",
+          "reason": "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "residential",
+      "summary": "Required permit package: Electrical Permit \u2014 Service Upgrade (200A). Conditional guidance: Building Permit.",
+      "verdict_basis": ""
+    },
+    "checklist": [
+      "Pull Electrical Permit \u2014 Service Upgrade (200A) before starting work",
+      "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ. \u2014 if triggered, pull Building Permit"
+    ],
+    "companion_permits": [],
+    "conditional_permits": [
+      {
+        "apply_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "approval_type": "Building Permit",
+        "conditional_text": "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "building",
+        "filing_family": "building",
+        "inspections": [],
+        "kind": "Building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "required": false,
+        "required_if": "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ.",
+        "source_role": "UNKNOWN",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Electrical Permit \u2014 Service Upgrade (200A). Conditional guidance: Building Permit.",
+    "customer_headline": "Residential permit required: Electrical Permit \u2014 Service Upgrade (200A)",
+    "customer_next_step": "File the required permit categories with Town of Gilbert Development Services: Electrical Permit \u2014 Service Upgrade (200A). Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "File the required permit categories with Town of Gilbert Development Services: Electrical Permit \u2014 Service Upgrade (200A). Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Electrical",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Electrical Permit \u2014 Service Upgrade (200A). Conditional guidance: Building Permit."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $75 - $300 (exact Gilbert fee schedule not found in provided sources; verify current fee at permit counter/portal) \u2014 verify with the building department before quoting",
+    "inspections": [
+      "Electrical final inspection"
+    ],
+    "job_summary": "Required permit package: Electrical Permit \u2014 Service Upgrade (200A). Conditional guidance: Building Permit.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://roc.az.gov"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Electrical",
+    "permit_name": "Electrical Permit \u2014 Service Upgrade (200A)",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Electrical Permit \u2014 Service Upgrade (200A). Conditional guidance: Building Permit.",
+    "permit_type": "Electrical Permit \u2014 Service Upgrade (200A)",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "approval_type": "Electrical Permit \u2014 Service Upgrade (200A)",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fee": "Fee Estimate: $75 - $300 (exact Gilbert fee schedule not found in provided sources; verify current fee at permit counter/portal) \u2014 verify with the building department before quoting",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "lead": true,
+        "permit_name": "Electrical Permit \u2014 Service Upgrade (200A)",
+        "permit_type": "Electrical Permit \u2014 Service Upgrade (200A)",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "electrical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Electrical Permit \u2014 Service Upgrade (200A)",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "name": "Town of Gilbert Development Services",
+        "segment": "residential",
+        "source_roles": [
+          "LOCAL_OFFICIAL_FILING",
+          "STATE_OFFICIAL",
+          "LOCAL_OFFICIAL_INFO"
+        ],
+        "source_urls": [
+          "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+          "https://roc.az.gov",
+          "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Electrical Permit \u2014 Service Upgrade (200A) before starting work",
+        "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ. \u2014 if triggered, pull Building Permit"
+      ],
+      "conditional_families": [
+        "building"
+      ],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule"
+      ],
+      "fees": [
+        "Fee Estimate: $75 - $300 (exact Gilbert fee schedule not found in provided sources; verify current fee at permit counter/portal) \u2014 verify with the building department before quoting"
+      ],
+      "headline": "Residential permit required: Electrical Permit \u2014 Service Upgrade (200A)",
+      "inspections": [
+        "Electrical final inspection"
+      ],
+      "lead_label": "Electrical Permit \u2014 Service Upgrade (200A)",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "electrical"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee Estimate: $75 - $300 (exact Gilbert fee schedule not found in provided sources; verify current fee at permit counter/portal) \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Electrical Permit \u2014 Service Upgrade (200A)",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+          "conditional_text": "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ.",
+          "decision": "CONDITIONAL",
+          "documents": [],
+          "family": "building",
+          "fees": "",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Building Permit",
+          "reason": "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "residential",
+      "summary": "Required permit package: Electrical Permit \u2014 Service Upgrade (200A). Conditional guidance: Building Permit.",
+      "verdict_basis": ""
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fees": "Fee Estimate: $75 - $300 (exact Gilbert fee schedule not found in provided sources; verify current fee at permit counter/portal) \u2014 verify with the building department before quoting",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Electrical Permit \u2014 Service Upgrade (200A)",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "conditional_text": "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "building",
+        "fees": "",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Building Permit",
+        "reason": "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      }
+    ],
+    "related_permits": [
+      {
+        "apply_url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+        "approval_type": "Building Permit",
+        "conditional_text": "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ.",
+        "decision": "CONDITIONAL",
+        "documents": [],
+        "family": "building",
+        "filing_family": "building",
+        "inspections": [],
+        "kind": "Building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "required": false,
+        "required_if": "Only needed if equipment mounting, penetration, fire/life-safety review, or building work is required by the AHJ.",
+        "source_role": "UNKNOWN",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "render_seal_hash": "sha256:[REDACTED]",
+    "required_permit_families": [
+      "electrical"
+    ],
+    "required_permit_names": [
+      "Electrical Permit \u2014 Service Upgrade (200A)"
+    ],
+    "required_permit_summary": "Required permit package: Electrical Permit \u2014 Service Upgrade (200A). Conditional guidance: Building Permit.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ],
+    "sealed_public_packet_hash": "sha256:[REDACTED]",
+    "sealed_schema": "final_public_permit_packet.v1",
+    "segment": "residential",
+    "source_urls": [
+      "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit",
+      "https://roc.az.gov",
+      "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+    ],
+    "sources": [
+      {
+        "label": "Official filing source",
+        "role_evidence": "local official filing/permit URL",
+        "source_role": "LOCAL_OFFICIAL_FILING",
+        "source_tier": "local_permit_source",
+        "title": "Official filing source",
+        "url": "https://www.gilbertaz.gov/how-do-i-/apply-for/building-permit"
+      },
+      {
+        "label": "Official state source",
+        "role_evidence": "state official URL",
+        "source_role": "STATE_OFFICIAL",
+        "source_tier": "local_permit_source",
+        "title": "Official state source",
+        "url": "https://roc.az.gov"
+      },
+      {
+        "label": "Official permit information",
+        "role_evidence": "local official information URL",
+        "source_role": "LOCAL_OFFICIAL_INFO",
+        "source_tier": "local_permit_source",
+        "title": "Official permit information",
+        "url": "https://www.gilbertaz.gov/departments/development-services/one-stop-shop"
+      }
+    ],
+    "summary": "Required permit package: Electrical Permit \u2014 Service Upgrade (200A). Conditional guidance: Building Permit.",
+    "total_cost_estimate": "$2,800 - $6,500",
+    "trade_permits": [],
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ]
+  },
+  "share_url": "https://permitassist.io/report/PECToKSA-W4"
+}

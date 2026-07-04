@@ -78,7 +78,7 @@ def source_label_for_role(role: SourceRole | str) -> str:
         SourceRole.STATE_OFFICIAL: "Official state source",
         SourceRole.NATIONAL_MODEL_CODE: "Code reference (model code — verify local adoption/amendments)",
         SourceRole.PUBLISHER_CONTEXT: "Background reading",
-        SourceRole.UNKNOWN: "Source",
+        SourceRole.UNKNOWN: "Supporting source (verify jurisdiction)",
     }[value]
 
 
