@@ -1,0 +1,1187 @@
+{
+  "case": {
+    "adjudication_hint": "Change of occupancy restaurant",
+    "bucket": "office to restaurant",
+    "city": "New Orleans",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "CO",
+      "Plumbing",
+      "Electrical",
+      "Health/Fire"
+    ],
+    "id": "C-039",
+    "job_type": "change occupancy from office to small restaurant with bar no hood but plumbing and electrical upgrades, job value 220000",
+    "job_value": 220000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "LA",
+    "zip_code": "70112"
+  },
+  "request_payload": {
+    "city": "New Orleans",
+    "job_category": "commercial",
+    "job_type": "change occupancy from office to small restaurant with bar no hood but plumbing and electrical upgrades, job value 220000",
+    "job_value": 220000,
+    "state": "LA",
+    "vertical": "commercial",
+    "zip_code": "70112"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "City of New Orleans Department of Safety & Permits",
+      "channel": "office_verification",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description"
+      ],
+      "office_name": "City of New Orleans Department of Safety & Permits",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing",
+      "portal_url": "",
+      "state": "verify_with_permit_office",
+      "status": "VERIFY_WITH_PERMIT_OFFICE",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "typed_status": "VERIFY_WITH_PERMIT_OFFICE"
+    },
+    "apply_url": "https://onestopapp.nola.gov/Apply.aspx",
+    "apply_url_known": true,
+    "applying_office": "City of New Orleans Department of Safety & Permits",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "City of New Orleans Department of Safety & Permits",
+        "segment": "commercial",
+        "source_roles": [
+          "STATE_OFFICIAL",
+          "STATE_OFFICIAL",
+          "STATE_OFFICIAL",
+          "STATE_OFFICIAL"
+        ],
+        "source_urls": [
+          "https://nola.gov/safety-and-permits",
+          "https://onestopapp.nola.gov",
+          "https://onestopapp.nola.gov/Apply.aspx",
+          "https://nola.gov/guide-to-building-permits/"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building / Tenant Improvement Permit before starting work",
+        "Pull Electrical Permit \u2014 New Circuit / Equipment Connection before starting work",
+        "Pull Mechanical Permit before starting work",
+        "Pull Plumbing Permit before starting work",
+        "Pull Food Establishment Health Plan Review / Permit before starting work",
+        "Pull Fire Suppression / Fire Prevention Review before starting work",
+        "Pull Planning / Zoning Use Clearance before starting work",
+        "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+        "Pull Liquor License / Local Alcohol Routing before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection"
+      ],
+      "lead_label": "Commercial Building / Tenant Improvement Permit",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building_ti",
+        "electrical",
+        "mechanical",
+        "plumbing",
+        "health_food",
+        "fire_suppression",
+        "planning_zoning",
+        "co_change_of_occupancy",
+        "liquor"
+      ],
+      "rows": [
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building_ti",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit \u2014 New Circuit / Equipment Connection",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Food Establishment Health Plan Review / Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Fire Suppression / Fire Prevention Review",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "liquor",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Liquor License / Local Alcohol Routing",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing.",
+      "verdict_basis": ""
+    },
+    "checklist": [
+      "Pull Commercial Building / Tenant Improvement Permit before starting work",
+      "Pull Electrical Permit \u2014 New Circuit / Equipment Connection before starting work",
+      "Pull Mechanical Permit before starting work",
+      "Pull Plumbing Permit before starting work",
+      "Pull Food Establishment Health Plan Review / Permit before starting work",
+      "Pull Fire Suppression / Fire Prevention Review before starting work",
+      "Pull Planning / Zoning Use Clearance before starting work",
+      "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+      "Pull Liquor License / Local Alcohol Routing before starting work"
+    ],
+    "companion_permits": [],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing.",
+    "customer_headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+    "customer_next_step": "Contact City of New Orleans Department of Safety & Permits to confirm the filing path for: Commercial Building / Tenant Improvement Permit, Electrical Permit \u2014 New Circuit / Equipment Connection, Mechanical Permit, Plumbing Permit, Food Establishment Health Plan Review / Permit, Fire Suppression / Fire Prevention Review, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Liquor License / Local Alcohol Routing. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "Contact City of New Orleans Department of Safety & Permits to confirm the filing path for: Commercial Building / Tenant Improvement Permit, Electrical Permit \u2014 New Circuit / Equipment Connection, Mechanical Permit, Plumbing Permit, Food Establishment Health Plan Review / Permit, Fire Suppression / Fire Prevention Review, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Liquor License / Local Alcohol Routing. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "inspections": [
+      "Building final inspection",
+      "Electrical final inspection",
+      "Mechanical final inspection",
+      "Plumbing final inspection"
+    ],
+    "job_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://nola.gov/safety-and-permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://onestopapp.nola.gov"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://onestopapp.nola.gov/Apply.aspx"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://nola.gov/guide-to-building-permits/"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://onestopapp.nola.gov/Apply.aspx",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing.",
+    "permit_type": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "building",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "kind": "Building",
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "approval_type": "Electrical Permit \u2014 New Circuit / Equipment Connection",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit \u2014 New Circuit / Equipment Connection",
+        "permit_type": "Electrical Permit \u2014 New Circuit / Equipment Connection",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "approval_type": "Food Establishment Health Plan Review / Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "health_food",
+        "inspections": [],
+        "kind": "Health",
+        "permit_name": "Food Establishment Health Plan Review / Permit",
+        "permit_type": "Food Establishment Health Plan Review / Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "approval_type": "Fire Suppression / Fire Prevention Review",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "fire_suppression",
+        "inspections": [],
+        "kind": "Fire",
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "planning_zoning",
+        "inspections": [],
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "co_change_of_occupancy",
+        "inspections": [],
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "approval_type": "Liquor License / Local Alcohol Routing",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "liquor",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "liquor",
+        "inspections": [],
+        "kind": "Liquor",
+        "permit_name": "Liquor License / Local Alcohol Routing",
+        "permit_type": "Liquor License / Local Alcohol Routing",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building_ti",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Electrical Permit \u2014 New Circuit / Equipment Connection",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "health_food",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Food Establishment Health Plan Review / Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_suppression",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "planning_zoning",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "co_change_of_occupancy",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "liquor",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Liquor License / Local Alcohol Routing",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "City of New Orleans Department of Safety & Permits",
+        "segment": "commercial",
+        "source_roles": [
+          "STATE_OFFICIAL",
+          "STATE_OFFICIAL",
+          "STATE_OFFICIAL",
+          "STATE_OFFICIAL"
+        ],
+        "source_urls": [
+          "https://nola.gov/safety-and-permits",
+          "https://onestopapp.nola.gov",
+          "https://onestopapp.nola.gov/Apply.aspx",
+          "https://nola.gov/guide-to-building-permits/"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building / Tenant Improvement Permit before starting work",
+        "Pull Electrical Permit \u2014 New Circuit / Equipment Connection before starting work",
+        "Pull Mechanical Permit before starting work",
+        "Pull Plumbing Permit before starting work",
+        "Pull Food Establishment Health Plan Review / Permit before starting work",
+        "Pull Fire Suppression / Fire Prevention Review before starting work",
+        "Pull Planning / Zoning Use Clearance before starting work",
+        "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+        "Pull Liquor License / Local Alcohol Routing before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection"
+      ],
+      "lead_label": "Commercial Building / Tenant Improvement Permit",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building_ti",
+        "electrical",
+        "mechanical",
+        "plumbing",
+        "health_food",
+        "fire_suppression",
+        "planning_zoning",
+        "co_change_of_occupancy",
+        "liquor"
+      ],
+      "rows": [
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building_ti",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit \u2014 New Circuit / Equipment Connection",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Food Establishment Health Plan Review / Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Fire Suppression / Fire Prevention Review",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "liquor",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Liquor License / Local Alcohol Routing",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing.",
+      "verdict_basis": ""
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building_ti",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Electrical Permit \u2014 New Circuit / Equipment Connection",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Mechanical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Plumbing Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Food Establishment Health Plan Review / Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://onestopapp.nola.gov/Apply.aspx",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "liquor",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Liquor License / Local Alcohol Routing",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "render_seal_hash": "sha256:[REDACTED]",
+    "required_permit_families": [
+      "building_ti",
+      "electrical",
+      "mechanical",
+      "plumbing",
+      "health_food",
+      "fire_suppression",
+      "planning_zoning",
+      "co_change_of_occupancy",
+      "liquor"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Electrical Permit \u2014 New Circuit / Equipment Connection",
+      "Mechanical Permit",
+      "Plumbing Permit",
+      "Food Establishment Health Plan Review / Permit",
+      "Fire Suppression / Fire Prevention Review",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy / Change-of-Occupancy Approval",
+      "Liquor License / Local Alcohol Routing"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "sealed_public_packet_hash": "sha256:[REDACTED]",
+    "sealed_schema": "final_public_permit_packet.v1",
+    "segment": "commercial",
+    "source_urls": [
+      "https://nola.gov/safety-and-permits",
+      "https://onestopapp.nola.gov",
+      "https://onestopapp.nola.gov/Apply.aspx",
+      "https://nola.gov/guide-to-building-permits/"
+    ],
+    "sources": [
+      {
+        "label": "Official state source",
+        "role_evidence": "state official URL",
+        "source_role": "STATE_OFFICIAL",
+        "source_tier": "local_permit_source",
+        "title": "Official state source",
+        "url": "https://nola.gov/safety-and-permits"
+      },
+      {
+        "label": "Official state source",
+        "role_evidence": "state official URL",
+        "source_role": "STATE_OFFICIAL",
+        "source_tier": "local_permit_source",
+        "title": "Official state source",
+        "url": "https://onestopapp.nola.gov"
+      },
+      {
+        "label": "Official state source",
+        "role_evidence": "state official URL",
+        "source_role": "STATE_OFFICIAL",
+        "source_tier": "local_permit_source",
+        "title": "Official state source",
+        "url": "https://onestopapp.nola.gov/Apply.aspx"
+      },
+      {
+        "label": "Official state source",
+        "role_evidence": "state official URL",
+        "source_role": "STATE_OFFICIAL",
+        "source_tier": "local_permit_source",
+        "title": "Official state source",
+        "url": "https://nola.gov/guide-to-building-permits/"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit \u2014 New Circuit / Equipment Connection; Mechanical Permit; Plumbing Permit; Food Establishment Health Plan Review / Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Liquor License / Local Alcohol Routing.",
+    "total_cost_estimate": "$220,000 - $285,000",
+    "trade_permits": [],
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ]
+  },
+  "share_url": "https://permitassist.io/report/JIZBKEHxKRc"
+}

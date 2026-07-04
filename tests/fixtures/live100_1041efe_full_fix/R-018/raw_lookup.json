@@ -1,0 +1,776 @@
+{
+  "case": {
+    "adjudication_hint": "ADU multi-authority",
+    "bucket": "ADU conversion",
+    "city": "Salt Lake City",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Building",
+      "Planning/Zoning",
+      "Plumbing",
+      "Electrical",
+      "Mechanical"
+    ],
+    "id": "R-018",
+    "job_type": "basement ADU conversion with new kitchen bathroom egress windows, job value 95000",
+    "job_value": 95000,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "UT",
+    "zip_code": "84111"
+  },
+  "request_payload": {
+    "city": "Salt Lake City",
+    "job_category": "residential",
+    "job_type": "basement ADU conversion with new kitchen bathroom egress windows, job value 95000",
+    "job_value": 95000,
+    "state": "UT",
+    "vertical": "residential",
+    "zip_code": "84111"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "Salt Lake City Building Services",
+      "channel": "office_verification",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Bedroom egress compliance item",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "office_name": "Salt Lake City Building Services",
+      "permit_category": "ADU / Accessory Dwelling Unit",
+      "permit_type": "Permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval",
+      "portal_url": "",
+      "state": "verify_with_permit_office",
+      "status": "VERIFY_WITH_PERMIT_OFFICE",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "typed_status": "VERIFY_WITH_PERMIT_OFFICE"
+    },
+    "apply_url": "https://www.slc.gov/building/",
+    "apply_url_known": true,
+    "applying_office": "Salt Lake City Building Services",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "Salt Lake City Building Services",
+        "segment": "residential",
+        "source_roles": [
+          "LOCAL_OFFICIAL_INFO"
+        ],
+        "source_urls": [
+          "https://www.slc.gov/building/"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Building Permit \u2014 ADU / Dwelling Conversion before starting work",
+        "Pull Electrical Permit before starting work",
+        "Pull Mechanical Permit \u2014 ADU Ventilation / Heating before starting work",
+        "Pull Plumbing Permit \u2014 ADU Kitchen/Bath before starting work",
+        "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Bedroom egress compliance item",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Residential permit required: Building Permit \u2014 ADU / Dwelling Conversion",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection"
+      ],
+      "lead_label": "Building Permit \u2014 ADU / Dwelling Conversion",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building",
+        "electrical",
+        "mechanical",
+        "plumbing",
+        "co_change_of_occupancy"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.slc.gov/building/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Bedroom egress compliance item"
+          ],
+          "family": "building",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Building Permit \u2014 ADU / Dwelling Conversion",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.slc.gov/building/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.slc.gov/building/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.slc.gov/building/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.slc.gov/building/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "residential",
+      "summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval.",
+      "verdict_basis": ""
+    },
+    "checklist": [
+      "Pull Building Permit \u2014 ADU / Dwelling Conversion before starting work",
+      "Pull Electrical Permit before starting work",
+      "Pull Mechanical Permit \u2014 ADU Ventilation / Heating before starting work",
+      "Pull Plumbing Permit \u2014 ADU Kitchen/Bath before starting work",
+      "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work"
+    ],
+    "companion_permits": [],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "customer_headline": "Residential permit required: Building Permit \u2014 ADU / Dwelling Conversion",
+    "customer_next_step": "Contact Salt Lake City Building Services to confirm the filing path for: Building Permit \u2014 ADU / Dwelling Conversion, Electrical Permit, Mechanical Permit \u2014 ADU Ventilation / Heating, Plumbing Permit \u2014 ADU Kitchen/Bath, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "Contact Salt Lake City Building Services to confirm the filing path for: Building Permit \u2014 ADU / Dwelling Conversion, Electrical Permit, Mechanical Permit \u2014 ADU Ventilation / Heating, Plumbing Permit \u2014 ADU Kitchen/Bath, Certificate of Occupancy / Change-of-Occupancy Approval. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "ADU / Accessory Dwelling Unit",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Bedroom egress compliance item",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Bedroom egress compliance item",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "inspections": [
+      "Building final inspection",
+      "Electrical final inspection",
+      "Mechanical final inspection",
+      "Plumbing final inspection"
+    ],
+    "job_summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.slc.gov/building/"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.slc.gov/building/",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "ADU / Accessory Dwelling Unit",
+    "permit_name": "Permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "permit_type": "Permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://www.slc.gov/building/",
+        "approval_type": "Building Permit \u2014 ADU / Dwelling Conversion",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Bedroom egress compliance item"
+        ],
+        "family": "building",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "building",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "kind": "Building",
+        "lead": true,
+        "permit_name": "Building Permit \u2014 ADU / Dwelling Conversion",
+        "permit_type": "Building Permit \u2014 ADU / Dwelling Conversion",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.slc.gov/building/",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.slc.gov/building/",
+        "approval_type": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+        "permit_type": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.slc.gov/building/",
+        "approval_type": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "permit_type": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.slc.gov/building/",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "co_change_of_occupancy",
+        "inspections": [],
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Building Permit \u2014 ADU / Dwelling Conversion",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "co_change_of_occupancy",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "Salt Lake City Building Services",
+        "segment": "residential",
+        "source_roles": [
+          "LOCAL_OFFICIAL_INFO"
+        ],
+        "source_urls": [
+          "https://www.slc.gov/building/"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Building Permit \u2014 ADU / Dwelling Conversion before starting work",
+        "Pull Electrical Permit before starting work",
+        "Pull Mechanical Permit \u2014 ADU Ventilation / Heating before starting work",
+        "Pull Plumbing Permit \u2014 ADU Kitchen/Bath before starting work",
+        "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Bedroom egress compliance item",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Residential permit required: Building Permit \u2014 ADU / Dwelling Conversion",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection"
+      ],
+      "lead_label": "Building Permit \u2014 ADU / Dwelling Conversion",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building",
+        "electrical",
+        "mechanical",
+        "plumbing",
+        "co_change_of_occupancy"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.slc.gov/building/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Bedroom egress compliance item"
+          ],
+          "family": "building",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Building Permit \u2014 ADU / Dwelling Conversion",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.slc.gov/building/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.slc.gov/building/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.slc.gov/building/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.slc.gov/building/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "residential",
+      "summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval.",
+      "verdict_basis": ""
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://www.slc.gov/building/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Bedroom egress compliance item"
+        ],
+        "family": "building",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Building Permit \u2014 ADU / Dwelling Conversion",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://www.slc.gov/building/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Electrical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://www.slc.gov/building/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Mechanical Permit \u2014 ADU Ventilation / Heating",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://www.slc.gov/building/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Plumbing Permit \u2014 ADU Kitchen/Bath",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://www.slc.gov/building/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "render_seal_hash": "sha256:[REDACTED]",
+    "required_permit_families": [
+      "building",
+      "electrical",
+      "mechanical",
+      "plumbing",
+      "co_change_of_occupancy"
+    ],
+    "required_permit_names": [
+      "Building Permit \u2014 ADU / Dwelling Conversion",
+      "Electrical Permit",
+      "Mechanical Permit \u2014 ADU Ventilation / Heating",
+      "Plumbing Permit \u2014 ADU Kitchen/Bath",
+      "Certificate of Occupancy / Change-of-Occupancy Approval"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Bedroom egress compliance item",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ],
+    "sealed_public_packet_hash": "sha256:[REDACTED]",
+    "sealed_schema": "final_public_permit_packet.v1",
+    "segment": "residential",
+    "source_urls": [
+      "https://www.slc.gov/building/"
+    ],
+    "sources": [
+      {
+        "label": "Official permit information",
+        "role_evidence": "government permit information URL",
+        "source_role": "LOCAL_OFFICIAL_INFO",
+        "source_tier": "local_permit_source",
+        "title": "Official permit information",
+        "url": "https://www.slc.gov/building/"
+      }
+    ],
+    "summary": "Required permit package: Building Permit \u2014 ADU / Dwelling Conversion; Electrical Permit; Mechanical Permit \u2014 ADU Ventilation / Heating; Plumbing Permit \u2014 ADU Kitchen/Bath; Certificate of Occupancy / Change-of-Occupancy Approval.",
+    "total_cost_estimate": "$95,000 - $135,000",
+    "trade_permits": [],
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Bedroom egress compliance item",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required"
+    ]
+  },
+  "share_url": "https://permitassist.io/report/0j5iQhzchTU"
+}

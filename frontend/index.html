@@ -1836,6 +1836,13 @@ function normalizeCustomerVisibleCopy(value) {
 function esc(s){return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function escCopy(s){return esc(normalizeCustomerVisibleCopy(s))}
 function sourceUrl(src){return typeof src==='string'?src:((src&&src.url)||'')}
+function safeGoogleMapsUrl(url){
+  const u = String(url || '').trim();
+  return u.startsWith('https://www.google.com/maps') ? u : 'https://www.google.com/maps';
+}
+function openSafeMapsUrl(url){
+  window.open(safeGoogleMapsUrl(url), '_blank', 'noopener');
+}
 function sourceTitle(src){return (src&&typeof src==='object'&&(src.title||src.name))||'Source'}
 function sourceHostname(src){try{return new URL(sourceUrl(src)).hostname}catch(_){return sourceUrl(src)}}
 function sanitizeFallbackJurisdictionCopy(text, level) {
@@ -3161,8 +3168,10 @@ function renderResults(d, job, city, state) {
   const office = d.applying_office || d.office_name || '';
   const phone = d.apply_phone || d.office_phone || '';
   const officeAddress = d.apply_address || d.office_address || '';
-  const jobAddress = currentResult?.address || '';
-  const maps = safePermitOfficeMapsUrl(d.apply_google_maps || d.maps_url || '', city, state, office, officeAddress);
+  const jobAddress = d.job_address || currentResult?.address || '';
+  const projectMaps = d.job_maps_url || '';
+  const officeMaps = safePermitOfficeMapsUrl(d.apply_google_maps || d.maps_url || '', city, state, office, officeAddress);
+  const maps = officeMaps;
   const fee = d.fee_range || d.fee || d.cost || '';
   const applyUrl = d.apply_url || '';
   const applyPdf = d.apply_pdf || '';
@@ -3787,7 +3796,8 @@ function renderResults(d, job, city, state) {
       <button class="action-btn" onclick="downloadReport()">📄 Print / Save PDF</button>
     </div>
     <div class="action-row">
-      <button class="action-btn" data-maps-url="${esc(maps)}" onclick="openPermitOfficeMaps(this.dataset.mapsUrl)">🗺️ Maps</button>
+      ${projectMaps ? `<button class="action-btn" data-maps-url="${esc(projectMaps)}" onclick="openSafeMapsUrl(this.dataset.mapsUrl)">🏠 Project Address</button>` : ''}
+      <button class="action-btn" data-maps-url="${esc(officeMaps)}" onclick="openPermitOfficeMaps(this.dataset.mapsUrl)">🏛️ Building Department</button>
       <button class="action-btn" style="border-color:rgba(59,130,246,.4);color:var(--brand)" onclick="saveJobToTracker()">📁 Save to Job Tracker</button>
     </div>
     <div class="expiry-reminder-card" id="expiry-reminder">

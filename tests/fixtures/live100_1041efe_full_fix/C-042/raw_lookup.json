@@ -1,0 +1,1366 @@
+{
+  "case": {
+    "adjudication_hint": "Use change",
+    "bucket": "gallery to wine bar",
+    "city": "Santa Fe",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "CO",
+      "Plumbing",
+      "Electrical",
+      "Health/Fire"
+    ],
+    "id": "C-042",
+    "job_type": "commercial art gallery change to wine bar with occupant load increase plumbing fixtures and hoodless food prep, job value 190000",
+    "job_value": 190000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "NM",
+    "zip_code": "87501"
+  },
+  "request_payload": {
+    "city": "Santa Fe",
+    "job_category": "commercial",
+    "job_type": "commercial art gallery change to wine bar with occupant load increase plumbing fixtures and hoodless food prep, job value 190000",
+    "job_value": 190000,
+    "state": "NM",
+    "vertical": "commercial",
+    "zip_code": "87501"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "City of Santa Fe Community Development Department",
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Life-safety / egress plan",
+        "Occupant load calculation",
+        "Fire alarm & sprinkler compliance statement",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description"
+      ],
+      "office_name": "City of Santa Fe Community Development Department",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing",
+      "portal_url": "https://santafenm.gov/land-use/building-permits",
+      "state": "resolved_portal",
+      "status": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "typed_status": "RESOLVED_PORTAL"
+    },
+    "apply_url": "https://santafenm.gov/land-use/building-permits",
+    "apply_url_known": true,
+    "applying_office": "City of Santa Fe Community Development Department",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "https://santafenm.gov/land-use/building-permits",
+        "name": "City of Santa Fe Community Development Department",
+        "segment": "commercial",
+        "source_roles": [
+          "UNKNOWN",
+          "LOCAL_OFFICIAL_FILING",
+          "LOCAL_OFFICIAL_INFO",
+          "LOCAL_OFFICIAL_INFO",
+          "LOCAL_OFFICIAL_INFO"
+        ],
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf",
+          "https://santafenm.gov/land-use/inspections-and-enforcement"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building / Tenant Improvement Permit before starting work",
+        "Pull Electrical Permit before starting work",
+        "Pull Mechanical Permit before starting work",
+        "Pull Plumbing Permit \u2014 Commercial Fixture Addition / Relocation before starting work",
+        "Pull Health Plan Review / Food Establishment Permit before starting work",
+        "Pull Fire Suppression / Fire Prevention Review before starting work",
+        "Pull Planning / Zoning Use Clearance before starting work",
+        "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+        "Pull Fire Department \u2014 Assembly Occupancy / Life-Safety Review before starting work",
+        "Pull Liquor License / Local Alcohol Routing before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Life-safety / egress plan",
+        "Occupant load calculation",
+        "Fire alarm & sprinkler compliance statement",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection",
+        "Fire/life-safety final inspection"
+      ],
+      "lead_label": "Commercial Building / Tenant Improvement Permit",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building_ti",
+        "electrical",
+        "mechanical",
+        "plumbing",
+        "health_food",
+        "fire_suppression",
+        "planning_zoning",
+        "co_change_of_occupancy",
+        "fire_life_safety_assembly",
+        "liquor"
+      ],
+      "rows": [
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Life-safety / egress plan",
+            "Occupant load calculation",
+            "Fire alarm & sprinkler compliance statement"
+          ],
+          "family": "building_ti",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required",
+            "Life-safety / egress plan",
+            "Occupant load calculation",
+            "Fire alarm & sprinkler compliance statement"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Health Plan Review / Food Establishment Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Fire Suppression / Fire Prevention Review",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Life-safety / egress plan",
+            "Occupant load calculation",
+            "Fire alarm & sprinkler compliance statement"
+          ],
+          "family": "fire_life_safety_assembly",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Fire/life-safety final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "liquor",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Liquor License / Local Alcohol Routing",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing.",
+      "verdict_basis": ""
+    },
+    "checklist": [
+      "Pull Commercial Building / Tenant Improvement Permit before starting work",
+      "Pull Electrical Permit before starting work",
+      "Pull Mechanical Permit before starting work",
+      "Pull Plumbing Permit \u2014 Commercial Fixture Addition / Relocation before starting work",
+      "Pull Health Plan Review / Food Establishment Permit before starting work",
+      "Pull Fire Suppression / Fire Prevention Review before starting work",
+      "Pull Planning / Zoning Use Clearance before starting work",
+      "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+      "Pull Fire Department \u2014 Assembly Occupancy / Life-Safety Review before starting work",
+      "Pull Liquor License / Local Alcohol Routing before starting work"
+    ],
+    "companion_permits": [
+      {
+        "certainty": "conditional",
+        "permit_type": "Fire Permit / Fire Marshal Review",
+        "reason": "is conditional only when the listed condition applies if: Fire/life-safety upgrades are required by plan review or the fire marshal.",
+        "required_if": "Fire/life-safety upgrades are required by plan review or the fire marshal",
+        "requirement_label": "is conditional only when the listed condition applies based on scope"
+      }
+    ],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing.",
+    "customer_headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+    "customer_next_step": "File the required permit categories with City of Santa Fe Community Development Department: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit, Plumbing Permit \u2014 Commercial Fixture Addition / Relocation, Health Plan Review / Food Establishment Permit, Fire Suppression / Fire Prevention Review, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Fire Department \u2014 Assembly Occupancy / Life-Safety Review, Liquor License / Local Alcohol Routing. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "File the required permit categories with City of Santa Fe Community Development Department: Commercial Building / Tenant Improvement Permit, Electrical Permit, Mechanical Permit, Plumbing Permit \u2014 Commercial Fixture Addition / Relocation, Health Plan Review / Food Establishment Permit, Fire Suppression / Fire Prevention Review, Planning / Zoning Use Clearance, Certificate of Occupancy / Change-of-Occupancy Approval, Fire Department \u2014 Assembly Occupancy / Life-Safety Review, Liquor License / Local Alcohol Routing. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Life-safety / egress plan",
+      "Occupant load calculation",
+      "Fire alarm & sprinkler compliance statement",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Life-safety / egress plan",
+      "Occupant load calculation",
+      "Fire alarm & sprinkler compliance statement",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "inspections": [
+      "Building final inspection",
+      "Electrical final inspection",
+      "Mechanical final inspection",
+      "Plumbing final inspection",
+      "Fire/life-safety final inspection"
+    ],
+    "job_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://santafenm.gov/land-use/building-permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.santafenm.gov/community_development"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://santafenm.gov/land-use/inspections-and-enforcement"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://santafenm.gov/land-use/building-permits",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing.",
+    "permit_type": "Permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "approval_type": "Commercial Building / Tenant Improvement Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Life-safety / egress plan",
+          "Occupant load calculation",
+          "Fire alarm & sprinkler compliance statement"
+        ],
+        "family": "building",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "building",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "kind": "Building",
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "approval_type": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required",
+          "Life-safety / egress plan",
+          "Occupant load calculation",
+          "Fire alarm & sprinkler compliance statement"
+        ],
+        "family": "plumbing",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+        "permit_type": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "approval_type": "Health Plan Review / Food Establishment Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "health_food",
+        "inspections": [],
+        "kind": "Health",
+        "permit_name": "Health Plan Review / Food Establishment Permit",
+        "permit_type": "Health Plan Review / Food Establishment Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "approval_type": "Fire Suppression / Fire Prevention Review",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "fire_suppression",
+        "inspections": [],
+        "kind": "Fire",
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "planning_zoning",
+        "inspections": [],
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "co_change_of_occupancy",
+        "inspections": [],
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "approval_type": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Life-safety / egress plan",
+          "Occupant load calculation",
+          "Fire alarm & sprinkler compliance statement"
+        ],
+        "family": "fire_life_safety_assembly",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "fire_life_safety_assembly",
+        "inspections": [
+          "Fire/life-safety final inspection"
+        ],
+        "kind": "Fire",
+        "permit_name": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "permit_type": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "approval_type": "Liquor License / Local Alcohol Routing",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "liquor",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "liquor",
+        "inspections": [],
+        "kind": "Liquor",
+        "permit_name": "Liquor License / Local Alcohol Routing",
+        "permit_type": "Liquor License / Local Alcohol Routing",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building_ti",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "health_food",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Health Plan Review / Food Establishment Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_suppression",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Fire Suppression / Fire Prevention Review",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "planning_zoning",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "co_change_of_occupancy",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_life_safety_assembly",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "liquor",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Liquor License / Local Alcohol Routing",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "https://santafenm.gov/land-use/building-permits",
+        "name": "City of Santa Fe Community Development Department",
+        "segment": "commercial",
+        "source_roles": [
+          "UNKNOWN",
+          "LOCAL_OFFICIAL_FILING",
+          "LOCAL_OFFICIAL_INFO",
+          "LOCAL_OFFICIAL_INFO",
+          "LOCAL_OFFICIAL_INFO"
+        ],
+        "source_urls": [
+          "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "https://santafenm.gov/land-use/building-permits",
+          "https://www.santafenm.gov/community_development",
+          "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf",
+          "https://santafenm.gov/land-use/inspections-and-enforcement"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building / Tenant Improvement Permit before starting work",
+        "Pull Electrical Permit before starting work",
+        "Pull Mechanical Permit before starting work",
+        "Pull Plumbing Permit \u2014 Commercial Fixture Addition / Relocation before starting work",
+        "Pull Health Plan Review / Food Establishment Permit before starting work",
+        "Pull Fire Suppression / Fire Prevention Review before starting work",
+        "Pull Planning / Zoning Use Clearance before starting work",
+        "Pull Certificate of Occupancy / Change-of-Occupancy Approval before starting work",
+        "Pull Fire Department \u2014 Assembly Occupancy / Life-Safety Review before starting work",
+        "Pull Liquor License / Local Alcohol Routing before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Life-safety / egress plan",
+        "Occupant load calculation",
+        "Fire alarm & sprinkler compliance statement",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Food-service floor plan",
+        "Equipment schedule",
+        "Menu/process description"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Commercial permit required: Commercial Building / Tenant Improvement Permit",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection",
+        "Mechanical final inspection",
+        "Plumbing final inspection",
+        "Fire/life-safety final inspection"
+      ],
+      "lead_label": "Commercial Building / Tenant Improvement Permit",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building_ti",
+        "electrical",
+        "mechanical",
+        "plumbing",
+        "health_food",
+        "fire_suppression",
+        "planning_zoning",
+        "co_change_of_occupancy",
+        "fire_life_safety_assembly",
+        "liquor"
+      ],
+      "rows": [
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Life-safety / egress plan",
+            "Occupant load calculation",
+            "Fire alarm & sprinkler compliance statement"
+          ],
+          "family": "building_ti",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building / Tenant Improvement Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Mechanical Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required",
+            "Life-safety / egress plan",
+            "Occupant load calculation",
+            "Fire alarm & sprinkler compliance statement"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Food-service floor plan",
+            "Equipment schedule",
+            "Menu/process description"
+          ],
+          "family": "health_food",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Health Plan Review / Food Establishment Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Fire Suppression / Fire Prevention Review",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Life-safety / egress plan",
+            "Occupant load calculation",
+            "Fire alarm & sprinkler compliance statement"
+          ],
+          "family": "fire_life_safety_assembly",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Fire/life-safety final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "liquor",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Liquor License / Local Alcohol Routing",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing.",
+      "verdict_basis": ""
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Life-safety / egress plan",
+          "Occupant load calculation",
+          "Fire alarm & sprinkler compliance statement"
+        ],
+        "family": "building_ti",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Electrical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Mechanical Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required",
+          "Life-safety / egress plan",
+          "Occupant load calculation",
+          "Fire alarm & sprinkler compliance statement"
+        ],
+        "family": "plumbing",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Food-service floor plan",
+          "Equipment schedule",
+          "Menu/process description"
+        ],
+        "family": "health_food",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Health Plan Review / Food Establishment Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Fire Suppression / Fire Prevention Review",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Approval",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Life-safety / egress plan",
+          "Occupant load calculation",
+          "Fire alarm & sprinkler compliance statement"
+        ],
+        "family": "fire_life_safety_assembly",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Fire/life-safety final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "liquor",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Liquor License / Local Alcohol Routing",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "render_seal_hash": "sha256:[REDACTED]",
+    "required_permit_families": [
+      "building_ti",
+      "electrical",
+      "mechanical",
+      "plumbing",
+      "health_food",
+      "fire_suppression",
+      "planning_zoning",
+      "co_change_of_occupancy",
+      "fire_life_safety_assembly",
+      "liquor"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Tenant Improvement Permit",
+      "Electrical Permit",
+      "Mechanical Permit",
+      "Plumbing Permit \u2014 Commercial Fixture Addition / Relocation",
+      "Health Plan Review / Food Establishment Permit",
+      "Fire Suppression / Fire Prevention Review",
+      "Planning / Zoning Use Clearance",
+      "Certificate of Occupancy / Change-of-Occupancy Approval",
+      "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+      "Liquor License / Local Alcohol Routing"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Life-safety / egress plan",
+      "Occupant load calculation",
+      "Fire alarm & sprinkler compliance statement",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ],
+    "sealed_public_packet_hash": "sha256:[REDACTED]",
+    "sealed_schema": "final_public_permit_packet.v1",
+    "segment": "commercial",
+    "source_urls": [
+      "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
+      "https://santafenm.gov/land-use/building-permits",
+      "https://www.santafenm.gov/community_development",
+      "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf",
+      "https://santafenm.gov/land-use/inspections-and-enforcement"
+    ],
+    "sources": [
+      {
+        "label": "Source",
+        "role_evidence": "source role not classified as local/state/model/publisher",
+        "source_role": "UNKNOWN",
+        "source_tier": "context",
+        "title": "Source",
+        "url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home"
+      },
+      {
+        "label": "Official filing source",
+        "role_evidence": "local official filing/permit URL",
+        "source_role": "LOCAL_OFFICIAL_FILING",
+        "source_tier": "local_permit_source",
+        "title": "Official filing source",
+        "url": "https://santafenm.gov/land-use/building-permits"
+      },
+      {
+        "label": "Official permit information",
+        "role_evidence": "local official information URL",
+        "source_role": "LOCAL_OFFICIAL_INFO",
+        "source_tier": "local_permit_source",
+        "title": "Official permit information",
+        "url": "https://www.santafenm.gov/community_development"
+      },
+      {
+        "label": "Official permit information",
+        "role_evidence": "local official information URL",
+        "source_role": "LOCAL_OFFICIAL_INFO",
+        "source_tier": "local_permit_source",
+        "title": "Official permit information",
+        "url": "https://santafenm.gov/media/rfps_docs/19_18_P_Visual_Arts__Museum_FINAL.pdf"
+      },
+      {
+        "label": "Official permit information",
+        "role_evidence": "local official information URL",
+        "source_role": "LOCAL_OFFICIAL_INFO",
+        "source_tier": "local_permit_source",
+        "title": "Official permit information",
+        "url": "https://santafenm.gov/land-use/inspections-and-enforcement"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building / Tenant Improvement Permit; Electrical Permit; Mechanical Permit; Plumbing Permit \u2014 Commercial Fixture Addition / Relocation; Health Plan Review / Food Establishment Permit; Fire Suppression / Fire Prevention Review; Planning / Zoning Use Clearance; Certificate of Occupancy / Change-of-Occupancy Approval; Fire Department \u2014 Assembly Occupancy / Life-Safety Review; Liquor License / Local Alcohol Routing.",
+    "total_cost_estimate": "$190,000 - $235,000",
+    "trade_permits": [],
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Life-safety / egress plan",
+      "Occupant load calculation",
+      "Fire alarm & sprinkler compliance statement",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Food-service floor plan",
+      "Equipment schedule",
+      "Menu/process description"
+    ]
+  },
+  "share_url": "https://permitassist.io/report/tIGQ4qmdQGw"
+}

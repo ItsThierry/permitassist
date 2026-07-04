@@ -1,0 +1,832 @@
+{
+  "case": {
+    "adjudication_hint": "Use/occupant load change",
+    "bucket": "warehouse to assembly",
+    "city": "Portland",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Commercial Building/TI",
+      "Change of occupancy",
+      "Fire",
+      "Planning/Zoning possible"
+    ],
+    "id": "C-018",
+    "job_type": "change use from warehouse to indoor pickleball facility with occupant load increase, job value 300000",
+    "job_value": 300000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "OR",
+    "zip_code": "97204"
+  },
+  "request_payload": {
+    "city": "Portland",
+    "job_category": "commercial",
+    "job_type": "change use from warehouse to indoor pickleball facility with occupant load increase, job value 300000",
+    "job_value": 300000,
+    "state": "OR",
+    "vertical": "commercial",
+    "zip_code": "97204"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "Bureau of Development Services (BDS)",
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Life-safety / egress plan",
+        "Occupant load calculation",
+        "Fire alarm & sprinkler compliance statement"
+      ],
+      "office_name": "Bureau of Development Services (BDS)",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+      "portal_url": "https://devhub.portlandoregon.gov/",
+      "state": "resolved_portal",
+      "status": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "typed_status": "RESOLVED_PORTAL"
+    },
+    "apply_url": "https://devhub.portlandoregon.gov/",
+    "apply_url_known": true,
+    "applying_office": "Bureau of Development Services (BDS)",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "https://devhub.portlandoregon.gov/",
+        "name": "Bureau of Development Services (BDS)",
+        "segment": "commercial",
+        "source_roles": [
+          "LOCAL_OFFICIAL_FILING",
+          "LOCAL_OFFICIAL_FILING",
+          "LOCAL_OFFICIAL_INFO",
+          "LOCAL_OFFICIAL_INFO",
+          "LOCAL_OFFICIAL_INFO",
+          "LOCAL_OFFICIAL_INFO"
+        ],
+        "source_urls": [
+          "https://devhub.portlandoregon.gov/",
+          "https://www.portland.gov/ppd/get-permit/apply-permits",
+          "https://www.portland.gov/bds",
+          "https://www.portland.gov/ppd/change-use-or-occupancy",
+          "https://www.oregon.gov/bcd/jurisdictions/Documents/2026-portland-proposed-fees.pdf",
+          "https://www.portland.gov/ppd/about-portland-permitting-development/department-phone-numbers"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly) before starting work",
+        "Pull Fire / Life-Safety Review before starting work",
+        "Pull Planning / Zoning Use Clearance before starting work",
+        "Pull Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement before starting work",
+        "Pull Fire Department \u2014 Assembly Occupancy / Life-Safety Review before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Life-safety / egress plan",
+        "Occupant load calculation",
+        "Fire alarm & sprinkler compliance statement"
+      ],
+      "fees": [
+        "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge"
+      ],
+      "headline": "Commercial permit required: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+      "inspections": [
+        "Building final inspection",
+        "Fire/life-safety final inspection"
+      ],
+      "lead_label": "Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building_ti",
+        "fire_suppression",
+        "planning_zoning",
+        "co_change_of_occupancy",
+        "fire_life_safety_assembly"
+      ],
+      "rows": [
+        {
+          "action_url": "https://devhub.portlandoregon.gov/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Life-safety / egress plan",
+            "Occupant load calculation",
+            "Fire alarm & sprinkler compliance statement"
+          ],
+          "family": "building_ti",
+          "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://devhub.portlandoregon.gov/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Fire / Life-Safety Review",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://devhub.portlandoregon.gov/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://devhub.portlandoregon.gov/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://devhub.portlandoregon.gov/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Life-safety / egress plan",
+            "Occupant load calculation",
+            "Fire alarm & sprinkler compliance statement"
+          ],
+          "family": "fire_life_safety_assembly",
+          "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+          "inspections": [
+            "Fire/life-safety final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review.",
+      "verdict_basis": ""
+    },
+    "checklist": [
+      "Pull Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly) before starting work",
+      "Pull Fire / Life-Safety Review before starting work",
+      "Pull Planning / Zoning Use Clearance before starting work",
+      "Pull Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement before starting work",
+      "Pull Fire Department \u2014 Assembly Occupancy / Life-Safety Review before starting work"
+    ],
+    "companion_permits": [
+      {
+        "certainty": "conditional",
+        "permit_type": "Fire Permit \u2014 Fire Alarm / Sprinkler Modification",
+        "reason": "is conditional only when the listed condition applies if: fire alarm, sprinkler, or fire protection system modifications are required by code review.",
+        "required_if": "fire alarm, sprinkler, or fire protection system modifications are required by code review",
+        "requirement_label": "is conditional only when the listed condition applies based on scope"
+      }
+    ],
+    "conditional_permits": [],
+    "confidence": "high",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review.",
+    "customer_headline": "Commercial permit required: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+    "customer_next_step": "File the required permit categories with Bureau of Development Services (BDS): Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly), Fire / Life-Safety Review, Planning / Zoning Use Clearance, Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement, Fire Department \u2014 Assembly Occupancy / Life-Safety Review. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "File the required permit categories with Bureau of Development Services (BDS): Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly), Fire / Life-Safety Review, Planning / Zoning Use Clearance, Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement, Fire Department \u2014 Assembly Occupancy / Life-Safety Review. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Life-safety / egress plan",
+      "Occupant load calculation",
+      "Fire alarm & sprinkler compliance statement"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Life-safety / egress plan",
+      "Occupant load calculation",
+      "Fire alarm & sprinkler compliance statement"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+    "inspections": [
+      "Building final inspection",
+      "Fire/life-safety final inspection"
+    ],
+    "job_summary": "Required permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://devhub.portlandoregon.gov/"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.portland.gov/ppd/get-permit/apply-permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.portland.gov/bds"
+      },
+      {
+        "reason": "irrelevant_content",
+        "renderable": false,
+        "status": "offline_static_check",
+        "url": "https://www.portland.gov/ppd/news/2026/4/27/permitting-development-fee-changes-take-effect-july-10"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.portland.gov/ppd/change-use-or-occupancy"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.oregon.gov/bcd/jurisdictions/Documents/2026-portland-proposed-fees.pdf"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.portland.gov/ppd/about-portland-permitting-development/department-phone-numbers"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://devhub.portlandoregon.gov/",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review.",
+    "permit_type": "Permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://devhub.portlandoregon.gov/",
+        "approval_type": "Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Life-safety / egress plan",
+          "Occupant load calculation",
+          "Fire alarm & sprinkler compliance statement"
+        ],
+        "family": "building",
+        "fee": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+        "filing_family": "building",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "kind": "Building",
+        "lead": true,
+        "permit_name": "Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+        "permit_type": "Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://devhub.portlandoregon.gov/",
+        "approval_type": "Fire / Life-Safety Review",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "fee": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+        "filing_family": "fire_suppression",
+        "inspections": [],
+        "kind": "Fire",
+        "permit_name": "Fire / Life-Safety Review",
+        "permit_type": "Fire / Life-Safety Review",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://devhub.portlandoregon.gov/",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "fee": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+        "filing_family": "planning_zoning",
+        "inspections": [],
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://devhub.portlandoregon.gov/",
+        "approval_type": "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fee": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+        "filing_family": "co_change_of_occupancy",
+        "inspections": [],
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+        "permit_type": "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://devhub.portlandoregon.gov/",
+        "approval_type": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Life-safety / egress plan",
+          "Occupant load calculation",
+          "Fire alarm & sprinkler compliance statement"
+        ],
+        "family": "fire_life_safety_assembly",
+        "fee": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+        "filing_family": "fire_life_safety_assembly",
+        "inspections": [
+          "Fire/life-safety final inspection"
+        ],
+        "kind": "Fire",
+        "permit_name": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "permit_type": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building_ti",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_suppression",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Fire / Life-Safety Review",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "planning_zoning",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "co_change_of_occupancy",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "fire_life_safety_assembly",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "https://devhub.portlandoregon.gov/",
+        "name": "Bureau of Development Services (BDS)",
+        "segment": "commercial",
+        "source_roles": [
+          "LOCAL_OFFICIAL_FILING",
+          "LOCAL_OFFICIAL_FILING",
+          "LOCAL_OFFICIAL_INFO",
+          "LOCAL_OFFICIAL_INFO",
+          "LOCAL_OFFICIAL_INFO",
+          "LOCAL_OFFICIAL_INFO"
+        ],
+        "source_urls": [
+          "https://devhub.portlandoregon.gov/",
+          "https://www.portland.gov/ppd/get-permit/apply-permits",
+          "https://www.portland.gov/bds",
+          "https://www.portland.gov/ppd/change-use-or-occupancy",
+          "https://www.oregon.gov/bcd/jurisdictions/Documents/2026-portland-proposed-fees.pdf",
+          "https://www.portland.gov/ppd/about-portland-permitting-development/department-phone-numbers"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly) before starting work",
+        "Pull Fire / Life-Safety Review before starting work",
+        "Pull Planning / Zoning Use Clearance before starting work",
+        "Pull Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement before starting work",
+        "Pull Fire Department \u2014 Assembly Occupancy / Life-Safety Review before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Life-safety / egress plan",
+        "Occupant load calculation",
+        "Fire alarm & sprinkler compliance statement"
+      ],
+      "fees": [
+        "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge"
+      ],
+      "headline": "Commercial permit required: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+      "inspections": [
+        "Building final inspection",
+        "Fire/life-safety final inspection"
+      ],
+      "lead_label": "Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building_ti",
+        "fire_suppression",
+        "planning_zoning",
+        "co_change_of_occupancy",
+        "fire_life_safety_assembly"
+      ],
+      "rows": [
+        {
+          "action_url": "https://devhub.portlandoregon.gov/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Life-safety / egress plan",
+            "Occupant load calculation",
+            "Fire alarm & sprinkler compliance statement"
+          ],
+          "family": "building_ti",
+          "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://devhub.portlandoregon.gov/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "fire_suppression",
+          "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Fire / Life-Safety Review",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://devhub.portlandoregon.gov/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "planning_zoning",
+          "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Planning / Zoning Use Clearance",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://devhub.portlandoregon.gov/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "co_change_of_occupancy",
+          "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+          "inspections": [],
+          "lead": false,
+          "permit_name": "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://devhub.portlandoregon.gov/",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Life-safety / egress plan",
+            "Occupant load calculation",
+            "Fire alarm & sprinkler compliance statement"
+          ],
+          "family": "fire_life_safety_assembly",
+          "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+          "inspections": [
+            "Fire/life-safety final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "commercial",
+      "summary": "Required permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review.",
+      "verdict_basis": ""
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://devhub.portlandoregon.gov/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Life-safety / egress plan",
+          "Occupant load calculation",
+          "Fire alarm & sprinkler compliance statement"
+        ],
+        "family": "building_ti",
+        "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://devhub.portlandoregon.gov/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "fire_suppression",
+        "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Fire / Life-Safety Review",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://devhub.portlandoregon.gov/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "planning_zoning",
+        "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Planning / Zoning Use Clearance",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://devhub.portlandoregon.gov/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "co_change_of_occupancy",
+        "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+        "inspections": [],
+        "lead": false,
+        "permit_name": "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://devhub.portlandoregon.gov/",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Life-safety / egress plan",
+          "Occupant load calculation",
+          "Fire alarm & sprinkler compliance statement"
+        ],
+        "family": "fire_life_safety_assembly",
+        "fees": "Fee Estimate: $300,000 project value: building permit/plan review fees need verification against Portland's commercial valuation schedule; budget roughly $8,000 - $20,000+ in permit and review fees, plus Oregon's 12% state surcharge",
+        "inspections": [
+          "Fire/life-safety final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Fire Department \u2014 Assembly Occupancy / Life-Safety Review",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "render_seal_hash": "sha256:[REDACTED]",
+    "required_permit_families": [
+      "building_ti",
+      "fire_suppression",
+      "planning_zoning",
+      "co_change_of_occupancy",
+      "fire_life_safety_assembly"
+    ],
+    "required_permit_names": [
+      "Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly)",
+      "Fire / Life-Safety Review",
+      "Planning / Zoning Use Clearance",
+      "Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement",
+      "Fire Department \u2014 Assembly Occupancy / Life-Safety Review"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Life-safety / egress plan",
+      "Occupant load calculation",
+      "Fire alarm & sprinkler compliance statement"
+    ],
+    "sealed_public_packet_hash": "sha256:[REDACTED]",
+    "sealed_schema": "final_public_permit_packet.v1",
+    "segment": "commercial",
+    "source_urls": [
+      "https://devhub.portlandoregon.gov/",
+      "https://www.portland.gov/ppd/get-permit/apply-permits",
+      "https://www.portland.gov/bds",
+      "https://www.portland.gov/ppd/change-use-or-occupancy",
+      "https://www.oregon.gov/bcd/jurisdictions/Documents/2026-portland-proposed-fees.pdf",
+      "https://www.portland.gov/ppd/about-portland-permitting-development/department-phone-numbers"
+    ],
+    "sources": [
+      {
+        "label": "Official filing source",
+        "role_evidence": "known local official filing portal",
+        "source_role": "LOCAL_OFFICIAL_FILING",
+        "source_tier": "local_permit_source",
+        "title": "Official filing source",
+        "url": "https://devhub.portlandoregon.gov/"
+      },
+      {
+        "label": "Official filing source",
+        "role_evidence": "local official filing/permit URL",
+        "source_role": "LOCAL_OFFICIAL_FILING",
+        "source_tier": "local_permit_source",
+        "title": "Official filing source",
+        "url": "https://www.portland.gov/ppd/get-permit/apply-permits"
+      },
+      {
+        "label": "Official permit information",
+        "role_evidence": "local official information URL",
+        "source_role": "LOCAL_OFFICIAL_INFO",
+        "source_tier": "local_permit_source",
+        "title": "Official permit information",
+        "url": "https://www.portland.gov/bds"
+      },
+      {
+        "label": "Official permit information",
+        "role_evidence": "local official information URL",
+        "source_role": "LOCAL_OFFICIAL_INFO",
+        "source_tier": "local_permit_source",
+        "title": "Official permit information",
+        "url": "https://www.portland.gov/ppd/change-use-or-occupancy"
+      },
+      {
+        "label": "Official permit information",
+        "role_evidence": "local official information URL",
+        "source_role": "LOCAL_OFFICIAL_INFO",
+        "source_tier": "local_permit_source",
+        "title": "Official permit information",
+        "url": "https://www.oregon.gov/bcd/jurisdictions/Documents/2026-portland-proposed-fees.pdf"
+      },
+      {
+        "label": "Official permit information",
+        "role_evidence": "local official information URL",
+        "source_role": "LOCAL_OFFICIAL_INFO",
+        "source_tier": "local_permit_source",
+        "title": "Official permit information",
+        "url": "https://www.portland.gov/ppd/about-portland-permitting-development/department-phone-numbers"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building Permit \u2014 Change of Use / Tenant Improvement (Assembly); Fire / Life-Safety Review; Planning / Zoning Use Clearance; Building Permit \u2014 Commercial Change of Occupancy / Tenant Improvement; Fire Department \u2014 Assembly Occupancy / Life-Safety Review.",
+    "total_cost_estimate": "$325,000 - $425,000",
+    "trade_permits": [],
+    "warnings": [
+      "Commercial scope detected, but the primary permit name is building department-specific or not in the commercial allow-list; confirm the exact permit name and form title with the building department before filing.",
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Life-safety / egress plan",
+      "Occupant load calculation",
+      "Fire alarm & sprinkler compliance statement"
+    ]
+  },
+  "share_url": "https://permitassist.io/report/LofWTWRLZm8"
+}

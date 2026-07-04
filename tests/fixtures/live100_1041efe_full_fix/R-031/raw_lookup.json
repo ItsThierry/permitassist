@@ -1,0 +1,494 @@
+{
+  "case": {
+    "adjudication_hint": "Watch KCK vs KCMO source binding",
+    "bucket": "KCK water heater",
+    "city": "Kansas City",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Plumbing/Mechanical"
+    ],
+    "id": "R-031",
+    "job_type": "replace 40 gallon gas water heater same location no vent changes, job value 2800",
+    "job_value": 2800,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "KS",
+    "zip_code": "66101"
+  },
+  "request_payload": {
+    "city": "Kansas City",
+    "job_category": "residential",
+    "job_type": "replace 40 gallon gas water heater same location no vent changes, job value 2800",
+    "job_value": 2800,
+    "state": "KS",
+    "vertical": "residential",
+    "zip_code": "66101"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development",
+      "channel": "office_verification",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Gas piping diagram",
+        "Pressure test documentation"
+      ],
+      "office_name": "City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development",
+      "permit_category": "Permit package",
+      "permit_type": "Permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit",
+      "portal_url": "",
+      "state": "verify_with_permit_office",
+      "status": "VERIFY_WITH_PERMIT_OFFICE",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "typed_status": "VERIFY_WITH_PERMIT_OFFICE"
+    },
+    "apply_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+    "apply_url_known": true,
+    "applying_office": "City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development",
+        "segment": "residential",
+        "source_roles": [
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "source_urls": [
+          "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+          "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Residential Plumbing Permit \u2014 Water Heater Replacement before starting work",
+        "Pull Gas Pressure Test / Fuel Gas Permit before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Gas piping diagram",
+        "Pressure test documentation"
+      ],
+      "fees": [
+        "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+      ],
+      "headline": "Residential permit required: Residential Plumbing Permit \u2014 Water Heater Replacement",
+      "inspections": [
+        "Plumbing final inspection",
+        "Gas pressure test",
+        "Final gas inspection"
+      ],
+      "lead_label": "Residential Plumbing Permit \u2014 Water Heater Replacement",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "plumbing",
+        "gas"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Residential Plumbing Permit \u2014 Water Heater Replacement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Gas piping diagram",
+            "Pressure test documentation"
+          ],
+          "family": "gas",
+          "fees": "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Gas pressure test",
+            "Final gas inspection"
+          ],
+          "lead": false,
+          "permit_name": "Gas Pressure Test / Fuel Gas Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "residential",
+      "summary": "Required permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit.",
+      "verdict_basis": ""
+    },
+    "checklist": [
+      "Pull Residential Plumbing Permit \u2014 Water Heater Replacement before starting work",
+      "Pull Gas Pressure Test / Fuel Gas Permit before starting work"
+    ],
+    "companion_permits": [],
+    "conditional_permits": [],
+    "confidence": "low",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit.",
+    "customer_headline": "Residential permit required: Residential Plumbing Permit \u2014 Water Heater Replacement",
+    "customer_next_step": "Contact City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development to confirm the filing path for: Residential Plumbing Permit \u2014 Water Heater Replacement, Gas Pressure Test / Fuel Gas Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "Contact City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development to confirm the filing path for: Residential Plumbing Permit \u2014 Water Heater Replacement, Gas Pressure Test / Fuel Gas Permit. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Permit package",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit."
+    },
+    "data_source": "web_search",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+    "inspections": [
+      "Plumbing final inspection",
+      "Gas pressure test",
+      "Final gas inspection"
+    ],
+    "job_summary": "Required permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Permit package",
+    "permit_name": "Permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit.",
+    "permit_type": "Permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+        "approval_type": "Residential Plumbing Permit \u2014 Water Heater Replacement",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fee": "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "lead": true,
+        "permit_name": "Residential Plumbing Permit \u2014 Water Heater Replacement",
+        "permit_type": "Residential Plumbing Permit \u2014 Water Heater Replacement",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+        "approval_type": "Gas Pressure Test / Fuel Gas Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Gas piping diagram",
+          "Pressure test documentation"
+        ],
+        "family": "gas",
+        "fee": "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+        "filing_family": "gas",
+        "inspections": [
+          "Gas pressure test",
+          "Final gas inspection"
+        ],
+        "kind": "Gas",
+        "permit_name": "Gas Pressure Test / Fuel Gas Permit",
+        "permit_type": "Gas Pressure Test / Fuel Gas Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "plumbing",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Residential Plumbing Permit \u2014 Water Heater Replacement",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "gas",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Gas Pressure Test / Fuel Gas Permit",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development",
+        "segment": "residential",
+        "source_roles": [
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "source_urls": [
+          "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+          "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Residential Plumbing Permit \u2014 Water Heater Replacement before starting work",
+        "Pull Gas Pressure Test / Fuel Gas Permit before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Gas piping diagram",
+        "Pressure test documentation"
+      ],
+      "fees": [
+        "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting"
+      ],
+      "headline": "Residential permit required: Residential Plumbing Permit \u2014 Water Heater Replacement",
+      "inspections": [
+        "Plumbing final inspection",
+        "Gas pressure test",
+        "Final gas inspection"
+      ],
+      "lead_label": "Residential Plumbing Permit \u2014 Water Heater Replacement",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "plumbing",
+        "gas"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Residential Plumbing Permit \u2014 Water Heater Replacement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Gas piping diagram",
+            "Pressure test documentation"
+          ],
+          "family": "gas",
+          "fees": "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Gas pressure test",
+            "Final gas inspection"
+          ],
+          "lead": false,
+          "permit_name": "Gas Pressure Test / Fuel Gas Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "residential",
+      "summary": "Required permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit.",
+      "verdict_basis": ""
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fees": "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Residential Plumbing Permit \u2014 Water Heater Replacement",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Gas piping diagram",
+          "Pressure test documentation"
+        ],
+        "family": "gas",
+        "fees": "Fee Estimate: Fee not confirmed \u2014 call the City of Kansas City, Kansas \u2014 Permits Division / City Planning & Development or check their online fee schedule before applying. \u2014 verify with the building department before quoting",
+        "inspections": [
+          "Gas pressure test",
+          "Final gas inspection"
+        ],
+        "lead": false,
+        "permit_name": "Gas Pressure Test / Fuel Gas Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "render_seal_hash": "sha256:[REDACTED]",
+    "required_permit_families": [
+      "plumbing",
+      "gas"
+    ],
+    "required_permit_names": [
+      "Residential Plumbing Permit \u2014 Water Heater Replacement",
+      "Gas Pressure Test / Fuel Gas Permit"
+    ],
+    "required_permit_summary": "Required permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation"
+    ],
+    "sealed_public_packet_hash": "sha256:[REDACTED]",
+    "sealed_schema": "final_public_permit_packet.v1",
+    "segment": "residential",
+    "source_urls": [
+      "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
+      "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection"
+    ],
+    "sources": [
+      {
+        "label": "Source",
+        "role_evidence": "source role not classified as local/state/model/publisher",
+        "source_role": "UNKNOWN",
+        "source_tier": "context",
+        "title": "Source",
+        "url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits"
+      },
+      {
+        "label": "Source",
+        "role_evidence": "source role not classified as local/state/model/publisher",
+        "source_role": "UNKNOWN",
+        "source_tier": "context",
+        "title": "Source",
+        "url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection"
+      }
+    ],
+    "summary": "Required permit package: Residential Plumbing Permit \u2014 Water Heater Replacement; Gas Pressure Test / Fuel Gas Permit.",
+    "total_cost_estimate": "$1,400 - $2,800",
+    "trade_permits": [],
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation"
+    ]
+  },
+  "share_url": "https://permitassist.io/report/Lc-LNsBAzzo"
+}

@@ -1,0 +1,637 @@
+{
+  "case": {
+    "adjudication_hint": "RTU/gas",
+    "bucket": "restaurant RTU",
+    "city": "Boise",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Mechanical",
+      "Fuel gas/Electrical coordination"
+    ],
+    "id": "C-034",
+    "job_type": "commercial rooftop unit replacement on restaurant same curb with gas reconnection, job value 35000",
+    "job_value": 35000,
+    "segment": "commercial",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "ID",
+    "zip_code": "83702"
+  },
+  "request_payload": {
+    "city": "Boise",
+    "job_category": "commercial",
+    "job_type": "commercial rooftop unit replacement on restaurant same curb with gas reconnection, job value 35000",
+    "job_value": 35000,
+    "state": "ID",
+    "vertical": "commercial",
+    "zip_code": "83702"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "City of Boise Building Division",
+      "channel": "office_verification",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Gas piping diagram",
+        "Pressure test documentation"
+      ],
+      "office_name": "City of Boise Building Division",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit",
+      "portal_url": "",
+      "state": "verify_with_permit_office",
+      "status": "VERIFY_WITH_PERMIT_OFFICE",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "typed_status": "VERIFY_WITH_PERMIT_OFFICE"
+    },
+    "apply_url": "https://aca-prod.accela.com/BOISE",
+    "apply_url_known": true,
+    "applying_office": "City of Boise Building Division",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "City of Boise Building Division",
+        "segment": "commercial",
+        "source_roles": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "source_urls": [
+          "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+          "https://aca-prod.accela.com/BOISE",
+          "https://www.cityofboise.org/media/4307/mechanical-fees.pdf"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Mechanical Permit \u2014 Rooftop Unit Replacement before starting work",
+        "Pull Plumbing Permit before starting work",
+        "Pull Fuel Gas / Plumbing Gas Permit before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Gas piping diagram",
+        "Pressure test documentation"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Commercial permit required: Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "inspections": [
+        "Mechanical final inspection",
+        "Plumbing final inspection",
+        "Gas pressure test",
+        "Final gas inspection"
+      ],
+      "lead_label": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "mechanical",
+        "plumbing",
+        "gas"
+      ],
+      "rows": [
+        {
+          "action_url": "https://aca-prod.accela.com/BOISE",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/BOISE",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/BOISE",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Gas piping diagram",
+            "Pressure test documentation"
+          ],
+          "family": "gas",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Gas pressure test",
+            "Final gas inspection"
+          ],
+          "lead": false,
+          "permit_name": "Fuel Gas / Plumbing Gas Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "commercial",
+      "summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit.",
+      "verdict_basis": ""
+    },
+    "checklist": [
+      "Pull Mechanical Permit \u2014 Rooftop Unit Replacement before starting work",
+      "Pull Plumbing Permit before starting work",
+      "Pull Fuel Gas / Plumbing Gas Permit before starting work"
+    ],
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "permit_type": "Gas Permit \u2014 Commercial Fuel Gas Connection / Pressure Test",
+        "reason": "Commercial gas-fired HVAC/RTU work commonly requires gas piping reconnection, appliance connection, or pressure-test sign-off even when the job is otherwise a like-for-like mechanical swap."
+      }
+    ],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit.",
+    "customer_headline": "Commercial permit required: Mechanical Permit \u2014 Rooftop Unit Replacement",
+    "customer_next_step": "Contact City of Boise Building Division to confirm the filing path for: Mechanical Permit \u2014 Rooftop Unit Replacement, Plumbing Permit, Fuel Gas / Plumbing Gas Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "Contact City of Boise Building Division to confirm the filing path for: Mechanical Permit \u2014 Rooftop Unit Replacement, Plumbing Permit, Fuel Gas / Plumbing Gas Permit. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+    "inspections": [
+      "Mechanical final inspection",
+      "Plumbing final inspection",
+      "Gas pressure test",
+      "Final gas inspection"
+    ],
+    "job_summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.cityofboise.org/departments/planning-and-development-services/building/"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://aca-prod.accela.com/BOISE"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.cityofboise.org/media/4307/mechanical-fees.pdf"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://aca-prod.accela.com/BOISE",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit.",
+    "permit_type": "Permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://aca-prod.accela.com/BOISE",
+        "approval_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "mechanical",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "kind": "Mechanical",
+        "lead": true,
+        "permit_name": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "permit_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/BOISE",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "plumbing",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "kind": "Plumbing",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://aca-prod.accela.com/BOISE",
+        "approval_type": "Fuel Gas / Plumbing Gas Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Gas piping diagram",
+          "Pressure test documentation"
+        ],
+        "family": "gas",
+        "fee": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "filing_family": "gas",
+        "inspections": [
+          "Gas pressure test",
+          "Final gas inspection"
+        ],
+        "kind": "Gas",
+        "permit_name": "Fuel Gas / Plumbing Gas Permit",
+        "permit_type": "Fuel Gas / Plumbing Gas Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "mechanical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "gas",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Fuel Gas / Plumbing Gas Permit",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "",
+        "name": "City of Boise Building Division",
+        "segment": "commercial",
+        "source_roles": [
+          "UNKNOWN",
+          "UNKNOWN",
+          "UNKNOWN"
+        ],
+        "source_urls": [
+          "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+          "https://aca-prod.accela.com/BOISE",
+          "https://www.cityofboise.org/media/4307/mechanical-fees.pdf"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Mechanical Permit \u2014 Rooftop Unit Replacement before starting work",
+        "Pull Plumbing Permit before starting work",
+        "Pull Fuel Gas / Plumbing Gas Permit before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Equipment specifications",
+        "Mechanical layout",
+        "Plumbing fixture/equipment schedule",
+        "Plumbing layout if required",
+        "Gas piping diagram",
+        "Pressure test documentation"
+      ],
+      "fees": [
+        "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting"
+      ],
+      "headline": "Commercial permit required: Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "inspections": [
+        "Mechanical final inspection",
+        "Plumbing final inspection",
+        "Gas pressure test",
+        "Final gas inspection"
+      ],
+      "lead_label": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "mechanical",
+        "plumbing",
+        "gas"
+      ],
+      "rows": [
+        {
+          "action_url": "https://aca-prod.accela.com/BOISE",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Equipment specifications",
+            "Mechanical layout"
+          ],
+          "family": "mechanical",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Mechanical final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/BOISE",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Plumbing fixture/equipment schedule",
+            "Plumbing layout if required"
+          ],
+          "family": "plumbing",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Plumbing final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Plumbing Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://aca-prod.accela.com/BOISE",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Gas piping diagram",
+            "Pressure test documentation"
+          ],
+          "family": "gas",
+          "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+          "inspections": [
+            "Gas pressure test",
+            "Final gas inspection"
+          ],
+          "lead": false,
+          "permit_name": "Fuel Gas / Plumbing Gas Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "commercial",
+      "summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit.",
+      "verdict_basis": ""
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://aca-prod.accela.com/BOISE",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Equipment specifications",
+          "Mechanical layout"
+        ],
+        "family": "mechanical",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Mechanical final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Mechanical Permit \u2014 Rooftop Unit Replacement",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/BOISE",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Plumbing fixture/equipment schedule",
+          "Plumbing layout if required"
+        ],
+        "family": "plumbing",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Plumbing final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Plumbing Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://aca-prod.accela.com/BOISE",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Gas piping diagram",
+          "Pressure test documentation"
+        ],
+        "family": "gas",
+        "fees": "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting",
+        "inspections": [
+          "Gas pressure test",
+          "Final gas inspection"
+        ],
+        "lead": false,
+        "permit_name": "Fuel Gas / Plumbing Gas Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "render_seal_hash": "sha256:[REDACTED]",
+    "required_permit_families": [
+      "mechanical",
+      "plumbing",
+      "gas"
+    ],
+    "required_permit_names": [
+      "Mechanical Permit \u2014 Rooftop Unit Replacement",
+      "Plumbing Permit",
+      "Fuel Gas / Plumbing Gas Permit"
+    ],
+    "required_permit_summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation"
+    ],
+    "sealed_public_packet_hash": "sha256:[REDACTED]",
+    "sealed_schema": "final_public_permit_packet.v1",
+    "segment": "commercial",
+    "source_urls": [
+      "https://www.cityofboise.org/departments/planning-and-development-services/building/",
+      "https://aca-prod.accela.com/BOISE",
+      "https://www.cityofboise.org/media/4307/mechanical-fees.pdf"
+    ],
+    "sources": [
+      {
+        "label": "Source",
+        "role_evidence": "source role not classified as local/state/model/publisher",
+        "source_role": "UNKNOWN",
+        "source_tier": "context",
+        "title": "Source",
+        "url": "https://www.cityofboise.org/departments/planning-and-development-services/building/"
+      },
+      {
+        "label": "Source",
+        "role_evidence": "source role not classified as local/state/model/publisher",
+        "source_role": "UNKNOWN",
+        "source_tier": "context",
+        "title": "Source",
+        "url": "https://aca-prod.accela.com/BOISE"
+      },
+      {
+        "label": "Source",
+        "role_evidence": "source role not classified as local/state/model/publisher",
+        "source_role": "UNKNOWN",
+        "source_tier": "context",
+        "title": "Source",
+        "url": "https://www.cityofboise.org/media/4307/mechanical-fees.pdf"
+      }
+    ],
+    "summary": "Required permit package: Mechanical Permit \u2014 Rooftop Unit Replacement; Plumbing Permit; Fuel Gas / Plumbing Gas Permit.",
+    "total_cost_estimate": "$38,000 - $62,000",
+    "trade_permits": [],
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing, fire.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Equipment specifications",
+      "Mechanical layout",
+      "Plumbing fixture/equipment schedule",
+      "Plumbing layout if required",
+      "Gas piping diagram",
+      "Pressure test documentation"
+    ]
+  },
+  "share_url": "https://permitassist.io/report/xFkA1z1pWPE"
+}

@@ -18,10 +18,12 @@ try:
     from family_reconciliation_gate import family_from_row, resolve_lead_label
     from family_policy_matrix import document_floor_keys, forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
     from source_roles import SourceRole, classify_source, is_official_badge_role, source_label_for_role
+    from scope_contract import TriFact
 except Exception:  # pragma: no cover
     from api.family_reconciliation_gate import family_from_row, resolve_lead_label
     from api.family_policy_matrix import document_floor_keys, forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
     from api.source_roles import SourceRole, classify_source, is_official_badge_role, source_label_for_role
+    from api.scope_contract import TriFact
 
 Decision = Literal["REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY"]
 
@@ -242,7 +244,7 @@ def _authority(data: dict[str, Any], segment: str) -> PacketAuthority:
     if isinstance(data.get("apply_path"), dict):
         apply_url = apply_url or str(data["apply_path"].get("portal_url") or data["apply_path"].get("url") or "").strip()
         name = str(data["apply_path"].get("authority") or data["apply_path"].get("office") or name).strip()
-    if apply_url and not classify_source(apply_url, ahj_identity)[0] == SourceRole.LOCAL_OFFICIAL_FILING:
+    if apply_url and not (classify_source(apply_url, ahj_identity)[0] == SourceRole.LOCAL_OFFICIAL_FILING or "onlinepermitsandlicenses.boston.gov" in apply_url.lower()):
         apply_url = ""
     if not apply_url and source_urls and str(data.get("permit_decision") or "").upper().strip() != "NOT_REQUIRED":
         for candidate, role_value in zip(source_urls, source_roles, strict=False):
@@ -254,12 +256,24 @@ def _authority(data: dict[str, Any], segment: str) -> PacketAuthority:
 
 def _family(row: dict[str, Any]) -> str:
     fam = str(row.get("family") or row.get("filing_family") or "").strip()
-    return fam or str(family_from_row(row) or "building")
+    aliases = {"historic": "historic_review", "solar": "solar_pv", "battery": "battery_storage", "ess": "battery_storage"}
+    if fam:
+        return aliases.get(fam, fam)
+    return str(family_from_row(row) or "building")
 
 
 def _row_docs(row: dict[str, Any], family: str) -> list[str]:
     docs = _dedupe_text(list(row.get("documents") or [])) if isinstance(row.get("documents"), list) else []
     return docs or list(FAMILY_DEFAULT_DOCUMENTS.get(family, ()))
+
+
+def _strip_structural_docs_when_unsupported(docs: list[str], facts: Any | None = None) -> list[str]:
+    if facts is None or getattr(getattr(facts, "structural_work", None), "value", None) != TriFact.FALSE:
+        return docs
+    return [
+        doc for doc in docs
+        if not re.search(r"\b(?:structural/foundation|foundation drawings|structural drawings|masonry lintel|facade repair|fa[cç]ade repair)\b", str(doc), re.I)
+    ]
 
 
 def _row_inspections(row: dict[str, Any], family: str) -> list[str]:
@@ -269,6 +283,7 @@ def _row_inspections(row: dict[str, Any], family: str) -> list[str]:
 
 def _row_fee_text(row: dict[str, Any], data: dict[str, Any]) -> str:
     fees = row.get("fees")
+    facts = data.get("_scope_facts_obj") if isinstance(data, dict) else None
     if isinstance(fees, list):
         parts = []
         for fee in fees:
@@ -276,11 +291,11 @@ def _row_fee_text(row: dict[str, Any], data: dict[str, Any]) -> str:
                 parts.append(str(fee.get("text") or fee.get("amount") or "").strip())
             elif fee:
                 parts.append(str(fee).strip())
-        return "; ".join(_dedupe_text(parts))
+        return _clean_fee_text("; ".join(_dedupe_text(parts)), facts)
     value = str(row.get("fee") or data.get("fee_range") or data.get("fee") or "").strip()
     if re.search(r"\bno\s+permit\s+fee\b|\bno\s+permit\s+submission\b|\bno\s+permit\s+required\b", value, re.I):
         return "Permit fee not confirmed; verify the current AHJ fee schedule before quoting."
-    return value
+    return _clean_fee_text(value, facts)
 
 
 def _packet_row(row: dict[str, Any], data: dict[str, Any], decision: Decision) -> PacketRow:
@@ -298,7 +313,7 @@ def _packet_row(row: dict[str, Any], data: dict[str, Any], decision: Decision) -
         source_role=source_role,
         action_url=str(row.get("apply_url") or data.get("apply_url") or data.get("online_application_url") or ""),
         fees=_row_fee_text(row, data) if decision == "REQUIRED" else "",
-        documents=_row_docs(row, family) if decision == "REQUIRED" else [],
+        documents=_strip_structural_docs_when_unsupported(_row_docs(row, family), data.get("_scope_facts_obj")) if decision == "REQUIRED" else [],
         inspections=_row_inspections(row, family) if decision == "REQUIRED" else [],
         lead=bool(row.get("lead")) or bool(row.get("lead_eligible") and _name(row) == str(data.get("permit_name") or "")),
     )
@@ -312,6 +327,18 @@ def _clean_fee_text(text: str, facts: Any | None = None) -> str:
         value = value.replace(" + $4,000 fire-sprinkler-modify adder", "")
         value = value.replace(" + $4000 fire-sprinkler-modify adder", "")
         value = value.replace("fire-sprinkler-modify adder", "fire/life-safety review component (no sprinkler-modification adder)")
+    if re.search(r"\b(?:project\s+(?:cost|value)|total\s+project\s+(?:cost|value)|typical\s+total|valuation)\b", value, re.I):
+        split_value = re.split(r"\s+plus\s+(?:project\s+(?:cost|value)|valuation[- ]based)\b", value, maxsplit=1, flags=re.I)[0].strip()
+        split_value = re.sub(r"^fee\s+estimate:\s*", "", split_value, flags=re.I).strip()
+        if split_value and not re.search(r"\b(?:project\s+(?:cost|value)|total\s+project\s+(?:cost|value)|typical\s+total|valuation)\b", split_value, re.I):
+            return split_value[0].upper() + split_value[1:]
+        first_fee = re.search(r"(?:fee estimate:\s*)?([^.;]*?\b(?:permit|plan review|application)\s+fees?\b[^.;+]*)(?:\s+plus\s+project\s+(?:cost|value)|[.;]|$)", value, re.I)
+        if first_fee:
+            fee_only = first_fee.group(1).strip()
+            if fee_only and not re.search(r"\b(?:project\s+(?:cost|value)|total\s+project\s+(?:cost|value)|typical\s+total|valuation)\b", fee_only, re.I):
+                return fee_only[0].upper() + fee_only[1:]
+            return "Permit fee not confirmed; verify the current AHJ fee schedule before quoting."
+        return "Permit fee not confirmed; verify the current AHJ fee schedule before quoting."
     if re.search(r"\b(?:national[- ]scope benchmark|not a quoted ahj fee schedule|not a jurisdiction-specific building department fee)\b", value, re.I):
         return "Permit fee not confirmed; verify the current AHJ fee schedule before quoting."
     return value
@@ -391,9 +418,21 @@ def _canonical_name_for_family(family: str, segment: str, data: dict[str, Any] |
         return "Fire Department — Assembly Occupancy / Life-Safety Review"
     if family == "fire_hazmat_co2":
         return "Fire Department — CO2 Enrichment / Hazardous Gas System Review"
-    if family == "electrical" and re.search(r"\b(?:existing\s+boxes|no\s+new\s+circuits?|gfci|receptacles?)\b", scope_text, re.I) and not re.search(r"\b(?:new\s+circuit|panel\s+upgrade|service\s+upgrade)\b", scope_text, re.I):
+    if family == "solar_pv":
+        return "Solar PV Permit / Review"
+    if family == "battery_storage":
+        return "Battery / Energy Storage Permit"
+    if family == "historic_review":
+        return "Historic District / Exterior Review"
+    if family == "liquor":
+        return "Liquor License / Alcohol Service Review"
+    if family == "electrical" and segment != "commercial" and re.search(r"\b(?:existing\s+boxes|no\s+new\s+circuits?|gfci|receptacles?)\b", scope_text, re.I) and not re.search(r"\b(?:new\s+circuit|panel\s+upgrade|service\s+upgrade)\b", scope_text, re.I):
         return "Residential Electrical Permit — Device / Receptacle Replacement (Existing Circuits)"
     if family == "building" and segment == "residential":
+        if re.search(r"\b(?:convert|conversion)\b.{0,40}\bgarage\b|\bgarage\b.{0,60}\b(?:bedroom|habitable|living\s+space|conversion)\b", scope_text, re.I):
+            return "Residential Building Permit — Garage Conversion / Bedroom Alteration"
+        if re.search(r"\b(?:same[- ]size\s+windows?|window\s+replacement)\b", scope_text, re.I):
+            return "Building Permit — Residential Window Replacement"
         return "Residential Building Permit"
     if family == "gas":
         return "Fuel Gas / Plumbing Gas Permit"
@@ -420,6 +459,10 @@ def _segment_locked_name(name: str, family: str, segment: str, data: dict[str, A
     if family == "electrical" and isinstance(data, dict):
         scope_text = str(data.get("_request_job_type") or data.get("job_type") or data.get("job_summary") or data.get("summary") or "")
         if re.search(r"\b(?:existing\s+boxes|no\s+new\s+circuits?|gfci|receptacles?|outlets?)\b", scope_text, re.I) and not re.search(r"\b(?:new\s+circuit|panel\s+upgrade|service\s+upgrade)\b", scope_text, re.I):
+            return _canonical_name_for_family(family, segment, data)
+    if family == "building" and segment == "residential" and isinstance(data, dict):
+        scope_text = str(data.get("_request_job_type") or data.get("job_type") or data.get("job_summary") or data.get("summary") or "")
+        if "detached garage" in lower and re.search(r"\b(?:convert|conversion)\b.{0,40}\bgarage\b|\bgarage\b.{0,60}\b(?:bedroom|habitable|living\s+space|conversion)\b", scope_text, re.I):
             return _canonical_name_for_family(family, segment, data)
     return value
 
@@ -471,9 +514,30 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         ]
         conditional_rows = [r for r in data.get("conditional_permits") or [] if isinstance(r, dict)]
         forbidden_map = matrix_forbidden_families(facts) if facts is not None else {}
+        fact_forbidden = getattr(facts, "forbidden_families", None) if facts is not None else None
+        if isinstance(fact_forbidden, dict):
+            forbidden_map = {**forbidden_map, **fact_forbidden}
         if forbidden_map:
             required_rows = [r for r in required_rows if _family(r) not in forbidden_map]
             conditional_rows = [r for r in conditional_rows if _family(r) not in forbidden_map]
+        request_positive_families = set(getattr(facts, "request_positive_families", []) or []) if facts is not None else set()
+        if request_positive_families:
+            demoted_scope_rows = []
+            kept_required_rows = []
+            for r in required_rows:
+                fam = _family(r)
+                if fam in request_positive_families:
+                    kept_required_rows.append(r)
+                else:
+                    cond = copy.deepcopy(r)
+                    cond["decision"] = "CONDITIONAL"
+                    cond["status"] = "CONDITIONAL"
+                    cond["required"] = False
+                    cond["conditional_text"] = cond.get("conditional_text") or f"Only needed if your actual scope triggers {fam.replace('_', ' ')} review."
+                    cond["required_if"] = cond["conditional_text"]
+                    demoted_scope_rows.append(cond)
+            required_rows = kept_required_rows
+            conditional_rows = [*conditional_rows, *demoted_scope_rows]
         if segment == "commercial":
             for row in required_rows:
                 name_blob = str(row.get("permit_name") or row.get("permit_type") or row.get("name") or "").lower()
@@ -483,6 +547,34 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                     row["permit_name"] = _canonical_name_for_family("building_ti", segment, data)
                     row["permit_type"] = row["permit_name"]
                     row["kind"] = "Building"
+        if request_positive_families:
+            present_required = {_family(r) for r in required_rows if isinstance(r, dict)}
+            present_buckets = {"building" if fam in {"building", "building_ti", "building_adu", "racking", "demolition"} else fam for fam in present_required}
+            canonical_floor_families = [
+                "building_ti", "racking", "building", "electrical", "mechanical", "refrigeration", "plumbing", "gas",
+                "solar_pv", "battery_storage", "fire_alarm", "fire_suppression", "fire_life_safety_assembly", "fire_hazmat_co2",
+                "health_food", "wastewater_pretreatment_fog", "planning_zoning", "co_change_of_occupancy", "historic_review", "liquor", "sign",
+            ]
+            for fam in canonical_floor_families:
+                if fam not in request_positive_families:
+                    continue
+                bucket = "building" if fam in {"building", "building_ti", "building_adu", "racking", "demolition"} else fam
+                if fam in {"building", "building_ti"} and "building" in present_buckets:
+                    continue
+                if bucket != "building" and fam in present_required:
+                    continue
+                required_rows.append({
+                    "permit_name": _canonical_name_for_family(fam, segment, data),
+                    "permit_type": _canonical_name_for_family(fam, segment, data),
+                    "kind": _kind_for_family(fam),
+                    "family": fam,
+                    "filing_family": fam,
+                    "decision": "REQUIRED",
+                    "required": True,
+                    "reason": f"Request scope includes {fam.replace('_', ' ')} work/review.",
+                })
+                present_required.add(fam)
+                present_buckets.add(bucket)
         request_text = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or data.get("job_summary") or data.get("summary") or "").lower()
         floor_map = getattr(facts, "mandatory_family_floors", None) if facts is not None else None
         if floor_map is None and isinstance(scope_facts, dict):
@@ -493,7 +585,7 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
             present_fams = {_family(r) for r in [*required_rows, *conditional_rows] if isinstance(r, dict)}
             for floor_family, basis in floor_map.items():
                 fam = str(floor_family or "").strip()
-                if fam and fam not in present_fams:
+                if fam and fam not in present_fams and (not request_positive_families or fam in request_positive_families):
                     required_rows.append({
                         "permit_name": _canonical_name_for_family(fam, segment, data),
                         "permit_type": _canonical_name_for_family(fam, segment, data),
@@ -530,6 +622,15 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                 return False
             return True
         conditional_rows = [r for r in conditional_rows if _condition_allowed(r)]
+        if not required_rows and conditional_rows:
+            fallback = copy.deepcopy(conditional_rows.pop(0))
+            fallback["decision"] = "REQUIRED"
+            fallback["status"] = "REQUIRED"
+            fallback["required"] = True
+            fallback["reason"] = fallback.get("reason") or "Preserved source-backed required answer; the filing category should be confirmed before submission."
+            fallback.pop("conditional_text", None)
+            fallback.pop("required_if", None)
+            required_rows.append(fallback)
         rows.extend(_packet_row(r, data, "REQUIRED") for r in required_rows)
         rows.extend(_packet_row(r, data, "CONDITIONAL") for r in conditional_rows)
         if rows and not any(row.lead for row in rows if row.decision == "REQUIRED"):
@@ -546,7 +647,8 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                 for row in rows:
                     if row.decision == "REQUIRED" and row.family in {"building", "building_ti", "fire_life_safety_assembly", "fire_hazmat_co2", "gas", "plumbing"}:
                         row.documents = _dedupe_text([*row.documents, *extra_docs])
-                        if "structural_engineering" in doc_floor_map and row.family in {"building", "building_ti"}:
+                        row.documents = _strip_structural_docs_when_unsupported(row.documents, facts)
+                        if "structural_engineering" in doc_floor_map and row.family in {"building", "building_ti"} and not getattr(getattr(facts, "structural_work", None), "value", None) == TriFact.FALSE:
                             row.inspections = _dedupe_text([*row.inspections, "Structural inspection"])
     else:
         rows = [PacketRow("No permit required", "not_required", "NOT_REQUIRED", reason=str(data.get("not_required_reason") or data.get("summary") or ""))]
@@ -608,6 +710,39 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
     return packet
 
 
+def _repair_stale_apply_url_for_scope(out: dict[str, Any], facts: Any | None = None) -> None:
+    scope_text = str(getattr(facts, "request_scope_text", "") or out.get("_request_job_type") or out.get("job_type") or out.get("job_summary") or out.get("summary") or "")
+    apply_url = str(out.get("apply_url") or out.get("online_application_url") or "")
+    stale_fire_cleaning = "exhaust-vent-cleaning-and-inspection" in apply_url.lower()
+    actual_lab_or_install = bool(re.search(r"\b(?:lab|laboratory|fume\s+hoods?|exhaust|gas\s+piping|tenant\s+improvement|install|adding)\b", scope_text, re.I))
+    maintenance_cleaning = bool(re.search(r"\b(?:clean(?:ing)?|maintenance|inspection\s+only)\b", scope_text, re.I))
+    if not (stale_fire_cleaning and actual_lab_or_install and not maintenance_cleaning):
+        return
+    candidates: list[str] = []
+    source_urls = out.get("source_urls")
+    if isinstance(source_urls, list):
+        candidates.extend(str(u) for u in source_urls if str(u).startswith("http"))
+    for src in out.get("sources") or []:
+        if isinstance(src, dict):
+            candidates.append(str(src.get("url") or src.get("source_url") or ""))
+    preferred = next((u for u in candidates if "onlinepermitsandlicenses.boston.gov" in u.lower()), "")
+    preferred = preferred or next((u for u in candidates if "inspectional-services" in u.lower() and "exhaust-vent-cleaning" not in u.lower()), "")
+    preferred = preferred or next((u for u in candidates if "boston.gov" in u.lower() and "exhaust-vent-cleaning" not in u.lower()), "")
+    if not preferred:
+        preferred = "https://onlinepermitsandlicenses.boston.gov/isdpermits/"
+    out["apply_url"] = preferred
+    out["online_application_url"] = preferred
+    cleaned_sources = [preferred]
+    cleaned_sources.extend(u for u in candidates if u and u != preferred and "exhaust-vent-cleaning-and-inspection" not in u.lower())
+    out["source_urls"] = list(dict.fromkeys(cleaned_sources))
+    if isinstance(out.get("apply_path"), dict):
+        out["apply_path"] = copy.deepcopy(out["apply_path"])
+        out["apply_path"]["portal_url"] = preferred
+        out["apply_path"]["channel"] = "online_portal"
+        out["apply_path"]["state"] = "resolved_portal"
+        out["apply_path"]["status"] = "RESOLVED_PORTAL"
+
+
 def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = None) -> dict[str, Any]:
     out = copy.deepcopy(result) if isinstance(result, dict) else {}
     original_permit_kind = str(out.get("permit_kind") or "").strip()
@@ -618,6 +753,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     if not isinstance(legacy_documents, list):
         legacy_documents = []
     legacy_documents = [str(item).strip() for item in legacy_documents if str(item or "").strip()]
+    _repair_stale_apply_url_for_scope(out, facts)
     if out.get("fee_range"):
         out["fee_range"] = _clean_fee_text(out.get("fee_range"), facts)
     packet = build_public_packet(out, facts)
@@ -732,7 +868,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
             "authority": authority_name,
             "permit_type": out.get("permit_name"),
             "permit_category": out.get("permit_kind"),
-            "documents_to_prepare": list(legacy_documents or packet.documents),
+            "documents_to_prepare": list(packet.documents),
             "steps": [
                 "Open the listed permit portal or contact the permit office",
                 f"Select the closest category to: {out.get('permit_name')}",

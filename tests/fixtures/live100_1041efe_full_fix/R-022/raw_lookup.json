@@ -1,0 +1,484 @@
+{
+  "case": {
+    "adjudication_hint": "New circuit",
+    "bucket": "EV charger",
+    "city": "Tempe",
+    "expected_decision_pre_registered": "REQUIRED",
+    "expected_permit_families_pre_registered": [
+      "Electrical"
+    ],
+    "id": "R-022",
+    "job_type": "install level 2 EV charger with new 50 amp circuit in garage, job value 2200",
+    "job_value": 2200,
+    "segment": "residential",
+    "source_status": "pre_registered_expectation_source_check_required_for_final_grade",
+    "state": "AZ",
+    "zip_code": "85281"
+  },
+  "request_payload": {
+    "city": "Tempe",
+    "job_category": "residential",
+    "job_type": "install level 2 EV charger with new 50 amp circuit in garage, job value 2200",
+    "job_value": 2200,
+    "state": "AZ",
+    "vertical": "residential",
+    "zip_code": "85281"
+  },
+  "response_body": {
+    "apply_path": {
+      "authority": "City of Tempe Community Development Building Safety \u2014 Permit Center",
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule"
+      ],
+      "office_name": "City of Tempe Community Development Building Safety \u2014 Permit Center",
+      "permit_category": "Permit package",
+      "permit_type": "Permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit",
+      "portal_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+      "state": "resolved_portal",
+      "status": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "typed_status": "RESOLVED_PORTAL"
+    },
+    "apply_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+    "apply_url_known": true,
+    "applying_office": "City of Tempe Community Development Building Safety \u2014 Permit Center",
+    "canonical_public_packet": {
+      "authority": {
+        "apply_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "name": "City of Tempe Community Development Building Safety \u2014 Permit Center",
+        "segment": "residential",
+        "source_roles": [
+          "LOCAL_OFFICIAL_FILING",
+          "STATE_OFFICIAL",
+          "LOCAL_OFFICIAL_FILING"
+        ],
+        "source_urls": [
+          "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+          "https://roc.az.gov",
+          "https://www.tempe.gov/i-want-to/apply-for-a-building-permit"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Building Permit before starting work",
+        "Pull Electrical Permit \u2014 EV Charger / New Branch Circuit before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule"
+      ],
+      "fees": [
+        "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting"
+      ],
+      "headline": "Residential permit required: Building Permit",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection"
+      ],
+      "lead_label": "Building Permit",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building",
+        "electrical"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building",
+          "fees": "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Building Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit \u2014 EV Charger / New Branch Circuit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "residential",
+      "summary": "Required permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit.",
+      "verdict_basis": ""
+    },
+    "checklist": [
+      "Pull Building Permit before starting work",
+      "Pull Electrical Permit \u2014 EV Charger / New Branch Circuit before starting work"
+    ],
+    "companion_permits": [],
+    "conditional_permits": [],
+    "confidence": "medium",
+    "confidence_reason": "Official/local source support is present; verify the final portal subcategory with the listed permit office before filing.",
+    "customer_first_screen_summary": "Required permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit.",
+    "customer_headline": "Residential permit required: Building Permit",
+    "customer_next_step": "File the required permit categories with City of Tempe Community Development Building Safety \u2014 Permit Center: Building Permit, Electrical Permit \u2014 EV Charger / New Branch Circuit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "next_step": "File the required permit categories with City of Tempe Community Development Building Safety \u2014 Permit Center: Building Permit, Electrical Permit \u2014 EV Charger / New Branch Circuit. Confirm exact portal subcategories before final submission.",
+      "permit_kind": "Permit package",
+      "source_cue": "Official source path found",
+      "summary": "Required permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit."
+    },
+    "data_source": "city_database",
+    "decision_object": {
+      "schema_version": "decision_object.v1"
+    },
+    "disclaimer": "Data sourced Jun 29, 2026. Always verify current requirements directly with your local building department before starting work. Permit fees and requirements change frequently.",
+    "documents_needed": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ],
+    "documents_to_prepare": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ],
+    "fee_calculator": {
+      "confidence": "none",
+      "note": "Provide job_value to calculate an exact fee where formulas are available."
+    },
+    "fee_range": "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting",
+    "inspections": [
+      "Building final inspection",
+      "Electrical final inspection"
+    ],
+    "job_summary": "Required permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit.",
+    "link_liveness": [
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.tempe.gov/government/community-development/building-safety/permit-center"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://roc.az.gov"
+      },
+      {
+        "reason": "static_ok",
+        "renderable": true,
+        "status": "offline_static_check",
+        "url": "https://www.tempe.gov/i-want-to/apply-for-a-building-permit"
+      }
+    ],
+    "local_form_known": true,
+    "online_application_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Permit package",
+    "permit_name": "Permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit",
+    "permit_required": true,
+    "permit_summary": "Required permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit.",
+    "permit_type": "Permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fee": "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting",
+        "filing_family": "building",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "kind": "Building",
+        "lead": true,
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "approval_type": "Electrical Permit \u2014 EV Charger / New Branch Circuit",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fee": "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting",
+        "filing_family": "electrical",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit \u2014 EV Charger / New Branch Circuit",
+        "permit_type": "Electrical Permit \u2014 EV Charger / New Branch Circuit",
+        "required": true,
+        "source_role": "UNKNOWN",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "Project scope"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "The locked public packet includes this required permit family.",
+        "permit_type": "Electrical Permit \u2014 EV Charger / New Branch Circuit",
+        "scope_trigger": "Project scope"
+      }
+    ],
+    "public_packet": {
+      "authority": {
+        "apply_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "name": "City of Tempe Community Development Building Safety \u2014 Permit Center",
+        "segment": "residential",
+        "source_roles": [
+          "LOCAL_OFFICIAL_FILING",
+          "STATE_OFFICIAL",
+          "LOCAL_OFFICIAL_FILING"
+        ],
+        "source_urls": [
+          "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+          "https://roc.az.gov",
+          "https://www.tempe.gov/i-want-to/apply-for-a-building-permit"
+        ],
+        "state": ""
+      },
+      "checklist": [
+        "Pull Building Permit before starting work",
+        "Pull Electrical Permit \u2014 EV Charger / New Branch Circuit before starting work"
+      ],
+      "conditional_families": [],
+      "decision": "REQUIRED",
+      "documents": [
+        "Project scope description",
+        "Site address / parcel information",
+        "Electrical contractor/license information",
+        "Electrical fixture/equipment schedule"
+      ],
+      "fees": [
+        "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting"
+      ],
+      "headline": "Residential permit required: Building Permit",
+      "inspections": [
+        "Building final inspection",
+        "Electrical final inspection"
+      ],
+      "lead_label": "Building Permit",
+      "permit_required_verdict": "REQUIRED",
+      "render_seal_hash": "sha256:[REDACTED]",
+      "required_families": [
+        "building",
+        "electrical"
+      ],
+      "rows": [
+        {
+          "action_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information"
+          ],
+          "family": "building",
+          "fees": "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Building final inspection"
+          ],
+          "lead": true,
+          "permit_name": "Building Permit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        },
+        {
+          "action_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+          "conditional_text": "",
+          "decision": "REQUIRED",
+          "documents": [
+            "Project scope description",
+            "Site address / parcel information",
+            "Electrical contractor/license information",
+            "Electrical fixture/equipment schedule"
+          ],
+          "family": "electrical",
+          "fees": "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting",
+          "inspections": [
+            "Electrical final inspection"
+          ],
+          "lead": false,
+          "permit_name": "Electrical Permit \u2014 EV Charger / New Branch Circuit",
+          "reason": "Required because the described project scope includes this permit family.",
+          "source": "",
+          "source_role": "UNKNOWN"
+        }
+      ],
+      "schema_version": "final_public_permit_packet.v1",
+      "sealed_at_stage": "post_public_packet_projection",
+      "sealed_public_packet_hash": "sha256:[REDACTED]",
+      "segment": "residential",
+      "summary": "Required permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit.",
+      "verdict_basis": ""
+    },
+    "public_packet_rows": [
+      {
+        "action_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information"
+        ],
+        "family": "building",
+        "fees": "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting",
+        "inspections": [
+          "Building final inspection"
+        ],
+        "lead": true,
+        "permit_name": "Building Permit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      },
+      {
+        "action_url": "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+        "conditional_text": "",
+        "decision": "REQUIRED",
+        "documents": [
+          "Project scope description",
+          "Site address / parcel information",
+          "Electrical contractor/license information",
+          "Electrical fixture/equipment schedule"
+        ],
+        "family": "electrical",
+        "fees": "Fee Estimate: $75 - $300 permit fee typical for residential electrical work; exact Tempe fee schedule needs verification \u2014 verify with the building department before quoting",
+        "inspections": [
+          "Electrical final inspection"
+        ],
+        "lead": false,
+        "permit_name": "Electrical Permit \u2014 EV Charger / New Branch Circuit",
+        "reason": "Required because the described project scope includes this permit family.",
+        "source": "",
+        "source_role": "UNKNOWN"
+      }
+    ],
+    "related_permits": [],
+    "render_fidelity": {
+      "issues": [],
+      "pass": true
+    },
+    "render_seal_hash": "sha256:[REDACTED]",
+    "required_permit_families": [
+      "building",
+      "electrical"
+    ],
+    "required_permit_names": [
+      "Building Permit",
+      "Electrical Permit \u2014 EV Charger / New Branch Circuit"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit.",
+    "requirements": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ],
+    "sealed_public_packet_hash": "sha256:[REDACTED]",
+    "sealed_schema": "final_public_permit_packet.v1",
+    "segment": "residential",
+    "source_urls": [
+      "https://www.tempe.gov/government/community-development/building-safety/permit-center",
+      "https://roc.az.gov",
+      "https://www.tempe.gov/i-want-to/apply-for-a-building-permit"
+    ],
+    "sources": [
+      {
+        "label": "Official filing source",
+        "role_evidence": "local official filing/permit URL",
+        "source_role": "LOCAL_OFFICIAL_FILING",
+        "source_tier": "local_permit_source",
+        "title": "Official filing source",
+        "url": "https://www.tempe.gov/government/community-development/building-safety/permit-center"
+      },
+      {
+        "label": "Official state source",
+        "role_evidence": "state official URL",
+        "source_role": "STATE_OFFICIAL",
+        "source_tier": "local_permit_source",
+        "title": "Official state source",
+        "url": "https://roc.az.gov"
+      },
+      {
+        "label": "Official filing source",
+        "role_evidence": "local official filing/permit URL",
+        "source_role": "LOCAL_OFFICIAL_FILING",
+        "source_tier": "local_permit_source",
+        "title": "Official filing source",
+        "url": "https://www.tempe.gov/i-want-to/apply-for-a-building-permit"
+      }
+    ],
+    "summary": "Required permit package: Building Permit; Electrical Permit \u2014 EV Charger / New Branch Circuit.",
+    "total_cost_estimate": "$1,200 - $2,800",
+    "trade_permits": [],
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them."
+    ],
+    "what_to_bring": [
+      "Project scope description",
+      "Site address / parcel information",
+      "Electrical contractor/license information",
+      "Electrical fixture/equipment schedule"
+    ]
+  },
+  "share_url": "https://permitassist.io/report/hnJQLtsweO0"
+}
