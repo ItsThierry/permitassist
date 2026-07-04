@@ -18,7 +18,7 @@ import hashlib
 import io
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
 from copy import deepcopy
-from urllib.parse import quote_plus, urljoin, urlparse
+from urllib.parse import urljoin, urlparse
 import requests
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
@@ -8145,27 +8145,20 @@ def strip_pdf_from_result(result: dict) -> dict:
 
 
 def build_google_maps_url(city: str, state: str, address: str = "", office: str = "") -> str:
-    """Build a Google Maps URL with encoded query text and a fixed Google prefix.
-
-    `address` is for the project/building address when the caller is building a
-    project-location map. `office` is for AHJ/building-department maps. The two
-    are intentionally separate so a customer job address cannot contaminate AHJ
-    office fields.
-    """
-    city_text = str(city or "").strip()
-    state_text = str(state or "").strip()
-    address_text = str(address or "").strip()
-    office_text = str(office or "").strip()
-    if address_text:
-        q = address_text
-        if city_text and city_text.lower() not in q.lower():
-            q = f"{q}, {city_text}, {state_text}".strip(", ")
-        return "https://www.google.com/maps?q=" + quote_plus(q)
-    if office_text:
-        q = f"{office_text}, {city_text}, {state_text}".strip(", ")
+    """Build the best possible Google Maps URL — pinned address if available, else office+city search."""
+    # If we have a real street address, use maps?q= for a pin
+    if address and address.strip():
+        q = address.strip()
+        # Append city/state if not already present
+        if city.lower() not in q.lower():
+            q = f"{q}, {city}, {state}"
+        return f"https://www.google.com/maps?q={q.replace(' ', '+')}"
+    # Otherwise use a more targeted search: office name + city
+    if office and office.strip():
+        query = f"{office}, {city}, {state}".replace(" ", "+")
     else:
-        q = f"{city_text} {state_text} building permit office".strip()
-    return "https://www.google.com/maps/search/" + quote_plus(q)
+        query = f"{city}+{state}+building+permit+office".replace(" ", "+")
+    return f"https://www.google.com/maps/search/{query}"
 
 # ─── System Prompt ────────────────────────────────────────────────────────────
 

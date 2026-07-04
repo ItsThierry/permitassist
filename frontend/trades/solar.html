@@ -1735,13 +1735,6 @@ function setSearchMode(mode) {
 const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function sourceUrl(src){return typeof src==='string'?src:((src&&src.url)||'')}
-function safeGoogleMapsUrl(url){
-  const u = String(url || '').trim();
-  return u.startsWith('https://www.google.com/maps') ? u : 'https://www.google.com/maps';
-}
-function openSafeMapsUrl(url){
-  window.open(safeGoogleMapsUrl(url), '_blank', 'noopener');
-}
 function sourceTitle(src){return (src&&typeof src==='object'&&(src.title||src.name))||'Source'}
 function sourceHostname(src){try{return new URL(sourceUrl(src)).hostname}catch(_){return sourceUrl(src)}}
 
@@ -2393,9 +2386,8 @@ function renderResults(d, job, city, state) {
   const office = d.applying_office || d.office_name || '';
   const phone = d.apply_phone || d.office_phone || '';
   const officeAddress = d.apply_address || d.office_address || '';
-  const jobAddress = d.job_address || currentResult?.address || '';
-  const projectMaps = d.job_maps_url || '';
-  const officeMaps = d.apply_google_maps || d.maps_url || '';
+  const jobAddress = currentResult?.address || '';
+  const maps = d.apply_google_maps || d.maps_url || '';
   const fee = d.fee_range || d.fee || d.cost || '';
   const applyUrl = d.apply_url || '';
   const applyPdf = d.apply_pdf || '';
@@ -2851,8 +2843,7 @@ function renderResults(d, job, city, state) {
       <button class="action-btn" onclick="downloadReport()">📄 Print / Save PDF</button>
     </div>
     <div class="action-row">
-      ${projectMaps ? `<button class="action-btn" data-maps-url="${esc(projectMaps)}" onclick="openSafeMapsUrl(this.dataset.mapsUrl)">🏠 Project Address</button>` : ''}
-      <button class="action-btn" data-maps-url="${esc(officeMaps || 'https://www.google.com/maps')}" onclick="openSafeMapsUrl(this.dataset.mapsUrl)">🏛️ Building Department</button>
+      <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
       <button class="action-btn" style="border-color:rgba(59,130,246,.4);color:var(--brand)" onclick="saveJobToTracker()">📁 Save to Job Tracker</button>
     </div>
     <div class="expiry-reminder-card" id="expiry-reminder">
@@ -3644,7 +3635,7 @@ async function doLookup() {
   try {
     const res = await fetch('/api/permit', {
       method: 'POST', headers: getAuthHeaders(),
-      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, address, job_category: jobCategory })
+      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, job_category: jobCategory })
     });
     stopProgress();
     const data = await res.json();

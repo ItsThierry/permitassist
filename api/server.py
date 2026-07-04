@@ -37,7 +37,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-from typing import Any
 from research_engine import (
     research_permit,
     build_google_maps_url,
@@ -61,7 +60,7 @@ except (TypeError, ValueError):
     from api.research_engine import classify_scope_required_permits as _real_classify_scope_required_permits
     classify_scope_required_permits = _real_classify_scope_required_permits
 
-from scope_contract import build_scope_contract, build_scope_facts_v2, build_scope_facts_v3, build_scope_facts_v4, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
+from scope_contract import build_scope_contract, build_scope_facts_v2, build_scope_facts_v3, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
 from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
 from trade_authority_routing import apply_trade_authority_routing
 from decision_resolver import is_input_rejection, resolve_customer_decision
@@ -820,7 +819,6 @@ _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
     "total_cost_estimate", "fee_calculator", "approval_timeline", "timeline",
     "applying_office", "building_dept_name", "building_dept_phone", "apply_phone",
     "apply_address", "apply_google_maps", "apply_url", "apply_path", "online_application_url",
-    "job_address", "job_maps_url",
     "source_urls", "sources", "claim_citations", "warnings", "disclaimer",
     "permit_routing_map", "permit_authority_cards", "jurisdiction_routing_summary",
     "required_permit_names", "required_permit_families", "required_permit_segments", "required_permit_summary",
@@ -845,37 +843,6 @@ _INTERNAL_CUSTOMER_FIELD_NAMES = frozenset({
 _PUBLIC_KEEP_EMPTY_FIELDS = frozenset({
     "apply_url", "apply_phone", "online_application_url", "source_urls", "sources", "claim_citations",
 })
-
-
-def _sanitize_job_address(value: Any, *, max_len: int = 240) -> str:
-    """Return display-safe project address text without using it as AHJ data."""
-    text = re.sub(r"[\x00-\x1f\x7f]+", " ", str(value or ""))
-    text = re.sub(r"\s+", " ", text).strip()
-    return text[:max_len]
-
-
-def _safe_google_maps_url(value: Any) -> str:
-    text = str(value or "").strip()
-    if not text.startswith("https://www.google.com/maps"):
-        return ""
-    if re.search(r"[\s<>\"']", text):
-        return ""
-    return text
-
-
-def _apply_job_address_fields(result: dict, city: str = "", state: str = "") -> dict:
-    """Attach project-address maps without contaminating permit-office fields."""
-    if not isinstance(result, dict):
-        return {}
-    out = result
-    job_address = _sanitize_job_address(out.get("job_address") or out.get("address") or "")
-    if not job_address:
-        out.pop("job_maps_url", None)
-        out.pop("job_address", None)
-        return out
-    out["job_address"] = job_address
-    out["job_maps_url"] = _safe_google_maps_url(out.get("job_maps_url")) or build_google_maps_url(city, state, address=job_address)
-    return out
 
 
 @dataclass(frozen=True)
@@ -4713,7 +4680,6 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
-    working = _apply_job_address_fields(working, city, state)
     original_display_permit_kind = str(working.get("permit_kind") or "").strip()
     original_apply_path_source = working.get("apply_path")
     original_apply_path_obj = original_apply_path_source if isinstance(original_apply_path_source, dict) else {}
@@ -4728,8 +4694,6 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         if isinstance(row, dict)
     ]
     original_apply_url = working.get("apply_url")
-    original_apply_address = _sanitize_job_address(working.get("apply_address") or "")
-    original_apply_google_maps = _safe_google_maps_url(working.get("apply_google_maps") or working.get("maps_url") or "")
     raw_meta = working.get("_meta") if isinstance(working.get("_meta"), dict) else {}
     request_job_category = job_category or working.get("job_category") or raw_meta.get("job_category")
     contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
@@ -5122,7 +5086,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 else:
                     full_customer_gate_enabled = not os.environ.get("PYTEST_CURRENT_TEST")
                 if full_customer_gate_enabled:
-                    final_scope_facts = build_scope_facts_v4(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract)
+                    final_scope_facts = build_scope_facts_v3(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract)
                     final_public = apply_ahj_locality_resolution(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
                     final_public = apply_family_reconciliation_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract, job_category=request_job_category)
                     final_public = apply_ahj_identity_guard(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
@@ -5156,6 +5120,8 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                         final_public["apply_path"]["permit_category"] = original_display_permit_kind
                     if isinstance(final_public.get("customer_result_summary"), dict):
                         final_public["customer_result_summary"]["permit_kind"] = original_display_permit_kind
+                if original_legacy_documents and isinstance(final_public.get("apply_path"), dict):
+                    final_public["apply_path"]["documents_to_prepare"] = list(original_legacy_documents)
                 if original_companion_rows_for_legacy_contract and not final_public.get("companion_permits"):
                     final_public["companion_permits"] = copy.deepcopy(original_companion_rows_for_legacy_contract)
                 # Segment/kind lock must also protect pytest/legacy paths where
@@ -5174,14 +5140,6 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 seal_enabled = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower() in {"1", "true", "yes", "on"} or not os.environ.get("PYTEST_CURRENT_TEST")
                 if seal_enabled:
                     final_public = apply_render_parity_seal(final_public if isinstance(final_public, dict) else {}, facts=locals().get("final_scope_facts"))
-                if isinstance(final_public, dict):
-                    if original_apply_address and not final_public.get("apply_address"):
-                        final_public["apply_address"] = original_apply_address
-                    if original_apply_google_maps and not final_public.get("apply_google_maps"):
-                        final_public["apply_google_maps"] = original_apply_google_maps
-                    elif original_apply_address and not final_public.get("apply_google_maps"):
-                        final_public["apply_google_maps"] = build_google_maps_url(city, state, address=original_apply_address, office=str(final_public.get("applying_office") or ""))
-                final_public = _apply_job_address_fields(final_public if isinstance(final_public, dict) else {}, city, state)
         return final_public if isinstance(final_public, dict) else {}
     return {}
 
@@ -6047,7 +6005,7 @@ def _source_tier_label(tier: str, city: str | None, state: str | None) -> str:
         return f"{label} state reference"
     if tier == "universal":
         return "National code reference"
-    return "Supporting source (verify jurisdiction)"
+    return "Source"
 
 
 def _customer_source_type(tier: str) -> str:
@@ -10637,7 +10595,6 @@ class Handler(BaseHTTPRequestHandler):
                 city         = data.get("city", "").strip()
                 state        = data.get("state", "").strip()
                 zip_code     = data.get("zip_code", "").strip()
-                job_address  = _sanitize_job_address(data.get("job_address") or data.get("address") or "")
                 job_category = (data.get("job_category") or "").strip()
                 explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
 
@@ -10778,9 +10735,6 @@ class Handler(BaseHTTPRequestHandler):
                         bypass_lookup_caches=bool(qa_cache_mode),
                     )
                     is_cached = result.get("_cached", False)
-                    if job_address:
-                        result["job_address"] = job_address
-                        result["job_maps_url"] = build_google_maps_url(city, state, address=job_address)
 
                     if not unlimited and not is_sample_demo:
                         used_after = max(*record_lookup_usage(ip, fingerprint))
@@ -10860,16 +10814,12 @@ class Handler(BaseHTTPRequestHandler):
                     city = item.get("city", "")
                     state = item.get("state", "")
                     zip_code = item.get("zip", "") or item.get("zip_code", "")
-                    job_address = _sanitize_job_address(item.get("job_address") or item.get("address") or "")
                     job_value = item.get("job_value")
                     job_category = item.get("job_category", "")
                     explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
                     try:
                         evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
                         result = research_permit(job_type, city, state, zip_code, job_category=job_category, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
-                        if job_address:
-                            result["job_address"] = job_address
-                            result["job_maps_url"] = build_google_maps_url(city, state, address=job_address)
                         if evidence_allowed:
                             result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
                             response = dict(result)
