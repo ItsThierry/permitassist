@@ -937,6 +937,33 @@ def build_scope_facts_v4(job_type: str, city: str = "", state: str = "", *, job_
     v3 = build_scope_facts_v3(job_type, city, state, job_category=job_category, vertical=vertical, scope_contract=scope_contract)
     job = _norm(job_type)
     positives, positive_families, negative_families, forbidden, negatives = _family_support_sets_v4(job, v3)
+    explicit_no_food_service = bool(re.search(r"\b(?:no|without)\s+(?:food\s+service|food\s+prep|restaurant|commercial\s+kitchen|cooking|grease|fog)\b", job, re.I))
+    if explicit_no_food_service:
+        negatives.add("no_food_service_change")
+        negative_families.update({"health_food", "wastewater_pretreatment_fog"})
+        for token in ("food_service", "health_food", "grease_generating"):
+            positives.discard(token)
+        for fam in ("health_food", "wastewater_pretreatment_fog"):
+            positive_families.discard(fam)
+            forbidden[fam] = "explicit request says no food service/grease scope; do not hard-require food or FOG permits"
+    hpwh_scope = (v3.segment == "residential") and bool(re.search(r"\b(?:heat\s+pump\s+water\s+heater|hpwh)\b", job, re.I))
+    minisplit_scope = (v3.segment == "residential") and bool(re.search(r"\b(?:ductless|mini[- ]?split)\b", job, re.I))
+    residential_equipment_scope = hpwh_scope or minisplit_scope
+    explicit_field_refrigerant = bool(re.search(r"\b(?:refrigerant|line\s*set|field\s*charg|evacuat(?:e|ion)|braze|new\s+lines?)\b", job, re.I))
+    sealed_precharged_minisplit = bool(re.search(r"\b(?:pre[- ]?charged|factory[- ]sealed|sealed\s+system|no\s+(?:new\s+)?line\s*set|existing\s+line\s*set|no\s+field\s+refrigerant)\b", job, re.I))
+    seattle_source_backed_exception = (city or "").strip().lower() == "seattle" and (state or "").strip().upper() == "WA"
+    refrigeration_demote_scope = hpwh_scope or (minisplit_scope and sealed_precharged_minisplit)
+    if refrigeration_demote_scope and not explicit_field_refrigerant and not seattle_source_backed_exception:
+        positives.discard("refrigeration")
+        positive_families.discard("refrigeration")
+        negative_families.add("refrigeration")
+        forbidden.setdefault("refrigeration", "residential sealed/precharged HPWH or mini-split scope does not hard-require standalone refrigeration unless field refrigerant work is explicit")
+    explicit_building_equipment_work = bool(re.search(r"\b(?:structural|framing|roof\s+penetration|new\s+opening|new\s+wall|foundation|curb\s+cut|concrete\s+pad|equipment\s+platform)\b", job, re.I))
+    if residential_equipment_scope and not explicit_building_equipment_work:
+        positives.discard("building")
+        positive_families.discard("building")
+        negative_families.add("building")
+        forbidden.setdefault("building", "residential HPWH/mini-split equipment scope does not hard-require standalone building permit absent structural/framing/envelope work")
     mechanical_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:mechanical|hvac|ventilation|duct|ductwork)\b")
     electrical_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:electric(?:al)?|wiring|circuits?|panel|illumination)\b")
     plumbing_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:plumbing|pipes?|drains?|fixtures?|water|sewer)\b")

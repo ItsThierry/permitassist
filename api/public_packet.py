@@ -220,18 +220,42 @@ def _safe_reason(row: dict[str, Any]) -> str:
 
 def _source_urls_from_result(data: dict[str, Any]) -> list[str]:
     urls: list[str] = []
+    def add_url(value: Any) -> None:
+        url = str(value or "").strip()
+        if not url.startswith("http"):
+            return
+        if "google.com/maps" in url.lower() or "maps.google" in url.lower():
+            return
+        urls.append(url)
+
     raw = data.get("source_urls")
     if isinstance(raw, list):
-        urls.extend(str(u) for u in raw if isinstance(u, str) and u.startswith("http"))
+        for u in raw:
+            add_url(u)
     sources = data.get("sources")
     if isinstance(sources, list):
         for src in sources:
             if isinstance(src, dict):
                 url = src.get("url") or src.get("source_url")
-                if isinstance(url, str) and url.startswith("http"):
-                    urls.append(url)
+                add_url(url)
             elif isinstance(src, str) and src.startswith("http"):
-                urls.append(src)
+                add_url(src)
+    for citation in data.get("claim_citations") or []:
+        if isinstance(citation, dict):
+            add_url(citation.get("source_url") or citation.get("url"))
+    link_liveness = data.get("link_liveness") if isinstance(data.get("link_liveness"), dict) else {}
+    for candidate in link_liveness.values() if isinstance(link_liveness, dict) else []:
+        if isinstance(candidate, dict):
+            add_url(candidate.get("url") or candidate.get("source_url"))
+        else:
+            add_url(candidate)
+    packet_raw = data.get("public_packet")
+    packet = packet_raw if isinstance(packet_raw, dict) else {}
+    authority_raw = packet.get("authority")
+    authority = authority_raw if isinstance(authority_raw, dict) else {}
+    for u in authority.get("source_urls") or []:
+        add_url(u)
+    add_url(authority.get("apply_url"))
     return list(dict.fromkeys(urls))
 
 
@@ -488,6 +512,93 @@ def _decision(data: dict[str, Any]) -> Literal["REQUIRED", "NOT_REQUIRED"]:
     return "REQUIRED"
 
 
+def _requested_required_families(facts: Any | None, scope_facts: dict[str, Any]) -> list[str]:
+    raw = getattr(facts, "request_positive_families", None) if facts is not None else None
+    if raw is None and isinstance(scope_facts, dict):
+        raw = scope_facts.get("request_positive_families")
+    families = [str(fam or "").strip() for fam in (raw or []) if str(fam or "").strip()]
+    return [fam for fam in dict.fromkeys(families) if fam not in {"health_food", "wastewater_pretreatment_fog"}]
+
+
+def _customer_text_blob(data: dict[str, Any]) -> str:
+    fields = [
+        "summary", "job_summary", "required_permit_summary", "permit_summary", "customer_headline", "customer_next_step",
+        "not_required_reason", "reason", "exemption_reason", "permit_name", "permit_type", "permit_kind",
+    ]
+    parts = [str(data.get(key) or "") for key in fields]
+    for key in ("checklist", "what_to_bring", "requirements", "documents_to_prepare"):
+        value = data.get(key)
+        if isinstance(value, list):
+            parts.extend(str(item or "") for item in value)
+    for key in ("customer_result_summary", "customer_first_screen_summary"):
+        value = data.get(key)
+        if isinstance(value, dict):
+            parts.append(json.dumps(value, default=str))
+        else:
+            parts.append(str(value or ""))
+    return "\n".join(parts)
+
+
+def _should_promote_not_required_to_required(data: dict[str, Any], facts: Any | None, scope_facts: dict[str, Any]) -> bool:
+    """Promote only concrete customer-boundary contradictions, never citations alone.
+
+    This protects legitimate source-backed no-permit rows: citations/sources do
+    not imply REQUIRED.  We promote only when request-scope facts or visible copy
+    contain actual permit-family line-item signals.
+    """
+    blob = _customer_text_blob(data)
+    request_text = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or data.get("_request_job_type") or "")
+    families = _requested_required_families(facts, scope_facts)
+    required_signal_blob = re.sub(r"\b(?:no\s+permit\s+(?:is\s+)?required|permit\s+not\s+required|not\s+required)\b", "", blob, flags=re.I)
+    visible_required_copy = bool(re.search(r"\bpermit\s+required\b|\brequired\s+permit\s+package\b|\bpull\s+.+?permit\b|\bcompleted\s+.+?permit\s+application\b", required_signal_blob, re.I))
+    kitchen_trade_scope = bool(
+        re.search(r"\bkitchen\s+remodel\b", request_text, re.I)
+        and re.search(r"\b(?:moving|relocat(?:e|ing|ion))\s+(?:the\s+)?sink\b|\bsink\s+(?:move|relocat)", request_text, re.I)
+        and re.search(r"\b(?:island\s+)?receptacles?\b|\bnew\s+(?:electrical\s+)?(?:circuit|outlet|receptacle)", request_text, re.I)
+    )
+    if families and (visible_required_copy or kitchen_trade_scope):
+        return True
+    parking_accessibility_scope = bool(re.search(r"\b(?:restripe|striping)\b.*\bparking\s+lot\b", request_text, re.I) and re.search(r"\baccessible\s+parking\b|\bada\b", request_text, re.I))
+    return parking_accessibility_scope and visible_required_copy
+
+
+def _implied_required_rows_from_scope(data: dict[str, Any], facts: Any | None, scope_facts: dict[str, Any], segment: str) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    request_text = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or data.get("_request_job_type") or "")
+    family_order = [
+        "building_ti", "racking", "building", "electrical", "mechanical", "plumbing", "solar_pv", "battery_storage",
+        "fire_alarm", "fire_suppression", "fire_life_safety_assembly", "planning_zoning", "co_change_of_occupancy", "sign",
+    ]
+    requested = set(_requested_required_families(facts, scope_facts))
+    if re.search(r"\bkitchen\s+remodel\b", request_text, re.I):
+        requested.update({"building", "plumbing", "electrical"})
+    for fam in family_order:
+        if fam not in requested:
+            continue
+        rows.append({
+            "permit_name": _canonical_name_for_family(fam, segment, data),
+            "permit_type": _canonical_name_for_family(fam, segment, data),
+            "kind": _kind_for_family(fam),
+            "family": fam,
+            "filing_family": fam,
+            "decision": "REQUIRED",
+            "required": True,
+            "reason": f"Request scope includes {fam.replace('_', ' ')} work/review; final NOT_REQUIRED mirror was contradicted by the customer packet.",
+        })
+    if not rows and re.search(r"\b(?:restripe|striping)\b.*\bparking\s+lot\b", request_text, re.I) and re.search(r"\baccessible\s+parking\b|\bada\b", request_text, re.I):
+        rows.append({
+            "permit_name": "Right-of-Way / Site/Civil Permit",
+            "permit_type": "Right-of-Way / Site/Civil Permit",
+            "kind": "Planning/Zoning",
+            "family": "planning_zoning",
+            "filing_family": "planning_zoning",
+            "decision": "REQUIRED",
+            "required": True,
+            "reason": "Accessible parking restriping/site-civil work was rendered as permit-required in the customer packet; preserve the concrete filing family instead of a false no-permit mirror.",
+        })
+    return rows
+
+
 def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> PublicPacketDTO:
     data = copy.deepcopy(result) if isinstance(result, dict) else {}
     segment = str(getattr(facts, "segment", "") or data.get("segment") or "").strip().lower()
@@ -503,8 +614,22 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
     data["_scope_facts_obj"] = facts
     if facts is not None and hasattr(facts, "request_scope_text"):
         data["_request_job_type"] = getattr(facts, "request_scope_text", "")
-    decision = _decision(data)
     scope_facts = facts.as_dict() if facts is not None and hasattr(facts, "as_dict") else (copy.deepcopy(facts) if isinstance(facts, dict) else {})
+    decision = _decision(data)
+    promoted_from_not_required = False
+    promoted_required_rows: list[dict[str, Any]] = []
+    if decision == "NOT_REQUIRED" and _should_promote_not_required_to_required(data, facts, scope_facts):
+        promoted_required_rows = _implied_required_rows_from_scope(data, facts, scope_facts, segment)
+        # Empty REQUIRED packages are worse than a conservative no-permit row.
+        # If scope/visible-copy promotion cannot produce concrete permit line
+        # items, keep the original NOT_REQUIRED answer rather than creating a
+        # REQUIRED shell with no actionable package.
+        if promoted_required_rows:
+            decision = "REQUIRED"
+            promoted_from_not_required = True
+            data["permit_decision"] = "REQUIRED"
+            data["permit_required"] = True
+            data["permit_verdict"] = "YES"
 
     rows: list[PacketRow] = []
     if decision == "REQUIRED":
@@ -513,6 +638,8 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
             if isinstance(r, dict) and r.get("required") is not False and str(r.get("decision") or r.get("status") or "REQUIRED").upper() != "CONDITIONAL"
         ]
         conditional_rows = [r for r in data.get("conditional_permits") or [] if isinstance(r, dict)]
+        if promoted_from_not_required and not required_rows:
+            required_rows = promoted_required_rows
         forbidden_map = matrix_forbidden_families(facts) if facts is not None else {}
         fact_forbidden = getattr(facts, "forbidden_families", None) if facts is not None else None
         if isinstance(fact_forbidden, dict):

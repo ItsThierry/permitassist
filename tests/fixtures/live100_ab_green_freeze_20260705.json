@@ -1,0 +1,743 @@
+{
+  "cases": {
+    "C-001": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical",
+        "mechanical"
+      ]
+    },
+    "C-003": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "health_food",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ]
+    },
+    "C-004": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "solar_pv"
+      ]
+    },
+    "C-005": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "co_change_of_occupancy",
+        "mechanical",
+        "planning_zoning",
+        "plumbing"
+      ]
+    },
+    "C-008": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical",
+        "mechanical"
+      ]
+    },
+    "C-009": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "health_food",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ]
+    },
+    "C-011": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "health_food",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ]
+    },
+    "C-012": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "co_change_of_occupancy",
+        "electrical",
+        "fire_suppression",
+        "gas",
+        "health_food",
+        "mechanical",
+        "planning_zoning",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ]
+    },
+    "C-013": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "health_food",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ]
+    },
+    "C-014": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "mechanical",
+        "plumbing"
+      ]
+    },
+    "C-015": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "health_food",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ]
+    },
+    "C-016": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "solar_pv"
+      ]
+    },
+    "C-017": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "planning_zoning",
+        "sign"
+      ]
+    },
+    "C-019": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "co_change_of_occupancy",
+        "mechanical",
+        "planning_zoning",
+        "plumbing"
+      ]
+    },
+    "C-021": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "co_change_of_occupancy",
+        "mechanical",
+        "planning_zoning",
+        "plumbing"
+      ]
+    },
+    "C-022": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "co_change_of_occupancy",
+        "electrical",
+        "fire_suppression",
+        "gas",
+        "health_food",
+        "mechanical",
+        "planning_zoning",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ]
+    },
+    "C-023": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical",
+        "mechanical"
+      ]
+    },
+    "C-024": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "planning_zoning",
+        "sign"
+      ]
+    },
+    "C-025": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "C-027": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "planning_zoning",
+        "sign"
+      ]
+    },
+    "C-029": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical",
+        "mechanical"
+      ]
+    },
+    "C-030": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "fire_suppression"
+      ]
+    },
+    "C-031": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "planning_zoning",
+        "sign"
+      ]
+    },
+    "C-032": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "mechanical",
+        "plumbing"
+      ]
+    },
+    "C-033": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "C-034": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "fire_suppression"
+      ]
+    },
+    "C-035": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "C-036": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "fire_suppression"
+      ]
+    },
+    "C-037": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "solar_pv"
+      ]
+    },
+    "C-038": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "fire_suppression"
+      ]
+    },
+    "C-039": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "fire_suppression",
+        "health_food",
+        "historic_review",
+        "liquor",
+        "mechanical",
+        "planning_zoning",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ]
+    },
+    "C-040": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "C-041": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "C-042": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "co_change_of_occupancy",
+        "electrical",
+        "fire_suppression",
+        "gas",
+        "health_food",
+        "mechanical",
+        "planning_zoning",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ]
+    },
+    "C-043": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "co_change_of_occupancy",
+        "mechanical",
+        "planning_zoning",
+        "plumbing"
+      ]
+    },
+    "C-044": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "solar_pv"
+      ]
+    },
+    "C-045": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "health_food",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ]
+    },
+    "C-046": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "solar_pv"
+      ]
+    },
+    "C-047": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "solar_pv"
+      ]
+    },
+    "C-048": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "C-049": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-001": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "plumbing"
+      ]
+    },
+    "R-003": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    },
+    "R-004": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-005": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-006": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    },
+    "R-007": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-008": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    },
+    "R-009": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "mechanical"
+      ]
+    },
+    "R-011": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    },
+    "R-013": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-014": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    },
+    "R-015": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    },
+    "R-016": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-018": {
+      "decision": "NOT_REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": []
+    },
+    "R-019": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    },
+    "R-020": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-021": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-022": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-024": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-026": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    },
+    "R-027": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-028": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "battery_storage",
+        "building",
+        "electrical",
+        "solar_pv"
+      ]
+    },
+    "R-029": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building",
+        "electrical",
+        "mechanical"
+      ]
+    },
+    "R-030": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-031": {
+      "decision": "NOT_REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": []
+    },
+    "R-032": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-033": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    },
+    "R-035": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-036": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "battery_storage",
+        "building",
+        "electrical",
+        "solar_pv"
+      ]
+    },
+    "R-037": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    },
+    "R-038": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "battery_storage",
+        "building",
+        "electrical",
+        "solar_pv"
+      ]
+    },
+    "R-039": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "battery_storage",
+        "building",
+        "electrical",
+        "solar_pv"
+      ]
+    },
+    "R-040": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-042": {
+      "decision": "REQUIRED",
+      "grade": "B",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-043": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "building"
+      ]
+    },
+    "R-046": {
+      "decision": "REQUIRED",
+      "grade": "A",
+      "has_action_or_source": true,
+      "required_families": [
+        "electrical"
+      ]
+    }
+  },
+  "source_artifact": "artifacts/live_customer_100_full_customer_pov_clean_5946c7c_20260704T234342Z"
+}
