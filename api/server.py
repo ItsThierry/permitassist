@@ -70,6 +70,7 @@ from ahj_locality_resolver import apply_ahj_locality_resolution
 from ahj_identity_guard import apply_ahj_identity_guard
 from public_packet import apply_public_packet_projection, apply_render_parity_seal
 from closed_world_decision import apply_closed_world_customer_contract
+from live100_fable5_final_gate import apply_fable5_final_customer_gate
 try:
     from v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
 except ImportError:  # package import path in some tests
@@ -5257,6 +5258,17 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                             final_public[_key] = re.sub(r"Commercial Building\s*/\s*Tenant Improvement", replacement_name, final_public[_key], flags=re.I)
                     if isinstance(final_public.get("apply_path"), dict) and re.search(r"\b(?:commercial|tenant improvement)\b", str(final_public["apply_path"].get("permit_category") or ""), re.I):
                         final_public["apply_path"]["permit_category"] = final_public.get("permit_kind") or "Building"
+                final_scope_facts_for_packet = locals().get("final_scope_facts")
+                final_public = apply_fable5_final_customer_gate(
+                    final_public if isinstance(final_public, dict) else {},
+                    job_type,
+                    city,
+                    state,
+                    scope_contract,
+                    final_scope_facts_for_packet,
+                )
+                if final_scope_facts_for_packet is not None:
+                    final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts_for_packet)
                 seal_enabled = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower() in {"1", "true", "yes", "on"} or not os.environ.get("PYTEST_CURRENT_TEST")
                 if seal_enabled:
                     final_public = apply_render_parity_seal(final_public if isinstance(final_public, dict) else {}, facts=locals().get("final_scope_facts"))

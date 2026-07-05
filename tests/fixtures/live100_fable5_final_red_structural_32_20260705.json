@@ -1,0 +1,516 @@
+{
+  "artifact_root": "/home/boban/projects/permitassist/artifacts/live100_more_customer_pov_fd39220_20260705T030121Z",
+  "cases": {
+    "C-009": {
+      "factcheck_issues": "rendered_contradiction_permit_required_vs_no_permit;generic_inspection_checklist",
+      "factcheck_rationale": "Header and body say \"No permit required\" while the SUMMARY asserts \"Permit required: Right-of-Way / Site/Civil Permit\" on an ambiguous source-adjudicate scope \u2014 a material self-contradiction that misleads the customer.",
+      "grade": "C",
+      "observed_apply_url": "",
+      "observed_authority": "City of Dayton Division of Building Inspection",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "NOT_REQUIRED",
+      "observed_required_family_keys": [],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-016": {
+      "factcheck_issues": "missing_building_permit_for_patio_structure;thin_FOG;placeholder_inspections",
+      "factcheck_rationale": "900sqft physical shade structure and new exit gate have no building permit family anywhere (not even conditional) while Health/FOG lead \u2014 missing in-scope core family misdirects the primary construction job.",
+      "grade": "C",
+      "observed_apply_url": "https://www.friscotexas.gov/1669/Plans-Permits",
+      "observed_authority": "City of Frisco Building Inspections Division",
+      "observed_conditional_family_keys": [
+        "co_change_of_occupancy",
+        "planning_zoning",
+        "plumbing"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "fire_suppression",
+        "health_food",
+        "wastewater_pretreatment_fog"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-017": {
+      "factcheck_issues": "core_building_demoted_to_conditional;fire_alarm_sole_headline",
+      "factcheck_rationale": "Two modular classroom buildings ($750k) render only Fire Alarm+Fire required with Building demoted to conditional; headline misrepresents major construction and understates the core permit \u2014 material.",
+      "grade": "C",
+      "observed_apply_url": "https://www.chulavistaca.gov/departments/development-services/do-you-need-a-permit",
+      "observed_authority": "City of Chula Vista Development Services Department",
+      "observed_conditional_family_keys": [
+        "building"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "fire_alarm",
+        "fire_suppression"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-020": {
+      "factcheck_issues": "empty_apply_url;no_source_labels",
+      "factcheck_rationale": "Family coverage comprehensive/correct for laundromat conversion, but REQUIRED packet has empty apply URL and no sources \u2014 sole action path dead, customer cannot act or verify.",
+      "grade": "C",
+      "observed_apply_url": "",
+      "observed_authority": "City of Spartanburg Building Department",
+      "observed_conditional_family_keys": [
+        "mechanical"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building_ti",
+        "co_change_of_occupancy",
+        "electrical",
+        "gas",
+        "planning_zoning",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-023": {
+      "factcheck_issues": "missing_core_building_family;package_incoherent_for_scope",
+      "factcheck_rationale": "$1.2M car-wash tunnel with reclaim/drainage/electrical but sole required is Sign Permit; all construction families absent \u2014 untrustworthy and misleading for primary job.",
+      "grade": "F",
+      "observed_apply_url": "https://ci.lubbock.tx.us/departments/development-services/building-inspection",
+      "observed_authority": "City of Lubbock Development Services / Building Inspection",
+      "observed_conditional_family_keys": [
+        "electrical"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "sign"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-026": {
+      "factcheck_issues": "missing_core_building_structural_family",
+      "factcheck_rationale": "1200 sqft mezzanine with stairs is structural building work but Building permit entirely absent; MEP permits relevant so not incoherent-F, but core construction family missing = material.",
+      "grade": "C",
+      "observed_apply_url": "https://www.elizabethnj.org/194/Construction",
+      "observed_authority": "Elizabeth City Construction Office",
+      "observed_conditional_family_keys": [
+        "plumbing"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "electrical",
+        "mechanical"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-031": {
+      "factcheck_issues": "electrical required-family labeled \"Commercial Panel / Service Upgrade\" for like-for-like dishwasher reconnect to existing power",
+      "factcheck_rationale": "Scope-inflated wrong electrical sub-type misrepresents required scope to a paying customer on a same-location equipment swap; plumbing defensible but misleading required-family flavor is material.",
+      "grade": "C",
+      "observed_apply_url": "https://www.alexandriava.gov/permits/permit-requirements",
+      "observed_authority": "City of Alexandria Code Administration and Permitting",
+      "observed_conditional_family_keys": [
+        "co_change_of_occupancy",
+        "mechanical"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "electrical",
+        "plumbing"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-032": {
+      "factcheck_issues": "required building permit labeled \"Residential\" on $125k commercial office TI; exit signage rendered as \"Illuminated Sign\"",
+      "factcheck_rationale": "Building permit genuinely required but wrong-jurisdiction-track \"Residential\" label plus egress-signage mislabeled as illuminated sign misleads customer about correct filing track.",
+      "grade": "C",
+      "observed_apply_url": "https://www.paloalto.gov/Departments/Planning-Development-Services/Development-Services/Start-the-Permit-Process/Apply-for-a-Building-Permit",
+      "observed_authority": "City of Palo Alto Building Division",
+      "observed_conditional_family_keys": [
+        "building_ti",
+        "planning_zoning",
+        "plumbing",
+        "sign"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building",
+        "electrical"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-035": {
+      "factcheck_issues": "missing Mechanical (ventilation/ductwork) and Fire Prevention/explosion-venting families; rendered as lone Building Permit",
+      "factcheck_rationale": "$210k industrial dust collection with explosion venting under-scoped to a single building permit omits core in-scope life-safety families for the customer.",
+      "grade": "C",
+      "observed_apply_url": "https://www.waterburyct.org/services/department-of-inspections",
+      "observed_authority": "Waterbury Building Department",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-037": {
+      "factcheck_issues": "required set is Health Plan Review/Food Establishment + Liquor License with food-service docs; structural Building/TI demoted to conditional",
+      "factcheck_rationale": "Fence-and-pergola job with explicit no-kitchen/no-plumbing gets irrelevant food/liquor required families and menu/equipment docs while the actually-required building permit is only conditional \u2014 materially misleading path.",
+      "grade": "C",
+      "observed_apply_url": "https://www.fortcollins.gov/Business/Permits-and-Licensing/Building-Permits",
+      "observed_authority": "City of Fort Collins Building Services",
+      "observed_conditional_family_keys": [
+        "building_ti",
+        "co_change_of_occupancy",
+        "mechanical",
+        "planning_zoning"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "electrical",
+        "fire_suppression",
+        "health_food",
+        "liquor",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-040": {
+      "factcheck_issues": "false NOT_REQUIRED / \"No permit required\" for $480k cooler-room build-out with condensing units and drains",
+      "factcheck_rationale": "Clearly permit-required work (building/mechanical/electrical/plumbing) rendered as no-permit \u2014 unsafe, would tell a paying customer to proceed unpermitted.",
+      "grade": "F",
+      "observed_apply_url": "",
+      "observed_authority": "City of Salinas Community and Economic Development",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "NOT_REQUIRED",
+      "observed_required_family_keys": [],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-042": {
+      "factcheck_issues": "missing_electrical_family;duplicate_building_label;no_fire_or_UST_for_fuel",
+      "factcheck_rationale": "$1.1M fuel canopy with dispensers/UST piping/electrical lists only two near-duplicate Building Permits; electrical final inspection but no Electrical Permit, no fire/tank permit \u2014 material under-scope, not false NOT_REQUIRED.",
+      "grade": "C",
+      "observed_apply_url": "https://www.pasco-wa.gov/1434/APPLY-for-a-Permit",
+      "observed_authority": "City of Pasco Building Division",
+      "observed_conditional_family_keys": [
+        "fire_suppression",
+        "planning_zoning"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building",
+        "electrical"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-043": {
+      "factcheck_issues": "missing_plumbing_family_for_showers",
+      "factcheck_rationale": "Showers/locker-rooms add new plumbing fixtures but Plumbing Permit absent from required and conditional; in-scope core family missing.",
+      "grade": "C",
+      "observed_apply_url": "https://www.wilmingtonnc.gov/Development-Business/Zoning/Use-Permits",
+      "observed_authority": "City of Wilmington Planning, Development & Transportation Department",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building_ti",
+        "co_change_of_occupancy",
+        "fire_life_safety_assembly",
+        "mechanical",
+        "planning_zoning"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-046": {
+      "factcheck_issues": "irrelevant_food_health_and_FOG_required;food_service_doc_in_marine_shop",
+      "factcheck_rationale": "Marine repair shop lists Health Permit + Wastewater/FOG as REQUIRED with food-service floor plan doc; wrong families would route customer after incorrect permits, core mechanical/plumbing still correct.",
+      "grade": "C",
+      "observed_apply_url": "https://www.pompanobeachfl.gov/government/building-inspections/resources/permit-fee-estimator",
+      "observed_authority": "City of Pompano Beach Building Inspections Division",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building_ti",
+        "co_change_of_occupancy",
+        "fire_suppression",
+        "health_food",
+        "mechanical",
+        "planning_zoning",
+        "plumbing",
+        "wastewater_pretreatment_fog"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-048": {
+      "factcheck_issues": "false_negative_required_to_not_required;incoherent_report;fee_block_dumps_report",
+      "factcheck_rationale": "Six EV chargers with transformer pad/trenching resolved NOT_REQUIRED with no-permit precon, yet summary lists Electrical+Commercial Building; contradictory false no-permit for clearly permit-required work.",
+      "grade": "F",
+      "observed_apply_url": "",
+      "observed_authority": "City of Sparks Community Development / Building Permits",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "NOT_REQUIRED",
+      "observed_required_family_keys": [],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-049": {
+      "factcheck_issues": "missing_building_permit_for_physical_addition;missing_plumbing_oil_separator",
+      "factcheck_rationale": "$720K two-bay structural addition lists only Mechanical HVAC; primary Building Permit absent and plumbing for oil separator missing \u2014 severe under-scope but REQUIRED decision correct, not false negative.",
+      "grade": "C",
+      "observed_apply_url": "https://dearborn.gov/business/permits-licenses/permits",
+      "observed_authority": "City of Dearborn, Department of Economic Development (Building & Trade)",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "fire_suppression",
+        "mechanical"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "C-050": {
+      "factcheck_issues": "missing_health_food_establishment_family;missing_mechanical_and_sign",
+      "factcheck_rationale": "Grocery with deli prep sink/walk-in cooler/bakery oven lists only Plumbing required; core Health/Food Establishment review absent, mechanical/sign missing, building+CO only conditional.",
+      "grade": "C",
+      "observed_apply_url": "https://www.lakewoodco.gov/Local-Government/Departments/Public-Works/Building-and-Construction-Permits",
+      "observed_authority": "City of Lakewood Building Division",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building_ti",
+        "co_change_of_occupancy",
+        "planning_zoning",
+        "plumbing"
+      ],
+      "segment": "commercial",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-005": {
+      "factcheck_issues": "wrong_where_to_apply_authority_cook_county",
+      "factcheck_rationale": "Naperville is a home-rule city in DuPage/Will County that issues its own permits; rendered \"Where to apply: Cook County Department of Building and Zoning\" is a wrong-authority field that can misdirect the customer, though sources and apply URL are correct Naperville \u2014 material rendered defect, not unsafe.",
+      "grade": "C",
+      "observed_apply_url": "https://www.naperville.il.us/businesses/development-resources/building-permits/",
+      "observed_authority": "Cook County Department of Building and Zoning",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "battery_storage",
+        "building",
+        "electrical",
+        "solar_pv"
+      ],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-012": {
+      "factcheck_issues": "wrong_permit_family",
+      "factcheck_rationale": "Exhaust fan (mechanical/electrical) resolved entirely as Plumbing Permit with plumbing docs and plumbing final inspection; wrong sole family misdirects the customer.",
+      "grade": "C",
+      "observed_apply_url": "https://planninganddevelopment.columbiasc.gov",
+      "observed_authority": "City of Columbia Planning & Development Department",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "plumbing"
+      ],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-015": {
+      "factcheck_issues": "duplicated_garbled_fee_text;leaked_masonry_lintel_facade_docs",
+      "factcheck_rationale": "Shed correctly REQUIRED building permit but fee line is duplicated/garbled and checklist leaks masonry lintel/facade engineering docs from another case, misleading the customer.",
+      "grade": "C",
+      "observed_apply_url": "https://raleighnc.gov/permits",
+      "observed_authority": "City of Raleigh Planning and Development / Wake County Inspections",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building"
+      ],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-016": {
+      "factcheck_issues": "missing_required_building_permit_for_garage_conversion",
+      "factcheck_rationale": "Garage-to-conditioned-office with new window/insulation lists only MEP+refrigeration; building permit absent from required package risks customer under-filing the primary permit.",
+      "grade": "C",
+      "observed_apply_url": "https://city.milwaukee.gov/DNS/permits",
+      "observed_authority": "City of Milwaukee Department of Neighborhood Services (DNS)",
+      "observed_conditional_family_keys": [
+        "co_change_of_occupancy",
+        "plumbing"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "electrical",
+        "mechanical",
+        "refrigeration"
+      ],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-019": {
+      "factcheck_issues": "missing_required_building_permit_for_adu_conversion",
+      "factcheck_rationale": "Garage-to-ADU conversion adding bath/kitchenette lists only electrical/mechanical/plumbing/refrigeration with change-of-occupancy merely conditional; the primary building permit for a habitable-conversion is absent \u2014 same defect that made R-016 a C, so A is inconsistent.",
+      "grade": "C",
+      "observed_apply_url": "https://www.slc.gov/building/",
+      "observed_authority": "Salt Lake City Building Services",
+      "observed_conditional_family_keys": [
+        "co_change_of_occupancy"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "electrical",
+        "mechanical",
+        "plumbing",
+        "refrigeration"
+      ],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-020": {
+      "factcheck_issues": "missing_apply_url;no_source_urls_or_labels",
+      "factcheck_rationale": "Retaining wall correctly REQUIRED but apply URL, source URLs and labels all blank; only a named county office remains, leaving a materially blocked action path for a REQUIRED decision.",
+      "grade": "C",
+      "observed_apply_url": "",
+      "observed_authority": "Buncombe County Permits & Inspections Department",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building"
+      ],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-022": {
+      "factcheck_issues": "false_required;cross_contaminated_docs;garbled_fee",
+      "factcheck_rationale": "Cosmetic laminate flooring (no MEP/structural) wrongly REQUIRED a Building Permit and report is cross-contaminated with masonry lintel/facade drawings + structural inspection and duplicated garbled fee \u2014 untrustworthy.",
+      "grade": "F",
+      "observed_apply_url": "https://www.bismarcknd.gov/124/Permits-Are-Required-For",
+      "observed_authority": "City of Bismarck Building Inspections",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building"
+      ],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-024": {
+      "factcheck_issues": "rendered_mismatch;no_apply_url",
+      "factcheck_rationale": "Header/body resolve NOT_REQUIRED (correct for like-for-like no-MEP scope) but SUMMARY says \"Permit required: Electrical Permit\" \u2014 self-contradictory rendered report with blank apply URL, materially misleading.",
+      "grade": "C",
+      "observed_apply_url": "",
+      "observed_authority": "Pittsburgh Bureau of Building Inspection",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "NOT_REQUIRED",
+      "observed_required_family_keys": [],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-027": {
+      "factcheck_issues": "false_not_required;rendered_mismatch",
+      "factcheck_rationale": "Freestanding wood stove with chimney penetration clearly needs a mechanical/solid-fuel permit; body resolves NOT_REQUIRED contradicting its own summary \u2014 unsafe false negative.",
+      "grade": "F",
+      "observed_apply_url": "",
+      "observed_authority": "City of Olympia Community Planning and Development",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "NOT_REQUIRED",
+      "observed_required_family_keys": [],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-034": {
+      "factcheck_issues": "false_not_required;rendered_mismatch",
+      "factcheck_rationale": "New driveway curb cut in public ROW needs ROW/driveway permit; summary asserts required but body resolves \"No permit is required\" \u2014 unsafe false negative on a right-of-way job.",
+      "grade": "F",
+      "observed_apply_url": "",
+      "observed_authority": "Concord Building Safety Division",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "NOT_REQUIRED",
+      "observed_required_family_keys": [],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-036": {
+      "factcheck_issues": "false_required;no_apply_url;unrelated_food_family",
+      "factcheck_rationale": "Cabinet/countertop swap with no sink move wrongly REQUIRED a plumbing permit (over-prescription), apply URL blank, and rendered commercial food-establishment/FOG guidance is unrelated to a residential kitchen; over-prescription errs safe so material not unsafe.",
+      "grade": "C",
+      "observed_apply_url": "",
+      "observed_authority": "City of Pasadena Permit Center",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "plumbing"
+      ],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-038": {
+      "factcheck_issues": "required_missing_apply_url;no_sources",
+      "factcheck_rationale": "Heat-pump changeout correctly REQUIRED refrigeration with conditional electrical and reasonable fee, but apply URL, source URLs, and source labels are all blank \u2014 REQUIRED decision with no action path or proof.",
+      "grade": "C",
+      "observed_apply_url": "",
+      "observed_authority": "Macon-Bibb County Planning & Zoning \u2014 Building Inspections",
+      "observed_conditional_family_keys": [
+        "electrical"
+      ],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "refrigeration"
+      ],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-040": {
+      "factcheck_issues": "false_not_required;rendered_mismatch;no_apply_url",
+      "factcheck_rationale": "Irrigation backflow preventer needs a plumbing permit; summary says \"Permit required: Plumbing Permit\" while body resolves \"No permit is required\" \u2014 self-contradictory false negative leaves customer unable to act.",
+      "grade": "F",
+      "observed_apply_url": "",
+      "observed_authority": "City of Waco Development Services / Building Inspection",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "NOT_REQUIRED",
+      "observed_required_family_keys": [],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-042": {
+      "factcheck_issues": "Empty apply URL and zero source labels/URLs (dead filing path); garbled duplicated fee copy; off-scope \"masonry lintel & facade repair\" item on a resin shed",
+      "factcheck_rationale": "REQUIRED decision with no action path and no sources plus off-scope checklist content is a material customer-impacting defect that blocks acting, but not incoherent enough for F.",
+      "grade": "C",
+      "observed_apply_url": "",
+      "observed_authority": "Charlottesville permit office",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "REQUIRED",
+      "observed_required_family_keys": [
+        "building"
+      ],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    },
+    "R-050": {
+      "factcheck_issues": "False NOT_REQUIRED for an attached 20x20 metal carport on concrete piers; empty apply URL",
+      "factcheck_rationale": "An attached structure on a permanent foundation reliably requires a permit; the false NOT_REQUIRED is unsafe and could lead the customer to build without approval.",
+      "grade": "F",
+      "observed_apply_url": "",
+      "observed_authority": "Tyler Development Services / Building Inspections",
+      "observed_conditional_family_keys": [],
+      "observed_decision": "NOT_REQUIRED",
+      "observed_required_family_keys": [],
+      "segment": "residential",
+      "structural_assertion_status": "RED_BASELINE_EXPECTED_TO_FAIL_UNTIL_CHUNKS_A_E"
+    }
+  },
+  "count": 32,
+  "factcheck_dir": "/home/boban/projects/permitassist/artifacts/live100_more_customer_pov_fd39220_20260705T030121Z/final_factcheck_again_20260705",
+  "source_snapshot": "artifacts/live100_fable5_phase0_phase1_20260705/post_instrument_deterministic"
+}

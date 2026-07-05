@@ -17,9 +17,11 @@ from typing import Any, Iterable, Literal
 try:  # package/import-path compatibility in tests and server runtime
     from scope_contract import ScopeFactsV2, ScopeFactsV3, ScopeFactsV4, TriFact, build_scope_facts_v2, build_scope_facts_v3, build_scope_facts_v4
     from family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
+    from phase_trace import emit_trace
 except Exception:  # pragma: no cover
     from api.scope_contract import ScopeFactsV2, ScopeFactsV3, ScopeFactsV4, TriFact, build_scope_facts_v2, build_scope_facts_v3, build_scope_facts_v4
     from api.family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
+    from api.phase_trace import emit_trace
 
 GateAction = Literal["KEEP", "DEMOTE", "VETO", "ADD", "CONDITIONAL_FALLBACK"]
 
@@ -390,7 +392,8 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
             row.setdefault("decision", "REQUIRED")
             row.setdefault("required", True)
             kept.append(row)
-            rulings.append(GateRuling("KEEP", family, "positive scope fact or source-backed row", permit_name=_row_name(row)))
+            keep_basis = "positive scope fact or source-backed row"
+            rulings.append(GateRuling("KEEP", family, keep_basis, permit_name=_row_name(row)))
             continue
         cond = _conditionalize_row(row, family)
         conditional.append(cond)
@@ -482,7 +485,21 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
     if "exterior" in facts.positive_facts and "building" in facts.positive_facts:
         add_row("building", "Building Permit — Exterior Alteration", "deterministic implication: exterior alteration/building envelope scope")
 
-    return _dedupe_rows(kept), _dedupe_rows(conditional), rulings
+    final_kept = _dedupe_rows(kept)
+    final_conditional = _dedupe_rows(conditional)
+    emit_trace(
+        "family_reconciliation",
+        {
+            "candidate_families_in": [family_from_row(r) for r in rows or [] if isinstance(r, dict)],
+            "request_positive_families": sorted(str(f) for f in (getattr(facts, "request_positive_families", []) or [])),
+            "request_negative_families": sorted(str(f) for f in (getattr(facts, "request_negative_families", []) or [])),
+            "negative_facts": sorted(str(f) for f in (getattr(facts, "negative_facts", []) or [])),
+            "rulings": [r.as_dict() for r in rulings],
+            "final_required_families": [family_from_row(r) for r in final_kept],
+            "final_conditional_families": [family_from_row(r) for r in final_conditional],
+        },
+    )
+    return final_kept, final_conditional, rulings
 
 
 def _sync_required_mirrors(result: dict[str, Any]) -> None:
