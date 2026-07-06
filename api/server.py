@@ -71,6 +71,7 @@ from ahj_identity_guard import apply_ahj_identity_guard
 from public_packet import PacketInvariantError, apply_public_packet_projection, apply_render_parity_seal
 from closed_world_decision import apply_closed_world_customer_contract
 from live100_fable5_final_gate import apply_fable5_final_customer_gate
+from customer_pipeline import CustomerPipelineContext, run_pipeline_through_projection
 try:
     from v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
 except ImportError:  # package import path in some tests
@@ -106,6 +107,32 @@ def _canonical_primary_scope_label(detected) -> str:
 def detect_primary_scope(job_type: str) -> str:
     """Canonical server-facing wrapper around research_engine.detect_primary_scope."""
     return _canonical_primary_scope_label(_detect_primary_scope_raw(job_type or ""))
+
+
+def canonical_request_job_category(job_type: str, city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> str:
+    """Return the canonical request category for runtime, cache, and telemetry.
+
+    Client-provided labels are advisory but still matter for ambiguous scopes.
+    The unhinted scope contract wins only when visible job text clearly says
+    residential or commercial, so a stale/default label cannot contaminate the
+    runtime request, cache key, or customer-boundary telemetry.
+    """
+    raw = str(job_category or "").strip().lower()
+    if raw not in {"residential", "commercial"}:
+        raw = ""
+    contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
+    try:
+        unhinted_contract = build_scope_contract(contract_job_type, city, state, job_category=None, vertical=explicit_vertical)
+        unhinted_category = str((unhinted_contract or {}).get("category") or "").strip().lower()
+        if unhinted_category in {"residential", "commercial"}:
+            return unhinted_category
+        contract = build_scope_contract(contract_job_type, city, state, job_category=raw or None, vertical=explicit_vertical)
+        category = str((contract or {}).get("category") or "").strip().lower()
+        if category in {"residential", "commercial"}:
+            return category
+    except Exception:
+        pass
+    return raw
 
 # Module-level AI clients for /api/chat. Keep import/test/runtime startup safe
 # in environments where only Gemini or deterministic fallbacks are configured.
@@ -5466,25 +5493,22 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 full_customer_gate_enabled = raw_full_customer_gate not in {"0", "false", "no", "off"}
                 if full_customer_gate_enabled:
                     final_scope_facts = build_scope_facts_v4(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract)
-                    final_public = apply_ahj_locality_resolution(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
-                    final_public = apply_family_reconciliation_gate(final_public if isinstance(final_public, dict) else {}, job_type, city, state, scope_contract, job_category=request_job_category)
-                    final_public = apply_ahj_identity_guard(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
-                    final_public = apply_closed_world_customer_contract(
-                        final_public if isinstance(final_public, dict) else {},
-                        job_type,
-                        city,
-                        state,
-                        job_category=request_job_category,
-                        scope_facts_v2=final_scope_facts,
-                    )
-                    # Final lock happens after closed-world reconciliation so the
-                    # packet is the last source of truth before serialization.
                     if isinstance(final_public, dict):
                         final_public["_request_city"] = city
                         final_public["_request_state"] = state
                         if original_legacy_documents:
                             final_public["_legacy_apply_documents"] = list(original_legacy_documents)
-                    final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts)
+                    final_public = run_pipeline_through_projection(
+                        final_public if isinstance(final_public, dict) else {},
+                        CustomerPipelineContext(
+                            job_type=job_type,
+                            city=city,
+                            state=state,
+                            scope_contract=scope_contract,
+                            job_category=request_job_category,
+                            scope_facts=final_scope_facts,
+                        ),
+                    )
             except Exception as exc:
                 print(f"[customer-view] gate_chain_failed error_type={exc.__class__.__name__} error={exc}")
                 try:
@@ -11016,6 +11040,7 @@ class Handler(BaseHTTPRequestHandler):
                 job_address  = _sanitize_job_address(data.get("job_address") or data.get("address") or "")
                 job_category = (data.get("job_category") or "").strip()
                 explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
+                job_category = canonical_request_job_category(job_type, city, state, job_category, explicit_vertical)
 
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
@@ -11240,6 +11265,7 @@ class Handler(BaseHTTPRequestHandler):
                     job_value = item.get("job_value")
                     job_category = item.get("job_category", "")
                     explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
+                    job_category = canonical_request_job_category(job_type, city, state, job_category, explicit_vertical)
                     try:
                         evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
                         result = research_permit(job_type, city, state, zip_code, job_category=job_category, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
@@ -11471,6 +11497,7 @@ class Handler(BaseHTTPRequestHandler):
                 state = data.get("state", "").strip()
                 job_category = (data.get("job_category") or "").strip()
                 explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
+                job_category = canonical_request_job_category(job_type, city, state, job_category, explicit_vertical)
                 if not result:
                     self.send_json(400, {"error": "result is required"})
                     return
@@ -11552,6 +11579,7 @@ class Handler(BaseHTTPRequestHandler):
                 zip_code = data.get("zip_code", "").strip()
                 job_category = (data.get("job_category") or "").strip()
                 explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
+                job_category = canonical_request_job_category(job_type, city, state, job_category, explicit_vertical)
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
