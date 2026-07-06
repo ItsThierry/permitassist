@@ -4470,6 +4470,14 @@ def _get_cached_serper_source(city: str, state: str, claim_type: str, query: str
         if source_class == SOURCE_CLASS_EXCLUDED:
             print(f"[trust] Serper cache ignored excluded source: {url}")
             return None
+        authority = classify_source_authority(url, city, state)
+        cache_domain = _normalized_source_domain(url)
+        wrong_reason = str(authority.get("reason") or "")
+        wrong_official_host = wrong_reason == "no_requested_locality_match" and cache_domain.endswith(".gov") and "county" not in cache_domain
+        allowed_county_publichealth_context = cache_domain == "publichealth.lacounty.gov" and _cache_norm(city) == "los angeles" and _cache_norm(state) == "ca" and _cache_norm(claim_type) in {"code_section", "health_food"}
+        if authority.get("tier") == SOURCE_TIER_WRONG and not allowed_county_publichealth_context and (wrong_reason in {"explicit_locality_exclusion", "vendor_without_requested_locality_token", "wrong_state_official"} or wrong_official_host):
+            print(f"[trust] Serper cache ignored wrong-locality source: {url}")
+            return None
         cached = {
             "url": url,
             "title": title or url,
@@ -4492,6 +4500,13 @@ def _set_cached_serper_source(city: str, state: str, claim_type: str, query: str
     if not source or not source.get("url"):
         return
     if classify_source_url(source.get("url") or "") == SOURCE_CLASS_EXCLUDED:
+        return
+    authority = classify_source_authority(source.get("url") or "", city, state)
+    cache_domain = _normalized_source_domain(source.get("url") or "")
+    wrong_reason = str(authority.get("reason") or "")
+    wrong_official_host = wrong_reason == "no_requested_locality_match" and cache_domain.endswith(".gov") and "county" not in cache_domain
+    allowed_county_publichealth_context = cache_domain == "publichealth.lacounty.gov" and _cache_norm(city) == "los angeles" and _cache_norm(state) == "ca" and _cache_norm(claim_type) in {"code_section", "health_food"}
+    if authority.get("tier") == SOURCE_TIER_WRONG and not allowed_county_publichealth_context and (wrong_reason in {"explicit_locality_exclusion", "vendor_without_requested_locality_token", "wrong_state_official"} or wrong_official_host):
         return
     try:
         conn = _serper_cache_conn()
@@ -4709,7 +4724,8 @@ def _best_serper_source_from_results(results: list[dict], city: str, state: str,
     if not allowed:
         return None
     ranked = _rank_search_results(allowed, limit=min(len(allowed), 5), city=city, state=state)
-    ranked = ranked or allowed
+    if not ranked:
+        return None
     ranked.sort(key=lambda item: (_source_trust_rank(item.get("source_class", SOURCE_CLASS_EXCLUDED)),))
     best = ranked[0]
     url = best.get("url") or best.get("link") or ""
@@ -9716,8 +9732,16 @@ Return ONLY the JSON object."""
     try:
         apply_source_locality_hard_block(result, city, state, job_type)
     except Exception as _e:
-        # Defensive — never let the filter break the engine
-        print(f"[locality_filter] failed: {_e}")
+        print(f"[locality_filter] fail-closed: {_e}")
+        result["sources"] = []
+        result["source_urls"] = []
+        result["apply_url"] = None
+        result["online_application_url"] = None
+        if isinstance(result.get("apply_path"), dict):
+            result["apply_path"]["portal_url"] = ""
+            result["apply_path"]["status"] = "VERIFY_WITH_PERMIT_OFFICE"
+        result["degraded_sources"] = True
+        result["_source_locality_filter_failed_closed"] = str(_e)
 
     apply_residential_stress_quality_floor(result, job_type, city, state)
 

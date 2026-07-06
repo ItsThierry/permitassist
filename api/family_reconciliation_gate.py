@@ -18,10 +18,12 @@ try:  # package/import-path compatibility in tests and server runtime
     from scope_contract import ScopeFactsV2, ScopeFactsV3, ScopeFactsV4, TriFact, build_scope_facts_v2, build_scope_facts_v3, build_scope_facts_v4
     from family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
     from phase_trace import emit_trace
+    from source_provenance import has_local_official_source
 except Exception:  # pragma: no cover
     from api.scope_contract import ScopeFactsV2, ScopeFactsV3, ScopeFactsV4, TriFact, build_scope_facts_v2, build_scope_facts_v3, build_scope_facts_v4
     from api.family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
     from api.phase_trace import emit_trace
+    from api.source_provenance import has_local_official_source
 
 GateAction = Literal["KEEP", "DEMOTE", "VETO", "ADD", "CONDITIONAL_FALLBACK"]
 
@@ -245,14 +247,8 @@ def _veto_basis(facts: ScopeFactsV2, family: str, row: dict[str, Any]) -> str | 
     return None
 
 
-def _official_source_backed(row: dict[str, Any]) -> bool:
-    values = []
-    for key in ("source_url", "source", "source_type", "provenance", "citations", "evidence", "source_status"):
-        value = row.get(key)
-        if value not in (None, "", [], {}):
-            values.append(str(value))
-    blob = _norm(" ".join(values))
-    return bool(blob) and ("official" in blob or ".gov" in blob or ".us" in blob or "http" in blob)
+def _official_source_backed(row: dict[str, Any], *, city: str = "", state: str = "", result: dict[str, Any] | None = None) -> bool:
+    return has_local_official_source(row, city=city, state=state, result=result)
 
 
 def resolve_lead_label(segment: str, category: str, facts: ScopeFactsV2) -> str:
@@ -387,7 +383,7 @@ def reconcile_rows(rows: list[dict[str, Any]], facts: ScopeFactsV2) -> tuple[lis
             or (family in {"wastewater_pretreatment_fog", "health_food"} and not _positive_supports_family(facts, family))
             or (family in {"fire_alarm", "fire_suppression"} and not _positive_supports_family(facts, family))
         )
-        if _positive_supports_family(facts, family) or (source_keep_allowed and _official_source_backed(row)):
+        if _positive_supports_family(facts, family) or (source_keep_allowed and _official_source_backed(row, city=getattr(facts, "city", ""), state=getattr(facts, "state", ""))):
             row.setdefault("family", family)
             row.setdefault("decision", "REQUIRED")
             row.setdefault("required", True)

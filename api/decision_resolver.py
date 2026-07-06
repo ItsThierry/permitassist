@@ -9,6 +9,8 @@ REQUIRED or NOT_REQUIRED.
 from __future__ import annotations
 
 import re
+import json
+import os
 from typing import Any
 
 PERMIT_DECISION_REQUIRED = "REQUIRED"
@@ -58,10 +60,13 @@ _USE_TYPE_LEXICON = (
 def _explicit_change_of_use(job_text: str) -> bool:
     """Return True when the request explicitly describes a use-type change."""
     lowered = (job_text or "").lower()
-    return any(term in lowered for term in _CHANGE_OF_USE_TERMS) or            any(term in lowered for term in _USE_TYPE_LEXICON)
+    if any(term in lowered for term in _CHANGE_OF_USE_TERMS):
+        return True
+    use_alt = "|".join(re.escape(term) for term in _USE_TYPE_LEXICON)
+    return bool(re.search(rf"\b(?:from|former|existing)\s+(?:{use_alt})\b.{0,80}\b(?:to|into|as)\s+(?:{use_alt})\b", lowered))
 
 
-_SOURCE_ADJUDICATED_NOT_REQUIRED_RULES: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...], str], ...] = (
+_DEFAULT_SOURCE_ADJUDICATED_NOT_REQUIRED_RULES: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...], str], ...] = (
     (
         "flagstaff",
         "AZ",
@@ -86,11 +91,34 @@ _SOURCE_ADJUDICATED_NOT_REQUIRED_RULES: tuple[tuple[str, str, tuple[str, ...], t
 )
 
 
+def _source_adjudicated_not_required_rules() -> tuple[tuple[str, str, tuple[str, ...], tuple[str, ...], str], ...]:
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "not_required_adjudications.json")
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+        entries = payload.get("not_required_adjudications") if isinstance(payload, dict) else payload
+        rules: list[tuple[str, str, tuple[str, ...], tuple[str, ...], str]] = []
+        if isinstance(entries, list):
+            for item in entries:
+                if not isinstance(item, dict):
+                    continue
+                rules.append((
+                    str(item.get("city") or "").lower().strip(),
+                    str(item.get("state") or "").upper().strip(),
+                    tuple(str(t).lower() for t in (item.get("required_terms") or [])),
+                    tuple(str(t).lower() for t in (item.get("disqualifiers") or [])),
+                    str(item.get("reason") or ""),
+                ))
+        return tuple(rule for rule in rules if rule[0] and rule[1] and rule[2] and rule[4]) or _DEFAULT_SOURCE_ADJUDICATED_NOT_REQUIRED_RULES
+    except Exception:
+        return _DEFAULT_SOURCE_ADJUDICATED_NOT_REQUIRED_RULES
+
+
 def _source_adjudicated_not_required_reason(city: str, state: str, job_text: str) -> str:
     lowered = (job_text or "").lower()
     city_lc = (city or "").lower().strip()
     state_uc = (state or "").upper().strip()
-    for rule_city, rule_state, required_terms, disqualifiers, reason in _SOURCE_ADJUDICATED_NOT_REQUIRED_RULES:
+    for rule_city, rule_state, required_terms, disqualifiers, reason in _source_adjudicated_not_required_rules():
         if city_lc != rule_city or state_uc != rule_state:
             continue
         if not all(term in lowered for term in required_terms):
@@ -507,6 +535,7 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     # source-backed exemption evidence; cosmetic defaults alone are residential-only.
     if (source_adjudicated_not_required_reason and not_required_allowed_for_segment) or (trivial_not_required and not_required_allowed_for_segment) or (explicit_not_required and not _has_affirmative_structural_or_trade(scope_text) and not_required_allowed_for_segment):
         decision = PERMIT_DECISION_NOT_REQUIRED
+        decision_basis = "source_adjudicated_not_required" if source_adjudicated_not_required_reason else ("scope_trivial_not_required" if trivial_not_required else "explicit_not_required")
         kinds: list[str] = []
         permit_names: list[str] = []
         reason = source_adjudicated_not_required_reason or _not_required_reason(job_type, result)
@@ -515,6 +544,7 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
         confidence_tier = "AHJ_DIRECT" if _has_official_source(result) else "SCOPE_DEFAULT"
     else:
         decision = PERMIT_DECISION_REQUIRED
+        decision_basis = "scope_required_floor"
         existing_names = _existing_required_permit_names(result)
         # P1A — Change-of-use anchor guard (2026-06-09).
         # Force Building/TI anchor for commercial use-type changes, but do not
@@ -550,6 +580,7 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
                 "permit_decision": decision,
                 "permit_required": True,
                 "permit_verdict": "YES",
+                "decision_basis": "change_of_use_required_floor",
                 "permit_kind": kinds[0],
                 "permit_kinds": kinds,
                 "permit_name": permit_names[0],
@@ -604,6 +635,7 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     return {
         "permit_required": decision == PERMIT_DECISION_REQUIRED,
         "permit_decision": decision,
+        "decision_basis": decision_basis,
         "permit_kind": display_kind,
         "permit_kinds": kinds,
         "permit_name": primary_name if decision == PERMIT_DECISION_REQUIRED else "No permit required",

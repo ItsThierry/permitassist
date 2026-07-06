@@ -28,6 +28,7 @@ _FAMILY_LABELS = {
     "planning_zoning": "Planning/Zoning",
     "co_change_of_occupancy": "Certificate of Occupancy",
     "sign": "Sign",
+    "roofing": "Roofing",
     "solar_pv": "Solar / PV",
     "battery_storage": "Electrical",
     "environmental": "Environmental/Fuel-System",
@@ -50,6 +51,7 @@ _DEFAULT_NAMES = {
     "planning_zoning": "Planning / Zoning Use Clearance",
     "co_change_of_occupancy": "Certificate of Occupancy / Change-of-Occupancy Approval",
     "sign": "Sign Permit",
+    "roofing": "Roofing Permit",
     "solar_pv": "Solar PV Permit / Review",
     "battery_storage": "Battery / Energy Storage Permit",
     "environmental": "Environmental / Fuel-System Review",
@@ -85,6 +87,8 @@ def _row_family(row: dict[str, Any]) -> str:
         ("planning_zoning", r"\b(?:planning|zoning|land use)\b"),
         ("grading", r"\b(?:right.of.way|row|driveway|curb cut|site/civil|grading)\b"),
         ("sign", r"\bsign\b"),
+        ("roofing", r"\b(?:re[- ]?roof|roof(?:ing| replacement| repair)?|shingles?|membrane roof)\b"),
+        ("solar_pv", r"\b(?:solar\s+(?:pv|panels?|array)|photovoltaic|\bpv\s+(?:system|array|panels?))\b"),
         ("plumbing", r"\b(?:plumbing|sink|shower|drain|backflow|irrigation|water)\b"),
         ("mechanical", r"\b(?:mechanical|hvac|exhaust|ventilation|heat pump|wood stove|cooler|condenser)\b"),
         ("electrical", r"\b(?:electrical|circuit|panel|service|lighting|charger|disconnect|subpanel)\b"),
@@ -151,7 +155,7 @@ def _set_required(out: dict[str, Any], families: set[str], job_text: str, city: 
         by_family.setdefault(fam, row)
     for family in families:
         by_family.setdefault(family, _make_row(family, job_text))
-    order = ["building_ti", "building", "grading", "environmental", "electrical", "mechanical", "refrigeration", "plumbing", "gas", "fire_alarm", "fire_suppression", "health_food", "wastewater_pretreatment_fog", "sign", "planning_zoning", "co_change_of_occupancy"]
+    order = ["building_ti", "building", "roofing", "solar_pv", "grading", "environmental", "electrical", "mechanical", "refrigeration", "plumbing", "gas", "fire_alarm", "fire_suppression", "health_food", "wastewater_pretreatment_fog", "sign", "planning_zoning", "co_change_of_occupancy"]
     rows_out = [by_family[f] for f in order if f in by_family] + [r for f, r in by_family.items() if f not in order]
     for row in rows_out:
         row["required"] = True
@@ -241,6 +245,10 @@ def _triggered_families(job_type: str, segment: str) -> set[str]:
         families.add("wastewater_pretreatment_fog")
     if _has(text, r"\b(?:signs?|signage)\b") and not _has(text, r"\bexit signage\b"):
         families.add("sign")
+    if _has(text, r"\b(?:re[- ]?roof|roof(?:ing| replacement| repair)?|tear[- ]?off|shingles?|membrane roof)\b"):
+        families.add("roofing")
+    if _has(text, r"\b(?:solar\s+(?:pv|panels?|array)|photovoltaic|\bpv\s+(?:system|array|panels?))\b"):
+        families.add("solar_pv")
     if commercial and _has(text, r"\b(?:convert|change of use|former retail|retail suite|warehouse to|laundromat|fitness studio|grocery)\b"):
         families.add("co_change_of_occupancy")
         families.add("planning_zoning")
@@ -258,6 +266,10 @@ def _triggered_families(job_type: str, segment: str) -> set[str]:
         families.discard("electrical")
     if _has(text, r"\bno\s+(?:mechanical|hvac|ductwork)\b") and not _has(text, r"\b(?:wood stove|chimney|cooler|ventilation|exhaust)\b"):
         families.discard("mechanical")
+    if _has(text, r"\bno\s+roof(?:ing)?\s+work\b"):
+        families.discard("roofing")
+    if _has(text, r"\bno\s+solar\s+work\b"):
+        families.discard("solar_pv")
     return families
 
 

@@ -1393,7 +1393,7 @@ def sanitize_result_for_scope_contract(result: dict[str, Any], scope_contract: d
     cleaned["_scope_contract"] = scope_contract
     if removals:
         cleaned["_scope_firebreak_removed"] = removals
-        if fail_on_removal_in_tests and os.environ.get("PYTEST_CURRENT_TEST"):
+        if fail_on_removal_in_tests:
             raise AssertionError(f"Scope firebreak removed leaked customer-visible text; fix upstream: {removals[:5]}")
     return cleaned
 

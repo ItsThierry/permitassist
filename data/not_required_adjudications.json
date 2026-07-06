@@ -1,0 +1,25 @@
+{
+  "not_required_adjudications": [
+    {
+      "city": "flagstaff",
+      "state": "AZ",
+      "required_terms": ["faucet", "garbage disposal"],
+      "disqualifiers": ["pipe relocation", "new pipe", "new plumbing", "new wiring", "new circuit"],
+      "reason": "City of Flagstaff permit-exemption guidance covers same-location faucet/fixture replacement when plumbing is not rearranged; no permit is required for the described simple replacement scope."
+    },
+    {
+      "city": "las vegas",
+      "state": "NV",
+      "required_terms": ["toilet", "vanity", "no plumbing relocation"],
+      "disqualifiers": ["new pipe", "new plumbing", "new drain", "new supply"],
+      "reason": "City of Las Vegas administrative-code exemption covers replacement of plumbing fixtures in the same location with similar fixtures; no permit is required for the described no-relocation scope."
+    },
+    {
+      "city": "chicago",
+      "state": "IL",
+      "required_terms": ["drywall", "no structural", "no electrical"],
+      "disqualifiers": ["more than 1000", "1,000", "electrical", "plumbing", "mechanical", "structural"],
+      "reason": "City of Chicago permit-not-required guidance covers removing/replacing up to 1,000 square feet of drywall or plaster without MEP alteration; no permit is required for the described one-room repair."
+    }
+  ]
+}

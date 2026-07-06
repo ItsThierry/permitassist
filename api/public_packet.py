@@ -48,7 +48,7 @@ class PacketRow:
     reason: str = ""
     conditional_text: str = ""
     source: str = ""
-    source_role: str = "UNKNOWN"
+    source_role: str = "unverified"
     action_url: str = ""
     fees: str = ""
     documents: list[str] = field(default_factory=list)
@@ -265,7 +265,8 @@ def _authority(data: dict[str, Any], segment: str) -> PacketAuthority:
     name = str(data.get("applying_office") or data.get("jurisdiction") or data.get("office_name") or "Local permit office").strip()
     ahj_identity = {"city": data.get("_request_city") or data.get("city") or "", "state": data.get("_request_state") or data.get("state") or ""}
     source_urls = _source_urls_from_result(data)
-    source_roles = [classify_source(url, ahj_identity)[0].value for url in source_urls]
+    source_roles = [((classify_source(url, ahj_identity)[0].value) or "unverified") for url in source_urls]
+    source_roles = ["unverified" if str(role).upper() == "UNKNOWN" else str(role) for role in source_roles]
     apply_url = str(data.get("apply_url") or data.get("online_application_url") or "").strip()
     if isinstance(data.get("apply_path"), dict):
         apply_url = apply_url or str(data["apply_path"].get("portal_url") or data["apply_path"].get("url") or "").strip()
@@ -365,7 +366,7 @@ def _packet_row(row: dict[str, Any], data: dict[str, Any], decision: Decision) -
     family = _family(row)
     name = _segment_locked_name(_name(row), family, str(data.get("segment") or "").lower(), data)
     source_value = str(row.get("source_url") or row.get("source") or "")
-    source_role = classify_source(source_value, {"city": data.get("_request_city") or data.get("city") or "", "state": data.get("_request_state") or data.get("state") or ""})[0].value if source_value else "UNKNOWN"
+    source_role = classify_source(source_value, {"city": data.get("_request_city") or data.get("city") or "", "state": data.get("_request_state") or data.get("state") or ""})[0].value if source_value else "unverified"
     return PacketRow(
         permit_name=name,
         family=family,
@@ -1101,7 +1102,8 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
         ahj_identity = {"city": out.get("_request_city") or out.get("city") or "", "state": out.get("_request_state") or out.get("state") or packet.authority.state or ""}
         for url in packet.authority.source_urls:
             role, evidence = classify_source(url, ahj_identity)
-            source_items.append({"url": url, "title": source_label_for_role(role), "label": source_label_for_role(role), "source_tier": "local_permit_source" if is_official_badge_role(role) else "context", "source_role": role.value, "role_evidence": evidence})
+            role_value = "unverified" if str(role.value).upper() == "UNKNOWN" else role.value
+            source_items.append({"url": url, "title": source_label_for_role(role), "label": source_label_for_role(role), "source_tier": "local_permit_source" if is_official_badge_role(role) else "context", "source_role": role_value, "role_evidence": evidence})
         out["sources"] = source_items
     if packet.decision == "REQUIRED":
         original_apply_url = input_apply_url
@@ -1214,7 +1216,7 @@ def seal_packet(packet: dict[str, Any], *, facts: Any | None = None, fail_hard: 
         if not isinstance(source, dict):
             continue
         label = str(source.get("title") or source.get("label") or "")
-        role = str(source.get("source_role") or "UNKNOWN")
+        role = str(source.get("source_role") or "unverified")
         if "official" in label.lower() and not is_official_badge_role(role):
             errors.append("Official badge on non-local/state source")
     if errors and fail_hard:
@@ -1226,7 +1228,7 @@ def seal_packet(packet: dict[str, Any], *, facts: Any | None = None, fail_hard: 
     return out
 
 
-def apply_render_parity_seal(result: dict[str, Any], *, facts: Any | None = None, fail_hard: bool | None = None) -> dict[str, Any]:
+def apply_render_parity_seal(result: dict[str, Any], *, facts: Any | None = None, fail_hard: bool | None = True) -> dict[str, Any]:
     """Terminal customer-boundary seal for API/share/report/HTML parity."""
     out = copy.deepcopy(result) if isinstance(result, dict) else {}
     packet = out.get("public_packet") if isinstance(out.get("public_packet"), dict) else {}
@@ -1288,7 +1290,8 @@ def apply_render_parity_seal(result: dict[str, Any], *, facts: Any | None = None
         out["inspections"] = list(packet.get("inspections") or [])
         out["checklist"] = list(packet.get("checklist") or [])
     packet["sealed_at_stage"] = "post_public_packet_projection"
-    packet = seal_packet(packet, facts=facts, fail_hard=bool(fail_hard))
+    seal_fail_hard = True if fail_hard is None else bool(fail_hard)
+    packet = seal_packet(packet, facts=facts, fail_hard=seal_fail_hard)
     out["public_packet"] = packet
     out["canonical_public_packet"] = copy.deepcopy(packet)
     out["public_packet_rows"] = list(packet.get("rows") or [])

@@ -68,7 +68,7 @@ from decision_resolver import is_input_rejection, resolve_customer_decision
 from family_reconciliation_gate import apply_family_reconciliation_gate
 from ahj_locality_resolver import apply_ahj_locality_resolution
 from ahj_identity_guard import apply_ahj_identity_guard
-from public_packet import apply_public_packet_projection, apply_render_parity_seal
+from public_packet import PacketInvariantError, apply_public_packet_projection, apply_render_parity_seal
 from closed_world_decision import apply_closed_world_customer_contract
 from live100_fable5_final_gate import apply_fable5_final_customer_gate
 try:
@@ -648,6 +648,7 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             value = re.sub(r"\bsource-backed\b", "official-source", value, flags=re.I)
             value = re.sub(r"\bneeds_verification\b", "confirm with the listed department", value, flags=re.I)
             value = re.sub(r"\bfail[_\s-]?closed\b", "not shown", value, flags=re.I)
+            value = re.sub(r"\bUNKNOWN\b", "unverified", value)
             value = re.sub(r"\bpending(?:[_\s-]*(?:active[_\s-]*)?retrieval|view|lookup)?\b", "not yet published", value, flags=re.I)
             if not value.lower().startswith(("http://", "https://")):
                 value = re.sub(r"(?<=\b[A-Z]{2})\.(?=[A-Za-z])", ". ", value)
@@ -2453,6 +2454,35 @@ def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str
     return out
 
 
+def _load_authority_fixes() -> dict[tuple[str, str], dict]:
+    """Load targeted authority/action-path repairs from data instead of code hardcoding."""
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "authority_fixes.json")
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+    except Exception:
+        return {}
+    fixes: dict[tuple[str, str], dict] = {}
+    entries = payload.get("authority_fixes") if isinstance(payload, dict) else payload
+    if not isinstance(entries, list):
+        return fixes
+    for item in entries:
+        if not isinstance(item, dict):
+            continue
+        city_key = str(item.get("city") or "").strip().lower()
+        state_key = str(item.get("state") or "").strip().upper()
+        office = str(item.get("office") or "").strip()
+        url = str(item.get("url") or "").strip()
+        if not city_key or not state_key or not office or not url:
+            continue
+        fixes[(city_key, state_key)] = {
+            "office": office,
+            "url": url,
+            "bad": tuple(str(token).lower() for token in (item.get("bad") or [])),
+        }
+    return fixes
+
+
 def _live100_core_truth_recovery_guard(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     """Narrow final-boundary guard for confirmed Live100 core-truth regressions."""
     if not isinstance(result, dict):
@@ -2578,12 +2608,7 @@ def _live100_core_truth_recovery_guard(result: dict, job_type: str = "", city: s
         out["ordinary_maintenance_caveat"] = "Verify New Jersey/Jersey City ordinary-maintenance treatment for like-for-like roof work before filing; do not treat the building row as unconditional if the ordinary-maintenance exemption applies."
         out["customer_next_step"] = out["ordinary_maintenance_caveat"]
 
-    locality_repairs = {
-        ("des moines", "IA"): {"office": "City of Des Moines Permit & Development Center", "url": "https://css.dmgov.org/EnerGov_Prod/SelfService#/home", "bad": ("wdm.iowa.gov", "west des moines")},
-        ("las vegas", "NV"): {"office": "City of Las Vegas Building & Safety", "url": "https://www.lasvegasnevada.gov/Business/Planning-Zoning/Building-Safety", "bad": ("clark county", "clarkcountynv.gov", "permit-fee-estimator")},
-        ("cedar rapids", "IA"): {"office": "City of Cedar Rapids Development Services", "url": "https://aca-prod.accela.com/CEDARRAPIDS", "bad": ("linn county", "linncountyiowa.gov")},
-        ("idaho falls", "ID"): {"office": "Idaho Falls Building Inspections", "url": "https://www.idahofallsidaho.gov/131/Building-Inspections", "bad": ()},
-    }
+    locality_repairs = _load_authority_fixes()
     locality = locality_repairs.get((city_lc, state_uc))
     if locality:
         bad_tokens = tuple(str(token).lower() for token in locality["bad"])
@@ -2610,8 +2635,6 @@ def _live100_core_truth_recovery_guard(result: dict, job_type: str = "", city: s
         out["permit_verdict"] = "YES"
         out.pop("not_required_reason", None)
         out.pop("exemption_reason", None)
-        out.pop("public_packet", None)
-        out.pop("public_packet_rows", None)
         out = _sync_required_permit_summary_fields_from_rows(out)
         first_name = _live60_row_name(required_rows[0]) or "Required permit package"
         prefix = "Commercial" if str(out.get("segment") or "").lower() == "commercial" else ("Residential" if str(out.get("segment") or "").lower() == "residential" else "")
@@ -2621,18 +2644,6 @@ def _live100_core_truth_recovery_guard(result: dict, job_type: str = "", city: s
         out["customer_next_step"] = f"File or verify the required permit categories with {office}: {', '.join(dict.fromkeys(str(name) for name in names))}. Confirm exact portal subcategories before final submission."
         out["customer_result_summary"] = _build_customer_result_summary(out, out, city, state)
         out["customer_first_screen_summary"] = _build_customer_first_screen_summary(out["customer_result_summary"])
-        def _strip_required_no_permit_copy(value):
-            if isinstance(value, str):
-                value = re.sub(r"\bno[- ]permit\s+report\b", "required-permit report", value, flags=re.I)
-                value = re.sub(r"\bno\s+permit\s+(?:is\s+)?required\b", "permit is required", value, flags=re.I)
-                value = re.sub(r"\bnot\s+required\b", "required", value, flags=re.I)
-                return value
-            if isinstance(value, list):
-                return [_strip_required_no_permit_copy(item) for item in value]
-            if isinstance(value, dict):
-                return {k: _strip_required_no_permit_copy(v) for k, v in value.items()}
-            return value
-        out = _strip_required_no_permit_copy(out)
     else:
         out["permits_required"] = []
         if str(out.get("permit_decision") or "").upper() == "REQUIRED":
@@ -2653,7 +2664,13 @@ def _live100_core_truth_recovery_guard(result: dict, job_type: str = "", city: s
                 return {k: _strip_residential_fog_copy(v) for k, v in value.items()}
             return value
         out = _strip_residential_fog_copy(out)
-    return sanitize_customer_visible_result(out if isinstance(out, dict) else {}, strip_internal_keys=True)
+    sanitized = sanitize_customer_visible_result(out if isinstance(out, dict) else {}, strip_internal_keys=True)
+    if isinstance(sanitized, dict) and isinstance(sanitized.get("public_packet"), dict):
+        try:
+            sanitized = apply_render_parity_seal(sanitized, fail_hard=False)
+        except Exception:
+            pass
+    return sanitized
 
 
 def _pa20_demote_known_scope_overreach_rows(result: dict, job_type: str = "") -> dict:
@@ -4687,23 +4704,55 @@ def _pa20_normalize_customer_rows_and_summaries(public: dict, job_type: str, cit
 # `tests/fixtures/universal_customer_view_contracts_20260629.json`; universal
 # rules are implemented in api/permit_model.py.
 
+_CATASTROPHIC_CUSTOMER_VIEW_ISSUES = {
+    "required_without_rows",
+    "not_required_with_required_rows",
+    "required_no_permit_text_contradiction",
+    "not_required_required_package_text_contradiction",
+}
+
+
+def _is_catastrophic_customer_view_issue(issue: str) -> bool:
+    if issue in _CATASTROPHIC_CUSTOMER_VIEW_ISSUES:
+        return True
+    return issue.startswith("required_row_not_required_")
+
+
 def assert_customer_view_invariants(public: dict, *, soft: bool | None = None) -> dict:
     """Final public-boundary invariant net for customer permit packages.
 
-    In tests/CI this fails hard so replay fixtures catch regressions.  In normal
-    production it records a warning and returns the public object unchanged; the
-    preceding pure projection is responsible for making the view safe.
+    Catastrophic truth-contract failures fail closed in prod: try one pure
+    re-projection, then substitute the safe degraded REQUIRED-verify packet.
+    Cosmetic/package-shape issues stay internal warnings only.
     """
     out = copy.deepcopy(public) if isinstance(public, dict) else {}
     issues = validate_customer_view(out)
     if not issues:
         return out
-    strict = soft is False or _env_flag_enabled("PERMITASSIST_STRICT_CUSTOMER_INVARIANTS") or bool(os.environ.get("PYTEST_CURRENT_TEST"))
+    strict = soft is False or _env_flag_enabled("PERMITASSIST_STRICT_CUSTOMER_INVARIANTS")
+    catastrophic = [issue for issue in issues if _is_catastrophic_customer_view_issue(issue)]
+    if catastrophic:
+        job_type = str(out.get("_request_job_type") or out.get("job_summary") or out.get("permit_name") or "customer lookup")
+        city = str(out.get("_request_city") or out.get("city") or "")
+        state = str(out.get("_request_state") or out.get("state") or "")
+        repaired = out
+        try:
+            repaired = finalize_customer_public_projection(out, job_type, city, state, out.get("_scope_contract") if isinstance(out.get("_scope_contract"), dict) else {})
+        except Exception:
+            repaired = out
+        if repaired is not out and not any(_is_catastrophic_customer_view_issue(issue) for issue in validate_customer_view(repaired)):
+            repaired.setdefault("_customer_view_invariant_warnings", issues[:12])
+            return repaired
+        try:
+            record_beta_event("customer_invariant_blocked", {"issues": issues[:12], "permit_name": out.get("permit_name"), "city": city, "state": state})
+        except Exception:
+            pass
+        safe = _build_degraded_lookup_fallback(job_type, city, state, reason="customer_invariant_blocked")
+        safe["_customer_view_invariant_warnings"] = issues[:12]
+        return safe
     if strict:
         raise AssertionError({"customer_view_invariant_issues": issues, "permit_name": out.get("permit_name")})
-    warnings = out.setdefault("warnings", [])
-    if isinstance(warnings, list):
-        warnings.append("Customer-view invariant warning: " + ", ".join(issues[:6]))
+    out["_customer_view_invariant_warnings"] = issues[:12]
     return out
 
 
@@ -4736,39 +4785,34 @@ def finalize_customer_public_projection(public: dict, job_type: str, city: str, 
 
 def _build_degraded_lookup_fallback(job_type: str, city: str, state: str, *, reason: str = "lookup_timeout") -> dict:
     office = f"{city} permit office".strip() or "the local permit office"
-    likely = "REQUIRED" if _has_unnegated_any((job_type or "").lower(), ("renovation", "remodel", "bathroom", "plumbing", "electrical", "tenant improvement", "addition", "conversion", "hvac", "water heater")) else "NOT_REQUIRED"
-    if likely == "REQUIRED":
-        return {
-            "permit_required": True,
-            "permit_decision": "REQUIRED",
-            "permit_verdict": "YES",
-            "permit_kind": "Verify with AHJ",
-            "permit_name": "Permit category requires AHJ verification",
-            "permits_required": [{"permit_type": "Permit category needs AHJ verification", "status": "VERIFY", "decision": "VERIFY", "required": False, "rationale": "The live lookup timed out before PermitAssist could verify the exact permit category."}],
-            "related_permits": [],
-            "customer_headline": "Permit category requires permit-office verification before work starts.",
-            "customer_next_step": f"Contact {office} before starting work; PermitAssist could not complete live verification in time for this lookup.",
-            "confidence": "degraded — timeout fallback",
-            "degraded_sources": True,
-            "warnings": ["Live lookup timed out; this fallback preserves a useful next step but is not a fully verified filing packet."],
-            "fee_range": "Fee not confirmed; verify the current AHJ fee schedule before quoting.",
-            "apply_url": "",
-            "online_application_url": "",
-            "applying_office": office,
-            "_runtime_degraded_fallback": {"reason": reason, "timeout_seconds": PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS},
-        }
+    reason_label = "timeout" if reason == "lookup_timeout" else "engine exception"
     return {
-        "permit_required": False,
-        "permit_decision": "NOT_REQUIRED",
-        "permit_verdict": "NO",
-        "permit_kind": "Not Required",
-        "permit_name": "No permit indicated for the described minor scope",
-        "permits_required": [],
-        "customer_headline": "No permit indicated for the described minor scope.",
-        "customer_next_step": f"Keep the scope as described and verify with {office} if any structural, trade, occupancy, exterior, or life-safety work is added.",
-        "confidence": "degraded — timeout fallback",
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "decision_basis": "degraded",
+        "permit_kind": "Verify with AHJ",
+        "permit_name": "Permit category requires AHJ verification",
+        "permits_required": [{
+            "permit_type": "Permit category requires AHJ verification",
+            "permit_name": "Permit category requires AHJ verification",
+            "family": "building",
+            "filing_family": "building",
+            "kind": "Verify with AHJ",
+            "display_family": "Verify with AHJ",
+            "status": "REQUIRED",
+            "decision": "REQUIRED",
+            "required": True,
+            "decision_basis": "degraded",
+            "rationale": f"PermitAssist could not complete live verification because of a lookup {reason_label}; verify the exact permit category with the AHJ before work starts.",
+        }],
+        "related_permits": [],
+        "customer_headline": "Permit category requires permit-office verification before work starts.",
+        "customer_next_step": f"Contact {office} before starting work; PermitAssist could not complete live verification in time for this lookup.",
+        "confidence": f"degraded — {reason}",
         "degraded_sources": True,
-        "warnings": ["Live lookup timed out; this fallback is not a fully verified filing packet."],
+        "warnings": ["Live lookup did not complete; this safe fallback preserves the permit-office verification step but is not a fully verified filing packet."],
+        "fee_range": "Fee not confirmed; verify the current AHJ fee schedule before quoting.",
         "apply_url": "",
         "online_application_url": "",
         "applying_office": office,
@@ -4787,6 +4831,10 @@ def _research_permit_with_budget(job_type: str, city: str, state: str, zip_code:
         return _build_degraded_lookup_fallback(job_type, city, state, reason="lookup_timeout")
     except Exception as exc:
         print(f"[permit][error-fallback] {type(exc).__name__}: {exc}")
+        try:
+            record_beta_event("lookup_engine_exception", {"city": city, "state": state, "job_type": job_type[:240], "error_type": type(exc).__name__})
+        except Exception:
+            pass
         return _build_degraded_lookup_fallback(job_type, city, state, reason=type(exc).__name__)
     finally:
         executor.shutdown(wait=False, cancel_futures=True)
@@ -5021,6 +5069,15 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     original_apply_address = _sanitize_job_address(working.get("apply_address") or "")
     original_apply_google_maps = _safe_google_maps_url(working.get("apply_google_maps") or working.get("maps_url") or "")
     raw_meta = working.get("_meta") if isinstance(working.get("_meta"), dict) else {}
+    retrieval_diagnostics_value = working.get("retrieval_diagnostics")
+    retrieval_diagnostics = retrieval_diagnostics_value if isinstance(retrieval_diagnostics_value, dict) else {}
+    degraded_status_codes = list(retrieval_diagnostics.get("status_codes") or []) if isinstance(retrieval_diagnostics.get("status_codes"), list) else []
+    source_degraded_input = bool(
+        working.get("degraded_sources")
+        or retrieval_diagnostics.get("error")
+        or retrieval_diagnostics.get("source_url_count") == 0
+        or any(int(code) in {429, 500, 502, 503, 504} for code in degraded_status_codes if str(code).isdigit())
+    )
     request_job_category = job_category or working.get("job_category") or raw_meta.get("job_category")
     contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
     scope_contract = working.get("_scope_contract") if isinstance(working.get("_scope_contract"), dict) else build_scope_contract(contract_job_type, city, state, job_category=request_job_category, vertical=explicit_vertical)
@@ -5406,12 +5463,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             # projects a canonical PublicPacketDTO for API/share/report parity.
             try:
                 raw_full_customer_gate = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower()
-                if raw_full_customer_gate in {"0", "false", "no", "off"}:
-                    full_customer_gate_enabled = False
-                elif raw_full_customer_gate in {"1", "true", "yes", "on"}:
-                    full_customer_gate_enabled = True
-                else:
-                    full_customer_gate_enabled = not os.environ.get("PYTEST_CURRENT_TEST")
+                full_customer_gate_enabled = raw_full_customer_gate not in {"0", "false", "no", "off"}
                 if full_customer_gate_enabled:
                     final_scope_facts = build_scope_facts_v4(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract)
                     final_public = apply_ahj_locality_resolution(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
@@ -5434,7 +5486,12 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                             final_public["_legacy_apply_documents"] = list(original_legacy_documents)
                     final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts)
             except Exception as exc:
-                print(f"[customer-view] closed_world_contract_skipped error_type={exc.__class__.__name__} error={exc}")
+                print(f"[customer-view] gate_chain_failed error_type={exc.__class__.__name__} error={exc}")
+                try:
+                    record_beta_event("customer_gate_chain_failed", {"city": city, "state": state, "job_type": job_type[:240], "error_type": exc.__class__.__name__})
+                except Exception:
+                    pass
+                final_public = _build_degraded_lookup_fallback(job_type, city, state, reason="customer_gate_chain_failed")
             final_public = _apply_residential_commercial_timeline_veto(final_public if isinstance(final_public, dict) else {}, job_type, job_category=request_job_category, scope_contract=scope_contract)
             if isinstance(final_public, dict):
                 specific_kind = original_display_permit_kind and original_display_permit_kind.lower() not in {"building", "electrical", "mechanical", "plumbing", "fire", "refrigeration", "sign", "planning", "zoning", "permit package", "not required"}
@@ -5471,11 +5528,9 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     scope_contract,
                     final_scope_facts_for_packet,
                 )
+                final_public = _live100_core_truth_recovery_guard(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
                 if final_scope_facts_for_packet is not None:
                     final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts_for_packet)
-                seal_enabled = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower() in {"1", "true", "yes", "on"} or not os.environ.get("PYTEST_CURRENT_TEST")
-                if seal_enabled:
-                    final_public = apply_render_parity_seal(final_public if isinstance(final_public, dict) else {}, facts=locals().get("final_scope_facts"))
                 if isinstance(final_public, dict):
                     if original_apply_address and not final_public.get("apply_address"):
                         final_public["apply_address"] = original_apply_address
@@ -5484,7 +5539,24 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     elif original_apply_address and not final_public.get("apply_google_maps"):
                         final_public["apply_google_maps"] = build_google_maps_url(city, state, address=original_apply_address, office=str(final_public.get("applying_office") or ""))
                 final_public = _apply_job_address_fields(final_public if isinstance(final_public, dict) else {}, city, state)
-                final_public = _live100_core_truth_recovery_guard(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
+                seal_enabled = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower() not in {"0", "false", "no", "off"}
+                if seal_enabled:
+                    railway_prod = any(str(os.environ.get(name) or "").strip().lower() == "production" for name in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME"))
+                    seal_fail_hard = _env_flag_enabled("PERMITASSIST_PROD_MODE") or _env_flag_enabled("PERMITASSIST_RENDER_SEAL_FAIL_HARD") or railway_prod
+                    try:
+                        final_public = apply_render_parity_seal(final_public if isinstance(final_public, dict) else {}, facts=final_scope_facts_for_packet, fail_hard=seal_fail_hard)
+                    except PacketInvariantError as exc:
+                        print(f"[customer-view] render_seal_failed error_type={exc.__class__.__name__} error={exc}")
+                        try:
+                            record_beta_event("render_seal_failed", {"city": city, "state": state, "job_type": job_type[:240], "error_type": exc.__class__.__name__, "error": str(exc)[:500]})
+                        except Exception:
+                            pass
+                        final_public = _build_degraded_lookup_fallback(job_type, city, state, reason="render_seal_failed")
+                if source_degraded_input and isinstance(final_public, dict):
+                    final_public["degraded_sources"] = True
+                    warnings = final_public.setdefault("warnings", [])
+                    if isinstance(warnings, list) and not any("source support is degraded" in str(w).lower() for w in warnings):
+                        warnings.append("Exact local source support is degraded; the customer permit decision remains resolved.")
         return final_public if isinstance(final_public, dict) else {}
     return {}
 
@@ -8602,15 +8674,7 @@ def to_public_share_payload(share: dict, checklist: dict | None = None) -> dict:
         "generated_at": utc_now().isoformat(),
         "checklist": public_checklist,
     }
-    def _scrub(value):
-        if isinstance(value, dict):
-            return {k: _scrub(v) for k, v in value.items()}
-        if isinstance(value, list):
-            return [_scrub(v) for v in value]
-        if isinstance(value, str):
-            return re.sub(r"\bno\s+new\s+circuits?\b", "existing circuits only", value, flags=re.I)
-        return value
-    return _scrub(payload)
+    return payload
 
 
 def html_safe_json_dumps(value: object) -> str:
