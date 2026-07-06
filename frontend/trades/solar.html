@@ -2319,6 +2319,8 @@ function verdictState(d){
 }
 
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
+function looksLikeRawUrl(value){return /^https?:\/\//i.test(String(value || '').trim());}
+function safePhoneForDisplay(value){return looksLikeRawUrl(value) ? '' : String(value || '').trim();}
 function buildPermitOfficeMapsUrl(city, state, office, address) {
   const cityText = String(city || '').trim();
   const stateText = String(state || '').trim();
@@ -2407,7 +2409,7 @@ function renderResults(d, job, city, state) {
   const checklist = d.what_to_bring || d.checklist || [];
   const tl = d.approval_timeline || {};
   const office = d.applying_office || d.office_name || '';
-  const phone = d.apply_phone || d.office_phone || '';
+  const phone = safePhoneForDisplay(d.apply_phone || d.office_phone || '');
   const officeAddress = d.apply_address || d.office_address || '';
   const jobAddress = d.job_address || currentResult?.address || '';
   const projectMaps = d.job_maps_url || '';
@@ -2445,6 +2447,12 @@ function renderResults(d, job, city, state) {
   // County fallback notice
   if (countyNote) {
     html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
+  }
+
+
+  const degradedReason = (d.public_packet && d.public_packet.degraded_reason) || d.degraded_reason || '';
+  if (d.degraded_sources === true || (d.public_packet && d.public_packet.degraded === true)) {
+    html += `<div class="degraded-confidence-banner" style="margin-bottom:14px;border:1.5px solid rgba(217,119,6,0.35);background:rgba(217,119,6,0.08);color:#92400e;border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.5">⚠️ <strong>Source confidence is degraded.</strong> Treat this as a permit-office verification packet before quoting or filing.${degradedReason ? ` Reason: ${esc(degradedReason)}` : ''}</div>`;
   }
 
   // Homeowner mode — special "Did they pull the permit?" section
@@ -2993,7 +3001,7 @@ function copyResult() {
   const fee = d.fee_range || 'Contact building dept';
   const timeline = d.approval_timeline?.simple || d.approval_timeline?.complex || 'Varies';
   const office = d.applying_office || '';
-  const phone = d.apply_phone || '';
+  const phone = safePhoneForDisplay(d.apply_phone || '');
   let t = `PERMIT SUMMARY — ${job} in ${city}, ${state}\n`;
   t += `Permit needed: ${permitName}\n`;
   t += `Fee: ${fee}\n`;
@@ -3240,7 +3248,7 @@ function emailResult() {
 function callPermitOffice() {
   if (!currentResult) return;
   const { city, state, data: d } = currentResult;
-  const phone = d.apply_phone || '';
+  const phone = safePhoneForDisplay(d.apply_phone || '');
   // Strip non-digit characters to check if it's a real phone number
   const digits = phone.replace(/\D/g, '');
   if (digits.length >= 10 && !phone.toLowerCase().startsWith('search')) {
@@ -3338,7 +3346,7 @@ function downloadReport() {
   const mistakes = (d.common_mistakes || []).slice(0, 4);
   const inspections = (d.inspections || []).slice(0, 6);
   const sources = (d.sources || []).filter(s => sourceUrl(s)).slice(0, 5);
-  const phone = d.apply_phone || '';
+  const phone = safePhoneForDisplay(d.apply_phone || '');
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
   const offAddr = d.apply_address || '';
@@ -3472,7 +3480,7 @@ function printResult() {
   const tips = (d.pro_tips || []).slice(0, 4);
   const mistakes = (d.common_mistakes || []).slice(0, 4);
   const inspections = (d.inspections || []).slice(0, 6);
-  const phone = d.apply_phone || '';
+  const phone = safePhoneForDisplay(d.apply_phone || '');
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
   const offAddr = d.apply_address || '';

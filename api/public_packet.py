@@ -35,6 +35,9 @@ class PacketAuthority:
     name: str
     state: str = ""
     apply_url: str = ""
+    phone: str = ""
+    address: str = ""
+    contact_status: str = ""
     source_urls: list[str] = field(default_factory=list)
     source_roles: list[str] = field(default_factory=list)
     segment: str = ""
@@ -74,6 +77,8 @@ class PublicPacketDTO:
     fees: list[str] = field(default_factory=list)
     required_families: list[str] = field(default_factory=list)
     conditional_families: list[str] = field(default_factory=list)
+    degraded: bool = False
+    degraded_reason: str = ""
     scope_facts: dict[str, Any] = field(default_factory=dict)
     schema_version: str = "final_public_permit_packet.v1"
     gate_audit: list[dict[str, Any]] = field(default_factory=list)
@@ -278,7 +283,26 @@ def _authority(data: dict[str, Any], segment: str) -> PacketAuthority:
             if role_value == SourceRole.LOCAL_OFFICIAL_FILING.value:
                 apply_url = candidate
                 break
-    return PacketAuthority(name=name or "Local permit office", state=str(data.get("state") or "").upper(), apply_url=apply_url, source_urls=source_urls, source_roles=source_roles, segment=segment)
+    phone = str(data.get("apply_phone") or data.get("building_dept_phone") or data.get("office_phone") or "").strip()
+    if re.match(r"^https?://", phone, re.I):
+        phone = ""
+    address = str(data.get("apply_address") or data.get("office_address") or "").strip()
+    if re.match(r"^https?://", address, re.I):
+        address = ""
+    contact_status = str(data.get("contact_status") or data.get("contact_verified_status") or "").strip().lower()
+    if contact_status not in {"verified", "mismatch", "unverified"}:
+        contact_status = "verified" if (phone or address) and (data.get("contact_verified_at") or data.get("contact_source_url")) else ""
+    return PacketAuthority(
+        name=name or "Local permit office",
+        state=str(data.get("state") or "").upper(),
+        apply_url=apply_url,
+        phone=phone,
+        address=address,
+        contact_status=contact_status,
+        source_urls=source_urls,
+        source_roles=source_roles,
+        segment=segment,
+    )
 
 
 def _family(row: dict[str, Any]) -> str:
@@ -367,6 +391,8 @@ def _packet_row(row: dict[str, Any], data: dict[str, Any], decision: Decision) -
     name = _segment_locked_name(_name(row), family, str(data.get("segment") or "").lower(), data)
     source_value = str(row.get("source_url") or row.get("source") or "")
     source_role = classify_source(source_value, {"city": data.get("_request_city") or data.get("city") or "", "state": data.get("_request_state") or data.get("state") or ""})[0].value if source_value else "unverified"
+    if str(source_role).upper() == "UNKNOWN":
+        source_role = "unverified"
     return PacketRow(
         permit_name=name,
         family=family,
@@ -938,6 +964,9 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
             elif row.decision == "CONDITIONAL":
                 checklist.append(f"{row.conditional_text or 'Only if triggered'} — if triggered, pull {row.permit_name}")
 
+    runtime_degraded = data.get("_runtime_degraded_fallback") if isinstance(data.get("_runtime_degraded_fallback"), dict) else {}
+    degraded = bool(data.get("degraded_sources") or runtime_degraded or data.get("source_degraded_input"))
+    degraded_reason = str(runtime_degraded.get("reason") or data.get("degraded_reason") or data.get("source_degraded_reason") or "").strip()
     packet = PublicPacketDTO(
         segment=segment,
         authority=_authority(data, segment),
@@ -954,6 +983,8 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         fees=fees,
         required_families=required_families,
         conditional_families=conditional_families,
+        degraded=degraded,
+        degraded_reason=degraded_reason,
         scope_facts=scope_facts,
         gate_audit=list(data.get("_family_gate_audit") or []),
     )
@@ -997,6 +1028,11 @@ def _repair_stale_apply_url_for_scope(out: dict[str, Any], facts: Any | None = N
 
 def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = None) -> dict[str, Any]:
     out = copy.deepcopy(result) if isinstance(result, dict) else {}
+    original_degraded_sources = bool(out.get("degraded_sources") or out.get("_runtime_degraded_fallback") or out.get("source_degraded_input"))
+    original_degraded_reason = ""
+    if isinstance(out.get("_runtime_degraded_fallback"), dict):
+        original_degraded_reason = str(out["_runtime_degraded_fallback"].get("reason") or "")
+    original_degraded_reason = original_degraded_reason or str(out.get("degraded_reason") or out.get("source_degraded_reason") or "")
     original_permit_kind = str(out.get("permit_kind") or "").strip()
     legacy_apply_path_obj = out.get("apply_path")
     legacy_apply_path = legacy_apply_path_obj if isinstance(legacy_apply_path_obj, dict) else {}
@@ -1161,7 +1197,15 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
         out["customer_result_summary"]["next_step"] = str(out.get("customer_next_step") or "")
         out["customer_result_summary"]["source_cue"] = "Official source path found" if out.get("sources") or out.get("source_urls") else "Permit office verification path included"
     out["required_permit_summary"] = packet.summary
-    if out.get("degraded_sources"):
+    if original_degraded_sources:
+        out["degraded_sources"] = True
+        out["degraded_reason"] = original_degraded_reason
+        if isinstance(out.get("public_packet"), dict):
+            out["public_packet"]["degraded"] = True
+            out["public_packet"]["degraded_reason"] = original_degraded_reason
+        if isinstance(out.get("canonical_public_packet"), dict):
+            out["canonical_public_packet"]["degraded"] = True
+            out["canonical_public_packet"]["degraded_reason"] = original_degraded_reason
         out["source_support"] = {"decision_mutation_allowed": False}
     return out
 
@@ -1198,9 +1242,9 @@ def seal_packet(packet: dict[str, Any], *, facts: Any | None = None, fail_hard: 
     if decision == "REQUIRED":
         auth_raw = out.get("authority")
         auth = auth_raw if isinstance(auth_raw, dict) else {}
-        contact_fallback = bool(re.search(r"\b(?:phone|call|contact|office|address)\b", json.dumps(auth, default=str), re.I))
+        verified_contact = str(auth.get("contact_status") or "").lower() == "verified" and bool(str(auth.get("phone") or auth.get("address") or "").strip())
         official_source_fallback = bool(str(auth.get("name") or "").strip() and auth.get("source_urls"))
-        if not (auth.get("apply_url") or contact_fallback or official_source_fallback):
+        if not (auth.get("apply_url") or verified_contact or official_source_fallback):
             errors.append("REQUIRED packet missing apply URL or verified AHJ contact fallback")
     segment = str(out.get("segment") or "").lower()
     lead_label = str(out.get("lead_label") or "")

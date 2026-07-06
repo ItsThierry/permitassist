@@ -5539,6 +5539,20 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     elif original_apply_address and not final_public.get("apply_google_maps"):
                         final_public["apply_google_maps"] = build_google_maps_url(city, state, address=original_apply_address, office=str(final_public.get("applying_office") or ""))
                 final_public = _apply_job_address_fields(final_public if isinstance(final_public, dict) else {}, city, state)
+                if source_degraded_input and isinstance(final_public, dict):
+                    final_public["degraded_sources"] = True
+                    warnings = final_public.setdefault("warnings", [])
+                    if isinstance(warnings, list) and not any("source support is degraded" in str(w).lower() for w in warnings):
+                        warnings.append("Exact local source support is degraded; the customer permit decision remains resolved.")
+                    if final_scope_facts_for_packet is not None:
+                        final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts_for_packet)
+                if isinstance(final_public, dict):
+                    for _phone_key in ("apply_phone", "building_dept_phone", "office_phone"):
+                        _phone_value = str(final_public.get(_phone_key) or "").strip()
+                        if re.match(r"^https?://", _phone_value, re.I):
+                            if "google.com/maps" in _phone_value.lower() and not final_public.get("apply_google_maps"):
+                                final_public["apply_google_maps"] = _phone_value
+                            final_public[_phone_key] = ""
                 seal_enabled = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower() not in {"0", "false", "no", "off"}
                 if seal_enabled:
                     railway_prod = any(str(os.environ.get(name) or "").strip().lower() == "production" for name in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME"))
@@ -5552,11 +5566,6 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                         except Exception:
                             pass
                         final_public = _build_degraded_lookup_fallback(job_type, city, state, reason="render_seal_failed")
-                if source_degraded_input and isinstance(final_public, dict):
-                    final_public["degraded_sources"] = True
-                    warnings = final_public.setdefault("warnings", [])
-                    if isinstance(warnings, list) and not any("source support is degraded" in str(w).lower() for w in warnings):
-                        warnings.append("Exact local source support is degraded; the customer permit decision remains resolved.")
         return final_public if isinstance(final_public, dict) else {}
     return {}
 

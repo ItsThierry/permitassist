@@ -180,12 +180,15 @@ def _set_required(out: dict[str, Any], families: set[str], job_text: str, city: 
         out["permit_name"] = names[0]
         out["permit_type"] = names[0]
         out["permit_kind"] = labels[0]
+        out.pop("package_header", None)
         out["customer_headline"] = f"Permit required: {names[0]}."
         summary = f"Permit required: {names[0]}."
     else:
-        out["permit_name"] = "Multiple permits required: " + " + ".join(labels[:6])
-        out["permit_type"] = out["permit_name"]
-        out["permit_kind"] = " + ".join(labels[:6])
+        out["package_header"] = "Multiple permits required: " + " + ".join(labels[:6])
+        primary_name = names[0] if names else "Permit"
+        out["permit_name"] = primary_name
+        out["permit_type"] = primary_name
+        out["permit_kind"] = labels[0] if labels else "Permit package"
         out["customer_headline"] = "Permit required: multiple permits — " + " + ".join(labels[:6]) + "."
         summary = "Multiple permits required: " + "; ".join(names[:8]) + "."
     out["job_summary"] = summary
