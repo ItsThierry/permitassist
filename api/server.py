@@ -2509,7 +2509,7 @@ def _live100_core_truth_recovery_guard(result: dict, job_type: str = "", city: s
 
     kitchen_trade_scope = bool(
         re.search(r"\bkitchen\s+remodel\b", text)
-        and re.search(r"\b(?:moving|relocat(?:e|ing|ion))\s+(?:the\s+)?sink\b|\bsink\s+(?:move|relocat)", text)
+        and re.search(r"\b(?:mov(?:e|ing)|relocat(?:e|ing|ion))\s+(?:the\s+)?(?:kitchen\s+)?sink\b|\bsink\s+(?:move|relocat)", text)
         and re.search(r"\b(?:island\s+)?receptacles?\b|\bnew\s+(?:electrical\s+)?(?:circuit|outlet|receptacle)", text)
     )
     if kitchen_trade_scope:

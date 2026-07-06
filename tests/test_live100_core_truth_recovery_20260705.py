@@ -95,3 +95,17 @@ def test_green_freeze_has_no_core_truth_demotions_for_confirmed_ab_cases(recover
 def test_all_100_core_truth_gate_is_clean(recovery_report: dict):
     assert recovery_report["case_count"] == 100
     assert recovery_report["pass"] is True, json.dumps(recovery_report["errors"][:80], indent=2, sort_keys=True)
+
+
+def test_kitchen_sink_move_wording_variant_stays_required(tmp_path: Path):
+    server = recovery.import_server(tmp_path)
+    public = server.build_customer_permit_view_model(
+        {"permit_decision": "NOT_REQUIRED", "permit_required": False, "permit_verdict": "NO", "permits_required": []},
+        "move kitchen sink and add island receptacles, residential kitchen remodel no structural changes",
+        "South Bend",
+        "IN",
+        job_category="residential",
+    )
+    families = sorted({str(row.get("filing_family") or row.get("family") or "") for row in public.get("permits_required") or []})
+    assert public.get("permit_decision") == "REQUIRED", public
+    assert families == ["building", "electrical", "plumbing"], public
