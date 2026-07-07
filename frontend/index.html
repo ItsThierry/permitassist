@@ -2807,7 +2807,14 @@ function hasPositiveNoPermitEvidence(d){
   });
   const saysNoPermit = /\b(no permit required|permit (?:is )?not required|does not require a permit|exempt(?:ion|ed)?|no (?:building )?permit)\b/i.test(textEvidence);
   const hasCitation = Boolean(d?.code_citation || /\b(code|ordinance|section|chapter|exemption|official|source)\b/i.test(textEvidence));
-  return permitEvidence || (saysNoPermit && (hasCitation || hasOfficialSource));
+  const packet = (d && typeof d.public_packet === 'object') ? d.public_packet : {};
+  const packetVerdict = String(packet.permit_required_verdict || packet.decision || '').toUpperCase().trim();
+  const backendCertifiedNotRequired = (
+    d?.permit_required === false &&
+    String(d?.permit_decision || '').toUpperCase().trim() === 'NOT_REQUIRED' &&
+    (packetVerdict === 'NOT_REQUIRED' || Boolean(d?.sealed_public_packet_hash || packet.sealed_public_packet_hash))
+  );
+  return backendCertifiedNotRequired || permitEvidence || (saysNoPermit && (hasCitation || hasOfficialSource));
 }
 
 function verdictState(d){

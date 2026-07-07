@@ -33,6 +33,7 @@ _FAMILY_LABELS = {
     "battery_storage": "Electrical",
     "environmental": "Environmental/Fuel-System",
     "grading": "Right-of-Way / Site/Civil",
+    "fence": "Fence",
 }
 
 _DEFAULT_NAMES = {
@@ -56,6 +57,7 @@ _DEFAULT_NAMES = {
     "battery_storage": "Battery / Energy Storage Permit",
     "environmental": "Environmental / Fuel-System Review",
     "grading": "Right-of-Way / Site/Civil Permit",
+    "fence": "Fence Permit / Planning Review",
 }
 
 _NAMED_AUTHORITY_CONTACTS: dict[tuple[str, str], str] = {}
@@ -69,6 +71,57 @@ def _norm(text: object) -> str:
 
 def _has(text: str, pattern: str) -> bool:
     return bool(re.search(pattern, text, flags=re.I))
+
+
+def _not_negated(text: str, pattern: str) -> bool:
+    match = re.search(pattern, text, flags=re.I)
+    if not match:
+        return False
+    prefix = text[max(0, match.start() - 28):match.start()]
+    return not re.search(r"\b(?:no|not|without|exclude(?:s|d)?|excluding)\s+(?:any\s+)?$", prefix, flags=re.I)
+
+
+def _positive_electrical_scope(text: str) -> bool:
+    patterns = (
+        r"\b(?:electrical|lighting|exit signage|fire alarm tie-in|600a|subpanel|ev charging|charger|transformer|disconnect|wiring|vacuums?|dispensers?|circuits?|receptacles?)\b",
+        r"\b(?:new|upgrade|upgrad(?:e|ing)|replace|relocat(?:e|ing)|alter|install|modify)\s+(?:electrical\s+)?service\b",
+        r"\b(?:electrical\s+)?service\s+(?:upgrade|change|replacement|relocation|equipment|panel|disconnect|meter)\b",
+        r"\b(?:auto repair|service bays?|vehicle bays?)\b.{0,60}\blifts?\b",
+        r"\blifts?\b.{0,60}\b(?:auto repair|service bays?|vehicle bays?)\b",
+        r"\b(?:cooler rooms?|walk-in cooler|condensing units?)\b.{0,80}\b(?:controls?|power|electrical|circuit|disconnect|wiring)\b",
+    )
+    return any(_not_negated(text, pattern) for pattern in patterns)
+
+
+def _positive_mechanical_scope(text: str) -> bool:
+    patterns = (
+        r"\b(?:hvac|makeup air|make-up air|ventilation|exhaust|dust collection|cyclone|explosion venting|condensing units?|cooler rooms?|walk-in cooler|bakery oven|wood stove|chimney|heat pump|mini split|compressor)\b",
+        r"\bcommercial\s+dishwasher\b",
+    )
+    return any(_not_negated(text, pattern) for pattern in patterns)
+
+
+def _positive_plumbing_scope(text: str) -> bool:
+    patterns = (
+        r"\b(?:plumbing|water heaters?|backflow|irrigation|underground product piping|reclaim system|toilet|bathroom|kitchenette|oil separator|grease interceptor)\b",
+        r"\b(?:prep|mop|hand|three[- ]compartment|breakroom|kitchen|utility)\s+sink\b",
+        r"\b(?:locker rooms?|fitness studio|gym|health club)\b.{0,60}\bshowers?\b",
+        r"\bshowers?\b.{0,60}\b(?:locker rooms?|fitness studio|gym|health club)\b",
+        r"\b(?:cooler rooms?|walk-in cooler|refrigerated|refrigeration|produce cooler)\b.{0,80}\b(?:drains?|floor drains?|condensate)\b",
+        r"\b(?:add|adding|install|new|relocat(?:e|ing)|move|moving|replace|rough[- ]?in)\b.{0,32}\b(?:sink|shower|drain|floor drain|floor drains)\b",
+        r"\b(?:sink|shower|drain|floor drain|floor drains)\b.{0,32}\b(?:add|install|new|relocat(?:e|ing)|move|replacement|rough[- ]?in)\b",
+    )
+    return any(_not_negated(text, pattern) for pattern in patterns)
+
+
+def _positive_food_scope(text: str) -> bool:
+    if _has(text, r"\bno\s+(?:kitchen|food service|food prep|food preparation|commercial kitchen|restaurant|cooking|grease|fog)\b"):
+        return False
+    return _has(text, r"\b(?:deli prep|grocery\s+(?:prep|deli|bakery)|bakery|walk-in cooler|restaurant|commercial kitchen|food service|food prep|food preparation|cooking line|fryer|griddle|type\s*i\s*hood)\b")
+
+
+def _residential_non_food_scope(text: str, segment: str) -> bool:
+    return (segment == "residential" or _has(text, r"\b(?:residential|single[- ]family|homeowner|house|dwelling|kitchen)\b")) and not _positive_food_scope(text)
 
 
 def _row_family(row: dict[str, Any]) -> str:
@@ -124,6 +177,8 @@ def _make_row(family: str, job_text: str = "", *, existing: dict[str, Any] | Non
         name = "Plumbing Permit — Showers / Fixture Work"
     elif family == "plumbing" and _has(job_text, r"\b(?:irrigation|backflow)\b"):
         name = "Plumbing Permit — Irrigation Backflow Preventer"
+    elif family == "fence" and _has(job_text, r"\bfences?\b"):
+        name = "Fence Permit / Planning Review"
     row.update({
         "permit_type": name,
         "permit_name": name,
@@ -143,11 +198,42 @@ def _make_row(family: str, job_text: str = "", *, existing: dict[str, Any] | Non
     return row
 
 
+def _drop_stale_projection_artifacts(out: dict[str, Any]) -> None:
+    """Discard packet/seal mirrors whenever this gate changes the decision core."""
+    for key in (
+        "public_packet",
+        "canonical_public_packet",
+        "public_packet_rows",
+        "sealed_public_packet_hash",
+        "render_seal_hash",
+        "render_seal_status",
+        "render_seal_reason",
+        "_render_seal_status",
+        "_render_seal_reason",
+    ):
+        out.pop(key, None)
+
+
+def _session3_false_no_floor_scope(job_text: str) -> bool:
+    text = _norm(job_text)
+    return bool(
+        (_has(text, r"\b(?:refrigerated|refrigeration|cooler rooms?|walk-in cooler|condensing units?)\b") and _has(text, r"\b(?:warehouse|commercial|drains?|floor drains?)\b"))
+        or (_has(text, r"\b(?:ev\s+charging|ev\s+chargers?|charging stations?)\b") and _has(text, r"\b(?:transformer\s+pad|trenching|parking\s+lot)\b"))
+        or (_has(text, r"\b(?:wood\s+stove|solid[- ]fuel)\b") and _has(text, r"\bchimney\b"))
+    )
+
+
 def _required_rows(public: dict[str, Any]) -> list[dict[str, Any]]:
     return [copy.deepcopy(r) for r in public.get("permits_required") or [] if isinstance(r, dict) and str(r.get("decision") or r.get("status") or ("REQUIRED" if r.get("required") is True else "")).upper() == "REQUIRED"]
 
 
 def _set_required(out: dict[str, Any], families: set[str], job_text: str, city: str, state: str) -> None:
+    previous_decision = str(out.get("permit_decision") or "").upper().strip()
+    previous_packet = out.get("public_packet") if isinstance(out.get("public_packet"), dict) else {}
+    previous_packet_decision = str(previous_packet.get("decision") or previous_packet.get("permit_required_verdict") or "").upper().strip()
+    stale_not_required_projection = previous_decision != "REQUIRED" or out.get("permit_required") is False or previous_packet_decision == "NOT_REQUIRED"
+    if stale_not_required_projection and _session3_false_no_floor_scope(job_text):
+        _drop_stale_projection_artifacts(out)
     rows = _required_rows(out)
     by_family: dict[str, dict[str, Any]] = {}
     for row in rows:
@@ -200,6 +286,7 @@ def _set_required(out: dict[str, Any], families: set[str], job_text: str, city: 
 
 
 def _mark_not_required(out: dict[str, Any], job_text: str, city: str, state: str) -> None:
+    _drop_stale_projection_artifacts(out)
     office = str(out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office").strip()
     out.update({
         "permit_required": False,
@@ -222,29 +309,67 @@ def _mark_not_required(out: dict[str, Any], job_text: str, city: str, state: str
     out["apply_path"] = {"state": "NOT_APPLICABLE", "channel": "no_permit_required", "support_level": "not applicable", "portal_url": None, "office_name": office, "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope."}
 
 
+def _like_for_like_residential_fence_scope(job_type: str, segment: str) -> bool:
+    text = _norm(job_type)
+    if segment == "commercial" or not _has(text, r"\bfences?\b"):
+        return False
+    if not _has(text, r"\b(?:replace|replacement|repair|rebuild)\b"):
+        return False
+    if not _has(text, r"\b(?:same\s+height|same\s+location|same\s+footprint|like[- ]for[- ]like|existing\s+height)\b"):
+        return False
+    risky_text = re.sub(r"\bno\s+(?:retaining\s+wall|pool\s+barrier|pool\s+fence)\b", " ", text, flags=re.I)
+    if _has(risky_text, r"\b(?:new\s+fence|increase\s+height|taller|retaining\s+wall|pool\s+barrier|pool\s+fence|front\s+yard|corner\s+lot|historic|landmark)\b"):
+        return False
+    if _triggered_families(job_type, segment):
+        return False
+    explicit_low_risk = _has(text, r"\bno\s+retaining\s+wall\b") and _has(text, r"\bno\s+pool\s+barrier\b")
+    return explicit_low_risk
+
+
+def _conditionalize_like_for_like_fence(out: dict[str, Any], job_text: str, city: str, state: str) -> None:
+    related = [copy.deepcopy(r) for r in out.get("related_permits") or [] if isinstance(r, dict)]
+    fence_row = _make_row("fence", job_text, status="VERIFY")
+    fence_row.update({
+        "required_if": "Required only if local fence rules trigger review based on height, front/corner-yard location, easement/setback, retaining-wall function, pool-barrier use, historic overlay, or HOA/zoning conditions.",
+        "trigger_condition": "Same-height backyard fence replacement with no retaining wall and no pool-barrier function is not treated as a hard building-permit requirement by the deterministic floor; verify local fence/zoning thresholds before construction.",
+        "condition_text": "Verify local fence/zoning thresholds if height, location, retaining-wall function, pool-barrier use, easements, or overlays differ from the stated replacement scope.",
+    })
+    if not any(_row_family(row) == "fence" for row in related):
+        related.append(fence_row)
+    _mark_not_required(out, job_text, city, state)
+    out["related_permits"] = related
+    out["conditional_permits"] = related
+    out["not_required_reason"] = "Same-height backyard fence replacement is treated as not a hard building-permit requirement when there is no retaining wall, no pool-barrier function, and no stated height/location expansion; verify local fence/zoning thresholds for height, setbacks/easements, front or corner-yard placement, historic overlays, and HOA rules."
+    out["customer_headline"] = "No building permit expected for the stated same-height fence replacement; verify fence/zoning thresholds."
+    office = out.get("applying_office") or f"{city} permit office"
+    out["customer_next_step"] = f"Verify fence/zoning thresholds with {office} before starting, especially height, setbacks/easements, front or corner-yard placement, retaining wall function, pool barrier use, historic overlays, and HOA rules."
+
+
 def _triggered_families(job_type: str, segment: str) -> set[str]:
     text = _norm(job_type)
     families: set[str] = set()
     commercial = segment == "commercial" or _has(text, r"\b(?:commercial|restaurant|brewery|warehouse|retail|office|school|laundromat|grocery|marine repair|auto repair|car wash|gas station|fitness studio)\b")
-    if _has(text, r"\b(?:tenant improvement|demising wall|partition|build.?out|suite|mezzanine|modular classroom|car wash tunnel|shade structure|patio|canopy|service bays?|garage.*(?:office|adu|conversion|convert)|convert\s+.*garage|accessory dwelling|adu|carport|retaining wall|shed|cooler rooms?|transformer pad)\b"):
+    if _not_negated(text, r"\b(?:tenant improvement|demising wall|partition|build.?out|mezzanine|modular classroom|car wash tunnel|shade structure|patio|canopy|service bays?|garage.*(?:office|adu|conversion|convert)|convert\s+.*garage|accessory dwelling|adu|carport|retaining wall|shed|cooler rooms?|transformer pad)\b"):
         families.add("building_ti" if commercial and not _has(text, r"\b(?:car wash tunnel|modular classroom|shade structure|patio|canopy|service bays?|fuel canopy)\b") else "building")
+    if _not_negated(text, r"\b(?:kitchen|bathroom|basement)\b.{0,40}\b(?:remodel|renovation|alteration)\b|\b(?:remodel|renovation|alteration)\b.{0,40}\b(?:kitchen|bathroom|basement)\b"):
+        families.add("building_ti" if commercial else "building")
     if _has(text, r"\b(?:parking lot|restripe|ada stalls?|driveway curb cut|curb cut|right.of.way|row)\b"):
         families.add("grading")
-    if _has(text, r"\b(?:electrical|lighting|exit signage|fire alarm tie-in|600a|service|subpanel|ev charging|charger|transformer|disconnect|wiring|vacuums?|dispensers?)\b"):
+    if _positive_electrical_scope(text):
         families.add("electrical")
-    if _has(text, r"\b(?:hvac|makeup air|make-up air|ventilation|exhaust|dust collection|cyclone|explosion venting|condensing units?|cooler rooms?|walk-in cooler|bakery oven|wood stove|chimney|heat pump|mini split|compressor|commercial dishwasher|dishwasher)\b"):
+    if _positive_mechanical_scope(text):
         families.add("mechanical")
     if _has(text, r"\b(?:cooler rooms?|walk-in cooler|refrigerated|refrigeration|condensing units?)\b"):
         families.add("refrigeration")
-    if _has(text, r"\b(?:floor drains?|drains?|water heaters?|showers?|locker rooms?|prep sink|sink|oil separator|backflow|irrigation|underground product piping|reclaim system|plumbing|toilet|bathroom|kitchenette)\b"):
+    if _positive_plumbing_scope(text):
         families.add("plumbing")
     if _has(text, r"\b(?:gas dryers?|gas line|gas station|fuel canopy|fuel dispensers?)\b"):
         families.add("gas")
-    if _has(text, r"\b(?:fire alarm|fire suppression|sprinkler|life safety|explosion venting|fuel canopy|dispensers?|ust|wood stove|chimney)\b"):
+    if _has(text, r"\b(?:fire alarm|fire suppression|sprinkler|life safety|explosion venting|fuel canopy|dispensers?|ust|wood stove|chimney|type\s*i\s*hood|ansul)\b"):
         families.add("fire_suppression")
-    if _has(text, r"\b(?:deli prep|grocery|bakery|walk-in cooler|restaurant|commercial kitchen|food service)\b") and not _has(text, r"\bno\s+(?:kitchen|food service|food prep|commercial kitchen)\b"):
+    if _positive_food_scope(text):
         families.add("health_food")
-    if _has(text, r"\b(?:grease|fog|oil separator|floor drains?|reclaim system|food service|deli prep|bakery)\b") and not _has(text, r"\bno\s+(?:kitchen|food service|food prep|grease|fog)\b"):
+    if (_has(text, r"\b(?:grease|fog|oil separator|grease interceptor|floor drains?|reclaim system|deli prep|bakery)\b") or _positive_food_scope(text)) and not _has(text, r"\bno\s+(?:kitchen|food service|food prep|food preparation|grease|fog)\b"):
         families.add("wastewater_pretreatment_fog")
     if _has(text, r"\b(?:signs?|signage)\b") and not _has(text, r"\bexit signage\b"):
         families.add("sign")
@@ -253,6 +378,7 @@ def _triggered_families(job_type: str, segment: str) -> set[str]:
     if _has(text, r"\b(?:solar\s+(?:pv|panels?|array)|photovoltaic|\bpv\s+(?:system|array|panels?))\b"):
         families.add("solar_pv")
     if commercial and _has(text, r"\b(?:convert|change of use|former retail|retail suite|warehouse to|laundromat|fitness studio|grocery)\b"):
+        families.add("building_ti")
         families.add("co_change_of_occupancy")
         families.add("planning_zoning")
     if _has(text, r"\b(?:fuel canopy|gas station|underground product piping|dispensers?)\b"):
@@ -261,7 +387,10 @@ def _triggered_families(job_type: str, segment: str) -> set[str]:
     if _has(text, r"\bno\s+(?:kitchen|food service|food prep|commercial kitchen|grease|fog|plumbing)\b"):
         families.discard("health_food")
         families.discard("wastewater_pretreatment_fog")
-    if _has(text, r"\bno\s+(?:plumbing|sink move|sink relocation|pipe|water line)\b") and not _has(text, r"\b(?:shower|drain|backflow|irrigation|oil separator|floor drain)\b"):
+    if _residential_non_food_scope(text, segment):
+        families.discard("health_food")
+        families.discard("wastewater_pretreatment_fog")
+    if _has(text, r"\bno\s+(?:plumbing|sink move|sink relocation|pipe|water line)\b"):
         families.discard("plumbing")
     if _has(text, r"\bexhaust fan\b") and _has(text, r"\bno\s+(?:duct route changes?|electrical circuit changes?)\b"):
         families.discard("plumbing")
@@ -329,16 +458,22 @@ def _demote_or_drop_overreach(out: dict[str, Any], job_type: str) -> None:
             continue
         fam = _row_family(row)
         drop = False
+        drop_to_related = True
         if fam in {"health_food", "wastewater_pretreatment_fog", "liquor"} and (
             _has(text, r"\bno\s+(?:kitchen|food service|food prep|commercial kitchen|grease|fog|plumbing)\b")
+            or _residential_non_food_scope(text, "residential" if _has(text, r"\b(?:residential|single[- ]family|homeowner|house|dwelling)\b") else "")
             or (_has(text, r"\b(?:repair shop|industrial|warehouse|solvent storage|compressor)\b") and not _has(text, r"\b(?:food|restaurant|kitchen|deli|bakery|grocery|grease|fog|brewery|taproom|brewing)\b"))
         ):
             drop = True
+            if _residential_non_food_scope(text, "residential" if _has(text, r"\b(?:residential|single[- ]family|homeowner|house|dwelling)\b") else ""):
+                drop_to_related = False
         if fam == "sign" and _has(text, r"\bexit signage\b") and not _has(text, r"\b(?:exterior sign|storefront sign|illuminated sign|new sign)\b"):
             drop = True
         if fam == "plumbing" and _has(text, r"\bexhaust fan\b") and _has(text, r"\bno\s+(?:duct route changes?|electrical circuit changes?)\b"):
             drop = True
         if drop:
+            if not drop_to_related:
+                continue
             demoted = copy.deepcopy(row)
             demoted.update({"required": False, "decision": "CONDITIONAL", "status": "CONDITIONAL", "required_if": "Only needed if final scope or AHJ intake confirms this companion review is actually triggered."})
             related.append(demoted)
@@ -402,6 +537,10 @@ def apply_fable5_final_customer_gate(public: dict[str, Any], job_type: str = "",
     # E2 high-risk safe downgrades: only for explicit cosmetic/no-trade scopes.
     if _cosmetic_not_required(job_type) and segment != "commercial":
         _mark_not_required(out, job_text, city, state)
+        return out
+
+    if _like_for_like_residential_fence_scope(job_type, segment):
+        _conditionalize_like_for_like_fence(out, job_text, city, state)
         return out
 
     _demote_or_drop_overreach(out, job_type)

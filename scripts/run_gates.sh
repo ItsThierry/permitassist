@@ -5,8 +5,12 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 PYTHON_BIN="${PYTHON_BIN:-python3}"
-PYTEST_CMD=(uv run --with pytest python -m pytest)
-ARTIFACT_DIR="${PERMITASSIST_GATE_ARTIFACT_DIR:-$ROOT/artifacts/titi_build_20260706_session2/run_gates}"
+if command -v uv >/dev/null 2>&1; then
+  PYTEST_CMD=(uv run --with pytest --with openai --with requests --with tavily-python --with google-generativeai --with beautifulsoup4 --with lxml --with pdfplumber --with sentry-sdk python -m pytest)
+else
+  PYTEST_CMD=("$PYTHON_BIN" -m pytest)
+fi
+ARTIFACT_DIR="${PERMITASSIST_GATE_ARTIFACT_DIR:-$ROOT/artifacts/run_gates/$(date -u +%Y%m%dT%H%M%SZ)}"
 mkdir -p "$ARTIFACT_DIR"
 
 echo "RUN_GATES_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)" | tee "$ARTIFACT_DIR/run_gates_summary.txt"
@@ -39,6 +43,9 @@ $PYTHON_BIN -m py_compile \
   tests/test_prod_mode_invariants.py \
   tests/test_seal_is_last_mutation.py \
   tests/test_session1_p1_contracts.py \
+  tests/test_fable5_20260707_session1_b1_b3_contracts.py \
+  tests/test_fable5_20260707_session2_contracts.py \
+  tests/test_fable5_20260707_session3_contracts.py \
   tests/test_no_pytest_branches_in_api.py \
   2>&1 | tee "$ARTIFACT_DIR/pytest_focused.txt"
 

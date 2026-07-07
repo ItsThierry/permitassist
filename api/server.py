@@ -843,6 +843,7 @@ _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
     "customer_headline", "customer_next_step", "summary", "job_summary", "scope_summary",
     "confidence", "confidence_level", "confidence_reason", "data_source", "county_fallback_note",
     "source_confidence", "source_support", "local_form_known", "apply_url_known", "degraded_sources",
+    "render_seal_status", "render_seal_reason",
     "requirements", "documents_needed", "what_to_bring", "next_steps", "pro_tips",
     "common_mistakes", "watch_out", "checklist", "inspections", "inspect_checklist",
     "inspection_requirements", "inspection_booking", "fee_range", "fee_estimate",
@@ -3951,6 +3952,10 @@ def _live60_apply_not_required_contract(public: dict, job_type: str, city: str, 
         "claim_citations": [],
         "pro_tips": ["Keep the scope tight and document that no trade, framing, occupancy, fire/life-safety, exterior, or accessibility work was added."],
         "common_mistakes": ["Letting the scope expand into trade, framing, occupancy, fire/life-safety, exterior, or accessibility work without checking the permit office first."],
+        "_render_seal_status": out.get("_render_seal_status") or "UNSEALED_NOT_REQUIRED_CONTRACT",
+        "_render_seal_reason": out.get("_render_seal_reason") or "not_required_contract_without_public_packet_projection",
+        "render_seal_status": out.get("render_seal_status") or out.get("_render_seal_status") or "UNSEALED_NOT_REQUIRED_CONTRACT",
+        "render_seal_reason": out.get("render_seal_reason") or out.get("_render_seal_reason") or "not_required_contract_without_public_packet_projection",
     })
     out["apply_path"] = {"state": "NOT_APPLICABLE", "channel": "no_permit_required", "support_level": "not applicable", "portal_url": None, "platform": None, "login_required": None, "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope."}
     return out
@@ -4802,6 +4807,9 @@ def finalize_customer_public_projection(public: dict, job_type: str, city: str, 
             projected.setdefault(key, [])
         projected.setdefault("apply_url", "")
         projected.setdefault("online_application_url", "")
+        if not projected.get("sealed_public_packet_hash"):
+            projected.setdefault("render_seal_status", "UNSEALED_NOT_REQUIRED_CONTRACT")
+            projected.setdefault("render_seal_reason", "not_required_projection_without_render_parity_seal")
     if isinstance(projected, dict):
         fee_range = projected.get("fee_range")
         if isinstance(fee_range, str) and "building department fee schedule" in fee_range.lower():
@@ -4844,6 +4852,10 @@ def _build_degraded_lookup_fallback(job_type: str, city: str, state: str, *, rea
         "online_application_url": "",
         "applying_office": office,
         "_runtime_degraded_fallback": {"reason": reason, "timeout_seconds": PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS},
+        "render_seal_status": "UNSEALED_DEGRADED_FALLBACK",
+        "render_seal_reason": reason,
+        "_render_seal_status": "UNSEALED_DEGRADED_FALLBACK",
+        "_render_seal_reason": reason,
     }
 
 
@@ -5228,7 +5240,17 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         cleaned_noncommercial = str(scope_contract.get("category") or "").lower() != "commercial" and not str(scope_contract.get("family") or "").lower().startswith("commercial")
         if source_backed_not_required_cleaned and cleaned_noncommercial and str((result if isinstance(result, dict) else {}).get("permit_decision") or "").upper().strip() != "REQUIRED":
             guarded_cleaned = _live100_core_truth_recovery_guard(cleaned, job_type, city, state)
-            return finalize_customer_public_projection(guarded_cleaned, job_type, city, state, scope_contract)
+            projected_cleaned = finalize_customer_public_projection(guarded_cleaned, job_type, city, state, scope_contract)
+            try:
+                source_backed_facts = build_scope_facts_v4(job_type, city, state, job_category=scope_contract.get("category"), scope_contract=scope_contract)
+                projected_cleaned = apply_render_parity_seal(projected_cleaned if isinstance(projected_cleaned, dict) else {}, facts=source_backed_facts, fail_hard=False)
+            except Exception as exc:
+                if isinstance(projected_cleaned, dict):
+                    projected_cleaned["render_seal_status"] = "UNSEALED_SOURCE_BACKED_NOT_REQUIRED_EARLY_RETURN"
+                    projected_cleaned["render_seal_reason"] = f"{exc.__class__.__name__}: {str(exc)[:240]}"
+                    projected_cleaned["_render_seal_status"] = projected_cleaned["render_seal_status"]
+                    projected_cleaned["_render_seal_reason"] = projected_cleaned["render_seal_reason"]
+            return projected_cleaned if isinstance(projected_cleaned, dict) else {}
     public = _public_dict(cleaned if isinstance(cleaned, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
     if isinstance(public, dict):
         dto = resolve_customer_decision({"result": public, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
@@ -5590,6 +5612,22 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                         except Exception:
                             pass
                         final_public = _build_degraded_lookup_fallback(job_type, city, state, reason="render_seal_failed")
+        if isinstance(final_public, dict):
+            if str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED":
+                final_public.pop("package_header", None)
+            if (
+                str(final_public.get("permit_decision") or "").upper().strip() != "NOT_REQUIRED"
+                and str(final_public.get("render_seal_status") or "") == "UNSEALED_NOT_REQUIRED_CONTRACT"
+            ):
+                final_public.pop("render_seal_status", None)
+                final_public.pop("render_seal_reason", None)
+            if (
+                str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+                and not final_public.get("sealed_public_packet_hash")
+                and not final_public.get("render_seal_status")
+            ):
+                final_public["render_seal_status"] = "UNSEALED_NOT_REQUIRED_CONTRACT"
+                final_public["render_seal_reason"] = "not_required_payload_without_public_packet_projection"
         return final_public if isinstance(final_public, dict) else {}
     return {}
 

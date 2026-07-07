@@ -8475,6 +8475,46 @@ def _try_repair_truncated_json(text: str):
     return None
 
 
+def _has_positive_no_permit_evidence_for_verdict(result: dict) -> bool:
+    """True only when a NO verdict has affirmative no-permit/exemption support."""
+    if not isinstance(result, dict):
+        return False
+    if result.get("permit_required") is False:
+        return True
+    if str(result.get("permit_decision") or "").upper() == "NOT_REQUIRED":
+        return True
+    if result.get("positive_exemption_evidence") or result.get("exemption_evidence"):
+        return True
+    for key in ("not_required_reason", "exemption_reason", "permit_exemption", "no_permit_reason"):
+        if str(result.get(key) or "").strip():
+            return True
+    citation = result.get("code_citation")
+    citation_text = json.dumps(citation, default=str).lower() if isinstance(citation, (dict, list)) else str(citation or "").lower()
+    if any(token in citation_text for token in ("not required", "no permit", "exempt", "exemption")):
+        return True
+    return False
+
+
+def _derive_permit_verdict_from_result(result: dict) -> str:
+    """Derive frontend permit_verdict without treating omission as NO."""
+    permits = result.get("permits_required", []) if isinstance(result, dict) else []
+    if not permits:
+        return "NO" if _has_positive_no_permit_evidence_for_verdict(result) and not result.get("_json_repaired") else "MAYBE"
+    first = permits[0] if isinstance(permits, list) and permits else {}
+    first_req = first.get("required") if isinstance(first, dict) else None
+    if first_req is True:
+        return "YES"
+    if first_req is False:
+        return "NO" if _has_positive_no_permit_evidence_for_verdict(result) and not result.get("_json_repaired") else "MAYBE"
+    if first_req == "maybe":
+        return "MAYBE"
+    fee = str(result.get("fee_range", "")).lower()
+    summary = str(result.get("job_summary", "") + result.get("permit_summary", "")).lower()
+    if ("no permit" in fee or "no permit" in summary or "not required" in summary) and _has_positive_no_permit_evidence_for_verdict(result) and not result.get("_json_repaired"):
+        return "NO"
+    return "MAYBE"
+
+
 def _retry_with_minimal_prompt(user_prompt: str, _openai_call_fn=None):
     """Last-resort retry with a stripped-down system prompt asking for a
     minimal JSON shape. Used when the full prompt repeatedly produces
@@ -9333,6 +9373,8 @@ Return ONLY the JSON object."""
             # data than a 500.
             result = _try_repair_truncated_json(cleaned)
             if result is not None:
+                if isinstance(result, dict):
+                    result["_json_repaired"] = True
                 print(f"[engine] Repaired truncated/malformed JSON after model failure ({e2})")
             else:
                 # Last resort: ask the model to retry with a shorter, stricter prompt.
@@ -9465,28 +9507,11 @@ Return ONLY the JSON object."""
             )
 
     # Derive top-level permit_verdict from permits_required array
-    # Frontend verdictState() reads this field
+    # Frontend verdictState() reads this field. Absence of permit rows is not
+    # affirmative no-permit evidence; leave it MAYBE so the customer resolver can
+    # apply the REQUIRED floor unless an explicit/source-backed exemption exists.
     if not result.get("permit_verdict"):
-        permits = result.get("permits_required", [])
-        if not permits:
-            # Empty array = GPT said no permit needed
-            result["permit_verdict"] = "NO"
-        else:
-            first_req = permits[0].get("required")
-            if first_req is True:
-                result["permit_verdict"] = "YES"
-            elif first_req is False:
-                result["permit_verdict"] = "NO"
-            elif first_req == "maybe":
-                result["permit_verdict"] = "MAYBE"
-            else:
-                # required field missing or unknown value — check fee/summary for hints
-                fee = str(result.get("fee_range", "")).lower()
-                summary = str(result.get("job_summary", "") + result.get("permit_summary", "")).lower()
-                if "no permit" in fee or "no permit" in summary or "not required" in summary:
-                    result["permit_verdict"] = "NO"
-                else:
-                    result["permit_verdict"] = "MAYBE"
+        result["permit_verdict"] = _derive_permit_verdict_from_result(result)
 
     # ── City Database Fallbacks for Missing Fields ──
     if city_match_level == "city":
