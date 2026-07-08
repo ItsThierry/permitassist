@@ -114,3 +114,45 @@ def test_known_bad_apply_urls_are_repaired_to_landing_pages() -> None:
     projected = apply_public_packet_projection(stale, facts)
     assert "Retail-Food-Facility-Permit-Application.pdf" not in projected.get("apply_url", "")
     assert projected.get("apply_url", "").startswith("https://sonomacounty.ca.gov/")
+
+
+def test_hpwh_water_heater_only_ceiling_blocks_building_mechanical_and_existing_circuit_electrical() -> None:
+    job = "replace electric tank water heater with heat pump water heater in basement, new condensate line, existing dedicated circuit"
+    facts = build_scope_facts_v4(job, "Ithaca", "NY", job_category="residential")
+    assert "plumbing" in facts.request_positive_families
+    assert "building" not in facts.request_positive_families
+    assert "mechanical" not in facts.request_positive_families
+    assert "electrical" not in facts.request_positive_families
+
+    stale = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permits_required": [
+            {"permit_name": "Building Permit", "family": "building", "required": True, "decision": "REQUIRED"},
+            {"permit_name": "Mechanical Permit", "family": "mechanical", "required": True, "decision": "REQUIRED"},
+            {"permit_name": "Electrical Permit", "family": "electrical", "required": True, "decision": "REQUIRED"},
+            {"permit_name": "Plumbing Permit", "family": "plumbing", "required": True, "decision": "REQUIRED"},
+        ],
+    }
+    projected = apply_public_packet_projection(stale, facts)
+    assert _families(projected) == {"plumbing"}
+
+
+def test_commercial_interior_build_scopes_floor_building_without_case_ids() -> None:
+    examples = [
+        "place two temporary modular classrooms on private school campus with ramps, electrical feeder and fire alarm connection",
+        "build 3000 square foot refrigerated cold storage room inside warehouse with insulated panels, ammonia-free refrigeration and floor drains",
+        "build small data room in office suite with supplemental cooling, clean agent fire suppression and new UPS circuits",
+        "add single accessible restroom inside warehouse with trench drain connection, exhaust fan and water heater",
+    ]
+    for job in examples:
+        facts = build_scope_facts_v4(job, "Testville", "TX", job_category="commercial")
+        assert "building" in facts.request_positive_families, job
+
+
+def test_exit_signs_do_not_become_illuminated_sign_scope() -> None:
+    job = "split existing retail suite into two tenant spaces with demising wall, exit signs and electrical panel separation, no plumbing"
+    facts = build_scope_facts_v4(job, "Tallahassee", "FL", job_category="commercial")
+    assert "electrical" in facts.request_positive_families
+    assert "sign" not in facts.request_positive_families

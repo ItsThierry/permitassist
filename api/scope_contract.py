@@ -359,7 +359,7 @@ _TRADE_SIGNAL_PATTERNS: dict[str, tuple[str, ...]] = {
     "grease_interceptor_only": ("grease interceptor only", "interceptor only"),
 }
 _SPECIAL_SIGNAL_PATTERNS: dict[str, tuple[str, ...]] = {
-    "historic": ("historic", "historic district", "historic overlay", "local historic district", "landmark", "french quarter", "vieux carre", "vieux carré", "vcc", "hdlc", "certificate of appropriateness", "coa", "architectural review", "bar", "board of architectural review"),
+    "historic": ("historic", "historic district", "historic overlay", "local historic district", "landmark", "french quarter", "vieux carre", "vieux carré", "vcc", "hdlc", "certificate of appropriateness", "coa", "architectural review", "board of architectural review"),
     "exterior_alteration": ("exterior facade", "front facade", "facade", "façade", "shutter", "shutters", "shutter replacement", "exterior sign", "sign replacement", "awning", "storefront", "exterior window", "exterior windows", "front window", "front windows", "window replacement", "windows", "exterior door", "door replacement"),
     "coastal": ("coastal", "shoreline", "windstorm", "twia"),
     "flood": ("flood", "floodplain", "fema", "sfha"),
@@ -518,7 +518,12 @@ def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
         facts.add("building")
     if "health" in v1.special_signals:
         facts.add("food_service")
-    if re.search(r"\b(?:change\s+of\s+(?:use|occupancy)|occupancy\s+change|convert(?:ing|ed)?\b|conversion\b|retail\s+to|office\s+to|warehouse\s+to)\b", job, re.I):
+    use_change_request = bool(
+        re.search(r"\b(?:change\s+of\s+(?:use|occupancy)|occupancy\s+change|retail\s+to|office\s+to|warehouse\s+to)\b", job, re.I)
+        or re.search(r"\b(?:convert|converting|converted|conversion)\b.{0,80}\b(?:garage|adu|accessory\s+dwelling|bedroom|habitable|office|retail|warehouse|restaurant|bar|gym|fitness|assembly|dwelling\s+unit|living\s+space)\b", job, re.I)
+        or re.search(r"\b(?:garage|office|retail|warehouse|storefront|suite)\b.{0,80}\b(?:convert|converting|converted|conversion)\b", job, re.I)
+    )
+    if use_change_request:
         facts.add("use_change")
         if v1.segment == "commercial":
             facts.add("commercial_ti")
@@ -542,9 +547,9 @@ def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
         facts.add("new_dwelling_unit")
     if re.search(r"\b(?:utilities|kitchen|bath|bathroom|water|sewer|electrical|panel|gas)\b", job, re.I) and "new_dwelling_unit" in facts:
         facts.add("utilities_connected")
-    if re.search(r"\b(?:sign|awning)\b", job, re.I):
+    if re.search(r"\b(?:sign|signage|awning)\b", job, re.I) and not re.search(r"\bexit\s+signs?\b", job, re.I):
         facts.add("sign")
-    if re.search(r"\b(?:illuminated|lit|lighting|electric sign)\b", job, re.I) and not re.search(r"\b(?:non[- ]?electric|no\s+electrical|no\s+illumination|not\s+illuminated)\b", job, re.I):
+    if re.search(r"\b(?:illuminated|lit|lighting|electric sign)\b", job, re.I) and not re.search(r"\b(?:exit\s+signs?|exit\s+signage|non[- ]?electric|no\s+electrical|no\s+illumination|not\s+illuminated)\b", job, re.I):
         facts.add("sign_illuminated")
         facts.add("electrical")
     if re.search(r"\b(?:rack|racking|high[- ]pile|storage rack)\b", job, re.I):
@@ -932,7 +937,7 @@ def _family_support_sets_v4(job: str, v3: ScopeFactsV3) -> tuple[set[str], set[s
         for fam in ("fire_suppression", "hood_wet_chemical"):
             positives.discard(fam)
             positive_families.discard(fam)
-    if re.search(r"\b(?:brewery|wine\s+bar|bar|liquor)\b", job, re.I):
+    if re.search(r"\b(?:brewery|taproom|wine\s+bar|cocktail\s+bar|liquor|alcohol\s+service)\b", job, re.I):
         positives.add("liquor")
         positive_families.add("liquor")
     positive_families.update(v3.mandatory_family_floors.keys())
@@ -953,7 +958,11 @@ def _family_support_sets_v4(job: str, v3: ScopeFactsV3) -> tuple[set[str], set[s
     if "no_use_change" in negatives:
         positives.discard("use_change")
         positives.discard("co_change_of_occupancy")
+        positives.discard("change_of_use_ti")
+        positives.discard("commercial_ti")
         positive_families.discard("co_change_of_occupancy")
+        if "building" not in positives:
+            positive_families.discard("building_ti")
     if "no_mechanical" in negatives:
         positives.discard("mechanical")
         positive_families.discard("mechanical")
@@ -1058,11 +1067,11 @@ def _apply_phase0_scope_axis_closure(
             negative_families.add(family)
 
     # Positive axes: explicit work requested by the customer.
-    if has(r"\b(?:electrical|electric|circuits?|receptacles?|outlets?|gfci|subpanel|sub-panel|panel|service|disconnect|feeder|lighting|lights?|ups|low[- ]voltage|data|x[- ]?ray|charger|bonding|solar|pv|photovoltaic|transformer|emergency\s+power|battery|ess|automatic\s+transfer\s+switch|ats|generator|mini[- ]?split|spray\s+booth)\b"):
+    if has(r"\b(?:electrical|electric|circuits?|receptacles?|outlets?|gfci|subpanel|sub-panel|panel|service|disconnect|feeder|lighting|lights?|ups|low[- ]voltage|data|x[- ]?ray|charger|bonding|solar|pv|photovoltaic|transformer|emergency\s+power|battery|ess|automatic\s+transfer\s+switch|ats|generator|mini[- ]?split|spray\s+booth|exhaust\s+fan)\b"):
         add_positive("electrical")
     if has(r"\b(?:plumbing|sinks?|toilets?|bath(?:room)?|restrooms?|showers?|drains?|floor\s+drains?|water\s+lines?|water\b|sewer|condensate|grease\s+interceptor|mop\s+sink|domestic\s+water|repipe|piping|backflow|cistern|irrigation|pool\s+equipment|gas\s+(?:line|branch|piping|range|reconnection|connection))\b"):
         add_positive("plumbing")
-    if has(r"\b(?:mechanical|hvac|heat\s+pump|mini[- ]?split|ductless|furnace|air\s+condition(?:er|ing)|\bac\b|a/c|fans?|bath\s+fan|exhaust|ducts?|ductwork|ventilation|rtu|rooftop\s+unit|makeup\s+air|hood|heater|cooling|supplemental\s+cooling|dryer|condenser|refrigeration\s+equipment|pool\s+heater)\b"):
+    if has(r"\b(?:mechanical|hvac|heat\s+pump|mini[- ]?split|ductless|furnace|air\s+condition(?:er|ing)|\bac\b|a/c|fans?|bath\s+fan|exhaust|ducts?|ductwork|ventilation|rtu|rooftop\s+unit|makeup\s+air|hood|heater|cooling|supplemental\s+cooling|dryer|condenser|refrigeration\s+equipment|cold\s+storage|refrigerated\s+(?:room|space|storage)|pool\s+heater)\b"):
         add_positive("mechanical")
     if has(r"\b(?:gas\s+(?:range|branch|line|piping|reconnection|connection|pool\s+heater|heaters?|makeup\s+air)|fuel[- ]gas|gas[- ]fired|fuel\s+tank|diesel|propane|gas\s+furnace|gas\s+reconnect|existing\s+gas)\b"):
         add_positive("gas")
@@ -1075,9 +1084,11 @@ def _apply_phase0_scope_axis_closure(
         add_positive("health_food_pool")
     if has(r"\b(?:change\s+of\s+use|change-of-use|change\s+of\s+occupancy|former\s+(?:retail|office)|tenant\s+improvement|\bti\b|vanilla\s+shell|buildout|build-out|fit[- ]out|retail\s+bay\s+to|office\s+to|split\s+existing\s+retail\s+suite|convert\s+(?:former|retail|vacant\s+retail|single-story\s+office|attached\s+garage|detached\s+garage)|garage\s+conversion|accessory\s+dwelling|adu\b|drive[- ]through\s+coffee\s+kiosk|coffee\s+kiosk)\b"):
         add_positive("change_of_use_ti")
-    if has(r"\b(?:sign|signage|menu\s+boards?|window\s+vinyl)\b"):
+    if has(r"\b(?:sign|signage|menu\s+boards?|window\s+vinyl)\b") and not has(r"\bexit\s+signs?\b"):
         add_positive("sign")
-    if has(r"\b(?:structural|load[- ]bearing|header|beam|lvl|foundation|footings?|mezzanine|racking|guardrails?|stairs?|masonry\s+opening|lintel|retaining\s+wall|helical\s+piers?|anchored|anchors?|rooftop\s+cellular|antenna|equipment\s+cabinets?|canopy|steel|two[- ]story|elevated|carport|deck|porch|fence|shed|skylights?|exterior\s+stairs?|storm\s+shelter|slab|bollards?)\b"):
+    if has(r"\b(?:structural|load[- ]bearing|header|beam|lvl|foundation|footings?|mezzanine|racking|guardrails?|stairs?|masonry\s+opening|lintel|retaining\s+wall|helical\s+piers?|anchored|anchors?|rooftop\s+cellular|antenna|equipment\s+cabinets?|canopy|steel|two[- ]story|elevated|carport|deck|porch|fence|shed|skylights?|exterior\s+stairs?|storm\s+shelter|slab|bollards?|modular\s+classrooms?|temporary\s+modular|cold\s+storage\s+room|insulated\s+panels?|data\s+room|accessible\s+restroom|single\s+accessible\s+restroom|restroom\s+inside\s+warehouse)\b"):
+        add_positive("structural")
+    if has(r"\b(?:build|construct|place|add|install)\b.{0,80}\b(?:modular\s+classrooms?|temporary\s+modular|cold\s+storage\s+room|data\s+room|accessible\s+restroom|single\s+accessible\s+restroom|restroom\s+inside\s+warehouse|warehouse\s+restroom)\b"):
         add_positive("structural")
     if has(r"\belevator\b"):
         add_positive("elevator")
@@ -1087,7 +1098,7 @@ def _apply_phase0_scope_axis_closure(
     # Negative axes: explicit ceilings/absence statements.
     if has(r"\b(?:no\s+electrical|without\s+electrical|no\s+new\s+electrical|existing\s+electrical\s+switch|existing\s+dedicated\s+circuit|no\s+illumination|non[- ]illuminated)\b"):
         add_negative("no_electrical", "electrical")
-    if has(r"\b(?:no\s+plumbing|without\s+plumbing|no\s+bath(?:room)?|no\s+sewer|no\s+water|no\s+drains?|bath(?:room)?\s+exhaust\s+fan|bath\s+fan)\b"):
+    if has(r"\b(?:no\s+plumbing|without\s+plumbing|no\s+bath(?:room)?|no\s+sewer|no\s+water|no\s+drains?)\b"):
         add_negative("no_plumbing", "plumbing")
     if has(r"\b(?:no\s+mechanical|no\s+hvac|without\s+mechanical|no\s+kitchen\s+work)\b"):
         add_negative("no_mechanical", "mechanical")
@@ -1158,10 +1169,50 @@ def build_scope_facts_v4(job_type: str, city: str = "", state: str = "", *, job_
         negative_families.add("building")
         forbidden.setdefault("building", "residential HPWH/mini-split equipment scope does not hard-require standalone building permit absent structural/framing/envelope work")
     _apply_phase0_scope_axis_closure(job, v3.segment, positives, positive_families, negatives, negative_families, forbidden)
+    if hpwh_scope or (v3.segment == "residential" and "water_heater_only" in negatives):
+        # A heat-pump/electric/gas water heater is still a water-heater/plumbing
+        # scope unless the customer separately describes HVAC/refrigerant or
+        # building/envelope work. The phase-0 keyword closure sees "heat pump" /
+        # "heater" and can otherwise re-add mechanical/refrigeration/building
+        # after the earlier ceiling above.
+        for token in ("mechanical", "refrigeration", "building", "building_ti"):
+            positives.discard(token)
+            positive_families.discard(token)
+        negative_families.update({"mechanical", "refrigeration", "building"})
+        forbidden.setdefault("mechanical", "water-heater-only replacement does not hard-require standalone HVAC/mechanical permit absent separate HVAC scope")
+        forbidden.setdefault("refrigeration", "water-heater-only replacement does not hard-require standalone refrigeration absent field refrigerant work")
+        forbidden.setdefault("building", "water-heater-only replacement does not hard-require standalone building permit absent structural/framing/envelope work")
+        if re.search(r"\b(?:existing\s+dedicated\s+circuit|existing\s+circuit|no\s+new\s+circuit|no\s+panel\s+work)\b", job, re.I) and not re.search(r"\b(?:new\s+circuit|add\s+(?:a\s+)?circuit|panel\s+upgrade|service\s+upgrade|new\s+wiring)\b", job, re.I):
+            positives.discard("electrical")
+            positive_families.discard("electrical")
+            negative_families.add("electrical")
+            forbidden.setdefault("electrical", "water-heater scope uses existing dedicated circuit; do not hard-require electrical absent new wiring/panel/circuit work")
+    bath_fan_only_scope = bool(
+        v3.segment == "residential"
+        and re.search(r"\b(?:bath(?:room)?\s+)?(?:exhaust\s+fan|bath\s+fan)\b", job, re.I)
+        and not re.search(r"\b(?:plumbing|sinks?|toilets?|showers?|drains?|floor\s+drains?|water\s+lines?|sewer|repipe|piping|backflow|gas\s+(?:line|branch|piping|range|reconnection|connection))\b", job, re.I)
+    )
+    if bath_fan_only_scope:
+        positives.discard("plumbing")
+        positive_families.discard("plumbing")
+        negative_families.add("plumbing")
+        forbidden.setdefault("plumbing", "bathroom exhaust fan/duct scope does not hard-require plumbing absent fixture, drain, water, sewer, or gas work")
+    if "no_electrical" in negatives and not re.search(r"\b(?:new\s+circuit|add\s+(?:a\s+)?circuit|panel\s+upgrade|service\s+upgrade|new\s+wiring|new\s+lighting|ups\s+circuits?|feeder|subpanel|electrical\s+panel\s+separation)\b", job, re.I):
+        positives.discard("electrical")
+        positive_families.discard("electrical")
+        negative_families.add("electrical")
+        forbidden.setdefault("electrical", "explicit no-electrical/existing-circuit request fact forbids hard-required electrical absent same-family new work")
     mechanical_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:mechanical|hvac|ventilation|duct|ductwork)\b")
     electrical_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:electric(?:al)?|wiring|circuits?|panel|illumination)\b")
     plumbing_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:plumbing|pipes?|drains?|fixtures?|water|sewer)\b")
     building_false = _evidence_spans(job, r"\b(?:no\s+structural(?:\s+changes?)?|non[- ]structural|non\s+load\s+bearing|no\s+wall\s+framing)\b")
+    mandatory_floors = dict(v3.mandatory_family_floors)
+    if "cosmetic_only" in negatives:
+        for fam in ("building_ti", "co_change_of_occupancy", "planning_zoning"):
+            mandatory_floors.pop(fam, None)
+    if "no_use_change" in negatives:
+        for fam in ("co_change_of_occupancy", "planning_zoning"):
+            mandatory_floors.pop(fam, None)
     occupancy_class = "commercial" if v3.segment == "commercial" else ("residential" if v3.segment == "residential" else "unknown")
     if v3.change_of_use and v3.change_of_use.to_occupancy_group:
         occupancy_class = f"commercial:{v3.change_of_use.to_occupancy_group}" if v3.segment == "commercial" else occupancy_class
@@ -1180,7 +1231,7 @@ def build_scope_facts_v4(job_type: str, city: str = "", state: str = "", *, job_
         service_amperage=v3.service_amperage,
         valuation_usd=v3.valuation_usd,
         rack_height_ft=v3.rack_height_ft,
-        mandatory_family_floors=v3.mandatory_family_floors,
+        mandatory_family_floors=mandatory_floors,
         forbidden_families=forbidden,
         required_documents_floor=v3.required_documents_floor,
         repair_exemption_candidate=v3.repair_exemption_candidate,
