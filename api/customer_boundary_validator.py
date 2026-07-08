@@ -17,9 +17,11 @@ from typing import Any, Iterable
 try:  # api/ on sys.path in production/tests
     from family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
     from family_reconciliation_gate import family_from_row
+    from scope_contract import safety_critical_required_families
 except Exception:  # pragma: no cover
     from api.family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
     from api.family_reconciliation_gate import family_from_row
+    from api.scope_contract import safety_critical_required_families
 
 
 _FAMILY_ALIASES = {
@@ -340,6 +342,9 @@ def validate_customer_boundary(
         findings.append(CustomerBoundaryFinding("status_contradiction_required_with_no_permit_text"))
     if decision == "NOT_REQUIRED" and (public_required or packet_required or _REQUIRED_ACTION_RE.search(surface)):
         findings.append(CustomerBoundaryFinding("status_contradiction_not_required_with_required_artifacts"))
+    safety_families = safety_critical_required_families(facts)
+    if decision == "NOT_REQUIRED" and safety_families:
+        findings.append(CustomerBoundaryFinding("safety_trigger_not_required", detail=",".join(sorted(safety_families))))
     if decision == "NOT_REQUIRED" and not re.search(r"\b(?:exempt|no permit|not required|finish work only|same[- ]?kind|like[- ]for[- ]like)\b", serialized, re.I):
         findings.append(CustomerBoundaryFinding("not_required_missing_positive_exemption_evidence", "warning"))
     if _FEE_DUMP_RE.search(_fee_copy_surface(data, visible_text)):

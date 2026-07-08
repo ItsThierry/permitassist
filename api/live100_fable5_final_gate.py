@@ -13,8 +13,10 @@ from typing import Any
 
 try:
     from family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
+    from scope_contract import safety_critical_required_families
 except Exception:  # pragma: no cover
     from api.family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
+    from api.scope_contract import safety_critical_required_families
 
 
 _FAMILY_LABELS = {
@@ -539,6 +541,36 @@ def _triggered_families_from_scope_facts(scope_facts: Any | None) -> set[str]:
     return {fam for fam in mandatory if fam not in forbidden}
 
 
+def _bounded_family_set(families: set[str], scope_facts: Any | None, job_text: str = "") -> set[str]:
+    """Apply request-negative ceilings without erasing supported building/TI buckets."""
+    if scope_facts is None:
+        return set(families)
+    out = set(families)
+    forbidden = set(matrix_forbidden_families(scope_facts))
+    positive = {str(f or "").strip() for f in (getattr(scope_facts, "request_positive_families", ()) or ()) if str(f or "").strip()}
+    negative_facts = {str(f or "").strip() for f in (getattr(scope_facts, "negative_facts", ()) or ()) if str(f or "").strip()}
+    text = _norm(job_text or getattr(scope_facts, "request_scope_text", "") or "")
+    if "building" in forbidden and ("building_ti" in out or "building_ti" in positive):
+        # A no-structural ceiling on a tenant-improvement scope forbids a
+        # standalone structural building add-on, not the core TI/building bucket.
+        forbidden.discard("building")
+    for fam in forbidden:
+        out.discard(fam)
+    if "no_use_change" in negative_facts:
+        out.discard("co_change_of_occupancy")
+        if not _has(text, r"\b(?:zoning|planning|sign|parking\s+lot|curb\s+cut|driveway|ada\s+stalls?|accessible\s+parking|site\s*(?:work|civil)|grading)\b"):
+            out.discard("planning_zoning")
+    if "no_electrical" in negative_facts and not _positive_electrical_scope(text):
+        out.discard("electrical")
+    if "no_plumbing" in negative_facts and not _positive_plumbing_scope(text):
+        out.discard("plumbing")
+    if "no_mechanical" in negative_facts and not _positive_mechanical_scope(text):
+        out.discard("mechanical")
+    if "cosmetic_only" in negative_facts:
+        out.difference_update({"building", "building_ti", "co_change_of_occupancy", "planning_zoning", "electrical", "mechanical", "plumbing", "fire_suppression"})
+    return out
+
+
 def apply_fable5_final_customer_gate(public: dict[str, Any], job_type: str = "", city: str = "", state: str = "", scope_contract: dict[str, Any] | None = None, scope_facts: Any | None = None) -> dict[str, Any]:
     if not isinstance(public, dict):
         return {}
@@ -568,10 +600,19 @@ def apply_fable5_final_customer_gate(public: dict[str, Any], job_type: str = "",
     # required-packet omissions from losing verified ScopeFactsV4 floors.
     if existing_decision == "REQUIRED" or out.get("_core_truth_matrix_enforce") is True:
         families.update(_triggered_families_from_scope_facts(scope_facts))
+    safety_floor_families = safety_critical_required_families(scope_facts)
+    if existing_decision == "NOT_REQUIRED" and safety_floor_families:
+        families.update(safety_floor_families)
+        out["_decision_floor_invariant"] = {
+            "reason": "safety-critical request facts cannot produce a clean NOT_REQUIRED output",
+            "families": sorted(safety_floor_families),
+        }
 
     # R-012 style exhaust fan: mechanical wins; stale plumbing row is demoted above.
     if _has(job_text, r"\bexhaust fan\b"):
         families.add("mechanical")
+
+    families = _bounded_family_set(families, scope_facts, job_type)
 
     # If the final output says NOT_REQUIRED while scope facts have a primary floor,
     # the source-backed/explicit family wins and all surfaces must become REQUIRED.

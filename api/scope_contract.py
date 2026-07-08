@@ -262,6 +262,78 @@ class ScopeFactsV4(ScopeFactsV3):
         return data
 
 
+def _fact_value(facts: Any, name: str) -> str:
+    value = getattr(facts, name, None)
+    if isinstance(value, Fact):
+        return value.value.value
+    if isinstance(facts, dict):
+        raw = facts.get(name)
+        if isinstance(raw, dict):
+            return str(raw.get("value") or "").upper()
+    return ""
+
+
+def safety_critical_required_families(facts: Any | None) -> set[str]:
+    """Return request-evidence safety families that cannot be clean NOT_REQUIRED.
+
+    This is a safety backstop, not the broad family matrix.  It only uses
+    explicit request-positive safety work classes (structural, electrical, gas,
+    plumbing supply/drain, and fire/life-safety) and respects explicit negative
+    facts so cosmetic/no-trade scopes remain NOT_REQUIRED.
+    """
+    if facts is None:
+        return set()
+    positive_families = {str(f or "").strip() for f in (getattr(facts, "request_positive_families", ()) or ()) if str(f or "").strip()}
+    positive_facts = {str(f or "").strip() for f in (getattr(facts, "positive_facts", ()) or ()) if str(f or "").strip()}
+    negative_families = {str(f or "").strip() for f in (getattr(facts, "request_negative_families", ()) or ()) if str(f or "").strip()}
+    negative_facts = {str(f or "").strip() for f in (getattr(facts, "negative_facts", ()) or ()) if str(f or "").strip()}
+    floors = set((getattr(facts, "mandatory_family_floors", {}) or {}).keys())
+    if isinstance(facts, dict):
+        positive_families |= {str(f or "").strip() for f in (facts.get("request_positive_families") or []) if str(f or "").strip()}
+        positive_facts |= {str(f or "").strip() for f in (facts.get("positive_facts") or []) if str(f or "").strip()}
+        negative_families |= {str(f or "").strip() for f in (facts.get("request_negative_families") or []) if str(f or "").strip()}
+        negative_facts |= {str(f or "").strip() for f in (facts.get("negative_facts") or []) if str(f or "").strip()}
+        floors |= set((facts.get("mandatory_family_floors") or {}).keys()) if isinstance(facts.get("mandatory_family_floors"), dict) else set()
+    positives = positive_families | floors
+    request_text = str(getattr(facts, "request_scope_text", "") or (facts.get("request_scope_text") if isinstance(facts, dict) else "") or "").lower()
+    out: set[str] = set()
+    cosmetic = "cosmetic_only" in negative_facts
+    if not cosmetic and (
+        "electrical" in positives
+        or "electrical" in positive_facts
+        or _fact_value(facts, "electrical_work") == "TRUE"
+        or _fact_value(facts, "electrical_new_circuits") == "TRUE"
+    ) and "electrical" not in negative_families and "no_electrical" not in negative_facts and "no_mep" not in negative_facts:
+        out.add("electrical")
+    if not cosmetic and (
+        "plumbing" in positives
+        or "plumbing" in positive_facts
+        or _fact_value(facts, "plumbing_work") == "TRUE"
+    ) and "plumbing" not in negative_families and "no_plumbing" not in negative_facts and "no_mep" not in negative_facts:
+        out.add("plumbing")
+    if not cosmetic and ("gas" in positives or "gas" in positive_facts or _fact_value(facts, "gas_fuel_work") == "TRUE"):
+        out.add("gas")
+        if "no_plumbing" not in negative_facts and "plumbing" not in negative_families:
+            out.add("plumbing")
+    if not cosmetic and (
+        positive_families & {"fire_suppression", "fire_alarm", "fire_life_safety_assembly"}
+        or positive_facts & {"fire_suppression", "fire_alarm", "hood_wet_chemical"}
+    ):
+        out.add("fire_suppression")
+    if not cosmetic and (
+        positive_families & {"building", "building_structural"}
+        or positive_facts & {"structural", "addition", "demolition", "racking", "exterior"}
+        or _fact_value(facts, "structural_work") == "TRUE"
+        or _fact_value(facts, "building_work") == "TRUE"
+    ) and "building" not in negative_families and "structural" not in negative_families and "no_structural" not in negative_facts:
+        out.add("building")
+    if not cosmetic and re.search(r"\b(?:curb\s+cut|driveway\s+apron|widen\s+(?:the\s+)?driveway|parking\s+lot|ada\s+stalls?|accessible\s+parking|restripe|striping|mill\s+and\s+overlay|grading|stormwater|right[- ]of[- ]way|\brow\b|site\s*(?:work|civil))\b", request_text, re.I):
+        out.add("grading")
+        if "no_use_change" not in negative_facts:
+            out.add("planning_zoning")
+    return {fam for fam in out if fam}
+
+
 _CONSTRUCTION_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("change_of_use", ("change of use", "change in use", "change of occupancy", "occupancy change", "retail to", "office to", "warehouse to", "gallery change to", "convert from", "conversion from")),
     ("conversion", ("convert garage", "garage into", "garage to", "basement adu", "basement apartment", "laundromat conversion", "conversion", "converted into", "convert into", "convert vacant", "convert office", "convert retail", "convert warehouse", "convert space", "convert suite")),
@@ -1030,6 +1102,8 @@ def _apply_phase0_scope_axis_closure(
         add_negative("no_signage", "sign")
     if has(r"\b(?:no\s+food\s+service|same\s+cooking\s+line|like[- ]for[- ]like|same[- ]for[- ]same|no\s+kitchen\s+work)\b"):
         add_negative("no_food_service_change", "health_food")
+    if has(r"\b(?:same\s+cooking\s+line|same\s+use|same\s+occupancy|operating\s+restaurant)\b"):
+        add_negative("no_use_change", "co_change_of_occupancy")
     if has(r"\b(?:no\s+change\s+of\s+use|no\s+occupancy\s+change|no\s+change\s+of\s+occupancy|same\s+footprint|same\s+size|same[- ]size|like[- ]for[- ]like)\b"):
         add_negative("no_use_change", "co_change_of_occupancy")
     if has(r"\b(?:paint,\s*carpet\s+tile\s+replacement\s+and\s+furniture\s+only|cabinets\s+and\s+countertops\s+like\s+for\s+like|cosmetic\s+only|furniture\s+only)\b"):

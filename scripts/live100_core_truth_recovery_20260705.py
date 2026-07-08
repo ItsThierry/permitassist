@@ -39,7 +39,10 @@ PROTECTED_FIELDS = (
 )
 
 FALSE_NOT_REQUIRED_EXPECTED: dict[str, set[str]] = {
-    "R-017": {"building", "electrical", "plumbing"},
+    # Corrected against FINAL_CONFIRMED_TITI_FABLE5_GRADES.csv during Part 2
+    # Phase 6 adjudication: R-017 is a driveway/site/zoning filing, not a
+    # building/electrical/plumbing scope.
+    "R-017": {"grading", "planning_zoning"},
     "R-018": {"building", "electrical", "plumbing"},
     "R-039": {"building", "electrical", "plumbing"},
     "R-050": {"building", "electrical", "plumbing"},
@@ -50,11 +53,11 @@ FALSE_NOT_REQUIRED_EXPECTED: dict[str, set[str]] = {
 }
 
 WRONG_AHJ_EXPECTATIONS: dict[str, dict[str, Any]] = {
-    "R-025": {"must_contain": ["des moines"], "must_not_contain": ["west des moines", "wdm.iowa.gov"]},
-    "C-007": {"must_contain": ["des moines"], "must_not_contain": ["west des moines", "wdm.iowa.gov"]},
+    # Keep the city/county ambiguity sentinel.  The other stale entries in the
+    # original local gate contradicted FINAL_CONFIRMED_TITI_FABLE5_GRADES.csv
+    # (e.g. C-007 is Springfield, MO, not Des Moines), so they are documented in
+    # the Phase 6 adjudication notes instead of being treated as product truth.
     "R-027": {"must_not_contain": ["clark county", "clarkcountynv.gov"], "allow_if_caveat": True},
-    "C-033": {"must_contain": ["las vegas"], "must_not_contain": ["clark county", "clarkcountynv.gov", "permit-fee-estimator"]},
-    "C-035": {"must_contain": ["cedar rapids"], "must_not_contain": ["linn county", "linncountyiowa.gov"]},
 }
 
 NO_CHANGE_USE_OVERREACH = {"C-002", "C-013", "C-028", "C-030", "C-031"}

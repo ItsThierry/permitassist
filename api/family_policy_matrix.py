@@ -196,6 +196,22 @@ def _request_negative_ceilings(facts: ScopeFactsV3 | Any, floors: dict[str, str]
 
 def mandatory_families(facts: ScopeFactsV3 | Any) -> dict[str, str]:
     out = {_canonical_family(k): str(v) for k, v in dict(getattr(facts, "mandatory_family_floors", {}) or {}).items() if _canonical_family(k)}
+    negative_facts = set(getattr(facts, "negative_facts", ()) or ())
+    negative_families = {_canonical_family(f) for f in (getattr(facts, "request_negative_families", ()) or ())}
+    if "no_use_change" in negative_facts:
+        out.pop("co_change_of_occupancy", None)
+        # Keep zoning only when the request has an independent site/sign/zoning
+        # trigger; do not inherit it from stale change-of-use floors.
+        positive = {_canonical_family(f) for f in (getattr(facts, "request_positive_families", ()) or ())}
+        if not (positive & {"sign", "grading", "planning_zoning"}):
+            out.pop("planning_zoning", None)
+    if "no_electrical" in negative_facts or "electrical" in negative_families:
+        out.pop("electrical", None)
+    if "no_plumbing" in negative_facts or "plumbing" in negative_families:
+        out.pop("plumbing", None)
+        out.pop("wastewater_pretreatment_fog", None)
+    if "no_mechanical" in negative_facts or "mechanical" in negative_families:
+        out.pop("mechanical", None)
     if not isinstance(facts, ScopeFactsV3):
         return out
     out.update(_request_positive_floors(facts))

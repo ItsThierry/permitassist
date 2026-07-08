@@ -19,13 +19,13 @@ try:
     from family_policy_matrix import document_floor_keys, forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
     from phase_trace import emit_trace
     from source_roles import SourceRole, classify_source, is_official_badge_role, source_label_for_role
-    from scope_contract import TriFact
+    from scope_contract import TriFact, safety_critical_required_families
 except Exception:  # pragma: no cover
     from api.family_reconciliation_gate import family_from_row, resolve_lead_label
     from api.family_policy_matrix import document_floor_keys, forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
     from api.phase_trace import emit_trace
     from api.source_roles import SourceRole, classify_source, is_official_badge_role, source_label_for_role
-    from api.scope_contract import TriFact
+    from api.scope_contract import TriFact, safety_critical_required_families
 
 Decision = Literal["REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY"]
 
@@ -697,6 +697,9 @@ def _should_promote_not_required_to_required(data: dict[str, Any], facts: Any | 
     blob = _customer_text_blob(data)
     request_text = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or data.get("_request_job_type") or "")
     families = _requested_required_families(facts, scope_facts)
+    safety_families = safety_critical_required_families(facts if facts is not None else scope_facts)
+    if safety_families:
+        return True
     required_signal_blob = re.sub(r"\b(?:no\s+permit\s+(?:is\s+)?required|permit\s+not\s+required|not\s+required)\b", "", blob, flags=re.I)
     visible_required_copy = bool(re.search(r"\bpermit\s+required\b|\brequired\s+permit\s+package\b|\bpull\s+.+?permit\b|\bcompleted\s+.+?permit\s+application\b", required_signal_blob, re.I))
     kitchen_trade_scope = bool(
@@ -714,10 +717,10 @@ def _implied_required_rows_from_scope(data: dict[str, Any], facts: Any | None, s
     rows: list[dict[str, Any]] = []
     request_text = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or data.get("_request_job_type") or "")
     family_order = [
-        "building_ti", "racking", "building", "electrical", "mechanical", "plumbing", "solar_pv", "battery_storage",
+        "building_ti", "racking", "building", "electrical", "mechanical", "plumbing", "gas", "grading", "solar_pv", "battery_storage",
         "fire_alarm", "fire_suppression", "fire_life_safety_assembly", "planning_zoning", "co_change_of_occupancy", "sign",
     ]
-    requested = set(_requested_required_families(facts, scope_facts))
+    requested = set(_requested_required_families(facts, scope_facts)) | safety_critical_required_families(facts if facts is not None else scope_facts)
     if re.search(r"\bkitchen\s+remodel\b", request_text, re.I):
         requested.update({"building", "plumbing", "electrical"})
     for fam in family_order:
@@ -794,9 +797,22 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         if isinstance(fact_forbidden, dict):
             forbidden_map = {**forbidden_map, **fact_forbidden}
         if forbidden_map:
-            required_rows = [r for r in required_rows if _family(r) not in forbidden_map]
-            conditional_rows = [r for r in conditional_rows if _family(r) not in forbidden_map]
+            positive_families = set(getattr(facts, "request_positive_families", []) or []) if facts is not None else set(scope_facts.get("request_positive_families") or [])
+            def _forbidden_blocks_row(row: dict[str, Any]) -> bool:
+                fam = _family(row)
+                if fam not in forbidden_map:
+                    return False
+                if fam == "building" and ("building_ti" in positive_families or any(_family(r) == "building_ti" for r in required_rows)):
+                    return False
+                return True
+            required_rows = [r for r in required_rows if not _forbidden_blocks_row(r)]
+            conditional_rows = [r for r in conditional_rows if not _forbidden_blocks_row(r)]
         request_positive_families = set(getattr(facts, "request_positive_families", []) or []) if facts is not None else set()
+        if forbidden_map:
+            blocked_positive = set(forbidden_map)
+            if "building_ti" in request_positive_families:
+                blocked_positive.discard("building")
+            request_positive_families = {fam for fam in request_positive_families if fam not in blocked_positive}
         if request_positive_families:
             demoted_scope_rows = []
             kept_required_rows = []
@@ -871,7 +887,11 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
             present_fams = {_family(r) for r in [*required_rows, *conditional_rows] if isinstance(r, dict)}
             for floor_family, basis in floor_map.items():
                 fam = str(floor_family or "").strip()
-                if fam and fam not in present_fams and (not request_positive_families or fam in request_positive_families) and not _fable5_negative_family_override(fam, request_text_for_fable5):
+                if not fam:
+                    continue
+                if fam in forbidden_map and not (fam == "building" and "building_ti" in request_positive_families):
+                    continue
+                if fam not in present_fams and (not request_positive_families or fam in request_positive_families) and not _fable5_negative_family_override(fam, request_text_for_fable5):
                     required_rows.append({
                         "permit_name": _canonical_name_for_family(fam, segment, data),
                         "permit_type": _canonical_name_for_family(fam, segment, data),
@@ -1025,6 +1045,35 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
 def _repair_stale_apply_url_for_scope(out: dict[str, Any], facts: Any | None = None) -> None:
     scope_text = str(getattr(facts, "request_scope_text", "") or out.get("_request_job_type") or out.get("job_type") or out.get("job_summary") or out.get("summary") or "")
     apply_url = str(out.get("apply_url") or out.get("online_application_url") or "")
+    lower_url = apply_url.lower()
+    static_bad_replacements = {
+        "retail-food-facility-permit-application.pdf": "https://sonomacounty.ca.gov/health-and-human-services/health-services/divisions/public-health/environmental-health-and-safety/food-facility-permits",
+        "aca-prod.accela.com/memphis": "https://www.memphistn.gov/government/construction-enforcement/",
+        "billingsmt.gov/135/building-division": "https://www.billingsmt.gov/1905/E-Permitting",
+    }
+    for token, replacement in static_bad_replacements.items():
+        if token in lower_url:
+            out["apply_url"] = replacement
+            out["online_application_url"] = replacement
+            out["_repaired_apply_url"] = replacement
+            source_urls = [replacement]
+            for u in out.get("source_urls") or []:
+                su = str(u or "")
+                if su and token not in su.lower() and su != replacement:
+                    source_urls.append(su)
+            out["source_urls"] = list(dict.fromkeys(source_urls))
+            if isinstance(out.get("sources"), list):
+                out["sources"] = [src for src in out["sources"] if not (isinstance(src, dict) and token in str(src.get("url") or src.get("source_url") or "").lower())]
+                out["sources"].insert(0, {"url": replacement, "title": "Official permit landing page", "source_role": "LOCAL_OFFICIAL_FILING"})
+            if isinstance(out.get("apply_path"), dict):
+                out["apply_path"] = copy.deepcopy(out["apply_path"])
+                out["apply_path"]["portal_url"] = replacement
+                out["apply_path"]["channel"] = "online_portal"
+                out["apply_path"]["state"] = "resolved_portal"
+                out["apply_path"]["status"] = "RESOLVED_PORTAL"
+            apply_url = replacement
+            lower_url = replacement.lower()
+            break
     stale_fire_cleaning = "exhaust-vent-cleaning-and-inspection" in apply_url.lower()
     actual_lab_or_install = bool(re.search(r"\b(?:lab|laboratory|fume\s+hoods?|exhaust|gas\s+piping|tenant\s+improvement|install|adding)\b", scope_text, re.I))
     maintenance_cleaning = bool(re.search(r"\b(?:clean(?:ing)?|maintenance|inspection\s+only)\b", scope_text, re.I))
@@ -1075,6 +1124,10 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
         out["fee_range"] = _clean_fee_text(out.get("fee_range"), facts)
     packet = build_public_packet(out, facts)
     public_packet = packet.public_dict()
+    repaired_apply_url = str(out.get("_repaired_apply_url") or "").strip()
+    if repaired_apply_url and isinstance(public_packet.get("authority"), dict):
+        public_packet["authority"]["apply_url"] = repaired_apply_url
+        packet.authority.apply_url = repaired_apply_url
     original_decision_schema = None
     if isinstance(out.get("decision_object"), dict):
         original_decision_schema = out["decision_object"].get("schema_version")
@@ -1206,6 +1259,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
         }
     for key in (
         "decision_object", "project_scope_attributes", "render_fidelity", "scope_facts", "scope_contract", "_scope_contract",
+        "_decision_floor_invariant", "_repaired_apply_url",
         "_request_city", "_request_state", "negative_facts", "positive_facts", "city_contractor_registration", "pro_tips", "common_mistakes", "watch_out",
         "inspection_requirements", "inspect_checklist", "inspection_checklist", "inspections_required",
         "companion_reviews", "companion_permits_or_reviews", "primary_permit", "description", "next_steps",
