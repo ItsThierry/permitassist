@@ -933,6 +933,125 @@ def _family_support_sets_v4(job: str, v3: ScopeFactsV3) -> tuple[set[str], set[s
     return positives, positive_families, negative_families, forbidden, negatives
 
 
+def _apply_phase0_scope_axis_closure(
+    job: str,
+    segment: str,
+    positives: set[str],
+    positive_families: set[str],
+    negatives: set[str],
+    negative_families: set[str],
+    forbidden: dict[str, str],
+) -> None:
+    """Add request-derived axes for the Phase 0 scope-fact contract.
+
+    This is intentionally archetype/phrase based, not case-ID based.  It fills
+    the gaps Fable flagged: deterministic facts must capture explicit work axes
+    (gas, elevator, pool/health, refrigeration, site/structural, etc.) before
+    any scope→family matrix can safely run.  Negatives are retained as facts even
+    when a different same-request positive remains; conflict handling belongs to
+    the validator/matrix layer, not silent extraction.
+    """
+
+    def has(pattern: str) -> bool:
+        return bool(re.search(pattern, job, re.I))
+
+    def add_positive(axis: str) -> None:
+        positives.add(axis)
+        family_map = {
+            "electrical": "electrical",
+            "plumbing": "plumbing",
+            "mechanical": "mechanical",
+            "gas": "gas",
+            "refrigeration": "refrigeration",
+            "sign": "sign",
+            "elevator": "elevator",
+            "environmental_fuel": "environmental",
+            "structural": "building",
+            "exterior_site_roof_support": "building",
+            "fire_life_safety": "fire_suppression",
+            "health_food_pool": "health_food",
+            "change_of_use_ti": "building_ti" if segment == "commercial" else "building",
+        }
+        fam = family_map.get(axis)
+        if fam:
+            positive_families.add(fam)
+        if axis == "change_of_use_ti" and segment == "commercial":
+            positive_families.update({"building_ti", "co_change_of_occupancy"})
+        if axis == "health_food_pool" and has(r"\b(?:pool|pool\s+deck|ada\s+lift)\b"):
+            positive_families.add("pool")
+
+    def add_negative(axis: str, family: str | None = None) -> None:
+        negatives.add(axis)
+        if family:
+            negative_families.add(family)
+
+    # Positive axes: explicit work requested by the customer.
+    if has(r"\b(?:electrical|electric|circuits?|receptacles?|outlets?|gfci|subpanel|sub-panel|panel|service|disconnect|feeder|lighting|lights?|ups|low[- ]voltage|data|x[- ]?ray|charger|bonding|solar|pv|photovoltaic|transformer|emergency\s+power|battery|ess|automatic\s+transfer\s+switch|ats|generator|mini[- ]?split|spray\s+booth)\b"):
+        add_positive("electrical")
+    if has(r"\b(?:plumbing|sinks?|toilets?|bath(?:room)?|restrooms?|showers?|drains?|floor\s+drains?|water\s+lines?|water\b|sewer|condensate|grease\s+interceptor|mop\s+sink|domestic\s+water|repipe|piping|backflow|cistern|irrigation|pool\s+equipment|gas\s+(?:line|branch|piping|range|reconnection|connection))\b"):
+        add_positive("plumbing")
+    if has(r"\b(?:mechanical|hvac|heat\s+pump|mini[- ]?split|ductless|furnace|air\s+condition(?:er|ing)|\bac\b|a/c|fans?|bath\s+fan|exhaust|ducts?|ductwork|ventilation|rtu|rooftop\s+unit|makeup\s+air|hood|heater|cooling|supplemental\s+cooling|dryer|condenser|refrigeration\s+equipment|pool\s+heater)\b"):
+        add_positive("mechanical")
+    if has(r"\b(?:gas\s+(?:range|branch|line|piping|reconnection|connection|pool\s+heater|heaters?|makeup\s+air)|fuel[- ]gas|gas[- ]fired|fuel\s+tank|diesel|propane|gas\s+furnace|gas\s+reconnect|existing\s+gas)\b"):
+        add_positive("gas")
+        add_positive("plumbing")
+    if has(r"\b(?:refrigeration|refrigerated|walk[- ]in|walk\s+in|cooler|freezer|refrigerant|line[- ]set|line\s+set|mini[- ]?split|cold\s+storage)\b"):
+        add_positive("refrigeration")
+    if has(r"\b(?:fire\s+alarm|fire\s+suppression|sprinklers?|wet\s+chemical|ansul|fire\s+detection|battery\s+energy\s+storage|lithium|bess|hazardous|spray\s+booth|daycare|childcare|church\s+assembly|assembly|occupant\s+load|classrooms?|high[- ]pile|racking|mezzanine|type\s*i\s+hood|type\s*1\s+hood|clean\s+agent)\b"):
+        add_positive("fire_life_safety")
+    if has(r"\b(?:restaurant|food\s+truck|commissary|coffee\s+kiosk|coffee\s+shop|cocktail\s+bar|brewery|brewpub|bakery|grocery|salon|dental|medical|clinic|daycare|childcare|public\s+pool|hotel\s+outdoor\s+pool|pool\s+deck|grease|type\s*i\s+hood|type\s*1\s+hood|pharmacy)\b"):
+        add_positive("health_food_pool")
+    if has(r"\b(?:change\s+of\s+use|change-of-use|change\s+of\s+occupancy|former\s+(?:retail|office)|tenant\s+improvement|\bti\b|vanilla\s+shell|buildout|build-out|fit[- ]out|retail\s+bay\s+to|office\s+to|split\s+existing\s+retail\s+suite|convert\s+(?:former|retail|vacant\s+retail|single-story\s+office|attached\s+garage|detached\s+garage)|garage\s+conversion|accessory\s+dwelling|adu\b|drive[- ]through\s+coffee\s+kiosk|coffee\s+kiosk)\b"):
+        add_positive("change_of_use_ti")
+    if has(r"\b(?:sign|signage|menu\s+boards?|window\s+vinyl)\b"):
+        add_positive("sign")
+    if has(r"\b(?:structural|load[- ]bearing|header|beam|lvl|foundation|footings?|mezzanine|racking|guardrails?|stairs?|masonry\s+opening|lintel|retaining\s+wall|helical\s+piers?|anchored|anchors?|rooftop\s+cellular|antenna|equipment\s+cabinets?|canopy|steel|two[- ]story|elevated|carport|deck|porch|fence|shed|skylights?|exterior\s+stairs?|storm\s+shelter|slab|bollards?)\b"):
+        add_positive("structural")
+    if has(r"\belevator\b"):
+        add_positive("elevator")
+    if has(r"\b(?:oil\s+tank|fuel\s+tank|diesel|environmental)\b"):
+        add_positive("environmental_fuel")
+
+    # Negative axes: explicit ceilings/absence statements.
+    if has(r"\b(?:no\s+electrical|without\s+electrical|no\s+new\s+electrical|existing\s+electrical\s+switch|existing\s+dedicated\s+circuit|no\s+illumination|non[- ]illuminated)\b"):
+        add_negative("no_electrical", "electrical")
+    if has(r"\b(?:no\s+plumbing|without\s+plumbing|no\s+bath(?:room)?|no\s+sewer|no\s+water|no\s+drains?|bath(?:room)?\s+exhaust\s+fan|bath\s+fan)\b"):
+        add_negative("no_plumbing", "plumbing")
+    if has(r"\b(?:no\s+mechanical|no\s+hvac|without\s+mechanical|no\s+kitchen\s+work)\b"):
+        add_negative("no_mechanical", "mechanical")
+    if has(r"\b(?:no\s+mep|no\s+utilities)\b"):
+        add_negative("no_mep")
+        add_negative("no_electrical", "electrical")
+        add_negative("no_plumbing", "plumbing")
+        add_negative("no_mechanical", "mechanical")
+    if has(r"\b(?:no\s+structural(?:\s+changes?)?|no\s+header\s+changes|no\s+wall\s+layout\s+changes|no\s+walls?|non[- ]load[- ]bearing|non\s+load\s+bearing|no\s+truss\s+cutting|no\s+structural\s+demolition|same[- ]size|same\s+size|same\s+footprint)\b"):
+        add_negative("no_structural", "structural")
+    if has(r"\b(?:no\s+signage|no\s+sign\s+(?:work|copy)|no\s+lighting)\b"):
+        add_negative("no_signage", "sign")
+    if has(r"\b(?:no\s+food\s+service|same\s+cooking\s+line|like[- ]for[- ]like|same[- ]for[- ]same|no\s+kitchen\s+work)\b"):
+        add_negative("no_food_service_change", "health_food")
+    if has(r"\b(?:no\s+change\s+of\s+use|no\s+occupancy\s+change|no\s+change\s+of\s+occupancy|same\s+footprint|same\s+size|same[- ]size|like[- ]for[- ]like)\b"):
+        add_negative("no_use_change", "co_change_of_occupancy")
+    if has(r"\b(?:paint,\s*carpet\s+tile\s+replacement\s+and\s+furniture\s+only|cabinets\s+and\s+countertops\s+like\s+for\s+like|cosmetic\s+only|furniture\s+only)\b"):
+        add_negative("cosmetic_only")
+
+    # Explicit negative ceilings remove unsupported positives for the same axis,
+    # except when another strong positive in the exact same family is present.
+    if "no_signage" in negatives and not has(r"\b(?:new\s+sign|install\s+sign|menu\s+board|window\s+vinyl)\b"):
+        positives.discard("sign")
+        positive_families.discard("sign")
+    if "no_mechanical" in negatives and not has(r"\b(?:install|replace|add|new|relocate|swap|connect|reconnect)\b.{0,60}\b(?:mechanical|hvac|heat\s+pump|mini[- ]?split|furnace|air\s+condition(?:er|ing)|\bac\b|a/c|fans?|bath\s+fan|exhaust|ducts?|ductwork|ventilation|rtu|rooftop\s+unit|makeup\s+air|hood|heater|cooling|dryer|condenser|pool\s+heater)\b|\b(?:mechanical|hvac|heat\s+pump|mini[- ]?split|furnace|air\s+condition(?:er|ing)|\bac\b|a/c|fans?|bath\s+fan|exhaust|ducts?|ductwork|ventilation|rtu|rooftop\s+unit|makeup\s+air|hood|heater|cooling|dryer|condenser|pool\s+heater)\b.{0,60}\b(?:install|replace|add|new|relocate|swap|connect|reconnect)\b"):
+        positives.discard("mechanical")
+        positive_families.discard("mechanical")
+        forbidden["mechanical"] = "explicit no-mechanical request fact forbids mechanical hard-required row absent same-family positive work"
+    if "cosmetic_only" in negatives:
+        for fam in ("building_ti", "co_change_of_occupancy", "planning_zoning"):
+            positive_families.discard(fam)
+        positives.discard("commercial_ti")
+        positives.discard("use_change")
+        positives.discard("co_change_of_occupancy")
+
+
 def build_scope_facts_v4(job_type: str, city: str = "", state: str = "", *, job_category: str | None = None, vertical: str | None = None, scope_contract: dict[str, Any] | None = None) -> ScopeFactsV4:
     v3 = build_scope_facts_v3(job_type, city, state, job_category=job_category, vertical=vertical, scope_contract=scope_contract)
     job = _norm(job_type)
@@ -964,6 +1083,7 @@ def build_scope_facts_v4(job_type: str, city: str = "", state: str = "", *, job_
         positive_families.discard("building")
         negative_families.add("building")
         forbidden.setdefault("building", "residential HPWH/mini-split equipment scope does not hard-require standalone building permit absent structural/framing/envelope work")
+    _apply_phase0_scope_axis_closure(job, v3.segment, positives, positive_families, negatives, negative_families, forbidden)
     mechanical_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:mechanical|hvac|ventilation|duct|ductwork)\b")
     electrical_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:electric(?:al)?|wiring|circuits?|panel|illumination)\b")
     plumbing_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:plumbing|pipes?|drains?|fixtures?|water|sewer)\b")

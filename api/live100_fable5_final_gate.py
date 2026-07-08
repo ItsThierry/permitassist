@@ -11,6 +11,11 @@ import copy
 import re
 from typing import Any
 
+try:
+    from family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
+except Exception:  # pragma: no cover
+    from api.family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
+
 
 _FAMILY_LABELS = {
     "building": "Building",
@@ -525,6 +530,15 @@ def _repair_action_path(out: dict[str, Any], city: str, state: str) -> None:
     out["apply_path"] = ap
 
 
+def _triggered_families_from_scope_facts(scope_facts: Any | None) -> set[str]:
+    """Consume verified request-derived ScopeFactsV4 floor/ceiling matrix only."""
+    if scope_facts is None:
+        return set()
+    mandatory = set(matrix_mandatory_families(scope_facts))
+    forbidden = set(matrix_forbidden_families(scope_facts))
+    return {fam for fam in mandatory if fam not in forbidden}
+
+
 def apply_fable5_final_customer_gate(public: dict[str, Any], job_type: str = "", city: str = "", state: str = "", scope_contract: dict[str, Any] | None = None, scope_facts: Any | None = None) -> dict[str, Any]:
     if not isinstance(public, dict):
         return {}
@@ -545,6 +559,15 @@ def apply_fable5_final_customer_gate(public: dict[str, Any], job_type: str = "",
 
     _demote_or_drop_overreach(out, job_type)
     families = _triggered_families(job_type, segment)
+    existing_decision = str(out.get("permit_decision") or "").upper().strip()
+    # Part 1 matrix enforcement is intentionally conservative in the runtime
+    # final gate: request-derived floors are always available to the validator,
+    # family-reconciliation gate, and packet seal, but they only mutate an already
+    # REQUIRED payload (or an explicit opt-in canary) here.  This preserves legacy
+    # source-backed NOT_REQUIRED sentinels while still preventing downstream
+    # required-packet omissions from losing verified ScopeFactsV4 floors.
+    if existing_decision == "REQUIRED" or out.get("_core_truth_matrix_enforce") is True:
+        families.update(_triggered_families_from_scope_facts(scope_facts))
 
     # R-012 style exhaust fan: mechanical wins; stale plumbing row is demoted above.
     if _has(job_text, r"\bexhaust fan\b"):

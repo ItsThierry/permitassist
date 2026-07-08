@@ -652,11 +652,20 @@ def _decision(data: dict[str, Any]) -> Literal["REQUIRED", "NOT_REQUIRED"]:
 
 
 def _requested_required_families(facts: Any | None, scope_facts: dict[str, Any]) -> list[str]:
+    if facts is not None:
+        mandatory = matrix_mandatory_families(facts)
+        forbidden = matrix_forbidden_families(facts)
+        if mandatory:
+            return [fam for fam in mandatory if fam not in forbidden and fam not in {"health_food", "wastewater_pretreatment_fog"}]
     raw = getattr(facts, "request_positive_families", None) if facts is not None else None
     if raw is None and isinstance(scope_facts, dict):
         raw = scope_facts.get("request_positive_families")
+    forbidden_raw = getattr(facts, "request_negative_families", None) if facts is not None else None
+    if forbidden_raw is None and isinstance(scope_facts, dict):
+        forbidden_raw = scope_facts.get("request_negative_families")
+    forbidden = {str(fam or "").strip() for fam in (forbidden_raw or []) if str(fam or "").strip()}
     families = [str(fam or "").strip() for fam in (raw or []) if str(fam or "").strip()]
-    return [fam for fam in dict.fromkeys(families) if fam not in {"health_food", "wastewater_pretreatment_fog"}]
+    return [fam for fam in dict.fromkeys(families) if fam not in forbidden and fam not in {"health_food", "wastewater_pretreatment_fog"}]
 
 
 def _customer_text_blob(data: dict[str, Any]) -> str:
@@ -931,8 +940,28 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         rows = [PacketRow("No permit required", "not_required", "NOT_REQUIRED", reason=str(data.get("not_required_reason") or data.get("summary") or ""))]
 
     required_families = list(dict.fromkeys(row.family for row in rows if row.decision == "REQUIRED"))
-    conditional_families = [fam for fam in dict.fromkeys(row.family for row in rows if row.decision == "CONDITIONAL") if fam not in required_families]
-    rows = [row for row in rows if row.decision != "CONDITIONAL" or row.family in conditional_families]
+    def _family_bucket_for_packet(family: str) -> str:
+        if family in {"building", "building_ti", "building_adu", "racking", "demolition"}:
+            return "building"
+        if family in {"fire_alarm", "fire_suppression", "fire_life_safety_assembly", "fire_hazmat_co2"}:
+            return "fire"
+        return family
+    required_buckets = {_family_bucket_for_packet(fam) for fam in required_families}
+    conditional_families = [
+        fam for fam in dict.fromkeys(row.family for row in rows if row.decision == "CONDITIONAL")
+        if fam not in required_families and _family_bucket_for_packet(fam) not in required_buckets
+    ]
+    deduped_rows: list[PacketRow] = []
+    seen_rows: set[tuple[str, str]] = set()
+    for row in rows:
+        if row.decision == "CONDITIONAL" and row.family not in conditional_families:
+            continue
+        key = (row.decision, _family_bucket_for_packet(row.family) if row.decision == "CONDITIONAL" else row.family)
+        if key in seen_rows:
+            continue
+        seen_rows.add(key)
+        deduped_rows.append(row)
+    rows = deduped_rows
 
     prefix = "Commercial" if segment == "commercial" else ("Residential" if segment == "residential" else "")
     required_names = [row.permit_name for row in rows if row.decision == "REQUIRED"]
