@@ -139,3 +139,20 @@ def test_s3_r004_risky_fence_variants_do_not_use_like_for_like_no_permit_gate() 
         assert public["permit_decision"] == "REQUIRED", (job, public)
         assert public["permit_required"] is True
         assert public.get("permits_required")
+
+
+def test_s3_runtime_sanitizer_scrubs_scope_firebreak_leak_instead_of_500(monkeypatch) -> None:
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+    scope_contract = {"category": "commercial", "family": "commercial_ti", "forbidden_scope_tags": ["residential_solar"]}
+    result = {
+        "permit_decision": "REQUIRED",
+        "permit_required": True,
+        "expert_notes": [{"note": "Solar PV interconnection package applies to this job"}],
+        "_scope_contract": scope_contract,
+    }
+
+    cleaned = server.sanitize_customer_visible_result(result, strip_internal_keys=False)
+
+    assert cleaned["permit_decision"] == "REQUIRED"
+    assert cleaned.get("_scope_firebreak_removed")
+    assert "residential solar" not in str(cleaned).lower()

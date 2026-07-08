@@ -751,10 +751,13 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
                     timeline["complex"] = "Longer plan-review cycle if structural, accessibility, fire/life-safety, health, zoning, or trade-plan corrections are triggered."
                 cleaned_result["approval_timeline"] = timeline
         if scope_contract:
+            # Production/customer rendering must scrub leaked forbidden-scope text
+            # instead of turning a lookup into a 500. Unit tests that need hard
+            # failure should call sanitize_result_for_scope_contract directly.
             cleaned_result = sanitize_result_for_scope_contract(
                 cleaned_result,
                 scope_contract,
-                fail_on_removal_in_tests=not strip_internal_keys,
+                fail_on_removal_in_tests=False,
             )
             if strip_internal_keys:
                 cleaned_result.pop("_scope_contract", None)
