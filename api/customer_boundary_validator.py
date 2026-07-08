@@ -63,7 +63,10 @@ _FAMILY_TEXT_PATTERNS: tuple[tuple[str, str], ...] = (
     ("building", r"\b(?:building|structural|foundation|framing|addition|garage conversion|adu|accessory structure|mezzanine|carport|shed|window|roof)\b"),
 )
 
-_FEE_DUMP_RE = re.compile(r"\b(?:Fee Estimate:\s*){2,}|\$\{[^}]+\}|\{\{[^{}]+\}\}|\b(?:nan|none|null)\b", re.I)
+_FEE_DUMP_RE = re.compile(
+    r"(?:Fee Estimate:\s*){2,}|\$\{[^}]+\}|\{\{[^{}]+\}\}|\bfees?\b.{0,80}\bnan\b|\bnan\b.{0,80}\bfees?\b",
+    re.I | re.S,
+)
 _NOT_REQUIRED_RE = re.compile(r"\b(?:no permit required|no permit needed|permit is not required|permit not required|no permit submission needed|no-permit scope|resolved no-permit)\b", re.I)
 _REQUIRED_ACTION_RE = re.compile(r"\b(?:file|submit|apply for|pull)\b.{0,80}\b(?:required )?permit\b", re.I)
 
@@ -251,6 +254,38 @@ def _visible_surface(public: dict[str, Any], visible_text: str = "", html_text: 
     return "\n".join(pieces)
 
 
+def _fee_copy_surface(public: dict[str, Any], visible_text: str = "") -> str:
+    """Return only customer-copy fields that can legitimately contain fee text.
+
+    Do not scan full serialized JSON: ordinary machine values such as null/None
+    are not customer-visible fee corruption. Rendered/body text and explicitly
+    fee/copy-shaped fields are enough to catch template leaks and duplicate fee
+    fragments without turning every empty JSON field into a RED finding.
+    """
+    data = public if isinstance(public, dict) else {}
+    pieces = [visible_text or ""]
+    for key in (
+        "fee_range",
+        "fee_estimate",
+        "fee_notes",
+        "permit_fee",
+        "customer_headline",
+        "customer_next_step",
+        "summary",
+        "job_summary",
+        "required_permit_summary",
+    ):
+        value = data.get(key)
+        if value not in (None, ""):
+            pieces.append(str(value))
+    raw_packet = data.get("public_packet")
+    packet = raw_packet if isinstance(raw_packet, dict) else {}
+    for value in packet.get("fees") or []:
+        if value not in (None, ""):
+            pieces.append(str(value))
+    return "\n".join(pieces)
+
+
 def _families_from_text(text: str) -> set[str]:
     out: set[str] = set()
     for fam, pattern in _FAMILY_TEXT_PATTERNS:
@@ -307,7 +342,7 @@ def validate_customer_boundary(
         findings.append(CustomerBoundaryFinding("status_contradiction_not_required_with_required_artifacts"))
     if decision == "NOT_REQUIRED" and not re.search(r"\b(?:exempt|no permit|not required|finish work only|same[- ]?kind|like[- ]for[- ]like)\b", serialized, re.I):
         findings.append(CustomerBoundaryFinding("not_required_missing_positive_exemption_evidence", "warning"))
-    if _FEE_DUMP_RE.search(surface) or _FEE_DUMP_RE.search(serialized):
+    if _FEE_DUMP_RE.search(_fee_copy_surface(data, visible_text)):
         findings.append(CustomerBoundaryFinding("fee_or_report_dump_corruption"))
 
     if packet:
@@ -356,4 +391,24 @@ def canonical_render_diffs(public: dict[str, Any]) -> list[CustomerBoundaryFindi
     for key in ("permit_decision", "permit_required", "permit_verdict", "required_permit_families", "required_permit_names"):
         if (public or {}).get(key) != projected.get(key):
             diffs.append(CustomerBoundaryFinding("canonical_projection_diff", detail=key))
+    return diffs
+
+
+def canonical_payload_diffs(public: dict[str, Any], payload_data: dict[str, Any]) -> list[CustomerBoundaryFinding]:
+    """Validate the rendered share/report payload against the canonical API JSON.
+
+    Part 2 establishes `public_packet` + `permits_required` as the rendered
+    customer contract. Legacy top-level `required_permit_families` and
+    `required_permit_names` are intentionally absent from the HTML share/report
+    payload so stale mirrors cannot become a second source of truth.
+    """
+    public_data = public if isinstance(public, dict) else {}
+    payload = payload_data if isinstance(payload_data, dict) else {}
+    diffs: list[CustomerBoundaryFinding] = []
+    for key in ("permit_decision", "permit_required", "permit_verdict", "permits_required", "public_packet"):
+        if payload.get(key) != public_data.get(key):
+            diffs.append(CustomerBoundaryFinding("html_payload_public_mismatch", detail=key))
+    for key in ("required_permit_families", "required_permit_names"):
+        if key in payload:
+            diffs.append(CustomerBoundaryFinding("legacy_render_mirror_present", detail=key))
     return diffs
