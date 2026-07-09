@@ -383,3 +383,60 @@ def test_forbidden_subtype_alias_still_flags_exact_required_subtype() -> None:
         and "detached_garage_building" in finding.detail
         for finding in findings
     )
+
+
+def test_dental_clinic_uses_non_food_regulatory_verify_not_health_food() -> None:
+    job = "convert business office to dental clinic with plumbing chairs, nitrous piping, compressor room, and new electrical circuits"
+    facts = build_scope_facts_v4(job, "Sioux Falls", "SD", job_category="commercial")
+    stale = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permits_required": [
+            {"permit_name": "Commercial Building Permit", "family": "building_ti", "required": True, "decision": "REQUIRED"},
+            {"permit_name": "Electrical Permit", "family": "electrical", "required": True, "decision": "REQUIRED"},
+            {"permit_name": "Plumbing Permit", "family": "plumbing", "required": True, "decision": "REQUIRED"},
+            {"permit_name": "Health Permit", "family": "health_food", "required": True, "decision": "REQUIRED"},
+        ],
+    }
+
+    projected = apply_public_packet_projection(stale, facts)
+    visible = json.dumps(projected, default=str)
+
+    assert projected["permit_decision"] == "REQUIRED"
+    assert "health_food" not in _families(projected)
+    assert "Health Permit" not in visible
+    assert "Food-service floor plan" not in visible
+    conditional = {
+        str(row.get("family") or row.get("filing_family") or ""): str(row.get("permit_name") or "")
+        for row in projected.get("conditional_permits") or []
+        if isinstance(row, dict)
+    }
+    assert conditional.get("health_radiation") == "Health / Radiation Regulatory Review"
+
+
+def test_dental_xray_scope_keeps_radiation_review_conditional_and_building_electrical_required() -> None:
+    job = "install dental x-ray room shielding and dedicated electrical circuit in existing clinic, no plumbing"
+    facts = build_scope_facts_v4(job, "Spokane", "WA", job_category="commercial")
+    stale = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permits_required": [
+            {"permit_name": "Electrical Permit", "family": "electrical", "required": True, "decision": "REQUIRED"},
+            {"permit_name": "Health Permit", "family": "health_food", "required": True, "decision": "REQUIRED"},
+        ],
+        "source_urls": ["https://doh.wa.gov/community-and-environment/radiation/x-ray/x-ray-equipment-registration/x-ray-facility-plan-review"],
+    }
+
+    projected = apply_public_packet_projection(stale, facts)
+
+    assert projected["permit_decision"] == "REQUIRED"
+    assert {"building", "electrical"}.issubset(_families(projected))
+    assert "health_food" not in _families(projected)
+    conditional = {
+        str(row.get("family") or row.get("filing_family") or "")
+        for row in projected.get("conditional_permits") or []
+        if isinstance(row, dict)
+    }
+    assert "health_radiation" in conditional

@@ -139,6 +139,7 @@ FAMILY_DEFAULT_DOCUMENTS: dict[str, tuple[str, ...]] = {
     "solar_pv": ("Electrical one-line diagram", "Solar/PV equipment specifications"),
     "battery_storage": ("Battery/ESS equipment specifications", "Electrical one-line diagram"),
     "health_food": ("Food-service floor plan", "Equipment schedule", "Menu/process description"),
+    "health_radiation": ("Equipment specifications", "Room/shielding plan if requested", "State registration or regulatory-review details"),
     "wastewater_pretreatment_fog": ("Grease interceptor sizing/details", "Wastewater pretreatment application"),
     "planning_zoning": ("Site plan / zoning review materials",),
     "co_change_of_occupancy": ("Occupancy/use-change description",),
@@ -566,7 +567,7 @@ def _kind_for_family(family: str) -> str:
         "building": "Building", "building_ti": "Building", "building_adu": "Building", "demolition": "Building", "racking": "Building",
         "electrical": "Electrical", "mechanical": "Mechanical", "refrigeration": "Refrigeration", "plumbing": "Plumbing", "gas": "Gas",
         "solar_pv": "Solar / PV", "battery_storage": "Electrical", "fire_alarm": "Fire", "fire_suppression": "Fire", "fire_life_safety_assembly": "Fire", "fire_hazmat_co2": "Fire",
-        "health_food": "Health", "wastewater_pretreatment_fog": "Wastewater/FOG", "planning_zoning": "Planning/Zoning",
+        "health_food": "Health", "health_radiation": "Health / Radiation", "wastewater_pretreatment_fog": "Wastewater/FOG", "planning_zoning": "Planning/Zoning",
         "co_change_of_occupancy": "Certificate of Occupancy", "historic_review": "Historic/Planning", "historic": "Historic/Planning", "liquor": "Liquor",
         "sign": "Sign",
     }.get(str(family or ""), "Permit")
@@ -591,6 +592,8 @@ def _canonical_name_for_family(family: str, segment: str, data: dict[str, Any] |
         return "Fire Department — Assembly Occupancy / Life-Safety Review"
     if family == "fire_hazmat_co2":
         return "Fire Department — CO2 Enrichment / Hazardous Gas System Review"
+    if family == "health_radiation":
+        return "Health / Radiation Regulatory Review"
     if family == "solar_pv":
         return "Solar PV Permit / Review"
     if family == "battery_storage":
@@ -770,7 +773,7 @@ def _implied_required_rows_from_scope(data: dict[str, Any], facts: Any | None, s
     return rows
 
 
-def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple[dict[str, str], dict[str, str], set[str], bool]:
+def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple[dict[str, str], dict[str, str], set[str], bool, bool]:
     """Universal Session-4 scope floors/ceilings from the customer request text.
 
     These rules repair remaining Fable-5 deploy-readiness blockers by deriving
@@ -783,6 +786,7 @@ def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple
     conditional_floors: dict[str, str] = {}
     blocked: set[str] = set()
     force_not_required = False
+    force_verify = False
 
     def add(fam: str, reason: str) -> None:
         floors.setdefault(fam, reason)
@@ -797,6 +801,7 @@ def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple
     # source-proven exemption. Preserve an AHJ verification path rather than
     # forcing either a hard NOT_REQUIRED answer or an unsupported hard permit.
     if segment == "residential" and re.search(r"\bgarage\s+doors?\b", text) and re.search(r"\bsame\s+size\b", text) and re.search(r"\bno\s+header\s+changes?\b", text):
+        force_verify = True
         block("building", "building_ti", "planning_zoning", "co_change_of_occupancy")
         add_conditional("building", "Verify the local like-for-like garage-door exemption and confirm that no opening, header, framing, wind-load, or structural work is triggered.")
         if re.search(r"\b(?:new\s+)?openers?\b", text):
@@ -833,8 +838,16 @@ def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple
         add("mechanical", "HVAC/ventilation/equipment scope requires mechanical family floor")
     if re.search(r"\b(?:solar|pv|photovoltaic|fuel\s+tank|outpatient\s+clinic|wet\s+lab|fume\s+hoods?|taproom|microbrewery|fire\s+alarm\s+modifications?|battery\s+energy\s+storage|battery\s+storage)\b", text):
         add("fire_suppression", "energy/fuel/lab/assembly/life-safety scope requires fire-family floor")
-    if segment == "commercial" and re.search(r"\b(?:dental|x[- ]?ray|clinic|wet\s+lab|life[- ]science|acid\s+waste)\b", text):
-        add("health_food", "clinic/lab health-regulated scope requires health-family floor")
+    if segment == "commercial" and re.search(r"\b(?:wet\s+lab|life[- ]science|acid\s+waste)\b", text):
+        add("health_food", "lab health-regulated scope preserves the existing health-review family floor")
+    if segment == "commercial" and re.search(r"\b(?:dental|x[- ]?ray|radiology)\b", text) and not re.search(r"\b(?:restaurant|food\s+service|food\s+establishment|commercial\s+kitchen|bakery|deli|grocery|public\s+pool)\b", text):
+        block("health_food")
+        add_conditional(
+            "health_radiation",
+            "Verify any non-food health, radiation-equipment, shielding, registration, or medical-gas review with the applicable state/local regulator; do not treat this clinical scope as a food-service permit.",
+        )
+    if segment == "commercial" and re.search(r"\b(?:wet\s+lab|life[- ]science|acid\s+waste)\b", text):
+        add_conditional("health_radiation", "Verify any non-food laboratory health or regulatory review with the applicable state/local authority.")
     if segment == "commercial" and re.search(r"\bx[- ]?ray\b|\bshielding\b", text):
         add("building", "x-ray shielding/room alteration requires building-family floor")
         block("mechanical")
@@ -875,7 +888,7 @@ def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple
         block("plumbing")
     if segment == "commercial" and re.search(r"\bfire\s+alarm\s+modifications?\b", text):
         block("fire_alarm")
-    return floors, conditional_floors, blocked, force_not_required
+    return floors, conditional_floors, blocked, force_not_required, force_verify
 
 
 def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> PublicPacketDTO:
@@ -895,7 +908,7 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         data["_request_job_type"] = getattr(facts, "request_scope_text", "")
     scope_facts = facts.as_dict() if facts is not None and hasattr(facts, "as_dict") else (copy.deepcopy(facts) if isinstance(facts, dict) else {})
     request_text_for_fable5 = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or data.get("_request_job_type") or data.get("job_type") or data.get("job_summary") or data.get("summary") or "")
-    session4_floors, session4_conditional_floors, session4_blocked_families, session4_force_not_required = _session4_scope_family_adjustments(request_text_for_fable5, segment)
+    session4_floors, session4_conditional_floors, session4_blocked_families, session4_force_not_required, session4_force_verify = _session4_scope_family_adjustments(request_text_for_fable5, segment)
     decision = _decision(data)
     promoted_from_not_required = False
     promoted_required_rows: list[dict[str, Any]] = []
@@ -924,7 +937,10 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         data["not_required_reason"] = no_permit_copy
         if isinstance(data.get("customer_result_summary"), dict):
             data["customer_result_summary"]["summary"] = no_permit_copy
-    if session4_conditional_floors:
+    if session4_force_verify:
+        # Explicit source-ambiguity scopes must remain VERIFY even when legacy
+        # mirrors or generic trade inference try to promote one component to a
+        # hard permit requirement.
         decision = "VERIFY"
         promoted_from_not_required = False
         promoted_required_rows = []

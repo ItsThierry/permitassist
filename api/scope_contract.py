@@ -1089,8 +1089,13 @@ def _apply_phase0_scope_axis_closure(
         add_positive("refrigeration")
     if has(r"\b(?:fire\s+alarm|fire\s+suppression|sprinklers?|wet\s+chemical|ansul|fire\s+detection|battery\s+energy\s+storage|lithium|bess|hazardous|spray\s+booth|daycare|childcare|church\s+assembly|assembly|occupant\s+load|classrooms?|high[- ]pile|racking|mezzanine|type\s*i\s+hood|type\s*1\s+hood|clean\s+agent)\b"):
         add_positive("fire_life_safety")
-    if has(r"\b(?:restaurant|food\s+truck|commissary|coffee\s+kiosk|coffee\s+shop|cocktail\s+bar|brewery|brewpub|bakery|grocery|salon|dental|medical|clinic|daycare|childcare|public\s+pool|hotel\s+outdoor\s+pool|pool\s+deck|grease|type\s*i\s+hood|type\s*1\s+hood|pharmacy)\b"):
+    clinical_radiation_scope = has(r"\b(?:dental|x[- ]?ray|radiology)\b")
+    if has(r"\b(?:restaurant|food\s+truck|commissary|coffee\s+kiosk|coffee\s+shop|cocktail\s+bar|brewery|brewpub|bakery|grocery|salon|medical|clinic|pharmacy|daycare|childcare|public\s+pool|hotel\s+outdoor\s+pool|pool\s+deck|grease|type\s*i\s+hood|type\s*1\s+hood)\b") and not clinical_radiation_scope:
         add_positive("health_food_pool")
+    if clinical_radiation_scope:
+        # Non-food clinical/radiation regulation is a separate, potentially
+        # conditional review path. Do not project it into the food/pool family.
+        add_positive("medical_radiation_review")
     if has(r"\b(?:change\s+of\s+use|change-of-use|change\s+of\s+occupancy|former\s+(?:retail|office)|tenant\s+improvement|\bti\b|vanilla\s+shell|buildout|build-out|fit[- ]out|retail\s+bay\s+to|office\s+to|split\s+existing\s+retail\s+suite|convert\s+(?:former|retail|vacant\s+retail|single-story\s+office|attached\s+garage|detached\s+garage)|garage\s+conversion|accessory\s+dwelling|adu\b|drive[- ]through\s+coffee\s+kiosk|coffee\s+kiosk)\b"):
         add_positive("change_of_use_ti")
     if has(r"\b(?:sign|signage|menu\s+boards?|window\s+vinyl)\b") and not has(r"\bexit\s+signs?\b"):
