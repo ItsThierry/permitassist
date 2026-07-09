@@ -15,11 +15,11 @@ import re
 from typing import Any, Iterable
 
 try:  # api/ on sys.path in production/tests
-    from family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
+    from family_policy_matrix import covered_families, forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
     from family_reconciliation_gate import family_from_row
     from scope_contract import safety_critical_required_families
 except Exception:  # pragma: no cover
-    from api.family_policy_matrix import forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
+    from api.family_policy_matrix import covered_families, forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
     from api.family_reconciliation_gate import family_from_row
     from api.scope_contract import safety_critical_required_families
 
@@ -407,9 +407,10 @@ def validate_customer_boundary(
     expected_decision = str(expected.get("expected_decision") or "").upper().strip()
     if expected_decision and decision in {"REQUIRED", "NOT_REQUIRED"} and expected_decision != decision:
         findings.append(CustomerBoundaryFinding("expected_decision_mismatch", detail=f"expected={expected_decision} actual={decision}"))
+    actual_required = covered_families(public_required | packet_required)
     must_include = {canonical_family(f) for f in expected.get("required_families_must_include") or [] if canonical_family(f)}
     if must_include:
-        missing = sorted(must_include - (public_required | packet_required))
+        missing = sorted(must_include - actual_required)
         if missing:
             findings.append(CustomerBoundaryFinding("missing_or_demoted_required_family", detail=",".join(missing)))
     raw_forbidden = {
@@ -439,7 +440,7 @@ def validate_customer_boundary(
 
     if include_matrix and facts is not None:
         mandatory_set, mandatory, forbidden_map = _matrix_expected_families(facts)
-        missing_matrix = sorted(mandatory_set - (public_required | packet_required))
+        missing_matrix = sorted(mandatory_set - actual_required)
         if missing_matrix:
             findings.append(CustomerBoundaryFinding("matrix_expected_family_floor_dry_run", detail=",".join(missing_matrix)))
         present_forbidden_matrix = sorted(set(forbidden_map) & (public_required | packet_required))

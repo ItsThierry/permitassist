@@ -311,7 +311,9 @@ def safety_critical_required_families(facts: Any | None) -> set[str]:
         or _fact_value(facts, "plumbing_work") == "TRUE"
     ) and "plumbing" not in negative_families and "no_plumbing" not in negative_facts and "no_mep" not in negative_facts:
         out.add("plumbing")
-    if not cosmetic and ("gas" in positives or "gas" in positive_facts or _fact_value(facts, "gas_fuel_work") == "TRUE"):
+    if not cosmetic and (
+        "gas" in positives or "gas" in positive_facts or _fact_value(facts, "gas_fuel_work") == "TRUE"
+    ) and "gas" not in negative_families and "no_gas" not in negative_facts:
         out.add("gas")
         if "no_plumbing" not in negative_facts and "plumbing" not in negative_families:
             out.add("plumbing")
@@ -1187,6 +1189,50 @@ def build_scope_facts_v4(job_type: str, city: str = "", state: str = "", *, job_
         negative_families.add("building")
         forbidden.setdefault("building", "residential HPWH/mini-split equipment scope does not hard-require standalone building permit absent structural/framing/envelope work")
     _apply_phase0_scope_axis_closure(job, v3.segment, positives, positive_families, negatives, negative_families, forbidden)
+    # Phase-0 keyword closure is intentionally broad, so re-apply explicit
+    # negative fuel-gas/plumbing ceilings after it. Search only affirmative
+    # clauses for same-family positive work; words inside "no ..." clauses are
+    # not evidence of requested work.
+    affirmative_job = re.sub(r"\b(?:no|without)\b[^;,.]*", "", job)
+    explicit_no_gas_piping = bool(
+        re.search(
+            r"\b(?:no|without)\s+(?:new\s+)?(?:fuel[- ]?gas|gas)(?:\s+(?:line|lines|piping|pipe|work|connection|connections))?\b",
+            job,
+            re.I,
+        )
+    )
+    affirmative_gas_piping = bool(
+        re.search(
+            r"\b(?:new|install|extend|replace|repair|reroute|run|add)\b.{0,48}\b(?:fuel[- ]?gas|gas)\s+(?:line|lines|piping|pipe|branch|connection|connections)\b"
+            r"|\b(?:fuel[- ]?gas|gas)\s+(?:line|lines|piping|pipe|branch)\b",
+            affirmative_job,
+            re.I,
+        )
+    )
+    affirmative_ordinary_plumbing = bool(
+        re.search(
+            r"\b(?:water\s+(?:line|lines|supply|service|piping|pipe)|sewer|sanitary|waste\s+(?:line|piping)|"
+            r"drain|drainage|plumbing\s+fixture|sink|faucet|toilet|urinal|shower|bathtub|water\s+heater|"
+            r"backflow|irrigation|sump\s+pump|grease\s+(?:trap|interceptor)|condensate\s+drain)\b",
+            affirmative_job,
+            re.I,
+        )
+    )
+    if explicit_no_gas_piping and not affirmative_gas_piping:
+        negatives.add("no_gas")
+        negative_families.add("gas")
+        positives.discard("gas")
+        positive_families.discard("gas")
+        forbidden["gas"] = "explicit no-gas/no-new-gas-piping scope forbids a standalone fuel-gas filing row"
+        if not affirmative_ordinary_plumbing:
+            negative_families.add("plumbing")
+            positives.discard("plumbing")
+            positive_families.discard("plumbing")
+            forbidden["plumbing"] = "appliance-only/no-new-gas-piping scope has no independent plumbing filing trigger"
+    if "no_plumbing" in negatives and not affirmative_ordinary_plumbing and not affirmative_gas_piping:
+        negative_families.add("plumbing")
+        positives.discard("plumbing")
+        positive_families.discard("plumbing")
     if "no_use_change" in negatives:
         for token in ("use_change", "co_change_of_occupancy", "change_of_use_ti"):
             positives.discard(token)
@@ -1241,8 +1287,13 @@ def build_scope_facts_v4(job_type: str, city: str = "", state: str = "", *, job_
     mechanical_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:mechanical|hvac|ventilation|duct|ductwork)\b")
     electrical_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:electric(?:al)?|wiring|circuits?|panel|illumination)\b")
     plumbing_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:plumbing|pipes?|drains?|fixtures?|water|sewer)\b")
+    gas_false = _evidence_spans(job, r"\b(?:no|without)\s+(?:new\s+)?(?:fuel[- ]?gas|gas)(?:\s+(?:line|lines|piping|pipe|work|connection|connections))?\b")
     building_false = _evidence_spans(job, r"\b(?:no\s+structural(?:\s+changes?)?|non[- ]structural|non\s+load\s+bearing|no\s+wall\s+framing)\b")
     mandatory_floors = dict(v3.mandatory_family_floors)
+    if "no_gas" in negatives:
+        mandatory_floors.pop("gas", None)
+    if "plumbing" in negative_families and "plumbing" not in positive_families:
+        mandatory_floors.pop("plumbing", None)
     if "cosmetic_only" in negatives:
         for fam in ("building_ti", "co_change_of_occupancy", "planning_zoning"):
             mandatory_floors.pop(fam, None)
@@ -1283,7 +1334,7 @@ def build_scope_facts_v4(job_type: str, city: str = "", state: str = "", *, job_
         assembly_occupancy=v3.assembly_occupancy,
         electrical_new_circuits=v3.electrical_new_circuits,
         residential_outdoor_cooking=v3.residential_outdoor_cooking,
-        gas_fuel_work=v3.gas_fuel_work,
+        gas_fuel_work=_fact(TriFact.FALSE, gas_false) if gas_false and "gas" not in positive_families else v3.gas_fuel_work,
         occupancy_class=occupancy_class,
         use_change=bool(v3.change_of_use or "use_change" in positives) and "no_use_change" not in negatives,
         request_positive_families=frozenset(positive_families),

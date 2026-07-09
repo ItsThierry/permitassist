@@ -173,6 +173,11 @@ def required_families(public: dict[str, Any], *, bucket: bool = False) -> list[s
         fam = family_from_row(row)
         if fam:
             fams.append(bucket_family(fam) if bucket else fam)
+    # Match the production family taxonomy: a concrete fuel-gas filing is a
+    # plumbing-trade subtype and therefore covers the plumbing parent bucket.
+    # Keep exact families literal; expand only semantic comparison buckets.
+    if bucket and "gas" in fams:
+        fams.append("plumbing")
     return sorted(dict.fromkeys(fams))
 
 

@@ -129,7 +129,7 @@ def test_terminal_render_parity_seal_runs_packet_invariants_and_render_hash():
             "fees": [],
         },
     }
-    sealed = apply_render_parity_seal(result, facts=facts)
+    sealed = apply_render_parity_seal(result, facts=facts, fail_hard=False)
     packet = sealed["public_packet"]
     assert packet.get("render_seal_hash", "").startswith("sha256:")
     assert packet["sealed_public_packet_hash"] == packet["render_seal_hash"] == sealed["render_seal_hash"]

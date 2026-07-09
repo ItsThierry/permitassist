@@ -103,6 +103,59 @@ def _canonical_family(family: Any) -> str:
     return aliases.get(raw, raw)
 
 
+def covered_families(families: Any) -> set[str]:
+    """Return semantic family coverage for packet-floor validation.
+
+    ``gas`` is a filing subtype of the plumbing trade, so a concrete fuel-gas
+    row covers both the gas scope and its plumbing parent. The relationship is
+    intentionally one-way: a generic plumbing row does not prove that explicit
+    fuel-gas work was captured.
+    """
+    covered = {_canonical_family(family) for family in (families or ()) if _canonical_family(family)}
+    if "gas" in covered:
+        covered.add("plumbing")
+    return covered
+
+
+def fuel_gas_plumbing_subtype_only(facts_or_text: ScopeFactsV3 | Any) -> bool:
+    """True when plumbing is present only as the parent of fuel-gas piping.
+
+    This keeps a pure gas-line scope as one actionable ``gas`` row (labelled as
+    fuel/plumbing gas) instead of emitting a duplicate generic Plumbing Permit.
+    Concrete water, sanitary, fixture, or ordinary plumbing work keeps the
+    standalone plumbing row.
+    """
+    if isinstance(facts_or_text, str):
+        text = facts_or_text.lower()
+    else:
+        text = str(getattr(facts_or_text, "request_scope_text", "") or "").lower()
+    if not text:
+        return False
+    # Remove explicit negative clauses before looking for positive gas or
+    # ordinary-plumbing work. This prevents phrases such as "no water or drain
+    # work" from defeating a real gas-line subtype, and prevents "no new gas
+    # piping" from being read as positive gas work.
+    affirmative_text = re.sub(r"\b(?:no|without)\b[^;,.]*", "", text)
+    explicit_gas_piping = bool(
+        re.search(
+            r"\b(?:new|install|extend|replace|repair|reroute|run|add)\b.{0,48}\b(?:fuel[- ]?gas|gas)\s+(?:line|lines|piping|pipe|branch|connection|connections)\b"
+            r"|\b(?:fuel[- ]?gas|gas)\s+(?:line|lines|piping|pipe|branch)\b",
+            affirmative_text,
+        )
+    )
+    if not explicit_gas_piping:
+        return False
+    ordinary_plumbing = bool(
+        re.search(
+            r"\b(?:water\s+(?:line|lines|supply|service|piping|pipe)|sewer|sanitary|waste\s+(?:line|piping)|"
+            r"drain|drainage|plumbing\s+fixture|sink|faucet|toilet|urinal|shower|bathtub|water\s+heater|"
+            r"backflow|irrigation|sump\s+pump|grease\s+(?:trap|interceptor)|condensate\s+drain)\b",
+            affirmative_text,
+        )
+    )
+    return not ordinary_plumbing
+
+
 def _request_positive_floors(facts: ScopeFactsV3 | Any) -> dict[str, str]:
     """ScopeFactsV4 request-derived floor matrix.
 
@@ -211,6 +264,8 @@ def mandatory_families(facts: ScopeFactsV3 | Any) -> dict[str, str]:
     if "no_plumbing" in negative_facts or "plumbing" in negative_families:
         out.pop("plumbing", None)
         out.pop("wastewater_pretreatment_fog", None)
+    if "no_gas" in negative_facts or "gas" in negative_families:
+        out.pop("gas", None)
     if "no_mechanical" in negative_facts or "mechanical" in negative_families:
         out.pop("mechanical", None)
     if not isinstance(facts, ScopeFactsV3):

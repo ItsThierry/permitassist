@@ -16,13 +16,13 @@ import re
 
 try:
     from family_reconciliation_gate import family_from_row, resolve_lead_label
-    from family_policy_matrix import document_floor_keys, forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
+    from family_policy_matrix import covered_families, document_floor_keys, forbidden_families as matrix_forbidden_families, fuel_gas_plumbing_subtype_only, mandatory_families as matrix_mandatory_families
     from phase_trace import emit_trace
     from source_roles import SourceRole, classify_source, is_official_badge_role, source_label_for_role
     from scope_contract import TriFact, safety_critical_required_families
 except Exception:  # pragma: no cover
     from api.family_reconciliation_gate import family_from_row, resolve_lead_label
-    from api.family_policy_matrix import document_floor_keys, forbidden_families as matrix_forbidden_families, mandatory_families as matrix_mandatory_families
+    from api.family_policy_matrix import covered_families, document_floor_keys, forbidden_families as matrix_forbidden_families, fuel_gas_plumbing_subtype_only, mandatory_families as matrix_mandatory_families
     from api.phase_trace import emit_trace
     from api.source_roles import SourceRole, classify_source, is_official_badge_role, source_label_for_role
     from api.scope_contract import TriFact, safety_critical_required_families
@@ -834,7 +834,7 @@ def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple
     # Trade precision floors.
     if re.search(r"\b(?:walk[- ]in\s+cooler|freezer\s+boxes|refrigerated\s+cases|condensate\s+drain|rooftop\s+unit|rtu|x[- ]?ray|standby\s+generator|heat\s+pump\s+system|automatic\s+transfer\s+switch)\b", text):
         add("electrical", "equipment scope includes electrical connection/control family floor")
-    if re.search(r"\b(?:showers?|locker\s+rooms?|fume\s+hoods?|ventilation\s+upgrades?|refrigerated\s+cases|standby\s+generator|heat\s+pump\s+system|gas[- ]fired\s+makeup\s+air)\b", text):
+    if re.search(r"\b(?:showers?|locker\s+rooms?|fume\s+hoods?|ventilation\s+upgrades?|refrigerated\s+cases|heat\s+pump\s+system|gas[- ]fired\s+makeup\s+air)\b", text):
         add("mechanical", "HVAC/ventilation/equipment scope requires mechanical family floor")
     if re.search(r"\b(?:solar|pv|photovoltaic|fuel\s+tank|outpatient\s+clinic|wet\s+lab|fume\s+hoods?|taproom|microbrewery|fire\s+alarm\s+modifications?|battery\s+energy\s+storage|battery\s+storage)\b", text):
         add("fire_suppression", "energy/fuel/lab/assembly/life-safety scope requires fire-family floor")
@@ -867,8 +867,6 @@ def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple
         block("gas", "plumbing")
     if segment == "residential" and re.search(r"\bstandby\s+generator\b", text) and re.search(r"\bnew\s+gas\s+line\b", text):
         add("gas", "generator scope with new gas line requires fuel-gas family floor")
-        add("mechanical", "standby generator/gas equipment requires mechanical family floor")
-        block("plumbing")
     if segment == "residential" and re.search(r"\boil\s+boiler\b", text) and re.search(r"\bheat\s+pump\s+system\b", text):
         add("electrical", "heat-pump conversion requires electrical family floor")
         block("environmental", "refrigeration")
@@ -1147,6 +1145,13 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                 return False
             return True
         conditional_rows = [r for r in conditional_rows if _condition_allowed(r)]
+        if fuel_gas_plumbing_subtype_only(request_text) and any(_family(row) == "gas" for row in required_rows):
+            # A concrete fuel-gas row is the plumbing-trade subtype for pure
+            # gas-piping scope. Keep one actionable row rather than a duplicate
+            # generic Plumbing Permit; semantic floor validation expands gas to
+            # its plumbing parent.
+            required_rows = [row for row in required_rows if _family(row) != "plumbing"]
+            conditional_rows = [row for row in conditional_rows if _family(row) != "plumbing"]
         if decision == "REQUIRED" and not required_rows and conditional_rows:
             fallback = copy.deepcopy(conditional_rows.pop(0))
             fallback["decision"] = "REQUIRED"
@@ -1606,7 +1611,8 @@ def seal_packet(packet: dict[str, Any], *, facts: Any | None = None, fail_hard: 
     if segment == "residential" and re.search(r"\b(?:commercial|tenant improvement)\b", lead_label, re.I):
         errors.append("lead label segment mismatch")
     mandatory = matrix_mandatory_families(facts) if facts is not None else {}
-    missing_mandatory = sorted(fam for fam in mandatory if fam not in present_families)
+    present_coverage = covered_families(present_families)
+    missing_mandatory = sorted(fam for fam in mandatory if fam not in present_coverage)
     if missing_mandatory:
         errors.append("mandatory families missing: " + ",".join(missing_mandatory))
     for source in out.get("sources") or []:
