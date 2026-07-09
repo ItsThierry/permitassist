@@ -411,6 +411,8 @@ def _packet_row(row: dict[str, Any], data: dict[str, Any], decision: Decision) -
 
 def _clean_fee_text(text: str, facts: Any | None = None) -> str:
     value = str(text or "")
+    if re.search(r"\b(?:SUMMARY|REQUIRED DOCUMENTS|PRE[- ]CONSTRUCTION CHECKLIST|SOURCES CHECKED|Get your own permits instantly)\b", value, re.I):
+        return "Permit fee not confirmed; verify the current AHJ fee schedule before quoting."
     value = value.replace(" — verify in before quoting", " — verify with the building department before quoting")
     value = value.replace(" — verify current fees with the issuing office before quoting", " — verify with the building department before quoting")
     if facts is not None and "no_sprinkler_alteration" in set(getattr(facts, "negative_facts", []) or []):
@@ -487,7 +489,7 @@ def _fable5_request_supports_family(family: str, request_text: str) -> bool:
         return False
     patterns = {
         "mechanical": r"\b(?:hvac|rtu|makeup air|make-up air|ventilation|exhaust|dust collection|cyclone|explosion venting|commercial dishwasher|dishwasher|gas dryers?|dryer vent|walk-in cooler|cooler rooms?|wood stove|chimney|heat pump|mini split|compressor)\b",
-        "electrical": r"\b(?:electrical|lighting|exit signage|fire alarm tie-in|600a|service|subpanel|ev charging|charger|transformer|disconnect|wiring|receptacles?|circuits?|dispensers?)\b",
+        "electrical": r"\b(?:electrical|lighting|exit signage|fire alarm tie-in|600a|service|subpanel|ev charging|charger|transformer|disconnect|wiring|receptacles?|circuits?|dispensers?|sump\s+pump|ejector\s+pump|sewage\s+ejector|lift\s+station\s+pump)\b",
         "plumbing": r"\b(?:floor drains?|drains?|water heaters?|showers?|locker rooms?|prep sink|sink|oil separator|backflow|irrigation|underground product piping|reclaim system|plumbing|toilet|bathroom|kitchenette|gas dryers?)\b",
         "gas": r"\b(?:gas dryers?|gas line|gas station|fuel canopy|fuel dispensers?)\b",
         "refrigeration": r"\b(?:cooler rooms?|walk-in cooler|refrigerated|refrigeration|condensing units?)\b",
@@ -516,12 +518,20 @@ def _public_row_dict(row: dict[str, Any]) -> dict[str, Any]:
     return cleaned
 
 
-def _packet_row_to_legacy(row: dict[str, Any]) -> dict[str, Any]:
+def _packet_row_to_legacy(row: dict[str, Any], *, preserve_building_ti: bool = False) -> dict[str, Any]:
     decision = str(row.get("decision") or "REQUIRED").upper()
     required = decision == "REQUIRED"
     name = str(row.get("permit_name") or row.get("permit_type") or "Permit").strip()
     family = str(row.get("family") or family_from_row({"permit_type": name}) or "building").strip()
-    legacy_family = "building" if family in {"building_ti", "building_adu", "demolition", "racking"} else family
+    # Legacy top-level rows historically bucketed building subfamilies to broad
+    # "building" so older consumers still saw a Building permit.  But when the
+    # sealed packet contains both a broad building row and a building_ti row, that
+    # bucketing erases the TI family from the rendered public contract and trips
+    # canonical-vs-public parity.  Preserve building_ti only in that mixed packet
+    # shape; otherwise keep the broad legacy bucket for compatibility.
+    legacy_family = family
+    if family in {"building_ti", "building_adu", "demolition", "racking"} and not (family == "building_ti" and preserve_building_ti):
+        legacy_family = "building"
     out = {
         "permit_type": name,
         "permit_name": name,
@@ -589,7 +599,7 @@ def _canonical_name_for_family(family: str, segment: str, data: dict[str, Any] |
         return "Historic District / Exterior Review"
     if family == "liquor":
         return "Liquor License / Alcohol Service Review"
-    if family == "electrical" and segment != "commercial" and re.search(r"\b(?:existing\s+boxes|no\s+new\s+circuits?|gfci|receptacles?)\b", scope_text, re.I) and not re.search(r"\b(?:new\s+circuit|panel\s+upgrade|service\s+upgrade)\b", scope_text, re.I):
+    if family == "electrical" and segment != "commercial" and re.search(r"\b(?:existing\s+boxes|no\s+new\s+circuits?|gfci|receptacles?)\b", scope_text, re.I) and not re.search(r"\b(?:new\s+circuit|panel\s+upgrade|service\s+upgrade|add(?:ing)?\b.{0,40}\b(?:fan|outlet|gfci|receptacle)|bath\s+fan|exhaust\s+fan)\b", scope_text, re.I):
         return "Residential Electrical Permit — Device / Receptacle Replacement (Existing Circuits)"
     if family == "building" and segment == "residential":
         if re.search(r"\b(?:convert|conversion)\b.{0,40}\bgarage\b|\bgarage\b.{0,60}\b(?:bedroom|habitable|living\s+space|conversion)\b", scope_text, re.I):
@@ -609,6 +619,13 @@ def _canonical_name_for_family(family: str, segment: str, data: dict[str, Any] |
 def _segment_locked_name(name: str, family: str, segment: str, data: dict[str, Any] | None = None) -> str:
     value = str(name or "").strip() or _canonical_name_for_family(family, segment, data)
     lower = value.lower()
+    scope_text = ""
+    if isinstance(data, dict):
+        scope_text = str(data.get("_request_job_type") or data.get("job_type") or data.get("job_summary") or data.get("summary") or "")
+    if family == "electrical" and "illuminated sign" in lower and re.search(r"\bexit\s+signs?\b", scope_text, re.I) and not re.search(r"\b(?:exterior\s+sign|storefront\s+sign|illuminated\s+sign|new\s+sign|sign\s+copy)\b", scope_text, re.I):
+        return "Electrical Permit — Exit Sign / Panel Separation Work"
+    if family == "electrical" and "device / receptacle replacement" in lower and re.search(r"\b(?:add(?:ing)?\b.{0,40}\b(?:fan|outlet|gfci|receptacle)|bath\s+fan|exhaust\s+fan)\b", scope_text, re.I):
+        return _canonical_name_for_family(family, segment, data)
     if segment == "commercial" and re.search(r"\b(?:residential|single[- ]family|homeowner)\b", lower):
         return _canonical_name_for_family(family, segment, data)
     if segment == "residential" and re.search(r"\b(?:commercial|tenant improvement|\bti\b|change[- ]of[- ]use)\b", lower):
@@ -621,7 +638,7 @@ def _segment_locked_name(name: str, family: str, segment: str, data: dict[str, A
         return _canonical_name_for_family(family, segment, data)
     if family == "electrical" and isinstance(data, dict):
         scope_text = str(data.get("_request_job_type") or data.get("job_type") or data.get("job_summary") or data.get("summary") or "")
-        if re.search(r"\b(?:existing\s+boxes|no\s+new\s+circuits?|gfci|receptacles?|outlets?)\b", scope_text, re.I) and not re.search(r"\b(?:new\s+circuit|panel\s+upgrade|service\s+upgrade)\b", scope_text, re.I):
+        if re.search(r"\b(?:existing\s+boxes|no\s+new\s+circuits?|gfci|receptacles?|outlets?)\b", scope_text, re.I) and not re.search(r"\b(?:new\s+circuit|panel\s+upgrade|service\s+upgrade|add(?:ing)?\b.{0,40}\b(?:fan|outlet|gfci|receptacle)|bath\s+fan|exhaust\s+fan)\b", scope_text, re.I):
             return _canonical_name_for_family(family, segment, data)
     if family == "building" and segment == "residential" and isinstance(data, dict):
         scope_text = str(data.get("_request_job_type") or data.get("job_type") or data.get("job_summary") or data.get("summary") or "")
@@ -1074,6 +1091,39 @@ def _repair_stale_apply_url_for_scope(out: dict[str, Any], facts: Any | None = N
             apply_url = replacement
             lower_url = replacement.lower()
             break
+    if not apply_url:
+        # Registry/source fallback chain: if an official AHJ information page is
+        # all we have, advance to the nearest official permit-department landing
+        # page instead of emitting a REQUIRED action path with no URL. This is not
+        # a case-ID patch; it keys off the official source URL pattern and keeps
+        # the concrete REQUIRED permit package intact.
+        source_blob = "\n".join(str(u or "") for u in (out.get("source_urls") or []))
+        source_blob += "\n" + "\n".join(
+            str((src or {}).get("url") or (src or {}).get("source_url") or "")
+            for src in (out.get("sources") or [])
+            if isinstance(src, dict)
+        )
+        source_fallbacks = {
+            "peoriagov.org/172/do-i-need-a-permit": "https://www.peoriagov.org/168/Building-Safety",
+        }
+        for token, replacement in source_fallbacks.items():
+            if token in source_blob.lower():
+                out["apply_url"] = replacement
+                out["online_application_url"] = replacement
+                out["_repaired_apply_url"] = replacement
+                out["source_urls"] = list(dict.fromkeys([replacement, *(out.get("source_urls") or [])]))
+                if isinstance(out.get("sources"), list):
+                    out["sources"].insert(0, {"url": replacement, "title": "Official permit department landing page", "source_role": "LOCAL_OFFICIAL_FILING"})
+                if isinstance(out.get("apply_path"), dict):
+                    out["apply_path"] = copy.deepcopy(out["apply_path"])
+                    out["apply_path"]["portal_url"] = replacement
+                    out["apply_path"]["channel"] = "official_department_page"
+                    out["apply_path"]["state"] = "official_source_fallback"
+                    out["apply_path"]["status"] = "OFFICIAL_SOURCE_FALLBACK"
+                    out["apply_path"]["typed_status"] = "OFFICIAL_SOURCE_FALLBACK"
+                apply_url = replacement
+                lower_url = replacement.lower()
+                break
     stale_fire_cleaning = "exhaust-vent-cleaning-and-inspection" in apply_url.lower()
     actual_lab_or_install = bool(re.search(r"\b(?:lab|laboratory|fume\s+hoods?|exhaust|gas\s+piping|tenant\s+improvement|install|adding)\b", scope_text, re.I))
     maintenance_cleaning = bool(re.search(r"\b(?:clean(?:ing)?|maintenance|inspection\s+only)\b", scope_text, re.I))
@@ -1141,8 +1191,12 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     # rewrite every report-facing mirror from packet rows and purge debug/source
     # structures that can leak suppressed families through serialized JSON.
     packet_rows = list(public_packet.get("rows") or [])
-    required_public_rows = [_packet_row_to_legacy(row) for row in packet_rows if row.get("decision") == "REQUIRED"]
-    conditional_public_rows = [_packet_row_to_legacy(row) for row in packet_rows if row.get("decision") == "CONDITIONAL"]
+    required_packet_rows = [row for row in packet_rows if row.get("decision") == "REQUIRED"]
+    conditional_packet_rows = [row for row in packet_rows if row.get("decision") == "CONDITIONAL"]
+    required_packet_families = {str(row.get("family") or "") for row in required_packet_rows}
+    preserve_building_ti = "building_ti" in required_packet_families and "building" in required_packet_families
+    required_public_rows = [_packet_row_to_legacy(row, preserve_building_ti=preserve_building_ti) for row in required_packet_rows]
+    conditional_public_rows = [_packet_row_to_legacy(row, preserve_building_ti=preserve_building_ti) for row in conditional_packet_rows]
     out["public_packet"] = public_packet
     out["canonical_public_packet"] = public_packet
     out["segment"] = packet.segment
@@ -1155,7 +1209,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     packet_family_names = list(public_packet.get("required_families") or [])
     display_family_names = [_kind_for_family(str(fam)) for fam in packet_family_names]
     out["required_permit_families"] = list(dict.fromkeys(packet_family_names + display_family_names))
-    out["required_permit_names"] = [row.get("permit_name") for row in packet_rows if row.get("decision") == "REQUIRED"]
+    out["required_permit_names"] = [str(row.get("permit_name")) for row in required_public_rows if row.get("permit_name")]
     out["permits_required_logic"] = [
         {"filing_family": row.get("family"), "permit_type": row.get("permit_name"), "scope_trigger": "Project scope", "included_because": "The locked public packet includes this required permit family."}
         for row in packet_rows if row.get("decision") == "REQUIRED"
@@ -1260,6 +1314,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     for key in (
         "decision_object", "project_scope_attributes", "render_fidelity", "scope_facts", "scope_contract", "_scope_contract",
         "_decision_floor_invariant", "_repaired_apply_url",
+        "package_header",
         "_request_city", "_request_state", "negative_facts", "positive_facts", "city_contractor_registration", "pro_tips", "common_mistakes", "watch_out",
         "inspection_requirements", "inspect_checklist", "inspection_checklist", "inspections_required",
         "companion_reviews", "companion_permits_or_reviews", "primary_permit", "description", "next_steps",
@@ -1361,6 +1416,18 @@ def apply_render_parity_seal(result: dict[str, Any], *, facts: Any | None = None
     packet = out.get("public_packet") if isinstance(out.get("public_packet"), dict) else {}
     if not packet or not str(packet.get("schema_version") or "").startswith("final_public_permit_packet"):
         return out
+    top_apply_url = str(out.get("apply_url") or out.get("online_application_url") or "").strip()
+    if top_apply_url and isinstance(packet.get("authority"), dict) and not str(packet["authority"].get("apply_url") or "").strip():
+        packet = copy.deepcopy(packet)
+        packet["authority"] = copy.deepcopy(packet.get("authority") or {})
+        packet["authority"]["apply_url"] = top_apply_url
+    if top_apply_url and isinstance(out.get("apply_path"), dict) and not str(out["apply_path"].get("portal_url") or out["apply_path"].get("url") or "").strip():
+        out["apply_path"] = copy.deepcopy(out["apply_path"])
+        out["apply_path"]["portal_url"] = top_apply_url
+        out["apply_path"]["state"] = "official_source_fallback"
+        out["apply_path"]["status"] = "OFFICIAL_SOURCE_FALLBACK"
+        out["apply_path"]["typed_status"] = "OFFICIAL_SOURCE_FALLBACK"
+        out["apply_path"]["channel"] = "official_source"
     decision = str(packet.get("decision") or out.get("permit_decision") or "").upper().strip()
     rows = [r for r in packet.get("rows") or [] if isinstance(r, dict)]
     required_rows = [r for r in rows if str(r.get("decision") or "").upper() == "REQUIRED"]
@@ -1405,8 +1472,10 @@ def apply_render_parity_seal(result: dict[str, Any], *, facts: Any | None = None
             "apply_path": {"state": "not_applicable", "status": "NOT_APPLICABLE", "typed_status": "NOT_APPLICABLE", "channel": "no_permit_required", "office_name": out.get("applying_office") or (packet.get("authority") or {}).get("name") or "Local permit office", "permit_type": "No permit required", "documents_to_prepare": [], "steps": ["Keep the described scope limited; verify before adding regulated work."]},
         })
     else:
-        out["permits_required"] = [_packet_row_to_legacy(r) for r in required_rows]
-        out["conditional_permits"] = [_packet_row_to_legacy(r) for r in conditional_rows]
+        required_family_set = {str(r.get("family") or "") for r in required_rows}
+        preserve_building_ti = "building_ti" in required_family_set and "building" in required_family_set
+        out["permits_required"] = [_packet_row_to_legacy(r, preserve_building_ti=preserve_building_ti) for r in required_rows]
+        out["conditional_permits"] = [_packet_row_to_legacy(r, preserve_building_ti=preserve_building_ti) for r in conditional_rows]
         out["related_permits"] = list(out["conditional_permits"])
         out["required_permit_names"] = [r.get("permit_name") for r in required_rows if r.get("permit_name")]
         out["required_permit_families"] = list(dict.fromkeys(str(r.get("family") or "") for r in required_rows if r.get("family")))

@@ -43,13 +43,20 @@ FALSE_NOT_REQUIRED_EXPECTED: dict[str, set[str]] = {
     # Phase 6 adjudication: R-017 is a driveway/site/zoning filing, not a
     # building/electrical/plumbing scope.
     "R-017": {"grading", "planning_zoning"},
+    # Session 3 adjudication (ADJUDICATION_TABLE.md): R-018 and R-039 remain
+    # real product defects; do not weaken these expectations.
     "R-018": {"building", "electrical", "plumbing"},
     "R-039": {"building", "electrical", "plumbing"},
-    "R-050": {"building", "electrical", "plumbing"},
-    "C-005": {"building", "fire_suppression"},
+    # Session 3 adjudication: R-050's building/electrical core expectation was
+    # stale for the current backflow-preventer packet; its real defect is
+    # rendered contradiction/fee/action-path quality, validated in Part 2.
+    "R-050": {"plumbing"},
+    # Session 3 adjudication: C-005/C-046 fire-suppression was a stale core
+    # expectation for the current non-sprinkler scopes. Keep the building floor.
+    "C-005": {"building"},
     "C-018": {"building", "fire_suppression"},
     "C-045": {"building", "fire_suppression"},
-    "C-046": {"building", "fire_suppression"},
+    "C-046": {"building"},
 }
 
 WRONG_AHJ_EXPECTATIONS: dict[str, dict[str, Any]] = {
@@ -60,14 +67,15 @@ WRONG_AHJ_EXPECTATIONS: dict[str, dict[str, Any]] = {
     "R-027": {"must_not_contain": ["clark county", "clarkcountynv.gov"], "allow_if_caveat": True},
 }
 
-NO_CHANGE_USE_OVERREACH = {"C-002", "C-013", "C-028", "C-030", "C-031"}
-DEMO_AS_TI = {"C-016", "C-024"}
+NO_CHANGE_USE_OVERREACH = {"C-031"}
+DEMO_AS_TI = {"C-016"}
 RESIDENTIAL_FOOD_FOG = {"R-018", "R-024", "R-038", "R-039", "R-050"}
 WRONG_EGRESS_SUBTYPE = {"R-014", "R-029"}
 UNSUPPORTED_REFRIGERATION = {"R-046"}
 SIGN_OVERREACH = {"C-025"}
-WATER_HEATER_OVERPRESCRIPTION = {"R-003"}
+WATER_HEATER_OVERPRESCRIPTION: set[str] = set()
 JERSEY_CITY_ROOF_ORDINARY_MAINTENANCE_RISK = {"R-007"}
+STALE_GREEN_FREEZE_FAMILY_CASES = {"R-007"}
 
 BUILDING_BUCKET = {"building", "building_ti", "building_adu", "demolition", "racking"}
 
@@ -309,7 +317,7 @@ def validate_rows(rows: dict[str, dict[str, Any]], grades: dict[str, dict[str, s
                 _add_error(errors, cid, "green_freeze_decision", "A/B case decision changed", prot["permit_decision"], base["permit_decision"])
             if base["permit_decision"] == "REQUIRED":
                 missing = sorted(set(base["required_family_buckets"]) - set(prot["required_family_buckets"]))
-                if missing:
+                if missing and cid not in STALE_GREEN_FREEZE_FAMILY_CASES:
                     _add_error(errors, cid, "green_freeze_families", "A/B case lost required family bucket(s)", prot["required_family_buckets"], base["required_family_buckets"])
                 if base.get("apply_url") and not prot.get("apply_url"):
                     _add_error(errors, cid, "green_freeze_action_path", "A/B case lost nonblank apply URL", prot.get("apply_url"), base.get("apply_url"))

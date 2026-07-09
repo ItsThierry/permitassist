@@ -273,7 +273,7 @@ def _canonical_row_name(family: str, facts: ScopeFactsV2) -> str:
     text = getattr(facts, "request_scope_text", "") or ""
     if family == "building_ti":
         return resolve_lead_label(getattr(facts, "segment", ""), "building_ti", facts)
-    if family == "electrical" and getattr(facts, "segment", "") != "commercial" and getattr(getattr(facts, "electrical_new_circuits", None), "value", None) == TriFact.FALSE:
+    if family == "electrical" and getattr(facts, "segment", "") != "commercial" and getattr(getattr(facts, "electrical_new_circuits", None), "value", None) == TriFact.FALSE and not re.search(r"\b(?:add(?:ing)?\b.{0,40}\b(?:fan|outlet|gfci|receptacle)|bath\s+fan|exhaust\s+fan)\b", text, re.I):
         return "Residential Electrical Permit — Device / Receptacle Replacement (Existing Circuits)"
     if family == "fire_life_safety_assembly":
         return "Fire Department — Assembly Occupancy / Life-Safety Review"
