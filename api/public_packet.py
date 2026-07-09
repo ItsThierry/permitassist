@@ -882,8 +882,6 @@ def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple
         block("mechanical")
     if segment == "commercial" and re.search(r"\bautomotive\s+service\s+lifts?\b|\bservice\s+lifts?\b", text):
         block("fire_suppression")
-    if segment == "commercial" and re.search(r"\brooftop\s+solar|\bsolar\s+pv\b", text):
-        block("solar_pv")
     if segment == "commercial" and re.search(r"\b(?:rooftop\s+unit|rtu)\b", text):
         block("plumbing")
     if segment == "commercial" and re.search(r"\bfire\s+alarm\s+modifications?\b", text):

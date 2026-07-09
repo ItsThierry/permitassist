@@ -436,7 +436,39 @@ def test_dental_xray_scope_keeps_radiation_review_conditional_and_building_elect
     assert "health_food" not in _families(projected)
     conditional = {
         str(row.get("family") or row.get("filing_family") or "")
-        for row in projected.get("conditional_permits") or []
+        for row in projected.get("related_permits") or []
         if isinstance(row, dict)
     }
     assert "health_radiation" in conditional
+
+
+def test_commercial_rooftop_solar_preserves_distinct_solar_pv_family() -> None:
+    facts = build_scope_facts_v4(
+        "install 250 kW rooftop solar PV system on warehouse with inverter room and utility interconnection, customer asks for a customer-ready filing packet",
+        "Portland",
+        "OR",
+        job_category="commercial",
+    )
+    stale = {
+        "segment": "commercial",
+        "permit_decision": "REQUIRED",
+        "permit_required": True,
+        "permits_required": [
+            {"family": "electrical", "permit_name": "Electrical Permit — Solar PV / Battery System", "decision": "REQUIRED", "required": True},
+            {"family": "building", "permit_name": "Building Permit", "decision": "REQUIRED", "required": True},
+        ],
+        "source_urls": ["https://www.portland.gov/bds/solar-development/solar-permit-requirements"],
+        "apply_url": "https://www.portland.gov/bds/solar-development/solar-permit-requirements",
+        "applying_office": "City of Portland Bureau of Development Services",
+    }
+
+    projected = apply_public_packet_projection(stale, facts)
+
+    assert projected["permit_decision"] == "REQUIRED"
+    assert {"building", "electrical", "solar_pv"}.issubset(_families(projected))
+    solar_rows = [
+        row for row in projected.get("permits_required") or []
+        if isinstance(row, dict) and row.get("family") == "solar_pv"
+    ]
+    assert len(solar_rows) == 1
+    assert "Solar PV" in str(solar_rows[0].get("permit_name"))
