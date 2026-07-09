@@ -73,9 +73,20 @@ _NOT_REQUIRED_RE = re.compile(r"\b(?:no permit required|no permit needed|permit 
 _REQUIRED_ACTION_RE = re.compile(r"\b(?:file|submit|pull)\b.{0,80}\b(?:required )?permit\b|\bapply\s+for\b.{0,80}\b(?:required )?permit\b", re.I)
 
 
-def canonical_family(value: Any) -> str:
+def _normalized_family_token(value: Any) -> str:
+    """Normalize a family label without collapsing subtype aliases.
+
+    This is used for exact fixture ceilings such as
+    ``detached_garage_building``.  Canonicalization intentionally maps that
+    subtype to ``building`` for parity checks, but an exact subtype ceiling
+    must not thereby forbid every generic Building permit.
+    """
     raw = str(value or "").strip().lower().replace("-", "_").replace("/", "_").replace(" ", "_")
-    raw = re.sub(r"_+", "_", raw).strip("_")
+    return re.sub(r"_+", "_", raw).strip("_")
+
+
+def canonical_family(value: Any) -> str:
+    raw = _normalized_family_token(value)
     return _FAMILY_ALIASES.get(raw, raw)
 
 
@@ -118,6 +129,33 @@ def _row_status(row: dict[str, Any]) -> str:
     if row.get("required") is False:
         return "CONDITIONAL"
     return ""
+
+
+def _raw_required_family_tokens(data: dict[str, Any]) -> set[str]:
+    """Return exact required-family tokens before subtype alias collapse."""
+    packet_raw = data.get("public_packet")
+    packet: dict[str, Any] = packet_raw if isinstance(packet_raw, dict) else {}
+    packet_families = packet.get("required_families")
+    public_families = data.get("required_permit_families")
+    tokens = {
+        _normalized_family_token(value)
+        for value in [
+            *((packet_families if isinstance(packet_families, list) else [])),
+            *((public_families if isinstance(public_families, list) else [])),
+        ]
+        if _normalized_family_token(value)
+    }
+    rows: list[Any] = []
+    for value in (packet.get("rows"), data.get("permits_required"), data.get("public_packet_rows")):
+        if isinstance(value, list):
+            rows.extend(value)
+    for row in rows:
+        if not isinstance(row, dict) or _row_status(row) != "REQUIRED":
+            continue
+        token = _normalized_family_token(row.get("family") or row.get("filing_family") or "")
+        if token:
+            tokens.add(token)
+    return tokens
 
 
 @dataclass(frozen=True)
@@ -374,10 +412,27 @@ def validate_customer_boundary(
         missing = sorted(must_include - (public_required | packet_required))
         if missing:
             findings.append(CustomerBoundaryFinding("missing_or_demoted_required_family", detail=",".join(missing)))
-    forbidden = {canonical_family(f) for f in expected.get("forbidden_hard_required_families") or [] if canonical_family(f)}
+    raw_forbidden = {
+        _normalized_family_token(f)
+        for f in expected.get("forbidden_hard_required_families") or []
+        if _normalized_family_token(f)
+    }
+    raw_required = _raw_required_family_tokens(data)
+    # A fixture may require a canonical family while forbidding one of its
+    # narrower legacy subtypes (for example Building vs Detached Garage
+    # Building).  Enforce the subtype ceiling against exact raw tokens; do not
+    # let alias collapse turn it into a ban on the required parent family.
+    colliding_subtypes = {f for f in raw_forbidden if canonical_family(f) in must_include}
+    forbidden = {canonical_family(f) for f in raw_forbidden - colliding_subtypes if canonical_family(f)}
     present_forbidden = sorted(forbidden & (public_required | packet_required))
-    if present_forbidden:
-        findings.append(CustomerBoundaryFinding("unsupported_extra_hard_required_family", detail=",".join(present_forbidden)))
+    present_forbidden_exact = sorted(colliding_subtypes & raw_required)
+    if present_forbidden or present_forbidden_exact:
+        findings.append(
+            CustomerBoundaryFinding(
+                "unsupported_extra_hard_required_family",
+                detail=",".join([*present_forbidden, *present_forbidden_exact]),
+            )
+        )
     for phrase in expected.get("forbidden_rendered_phrases") or []:
         if phrase and re.search(re.escape(str(phrase)), surface, re.I):
             findings.append(CustomerBoundaryFinding("forbidden_rendered_phrase", detail=str(phrase)[:160]))

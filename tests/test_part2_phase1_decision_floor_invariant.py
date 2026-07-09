@@ -334,3 +334,52 @@ def test_garage_door_structural_scope_does_not_use_like_for_like_verify_rule() -
 
     assert projected["permit_decision"] == "REQUIRED"
     assert "building" in _families(projected)
+
+
+def test_forbidden_subtype_alias_does_not_forbid_required_parent_family() -> None:
+    public = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "required_permit_families": ["building"],
+        "permits_required": [
+            {"permit_name": "Residential Building Permit", "family": "building", "required": True, "decision": "REQUIRED"},
+        ],
+    }
+    expected = {
+        "expected_decision": "REQUIRED",
+        "required_families_must_include": ["building"],
+        "forbidden_hard_required_families": ["detached_garage_building"],
+    }
+
+    findings = validate_customer_boundary(public, visible_text="Residential Building Permit required.", expected=expected)
+
+    assert "unsupported_extra_hard_required_family" not in {finding.code for finding in findings}
+
+
+def test_forbidden_subtype_alias_still_flags_exact_required_subtype() -> None:
+    public = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "required_permit_families": ["detached_garage_building"],
+        "permits_required": [
+            {
+                "permit_name": "Building Permit — Detached Garage",
+                "family": "detached_garage_building",
+                "required": True,
+                "decision": "REQUIRED",
+            },
+        ],
+    }
+    expected = {
+        "expected_decision": "REQUIRED",
+        "required_families_must_include": ["building"],
+        "forbidden_hard_required_families": ["detached_garage_building"],
+    }
+
+    findings = validate_customer_boundary(public, visible_text="Building Permit — Detached Garage required.", expected=expected)
+
+    assert any(
+        finding.code == "unsupported_extra_hard_required_family"
+        and "detached_garage_building" in finding.detail
+        for finding in findings
+    )
