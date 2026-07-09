@@ -70,7 +70,7 @@ _FEE_DUMP_RE = re.compile(
     re.I | re.S,
 )
 _NOT_REQUIRED_RE = re.compile(r"\b(?:no permit required|no permit needed|permit is not required|permit not required|no permit submission needed|no-permit scope|resolved no-permit)\b", re.I)
-_REQUIRED_ACTION_RE = re.compile(r"\b(?:file|submit|apply for|pull)\b.{0,80}\b(?:required )?permit\b", re.I)
+_REQUIRED_ACTION_RE = re.compile(r"\b(?:file|submit|pull)\b.{0,80}\b(?:required )?permit\b|\bapply\s+for\b.{0,80}\b(?:required )?permit\b", re.I)
 
 
 def canonical_family(value: Any) -> str:
@@ -248,7 +248,12 @@ def _json_text(value: Any) -> str:
 
 
 def _visible_surface(public: dict[str, Any], visible_text: str = "", html_text: str = "") -> str:
-    pieces = [visible_text or "", html_text or ""]
+    # Scan customer-visible copy, not inert JavaScript source/fallback strings.
+    # The renderer includes code literals such as "Pull permit before starting
+    # work" that are not displayed for NOT_REQUIRED payloads and should not
+    # create false status-contradiction findings.
+    rendered_html_text = re.sub(r"<script\b.*?</script>", " ", html_text or "", flags=re.I | re.S)
+    pieces = [visible_text or "", rendered_html_text]
     for key in ("customer_headline", "customer_next_step", "summary", "job_summary", "required_permit_summary", "fee_range", "permit_name", "permit_type", "permit_kind"):
         value = public.get(key) if isinstance(public, dict) else None
         if value not in (None, ""):

@@ -673,7 +673,10 @@ def _requested_required_families(facts: Any | None, scope_facts: dict[str, Any])
         mandatory = matrix_mandatory_families(facts)
         forbidden = matrix_forbidden_families(facts)
         if mandatory:
-            return [fam for fam in mandatory if fam not in forbidden and fam not in {"health_food", "wastewater_pretreatment_fog"}]
+            # Session-4 Phase 2: do not suppress source/matrix-mandated food
+            # health or FOG/wastewater floors. Explicit negative facts still
+            # flow through matrix_forbidden_families / request_negative_families.
+            return [fam for fam in mandatory if fam not in forbidden]
     raw = getattr(facts, "request_positive_families", None) if facts is not None else None
     if raw is None and isinstance(scope_facts, dict):
         raw = scope_facts.get("request_positive_families")
@@ -682,7 +685,7 @@ def _requested_required_families(facts: Any | None, scope_facts: dict[str, Any])
         forbidden_raw = scope_facts.get("request_negative_families")
     forbidden = {str(fam or "").strip() for fam in (forbidden_raw or []) if str(fam or "").strip()}
     families = [str(fam or "").strip() for fam in (raw or []) if str(fam or "").strip()]
-    return [fam for fam in dict.fromkeys(families) if fam not in forbidden and fam not in {"health_food", "wastewater_pretreatment_fog"}]
+    return [fam for fam in dict.fromkeys(families) if fam not in forbidden]
 
 
 def _customer_text_blob(data: dict[str, Any]) -> str:
@@ -735,7 +738,7 @@ def _implied_required_rows_from_scope(data: dict[str, Any], facts: Any | None, s
     request_text = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or data.get("_request_job_type") or "")
     family_order = [
         "building_ti", "racking", "building", "electrical", "mechanical", "plumbing", "gas", "grading", "solar_pv", "battery_storage",
-        "fire_alarm", "fire_suppression", "fire_life_safety_assembly", "planning_zoning", "co_change_of_occupancy", "sign",
+        "fire_alarm", "fire_suppression", "fire_life_safety_assembly", "health_food", "wastewater_pretreatment_fog", "planning_zoning", "co_change_of_occupancy", "sign",
     ]
     requested = set(_requested_required_families(facts, scope_facts)) | safety_critical_required_families(facts if facts is not None else scope_facts)
     if re.search(r"\bkitchen\s+remodel\b", request_text, re.I):
@@ -767,6 +770,107 @@ def _implied_required_rows_from_scope(data: dict[str, Any], facts: Any | None, s
     return rows
 
 
+def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple[dict[str, str], set[str], bool]:
+    """Universal Session-4 scope floors/ceilings from the customer request text.
+
+    These rules repair remaining Fable-5 deploy-readiness blockers by deriving
+    permit-family lower/upper bounds from scope semantics, not case IDs or
+    artifact names.  They run after ScopeFacts/matrix floors so they can add
+    missing companion filing families and remove stale over-broad rows.
+    """
+    text = str(request_text or "").lower()
+    floors: dict[str, str] = {}
+    blocked: set[str] = set()
+    force_not_required = False
+
+    def add(fam: str, reason: str) -> None:
+        floors.setdefault(fam, reason)
+
+    def block(*families: str) -> None:
+        blocked.update(families)
+
+    # Clear no-permit residential maintenance: same-size garage doors/openers
+    # without header/framing/structural scope should not become a building row.
+    if segment == "residential" and re.search(r"\bgarage\s+doors?\b", text) and re.search(r"\bsame\s+size\b", text) and re.search(r"\bno\s+header\s+changes?\b", text):
+        force_not_required = True
+        block("building", "building_ti", "planning_zoning", "co_change_of_occupancy")
+
+    # Sign-only commercial storefront scopes: sign permit only unless the sign is
+    # illuminated/electrical or the request includes structural storefront work.
+    if segment == "commercial" and re.search(r"\b(?:wall\s+sign|window\s+vinyl|signage)\b", text) and re.search(r"\bno\s+electrical\b|\bnon[- ]illuminated\b", text) and not re.search(r"\b(?:structural|new\s+opening|new\s+storefront|tenant\s+improvement)\b", text):
+        add("sign", "non-illuminated storefront sign/vinyl scope requires sign-family floor only")
+        block("building", "building_ti", "planning_zoning", "electrical")
+
+    # Residential accessory/site improvements commonly need zoning/site review in
+    # addition to (or instead of) building: decks, sheds, carports, patio covers,
+    # ADU/garage conversions, retaining walls, and hot tubs on pads.
+    if segment == "residential" and re.search(r"\b(?:deck|storage\s+shed|shed|patio\s+cover|carport|retaining\s+wall|hot\s+tub|accessory\s+dwelling|\badu\b|garage\s+(?:conversion|into|to\s+conditioned|to\s+bedroom|to\s+living))\b", text) and not re.search(r"\bexterior\s+wood\s+stair\b|\bstair\s+from\s+deck\b", text):
+        add("planning_zoning", "residential accessory/site improvement requires zoning/setback/site-family floor")
+    if segment == "residential" and re.search(r"\bfence\b", text):
+        add("planning_zoning", "residential fence scope requires zoning/setback fence review floor")
+        if re.search(r"\bno\s+retaining\s+wall\b", text):
+            block("building")
+
+    # Building-family structural/equipment floors.
+    if segment == "residential" and re.search(r"\b(?:wood\s+stove|fireplace).{0,80}\b(?:insert|liner)|\bbasement\s+wet\s+bar\b|\bhot\s+tub\b.{0,80}\bconcrete\s+pad\b", text):
+        add("building", "residential appliance/fixture installation with building-code siting/support implications requires building floor")
+    if segment == "residential" and re.search(r"\b(?:garage\s+(?:conversion|into|to\s+conditioned|to\s+bedroom|to\s+living)|accessory\s+dwelling|\badu\b)\b", text):
+        add("building", "residential garage conversion/ADU/habitable-space scope requires building floor")
+    if segment == "commercial" and re.search(r"\b(?:paint\s+spray\s+booth|rooftop\s+unit|rtu|battery\s+energy\s+storage|battery\s+storage|elevator|cellular\s+antenna|cold\s+storage\s+room|walk[- ]in\s+cooler|taproom\s+into|expand\s+microbrewery|parking\s+lot|kiosk)\b", text):
+        add("building", "commercial equipment/interior/site installation requires building-family floor")
+
+    # Trade precision floors.
+    if re.search(r"\b(?:walk[- ]in\s+cooler|freezer\s+boxes|refrigerated\s+cases|condensate\s+drain|rooftop\s+unit|rtu|x[- ]?ray|standby\s+generator|heat\s+pump\s+system|automatic\s+transfer\s+switch)\b", text):
+        add("electrical", "equipment scope includes electrical connection/control family floor")
+    if re.search(r"\b(?:showers?|locker\s+rooms?|fume\s+hoods?|ventilation\s+upgrades?|refrigerated\s+cases|standby\s+generator|heat\s+pump\s+system|gas[- ]fired\s+makeup\s+air)\b", text):
+        add("mechanical", "HVAC/ventilation/equipment scope requires mechanical family floor")
+    if re.search(r"\b(?:solar|pv|photovoltaic|fuel\s+tank|outpatient\s+clinic|wet\s+lab|fume\s+hoods?|taproom|microbrewery|fire\s+alarm\s+modifications?|battery\s+energy\s+storage|battery\s+storage)\b", text):
+        add("fire_suppression", "energy/fuel/lab/assembly/life-safety scope requires fire-family floor")
+    if segment == "commercial" and re.search(r"\b(?:dental|x[- ]?ray|clinic|wet\s+lab|life[- ]science|acid\s+waste)\b", text):
+        add("health_food", "clinic/lab health-regulated scope requires health-family floor")
+    if segment == "commercial" and re.search(r"\bx[- ]?ray\b|\bshielding\b", text):
+        add("building", "x-ray shielding/room alteration requires building-family floor")
+        block("mechanical")
+    if re.search(r"\b(?:parking\s+lot|ada\s+stalls?|accessible\s+parking|stormwater|drive[- ]through\s+coffee\s+kiosk)\b", text):
+        add("grading", "site/parking/stormwater work requires grading/site-civil family floor")
+    if segment == "commercial" and re.search(r"\b(?:cellular\s+antennas?|rooftop\s+cellular|equipment\s+cabinets)\b", text):
+        add("planning_zoning", "commercial rooftop/cellular equipment scope requires zoning/use-location review floor")
+
+    # Ceilings for stale over-broad companion rows.
+    if re.search(r"\b(?:dental\s+clinic|fitness\s+gym|wet\s+lab)\b", text):
+        block("co_change_of_occupancy", "planning_zoning")
+    if re.search(r"\b(?:walk[- ]in\s+cooler|freezer\s+boxes|refrigerated\s+cases|produce\s+area)\b", text) and not re.search(r"\b(?:new\s+food\s+service|restaurant|commercial\s+kitchen|menu|deli|bakery|brewery|taproom)\b", text):
+        block("health_food")
+    if re.search(r"\b(?:type\s*i\s+kitchen\s+hood|type\s*1\s+kitchen\s+hood|wet\s+chemical\s+suppression)\b", text) and re.search(r"\bsame\s+cooking\s+line\b", text):
+        block("plumbing", "health_food", "wastewater_pretreatment_fog")
+    if segment == "residential" and re.search(r"\breplace\s+gas\s+furnace\b", text) and re.search(r"\bsame\s+capacity\b|\breconnect\s+existing\b", text):
+        block("gas", "plumbing")
+    if segment == "residential" and re.search(r"\bstandby\s+generator\b", text) and re.search(r"\bnew\s+gas\s+line\b", text):
+        add("gas", "generator scope with new gas line requires fuel-gas family floor")
+        add("mechanical", "standby generator/gas equipment requires mechanical family floor")
+        block("plumbing")
+    if segment == "residential" and re.search(r"\boil\s+boiler\b", text) and re.search(r"\bheat\s+pump\s+system\b", text):
+        add("electrical", "heat-pump conversion requires electrical family floor")
+        block("environmental", "refrigeration")
+    if segment == "residential" and re.search(r"\bradiant\s+floor\s+heat\s+mat\b", text):
+        block("plumbing")
+    if segment == "residential" and re.search(r"\bsubpanel\b.*\bdetached\s+garage\b|\bdetached\s+garage\b.*\bsubpanel\b", text) and not re.search(r"\b(?:accessory\s+dwelling|\badu\b|garage\s+(?:conversion|into|to\s+conditioned|to\s+bedroom|to\s+living))\b", text):
+        block("building")
+    if segment == "residential" and re.search(r"\bscreened\s+porch\b", text):
+        block("co_change_of_occupancy", "mechanical")
+    if segment == "residential" and re.search(r"\bceiling\s+fan\b", text) and not re.search(r"\b(?:exhaust|bath|hvac|duct|furnace|heat\s+pump|mini[- ]split)\b", text):
+        block("mechanical")
+    if segment == "commercial" and re.search(r"\bautomotive\s+service\s+lifts?\b|\bservice\s+lifts?\b", text):
+        block("fire_suppression")
+    if segment == "commercial" and re.search(r"\brooftop\s+solar|\bsolar\s+pv\b", text):
+        block("solar_pv")
+    if segment == "commercial" and re.search(r"\b(?:rooftop\s+unit|rtu)\b", text):
+        block("plumbing")
+    if segment == "commercial" and re.search(r"\bfire\s+alarm\s+modifications?\b", text):
+        block("fire_alarm")
+    return floors, blocked, force_not_required
+
+
 def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> PublicPacketDTO:
     data = copy.deepcopy(result) if isinstance(result, dict) else {}
     segment = str(getattr(facts, "segment", "") or data.get("segment") or "").strip().lower()
@@ -784,6 +888,7 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         data["_request_job_type"] = getattr(facts, "request_scope_text", "")
     scope_facts = facts.as_dict() if facts is not None and hasattr(facts, "as_dict") else (copy.deepcopy(facts) if isinstance(facts, dict) else {})
     request_text_for_fable5 = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or data.get("_request_job_type") or data.get("job_type") or data.get("job_summary") or data.get("summary") or "")
+    session4_floors, session4_blocked_families, session4_force_not_required = _session4_scope_family_adjustments(request_text_for_fable5, segment)
     decision = _decision(data)
     promoted_from_not_required = False
     promoted_required_rows: list[dict[str, Any]] = []
@@ -799,6 +904,19 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
             data["permit_decision"] = "REQUIRED"
             data["permit_required"] = True
             data["permit_verdict"] = "YES"
+    if session4_force_not_required:
+        decision = "NOT_REQUIRED"
+        promoted_from_not_required = False
+        promoted_required_rows = []
+        data["permit_decision"] = "NOT_REQUIRED"
+        data["permit_required"] = False
+        data["permit_verdict"] = "NO"
+        no_permit_copy = "No permit required for the stated like-for-like maintenance scope."
+        for key in ("summary", "job_summary", "permit_summary", "required_permit_summary", "customer_first_screen_summary"):
+            data[key] = no_permit_copy
+        data["not_required_reason"] = no_permit_copy
+        if isinstance(data.get("customer_result_summary"), dict):
+            data["customer_result_summary"]["summary"] = no_permit_copy
 
     rows: list[PacketRow] = []
     if decision == "REQUIRED":
@@ -866,6 +984,8 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                     row["permit_name"] = _canonical_name_for_family("building_ti", segment, data)
                     row["permit_type"] = row["permit_name"]
                     row["kind"] = "Building"
+        matrix_mandatory = matrix_mandatory_families(facts) if facts is not None else {}
+        matrix_mandatory_set = set(matrix_mandatory)
         if request_positive_families:
             present_required = {_family(r) for r in required_rows if isinstance(r, dict)}
             present_buckets = {"building" if fam in {"building", "building_ti", "building_adu", "racking", "demolition"} else fam for fam in present_required}
@@ -875,7 +995,7 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                 "health_food", "wastewater_pretreatment_fog", "planning_zoning", "co_change_of_occupancy", "historic_review", "liquor", "sign",
             ]
             for fam in canonical_floor_families:
-                if fam not in request_positive_families or _fable5_negative_family_override(fam, request_text_for_fable5):
+                if fam not in request_positive_families or (fam not in matrix_mandatory_set and _fable5_negative_family_override(fam, request_text_for_fable5)):
                     continue
                 bucket = "building" if fam in {"building", "building_ti", "building_adu", "racking", "demolition"} else fam
                 if fam in {"building", "building_ti"} and "building" in present_buckets:
@@ -900,7 +1020,7 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
             floor_map = scope_facts.get("mandatory_family_floors")
         if isinstance(floor_map, dict):
             floor_map = dict(floor_map)
-            floor_map.update(matrix_mandatory_families(facts) if facts is not None else {})
+            floor_map.update(matrix_mandatory)
             present_fams = {_family(r) for r in [*required_rows, *conditional_rows] if isinstance(r, dict)}
             for floor_family, basis in floor_map.items():
                 fam = str(floor_family or "").strip()
@@ -908,7 +1028,7 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                     continue
                 if fam in forbidden_map and not (fam == "building" and "building_ti" in request_positive_families):
                     continue
-                if fam not in present_fams and (not request_positive_families or fam in request_positive_families) and not _fable5_negative_family_override(fam, request_text_for_fable5):
+                if fam not in present_fams and (not request_positive_families or fam in request_positive_families) and (fam in matrix_mandatory_set or not _fable5_negative_family_override(fam, request_text_for_fable5)):
                     required_rows.append({
                         "permit_name": _canonical_name_for_family(fam, segment, data),
                         "permit_type": _canonical_name_for_family(fam, segment, data),
@@ -920,6 +1040,38 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                         "reason": str(basis or "mandatory scope-family floor"),
                     })
                     present_fams.add(fam)
+        if session4_floors or session4_blocked_families:
+            def _session4_blocked(row: dict[str, Any]) -> bool:
+                fam = _family(row)
+                return fam in session4_blocked_families or (fam in {"building", "building_ti", "building_adu", "racking", "demolition"} and "building" in session4_blocked_families)
+            if session4_blocked_families:
+                required_rows = [r for r in required_rows if not _session4_blocked(r)]
+                conditional_rows = [r for r in conditional_rows if not _session4_blocked(r)]
+            present_fams = {_family(r) for r in required_rows if isinstance(r, dict)}
+            present_buckets = {"building" if fam in {"building", "building_ti", "building_adu", "racking", "demolition"} else fam for fam in present_fams}
+            for fam, basis in session4_floors.items():
+                if fam in session4_blocked_families:
+                    continue
+                if fam in forbidden_map and fam not in session4_floors and not (fam == "building" and "building_ti" in request_positive_families):
+                    continue
+                bucket = "building" if fam in {"building", "building_ti", "building_adu", "racking", "demolition"} else fam
+                if bucket == "building" and "building" in present_buckets:
+                    if not (fam == "building" and "building_ti" in present_fams and "building" not in present_fams):
+                        continue
+                elif bucket != "building" and fam in present_fams:
+                    continue
+                required_rows.append({
+                    "permit_name": _canonical_name_for_family(fam, segment, data),
+                    "permit_type": _canonical_name_for_family(fam, segment, data),
+                    "kind": _kind_for_family(fam),
+                    "family": fam,
+                    "filing_family": fam,
+                    "decision": "REQUIRED",
+                    "required": True,
+                    "reason": basis,
+                })
+                present_fams.add(fam)
+                present_buckets.add(bucket)
         if (data.get("ahj_resolution") or {}).get("resolved_ahj_key") == "miami_fl_city" and re.search(r"\b(?:window|door|storefront|opening|impact|exterior)\b", request_text, re.I):
             hvhz_docs = [
                 "NOA / Florida Product Approval for impact-rated windows, doors, or storefront systems",
@@ -1194,7 +1346,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     required_packet_rows = [row for row in packet_rows if row.get("decision") == "REQUIRED"]
     conditional_packet_rows = [row for row in packet_rows if row.get("decision") == "CONDITIONAL"]
     required_packet_families = {str(row.get("family") or "") for row in required_packet_rows}
-    preserve_building_ti = "building_ti" in required_packet_families and "building" in required_packet_families
+    preserve_building_ti = "building_ti" in required_packet_families
     required_public_rows = [_packet_row_to_legacy(row, preserve_building_ti=preserve_building_ti) for row in required_packet_rows]
     conditional_public_rows = [_packet_row_to_legacy(row, preserve_building_ti=preserve_building_ti) for row in conditional_packet_rows]
     out["public_packet"] = public_packet
@@ -1307,6 +1459,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
             "typed_status": "NOT_APPLICABLE",
             "channel": "no_permit_required",
             "office_name": authority_name,
+            "portal_url": packet.authority.apply_url or (packet.authority.source_urls[0] if packet.authority.source_urls else ""),
             "permit_type": "No permit required",
             "documents_to_prepare": [],
             "steps": ["Keep the described scope limited; verify before adding regulated work."],
@@ -1469,11 +1622,11 @@ def apply_render_parity_seal(result: dict[str, Any], *, facts: Any | None = None
             "apply_url": "",
             "online_application_url": "",
             "fee_range": "",
-            "apply_path": {"state": "not_applicable", "status": "NOT_APPLICABLE", "typed_status": "NOT_APPLICABLE", "channel": "no_permit_required", "office_name": out.get("applying_office") or (packet.get("authority") or {}).get("name") or "Local permit office", "permit_type": "No permit required", "documents_to_prepare": [], "steps": ["Keep the described scope limited; verify before adding regulated work."]},
+            "apply_path": {"state": "not_applicable", "status": "NOT_APPLICABLE", "typed_status": "NOT_APPLICABLE", "channel": "no_permit_required", "office_name": out.get("applying_office") or (packet.get("authority") or {}).get("name") or "Local permit office", "portal_url": ((packet.get("authority") or {}).get("apply_url") or (((packet.get("authority") or {}).get("source_urls") or [""])[0])), "permit_type": "No permit required", "documents_to_prepare": [], "steps": ["Keep the described scope limited; verify before adding regulated work."]},
         })
     else:
         required_family_set = {str(r.get("family") or "") for r in required_rows}
-        preserve_building_ti = "building_ti" in required_family_set and "building" in required_family_set
+        preserve_building_ti = "building_ti" in required_family_set
         out["permits_required"] = [_packet_row_to_legacy(r, preserve_building_ti=preserve_building_ti) for r in required_rows]
         out["conditional_permits"] = [_packet_row_to_legacy(r, preserve_building_ti=preserve_building_ti) for r in conditional_rows]
         out["related_permits"] = list(out["conditional_permits"])

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from typing import Any, Callable
 
 try:
@@ -215,6 +216,25 @@ def mandatory_families(facts: ScopeFactsV3 | Any) -> dict[str, str]:
     if not isinstance(facts, ScopeFactsV3):
         return out
     out.update(_request_positive_floors(facts))
+    request_text = str(getattr(facts, "request_scope_text", "") or "").lower()
+    # Session-4: remove matrix floors that are contradicted by narrower
+    # scope-specific ceilings. These mirror public-packet ceilings so the
+    # validator does not demand rows that product logic correctly demotes.
+    if re.search(r"\b(?:dental\s+clinic|fitness\s+gym|wet\s+lab)\b", request_text):
+        out.pop("co_change_of_occupancy", None)
+        out.pop("planning_zoning", None)
+    if re.search(r"\b(?:walk[- ]in\s+cooler|freezer\s+boxes|refrigerated\s+cases|produce\s+area)\b", request_text) and not re.search(r"\b(?:new\s+food\s+service|restaurant|commercial\s+kitchen|menu|deli|bakery|brewery|taproom)\b", request_text):
+        out.pop("health_food", None)
+    if re.search(r"\b(?:type\s*i\s+kitchen\s+hood|type\s*1\s+kitchen\s+hood|wet\s+chemical\s+suppression)\b", request_text) and re.search(r"\bsame\s+cooking\s+line\b", request_text):
+        out.pop("plumbing", None)
+        out.pop("health_food", None)
+        out.pop("wastewater_pretreatment_fog", None)
+    if re.search(r"\bcommercial\s+office\s+refresh\b", request_text) and {"cosmetic_only", "no_mep", "no_structural"} & negative_facts:
+        out.pop("building", None)
+    if re.search(r"\bfire\s+alarm\s+modifications?\b", request_text):
+        out.pop("fire_alarm", None)
+    if re.search(r"\bsubpanel\b.*\bdetached\s+garage\b|\bdetached\s+garage\b.*\bsubpanel\b", request_text):
+        out.pop("building", None)
     for rule in FLOOR_RULES:
         if rule.predicate(facts):
             for family in rule.families:

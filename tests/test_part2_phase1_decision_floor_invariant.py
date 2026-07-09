@@ -100,7 +100,52 @@ def test_no_change_ti_negative_ceilings_remove_stale_mep_and_co_rows() -> None:
         ],
     }
     projected = apply_public_packet_projection(apply_fable5_final_customer_gate(stale, job, "Testville", "ID", {"category": "commercial"}, facts), facts)
-    assert _families(projected) == {"building", "building_ti"}
+    assert _families(projected) == {"building_ti"}
+
+
+def test_matrix_mandated_food_and_fog_floors_are_not_suppressed() -> None:
+    job = "build 3000 square foot refrigerated cold storage room inside warehouse with insulated panels, refrigeration and floor drains"
+    facts = build_scope_facts_v4(job, "Green Bay", "WI", job_category="commercial")
+    projected = apply_public_packet_projection(
+        {
+            "permit_required": True,
+            "permit_decision": "REQUIRED",
+            "permit_verdict": "YES",
+            "summary": "Permit required for the described work.",
+            "permits_required": [
+                {"permit_name": "Building Permit", "family": "building", "required": True, "decision": "REQUIRED"},
+                {"permit_name": "Mechanical Permit", "family": "mechanical", "required": True, "decision": "REQUIRED"},
+                {"permit_name": "Plumbing Permit", "family": "plumbing", "required": True, "decision": "REQUIRED"},
+                {"permit_name": "Refrigeration Permit", "family": "refrigeration", "required": True, "decision": "REQUIRED"},
+            ],
+        },
+        facts,
+    )
+    families = _families(projected)
+    assert "health_food" in families
+    assert "wastewater_pretreatment_fog" in families
+
+
+def test_explicit_no_food_service_still_blocks_food_and_fog_floors() -> None:
+    job = "convert former office suite to fitness gym with showers and locker rooms, no food service"
+    facts = build_scope_facts_v4(job, "Knoxville", "TN", job_category="commercial")
+    projected = apply_public_packet_projection(
+        {
+            "permit_required": True,
+            "permit_decision": "REQUIRED",
+            "permit_verdict": "YES",
+            "permits_required": [
+                {"permit_name": "Health Food Permit", "family": "health_food", "required": True, "decision": "REQUIRED"},
+                {"permit_name": "FOG Permit", "family": "wastewater_pretreatment_fog", "required": True, "decision": "REQUIRED"},
+                {"permit_name": "Building Permit", "family": "building", "required": True, "decision": "REQUIRED"},
+            ],
+        },
+        facts,
+    )
+    families = _families(projected)
+    assert "building" in families
+    assert "health_food" not in families
+    assert "wastewater_pretreatment_fog" not in families
 
 
 def test_known_bad_apply_urls_are_repaired_to_landing_pages() -> None:
