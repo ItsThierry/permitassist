@@ -63,8 +63,8 @@ class PacketRow:
 class PublicPacketDTO:
     segment: str
     authority: PacketAuthority
-    decision: Literal["REQUIRED", "NOT_REQUIRED"]
-    permit_required_verdict: Literal["REQUIRED", "NOT_REQUIRED", "CONDITIONAL"] = "REQUIRED"
+    decision: Literal["REQUIRED", "NOT_REQUIRED", "VERIFY"]
+    permit_required_verdict: Literal["REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY"] = "REQUIRED"
     verdict_basis: str = ""
     lead_label: str = ""
     render_seal_hash: str = ""
@@ -770,7 +770,7 @@ def _implied_required_rows_from_scope(data: dict[str, Any], facts: Any | None, s
     return rows
 
 
-def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple[dict[str, str], set[str], bool]:
+def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple[dict[str, str], dict[str, str], set[str], bool]:
     """Universal Session-4 scope floors/ceilings from the customer request text.
 
     These rules repair remaining Fable-5 deploy-readiness blockers by deriving
@@ -780,20 +780,27 @@ def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple
     """
     text = str(request_text or "").lower()
     floors: dict[str, str] = {}
+    conditional_floors: dict[str, str] = {}
     blocked: set[str] = set()
     force_not_required = False
 
     def add(fam: str, reason: str) -> None:
         floors.setdefault(fam, reason)
 
+    def add_conditional(fam: str, reason: str) -> None:
+        conditional_floors.setdefault(fam, reason)
+
     def block(*families: str) -> None:
         blocked.update(families)
 
-    # Clear no-permit residential maintenance: same-size garage doors/openers
-    # without header/framing/structural scope should not become a building row.
+    # Same-size garage-door replacement without header/framing changes is not a
+    # source-proven exemption. Preserve an AHJ verification path rather than
+    # forcing either a hard NOT_REQUIRED answer or an unsupported hard permit.
     if segment == "residential" and re.search(r"\bgarage\s+doors?\b", text) and re.search(r"\bsame\s+size\b", text) and re.search(r"\bno\s+header\s+changes?\b", text):
-        force_not_required = True
         block("building", "building_ti", "planning_zoning", "co_change_of_occupancy")
+        add_conditional("building", "Verify the local like-for-like garage-door exemption and confirm that no opening, header, framing, wind-load, or structural work is triggered.")
+        if re.search(r"\b(?:new\s+)?openers?\b", text):
+            add_conditional("electrical", "Verify whether the new powered opener connection, receptacle, circuit, or controls require an electrical permit or inspection.")
 
     # Sign-only commercial storefront scopes: sign permit only unless the sign is
     # illuminated/electrical or the request includes structural storefront work.
@@ -868,7 +875,7 @@ def _session4_scope_family_adjustments(request_text: str, segment: str) -> tuple
         block("plumbing")
     if segment == "commercial" and re.search(r"\bfire\s+alarm\s+modifications?\b", text):
         block("fire_alarm")
-    return floors, blocked, force_not_required
+    return floors, conditional_floors, blocked, force_not_required
 
 
 def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> PublicPacketDTO:
@@ -888,7 +895,7 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         data["_request_job_type"] = getattr(facts, "request_scope_text", "")
     scope_facts = facts.as_dict() if facts is not None and hasattr(facts, "as_dict") else (copy.deepcopy(facts) if isinstance(facts, dict) else {})
     request_text_for_fable5 = str(getattr(facts, "request_scope_text", "") or scope_facts.get("request_scope_text") or data.get("_request_job_type") or data.get("job_type") or data.get("job_summary") or data.get("summary") or "")
-    session4_floors, session4_blocked_families, session4_force_not_required = _session4_scope_family_adjustments(request_text_for_fable5, segment)
+    session4_floors, session4_conditional_floors, session4_blocked_families, session4_force_not_required = _session4_scope_family_adjustments(request_text_for_fable5, segment)
     decision = _decision(data)
     promoted_from_not_required = False
     promoted_required_rows: list[dict[str, Any]] = []
@@ -917,14 +924,24 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         data["not_required_reason"] = no_permit_copy
         if isinstance(data.get("customer_result_summary"), dict):
             data["customer_result_summary"]["summary"] = no_permit_copy
+    if session4_conditional_floors:
+        decision = "VERIFY"
+        promoted_from_not_required = False
+        promoted_required_rows = []
+        data["permit_decision"] = "VERIFY"
+        data["permit_required"] = None
+        data["permit_verdict"] = "VERIFY"
 
     rows: list[PacketRow] = []
-    if decision == "REQUIRED":
+    if decision in {"REQUIRED", "VERIFY"}:
         required_rows = [
             r for r in data.get("permits_required") or []
             if isinstance(r, dict) and r.get("required") is not False and str(r.get("decision") or r.get("status") or "REQUIRED").upper() != "CONDITIONAL"
         ]
         conditional_rows = [r for r in data.get("conditional_permits") or [] if isinstance(r, dict)]
+        if decision == "VERIFY":
+            required_rows = []
+            conditional_rows = []
         if promoted_from_not_required and not required_rows:
             required_rows = promoted_required_rows
         forbidden_map = matrix_forbidden_families(facts) if facts is not None else {}
@@ -1040,13 +1057,14 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                         "reason": str(basis or "mandatory scope-family floor"),
                     })
                     present_fams.add(fam)
-        if session4_floors or session4_blocked_families:
+        if session4_floors or session4_conditional_floors or session4_blocked_families:
             def _session4_blocked(row: dict[str, Any]) -> bool:
                 fam = _family(row)
                 return fam in session4_blocked_families or (fam in {"building", "building_ti", "building_adu", "racking", "demolition"} and "building" in session4_blocked_families)
             if session4_blocked_families:
                 required_rows = [r for r in required_rows if not _session4_blocked(r)]
-                conditional_rows = [r for r in conditional_rows if not _session4_blocked(r)]
+                if decision != "VERIFY":
+                    conditional_rows = [r for r in conditional_rows if not _session4_blocked(r)]
             present_fams = {_family(r) for r in required_rows if isinstance(r, dict)}
             present_buckets = {"building" if fam in {"building", "building_ti", "building_adu", "racking", "demolition"} else fam for fam in present_fams}
             for fam, basis in session4_floors.items():
@@ -1072,6 +1090,24 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                 })
                 present_fams.add(fam)
                 present_buckets.add(bucket)
+            present_conditional = {_family(r) for r in conditional_rows if isinstance(r, dict)}
+            for fam, basis in session4_conditional_floors.items():
+                if fam in present_fams or fam in present_conditional:
+                    continue
+                conditional_rows.append({
+                    "permit_name": _canonical_name_for_family(fam, segment, data),
+                    "permit_type": _canonical_name_for_family(fam, segment, data),
+                    "kind": _kind_for_family(fam),
+                    "family": fam,
+                    "filing_family": fam,
+                    "decision": "CONDITIONAL",
+                    "status": "CONDITIONAL",
+                    "required": False,
+                    "reason": basis,
+                    "conditional_text": basis,
+                    "required_if": basis,
+                })
+                present_conditional.add(fam)
         if (data.get("ahj_resolution") or {}).get("resolved_ahj_key") == "miami_fl_city" and re.search(r"\b(?:window|door|storefront|opening|impact|exterior)\b", request_text, re.I):
             hvhz_docs = [
                 "NOA / Florida Product Approval for impact-rated windows, doors, or storefront systems",
@@ -1097,7 +1133,7 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                 return False
             return True
         conditional_rows = [r for r in conditional_rows if _condition_allowed(r)]
-        if not required_rows and conditional_rows:
+        if decision == "REQUIRED" and not required_rows and conditional_rows:
             fallback = copy.deepcopy(conditional_rows.pop(0))
             fallback["decision"] = "REQUIRED"
             fallback["status"] = "REQUIRED"
@@ -1160,6 +1196,9 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         summary = "Required permit package: " + "; ".join(required_names) + "."
         if conditional_names:
             summary += " Conditional guidance: " + "; ".join(conditional_names) + "."
+    elif decision == "VERIFY":
+        headline = f"{prefix + ' ' if prefix else ''}permit requirement needs verification"
+        summary = "Verify with the listed permit office before starting work. Conditional guidance: " + "; ".join(conditional_names) + "."
     else:
         headline = f"{prefix + ' ' if prefix else ''}no permit required for the stated scope"
         summary = str(data.get("not_required_reason") or data.get("summary") or "No permit required for the stated scope.")
@@ -1190,8 +1229,8 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         authority=_authority(data, segment),
         decision=decision,
         permit_required_verdict=decision,
-        verdict_basis=str(data.get("not_required_reason") or data.get("exemption_reason") or data.get("reason") or summary if decision == "NOT_REQUIRED" else ""),
-        lead_label=(next((row.permit_name for row in rows if row.decision == "REQUIRED" and row.lead), "No permit required" if decision == "NOT_REQUIRED" else (required_names[0] if required_names else "Permit"))),
+        verdict_basis=str(data.get("not_required_reason") or data.get("exemption_reason") or data.get("reason") or summary if decision in {"NOT_REQUIRED", "VERIFY"} else ""),
+        lead_label=(next((row.permit_name for row in rows if row.decision == "REQUIRED" and row.lead), "No permit required" if decision == "NOT_REQUIRED" else ("Verification required" if decision == "VERIFY" else (required_names[0] if required_names else "Permit")))),
         rows=rows,
         headline=headline,
         summary=summary,
@@ -1401,6 +1440,15 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
             out["customer_next_step"] = f"File the required permit categories with {authority_name}: {', '.join(out['required_permit_names'])}. Confirm exact portal subcategories before final submission."
         else:
             out["customer_next_step"] = f"Contact {authority_name} to confirm the filing path for: {', '.join(out['required_permit_names'])}. Confirm exact portal subcategories before final submission."
+    elif packet.decision == "VERIFY":
+        out["permit_required"] = None
+        out["permit_decision"] = "VERIFY"
+        out["permit_verdict"] = "VERIFY"
+        out["permit_name"] = "Permit requirement verification needed"
+        out["permit_type"] = "Permit requirement verification needed"
+        out["permit_kind"] = "Verify with permit office"
+        conditional_names = [str(row.get("permit_name") or "") for row in conditional_public_rows if row.get("permit_name")]
+        out["customer_next_step"] = f"Contact {authority_name} before starting work to confirm whether these conditional permit categories apply: {', '.join(conditional_names)}."
     else:
         out["permit_required"] = False
         out["permit_decision"] = "NOT_REQUIRED"
@@ -1413,7 +1461,7 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
         out["fee_range"] = packet.fees[0]
     elif packet.decision == "NOT_REQUIRED":
         out["fee_range"] = "No permit fee expected for the resolved no-permit scope; verify with the permit office if the scope changes"
-    if packet.authority.apply_url and packet.decision == "REQUIRED":
+    if packet.authority.apply_url and packet.decision in {"REQUIRED", "VERIFY"}:
         out["apply_url"] = packet.authority.apply_url
         out["online_application_url"] = packet.authority.apply_url
     elif packet.decision == "NOT_REQUIRED":
@@ -1429,17 +1477,17 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
             role_value = "unverified" if str(role.value).upper() == "UNKNOWN" else role.value
             source_items.append({"url": url, "title": source_label_for_role(role), "label": source_label_for_role(role), "source_tier": "local_permit_source" if is_official_badge_role(role) else "context", "source_role": role_value, "role_evidence": evidence})
         out["sources"] = source_items
-    if packet.decision == "REQUIRED":
+    if packet.decision in {"REQUIRED", "VERIFY"}:
         original_apply_url = input_apply_url
         legacy_portal_url = str(legacy_apply_path.get("portal_url") or legacy_apply_path.get("url") or "").strip()
         fallback_source_url = bool(packet.authority.apply_url and not (original_apply_url or legacy_portal_url))
-        path_state = "official_source_fallback" if fallback_source_url else ("resolved_portal" if packet.authority.apply_url else "verify_with_permit_office")
-        typed_status = "OFFICIAL_SOURCE_FALLBACK" if fallback_source_url else ("RESOLVED_PORTAL" if packet.authority.apply_url else "VERIFY_WITH_PERMIT_OFFICE")
+        path_state = "verify_with_permit_office" if packet.decision == "VERIFY" else ("official_source_fallback" if fallback_source_url else ("resolved_portal" if packet.authority.apply_url else "verify_with_permit_office"))
+        typed_status = "VERIFY_WITH_PERMIT_OFFICE" if packet.decision == "VERIFY" else ("OFFICIAL_SOURCE_FALLBACK" if fallback_source_url else ("RESOLVED_PORTAL" if packet.authority.apply_url else "VERIFY_WITH_PERMIT_OFFICE"))
         out["apply_path"] = {
             "state": path_state,
             "status": typed_status,
             "typed_status": typed_status,
-            "channel": "official_source" if fallback_source_url else ("online_portal" if packet.authority.apply_url else "office_verification"),
+            "channel": "office_verification" if packet.decision == "VERIFY" else ("official_source" if fallback_source_url else ("online_portal" if packet.authority.apply_url else "office_verification")),
             "portal_url": packet.authority.apply_url,
             "office_name": authority_name,
             "authority": authority_name,

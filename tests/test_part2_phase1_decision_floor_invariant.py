@@ -291,3 +291,46 @@ def test_bathroom_tub_to_shower_fixture_relocation_blocks_stale_co_and_uses_posi
     visible = json.dumps(projected, default=str)
     assert "Certificate of Occupancy" not in visible
     assert "Device / Receptacle Replacement" not in visible
+
+
+def test_same_size_garage_doors_use_verify_with_conditional_building_and_electrical() -> None:
+    job = "replace two residential garage doors same size with new openers, no header changes"
+    facts = build_scope_facts_v4(job, "Rockford", "IL", job_category="residential")
+    stale = {
+        **_not_required_base(),
+        "applying_office": "City of Rockford Building Permits Division",
+        "apply_url": "https://www.rockfordil.gov/438/Permits",
+        "source_urls": ["https://www.rockfordil.gov/438/Permits"],
+    }
+
+    projected = apply_public_packet_projection(stale, facts)
+
+    assert projected["permit_decision"] == "VERIFY"
+    assert projected["permit_required"] is None
+    assert _families(projected) == set()
+    conditional = {
+        str(row.get("filing_family") or row.get("family") or "")
+        for row in projected.get("conditional_permits") or []
+        if isinstance(row, dict)
+    }
+    assert conditional == {"building", "electrical"}
+    assert "no permit required" not in json.dumps(projected, default=str).lower()
+    assert projected["apply_path"]["typed_status"] == "VERIFY_WITH_PERMIT_OFFICE"
+
+
+def test_garage_door_structural_scope_does_not_use_like_for_like_verify_rule() -> None:
+    job = "replace residential garage door and enlarge opening with new structural header framing"
+    facts = build_scope_facts_v4(job, "Rockford", "IL", job_category="residential")
+    stale = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permits_required": [
+            {"permit_name": "Building Permit", "family": "building", "required": True, "decision": "REQUIRED"},
+        ],
+    }
+
+    projected = apply_public_packet_projection(stale, facts)
+
+    assert projected["permit_decision"] == "REQUIRED"
+    assert "building" in _families(projected)
