@@ -87,10 +87,18 @@
     const conditionalPacketRows = packetRows.filter(r => r && r.decision === 'CONDITIONAL');
     const packetDocs = [...new Set(safeArray(d.public_packet && d.public_packet.documents).map(x => textValue(x)).filter(Boolean))];
     const packetInspections = [...new Set(safeArray(d.public_packet && d.public_packet.inspections).map(x => textValue(x)).filter(Boolean))];
-    const leadPermitName = (requiredPacketRows[0] && requiredPacketRows[0].permit_name) || d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type;
+    const legacyPermitCandidates = [
+      ...requiredPacketRows.map(row => row && (row.permit_name || row.permit_type)),
+      d.permit_name,
+      d.permit_type,
+      primaryPermit.permit_type,
+      firstPermit.permit_type,
+    ];
+    const leadPermitName = legacyPermitCandidates.find(value => textValue(value).trim());
     const specificPermitKind = specificDisplayPermitKind(
       d.public_packet && d.public_packet.display_permit_kind,
-      d.permit_kind
+      d.permit_kind,
+      ...legacyPermitCandidates
     );
     const permitName = textValue(specificPermitKind || leadPermitName, 'Permit details');
     const rawVerdict = textValue(d.permit_verdict).toUpperCase();

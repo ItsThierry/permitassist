@@ -201,6 +201,7 @@ const cases = [
   ['UNKNOWN'],
   ['Likely Building Permit'],
   ['Required?'],
+  ['Building Permit', 'Roofing Permit — Tear-Off / Re-Roof'],
   ['', 'Residential Building / Remodel'],
 ];
 console.log(JSON.stringify(cases.map(values => specificDisplayPermitKind(...values))));
@@ -213,4 +214,4 @@ console.log(JSON.stringify(cases.map(values => specificDisplayPermitKind(...valu
         check=True,
     )
 
-    assert json.loads(completed.stdout) == ["", "", "", "", "", "", "", "Residential Building / Remodel"]
+    assert json.loads(completed.stdout) == ["", "", "", "", "", "", "", "Roofing Permit — Tear-Off / Re-Roof", "Residential Building / Remodel"]
