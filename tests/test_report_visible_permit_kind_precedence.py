@@ -93,6 +93,36 @@ console.log(JSON.stringify(specific || lead));
         ),
         (
             {
+                "permit_kind": "Residential Building / Remodel",
+                "public_packet": {
+                    "display_permit_kind": "Building Permit",
+                    "rows": [{"decision": "REQUIRED", "permit_name": "Building Permit"}],
+                },
+            },
+            "Residential Building / Remodel",
+        ),
+        (
+            {
+                "permit_kind": "Commercial Building / Tenant Improvement",
+                "public_packet": {
+                    "display_permit_kind": "Permit package: Building Permit; Electrical Permit",
+                    "rows": [{"decision": "REQUIRED", "permit_name": "Building Permit"}],
+                },
+            },
+            "Commercial Building / Tenant Improvement",
+        ),
+        (
+            {
+                "permit_kind": "Building",
+                "public_packet": {
+                    "display_permit_kind": "Building Permit — Addition",
+                    "rows": [{"decision": "REQUIRED", "permit_name": "Building Permit"}],
+                },
+            },
+            "Building Permit — Addition",
+        ),
+        (
+            {
                 "permit_kind": "Commercial Building / Tenant Improvement",
                 "permit_name": "Permit package: Building Permit; Electrical Permit",
                 "public_packet": {
@@ -165,6 +195,8 @@ def test_report_specific_kind_filter_matches_backend_uncertainty_and_generic_con
 {helper}
 const cases = [
   ['Permit package'],
+  ['Permit package: Building Permit; Electrical Permit'],
+  ['Building Permit'],
   ['Verify with permit office'],
   ['UNKNOWN'],
   ['Likely Building Permit'],
@@ -181,4 +213,4 @@ console.log(JSON.stringify(cases.map(values => specificDisplayPermitKind(...valu
         check=True,
     )
 
-    assert json.loads(completed.stdout) == ["", "", "", "", "", "Residential Building / Remodel"]
+    assert json.loads(completed.stdout) == ["", "", "", "", "", "", "", "Residential Building / Remodel"]

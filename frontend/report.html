@@ -53,14 +53,24 @@
     function specificDisplayPermitKind(...candidates) {
       const genericPermitKinds = new Set([
         'building',
+        'building permit',
         'electrical',
+        'electrical permit',
         'mechanical',
+        'mechanical permit',
         'plumbing',
+        'plumbing permit',
         'fire',
+        'fire permit',
+        'fire/life safety permit',
         'refrigeration',
+        'refrigeration permit',
         'sign',
+        'sign permit',
         'planning',
+        'planning permit',
         'zoning',
+        'zoning permit',
         'permit package',
         'not required',
         'permit required',
@@ -71,6 +81,8 @@
         const value = String(candidate || '').trim();
         const lower = value.toLowerCase();
         if (!value || genericPermitKinds.has(lower)) continue;
+        if (/^permits?\s+(?:package|required)\b/i.test(value)) continue;
+        if (/^(?:verify|check|confirm)\b/i.test(value)) continue;
         if (/(?:\bunknown\b|\blikely\b|\brequired\?)/i.test(value)) continue;
         return value;
       }
