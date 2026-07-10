@@ -59,20 +59,6 @@
         'fire',
         'fire/life safety',
         'refrigeration',
-        'roofing',
-        'gas',
-        'low voltage',
-        'fire alarm',
-        'fire sprinkler',
-        'demolition',
-        'grading',
-        'right of way',
-        'right-of-way',
-        'utility',
-        'solar',
-        'pool',
-        'elevator',
-        'boiler',
         'sign',
         'planning',
         'zoning',
@@ -87,7 +73,8 @@
         const value = String(candidate || '').trim();
         const lower = value.toLowerCase();
         const normalizedGeneric = lower.replace(/\s+permit$/, '').trim();
-        if (!value || genericPermitKinds.has(lower) || genericPermitKinds.has(normalizedGeneric)) continue;
+        const terminalPermitFamily = /\s+permit$/i.test(value) && normalizedGeneric.split(/\s+/).filter(Boolean).length <= 3;
+        if (!value || genericPermitKinds.has(lower) || genericPermitKinds.has(normalizedGeneric) || terminalPermitFamily) continue;
         if (/^permits?\s+(?:package|required)\b/i.test(value)) continue;
         if (/^(?:verify|check|confirm)\b/i.test(value)) continue;
         if (/(?:\bunknown\b|\blikely\b|\brequired\?)/i.test(value)) continue;
