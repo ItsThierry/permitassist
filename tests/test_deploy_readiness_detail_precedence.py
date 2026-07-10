@@ -304,6 +304,109 @@ def test_saved_documents_beat_generic_defaults_without_truth_mutation(tmp_path, 
     ]
 
 
+def test_wrong_scope_structural_saved_documents_are_removed_at_terminal_packet_boundary(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    dirty = {
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permit_required": True,
+        "permit_kind": "Commercial Building / Tenant Improvement",
+        "permit_name": "Commercial Building / Tenant Improvement Permit",
+        "permits_required": [
+            {
+                "permit_type": "Commercial Building / Tenant Improvement Permit",
+                "required": True,
+                "family": "building_ti",
+                "documents": [
+                    "Details for masonry lintel & facade repair (sealed by licensed engineer where required by AHJ)",
+                    "Commercial tenant-improvement plan set",
+                ],
+            }
+        ],
+        "sources": [
+            {
+                "url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/default.aspx",
+                "title": "Dallas Building Inspection",
+            }
+        ],
+    }
+    structural = server.build_customer_permit_view_model(
+        copy.deepcopy(dirty),
+        "Commercial masonry lintel and structural facade repair",
+        "Dallas",
+        "TX",
+        job_category="commercial",
+    )
+    structural_packet = structural.get("public_packet") or {}
+    structural_blob = "\n".join(
+        str(item)
+        for item in [
+            *list(structural_packet.get("documents") or []),
+            *[doc for row in structural_packet.get("rows") or [] for doc in (row.get("documents") or [])],
+        ]
+    ).lower()
+    assert "masonry lintel" in structural_blob
+
+    public = server.build_customer_permit_view_model(
+        copy.deepcopy(structural),
+        "Commercial office tenant improvement with non-load-bearing partitions, lighting relocation, and data cabling",
+        "Dallas",
+        "TX",
+        job_category="commercial",
+    )
+    packet = public.get("public_packet") or {}
+    all_docs = [
+        *list(packet.get("documents") or []),
+        *[doc for row in packet.get("rows") or [] for doc in (row.get("documents") or [])],
+    ]
+    blob = "\n".join(str(item) for item in all_docs).lower()
+    assert "masonry lintel" not in blob
+    assert "facade repair" not in blob
+    assert public["permit_decision"] == "REQUIRED"
+
+
+def test_explicit_no_structural_window_scope_strips_structural_documents_at_terminal_boundary(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    dirty = {
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permit_required": True,
+        "permit_kind": "Residential Building / Windows",
+        "permit_name": "Residential Window Replacement Permit",
+        "permits_required": [
+            {
+                "permit_type": "Residential Window Replacement Permit",
+                "required": True,
+                "family": "building",
+                "documents": ["Structural/foundation drawings", "Window schedule and product specifications"],
+            }
+        ],
+        "sources": [
+            {
+                "url": "https://www.phoenix.gov/pdd/development/permits",
+                "title": "Phoenix Planning and Development",
+            }
+        ],
+    }
+    public = server.build_customer_permit_view_model(
+        dirty,
+        "Replace same-size residential windows in existing openings; no structural or header changes",
+        "Phoenix",
+        "AZ",
+        job_category="residential",
+    )
+    packet = public.get("public_packet") or {}
+    all_docs = [
+        *list(packet.get("documents") or []),
+        *[doc for row in packet.get("rows") or [] for doc in (row.get("documents") or [])],
+    ]
+    blob = "\n".join(str(item) for item in all_docs).lower()
+    assert "structural/foundation" not in blob
+    assert "structural drawings" not in blob
+    assert "project scope description" in blob
+    assert public["permit_decision"] == "REQUIRED"
+
+
 def test_source_backed_packet_documents_outrank_saved_documents(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     dirty = {

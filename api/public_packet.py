@@ -1549,6 +1549,14 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                     row.inspections = []
                 else:
                     row.inspections = list(fam_insp)
+        # Terminal scope-safety pass: stale saved/canonical packets can re-enter
+        # through package precedence after the earlier row-level scrub. Re-apply
+        # the same universal request-fact filter to the final package and row
+        # projections so unsupported structural detail cannot survive a replay.
+        documents = _strip_structural_docs_when_unsupported(documents, facts)
+        for row in rows:
+            if row.decision == "REQUIRED":
+                row.documents = _strip_structural_docs_when_unsupported(row.documents, facts)
 
     checklist: list[str] = []
     if decision == "NOT_REQUIRED":
