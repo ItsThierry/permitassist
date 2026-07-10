@@ -95,12 +95,13 @@
       primaryPermit.permit_type,
       firstPermit.permit_type,
     ];
-    const leadPermitName = legacyPermitCandidates.find(value => textValue(value).trim());
-    const specificPermitKind = specificDisplayPermitKind(
+    const orderedPermitCandidates = [
       d.public_packet && d.public_packet.display_permit_kind,
       d.permit_kind,
       ...legacyPermitCandidates
-    );
+    ];
+    const leadPermitName = orderedPermitCandidates.find(value => textValue(value).trim());
+    const specificPermitKind = specificDisplayPermitKind(...orderedPermitCandidates);
     const permitName = textValue(specificPermitKind || leadPermitName, 'Permit details');
     const rawVerdict = textValue(d.permit_verdict).toUpperCase();
     const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'VERIFY');

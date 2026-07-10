@@ -68,12 +68,13 @@ const legacy = [
   d.permit_name,
   d.permit_type,
 ];
-const lead = legacy.find(value => String(value || '').trim()) || 'Permit details';
-const specific = specificDisplayPermitKind(
+const ordered = [
   d.public_packet?.display_permit_kind,
   d.permit_kind,
   ...legacy,
-);
+];
+const lead = ordered.find(value => String(value || '').trim()) || 'Permit details';
+const specific = specificDisplayPermitKind(...ordered);
 console.log(JSON.stringify(specific || lead));
 """
     completed = subprocess.run(
@@ -167,7 +168,7 @@ console.log(JSON.stringify(specific || lead));
                     "rows": [{"decision": "REQUIRED", "permit_name": "Building Permit"}],
                 },
             },
-            "Building Permit",
+            "Building",
         ),
         (
             {
@@ -192,6 +193,22 @@ console.log(JSON.stringify(specific || lead));
                 },
             },
             "Roofing Permit — Tear-Off / Re-Roof",
+        ),
+        (
+            {
+                "public_packet": {
+                    "display_permit_kind": "Roofing Permit",
+                    "rows": [],
+                },
+            },
+            "Roofing Permit",
+        ),
+        (
+            {
+                "permit_kind": "Building Permit",
+                "public_packet": {"rows": []},
+            },
+            "Building Permit",
         ),
     ],
 )
