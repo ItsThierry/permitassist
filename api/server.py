@@ -61,7 +61,7 @@ except (TypeError, ValueError):
     from api.research_engine import classify_scope_required_permits as _real_classify_scope_required_permits
     classify_scope_required_permits = _real_classify_scope_required_permits
 
-from scope_contract import build_scope_contract, build_scope_facts_v2, build_scope_facts_v3, build_scope_facts_v4, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
+from scope_contract import build_scope_contract, build_scope_facts_v2, build_scope_facts_v3, build_scope_facts_v4, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, filter_scope_contradicted_companion_warnings, is_vehicle_lift_scope, sanitize_result_for_scope_contract
 from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
 from trade_authority_routing import apply_trade_authority_routing
 from decision_resolver import is_input_rejection, resolve_customer_decision
@@ -6606,7 +6606,11 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
             warnings.append("Commercial scope detected, but the primary permit name is AHJ-specific or not in the commercial allow-list; verify exact AHJ naming before quoting.")
 
         companion_text = " ".join(str(x) for x in (result.get("companion_permits") or result.get("permits_required") or [])).lower()
-        required_companions = ["electrical", "mechanical", "plumbing"]
+        vehicle_lift_scope = is_vehicle_lift_scope(job_type)
+        if vehicle_lift_scope:
+            required_companions = ["electrical"] if re.search(r"\b(?:electrical|wiring|circuits?|receptacles?|disconnects?|power)\b", job_type or "", re.I) else []
+        else:
+            required_companions = ["electrical", "mechanical", "plumbing"]
         companion_scope = _commercial_companion_scope(job_type, result)
         scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
         if companion_scope == "restaurant":
@@ -6634,7 +6638,7 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
         for w in warnings:
             if w and w not in deduped:
                 deduped.append(w)
-        result["quality_warnings"] = deduped
+        result["quality_warnings"] = filter_scope_contradicted_companion_warnings(deduped, job_type)
         result["needs_review"] = True
 
     _filter_negated_surface_lists(result, job_type)

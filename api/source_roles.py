@@ -38,6 +38,33 @@ def _city_tokens(ahj_identity: dict[str, Any] | None) -> set[str]:
     return {token for token in re.split(r"[^a-z0-9]+", city) if len(token) >= 3}
 
 
+_AUTHORITY_STOP_TOKENS = {
+    "building", "department", "development", "permit", "permits", "planning",
+    "county", "city", "town", "village", "government", "joint", "official",
+}
+_JOINT_COUNTY_TOKENS = {("fort wayne", "in"): {"allen"}}
+
+
+def _authority_tokens(ahj_identity: dict[str, Any] | None) -> set[str]:
+    identity = ahj_identity or {}
+    state = str(identity.get("state") or "").lower().strip()
+    city = str(identity.get("city") or "").lower().strip()
+    values = (
+        identity.get("authority_name"),
+        identity.get("resolved_ahj_name"),
+        identity.get("resolved_ahj_key"),
+        identity.get("county"),
+    )
+    tokens = set(_city_tokens(identity))
+    for value in values:
+        tokens.update(
+            token for token in re.split(r"[^a-z0-9]+", str(value or "").lower())
+            if len(token) >= 3 and token not in _AUTHORITY_STOP_TOKENS
+        )
+    tokens.update(_JOINT_COUNTY_TOKENS.get((city, state), set()))
+    return tokens
+
+
 def classify_source(url: str, ahj_identity: dict[str, Any] | None = None) -> tuple[SourceRole, str]:
     text = str(url or "").strip()
     if not text:
@@ -51,22 +78,36 @@ def classify_source(url: str, ahj_identity: dict[str, Any] | None = None) -> tup
         if re.search(r"\b(?:blog|journal|article|news|technical)\b", path, re.I):
             return SourceRole.PUBLISHER_CONTEXT, "publisher/blog/background-reading host"
         return SourceRole.NATIONAL_MODEL_CODE, "national code-organization reference"
-    city_tokens = _city_tokens(ahj_identity)
+    authority_tokens = _authority_tokens(ahj_identity)
     state = str((ahj_identity or {}).get("state") or "").lower().strip()
     is_gov = host.endswith(".gov") or ".gov." in host or host.endswith(".us")
-    localish = bool(city_tokens and any(token in host.replace("-", "") or token in path for token in city_tokens))
+    normalized_location = re.sub(r"[^a-z0-9]+", "", f"{host} {path}")
+    localish = bool(authority_tokens and any(token in normalized_location for token in authority_tokens))
+    normalized_host = re.sub(r"[^a-z0-9]+", "", host)
+    host_localish = bool(authority_tokens and any(token in normalized_host for token in authority_tokens))
     if host_no_www in {"devhub.portlandoregon.gov", "li.phila.gov"}:
-        return SourceRole.LOCAL_OFFICIAL_FILING, "known local official filing portal"
+        if localish:
+            return SourceRole.LOCAL_OFFICIAL_FILING, "known local official filing portal for requested locality"
+        return SourceRole.UNKNOWN, "filing portal is not confirmed for the requested locality"
+    if host_no_www == "aca-prod.accela.com" and path.startswith("/acfw"):
+        if state in {"", "in"} and ({"allen", "fort", "wayne"} & authority_tokens):
+            return SourceRole.LOCAL_OFFICIAL_FILING, "known Allen County/City of Fort Wayne official filing portal for resolved locality"
+        return SourceRole.UNKNOWN, "filing portal is not confirmed for the requested locality"
+    municipal_host = bool(re.search(r"(?:^|\.)(?:[a-z0-9-]*county|cityof|townof|villageof)", host_no_www))
+    if is_gov and municipal_host:
+        if host_localish and _FILING_HINT_RE.search(f"{host} {path}"):
+            return SourceRole.LOCAL_OFFICIAL_FILING, "local county/city government permit/filing URL"
+        if host_localish:
+            return SourceRole.LOCAL_OFFICIAL_INFO, "local county/city government permit information URL"
+        return SourceRole.UNKNOWN, "county/city government URL is not confirmed for the requested locality"
     if is_gov and localish and _FILING_HINT_RE.search(f"{host} {path}"):
         return SourceRole.LOCAL_OFFICIAL_FILING, "local official filing/permit URL"
     if is_gov and localish:
         return SourceRole.LOCAL_OFFICIAL_INFO, "local official information URL"
     if _STATE_HOST_RE.search(host) or (is_gov and state and state in host):
         return SourceRole.STATE_OFFICIAL, "state official URL"
-    if is_gov and _FILING_HINT_RE.search(f"{host} {path}"):
-        return SourceRole.LOCAL_OFFICIAL_FILING, "government permit/filing URL"
-    if is_gov and _INFO_HINT_RE.search(f"{host} {path}"):
-        return SourceRole.LOCAL_OFFICIAL_INFO, "government permit information URL"
+    if is_gov and (_FILING_HINT_RE.search(f"{host} {path}") or _INFO_HINT_RE.search(f"{host} {path}")):
+        return SourceRole.UNKNOWN, "government permit URL is not confirmed for the requested locality"
     return SourceRole.UNKNOWN, "source role not classified as local/state/model/publisher"
 
 

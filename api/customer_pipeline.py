@@ -17,12 +17,14 @@ try:  # top-level imports when api/ is on sys.path in production/tests
     from closed_world_decision import apply_closed_world_customer_contract
     from family_reconciliation_gate import apply_family_reconciliation_gate
     from public_packet import apply_public_packet_projection
+    from scope_contract import filter_scope_contradicted_companion_warnings
 except Exception:  # pragma: no cover - package import compatibility
     from api.ahj_identity_guard import apply_ahj_identity_guard
     from api.ahj_locality_resolver import apply_ahj_locality_resolution
     from api.closed_world_decision import apply_closed_world_customer_contract
     from api.family_reconciliation_gate import apply_family_reconciliation_gate
     from api.public_packet import apply_public_packet_projection
+    from api.scope_contract import filter_scope_contradicted_companion_warnings
 
 PIPELINE: tuple[str, ...] = (
     "locality",
@@ -108,6 +110,14 @@ def apply_pre_projection_pipeline(payload: dict[str, Any], ctx: CustomerPipeline
     out = payload if isinstance(payload, dict) else {}
     for gate in PRE_PROJECTION_GATES:
         out = _apply_gate(gate, out, ctx)
+    for key in ("warnings", "quality_warnings"):
+        if key not in out:
+            continue
+        filtered = filter_scope_contradicted_companion_warnings(out.get(key), ctx.job_type)
+        if filtered:
+            out[key] = filtered
+        else:
+            out.pop(key, None)
     return out
 
 

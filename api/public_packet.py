@@ -19,13 +19,13 @@ try:
     from family_policy_matrix import covered_families, document_floor_keys, forbidden_families as matrix_forbidden_families, fuel_gas_plumbing_subtype_only, mandatory_families as matrix_mandatory_families
     from phase_trace import emit_trace
     from source_roles import SourceRole, classify_source, is_official_badge_role, source_label_for_role
-    from scope_contract import TriFact, safety_critical_required_families
+    from scope_contract import TriFact, is_vehicle_lift_scope, safety_critical_required_families
 except Exception:  # pragma: no cover
     from api.family_reconciliation_gate import family_from_row, resolve_lead_label
     from api.family_policy_matrix import covered_families, document_floor_keys, forbidden_families as matrix_forbidden_families, fuel_gas_plumbing_subtype_only, mandatory_families as matrix_mandatory_families
     from api.phase_trace import emit_trace
     from api.source_roles import SourceRole, classify_source, is_official_badge_role, source_label_for_role
-    from api.scope_contract import TriFact, safety_critical_required_families
+    from api.scope_contract import TriFact, is_vehicle_lift_scope, safety_critical_required_families
 
 Decision = Literal["REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY"]
 
@@ -51,6 +51,7 @@ class PacketRow:
     reason: str = ""
     conditional_text: str = ""
     source: str = ""
+    source_url: str = ""
     source_role: str = "unverified"
     action_url: str = ""
     fees: str = ""
@@ -267,9 +268,21 @@ def _source_urls_from_result(data: dict[str, Any]) -> list[str]:
     return list(dict.fromkeys(urls))
 
 
+def _source_ahj_identity(data: dict[str, Any]) -> dict[str, Any]:
+    raw_resolution = data.get("ahj_resolution")
+    resolution: dict[str, Any] = raw_resolution if isinstance(raw_resolution, dict) else {}
+    return {
+        "city": data.get("_request_city") or data.get("city") or "",
+        "state": data.get("_request_state") or data.get("state") or "",
+        "authority_name": data.get("applying_office") or resolution.get("resolved_ahj_name") or "",
+        "resolved_ahj_name": resolution.get("resolved_ahj_name") or "",
+        "resolved_ahj_key": resolution.get("resolved_ahj_key") or "",
+    }
+
+
 def _authority(data: dict[str, Any], segment: str) -> PacketAuthority:
     name = str(data.get("applying_office") or data.get("jurisdiction") or data.get("office_name") or "Local permit office").strip()
-    ahj_identity = {"city": data.get("_request_city") or data.get("city") or "", "state": data.get("_request_state") or data.get("state") or ""}
+    ahj_identity = _source_ahj_identity(data)
     source_urls = _source_urls_from_result(data)
     source_roles = [((classify_source(url, ahj_identity)[0].value) or "unverified") for url in source_urls]
     source_roles = ["unverified" if str(role).upper() == "UNKNOWN" else str(role) for role in source_roles]
@@ -369,6 +382,7 @@ def _packet_render_provenance(packet: PublicPacketDTO) -> dict[str, Any]:
             "family": row.get("family"),
             "decision": row.get("decision"),
             "permit_name": row.get("permit_name"),
+            "source_url": row.get("source_url") or row.get("source"),
             "source_role": row.get("source_role"),
         }
         for key in ("documents", "inspections"):
@@ -390,8 +404,11 @@ def _packet_render_provenance(packet: PublicPacketDTO) -> dict[str, Any]:
 def _packet_row(row: dict[str, Any], data: dict[str, Any], decision: Decision) -> PacketRow:
     family = _family(row)
     name = _segment_locked_name(_name(row), family, str(data.get("segment") or "").lower(), data)
-    source_value = str(row.get("source_url") or row.get("source") or "")
-    source_role = classify_source(source_value, {"city": data.get("_request_city") or data.get("city") or "", "state": data.get("_request_state") or data.get("state") or ""})[0].value if source_value else "unverified"
+    direct_source = row.get("source_url") or row.get("source")
+    raw_row_source_urls = row.get("source_urls")
+    row_source_urls: list[Any] = raw_row_source_urls if isinstance(raw_row_source_urls, list) else []
+    source_value = str(direct_source or next((url for url in row_source_urls if isinstance(url, str) and url.strip()), ""))
+    source_role = classify_source(source_value, _source_ahj_identity(data))[0].value if source_value else "unverified"
     if str(source_role).upper() == "UNKNOWN":
         source_role = "unverified"
     return PacketRow(
@@ -401,6 +418,7 @@ def _packet_row(row: dict[str, Any], data: dict[str, Any], decision: Decision) -
         reason=_safe_reason(row),
         conditional_text=str(row.get("conditional_text") or row.get("required_if") or row.get("trigger") or ""),
         source=source_value,
+        source_url=source_value,
         source_role=source_role,
         action_url=str(row.get("apply_url") or data.get("apply_url") or data.get("online_application_url") or ""),
         fees=_row_fee_text(row, data) if decision == "REQUIRED" else "",
@@ -553,8 +571,8 @@ def _packet_row_to_legacy(row: dict[str, Any], *, preserve_building_ti: bool = F
         out["required_if"] = row.get("conditional_text")
     if row.get("action_url"):
         out["apply_url"] = row.get("action_url")
-    if row.get("source"):
-        out["source_url"] = row.get("source")
+    if row.get("source_url") or row.get("source"):
+        out["source_url"] = row.get("source_url") or row.get("source")
     if row.get("source_role"):
         out["source_role"] = row.get("source_role")
     if row.get("lead"):
@@ -1135,6 +1153,7 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
                             docs.append(doc)
                     row["documents"] = docs
         negative_facts = set(getattr(facts, "negative_facts", []) or []) if facts is not None else set(scope_facts.get("negative_facts") or [])
+        vehicle_lift_scope = is_vehicle_lift_scope(request_text)
         def _condition_allowed(row: dict[str, Any]) -> bool:
             fam = _family(row)
             if fam in {"health_food", "wastewater_pretreatment_fog"} and "no_food_service_change" in negative_facts:
@@ -1142,6 +1161,8 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
             if fam == "co_change_of_occupancy" and "no_use_change" in negative_facts:
                 return False
             if fam in {"electrical", "plumbing", "mechanical"} and "no_utilities" in negative_facts and not re.search(r"\b(electrical|plumbing|mechanical|gas|hvac|wiring|fixture|utility|utilities)\b", request_text):
+                return False
+            if vehicle_lift_scope and fam in {"mechanical", "plumbing", "gas", "fire_alarm", "fire_suppression", "planning_zoning", "co_change_of_occupancy"} and fam not in request_positive_families:
                 return False
             return True
         conditional_rows = [r for r in conditional_rows if _condition_allowed(r)]
@@ -1490,7 +1511,8 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     if packet.authority.source_urls:
         out["source_urls"] = list(packet.authority.source_urls)
         source_items = []
-        ahj_identity = {"city": out.get("_request_city") or out.get("city") or "", "state": out.get("_request_state") or out.get("state") or packet.authority.state or ""}
+        ahj_identity = _source_ahj_identity(out)
+        ahj_identity["state"] = ahj_identity.get("state") or packet.authority.state or ""
         for url in packet.authority.source_urls:
             role, evidence = classify_source(url, ahj_identity)
             role_value = "unverified" if str(role.value).upper() == "UNKNOWN" else role.value

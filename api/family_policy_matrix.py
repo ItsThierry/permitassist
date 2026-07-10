@@ -196,8 +196,10 @@ def _request_positive_floors(facts: ScopeFactsV3 | Any) -> dict[str, str]:
         out.setdefault("building_ti" if segment == "commercial" and ("building_ti" in positive or "change_of_use_ti" in positive_facts or "commercial_ti" in positive_facts) else "building", "building/structural work floor from request facts")
     if "gas" in positive:
         out.setdefault("plumbing", "fuel-gas scope requires plumbing/gas permit-family floor")
-    if positive & {"fire_suppression", "fire_alarm"}:
-        out.setdefault("fire_suppression", "fire/life-safety scope requires fire-family floor")
+    if "fire_suppression" in positive:
+        out.setdefault("fire_suppression", "explicit sprinkler/suppression scope requires suppression-family floor")
+    if "fire_alarm" in positive:
+        out.setdefault("fire_alarm", "explicit fire-alarm scope requires alarm-family floor")
     if "health_food" in positive:
         out.setdefault("health_food", "health/food/pool scope requires health-family floor")
     if "use_change" in positive_facts or "co_change_of_occupancy" in positive or "building_ti" in positive:

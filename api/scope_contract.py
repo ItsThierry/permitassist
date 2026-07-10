@@ -498,6 +498,36 @@ def _extract_rack_height(text: str) -> float | None:
     return float(match.group(1) or match.group(2))
 
 
+def is_vehicle_lift_scope(text: str) -> bool:
+    """Return True only for vehicle/service-lift equipment scope.
+
+    This shared classifier prevents generic lift/elevator wording from creating
+    building, fire, or trade-family noise in unrelated requests.
+    """
+    return bool(
+        re.search(
+            r"\b(?:automotive|vehicle|car|service)\s+lifts?\b"
+            r"|\blifts?\b.{0,50}\b(?:repair\s+shop|garage|slab|anchor)\b"
+            r"|\b(?:repair\s+shop|garage)\b.{0,50}\blifts?\b",
+            str(text or ""),
+            re.I,
+        )
+    )
+
+
+def filter_scope_contradicted_companion_warnings(
+    warnings: list[Any] | tuple[Any, ...] | None,
+    job_type: str,
+) -> list[str]:
+    """Remove the legacy generic trade warning when the scope classifier rejects it."""
+    values = warnings if isinstance(warnings, (list, tuple)) else ([warnings] if warnings else [])
+    cleaned = [str(item).strip() for item in values if str(item or "").strip()]
+    if not is_vehicle_lift_scope(job_type):
+        return cleaned
+    marker = "commercial scope may require companion reviews/permits not fully proven here:"
+    return [item for item in cleaned if marker not in item.lower()]
+
+
 def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
     facts: set[str] = set()
     trade_map = {
@@ -541,8 +571,16 @@ def _scope_facts_v2_positive(job: str, v1: ScopeFacts) -> set[str]:
         facts.update({"food_service", "grease_generating", "fire_suppression", "health_food", "co_change_of_occupancy", "planning_zoning", "mechanical", "plumbing", "electrical"})
     if v1.segment == "commercial" and re.search(r"\b(?:dental|medical|clinic|x[- ]?ray|exam room)\b", job, re.I):
         facts.update({"electrical", "mechanical", "plumbing"})
-    if v1.segment == "commercial" and re.search(r"\b(?:auto\s+repair|repair\s+shop|garage|vehicle\s+repair|lifts?)\b", job, re.I):
-        facts.update({"fire_suppression", "planning_zoning"})
+    vehicle_lift_scope = is_vehicle_lift_scope(job)
+    if v1.segment == "commercial" and vehicle_lift_scope:
+        # Vehicle/service lifts anchored to the slab are structural equipment.
+        # Do not infer fire-suppression or zoning review from the business type;
+        # those families require explicit system/hazardous/use-change scope.
+        facts.update({"building", "structural"})
+        if re.search(r"\b(?:electrical|wiring|circuits?|receptacles?|disconnects?|power)\b", job, re.I):
+            facts.add("electrical")
+        if "use_change" in facts:
+            facts.add("planning_zoning")
     if re.search(r"\b(?:solar|pv|photovoltaic)\b", job, re.I):
         facts.update({"electrical", "building"})
     if re.search(r"\b(?:adu|accessory dwelling|detached dwelling|garage conversion|kitchen\s+bath\s+and\s+utilities)\b", job, re.I):
@@ -660,6 +698,11 @@ def _scope_facts_v2_family_floors(job: str, v1: ScopeFacts, positives: set[str])
     )
     if v1.segment == "commercial" and commercial_structural_addition:
         floors["building"] = "commercial structural/addition scope requires commercial building floor"
+    vehicle_lift_scope = is_vehicle_lift_scope(job)
+    if v1.segment == "commercial" and vehicle_lift_scope:
+        floors["building"] = "commercial vehicle/service lift anchored to the slab requires structural building-equipment filing floor"
+        if re.search(r"\b(?:electrical|wiring|circuits?|receptacles?|disconnects?|power)\b", job, re.I):
+            floors["electrical"] = "commercial vehicle/service lift scope with new electrical work requires electrical filing floor"
     if v1.segment == "commercial" and re.search(r"\bfloor\s+drains?\b", job, re.I):
         floors["plumbing"] = "commercial TI with floor drains requires plumbing floor"
     if v1.segment == "commercial" and re.search(r"\b(?:warehouse\s+to|assembly|pickleball|occupant\s+load)\b", job, re.I) and "use_change" in positives:
@@ -1189,11 +1232,29 @@ def build_scope_facts_v4(job_type: str, city: str = "", state: str = "", *, job_
         negative_families.add("building")
         forbidden.setdefault("building", "residential HPWH/mini-split equipment scope does not hard-require standalone building permit absent structural/framing/envelope work")
     _apply_phase0_scope_axis_closure(job, v3.segment, positives, positive_families, negatives, negative_families, forbidden)
-    # Phase-0 keyword closure is intentionally broad, so re-apply explicit
-    # negative fuel-gas/plumbing ceilings after it. Search only affirmative
-    # clauses for same-family positive work; words inside "no ..." clauses are
-    # not evidence of requested work.
+    # Phase-0 keyword closure is intentionally broad. Re-apply explicit
+    # fire-system negatives so phrases such as "no sprinkler or fire alarm
+    # changes" cannot create permit families from the words in the negative.
     affirmative_job = re.sub(r"\b(?:no|without)\b[^;,.]*", "", job)
+    explicit_no_sprinkler = bool(re.search(r"\b(?:no|without)\b[^;,.]*\b(?:fire\s+)?sprinklers?\b", job, re.I))
+    explicit_no_fire_alarm = bool(re.search(r"\b(?:no|without)\b[^;,.]*\bfire\s+alarms?\b", job, re.I))
+    affirmative_sprinkler = bool(re.search(r"\b(?:install|add|alter|modify|relocate|replace|extend)\b[^;,.]*\b(?:fire\s+)?sprinklers?\b", affirmative_job, re.I))
+    affirmative_fire_alarm = bool(re.search(r"\b(?:install|add|alter|modify|relocate|replace|extend)\b[^;,.]*\bfire\s+alarms?\b", affirmative_job, re.I))
+    if explicit_no_sprinkler and not affirmative_sprinkler:
+        negatives.add("no_sprinkler_alteration")
+        negative_families.add("fire_suppression")
+        positives.discard("fire_suppression")
+        positive_families.discard("fire_suppression")
+        forbidden["fire_suppression"] = "explicit request says no sprinkler/suppression changes"
+    if explicit_no_fire_alarm and not affirmative_fire_alarm:
+        negatives.add("no_fire_alarm_work")
+        negative_families.add("fire_alarm")
+        positives.discard("fire_alarm")
+        positive_families.discard("fire_alarm")
+        forbidden["fire_alarm"] = "explicit request says no fire-alarm changes"
+    if explicit_no_sprinkler and explicit_no_fire_alarm and not (affirmative_sprinkler or affirmative_fire_alarm):
+        positives.discard("fire_life_safety")
+    # Re-apply explicit negative fuel-gas/plumbing ceilings after closure.
     explicit_no_gas_piping = bool(
         re.search(
             r"\b(?:no|without)\s+(?:new\s+)?(?:fuel[- ]?gas|gas)(?:\s+(?:line|lines|piping|pipe|work|connection|connections))?\b",

@@ -664,7 +664,7 @@ def apply_fee_realism_guardrail(result: dict, job_type: str, city: str, state: s
 
     # P2A: Coherence check — fee shall not exceed 40% of job value
     try:
-        job_value_match = re.search(r'[\$]?([\d,]+(?:\.\d+)?)\s*[kK]?', str(job_type or result.get("job_value", "")))
+        job_value_match = re.search(r'[\$]?([\d,]+(?:\.\d+)?)\s*[kK]?\b', str(job_type or result.get("job_value", "")))
         if job_value_match:
             job_val = float(job_value_match.group(1).replace(",", ""))
             if "k" in job_type.lower() or "K" in str(result.get("job_value", "")):

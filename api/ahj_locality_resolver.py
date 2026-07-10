@@ -11,7 +11,7 @@ import copy
 from dataclasses import dataclass, field
 import re
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 
 
 @dataclass(frozen=True)
@@ -26,6 +26,10 @@ class NestedJurisdiction:
     retained_source_patterns: tuple[str, ...] = field(default_factory=tuple)
     blocked_filing_patterns: tuple[str, ...] = field(default_factory=tuple)
     source_title: str = "Official city permitting source"
+    resolved_level: str = "city"
+    office_address: str = ""
+    office_phone: str = ""
+    official_source_urls: tuple[str, ...] = field(default_factory=tuple)
 
 
 NESTED_JURISDICTIONS: dict[tuple[str, str], NestedJurisdiction] = {
@@ -68,6 +72,26 @@ NESTED_JURISDICTIONS: dict[tuple[str, str], NestedJurisdiction] = {
         fee_authority_url="https://www.nyc.gov/site/buildings/dob/fees.page",
         source_title="NYC Department of Buildings DOB NOW",
     ),
+    ("fort wayne", "IN"): NestedJurisdiction(
+        city="Fort Wayne",
+        state="IN",
+        resolved_ahj_key="allen_county_building_department_joint",
+        resolved_ahj_name="Allen County Building Department",
+        filing_authority_url="https://aca-prod.accela.com/ACFW/Default.aspx",
+        fee_authority_url="https://www.allencounty.in.gov/308/Applications-Fees",
+        resolved_level="county_joint_city_county",
+        office_address="200 East Berry Street, Suite 180, Fort Wayne, IN 46802",
+        office_phone="260-449-7131",
+        official_source_urls=(
+            "https://www.allencounty.in.gov/234/Building-Department",
+            "https://www.allencounty.in.gov/308/Applications-Fees",
+            "https://www.allencounty.in.gov/directory.aspx?did=18",
+        ),
+        blocked_filing_patterns=(
+            r"cityoffortwayne\.in\.gov/668/permits-and-bonds",
+            r"cityoffortwayne\.org/.*/right-of-way",
+        ),
+    ),
 }
 
 
@@ -84,12 +108,14 @@ def resolve_ahj_locality(city: str, state: str, result: dict[str, Any] | None = 
     if not entry:
         return None
     return {
-        "resolved_level": "city",
+        "resolved_level": entry.resolved_level,
         "resolved_ahj_name": entry.resolved_ahj_name,
         "resolved_ahj_key": entry.resolved_ahj_key,
         "filing_authority_url": entry.filing_authority_url,
         "fee_authority_url": entry.fee_authority_url,
         "retained_county_facets": list(entry.retained_county_facets),
+        "office_address": entry.office_address,
+        "office_phone": entry.office_phone,
         "source": "deterministic_nested_jurisdiction_table",
     }
 
@@ -126,7 +152,11 @@ def classify_source_for_resolution(source: Any, resolution: dict[str, Any] | Non
         return "context"
     url = _url(source)
     host = _host(url)
-    if "miami.gov" in host or "chicago.gov" in host or "nyc.gov" in host:
+    filing_hosts = {
+        _host(entry.filing_authority_url),
+        *(_host(url) for url in entry.official_source_urls),
+    }
+    if host and host in filing_hosts:
         return "filing_authority"
     if _retained_by_entry(url, entry):
         return "retained_requirement"
@@ -195,6 +225,15 @@ def apply_ahj_locality_resolution(result: dict[str, Any], city: str, state: str,
     out["applying_office"] = entry.resolved_ahj_name
     out["apply_url"] = entry.filing_authority_url
     out["online_application_url"] = entry.filing_authority_url
+    if entry.office_address:
+        out["apply_address"] = entry.office_address
+        maps_query = quote_plus(f"{entry.resolved_ahj_name}, {entry.office_address}")
+        maps_url = f"https://www.google.com/maps/search/?api=1&query={maps_query}"
+        out["apply_google_maps"] = maps_url
+        out["maps_url"] = maps_url
+    if entry.office_phone:
+        out["apply_phone"] = entry.office_phone
+        out["building_dept_phone"] = entry.office_phone
     if str(out.get("permit_decision") or "").upper() == "REQUIRED" or out.get("permit_required") is True:
         out["apply_url_known"] = True
     apply_path = dict(out.get("apply_path") or {}) if isinstance(out.get("apply_path"), dict) else {}
@@ -210,6 +249,47 @@ def apply_ahj_locality_resolution(result: dict[str, Any], city: str, state: str,
     })
     out["apply_path"] = apply_path
 
+    fee_text = str(out.get("fee_range") or "")
+    fee_needs_verification = bool(
+        entry.fee_authority_url
+        and re.search(
+            r"miami[- ]dade|\$\s*158|\b(?:rough|budget|estimate|not confirmed|not found|verification needed|verify)\b",
+            fee_text,
+            re.I,
+        )
+    )
+    safe_fee_text = (
+        f"Permit fee not confirmed; verify the current {entry.resolved_ahj_name} fee schedule before quoting: {entry.fee_authority_url}"
+        if entry.fee_authority_url
+        else ""
+    )
+    if fee_needs_verification:
+        out["fee_range"] = safe_fee_text
+
+    def rewrite_rows(rows: Any) -> None:
+        if not isinstance(rows, list):
+            return
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            row["action_url"] = entry.filing_authority_url
+            row["apply_url"] = entry.filing_authority_url
+            row["source"] = entry.filing_authority_url
+            row["source_url"] = entry.filing_authority_url
+            if fee_needs_verification and (
+                str(row.get("decision") or row.get("status") or "REQUIRED").upper() == "REQUIRED"
+                or row.get("required") is True
+            ):
+                row.pop("fees", None)
+                row["fee"] = safe_fee_text
+
+    for key in ("permits_required", "conditional_permits", "related_permits", "companion_permits", "public_packet_rows"):
+        rewrite_rows(out.get(key))
+    for packet_key in ("public_packet", "canonical_public_packet"):
+        packet = out.get(packet_key)
+        if isinstance(packet, dict):
+            rewrite_rows(packet.get("rows"))
+
     clean_sources: list[Any] = []
     retained_sources: list[Any] = []
     degraded: list[dict[str, Any]] = []
@@ -218,7 +298,7 @@ def apply_ahj_locality_resolution(result: dict[str, Any], city: str, state: str,
             continue
         relevance = classify_source_for_resolution(src, resolution)
         if relevance == "irrelevant_or_procurement":
-            degraded.append({"url": _url(src), "status": "irrelevant_or_wrong_authority", "reason": "Resolved filing AHJ is city; this county/procurement source is not a filing authority."})
+            degraded.append({"url": _url(src), "status": "irrelevant_or_wrong_authority", "reason": "Source is not the resolved filing authority for this locality."})
             continue
         item = copy.deepcopy(src)
         if relevance == "retained_requirement":
@@ -230,6 +310,7 @@ def apply_ahj_locality_resolution(result: dict[str, Any], city: str, state: str,
                 item["source_relevance"] = "filing_authority"
             clean_sources.append(item)
     official = [_source(entry.filing_authority_url, entry.source_title, "filing_authority")]
+    official.extend(_source(url, entry.resolved_ahj_name, "filing_authority") for url in entry.official_source_urls)
     if entry.fee_authority_url:
         official.append(_source(entry.fee_authority_url, f"{entry.resolved_ahj_name} fee schedule", "filing_authority"))
     if entry.resolved_ahj_key == "miami_fl_city":
@@ -239,8 +320,7 @@ def apply_ahj_locality_resolution(result: dict[str, Any], city: str, state: str,
     out["sources"] = [*official, *retained_sources, *clean_sources]
     out["source_urls"] = _dedupe_urls([_url(src) for src in out["sources"] if _url(src)])
     if degraded:
-        out["degraded_sources"] = list(out.get("degraded_sources") or []) + degraded
-    if entry.fee_authority_url and re.search(r"miami[- ]dade|\$\s*158|county", str(out.get("fee_range") or ""), re.I):
-        out["fee_range"] = f"Permit fee not confirmed; verify the current {entry.resolved_ahj_name} fee schedule before quoting: {entry.fee_authority_url}"
+        resolution["discarded_wrong_authority_sources"] = degraded
+        out["ahj_resolution"] = resolution
     _add_hvhz_docs(out, entry, job_type)
     return out
