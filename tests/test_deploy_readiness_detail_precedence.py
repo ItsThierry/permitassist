@@ -424,3 +424,51 @@ def test_wrong_scope_companion_rows_are_scrubbed_or_dropped(tmp_path, monkeypatc
     assert "_debug_source" not in serialized
     assert "ahj_contact_source" not in serialized
     assert pub.get("permit_decision") == "REQUIRED"
+
+
+def test_legitimate_same_scope_companion_survives_scrub(tmp_path, monkeypatch):
+    """Positive control: same-scope companion rows must survive scrub with safe fields."""
+    server = _import_server(tmp_path, monkeypatch)
+    data = {
+        "permit_required": True,
+        "permit_verdict": "YES",
+        "permit_decision": "REQUIRED",
+        "permit_kind": "Commercial Building / Tenant Improvement",
+        "permit_name": "Commercial Building / Tenant Improvement",
+        "permit_type": "Commercial Building / Tenant Improvement",
+        "customer_headline": "Permit required",
+        "customer_next_step": "File with the building department.",
+        "permits_required": [{"permit_type": "Commercial Building / Tenant Improvement"}],
+        "companion_permits": [
+            {
+                "permit_type": "Electrical Permit — Tenant Improvement",
+                "reason": "Companion permit for electrical alterations only.",
+                "certainty": "likely",
+                "label": "Companion / secondary permit",
+                "_debug_source": "should_not_leak",
+                "ahj_contact_source": "AHJ internal",
+            }
+        ],
+        "sources": [
+            {
+                "url": "https://www.austintexas.gov/department/development-services",
+                "title": "Austin",
+            }
+        ],
+        "source_urls": ["https://www.austintexas.gov/department/development-services"],
+    }
+    pub = server.build_customer_permit_view_model(
+        copy.deepcopy(data),
+        "Commercial restaurant tenant improvement with Type I hood",
+        "Austin",
+        "TX",
+    )
+    comps = pub.get("companion_permits") or []
+    assert comps, "legitimate same-scope companion must survive scrub"
+    row = comps[0]
+    assert "Electrical" in str(row.get("permit_type") or "")
+    assert "electrical alterations" in str(row.get("reason") or "").lower()
+    serialized = json.dumps(pub, sort_keys=True, default=str)
+    assert "_debug_source" not in serialized
+    assert "ahj_contact_source" not in serialized
+    assert pub.get("permit_decision") == "REQUIRED"
