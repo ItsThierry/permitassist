@@ -220,7 +220,9 @@ def test_report_title_h1_and_core_permit_share_the_same_precedence_resolved_labe
     html = REPORT_TEMPLATE.read_text(encoding="utf-8")
 
     assert "specificDisplayPermitKind" in html
-    assert "const specificPermitKind = specificDisplayPermitKind(" in html
+    assert "const orderedPermitCandidates = [" in html
+    assert "const leadPermitName = orderedPermitCandidates.find" in html
+    assert "const specificPermitKind = specificDisplayPermitKind(...orderedPermitCandidates);" in html
     assert "const permitName = textValue(specificPermitKind || leadPermitName, 'Permit details');" in html
     assert "addText(heroText, 'h1', { className: 'headline', text: permitName });" in html
     assert "meta.appendChild(metaRow('Permit', permitName));" in html
