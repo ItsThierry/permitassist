@@ -336,3 +336,91 @@ def test_source_backed_packet_documents_outrank_saved_documents(tmp_path, monkey
     docs = list((public.get("apply_path") or {}).get("documents_to_prepare") or public.get("documents_to_prepare") or [])
     assert any("NOA" in str(d) or "Product Approval" in str(d) for d in docs)
     assert public["permit_decision"] == "REQUIRED"
+
+
+def test_uncertainty_permit_kind_is_not_force_restored(tmp_path, monkeypatch):
+    """Fable HIGH: uncertainty/generic kinds must not reappear after post-projection restore."""
+    server = _import_server(tmp_path, monkeypatch)
+    for kind in (
+        "Building Permit Likely Required?",
+        "Verify with permit office",
+        "Unknown Permit Type",
+    ):
+        data = {
+            "permit_required": True,
+            "permit_verdict": "YES",
+            "permit_decision": "REQUIRED",
+            "permit_kind": kind,
+            "permit_name": kind,
+            "permit_type": kind,
+            "customer_headline": "Permit required",
+            "customer_next_step": "File with the building department.",
+            "permits_required": [{"permit_type": kind}],
+            "sources": [
+                {
+                    "url": "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/default.aspx",
+                    "title": "Dallas",
+                }
+            ],
+            "source_urls": [
+                "https://dallascityhall.com/departments/sustainabledevelopment/buildinginspection/Pages/default.aspx"
+            ],
+        }
+        pub = server.build_customer_permit_view_model(
+            copy.deepcopy(data), "Residential kitchen remodel", "Dallas", "TX"
+        )
+        kind_out = str(pub.get("permit_kind") or "")
+        assert "likely" not in kind_out.lower()
+        assert "unknown" not in kind_out.lower()
+        assert "verify with permit office" not in kind_out.lower()
+        assert kind_out != kind
+        assert pub.get("permit_decision") == "REQUIRED"
+        pkt = pub.get("public_packet") or {}
+        display = str(pkt.get("display_permit_kind") or "")
+        assert "likely" not in display.lower()
+        assert "unknown" not in display.lower()
+
+
+def test_wrong_scope_companion_rows_are_scrubbed_or_dropped(tmp_path, monkeypatch):
+    """Fable MED: companion restore must not reintroduce wrong-scope or internal keys."""
+    server = _import_server(tmp_path, monkeypatch)
+    data = {
+        "permit_required": True,
+        "permit_verdict": "YES",
+        "permit_decision": "REQUIRED",
+        "permit_kind": "Commercial Building / Tenant Improvement",
+        "permit_name": "Commercial Building / Tenant Improvement",
+        "permit_type": "Commercial Building / Tenant Improvement",
+        "customer_headline": "Permit required",
+        "customer_next_step": "File with the building department.",
+        "permits_required": [{"permit_type": "Commercial Building / Tenant Improvement"}],
+        "companion_permits": [
+            {
+                "permit_type": "Owner-builder ADU solar PV Electrical Permit",
+                "reason": "homeowner ADU solar circuit",
+                "certainty": "likely",
+                "_debug_source": "should_not_leak",
+                "ahj_contact_source": "AHJ internal",
+            }
+        ],
+        "sources": [
+            {
+                "url": "https://www.austintexas.gov/department/development-services",
+                "title": "Austin",
+            }
+        ],
+        "source_urls": ["https://www.austintexas.gov/department/development-services"],
+    }
+    pub = server.build_customer_permit_view_model(
+        copy.deepcopy(data),
+        "Commercial restaurant tenant improvement with Type I hood",
+        "Austin",
+        "TX",
+    )
+    serialized = json.dumps(pub, sort_keys=True, default=str).lower()
+    assert "homeowner" not in serialized
+    assert "owner-builder" not in serialized
+    assert "adu" not in serialized
+    assert "_debug_source" not in serialized
+    assert "ahj_contact_source" not in serialized
+    assert pub.get("permit_decision") == "REQUIRED"

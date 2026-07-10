@@ -5090,6 +5090,56 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
     return result
 
 
+
+def _restore_sealed_display_kind_and_companions(
+    final_public: dict,
+    *,
+    original_display_permit_kind: str,
+    original_companion_rows_for_legacy_contract: list,
+    job_type: str = "",
+) -> dict:
+    """Restore only sealed-specific display kind and scrubbed companion rows after projection."""
+    if not isinstance(final_public, dict):
+        return final_public
+    try:
+        from public_packet import sealed_customer_display_permit_kind, scrub_customer_companion_rows
+    except Exception:
+        try:
+            from api.public_packet import sealed_customer_display_permit_kind, scrub_customer_companion_rows
+        except Exception:
+            sealed_customer_display_permit_kind = None  # type: ignore
+            scrub_customer_companion_rows = None  # type: ignore
+
+    segment_value = str(final_public.get("segment") or "").lower()
+    decision = str(final_public.get("permit_decision") or "").upper()
+    sealed = ""
+    if original_display_permit_kind and decision == "REQUIRED" and sealed_customer_display_permit_kind is not None:
+        sealed = sealed_customer_display_permit_kind(
+            original_display_permit_kind,
+            segment=segment_value,
+            package_name=str(final_public.get("permit_name") or ""),
+        )
+    if sealed:
+        final_public["permit_kind"] = sealed
+        if isinstance(final_public.get("apply_path"), dict):
+            final_public["apply_path"]["permit_category"] = sealed
+        if isinstance(final_public.get("customer_result_summary"), dict):
+            final_public["customer_result_summary"]["permit_kind"] = sealed
+        if isinstance(final_public.get("public_packet"), dict):
+            final_public["public_packet"]["display_permit_kind"] = sealed
+
+    if original_companion_rows_for_legacy_contract and not final_public.get("companion_permits"):
+        if scrub_customer_companion_rows is not None:
+            final_public["companion_permits"] = scrub_customer_companion_rows(
+                original_companion_rows_for_legacy_contract,
+                segment=segment_value,
+                request_text=str(job_type or final_public.get("job_type") or ""),
+            )
+        else:
+            final_public["companion_permits"] = []
+    return final_public
+
+
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
@@ -5539,8 +5589,6 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                             final_public["_legacy_inspections"] = copy.deepcopy(original_legacy_inspections)
                         if original_display_permit_kind:
                             final_public["_original_display_permit_kind"] = original_display_permit_kind
-                            # Prefer sealed original display kind before terminal packet projection.
-                            final_public["permit_kind"] = original_display_permit_kind
                     final_public = run_pipeline_through_projection(
                         final_public if isinstance(final_public, dict) else {},
                         CustomerPipelineContext(
@@ -5561,18 +5609,12 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 final_public = _build_degraded_lookup_fallback(job_type, city, state, reason="customer_gate_chain_failed")
             final_public = _apply_residential_commercial_timeline_veto(final_public if isinstance(final_public, dict) else {}, job_type, job_category=request_job_category, scope_contract=scope_contract)
             if isinstance(final_public, dict):
-                specific_kind = original_display_permit_kind and original_display_permit_kind.lower() not in {"building", "electrical", "mechanical", "plumbing", "fire", "refrigeration", "sign", "planning", "zoning", "permit package", "not required"}
-                segment_value = str(final_public.get("segment") or "").lower()
-                kind_lc = str(original_display_permit_kind or "").lower()
-                segment_kind_safe = not ((segment_value == "residential" and ("commercial" in kind_lc or "tenant improvement" in kind_lc)) or (segment_value == "commercial" and "residential" in kind_lc))
-                if specific_kind and segment_kind_safe and str(final_public.get("permit_decision") or "").upper() == "REQUIRED":
-                    final_public["permit_kind"] = original_display_permit_kind
-                    if isinstance(final_public.get("apply_path"), dict):
-                        final_public["apply_path"]["permit_category"] = original_display_permit_kind
-                    if isinstance(final_public.get("customer_result_summary"), dict):
-                        final_public["customer_result_summary"]["permit_kind"] = original_display_permit_kind
-                if original_companion_rows_for_legacy_contract and not final_public.get("companion_permits"):
-                    final_public["companion_permits"] = copy.deepcopy(original_companion_rows_for_legacy_contract)
+                final_public = _restore_sealed_display_kind_and_companions(
+                    final_public,
+                    original_display_permit_kind=original_display_permit_kind,
+                    original_companion_rows_for_legacy_contract=original_companion_rows_for_legacy_contract,
+                    job_type=job_type,
+                )
                 # Segment/kind lock must also protect pytest/legacy paths where
                 # the full customer gate is disabled; stale commercial anchors
                 # must never survive in a residential customer header/action.
@@ -5604,32 +5646,15 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                             final_public["_legacy_inspections"] = copy.deepcopy(original_legacy_inspections)
                         if original_display_permit_kind:
                             final_public["_original_display_permit_kind"] = original_display_permit_kind
-                            final_public["permit_kind"] = original_display_permit_kind
                     final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts_for_packet)
                 if isinstance(final_public, dict):
                     # Final sealed display-kind restore after the last packet projection.
-                    specific_kind = original_display_permit_kind and original_display_permit_kind.lower() not in {
-                        "building", "electrical", "mechanical", "plumbing", "fire", "refrigeration",
-                        "sign", "planning", "zoning", "permit package", "not required",
-                    }
-                    segment_value = str(final_public.get("segment") or "").lower()
-                    kind_lc = str(original_display_permit_kind or "").lower()
-                    segment_kind_safe = not (
-                        (segment_value == "residential" and ("commercial" in kind_lc or "tenant improvement" in kind_lc))
-                        or (segment_value == "commercial" and "residential" in kind_lc)
+                    final_public = _restore_sealed_display_kind_and_companions(
+                        final_public,
+                        original_display_permit_kind=original_display_permit_kind,
+                        original_companion_rows_for_legacy_contract=original_companion_rows_for_legacy_contract,
+                        job_type=job_type,
                     )
-                    if specific_kind and segment_kind_safe and str(final_public.get("permit_decision") or "").upper() == "REQUIRED":
-                        final_public["permit_kind"] = original_display_permit_kind
-                        if isinstance(final_public.get("apply_path"), dict):
-                            final_public["apply_path"]["permit_category"] = original_display_permit_kind
-                        if isinstance(final_public.get("customer_result_summary"), dict):
-                            final_public["customer_result_summary"]["permit_kind"] = original_display_permit_kind
-                        if isinstance(final_public.get("public_packet"), dict):
-                            final_public["public_packet"]["display_permit_kind"] = original_display_permit_kind
-                    # Projection clears companion rows; restore the original customer-visible
-                    # companion contract without letting it alter sealed required families.
-                    if original_companion_rows_for_legacy_contract and not final_public.get("companion_permits"):
-                        final_public["companion_permits"] = copy.deepcopy(original_companion_rows_for_legacy_contract)
                     if original_apply_address and not final_public.get("apply_address"):
                         final_public["apply_address"] = original_apply_address
                     if original_apply_google_maps and not final_public.get("apply_google_maps"):
@@ -5650,7 +5675,6 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                                 final_public["_legacy_inspections"] = copy.deepcopy(original_legacy_inspections)
                             if original_display_permit_kind:
                                 final_public["_original_display_permit_kind"] = original_display_permit_kind
-                                final_public["permit_kind"] = original_display_permit_kind
                         final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts_for_packet)
                 if isinstance(final_public, dict):
                     for _phone_key in ("apply_phone", "building_dept_phone", "office_phone"):

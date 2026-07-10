@@ -435,6 +435,51 @@ def _saved_detail_compatible_with_scope(values: list[str], *, segment: str, requ
     return out
 
 
+
+def scrub_customer_companion_rows(rows: list[Any] | None, *, segment: str = "", request_text: str = "") -> list[dict[str, Any]]:
+    """Keep legacy companion rows for customer contracts while scrubbing unsafe fields.
+
+    - Drop underscore/internal keys and known authority/debug fields.
+    - Reject wrong-scope companion labels (residential owner-builder into commercial, etc.).
+    - Keep only customer-safe scalar/list fields.
+    """
+    if not isinstance(rows, list):
+        return []
+    allowed = {
+        "permit_type", "label", "requirement_label", "certainty", "reason",
+        "required", "portal_selection", "kind", "display_family", "family",
+        "where_to_apply", "apply_url", "notes",
+    }
+    out: list[dict[str, Any]] = []
+    for raw in rows:
+        if not isinstance(raw, dict):
+            continue
+        cleaned: dict[str, Any] = {}
+        for key, value in raw.items():
+            k = str(key or "")
+            if not k or k.startswith("_"):
+                continue
+            if k not in allowed:
+                continue
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                cleaned[k] = value
+            elif isinstance(value, list):
+                cleaned[k] = [str(v) for v in value if str(v or "").strip()]
+        if not cleaned:
+            continue
+        blob = " ".join(str(v) for v in cleaned.values() if v is not None)
+        kept = _saved_detail_compatible_with_scope([blob], segment=segment, request_text=request_text)
+        if not kept:
+            continue
+        out.append(cleaned)
+    return out
+
+
+def sealed_customer_display_permit_kind(candidate: str, *, segment: str = "", package_name: str = "") -> str:
+    """Public helper for terminal restore paths to reuse the sealed display-kind filter."""
+    return _specific_display_permit_kind(candidate, segment=segment, package_name=package_name)
+
+
 def resolve_detail_precedence(
     *,
     source_backed: list[str] | None = None,

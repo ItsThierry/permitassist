@@ -2560,9 +2560,14 @@ function renderResults(d, job, city, state) {
     const requiredPermitNames = (d.required_permit_names && d.required_permit_names.length)
       ? d.required_permit_names
       : requiredPermits.map(p => p.permit_type || p.approval_type || p.portal_selection).filter(Boolean);
-    const requiredPermitFamilies = (d.required_permit_families && d.required_permit_families.length)
-      ? d.required_permit_families
-      : requiredPermits.map(p => p.display_family || p.kind || '').filter(Boolean);
+    const sealedFamilyLabels = (d.public_packet && Array.isArray(d.public_packet.required_family_display_labels))
+      ? d.public_packet.required_family_display_labels.filter(Boolean)
+      : [];
+    const requiredPermitFamilies = sealedFamilyLabels.length
+      ? sealedFamilyLabels
+      : ((d.required_permit_families && d.required_permit_families.length)
+        ? d.required_permit_families
+        : requiredPermits.map(p => p.display_family || p.kind || '').filter(Boolean));
     const isMultiPermit = requiredPermitNames.length > 1;
     const portalSel = !isMultiPermit && requiredPermits.length > 0 ? requiredPermits[0].portal_selection : null;
     const exactPermitName = isMultiPermit
