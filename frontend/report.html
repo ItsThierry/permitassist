@@ -50,13 +50,44 @@
       if (value === null || value === undefined) return fallback;
       return String(value);
     };
+    function specificDisplayPermitKind(...candidates) {
+      const genericPermitKinds = new Set([
+        'building',
+        'electrical',
+        'mechanical',
+        'plumbing',
+        'fire',
+        'refrigeration',
+        'sign',
+        'planning',
+        'zoning',
+        'permit package',
+        'not required',
+        'permit required',
+        'other',
+        'verify with permit office',
+      ]);
+      for (const candidate of candidates) {
+        const value = String(candidate || '').trim();
+        const lower = value.toLowerCase();
+        if (!value || genericPermitKinds.has(lower)) continue;
+        if (/(?:\bunknown\b|\blikely\b|\brequired\?)/i.test(value)) continue;
+        return value;
+      }
+      return '';
+    }
     const safeArray = (value) => Array.isArray(value) ? value : [];
     const packetRows = safeArray(d.public_packet_rows || (d.public_packet && d.public_packet.rows));
     const requiredPacketRows = packetRows.filter(r => r && r.decision === 'REQUIRED');
     const conditionalPacketRows = packetRows.filter(r => r && r.decision === 'CONDITIONAL');
     const packetDocs = [...new Set(safeArray(d.public_packet && d.public_packet.documents).map(x => textValue(x)).filter(Boolean))];
     const packetInspections = [...new Set(safeArray(d.public_packet && d.public_packet.inspections).map(x => textValue(x)).filter(Boolean))];
-    const permitName = textValue((requiredPacketRows[0] && requiredPacketRows[0].permit_name) || d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type, 'Permit details');
+    const leadPermitName = (requiredPacketRows[0] && requiredPacketRows[0].permit_name) || d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type;
+    const specificPermitKind = specificDisplayPermitKind(
+      d.public_packet && d.public_packet.display_permit_kind,
+      d.permit_kind
+    );
+    const permitName = textValue(specificPermitKind || leadPermitName, 'Permit details');
     const rawVerdict = textValue(d.permit_verdict).toUpperCase();
     const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'VERIFY');
     const verdictLabel = verdict === 'YES' ? 'Permit required: Yes' : (verdict === 'NO' ? 'Permit required: No' : 'Permit status: Verify');
