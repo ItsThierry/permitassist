@@ -43,6 +43,10 @@ _AUTHORITY_STOP_TOKENS = {
     "county", "city", "town", "village", "government", "joint", "official",
 }
 _JOINT_COUNTY_TOKENS = {("fort wayne", "in"): {"allen"}}
+_KNOWN_FILING_PORTAL_LOCALITY_TOKENS = {
+    "devhub.portlandoregon.gov": {"portland"},
+    "li.phila.gov": {"philadelphia"},
+}
 
 
 def _authority_tokens(ahj_identity: dict[str, Any] | None) -> set[str]:
@@ -85,8 +89,9 @@ def classify_source(url: str, ahj_identity: dict[str, Any] | None = None) -> tup
     localish = bool(authority_tokens and any(token in normalized_location for token in authority_tokens))
     normalized_host = re.sub(r"[^a-z0-9]+", "", host)
     host_localish = bool(authority_tokens and any(token in normalized_host for token in authority_tokens))
-    if host_no_www in {"devhub.portlandoregon.gov", "li.phila.gov"}:
-        if localish:
+    if host_no_www in _KNOWN_FILING_PORTAL_LOCALITY_TOKENS:
+        expected_tokens = _KNOWN_FILING_PORTAL_LOCALITY_TOKENS[host_no_www]
+        if authority_tokens & expected_tokens:
             return SourceRole.LOCAL_OFFICIAL_FILING, "known local official filing portal for requested locality"
         return SourceRole.UNKNOWN, "filing portal is not confirmed for the requested locality"
     if host_no_www == "aca-prod.accela.com" and path.startswith("/acfw"):

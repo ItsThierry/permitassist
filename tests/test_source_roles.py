@@ -33,6 +33,23 @@ def test_city_gov_apply_page_is_local_official_filing():
     assert "local" in evidence.lower() or "official" in evidence.lower()
 
 
+def test_known_philadelphia_filing_portal_accepts_verified_locality_only():
+    philadelphia_role, _evidence = classify_source(
+        "https://li.phila.gov/",
+        {
+            "city": "Philadelphia",
+            "state": "PA",
+            "authority_name": "City of Philadelphia Department of Licenses and Inspections",
+        },
+    )
+    wrong_locality_role, _evidence = classify_source(
+        "https://li.phila.gov/",
+        {"city": "Chicago", "state": "IL", "authority_name": "City of Chicago Buildings"},
+    )
+    assert philadelphia_role == SourceRole.LOCAL_OFFICIAL_FILING
+    assert wrong_locality_role == SourceRole.UNKNOWN
+
+
 def test_city_info_page_is_official_info_not_apply_path():
     role, _evidence = classify_source("https://www.portland.gov/ppd/get-permit/apply-permits", {"city": "Portland", "state": "OR"})
     assert role in {SourceRole.LOCAL_OFFICIAL_FILING, SourceRole.LOCAL_OFFICIAL_INFO}
