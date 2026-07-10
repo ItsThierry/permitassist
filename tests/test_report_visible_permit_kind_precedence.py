@@ -63,8 +63,17 @@ def _rendered_permit_name(data: dict) -> str:
 const d = {json.dumps(data)};
 const rows = Array.isArray(d.public_packet?.rows) ? d.public_packet.rows : [];
 const required = rows.filter(row => row && row.decision === 'REQUIRED');
-const lead = (required[0] && required[0].permit_name) || d.permit_name || d.permit_type || 'Permit details';
-const specific = specificDisplayPermitKind(d.public_packet?.display_permit_kind, d.permit_kind);
+const legacy = [
+  ...required.map(row => row && (row.permit_name || row.permit_type)),
+  d.permit_name,
+  d.permit_type,
+];
+const lead = legacy.find(value => String(value || '').trim()) || 'Permit details';
+const specific = specificDisplayPermitKind(
+  d.public_packet?.display_permit_kind,
+  d.permit_kind,
+  ...legacy,
+);
 console.log(JSON.stringify(specific || lead));
 """
     completed = subprocess.run(
@@ -162,6 +171,19 @@ console.log(JSON.stringify(specific || lead));
         ),
         (
             {
+                "permit_kind": "Permit package",
+                "public_packet": {
+                    "display_permit_kind": "Permit package",
+                    "rows": [
+                        {"decision": "REQUIRED", "permit_name": "Roofing Permit"},
+                        {"decision": "REQUIRED", "permit_name": "Roofing Permit — Tear-Off / Re-Roof"},
+                    ],
+                },
+            },
+            "Roofing Permit — Tear-Off / Re-Roof",
+        ),
+        (
+            {
                 "permit_kind": "UNKNOWN",
                 "permit_name": "Roofing Permit — Tear-Off / Re-Roof",
                 "public_packet": {
@@ -202,6 +224,7 @@ const cases = [
   ['Likely Building Permit'],
   ['Required?'],
   ['Building Permit', 'Roofing Permit — Tear-Off / Re-Roof'],
+  ['Roofing Permit', 'Roofing Permit — Tear-Off / Re-Roof'],
   ['', 'Residential Building / Remodel'],
 ];
 console.log(JSON.stringify(cases.map(values => specificDisplayPermitKind(...values))));
@@ -214,4 +237,4 @@ console.log(JSON.stringify(cases.map(values => specificDisplayPermitKind(...valu
         check=True,
     )
 
-    assert json.loads(completed.stdout) == ["", "", "", "", "", "", "", "Roofing Permit — Tear-Off / Re-Roof", "Residential Building / Remodel"]
+    assert json.loads(completed.stdout) == ["", "", "", "", "", "", "", "Roofing Permit — Tear-Off / Re-Roof", "Roofing Permit — Tear-Off / Re-Roof", "Residential Building / Remodel"]
