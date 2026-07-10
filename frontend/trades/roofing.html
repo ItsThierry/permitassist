@@ -25,7 +25,6 @@
   <meta name="twitter:description" content="Look up roofing permit requirements in seconds. Fees, documents, timelines for 1,569 cities. Free for contractors." />
   <meta name="twitter:image" content="https://permitassist.io/icons/icon-512.png" />
   <link rel="manifest" href="/manifest.json" />
-  <script src="/js/render_result.js" defer></script>
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
   <link rel="shortcut icon" href="/icons/icon-192.png" />
@@ -1736,13 +1735,6 @@ function setSearchMode(mode) {
 const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function sourceUrl(src){return typeof src==='string'?src:((src&&src.url)||'')}
-function safeGoogleMapsUrl(url){
-  const u = String(url || '').trim();
-  return u.startsWith('https://www.google.com/maps') ? u : 'https://www.google.com/maps';
-}
-function openSafeMapsUrl(url){
-  window.open(safeGoogleMapsUrl(url), '_blank', 'noopener');
-}
 function sourceTitle(src){return (src&&typeof src==='object'&&(src.title||src.name))||'Source'}
 function sourceHostname(src){try{return new URL(sourceUrl(src)).hostname}catch(_){return sourceUrl(src)}}
 
@@ -2320,24 +2312,6 @@ function verdictState(d){
 }
 
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
-function looksLikeRawUrl(value){return /^https?:\/\//i.test(String(value || '').trim());}
-function safePhoneForDisplay(value){return looksLikeRawUrl(value) ? '' : String(value || '').trim();}
-function buildPermitOfficeMapsUrl(city, state, office, address) {
-  const cityText = String(city || '').trim();
-  const stateText = String(state || '').trim();
-  const officeText = String(office || '').trim();
-  const addressText = String(address || '').trim();
-  const query = addressText || [officeText, cityText, stateText, 'building permit office'].filter(Boolean).join(' ');
-  return 'https://www.google.com/maps/search/' + encodeURIComponent(query || 'building permit office');
-}
-function safePermitOfficeMapsUrl(rawUrl, city, state, office, address) {
-  const raw = String(rawUrl || '').trim();
-  if (/^https:\/\/www\.google\.com\/maps(?:\/search\/.+|\/place\/.+|\?q=.+)/i.test(raw)) return raw;
-  return buildPermitOfficeMapsUrl(city, state, office, address);
-}
-function openPermitOfficeMaps(url) {
-  window.open(String(url || '').trim() || buildPermitOfficeMapsUrl('', '', '', ''), '_blank', 'noopener');
-}
 
 // ── Render Results ───────────────────────────────────────────────────────────
 function getPermitDisplayName(d) {
@@ -2410,12 +2384,10 @@ function renderResults(d, job, city, state) {
   const checklist = d.what_to_bring || d.checklist || [];
   const tl = d.approval_timeline || {};
   const office = d.applying_office || d.office_name || '';
-  const phone = safePhoneForDisplay(d.apply_phone || d.office_phone || '');
+  const phone = d.apply_phone || d.office_phone || '';
   const officeAddress = d.apply_address || d.office_address || '';
-  const jobAddress = d.job_address || currentResult?.address || '';
-  const projectMaps = d.job_maps_url || '';
-  const officeMaps = safePermitOfficeMapsUrl(d.apply_google_maps || d.maps_url || '', city, state, office, officeAddress);
-  const maps = officeMaps;
+  const jobAddress = currentResult?.address || '';
+  const maps = d.apply_google_maps || d.maps_url || '';
   const fee = d.fee_range || d.fee || d.cost || '';
   const applyUrl = d.apply_url || '';
   const applyPdf = d.apply_pdf || '';
@@ -2448,12 +2420,6 @@ function renderResults(d, job, city, state) {
   // County fallback notice
   if (countyNote) {
     html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
-  }
-
-
-  const degradedReason = (d.public_packet && d.public_packet.degraded_reason) || d.degraded_reason || '';
-  if (d.degraded_sources === true || (d.public_packet && d.public_packet.degraded === true)) {
-    html += `<div class="degraded-confidence-banner" style="margin-bottom:14px;border:1.5px solid rgba(217,119,6,0.35);background:rgba(217,119,6,0.08);color:#92400e;border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.5">⚠️ <strong>Source confidence is degraded.</strong> Treat this as a permit-office verification packet before quoting or filing.${degradedReason ? ` Reason: ${esc(degradedReason)}` : ''}</div>`;
   }
 
   // Homeowner mode — special "Did they pull the permit?" section
@@ -2560,14 +2526,9 @@ function renderResults(d, job, city, state) {
     const requiredPermitNames = (d.required_permit_names && d.required_permit_names.length)
       ? d.required_permit_names
       : requiredPermits.map(p => p.permit_type || p.approval_type || p.portal_selection).filter(Boolean);
-    const sealedFamilyLabels = (d.public_packet && Array.isArray(d.public_packet.required_family_display_labels))
-      ? d.public_packet.required_family_display_labels.filter(Boolean)
-      : [];
-    const requiredPermitFamilies = sealedFamilyLabels.length
-      ? sealedFamilyLabels
-      : ((d.required_permit_families && d.required_permit_families.length)
-        ? d.required_permit_families
-        : requiredPermits.map(p => p.display_family || p.kind || '').filter(Boolean));
+    const requiredPermitFamilies = (d.required_permit_families && d.required_permit_families.length)
+      ? d.required_permit_families
+      : requiredPermits.map(p => p.display_family || p.kind || '').filter(Boolean);
     const isMultiPermit = requiredPermitNames.length > 1;
     const portalSel = !isMultiPermit && requiredPermits.length > 0 ? requiredPermits[0].portal_selection : null;
     const exactPermitName = isMultiPermit
@@ -2882,8 +2843,7 @@ function renderResults(d, job, city, state) {
       <button class="action-btn" onclick="downloadReport()">📄 Print / Save PDF</button>
     </div>
     <div class="action-row">
-      ${projectMaps ? `<button class="action-btn" data-maps-url="${esc(projectMaps)}" onclick="openSafeMapsUrl(this.dataset.mapsUrl)">🏠 Project Address</button>` : ''}
-      <button class="action-btn" data-maps-url="${esc(officeMaps)}" onclick="openPermitOfficeMaps(this.dataset.mapsUrl)">🏛️ Building Department</button>
+      <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
       <button class="action-btn" style="border-color:rgba(59,130,246,.4);color:var(--brand)" onclick="saveJobToTracker()">📁 Save to Job Tracker</button>
     </div>
     <div class="expiry-reminder-card" id="expiry-reminder">
@@ -3007,7 +2967,7 @@ function copyResult() {
   const fee = d.fee_range || 'Contact building dept';
   const timeline = d.approval_timeline?.simple || d.approval_timeline?.complex || 'Varies';
   const office = d.applying_office || '';
-  const phone = safePhoneForDisplay(d.apply_phone || '');
+  const phone = d.apply_phone || '';
   let t = `PERMIT SUMMARY — ${job} in ${city}, ${state}\n`;
   t += `Permit needed: ${permitName}\n`;
   t += `Fee: ${fee}\n`;
@@ -3254,7 +3214,7 @@ function emailResult() {
 function callPermitOffice() {
   if (!currentResult) return;
   const { city, state, data: d } = currentResult;
-  const phone = safePhoneForDisplay(d.apply_phone || '');
+  const phone = d.apply_phone || '';
   // Strip non-digit characters to check if it's a real phone number
   const digits = phone.replace(/\D/g, '');
   if (digits.length >= 10 && !phone.toLowerCase().startsWith('search')) {
@@ -3352,7 +3312,7 @@ function downloadReport() {
   const mistakes = (d.common_mistakes || []).slice(0, 4);
   const inspections = (d.inspections || []).slice(0, 6);
   const sources = (d.sources || []).filter(s => sourceUrl(s)).slice(0, 5);
-  const phone = safePhoneForDisplay(d.apply_phone || '');
+  const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
   const offAddr = d.apply_address || '';
@@ -3486,7 +3446,7 @@ function printResult() {
   const tips = (d.pro_tips || []).slice(0, 4);
   const mistakes = (d.common_mistakes || []).slice(0, 4);
   const inspections = (d.inspections || []).slice(0, 6);
-  const phone = safePhoneForDisplay(d.apply_phone || '');
+  const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
   const offAddr = d.apply_address || '';
@@ -3675,7 +3635,7 @@ async function doLookup() {
   try {
     const res = await fetch('/api/permit', {
       method: 'POST', headers: getAuthHeaders(),
-      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, address, job_category: jobCategory })
+      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, job_category: jobCategory })
     });
     stopProgress();
     const data = await res.json();

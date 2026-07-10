@@ -37,7 +37,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-from typing import Any
 from research_engine import (
     research_permit,
     build_google_maps_url,
@@ -61,17 +60,10 @@ except (TypeError, ValueError):
     from api.research_engine import classify_scope_required_permits as _real_classify_scope_required_permits
     classify_scope_required_permits = _real_classify_scope_required_permits
 
-from scope_contract import build_scope_contract, build_scope_facts_v2, build_scope_facts_v3, build_scope_facts_v4, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, filter_scope_contradicted_companion_warnings, is_vehicle_lift_scope, sanitize_result_for_scope_contract
+from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, sanitize_result_for_scope_contract
 from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
 from trade_authority_routing import apply_trade_authority_routing
 from decision_resolver import is_input_rejection, resolve_customer_decision
-from family_reconciliation_gate import apply_family_reconciliation_gate
-from ahj_locality_resolver import apply_ahj_locality_resolution
-from ahj_identity_guard import apply_ahj_identity_guard
-from public_packet import PacketInvariantError, apply_public_packet_projection, apply_render_parity_seal
-from closed_world_decision import apply_closed_world_customer_contract
-from live100_fable5_final_gate import apply_fable5_final_customer_gate
-from customer_pipeline import CustomerPipelineContext, run_pipeline_through_projection
 try:
     from v231_decision_cells import reconcile_v231_result as _reconcile_v231_result, resolve_v231_cell as _resolve_v231_cell
 except ImportError:  # package import path in some tests
@@ -79,7 +71,7 @@ except ImportError:  # package import path in some tests
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from filing_packet_reconciler import ensure_required_filing_rows
 from residential_universal_gate import apply_residential_universal_gate
-from permit_model import build_permit_package, project_permit_package, validate_customer_view, normalize_family, default_name, family_label
+from permit_model import build_permit_package, project_permit_package, validate_customer_view
 from openai import OpenAI as _OpenAI
 import google.generativeai as _genai
 import requests as _requests
@@ -107,32 +99,6 @@ def _canonical_primary_scope_label(detected) -> str:
 def detect_primary_scope(job_type: str) -> str:
     """Canonical server-facing wrapper around research_engine.detect_primary_scope."""
     return _canonical_primary_scope_label(_detect_primary_scope_raw(job_type or ""))
-
-
-def canonical_request_job_category(job_type: str, city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> str:
-    """Return the canonical request category for runtime, cache, and telemetry.
-
-    Client-provided labels are advisory but still matter for ambiguous scopes.
-    The unhinted scope contract wins only when visible job text clearly says
-    residential or commercial, so a stale/default label cannot contaminate the
-    runtime request, cache key, or customer-boundary telemetry.
-    """
-    raw = str(job_category or "").strip().lower()
-    if raw not in {"residential", "commercial"}:
-        raw = ""
-    contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
-    try:
-        unhinted_contract = build_scope_contract(contract_job_type, city, state, job_category=None, vertical=explicit_vertical)
-        unhinted_category = str((unhinted_contract or {}).get("category") or "").strip().lower()
-        if unhinted_category in {"residential", "commercial"}:
-            return unhinted_category
-        contract = build_scope_contract(contract_job_type, city, state, job_category=raw or None, vertical=explicit_vertical)
-        category = str((contract or {}).get("category") or "").strip().lower()
-        if category in {"residential", "commercial"}:
-            return category
-    except Exception:
-        pass
-    return raw
 
 # Module-level AI clients for /api/chat. Keep import/test/runtime startup safe
 # in environments where only Gemini or deterministic fallbacks are configured.
@@ -605,29 +571,9 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
     ).lower().strip()
 
     def is_commercial_ti_result(value: dict) -> bool:
-        text = " ".join(str(value.get(k) or "") for k in ("permit_name", "permit_type", "permit_kind", "job_summary")).lower()
-        scope_category = str((scope_contract or {}).get("category") or (scope_contract or {}).get("segment") or "").lower().strip()
-        scope_family = str((scope_contract or {}).get("family") or "").lower().strip()
-        structured_commercial = (
-            primary_scope.startswith("commercial")
-            or primary_scope in {"multifamily", "change_of_occupancy"}
-            or scope_category == "commercial"
-            or scope_family.startswith("commercial")
-        )
-        if structured_commercial:
+        text = " ".join(str(value.get(k) or "") for k in ("permit_name", "permit_type", "job_summary")).lower()
+        if primary_scope.startswith("commercial") or primary_scope in {"multifamily", "change_of_occupancy"}:
             return True
-        # Live100 no-neuter guard: residential-veto first.  Residential packages
-        # such as bath remodels and ADUs can contain broad words like
-        # "addition/remodel"; never let those generic substrings inject the
-        # commercial-TI timeline unless a commercial signal above has won.
-        structured_residential = (
-            primary_scope.startswith("residential")
-            or scope_category == "residential"
-            or scope_family.startswith("residential")
-            or bool(re.search(r"\b(?:single[-\s]?family|dwelling|adu|accessory\s+dwelling|residential)\b", text, re.I))
-        )
-        if structured_residential and not re.search(r"\b(?:commercial|tenant[-\s]?(?:improvement|finish|buildout)|retail|restaurant|bar|clinic|medical|dental|warehouse|industrial)\b", text, re.I):
-            return False
         return any(term in text for term in ("commercial", "tenant improvement", "buildout", "build-out", "interior alteration"))
 
     def has_internal(text: str) -> bool:
@@ -675,7 +621,6 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             value = re.sub(r"\bsource-backed\b", "official-source", value, flags=re.I)
             value = re.sub(r"\bneeds_verification\b", "confirm with the listed department", value, flags=re.I)
             value = re.sub(r"\bfail[_\s-]?closed\b", "not shown", value, flags=re.I)
-            value = re.sub(r"\bUNKNOWN\b", "unverified", value)
             value = re.sub(r"\bpending(?:[_\s-]*(?:active[_\s-]*)?retrieval|view|lookup)?\b", "not yet published", value, flags=re.I)
             if not value.lower().startswith(("http://", "https://")):
                 value = re.sub(r"(?<=\b[A-Z]{2})\.(?=[A-Za-z])", ". ", value)
@@ -751,13 +696,10 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
                     timeline["complex"] = "Longer plan-review cycle if structural, accessibility, fire/life-safety, health, zoning, or trade-plan corrections are triggered."
                 cleaned_result["approval_timeline"] = timeline
         if scope_contract:
-            # Production/customer rendering must scrub leaked forbidden-scope text
-            # instead of turning a lookup into a 500. Unit tests that need hard
-            # failure should call sanitize_result_for_scope_contract directly.
             cleaned_result = sanitize_result_for_scope_contract(
                 cleaned_result,
                 scope_contract,
-                fail_on_removal_in_tests=False,
+                fail_on_removal_in_tests=not strip_internal_keys,
             )
             if strip_internal_keys:
                 cleaned_result.pop("_scope_contract", None)
@@ -846,14 +788,12 @@ _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
     "customer_headline", "customer_next_step", "summary", "job_summary", "scope_summary",
     "confidence", "confidence_level", "confidence_reason", "data_source", "county_fallback_note",
     "source_confidence", "source_support", "local_form_known", "apply_url_known", "degraded_sources",
-    "render_seal_status", "render_seal_reason",
     "requirements", "documents_needed", "what_to_bring", "next_steps", "pro_tips",
     "common_mistakes", "watch_out", "checklist", "inspections", "inspect_checklist",
     "inspection_requirements", "inspection_booking", "fee_range", "fee_estimate",
     "total_cost_estimate", "fee_calculator", "approval_timeline", "timeline",
     "applying_office", "building_dept_name", "building_dept_phone", "apply_phone",
     "apply_address", "apply_google_maps", "apply_url", "apply_path", "online_application_url",
-    "job_address", "job_maps_url",
     "source_urls", "sources", "claim_citations", "warnings", "disclaimer",
     "permit_routing_map", "permit_authority_cards", "jurisdiction_routing_summary",
     "required_permit_names", "required_permit_families", "required_permit_segments", "required_permit_summary",
@@ -878,37 +818,6 @@ _INTERNAL_CUSTOMER_FIELD_NAMES = frozenset({
 _PUBLIC_KEEP_EMPTY_FIELDS = frozenset({
     "apply_url", "apply_phone", "online_application_url", "source_urls", "sources", "claim_citations",
 })
-
-
-def _sanitize_job_address(value: Any, *, max_len: int = 240) -> str:
-    """Return display-safe project address text without using it as AHJ data."""
-    text = re.sub(r"[\x00-\x1f\x7f]+", " ", str(value or ""))
-    text = re.sub(r"\s+", " ", text).strip()
-    return text[:max_len]
-
-
-def _safe_google_maps_url(value: Any) -> str:
-    text = str(value or "").strip()
-    if not text.startswith("https://www.google.com/maps"):
-        return ""
-    if re.search(r"[\s<>\"']", text):
-        return ""
-    return text
-
-
-def _apply_job_address_fields(result: dict, city: str = "", state: str = "") -> dict:
-    """Attach project-address maps without contaminating permit-office fields."""
-    if not isinstance(result, dict):
-        return {}
-    out = result
-    job_address = _sanitize_job_address(out.get("job_address") or out.get("address") or "")
-    if not job_address:
-        out.pop("job_maps_url", None)
-        out.pop("job_address", None)
-        return out
-    out["job_address"] = job_address
-    out["job_maps_url"] = _safe_google_maps_url(out.get("job_maps_url")) or build_google_maps_url(city, state, address=job_address)
-    return out
 
 
 @dataclass(frozen=True)
@@ -1264,415 +1173,6 @@ _CANONICAL_AHJ_APPLY_URLS: dict[tuple[str, str], dict[str, object]] = {
 }
 
 
-def _url_status_soft_404(body: object) -> bool:
-    text = str(body or "").lower()
-    return bool(re.search(r"\b(?:404\s*-\s*file or directory not found|404\s+not\s+found|page\s+not\s+found|url\s+requested\s+wasn'?t\s+found|resource\s+you\s+are\s+looking\s+for\s+might\s+have\s+been\s+removed)\b", text, re.I))
-
-
-def classify_customer_url_status(http_status: int | None = None, error: str | None = None, body: object = "") -> str:
-    """Offline URL reachability semantics for customer filing paths.
-
-    This function is deliberately pure: it classifies evidence from an offline
-    sweep/cache and is never used to perform request-time reachability checks.
-    """
-    error_lc = str(error or "").lower()
-    if any(token in error_lc for token in ("nxdomain", "name_not_resolved", "name not resolved", "err_name_not_resolved")):
-        return "broken"
-    if http_status in {404, 410}:
-        return "broken"
-    if http_status is not None and 200 <= int(http_status) < 400:
-        return "broken" if _url_status_soft_404(body) else "ok"
-    if http_status in {403, 429} or (http_status is not None and 500 <= int(http_status) < 600):
-        return "unknown"
-    if error_lc:
-        if any(token in error_lc for token in ("timeout", "timed out", "tls", "ssl", "reset", "refused", "blocked", "forbidden", "429")):
-            return "unknown"
-        return "unknown"
-    return "unknown"
-
-
-_LIVE100_BROKEN_PRIMARY_URLS = {
-    "https://aca-prod.accela.com/portland",
-    "https://aca-prod.accela.com/nashville",
-    "https://www.boston.gov/departments/inspectional-services/apply-permit-online",
-    "https://www.houstonpermittingcenter.org/online-permitting",
-    "https://www.cityofmadison.com/building-inspection/permits",
-    "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department/bseed-online-services",
-    "https://www.burlingtonvt.gov/dpz",
-    "https://www.santafenm.gov/community_development/permits",
-    "https://santafenm.gov/community_development/permits",
-    "https://www.charleston-sc.gov/1075/inspections",
-    "https://www.littlerock.gov/city-administration/departments/planning-and-development/building-codes",
-    "https://littlerock.gov/city-administration/departments/planning-and-development/building-codes",
-    "https://www.clarkcountynv.gov/business/building/permits",
-}
-
-
-_LIVE100_OFFICIAL_FILING_PATH_REPAIRS: dict[tuple[str, str], dict[str, object]] = {
-    ("portland", "or"): {
-        "apply_url": "https://devhub.portlandoregon.gov/",
-        "source_urls": ["https://www.portland.gov/ppd/get-permit/apply-permits", "https://devhub.portlandoregon.gov/"],
-        "title": "City of Portland Permitting & Development",
-        "evidence": "Official Portland.gov Apply for permits page links to DevHub for online permit applications.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "ok",
-    },
-    ("nashville", "tn"): {
-        "apply_url": "https://epermits.nashville.gov/",
-        "source_urls": ["https://www.nashville.gov/departments/codes/construction-and-permits/e-permits-system", "https://epermits.nashville.gov/"],
-        "title": "Metro Nashville Codes ePermits",
-        "evidence": "Official Nashville.gov Codes E-Permits page links to epermits.nashville.gov for permit applications/inquiry.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "ok",
-    },
-    ("boston", "ma"): {
-        "apply_url": "https://www.boston.gov/boston-permitting",
-        "source_urls": ["https://www.boston.gov/boston-permitting", "https://onlinepermitsandlicenses.boston.gov/isdpermits/"],
-        "title": "City of Boston Permitting / Inspectional Services",
-        "evidence": "Official Boston permitting page links to the Inspectional Services Online Portal.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "ok",
-    },
-    ("houston", "tx"): {
-        "apply_url": "https://permits.houstontx.gov/",
-        "source_urls": ["https://permits.houstontx.gov/", "https://www.houstonpublicworks.org/houston-permitting-center"],
-        "title": "City of Houston Permit Portal",
-        "evidence": "Official City of Houston Permit Portal states users can apply for permits, print permits, make payments, and request inspections.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "ok",
-    },
-    ("madison", "wi"): {
-        "apply_url": "https://www.cityofmadison.com/development-services-center/permits",
-        "source_urls": ["https://www.cityofmadison.com/development-services-center/permits", "https://www.cityofmadison.com/dpced/building-inspection"],
-        "title": "City of Madison Development Services Center Permits",
-        "evidence": "Official City of Madison Development Services Center permits page replaces the stale Building Inspection /permits path.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "ok",
-    },
-    ("detroit", "mi"): {
-        "apply_url": "https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review",
-        "source_urls": ["https://detroitmi.gov/departments/buildings-safety-engineering-and-environmental-department-bseed/bseed-divisions/permits-plan-review"],
-        "title": "City of Detroit BSEED Permits & Plan Review",
-        "evidence": "Official Detroit BSEED Permits & Plan Review page documents online permit application/ePlans steps.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "ok",
-    },
-    ("burlington", "vt"): {
-        "apply_url": "https://burlingtonvt.portal.opengov.com/",
-        "source_urls": ["https://www.burlingtonvt.gov/548/Permit-Applications-and-Forms", "https://burlingtonvt.portal.opengov.com/"],
-        "title": "City of Burlington Permitting Portal",
-        "evidence": "Official Burlington Permit Applications and Forms page says all permit applications/forms are online at the City permitting portal.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "unknown",
-    },
-    ("santa fe", "nm"): {
-        "apply_url": "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home",
-        "source_urls": ["https://santafenm.gov/land-use/building-permits", "https://santafenm-energovpub.tylerhost.net/Apps/selfservice#/home"],
-        "title": "City of Santa Fe Building Permits / CSS",
-        "evidence": "Official City of Santa Fe Building Permits page links to Citizen Self-Service for online permitting.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "ok",
-    },
-    ("charleston", "sc"): {
-        "apply_url": "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home",
-        "source_urls": ["https://www.charleston-sc.gov/856/Permit-Center", "https://egcss.charleston-sc.gov/energov_prod/selfservice#/home"],
-        "title": "City of Charleston Permit Center / Customer Self Service",
-        "evidence": "Official Charleston Permit Center page links to Customer Self Service for permit submittal and inspections.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "ok",
-    },
-    ("little rock", "ar"): {
-        "apply_url": "https://littlerock.gov/government/city-departments/planning-and-development/divisions/",
-        "source_urls": ["https://littlerock.gov/government/city-departments/planning-and-development/divisions/"],
-        "title": "City of Little Rock Planning & Development / Building Codes",
-        "evidence": "Official Little Rock Planning & Development divisions page identifies Building Codes as issuing construction permits and providing plan review/inspection for building, plumbing, mechanical, and electrical work.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "ok",
-    },
-    ("las vegas", "nv"): {
-        "apply_url": "https://aca-prod.accela.com/clarkco/Cap/CapHome.aspx?module=Building&TabName=Building",
-        "source_urls": ["https://www.clarkcountynv.gov/government/departments/building___fire_prevention/", "https://aca-prod.accela.com/clarkco/Cap/CapHome.aspx?module=Building&TabName=Building"],
-        "title": "Clark County Building Department / Accela Citizen Access",
-        "evidence": "Official Clark County Building Department page and Clark County Accela Citizen Access Building module replace the stale /business/building/permits path.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "ok",
-    },
-    ("kansas city", "ks"): {
-        "apply_url": "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits",
-        "source_urls": ["https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection/Building-Inspection-Permits", "https://www.wycokck.org/Departments/Neighborhood-Resource-Center/Building-Inspection"],
-        "title": "Unified Government of Wyandotte County/Kansas City, KS Building Inspection Permits",
-        "evidence": "Official Wycokck Building Inspection Permits page covers residential, commercial, electrical, mechanical, plumbing, and demolition permits.",
-        "verified_on": "2026-07-01",
-        "reachability_status": "unknown",
-    },
-    ("cheyenne", "wy"): {
-        "apply_url": "https://www.cheyennecity.org/Your-Government/Departments/Compliance-Department/Building-Permitting-Licensing",
-        "source_urls": ["https://www.cheyennecity.org/Your-Government/Departments/Compliance-Department/Building-Permitting-Licensing"],
-        "title": "City of Cheyenne Building Permitting & Licensing",
-        "evidence": "Official Cheyenne Building Permitting & Licensing page is the local filing/permit office path for commercial building, electrical, mechanical, plumbing, gas, and fire/environmental permit coordination.",
-        "verified_on": "2026-07-03",
-        "reachability_status": "unknown",
-    },
-    ("springfield", "il"): {
-        "apply_url": "https://www.springfield.il.us/Departments/PublicWorks/ApplicationPermits/OnlinePermits/2025/BldgPermitApp2025.pdf",
-        "source_urls": [
-            "https://www.springfield.il.us/Departments/PublicWorks/PublicWorksDefault.aspx?ApplicationsPermits=",
-            "https://www.springfield.il.us/Departments/PublicWorks/ApplicationPermits/OnlinePermits/2025/BldgPermitApp2025.pdf",
-        ],
-        "title": "City of Springfield Building & Zoning Department",
-        "evidence": "Official springfield.il.us Public Works/Building & Zoning application materials provide the local building permit application path.",
-        "verified_on": "2026-07-05",
-        "reachability_status": "unknown",
-        "trusted_missing_filing_path": True,
-    },
-    ("st louis", "mo"): {
-        "apply_url": "https://www.stlouis-mo.gov/government/departments/public-safety/fire/fire-prevention-permits-information.cfm",
-        "source_urls": ["https://www.stlouis-mo.gov/government/departments/public-safety/fire/fire-prevention-permits-information.cfm"],
-        "title": "City of St. Louis Fire Prevention Permits",
-        "evidence": "Official stlouis-mo.gov Fire Prevention Permits page documents City fire prevention permit filing information.",
-        "verified_on": "2026-07-05",
-        "reachability_status": "ok",
-        "trusted_missing_filing_path": True,
-    },
-    ("augusta", "ga"): {
-        "apply_url": "https://www.augustaga.gov/2101/Building-Permits",
-        "source_urls": ["https://www.augustaga.gov/1105/Permit-Information", "https://www.augustaga.gov/2101/Building-Permits"],
-        "title": "Augusta GA Building Permits",
-        "evidence": "Official Augusta GA permit pages document electrical/building permit requirements and online application intake.",
-        "verified_on": "2026-07-05",
-        "reachability_status": "ok",
-        "trusted_missing_filing_path": True,
-    },
-    ("rapid city", "sd"): {
-        "apply_url": "https://permits.rcgov.org/eTRAKiT/",
-        "source_urls": ["https://www.rcgov.org/departments/community-planning-development/building-permits-inspections-information.html", "https://permits.rcgov.org/eTRAKiT/"],
-        "title": "City of Rapid City Building Services / eTRAKiT",
-        "evidence": "Official Rapid City building permit page and eTRAKiT portal provide local permit intake.",
-        "verified_on": "2026-07-05",
-        "reachability_status": "unknown",
-        "trusted_missing_filing_path": True,
-    },
-    ("mobile", "al"): {
-        "apply_url": "https://www.buildmobile.org/permitting/",
-        "source_urls": ["https://www.buildmobile.org/permitting/", "https://www.buildmobile.org/forms-and-applications/"],
-        "title": "City of Mobile Build Mobile Permitting & Inspections",
-        "evidence": "Official Build Mobile permitting and forms pages provide building permit application/intake information.",
-        "verified_on": "2026-07-05",
-        "reachability_status": "ok",
-        "trusted_missing_filing_path": True,
-    },
-    ("lexington", "ky"): {
-        "apply_url": "https://www.lexingtonky.gov/working/building-permits",
-        "source_urls": ["https://www.lexingtonky.gov/working/building-permits", "https://aca-prod.accela.com/lexky/Default.aspx"],
-        "title": "City of Lexington Building Permits / Online Portal",
-        "evidence": "Official Lexington building permits page links to one-stop permitting and the Accela online portal.",
-        "verified_on": "2026-07-05",
-        "reachability_status": "ok",
-        "trusted_missing_filing_path": True,
-    },
-    ("athens", "ga"): {
-        "apply_url": "https://www.accgov.com/135/Building-Permits-Inspections",
-        "source_urls": ["https://www.accgov.com/135/Building-Permits-Inspections", "https://www.accgov.com/7006/Solar-PV-Systems-Expedited-Permit-Proces"],
-        "title": "Athens-Clarke County Building Permits & Inspections",
-        "evidence": "Official Athens-Clarke County pages document building/electrical permits and residential Solar PV expedited permit materials.",
-        "verified_on": "2026-07-05",
-        "reachability_status": "ok",
-        "trusted_missing_filing_path": True,
-    },
-    ("albuquerque", "nm"): {
-        "apply_url": "https://www.cabq.gov/planning/online-planning-permitting-applications",
-        "source_urls": ["https://www.cabq.gov/planning/online-planning-permitting-applications", "https://www.cabq.gov/planning/building-safety-division"],
-        "title": "City of Albuquerque Online Planning, Permitting & Applications",
-        "evidence": "Official CABQ online planning/permitting page and Building Safety Division cover building permits for remodeling work.",
-        "verified_on": "2026-07-05",
-        "reachability_status": "ok",
-        "trusted_missing_filing_path": True,
-    },
-    ("harrisburg", "pa"): {
-        "apply_url": "https://harrisburgpa.gov/services/codes/documents_forms.php",
-        "source_urls": ["https://harrisburgpa.gov/services/codes/index.php", "https://harrisburgpa.gov/services/codes/documents_forms.php"],
-        "title": "City of Harrisburg Bureau of Codes Permits and Forms",
-        "evidence": "Official Harrisburg Bureau of Codes and documents/forms pages provide building, electrical, and plumbing permit forms/intake information.",
-        "verified_on": "2026-07-05",
-        "reachability_status": "ok",
-        "trusted_missing_filing_path": True,
-    },
-}
-
-
-def _normalized_customer_url_key(url: object) -> str:
-    return _safe_customer_source_url(str(url or "")).rstrip("/").lower()
-
-
-def _live100_known_broken_url(url: object) -> bool:
-    return _normalized_customer_url_key(url) in _LIVE100_BROKEN_PRIMARY_URLS
-
-
-def _live100_repair_entry_for(city: str, state: str) -> dict[str, object] | None:
-    return _LIVE100_OFFICIAL_FILING_PATH_REPAIRS.get(((city or "").lower().strip(), (state or "").lower().strip()))
-
-
-def _apply_live100_official_filing_path_repair(result: dict, city: str, state: str, job_type: str = "") -> dict:
-    """Repair known Live100 action-path rot without changing decisions/families.
-
-    This uses only evidence-gated official URLs gathered offline for the Live100
-    no-neuter pass. It never performs request-time network checks and never turns
-    a concrete REQUIRED/NOT_REQUIRED answer into AHJ-contact/VERIFY.
-    """
-    if not isinstance(result, dict):
-        return {}
-    if str(result.get("permit_decision") or "").upper().strip() != "REQUIRED" and result.get("permit_required") is not True:
-        return result
-    entry = _live100_repair_entry_for(city, state)
-    if not entry:
-        return result
-    primary_urls = []
-    for key in ("apply_url", "online_application_url"):
-        if result.get(key):
-            primary_urls.append(result.get(key))
-    apply_path = result.get("apply_path") if isinstance(result.get("apply_path"), dict) else {}
-    for key in ("portal_url", "url", "source_url"):
-        if apply_path.get(key):
-            primary_urls.append(apply_path.get(key))
-    has_primary = any(_safe_customer_source_url(url) for url in primary_urls)
-    should_repair = any(_live100_known_broken_url(url) for url in primary_urls)
-    # KCK/Wyandotte resolver miss: existing output had a concrete REQUIRED answer
-    # but no source/apply path; repairing here is an alias/keying fallback, not a
-    # decision override.  Do not promote generic missing-URL outputs in other
-    # cities; legacy tests rely on honest no-exact-portal copy when no official
-    # URL was present in the frozen evidence.
-    if not should_repair and (city or "").lower().strip() == "kansas city" and (state or "").upper().strip() == "KS":
-        text = _result_text_inventory(result)
-        should_repair = (not has_primary) and ("wyandotte" in text or "kansas city, kansas" in text or "kck" in text or "water heater" in (job_type or "").lower())
-    if not should_repair:
-        text = _result_text_inventory(result).lower()
-        raw_entry_sources = entry.get("source_urls")
-        entry_source_urls = raw_entry_sources if isinstance(raw_entry_sources, list) else []
-        entry_urls = [str(entry.get("apply_url") or "").lower(), *[str(u or "").lower() for u in entry_source_urls]]
-        should_repair = (not has_primary) and any(url and url in text for url in entry_urls)
-    if not should_repair and entry.get("trusted_missing_filing_path"):
-        should_repair = not has_primary
-    if not should_repair:
-        return result
-
-    apply_url = _safe_customer_source_url(entry.get("apply_url") or "")
-    source_urls = [_safe_customer_source_url(url) for url in (entry.get("source_urls") or [])]
-    source_urls = [url for url in source_urls if url]
-    if not apply_url and source_urls:
-        apply_url = source_urls[0]
-    if not apply_url:
-        return result
-
-    degraded = list(result.get("degraded_sources") or []) if isinstance(result.get("degraded_sources"), list) else []
-    for url in primary_urls:
-        if _live100_known_broken_url(url):
-            degraded.append({
-                "url": _safe_customer_source_url(url),
-                "status": "broken",
-                "reason": "Offline Live100 link check returned deterministic 404/410 or equivalent stale path; official replacement/fallback is listed in apply_url/source_urls.",
-            })
-    if degraded:
-        result["degraded_sources"] = degraded
-
-    result["apply_url"] = apply_url
-    result["online_application_url"] = apply_url
-    result["apply_url_known"] = True
-    if not result.get("applying_office"):
-        result["applying_office"] = str(entry.get("title") or f"{city} permit office")
-    repaired_path = dict(apply_path or {})
-    repaired_path.update({
-        "channel": "online_portal" if not apply_url.lower().endswith(".pdf") else "pdf_or_paper_form",
-        "portal_url": apply_url,
-        "state": "RESOLVED_PORTAL",
-        "support_level": "official source verified",
-        "verification_note": "Official filing path repaired from an offline verified AHJ source; confirm the exact portal subcategory before final submission.",
-    })
-    result["apply_path"] = repaired_path
-
-    existing_source_urls = [url for url in (result.get("source_urls") or []) if isinstance(url, str)] if isinstance(result.get("source_urls"), list) else []
-    cleaned_existing = [url for url in existing_source_urls if not _live100_known_broken_url(url)]
-    merged_urls: list[str] = []
-    for url in [apply_url, *source_urls, *cleaned_existing]:
-        safe = _safe_customer_source_url(url)
-        if safe and safe not in merged_urls:
-            merged_urls.append(safe)
-    result["source_urls"] = merged_urls
-
-    sources = [src for src in (result.get("sources") or []) if isinstance(src, dict) and not _live100_known_broken_url(src.get("url") or src.get("source_url"))]
-    seen = {_safe_customer_source_url(src.get("url") or src.get("source_url") or "") for src in sources}
-    title = str(entry.get("title") or f"{city} permit office")
-    jurisdiction = ", ".join(part for part in (city, state) if part)
-    for url in merged_urls:
-        if url in seen:
-            continue
-        sources.insert(0, {
-            "url": url,
-            "title": title,
-            "publisher": title,
-            "source_type": "official_local",
-            "jurisdiction": jurisdiction,
-            "snippet": str(entry.get("evidence") or "Official AHJ filing/source path verified offline."),
-            "date": str(entry.get("verified_on") or "2026-07-01"),
-        })
-        seen.add(url)
-    result["sources"] = sources
-
-    source_support = result.get("source_support") if isinstance(result.get("source_support"), dict) else {}
-    source_support = dict(source_support)
-    source_support["filing_path_status"] = "repaired_official_fallback"
-    source_support["filing_path_reachability"] = str(entry.get("reachability_status") or "unknown")
-    source_support["filing_path_verified_on"] = str(entry.get("verified_on") or "2026-07-01")
-    source_support["filing_path_evidence"] = str(entry.get("evidence") or "Official AHJ filing/source path verified offline.")
-    source_support["local_decision_evidence_urls"] = list(merged_urls)
-    source_support["display_source_count"] = len(merged_urls)
-    source_support["requirement_source_count"] = len(merged_urls)
-    source_support["filing_source_count"] = len(merged_urls)
-    source_support["has_source_backed_evidence"] = True
-    source_support["has_official_source"] = True
-    source_support["apply_url_known"] = True
-    source_support["local_form_known"] = True
-    result["source_support"] = source_support
-
-    next_step = str(result.get("customer_next_step") or "")
-    if "No exact local filing portal is attached" in next_step or "contact_ahj" in str(apply_path.get("channel") or "").lower():
-        permit_names = ", ".join(
-            str(row.get("permit_name") or row.get("permit_type") or "").strip()
-            for row in result.get("permits_required") or []
-            if isinstance(row, dict) and str(row.get("permit_name") or row.get("permit_type") or "").strip()
-        )
-        result["customer_next_step"] = (
-            f"Use the official filing path listed for {title} and file the required permit categories"
-            f"{': ' + permit_names if permit_names else ''}. Confirm exact portal subcategories before final submission."
-        )
-    return result
-
-
-def _apply_residential_commercial_timeline_veto(result: dict, job_type: str = "", job_category: str | None = None, scope_contract: dict | None = None) -> dict:
-    if not isinstance(result, dict):
-        return {}
-    timeline = result.get("approval_timeline")
-    if not isinstance(timeline, dict):
-        return result
-    simple = str(timeline.get("simple") or "")
-    if "commercial ti/addition/remodel scopes usually require plan review" not in simple.lower():
-        return result
-    category = str(job_category or (scope_contract or {}).get("category") or (scope_contract or {}).get("segment") or "").lower().strip()
-    family = str((scope_contract or {}).get("family") or "").lower().strip()
-    text = " ".join(str(result.get(k) or "") for k in ("permit_kind", "permit_name", "permit_type", "job_summary")).lower()
-    if category == "commercial" or family.startswith("commercial") or re.search(r"\bcommercial\b|tenant[-\s]?(?:improvement|buildout|finish)|retail|restaurant|bar|warehouse|industrial|clinic|medical|dental", text, re.I):
-        return result
-    residential_signal = category == "residential" or family.startswith("residential") or re.search(r"\b(?:residential|single[-\s]?family|dwelling|adu|accessory\s+dwelling|bath(?:room)?\s+remodel|porch|home)\b", f"{job_type} {text}", re.I)
-    if not residential_signal:
-        return result
-    repaired = dict(timeline)
-    if re.search(r"\b(?:adu|accessory\s+dwelling|dwelling\s+conversion|basement\s+adu)\b", f"{job_type} {text}", re.I):
-        repaired["simple"] = "Residential ADU/conversion scopes usually require plan review; expect several business days to a few weeks depending on completeness, egress/life-safety details, and local queue."
-    else:
-        repaired["simple"] = "Residential remodel/trade scopes may be issued over the counter or after light plan review; timing depends on complete submittal details and the local permit queue."
-    result["approval_timeline"] = repaired
-    return result
-
-
 def _trusted_canonical_apply_url_for_request(url: str, city: str, state: str) -> bool:
     entry = _CANONICAL_AHJ_APPLY_URLS.get(((city or "").lower().strip(), (state or "").lower().strip()))
     if not (isinstance(entry, dict) and entry.get("trusted_canonical")):
@@ -1743,29 +1243,12 @@ def _customer_apply_url_fallback_from_sources(result: dict, city: str, state: st
         result["apply_url"] = existing
         result.setdefault("online_application_url", existing)
         return result
-    apply_path_existing_raw = result.get("apply_path")
-    apply_path_existing = apply_path_existing_raw if isinstance(apply_path_existing_raw, dict) else {}
-    if (
-        str(apply_path_existing.get("state") or "").upper() in {"HONEST_FALLBACK", "CONTACT_AHJ"}
-        and not _safe_customer_source_url(apply_path_existing.get("portal_url") or apply_path_existing.get("url") or "")
-    ):
-        # Public customer outputs may carry official source URLs that prove the
-        # requirement but are not filing paths.  Preserve an explicit fallback
-        # instead of making re-finalization promote a generic department page.
-        return result
 
     candidates: list[tuple[int, str]] = []
 
-    def add_candidate(url: object, priority: int, *, allow_pdf: bool = False) -> None:
+    def add_candidate(url: object, priority: int) -> None:
         safe = _safe_customer_source_url(str(url or ""))
         if not safe:
-            return
-        lowered = safe.lower()
-        # Generic source evidence PDFs can document a requirement without being
-        # the filing path.  Only preserve PDF filing URLs when they were already
-        # explicit apply-path/apply-url evidence, not when refinalizing from a
-        # customer output's source list.
-        if lowered.endswith(".pdf") and not allow_pdf:
             return
         authority = classify_source_authority(safe, city, state, result=result)
         if not (authority.get("local_decision_evidence") and authority.get("display_allowed")):
@@ -1774,15 +1257,16 @@ def _customer_apply_url_fallback_from_sources(result: dict, city: str, state: st
             return
         if _apply_url_segment_mismatch(safe, city, state, result):
             return
+        lowered = safe.lower()
         portal_bonus = 0 if any(token in lowered for token in ("permit", "accela", "portal", "aca", "develop", "civic", "opengov", "online")) else 20
         candidates.append((priority + portal_bonus, safe))
 
     apply_path = result.get("apply_path")
     if isinstance(apply_path, dict):
-        add_candidate(apply_path.get("portal_url") or apply_path.get("url") or apply_path.get("source_url"), 0, allow_pdf=True)
+        add_candidate(apply_path.get("portal_url") or apply_path.get("url") or apply_path.get("source_url"), 0)
     for citation in result.get("claim_citations") or []:
         if isinstance(citation, dict) and str(citation.get("field") or "").lower() in {"apply_url", "online_application_url", "apply_path"}:
-            add_candidate(citation.get("source_url"), 5, allow_pdf=True)
+            add_candidate(citation.get("source_url"), 5)
     for source in result.get("sources") or []:
         if isinstance(source, dict):
             add_candidate(source.get("url") or source.get("source_url"), 10)
@@ -2149,17 +1633,6 @@ def ensure_required_filing_path_contract(result: dict, city: str, state: str, jo
     }
     role_summary = _source_role_bundle(result, city, state, job_type)
     apply_path = dict(result.get("apply_path") or {}) if isinstance(result.get("apply_path"), dict) else {}
-    if (
-        str(apply_path.get("state") or "").upper() == "HONEST_FALLBACK"
-        and str(apply_path.get("support_level") or "").lower().strip() == "not available"
-        and not _safe_customer_source_url(apply_path.get("portal_url") or apply_path.get("url") or "")
-    ):
-        # Idempotency: an already-published public ViewModel may intentionally
-        # carry official source URLs while stating no exact filing portal is
-        # attached.  Do not promote those generic source URLs on re-finalization.
-        result["apply_url"] = None
-        result["online_application_url"] = None
-        return result
     candidate_url = _safe_customer_source_url(
         result.get("apply_url")
         or result.get("online_application_url")
@@ -2296,54 +1769,11 @@ def _pa20_add_trigger_conditions_to_visible_floor_rows(result: dict, job_type: s
     return result
 
 
-def _pa20_negative_scope_not_required(job_type: str) -> bool:
-    """True for explicit no-overreach scopes that should not stay hard REQUIRED."""
-    text = (job_type or "").lower()
-    same_footprint_private_driveway = (
-        re.search(r"\bdriveway\b", text)
-        and re.search(r"\bsame\s+footprint\b", text)
-        and re.search(r"\bprivate\s+property\b", text)
-        and not re.search(r"\b(?:right[-\s]?of[-\s]?way|\brow\b|curb|sidewalk|apron|drainage|stormwater|grading|widen|expand|new\s+driveway)\b", text)
-    )
-    finish_only_no_mep_no_seating = (
-        ("finish" in text or "refresh" in text)
-        and "no mep" in text
-        and "no seating" in text
-        and ("no occupancy" in text or "no use change" in text or "interior refresh" in text or "finishes only" in text)
-        and not re.search(r"\b(?:new\s+(?:wall|partition|sink|hood|circuit|panel)|relocat|structural|exterior|historic|fire\s+alarm|sprinkler)\b", text)
-    )
-    like_for_like_minor_swap = (
-        re.search(r"\b(?:like[-\s]?for[-\s]?like|same\s+location|same\s+size)\b", text)
-        and re.search(r"\b(?:replace|replacement|swap)\b", text)
-        and re.search(r"\b(?:fixture|toilet|vanity|faucet|cabinet|countertop|flooring|carpet|drywall|interior\s+door)\b", text)
-        and not re.search(r"\b(?:relocat|new\s+(?:drain|supply|circuit|panel|wall|opening)|disconnect|structural|exterior|storefront|sign|signage|historic|gas\s+water\s+heater|hvac|furnace|heat\s+pump)\b", text)
-    )
-    small_detached_shed_exempt = (
-        re.search(r"\b(?:denver|\bco\b|colorado)\b", text)
-        and re.search(r"\b(?:10x10|100\s+square\s+feet|100\s*sf)\b", text)
-        and re.search(r"\bdetached\s+storage\s+shed\b", text)
-        and re.search(r"\bno\s+foundation\b", text)
-        and re.search(r"\bno\s+electrical\b", text)
-        and re.search(r"\bno\s+plumbing\b", text)
-        and re.search(r"\bno\s+heat\b", text)
-    )
-    paint_trim_same_size = (
-        re.search(r"\bpaint\b", text)
-        and re.search(r"\b(?:trim\s+boards?|siding)\b", text)
-        and re.search(r"\bsame\s+size\b", text)
-        and not re.search(r"\b(?:historic|landmark|structural|new\s+opening|alter\s+opening|load[-\s]?bearing|facade\s+alteration|stucco|sheathing)\b", text)
-    )
-    return bool(same_footprint_private_driveway or finish_only_no_mep_no_seating or like_for_like_minor_swap or small_detached_shed_exempt or paint_trim_same_size)
-
-
 def _pa20_scope_signal_status_row(family: str, status: str, job_type: str, city: str, state: str) -> dict:
     profile = {"text": (job_type or "").lower(), "triggered_families": {family}}
     row = _live60_make_row(family, profile, city, state)
     row["permit_type"] = _pa20_canonical_permit_type_for_family(family, row, job_type)
     row["filing_family"] = family
-    row["family"] = family
-    row["kind"] = _pa20_family_label(family, row)
-    row["display_family"] = _pa20_family_label(family, row)
     row["scope_trigger"] = f"scope_signal_floor_{family}"
     row["derived_from"] = ["scope_signals_family_floor"]
     row["trigger_condition"] = f"When the described scope includes {family} work or AHJ confirms the {family} trigger from the request text."
@@ -2361,8 +1791,6 @@ def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str
     """Additive Phase-4 wiring: ScopeSignals floor controls visibility, not hiding."""
     if not isinstance(result, dict):
         return {}
-    if _pa20_negative_scope_not_required(job_type):
-        return _live60_apply_not_required_contract(result, job_type, city, state)
     try:
         from scope_signals import detect_scope_signals, derive_project_archetypes, derive_family_floor, resolve_primary_family
     except Exception:
@@ -2376,18 +1804,7 @@ def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str
         return result
     archetypes = derive_project_archetypes(signals)
     floor = derive_family_floor(signals, archetypes)
-    floor_text = (job_type or "").lower()
-    if re.search(r"\bheat\s+pump\s+dryer\b|\b240\s*volt\s+outlet\b", floor_text):
-        floor = {"electrical": "REQUIRED"}
-    if re.search(r"\bgrease\s+interceptor\s+only\b", floor_text) and re.search(r"\bexisting\s+restaurant\s+plumbing\b", floor_text):
-        floor = {"plumbing": "REQUIRED", "health": "REQUIRED", "wastewater": "VERIFY"}
-    if re.search(r"\btransformer\s+pad\b", floor_text) or (re.search(r"\bev\s+chargers?\b", floor_text) and re.search(r"\bparking\s+lot\b", floor_text)):
-        floor.setdefault("grading", "VERIFY")
     primary = resolve_primary_family(signals, archetypes, floor, request_text=job_type or "")
-    if re.search(r"\bheat\s+pump\s+dryer\b|\b240\s*volt\s+outlet\b", floor_text):
-        primary = "electrical"
-    if re.search(r"\bgrease\s+interceptor\s+only\b", floor_text) and re.search(r"\bexisting\s+restaurant\s+plumbing\b", floor_text):
-        primary = "plumbing"
     out = result
     if not floor:
         signal_ids = {getattr(signal, "signal_id", "") for signal in signals}
@@ -2482,234 +1899,15 @@ def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str
             out["permit_kind"] = original_permit_kind
     else:
         out["related_permits"] = related_rows
+    out["_scope_signal_primary_family"] = primary
+    out["_scope_signal_family_floor"] = floor
     return out
-
-
-def _load_authority_fixes() -> dict[tuple[str, str], dict]:
-    """Load targeted authority/action-path repairs from data instead of code hardcoding."""
-    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "authority_fixes.json")
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            payload = json.load(fh)
-    except Exception:
-        return {}
-    fixes: dict[tuple[str, str], dict] = {}
-    entries = payload.get("authority_fixes") if isinstance(payload, dict) else payload
-    if not isinstance(entries, list):
-        return fixes
-    for item in entries:
-        if not isinstance(item, dict):
-            continue
-        city_key = str(item.get("city") or "").strip().lower()
-        state_key = str(item.get("state") or "").strip().upper()
-        office = str(item.get("office") or "").strip()
-        url = str(item.get("url") or "").strip()
-        if not city_key or not state_key or not office or not url:
-            continue
-        fixes[(city_key, state_key)] = {
-            "office": office,
-            "url": url,
-            "bad": tuple(str(token).lower() for token in (item.get("bad") or [])),
-        }
-    return fixes
-
-
-def _live100_core_truth_recovery_guard(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
-    """Narrow final-boundary guard for confirmed Live100 core-truth regressions."""
-    if not isinstance(result, dict):
-        return {}
-    out = copy.deepcopy(result)
-    text = (job_type or "").lower()
-    city_lc = (city or "").strip().lower()
-    state_uc = (state or "").strip().upper()
-    required_rows = [copy.deepcopy(row) for row in out.get("permits_required") or [] if isinstance(row, dict)]
-    related_rows = [copy.deepcopy(row) for row in out.get("related_permits") or [] if isinstance(row, dict)]
-
-    def row_family(row: dict) -> str:
-        return (_pa20_row_family(row) or _customer_row_family(row) or str(row.get("family") or row.get("filing_family") or "")).strip().lower()
-
-    def family_bucket(family: str) -> str:
-        return "building" if family in {"building_ti", "building_adu", "demolition", "racking"} else family
-
-    def has_required_family(family: str) -> bool:
-        return any(row_family(row) == family and _pa20_row_status(row) == "REQUIRED" for row in required_rows)
-
-    def has_required_bucket(bucket: str) -> bool:
-        return any(family_bucket(row_family(row)) == bucket and _pa20_row_status(row) == "REQUIRED" for row in required_rows)
-
-    def add_required_family(family: str, permit_type: str, rationale: str) -> None:
-        if has_required_family(family) or (family_bucket(family) == "building" and has_required_bucket("building")):
-            return
-        row = _pa20_scope_signal_status_row(family, "REQUIRED", job_type, city, state)
-        row.update({
-            "permit_type": permit_type,
-            "permit_name": permit_type,
-            "approval_type": permit_type,
-            "family": family,
-            "filing_family": family,
-            "source_binding": "live100_core_truth_recovery_scope_positive",
-            "rationale": rationale,
-        })
-        required_rows.append(row)
-
-    def demote_required_family(families: set[str], reason: str) -> None:
-        nonlocal required_rows, related_rows
-        kept: list[dict] = []
-        for row in required_rows:
-            fam = row_family(row)
-            if fam in families or family_bucket(fam) in families:
-                demoted = copy.deepcopy(row)
-                demoted.update({"required": False, "decision": "VERIFY", "status": "VERIFY"})
-                demoted["trigger_condition"] = reason
-                demoted["condition_text"] = reason
-                demoted["rationale"] = reason
-                related_rows.append(demoted)
-            else:
-                kept.append(row)
-        required_rows = kept
-
-    kitchen_trade_scope = bool(
-        re.search(r"\bkitchen\s+remodel\b", text)
-        and re.search(r"\b(?:mov(?:e|ing)|relocat(?:e|ing|ion))\s+(?:the\s+)?(?:kitchen\s+)?sink\b|\bsink\s+(?:move|relocat)", text)
-        and re.search(r"\b(?:island\s+)?receptacles?\b|\bnew\s+(?:electrical\s+)?(?:circuit|outlet|receptacle)", text)
-    )
-    if kitchen_trade_scope:
-        add_required_family("building", "Residential Building Permit", "Kitchen remodel scope includes cabinet/layout alteration; preserve building review as REQUIRED before presentation layers.")
-        add_required_family("plumbing", "Plumbing Permit", "Kitchen remodel moves the sink; preserve plumbing review as REQUIRED before presentation layers.")
-        add_required_family("electrical", "Electrical Permit", "Kitchen remodel adds island receptacles; preserve electrical review as REQUIRED before presentation layers.")
-
-    high_piled_racking_scope = bool(
-        re.search(r"\b(?:high[- ]?piled|high[- ]?pile|storage\s+racks?|warehouse\s+racks?|racking)\b", text)
-        and re.search(r"\b(?:1[2-9]|[2-9]\d)\s*(?:ft|feet|foot)\b", text)
-    )
-    if high_piled_racking_scope:
-        add_required_family("racking", "Building Permit — Warehouse Racking / High-Piled Storage", "Warehouse high-piled racking is request-positive building/racking work; false NOT_REQUIRED is unsafe.")
-        add_required_family("fire_suppression", "Fire Department High-Piled Storage / Sprinkler Review", "High-piled warehouse storage requires fire/sprinkler review before storage layout is approved.")
-
-    if re.search(r"\bsprinkler\b", text) and re.search(r"\bno\s+change\s+of\s+use\b|\bno\s+occupancy\s+change\b", text):
-        demote_required_family({"planning", "planning_zoning", "zoning", "co", "co_change_of_occupancy"}, "Explicit no-change-of-use sprinkler-head scope does not hard-trigger zoning or certificate/change-of-occupancy review.")
-
-    if re.search(r"\b(?:interior\s+)?(?:non[- ]structural\s+)?demolition\b|\bdemo\b", text) and re.search(r"\bno\s+new\s+tenant\s+use\b|\bvacant\s+commercial\s+suite\b", text):
-        for row in required_rows:
-            fam = row_family(row)
-            name_blob = " ".join(str(row.get(k) or "") for k in ("permit_name", "permit_type", "approval_type")).lower()
-            if fam == "building_ti" or "tenant improvement" in name_blob:
-                row.update({
-                    "family": "demolition",
-                    "filing_family": "demolition",
-                    "permit_type": "Demolition / Building Permit",
-                    "permit_name": "Demolition / Building Permit",
-                    "approval_type": "Demolition / Building Permit",
-                    "kind": "Building",
-                })
-
-    if re.search(r"\bkitchen\s+remodel\b", text) and not re.search(r"\b(?:restaurant|commercial\s+kitchen|food\s+service|grease\s+interceptor|fog)\b", text):
-        demote_required_family({"health", "health_food", "wastewater", "wastewater_pretreatment_fog"}, "Residential kitchen scope has no commercial food-service/FOG trigger.")
-        for bucket in (required_rows, related_rows):
-            for row in bucket:
-                for key in ("permit_type", "permit_name", "approval_type", "kind", "display_family"):
-                    if isinstance(row.get(key), str):
-                        row[key] = re.sub(r"\s*/\s*FOG\b|\bFOG\s*/\s*", "", row[key], flags=re.I)
-                        row[key] = re.sub(r"\bWastewater\s*/\s*", "", row[key], flags=re.I)
-
-    if re.search(r"\b(?:same[- ]size\s+windows?|like[- ]for[- ]like)\b", text) and re.search(r"\bno\s+egress\s+reduction\b|\bno\s+header\s+changes?\b", text):
-        for row in required_rows:
-            for key in ("permit_type", "permit_name", "approval_type"):
-                if isinstance(row.get(key), str) and re.search(r"\begress\b|\bwindow\s+well\b", row[key], re.I):
-                    row[key] = "Building Permit — Residential Window Replacement"
-
-    if re.search(r"\b(?:ductless\s+)?mini[- ]?split|heat\s+pump\b", text) and city_lc == "newark" and state_uc == "NJ" and re.search(r"\b(?:refrigerant\s+line|condenser|240v|new\s+240)\b", text) and not re.search(r"\b(?:walk[- ]in\s+cooler|cooler\s+room|refrigeration\s+system|commercial\s+refrigeration)\b", text):
-        demote_required_family({"refrigeration"}, "Ductless mini-split scope supports mechanical/electrical review, not a standalone refrigeration permit absent commercial refrigeration equipment.")
-
-    if city_lc == "huntsville" and state_uc == "AL" and re.search(r"\bsign\s+prep\b", text) and not re.search(r"\b(?:install|new|replace|illuminated|lit|electric)\s+(?:storefront\s+)?sign\b|\bsign\s+(?:installation|replacement)\b", text):
-        demote_required_family({"sign"}, "Sign-prep-only scope does not hard-trigger a sign permit unless actual sign/illumination installation is included.")
-
-    if re.search(r"\bcold\s+storage\b", text) and re.search(r"\bwarehouse\b", text) and re.search(r"\bfloor\s+drains?\b", text):
-        demote_required_family({"refrigeration"}, "Legacy cold-storage TI fixtures treat refrigeration equipment as part of the broader commercial TI/health/wastewater package, not a standalone public filing family.")
-        add_required_family("health_food", "Health Permit", "Cold-storage commercial buildout with floor drains needs health review preserved from the source-backed legacy packet.")
-        add_required_family("wastewater_pretreatment_fog", "Wastewater / FOG / Pretreatment Approval", "Cold-storage commercial buildout with floor drains needs wastewater/pretreatment review preserved from the source-backed legacy packet.")
-
-    if re.search(r"\bconvert\s+attached\s+garage\s+into\s+conditioned\s+bedroom\b", text) and not re.search(r"\b(?:adu|accessory\s+dwelling|separate\s+dwelling|rental\s+unit|kitchen)\b", text):
-        demote_required_family({"co", "co_change_of_occupancy"}, "Attached-garage-to-bedroom residential remodel preserves building/electrical/mechanical review without hard-triggering certificate/change-of-occupancy absent ADU or separate-dwelling scope.")
-
-    if city_lc == "casper" and state_uc == "WY" and re.search(r"\bwater\s+heater\b", text) and re.search(r"\blike[- ]for[- ]like\b|\bsame\s+venting\b", text) and not re.search(r"\b(?:structural|framing|new\s+opening|addition)\b", text) and not (re.search(r"\bnew\s+gas\s+line\b", text) and not re.search(r"\bno\s+new\s+gas\s+line\b", text)):
-        demote_required_family({"building"}, "Like-for-like water-heater replacement supports plumbing/gas review, not a standalone building permit absent structural/framing changes.")
-
-    if city_lc == "jersey city" and state_uc == "NJ" and re.search(r"\b(?:reroof|re-roof|roof replacement|tear off)\b", text) and re.search(r"\bsame\s+deck\b|\bno\s+structural\s+changes?\b", text):
-        out["ordinary_maintenance_caveat"] = "Verify New Jersey/Jersey City ordinary-maintenance treatment for like-for-like roof work before filing; do not treat the building row as unconditional if the ordinary-maintenance exemption applies."
-        out["customer_next_step"] = out["ordinary_maintenance_caveat"]
-
-    locality_repairs = _load_authority_fixes()
-    locality = locality_repairs.get((city_lc, state_uc))
-    if locality:
-        bad_tokens = tuple(str(token).lower() for token in locality["bad"])
-        out["applying_office"] = locality["office"]
-        out["building_dept_name"] = locality["office"]
-        out["apply_url"] = locality["url"]
-        out["online_application_url"] = locality["url"]
-        ap = dict(out.get("apply_path") or {}) if isinstance(out.get("apply_path"), dict) else {}
-        ap.update({"office_name": locality["office"], "authority": locality["office"], "portal_url": locality["url"], "channel": "online_portal", "state": "RESOLVED_PORTAL", "status": "RESOLVED_PORTAL", "typed_status": "RESOLVED_PORTAL"})
-        out["apply_path"] = ap
-        for key in ("sources", "claim_citations"):
-            if isinstance(out.get(key), list):
-                out[key] = [item for item in out.get(key) or [] if not any(token in json.dumps(item, default=str).lower() for token in bad_tokens)]
-        if isinstance(out.get("source_urls"), list):
-            out["source_urls"] = [url for url in out.get("source_urls") or [] if not any(token in str(url).lower() for token in bad_tokens)]
-        if locality["url"] not in (out.get("source_urls") or []):
-            out["source_urls"] = [locality["url"], *(out.get("source_urls") or [])]
-
-    if required_rows:
-        out["permits_required"] = required_rows
-        out["related_permits"] = related_rows
-        out["permit_required"] = True
-        out["permit_decision"] = "REQUIRED"
-        out["permit_verdict"] = "YES"
-        out.pop("not_required_reason", None)
-        out.pop("exemption_reason", None)
-        out = _sync_required_permit_summary_fields_from_rows(out)
-        first_name = _live60_row_name(required_rows[0]) or "Required permit package"
-        prefix = "Commercial" if str(out.get("segment") or "").lower() == "commercial" else ("Residential" if str(out.get("segment") or "").lower() == "residential" else "")
-        out["customer_headline"] = f"{prefix + ' ' if prefix else ''}permit required: {first_name}"
-        office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office"
-        names = [(_live60_row_name(row) or row.get("permit_type") or row.get("permit_name") or "Permit") for row in required_rows]
-        out["customer_next_step"] = f"File or verify the required permit categories with {office}: {', '.join(dict.fromkeys(str(name) for name in names))}. Confirm exact portal subcategories before final submission."
-        out["customer_result_summary"] = _build_customer_result_summary(out, out, city, state)
-        out["customer_first_screen_summary"] = _build_customer_first_screen_summary(out["customer_result_summary"])
-    else:
-        out["permits_required"] = []
-        if str(out.get("permit_decision") or "").upper() == "REQUIRED":
-            out = _live60_apply_not_required_contract(out, job_type, city, state)
-    if re.search(r"\bkitchen\s+remodel\b", text) and not re.search(r"\b(?:restaurant|commercial\s+kitchen|food\s+service|grease\s+interceptor|fog)\b", text):
-        def _strip_residential_fog_copy(value):
-            if isinstance(value, str):
-                value = re.sub(r"Plumbing\s*/\s*FOG\s+Permit", "Plumbing Permit", value, flags=re.I)
-                value = re.sub(r"\s*/\s*FOG\b|\bFOG\s*/\s*", "", value, flags=re.I)
-                value = re.sub(r"\bWastewater\s*/\s*", "", value, flags=re.I)
-                value = re.sub(r"\bcommercial\s+kitchen\b", "kitchen", value, flags=re.I)
-                value = re.sub(r"\bfood\s+service\b", "kitchen", value, flags=re.I)
-                value = re.sub(r"\s{2,}", " ", value).strip()
-                return value
-            if isinstance(value, list):
-                return [_strip_residential_fog_copy(item) for item in value]
-            if isinstance(value, dict):
-                return {k: _strip_residential_fog_copy(v) for k, v in value.items()}
-            return value
-        out = _strip_residential_fog_copy(out)
-    sanitized = sanitize_customer_visible_result(out if isinstance(out, dict) else {}, strip_internal_keys=True)
-    if isinstance(sanitized, dict) and isinstance(sanitized.get("public_packet"), dict):
-        try:
-            sanitized = apply_render_parity_seal(sanitized, fail_hard=False)
-        except Exception:
-            pass
-    return sanitized
 
 
 def _pa20_demote_known_scope_overreach_rows(result: dict, job_type: str = "") -> dict:
     """Demote source-weak hard REQUIRED companions that are contradicted by scope text."""
     if not isinstance(result, dict):
         return result
-    if _pa20_negative_scope_not_required(job_type):
-        return _live60_apply_not_required_contract(result, job_type, "", "")
     rows = [copy.deepcopy(row) for row in result.get("permits_required") or [] if isinstance(row, dict)]
     if not rows:
         return result
@@ -2725,28 +1923,10 @@ def _pa20_demote_known_scope_overreach_rows(result: dict, job_type: str = "") ->
         re.search(r"\b(?:dental\s+office|medical\s+clinic|exam\s+rooms?|nitrous|medical\s+gas)\b", text)
         and not re.search(r"\b(?:convert|conversion|change\s+of\s+(?:use|occupancy)|new\s+use|rezon|zoning\s+change)\b", text)
     )
-    dryer_outlet_only = bool(re.search(r"\bheat\s+pump\s+dryer\b|\b240\s*volt\s+outlet\b", text))
-    grease_interceptor_only = bool(re.search(r"\bgrease\s+interceptor\s+only\b", text) and re.search(r"\bexisting\s+restaurant\s+plumbing\b", text))
-    rooftop_hvac_same_location = bool(
-        re.search(r"\b(?:rooftop\s+)?evaporative\s+cooler\b", text)
-        and re.search(r"\bsame\s+location\b", text)
-        and not re.search(r"\b(?:roof(?:ing)?|reroof|curb\s+cut|new\s+(?:circuit|panel|disconnect)|structural)\b", text)
-    )
-    sign_only_no_building = bool(
-        re.search(r"\b(?:signage|sign\s+cabinet|cabinet\s+sign|projecting\s+sign|awning\s+sign|storefront\s+sign|illuminated\s+sign|monument\s+sign)\b", text)
-        and not re.search(r"\b(?:tenant\s+improvement|building\s+alteration|wall\s+work|structural|new\s+wall|facade\s+alteration)\b", text)
-    )
 
     for row in rows:
         fam = _pa20_row_family(row) or _customer_row_family(row)
-        should_demote = (
-            (fam == "building" and repipe_no_building)
-            or (fam == "planning" and clinic_ti_planning_verify)
-            or (dryer_outlet_only and fam in {"building", "plumbing", "mechanical"})
-            or (grease_interceptor_only and fam in {"building", "mechanical", "electrical"})
-            or (rooftop_hvac_same_location and fam in {"roofing", "electrical"})
-            or (sign_only_no_building and fam == "building")
-        )
+        should_demote = (fam == "building" and repipe_no_building) or (fam == "planning" and clinic_ti_planning_verify)
         if should_demote:
             demoted = copy.deepcopy(row)
             demoted.update({"required": False, "decision": "VERIFY", "status": "VERIFY"})
@@ -2833,7 +2013,7 @@ def apply_phase1_public_boundary_invariants(result: dict, city: str, state: str,
             if "panel" in job_lc or "service" in job_lc:
                 guidance_bits.append("utility/panel/grounding coordination; coordinate utility meter release")
             guidance_note = f" Include {'; '.join(guidance_bits)}." if guidance_bits else ""
-            next_step = f"No exact local filing portal is attached; contact {office} and file the required permit categories: {permit_type}. Confirm exact portal subcategories before final submission.{guidance_note}"
+            next_step = f"Permit required. No exact local filing portal is attached; contact {office} to file under {permit_type} before starting work.{guidance_note}"
         out["apply_path"] = apply_path
         out["customer_next_step"] = next_step
         summary = out.get("customer_result_summary") if isinstance(out.get("customer_result_summary"), dict) else None
@@ -3465,54 +2645,37 @@ def _repair_customer_boundary_copy(value, *, key: str = "", root: dict | None = 
 
 
 _CUSTOMER_COMPANION_FAMILY_TERMS = {
-    "building": ("building", "alteration", "remodel", "addition", "deck", "basement", "window", "egress", "retaining wall", "construction", "patio cover", "porch", "stoop", "front steps", "handrail", "shed", "detached garage"),
-    "electrical": ("electrical", "electric", "circuit", "panel", "service", "outlet", "ev charger", "charger", "lighting", "fixture", "subpanel"),
-    "utility": ("utility", "utility interconnection", "permission to operate", "switchgear", "service equipment", "transformer", "meter main", "meter/main"),
-    "solar": ("solar", "photovoltaic", "solar pv", "solarapp", "battery storage"),
-    "fence": ("fence", "fencing", "fence / wall", "fence/wall"),
-    "roofing": ("roof", "roofing", "reroof", "re-roof", "shingle", "sheathing"),
-    "structural": ("structural", "structural steel", "mezzanine", "platform", "load bearing", "load-bearing", "guardrail", "stairs"),
+    "building": ("building", "alteration", "remodel", "addition", "deck", "basement", "window", "roof", "egress"),
+    "electrical": ("electrical", "electric", "circuit", "panel", "service", "outlet", "ev charger", "charger"),
     "refrigeration": ("refrigeration", "refrigerant", "line set", "line-set"),
-    "mechanical": ("mechanical", "hvac", "furnace", "ac", "air conditioner", "mini split", "heat pump", "heat-pump", "rooftop unit", "rtu", "pellet stove", "fireplace", "fume hood", "exhaust", "ventilation"),
-    "plumbing": ("plumbing", "water heater", "heat-pump water heater", "heat pump water heater", "toilet", "shower", "drain", "fixture", "ejector", "grease interceptor", "sewer", "backflow", "irrigation"),
+    "mechanical": ("mechanical", "hvac", "furnace", "ac", "air conditioner", "mini split", "heat pump", "pellet stove", "fireplace"),
+    "plumbing": ("plumbing", "water heater", "toilet", "shower", "drain", "fixture", "ejector"),
     "sign": ("sign permit", "signage permit", "commercial sign", "illuminated sign", "channel letter"),
-    "fire": ("fire", "sprinkler", "alarm", "hood", "suppression", "life safety", "life-safety", "hazmat"),
-    "health": ("health", "food establishment", "food", "brewery", "restaurant", "cafe", "coffee shop", "salon", "daycare", "medical", "dental"),
-    "planning": ("planning", "zoning", "setback", "parcel", "site plan", "land use"),
-    "historic": ("historic", "hdlc", "certificate of appropriateness", "coa", "landmark", "design review"),
+    "fire": ("fire", "sprinkler", "alarm", "hood", "suppression"),
+    "planning": ("planning", "zoning", "setback", "fence", "parcel", "site plan", "land use"),
+    "historic": ("historic", "landmark", "district"),
     "co": ("certificate of occupancy", "change of occupancy", "change of use", "coo"),
+    "roofing": ("roof", "roofing", "reroof", "re-roof", "shingle"),
 }
-_ADDRESS_DEPENDENT_COMPANION_FAMILIES = {"fire", "planning", "historic", "co", "utility"}
-
-
-def _canonical_server_row_family(row: dict) -> str:
-    if not isinstance(row, dict):
-        return "other"
-    explicit = str(row.get("filing_family") or row.get("family") or "").lower().strip().replace("-", "_")
-    explicit_family = normalize_family(explicit).value if explicit else "other"
-    inferred_family = normalize_family(None, row).value
-    # Strong explicit filing families are authoritative; this prevents rows such
-    # as "Electrical Permit — Illuminated Sign" from being re-bucketed as Sign.
-    strong_explicit = {
-        "electrical", "plumbing", "mechanical", "refrigeration", "fire", "health",
-        "co", "historic", "wastewater", "environmental", "liquor", "utility",
-        "solar", "fence", "roofing", "structural", "sign",
-    }
-    if explicit_family in strong_explicit:
-        return explicit_family
-    row_text = " ".join(str(row.get(k) or "") for k in ("permit_type", "permit_name", "approval_type", "kind", "category", "display_family")).lower()
-    if explicit_family == "building" and "retaining wall" in row_text:
-        return "building"
-    # Generic/stale explicit values (building/planning/other) can be overridden
-    # by a more specific canonical family from the row title/kind.
-    if inferred_family != "other":
-        return inferred_family
-    return explicit_family if explicit_family != "other" else "other"
+_ADDRESS_DEPENDENT_COMPANION_FAMILIES = {"fire", "planning", "historic", "co"}
 
 
 def _customer_row_family(row: dict) -> str:
-    """Canonical customer-row classifier; delegates to permit_model.normalize_family."""
-    return _canonical_server_row_family(row)
+    text = " ".join(str(row.get(k) or "") for k in ("filing_family", "family", "kind", "category", "permit_kind", "permit_type", "permit_name", "approval_type", "portal_selection")).lower()
+    if "refrigeration" in text:
+        return "refrigeration"
+    if "sign" in text and not re.search(r"design|signature|assigned", text):
+        return "sign"
+    if "zoning" in text or "planning" in text or "land use" in text:
+        return "planning"
+    if "historic" in text or "landmark" in text:
+        return "historic"
+    if "certificate of occupancy" in text or re.search(r"\bcoo?\b", text):
+        return "co"
+    for family, terms in _CUSTOMER_COMPANION_FAMILY_TERMS.items():
+        if any(term in text for term in terms):
+            return family
+    return "other"
 
 
 def _customer_row_status(row: dict) -> str:
@@ -3955,10 +3118,6 @@ def _live60_apply_not_required_contract(public: dict, job_type: str, city: str, 
         "claim_citations": [],
         "pro_tips": ["Keep the scope tight and document that no trade, framing, occupancy, fire/life-safety, exterior, or accessibility work was added."],
         "common_mistakes": ["Letting the scope expand into trade, framing, occupancy, fire/life-safety, exterior, or accessibility work without checking the permit office first."],
-        "_render_seal_status": out.get("_render_seal_status") or "UNSEALED_NOT_REQUIRED_CONTRACT",
-        "_render_seal_reason": out.get("_render_seal_reason") or "not_required_contract_without_public_packet_projection",
-        "render_seal_status": out.get("render_seal_status") or out.get("_render_seal_status") or "UNSEALED_NOT_REQUIRED_CONTRACT",
-        "render_seal_reason": out.get("render_seal_reason") or out.get("_render_seal_reason") or "not_required_contract_without_public_packet_projection",
     })
     out["apply_path"] = {"state": "NOT_APPLICABLE", "channel": "no_permit_required", "support_level": "not applicable", "portal_url": None, "platform": None, "login_required": None, "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope."}
     return out
@@ -4244,20 +3403,58 @@ def _pa20_row_text(row: dict) -> str:
 
 
 def _pa20_row_family(row: dict) -> str:
-    """Canonical PA20 row classifier; delegates to permit_model.normalize_family."""
-    return _canonical_server_row_family(row)
+    filing_text = str(row.get("filing_family") or "").lower()
+    label_text = " ".join(str(row.get(k) or "") for k in ("permit_type", "permit_name", "approval_type")).lower()
+    kind_text = str(row.get("kind") or row.get("category") or "").lower()
+
+    def classify(text: str) -> str:
+        if "refrigeration" in text:
+            return "refrigeration"
+        if "sign" in text and not re.search(r"design|signature|assigned", text):
+            return "sign"
+        if "liquor" in text or "alcohol" in text:
+            return "liquor"
+        if "food establishment" in text or "health" in text:
+            return "health"
+        if "fog" in text or "pretreatment" in text or "wastewater" in text:
+            return "wastewater"
+        if "historic" in text or "landmark" in text:
+            return "historic"
+        if "planning" in text or "zoning" in text or "land use" in text:
+            return "planning"
+        if "certificate of occupancy" in text or re.search(r"\bco\b", text):
+            return "co"
+        if "fire" in text or "suppression" in text:
+            return "fire"
+        if "electrical" in text or "electric" in text:
+            return "electrical"
+        if "refrigeration" in text or "refrigerant" in text:
+            return "refrigeration"
+        if "mechanical" in text or "hvac" in text or "hood" in text or "ventilation" in text:
+            return "mechanical"
+        if "plumbing" in text or "water heater" in text or "fixture" in text:
+            return "plumbing"
+        if "roof" in text:
+            return "roofing"
+        if "building" in text or "tenant improvement" in text or "alteration" in text or "remodel" in text:
+            return "building"
+        return ""
+
+    # filing_family is the packet row's intended family; prefer it over stale
+    # `kind` values and over generic Building labels accidentally copied onto
+    # specialty rows. Fall back to visible label, then kind.
+    return classify(filing_text) or classify(label_text) or classify(kind_text) or str(row.get("filing_family") or row.get("permit_type") or row.get("permit_name") or "permit").strip().lower()[:60]
 
 
 def _pa20_family_label(family: str, row: dict | None = None) -> str:
     labels = {
         "building": "Building", "electrical": "Electrical", "mechanical": "Mechanical",
         "refrigeration": "Refrigeration",
-        "plumbing": "Plumbing", "fire": "Fire", "planning": "Planning/Zoning", "zoning": "Planning/Zoning",
+        "plumbing": "Plumbing", "fire": "Fire", "planning": "Planning/Zoning",
         "historic": "Historic/Planning", "co": "Certificate of Occupancy",
         "health": "Health", "liquor": "Liquor", "wastewater": "Wastewater/FOG",
-        "sign": "Sign", "solar": "Solar / PV", "fence": "Fence", "roofing": "Roofing",
-        "structural": "Structural", "utility": "Utility",
-        "grading": "Right-of-Way / Site/Civil", "environmental": "Environmental/Fuel-System",
+        "refrigeration": "Refrigeration", "sign": "Sign",
+        "roofing": "Roofing",
     }
     return labels.get(family, str((row or {}).get("permit_type") or (row or {}).get("permit_name") or family).strip() or "Permit")
 
@@ -4274,10 +3471,6 @@ def _pa20_canonical_permit_type_for_family(family: str, row: dict, job_type: str
         "co": "Certificate of Occupancy / Change-of-Occupancy Approval",
         "fire": "Fire / Hood Suppression Permit" if _pa20_job_has_any(job_type, ("hood", "suppression", "ansul", "type i")) else "Fire Suppression / Fire Prevention Review",
         "roofing": "Roofing Permit — Tear-Off / Re-Roof",
-        "solar": "Solar / PV Permit",
-        "fence": "Fence Permit / Planning Review",
-        "structural": "Structural Permit / Engineering Review",
-        "utility": "Utility Interconnection / Service Approval",
     }
     if family in canonical:
         family_tokens = {
@@ -4288,10 +3481,6 @@ def _pa20_canonical_permit_type_for_family(family: str, row: dict, job_type: str
             "co": ("certificate of occupancy", "change-of-occupancy", "co"),
             "fire": ("fire", "suppression", "hood"),
             "roofing": ("roof", "reroof", "re-roof"),
-            "solar": ("solar", "pv", "photovoltaic"),
-            "fence": ("fence", "wall"),
-            "structural": ("structural", "mezzanine", "platform"),
-            "utility": ("utility", "interconnection", "switchgear", "service"),
         }[family]
         if not existing or not any(token in existing_lc for token in family_tokens):
             return canonical[family]
@@ -4739,55 +3928,23 @@ def _pa20_normalize_customer_rows_and_summaries(public: dict, job_type: str, cit
 # `tests/fixtures/universal_customer_view_contracts_20260629.json`; universal
 # rules are implemented in api/permit_model.py.
 
-_CATASTROPHIC_CUSTOMER_VIEW_ISSUES = {
-    "required_without_rows",
-    "not_required_with_required_rows",
-    "required_no_permit_text_contradiction",
-    "not_required_required_package_text_contradiction",
-}
-
-
-def _is_catastrophic_customer_view_issue(issue: str) -> bool:
-    if issue in _CATASTROPHIC_CUSTOMER_VIEW_ISSUES:
-        return True
-    return issue.startswith("required_row_not_required_")
-
-
 def assert_customer_view_invariants(public: dict, *, soft: bool | None = None) -> dict:
     """Final public-boundary invariant net for customer permit packages.
 
-    Catastrophic truth-contract failures fail closed in prod: try one pure
-    re-projection, then substitute the safe degraded REQUIRED-verify packet.
-    Cosmetic/package-shape issues stay internal warnings only.
+    In tests/CI this fails hard so replay fixtures catch regressions.  In normal
+    production it records a warning and returns the public object unchanged; the
+    preceding pure projection is responsible for making the view safe.
     """
     out = copy.deepcopy(public) if isinstance(public, dict) else {}
     issues = validate_customer_view(out)
     if not issues:
         return out
-    strict = soft is False or _env_flag_enabled("PERMITASSIST_STRICT_CUSTOMER_INVARIANTS")
-    catastrophic = [issue for issue in issues if _is_catastrophic_customer_view_issue(issue)]
-    if catastrophic:
-        job_type = str(out.get("_request_job_type") or out.get("job_summary") or out.get("permit_name") or "customer lookup")
-        city = str(out.get("_request_city") or out.get("city") or "")
-        state = str(out.get("_request_state") or out.get("state") or "")
-        repaired = out
-        try:
-            repaired = finalize_customer_public_projection(out, job_type, city, state, out.get("_scope_contract") if isinstance(out.get("_scope_contract"), dict) else {})
-        except Exception:
-            repaired = out
-        if repaired is not out and not any(_is_catastrophic_customer_view_issue(issue) for issue in validate_customer_view(repaired)):
-            repaired.setdefault("_customer_view_invariant_warnings", issues[:12])
-            return repaired
-        try:
-            record_beta_event("customer_invariant_blocked", {"issues": issues[:12], "permit_name": out.get("permit_name"), "city": city, "state": state})
-        except Exception:
-            pass
-        safe = _build_degraded_lookup_fallback(job_type, city, state, reason="customer_invariant_blocked")
-        safe["_customer_view_invariant_warnings"] = issues[:12]
-        return safe
+    strict = soft is False or _env_flag_enabled("PERMITASSIST_STRICT_CUSTOMER_INVARIANTS") or bool(os.environ.get("PYTEST_CURRENT_TEST"))
     if strict:
         raise AssertionError({"customer_view_invariant_issues": issues, "permit_name": out.get("permit_name")})
-    out["_customer_view_invariant_warnings"] = issues[:12]
+    warnings = out.setdefault("warnings", [])
+    if isinstance(warnings, list):
+        warnings.append("Customer-view invariant warning: " + ", ".join(issues[:6]))
     return out
 
 
@@ -4810,9 +3967,6 @@ def finalize_customer_public_projection(public: dict, job_type: str, city: str, 
             projected.setdefault(key, [])
         projected.setdefault("apply_url", "")
         projected.setdefault("online_application_url", "")
-        if not projected.get("sealed_public_packet_hash"):
-            projected.setdefault("render_seal_status", "UNSEALED_NOT_REQUIRED_CONTRACT")
-            projected.setdefault("render_seal_reason", "not_required_projection_without_render_parity_seal")
     if isinstance(projected, dict):
         fee_range = projected.get("fee_range")
         if isinstance(fee_range, str) and "building department fee schedule" in fee_range.lower():
@@ -4823,42 +3977,43 @@ def finalize_customer_public_projection(public: dict, job_type: str, city: str, 
 
 def _build_degraded_lookup_fallback(job_type: str, city: str, state: str, *, reason: str = "lookup_timeout") -> dict:
     office = f"{city} permit office".strip() or "the local permit office"
-    reason_label = "timeout" if reason == "lookup_timeout" else "engine exception"
-    return {
-        "permit_required": True,
-        "permit_decision": "REQUIRED",
-        "permit_verdict": "YES",
-        "decision_basis": "degraded",
-        "permit_kind": "Verify with AHJ",
-        "permit_name": "Permit category requires AHJ verification",
-        "permits_required": [{
-            "permit_type": "Permit category requires AHJ verification",
+    likely = "REQUIRED" if _has_unnegated_any((job_type or "").lower(), ("renovation", "remodel", "bathroom", "plumbing", "electrical", "tenant improvement", "addition", "conversion", "hvac", "water heater")) else "NOT_REQUIRED"
+    if likely == "REQUIRED":
+        return {
+            "permit_required": True,
+            "permit_decision": "REQUIRED",
+            "permit_verdict": "YES",
+            "permit_kind": "Verify with AHJ",
             "permit_name": "Permit category requires AHJ verification",
-            "family": "building",
-            "filing_family": "building",
-            "kind": "Verify with AHJ",
-            "display_family": "Verify with AHJ",
-            "status": "REQUIRED",
-            "decision": "REQUIRED",
-            "required": True,
-            "decision_basis": "degraded",
-            "rationale": f"PermitAssist could not complete live verification because of a lookup {reason_label}; verify the exact permit category with the AHJ before work starts.",
-        }],
-        "related_permits": [],
-        "customer_headline": "Permit category requires permit-office verification before work starts.",
-        "customer_next_step": f"Contact {office} before starting work; PermitAssist could not complete live verification in time for this lookup.",
-        "confidence": f"degraded — {reason}",
+            "permits_required": [{"permit_type": "Permit category needs AHJ verification", "status": "VERIFY", "decision": "VERIFY", "required": False, "rationale": "The live lookup timed out before PermitAssist could verify the exact permit category."}],
+            "related_permits": [],
+            "customer_headline": "Permit category requires permit-office verification before work starts.",
+            "customer_next_step": f"Contact {office} before starting work; PermitAssist could not complete live verification in time for this lookup.",
+            "confidence": "degraded — timeout fallback",
+            "degraded_sources": True,
+            "warnings": ["Live lookup timed out; this fallback preserves a useful next step but is not a fully verified filing packet."],
+            "fee_range": "Fee not confirmed; verify the current AHJ fee schedule before quoting.",
+            "apply_url": "",
+            "online_application_url": "",
+            "applying_office": office,
+            "_runtime_degraded_fallback": {"reason": reason, "timeout_seconds": PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS},
+        }
+    return {
+        "permit_required": False,
+        "permit_decision": "NOT_REQUIRED",
+        "permit_verdict": "NO",
+        "permit_kind": "Not Required",
+        "permit_name": "No permit indicated for the described minor scope",
+        "permits_required": [],
+        "customer_headline": "No permit indicated for the described minor scope.",
+        "customer_next_step": f"Keep the scope as described and verify with {office} if any structural, trade, occupancy, exterior, or life-safety work is added.",
+        "confidence": "degraded — timeout fallback",
         "degraded_sources": True,
-        "warnings": ["Live lookup did not complete; this safe fallback preserves the permit-office verification step but is not a fully verified filing packet."],
-        "fee_range": "Fee not confirmed; verify the current AHJ fee schedule before quoting.",
+        "warnings": ["Live lookup timed out; this fallback is not a fully verified filing packet."],
         "apply_url": "",
         "online_application_url": "",
         "applying_office": office,
         "_runtime_degraded_fallback": {"reason": reason, "timeout_seconds": PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS},
-        "render_seal_status": "UNSEALED_DEGRADED_FALLBACK",
-        "render_seal_reason": reason,
-        "_render_seal_status": "UNSEALED_DEGRADED_FALLBACK",
-        "_render_seal_reason": reason,
     }
 
 
@@ -4873,10 +4028,6 @@ def _research_permit_with_budget(job_type: str, city: str, state: str, zip_code:
         return _build_degraded_lookup_fallback(job_type, city, state, reason="lookup_timeout")
     except Exception as exc:
         print(f"[permit][error-fallback] {type(exc).__name__}: {exc}")
-        try:
-            record_beta_event("lookup_engine_exception", {"city": city, "state": state, "job_type": job_type[:240], "error_type": type(exc).__name__})
-        except Exception:
-            pass
         return _build_degraded_lookup_fallback(job_type, city, state, reason=type(exc).__name__)
     finally:
         executor.shutdown(wait=False, cancel_futures=True)
@@ -5090,98 +4241,16 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
     return result
 
 
-
-def _restore_sealed_display_kind_and_companions(
-    final_public: dict,
-    *,
-    original_display_permit_kind: str,
-    original_companion_rows_for_legacy_contract: list,
-    job_type: str = "",
-) -> dict:
-    """Restore only sealed-specific display kind and scrubbed companion rows after projection."""
-    if not isinstance(final_public, dict):
-        return final_public
-    try:
-        from public_packet import sealed_customer_display_permit_kind, scrub_customer_companion_rows
-    except Exception:
-        try:
-            from api.public_packet import sealed_customer_display_permit_kind, scrub_customer_companion_rows
-        except Exception:
-            sealed_customer_display_permit_kind = None  # type: ignore
-            scrub_customer_companion_rows = None  # type: ignore
-
-    segment_value = str(final_public.get("segment") or "").lower()
-    decision = str(final_public.get("permit_decision") or "").upper()
-    sealed = ""
-    if original_display_permit_kind and decision == "REQUIRED" and sealed_customer_display_permit_kind is not None:
-        sealed = sealed_customer_display_permit_kind(
-            original_display_permit_kind,
-            segment=segment_value,
-            package_name=str(final_public.get("permit_name") or ""),
-        )
-    if sealed:
-        final_public["permit_kind"] = sealed
-        if isinstance(final_public.get("apply_path"), dict):
-            final_public["apply_path"]["permit_category"] = sealed
-        if isinstance(final_public.get("customer_result_summary"), dict):
-            final_public["customer_result_summary"]["permit_kind"] = sealed
-        if isinstance(final_public.get("public_packet"), dict):
-            final_public["public_packet"]["display_permit_kind"] = sealed
-
-    if original_companion_rows_for_legacy_contract and not final_public.get("companion_permits"):
-        if scrub_customer_companion_rows is not None:
-            final_public["companion_permits"] = scrub_customer_companion_rows(
-                original_companion_rows_for_legacy_contract,
-                segment=segment_value,
-                request_text=str(job_type or final_public.get("job_type") or ""),
-            )
-        else:
-            final_public["companion_permits"] = []
-    return final_public
-
-
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
-    working = _apply_job_address_fields(working, city, state)
-    original_display_permit_kind = str(working.get("permit_kind") or "").strip()
-    original_apply_path_source = working.get("apply_path")
-    original_apply_path_obj = original_apply_path_source if isinstance(original_apply_path_source, dict) else {}
-    original_legacy_documents = (
-        original_apply_path_obj.get("likely_documents")
-        or original_apply_path_obj.get("documents_to_prepare")
-        or working.get("documents_to_prepare")
-        or working.get("what_to_bring")
-        or working.get("documents_needed")
-        or working.get("requirements")
-        or []
-    )
-    if not isinstance(original_legacy_documents, list):
-        original_legacy_documents = []
-    original_legacy_documents = [str(item).strip() for item in original_legacy_documents if str(item or "").strip()]
-    original_legacy_inspections = working.get("inspections") or working.get("inspection_requirements") or working.get("inspection_checklist") or []
-    if not isinstance(original_legacy_inspections, list):
-        original_legacy_inspections = []
-    original_legacy_inspections = copy.deepcopy(original_legacy_inspections)
-    original_companion_rows_for_legacy_contract = [copy.deepcopy(row) for row in (working.get("companion_permits") or []) if isinstance(row, dict)]
     original_required_rows_for_companion_contract = [
         copy.deepcopy(row)
         for row in (working.get("permits_required") or [])
         if isinstance(row, dict)
     ]
     original_apply_url = working.get("apply_url")
-    original_apply_address = _sanitize_job_address(working.get("apply_address") or "")
-    original_apply_google_maps = _safe_google_maps_url(working.get("apply_google_maps") or working.get("maps_url") or "")
     raw_meta = working.get("_meta") if isinstance(working.get("_meta"), dict) else {}
-    retrieval_diagnostics_value = working.get("retrieval_diagnostics")
-    retrieval_diagnostics = retrieval_diagnostics_value if isinstance(retrieval_diagnostics_value, dict) else {}
-    degraded_status_codes = list(retrieval_diagnostics.get("status_codes") or []) if isinstance(retrieval_diagnostics.get("status_codes"), list) else []
-    source_degraded_input = bool(
-        working.get("degraded_sources")
-        or retrieval_diagnostics.get("error")
-        or retrieval_diagnostics.get("source_url_count") == 0
-        or any(int(code) in {429, 500, 502, 503, 504} for code in degraded_status_codes if str(code).isdigit())
-    )
     request_job_category = job_category or working.get("job_category") or raw_meta.get("job_category")
     contract_job_type = f"{job_type or ''} {explicit_vertical or ''}".strip()
     scope_contract = working.get("_scope_contract") if isinstance(working.get("_scope_contract"), dict) else build_scope_contract(contract_job_type, city, state, job_category=request_job_category, vertical=explicit_vertical)
@@ -5304,18 +4373,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         )
         cleaned_noncommercial = str(scope_contract.get("category") or "").lower() != "commercial" and not str(scope_contract.get("family") or "").lower().startswith("commercial")
         if source_backed_not_required_cleaned and cleaned_noncommercial and str((result if isinstance(result, dict) else {}).get("permit_decision") or "").upper().strip() != "REQUIRED":
-            guarded_cleaned = _live100_core_truth_recovery_guard(cleaned, job_type, city, state)
-            projected_cleaned = finalize_customer_public_projection(guarded_cleaned, job_type, city, state, scope_contract)
-            try:
-                source_backed_facts = build_scope_facts_v4(job_type, city, state, job_category=scope_contract.get("category"), scope_contract=scope_contract)
-                projected_cleaned = apply_render_parity_seal(projected_cleaned if isinstance(projected_cleaned, dict) else {}, facts=source_backed_facts, fail_hard=False)
-            except Exception as exc:
-                if isinstance(projected_cleaned, dict):
-                    projected_cleaned["render_seal_status"] = "UNSEALED_SOURCE_BACKED_NOT_REQUIRED_EARLY_RETURN"
-                    projected_cleaned["render_seal_reason"] = f"{exc.__class__.__name__}: {str(exc)[:240]}"
-                    projected_cleaned["_render_seal_status"] = projected_cleaned["render_seal_status"]
-                    projected_cleaned["_render_seal_reason"] = projected_cleaned["render_seal_reason"]
-            return projected_cleaned if isinstance(projected_cleaned, dict) else {}
+            return finalize_customer_public_projection(cleaned, job_type, city, state, scope_contract)
     public = _public_dict(cleaned if isinstance(cleaned, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
     if isinstance(public, dict):
         dto = resolve_customer_decision({"result": public, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
@@ -5523,11 +4581,10 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     and not re.search(r"\b(?:fire\s+rating|rated\s+wall|egress|load[- ]bearing|new\s+wall|framing|commercial)\b", job_type or "", re.I)
                 )
                 or (
-                    re.search(r"\b(?:commercial|office|retail|tenant|store|lobby|shop|restaurant|bar|cafe|coffee\s+shop)\b", job_type or "", re.I)
+                    re.search(r"\b(?:commercial|office|retail|tenant|store|lobby|shop)\b", job_type or "", re.I)
                     and re.search(r"\b(?:paint|repaint|carpet|flooring|cosmetic|refresh)\b", job_type or "", re.I)
                     and re.search(r"\bno\s+(?:walls?|mep|mechanical|electrical|plumbing|fire|life[- ]safety|occupancy(?:\s+change)?|structural|exterior|accessibility|tenant\s+improvement|ti)\b", job_type or "", re.I)
                 )
-                or _pa20_negative_scope_not_required(job_type or "")
             )
             restore_original_required_projection = (
                 original_required_rows_for_companion_contract
@@ -5542,13 +4599,6 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 final_public["permit_verdict"] = "YES"
                 final_public["permits_required"] = copy.deepcopy(original_required_rows_for_companion_contract)
             final_public = finalize_customer_public_projection(final_public, job_type, city, state, scope_contract)
-            if _pa20_negative_scope_not_required(job_type or ""):
-                final_public = _live60_apply_not_required_contract(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
-            elif not source_backed_not_required_passthrough:
-                # Finalizer/projection can reclassify or demote freshly-added floor rows;
-                # reapply the universal deterministic floor once more at the last
-                # customer boundary so required companion families remain visible.
-                final_public = _pa20_apply_scope_signal_family_floor(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
             if restore_original_required_projection and str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED":
                 canonical_original = finalize_customer_public_projection(copy.deepcopy(result) if isinstance(result, dict) else {}, job_type, city, state, scope_contract)
                 if str(canonical_original.get("permit_decision") or "").upper().strip() == "REQUIRED":
@@ -5568,160 +4618,6 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     final_public["not_required_reason"] = cell_lock.get("customer_action")
                 if cell_lock.get("source_urls"):
                     final_public["source_urls"] = list(cell_lock.get("source_urls") or [])
-            final_public = _apply_live100_official_filing_path_repair(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
-            # Full-customer fix-for-good gate: one deterministic reconciliation
-            # point immediately before public serialization/report rendering.
-            # It preserves concrete REQUIRED/NOT_REQUIRED decisions, demotes
-            # unsupported extras to first-class CONDITIONAL rows, vetoes only
-            # explicitly contradicted trigger families, repairs AHJ identity, and
-            # projects a canonical PublicPacketDTO for API/share/report parity.
-            try:
-                raw_full_customer_gate = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower()
-                full_customer_gate_enabled = raw_full_customer_gate not in {"0", "false", "no", "off"}
-                if full_customer_gate_enabled:
-                    final_scope_facts = build_scope_facts_v4(job_type, city, state, job_category=request_job_category, scope_contract=scope_contract)
-                    if isinstance(final_public, dict):
-                        final_public["_request_city"] = city
-                        final_public["_request_state"] = state
-                        if original_legacy_documents:
-                            final_public["_legacy_apply_documents"] = list(original_legacy_documents)
-                        if original_legacy_inspections:
-                            final_public["_legacy_inspections"] = copy.deepcopy(original_legacy_inspections)
-                        if original_display_permit_kind:
-                            final_public["_original_display_permit_kind"] = original_display_permit_kind
-                    final_public = run_pipeline_through_projection(
-                        final_public if isinstance(final_public, dict) else {},
-                        CustomerPipelineContext(
-                            job_type=job_type,
-                            city=city,
-                            state=state,
-                            scope_contract=scope_contract,
-                            job_category=request_job_category,
-                            scope_facts=final_scope_facts,
-                        ),
-                    )
-            except Exception as exc:
-                print(f"[customer-view] gate_chain_failed error_type={exc.__class__.__name__} error={exc}")
-                try:
-                    record_beta_event("customer_gate_chain_failed", {"city": city, "state": state, "job_type": job_type[:240], "error_type": exc.__class__.__name__})
-                except Exception:
-                    pass
-                final_public = _build_degraded_lookup_fallback(job_type, city, state, reason="customer_gate_chain_failed")
-            final_public = _apply_residential_commercial_timeline_veto(final_public if isinstance(final_public, dict) else {}, job_type, job_category=request_job_category, scope_contract=scope_contract)
-            if isinstance(final_public, dict):
-                final_public = _restore_sealed_display_kind_and_companions(
-                    final_public,
-                    original_display_permit_kind=original_display_permit_kind,
-                    original_companion_rows_for_legacy_contract=original_companion_rows_for_legacy_contract,
-                    job_type=job_type,
-                )
-                # Segment/kind lock must also protect pytest/legacy paths where
-                # the full customer gate is disabled; stale commercial anchors
-                # must never survive in a residential customer header/action.
-                if str(request_job_category or final_public.get("segment") or "").lower() == "residential":
-                    if re.search(r"\b(?:commercial|tenant improvement)\b", str(final_public.get("permit_kind") or ""), re.I):
-                        first_row = next((r for r in (final_public.get("permits_required") or []) if isinstance(r, dict)), {})
-                        final_public["permit_kind"] = str(first_row.get("kind") or "Building")
-                    replacement_name = str(final_public.get("permit_name") or final_public.get("permit_type") or "permit")
-                    for _key in ("customer_headline", "customer_next_step"):
-                        if isinstance(final_public.get(_key), str):
-                            final_public[_key] = re.sub(r"Commercial Building\s*/\s*Tenant Improvement", replacement_name, final_public[_key], flags=re.I)
-                    if isinstance(final_public.get("apply_path"), dict) and re.search(r"\b(?:commercial|tenant improvement)\b", str(final_public["apply_path"].get("permit_category") or ""), re.I):
-                        final_public["apply_path"]["permit_category"] = final_public.get("permit_kind") or "Building"
-                final_scope_facts_for_packet = locals().get("final_scope_facts")
-                final_public = apply_fable5_final_customer_gate(
-                    final_public if isinstance(final_public, dict) else {},
-                    job_type,
-                    city,
-                    state,
-                    scope_contract,
-                    final_scope_facts_for_packet,
-                )
-                final_public = _live100_core_truth_recovery_guard(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
-                if final_scope_facts_for_packet is not None:
-                    if isinstance(final_public, dict):
-                        if original_legacy_documents:
-                            final_public["_legacy_apply_documents"] = list(original_legacy_documents)
-                        if original_legacy_inspections:
-                            final_public["_legacy_inspections"] = copy.deepcopy(original_legacy_inspections)
-                        if original_display_permit_kind:
-                            final_public["_original_display_permit_kind"] = original_display_permit_kind
-                    final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts_for_packet)
-                if isinstance(final_public, dict):
-                    # Final sealed display-kind restore after the last packet projection.
-                    final_public = _restore_sealed_display_kind_and_companions(
-                        final_public,
-                        original_display_permit_kind=original_display_permit_kind,
-                        original_companion_rows_for_legacy_contract=original_companion_rows_for_legacy_contract,
-                        job_type=job_type,
-                    )
-                    if original_apply_address and not final_public.get("apply_address"):
-                        final_public["apply_address"] = original_apply_address
-                    if original_apply_google_maps and not final_public.get("apply_google_maps"):
-                        final_public["apply_google_maps"] = original_apply_google_maps
-                    elif original_apply_address and not final_public.get("apply_google_maps"):
-                        final_public["apply_google_maps"] = build_google_maps_url(city, state, address=original_apply_address, office=str(final_public.get("applying_office") or ""))
-                final_public = _apply_job_address_fields(final_public if isinstance(final_public, dict) else {}, city, state)
-                if source_degraded_input and isinstance(final_public, dict):
-                    final_public["degraded_sources"] = True
-                    warnings = final_public.setdefault("warnings", [])
-                    if isinstance(warnings, list) and not any("source support is degraded" in str(w).lower() for w in warnings):
-                        warnings.append("Exact local source support is degraded; the customer permit decision remains resolved.")
-                    if final_scope_facts_for_packet is not None:
-                        if isinstance(final_public, dict):
-                            if original_legacy_documents:
-                                final_public["_legacy_apply_documents"] = list(original_legacy_documents)
-                            if original_legacy_inspections:
-                                final_public["_legacy_inspections"] = copy.deepcopy(original_legacy_inspections)
-                            if original_display_permit_kind:
-                                final_public["_original_display_permit_kind"] = original_display_permit_kind
-                        final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts_for_packet)
-                if isinstance(final_public, dict):
-                    for _phone_key in ("apply_phone", "building_dept_phone", "office_phone"):
-                        _phone_value = str(final_public.get(_phone_key) or "").strip()
-                        if re.match(r"^https?://", _phone_value, re.I):
-                            if "google.com/maps" in _phone_value.lower() and not final_public.get("apply_google_maps"):
-                                final_public["apply_google_maps"] = _phone_value
-                            final_public[_phone_key] = ""
-                seal_enabled = str(os.environ.get("PERMITASSIST_FULL_CUSTOMER_FIX_FOR_GOOD") or "").strip().lower() not in {"0", "false", "no", "off"}
-                if seal_enabled:
-                    railway_prod = any(str(os.environ.get(name) or "").strip().lower() == "production" for name in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME"))
-                    seal_fail_hard = _env_flag_enabled("PERMITASSIST_PROD_MODE") or _env_flag_enabled("PERMITASSIST_RENDER_SEAL_FAIL_HARD") or railway_prod
-                    try:
-                        final_public = apply_render_parity_seal(final_public if isinstance(final_public, dict) else {}, facts=final_scope_facts_for_packet, fail_hard=seal_fail_hard)
-                    except PacketInvariantError as exc:
-                        print(f"[customer-view] render_seal_failed error_type={exc.__class__.__name__} error={exc}")
-                        try:
-                            record_beta_event("render_seal_failed", {"city": city, "state": state, "job_type": job_type[:240], "error_type": exc.__class__.__name__, "error": str(exc)[:500]})
-                        except Exception:
-                            pass
-                        final_public = _build_degraded_lookup_fallback(job_type, city, state, reason="render_seal_failed")
-        if isinstance(final_public, dict):
-            for _internal_key in (
-                "_legacy_apply_documents",
-                "_legacy_inspections",
-                "_legacy_customer_notes",
-                "_original_display_permit_kind",
-                "_original_permits_required_for_companion_contract",
-                "_request_city",
-                "_request_state",
-            ):
-                final_public.pop(_internal_key, None)
-            if str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED":
-                final_public.pop("package_header", None)
-            if (
-                str(final_public.get("permit_decision") or "").upper().strip() != "NOT_REQUIRED"
-                and str(final_public.get("render_seal_status") or "") == "UNSEALED_NOT_REQUIRED_CONTRACT"
-            ):
-                final_public.pop("render_seal_status", None)
-                final_public.pop("render_seal_reason", None)
-            if (
-                str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
-                and not final_public.get("sealed_public_packet_hash")
-                and not final_public.get("render_seal_status")
-            ):
-                final_public["render_seal_status"] = "UNSEALED_NOT_REQUIRED_CONTRACT"
-                final_public["render_seal_reason"] = "not_required_payload_without_public_packet_projection"
         return final_public if isinstance(final_public, dict) else {}
     return {}
 
@@ -6587,7 +5483,7 @@ def _source_tier_label(tier: str, city: str | None, state: str | None) -> str:
         return f"{label} state reference"
     if tier == "universal":
         return "National code reference"
-    return "Supporting source (verify jurisdiction)"
+    return "Source"
 
 
 def _customer_source_type(tier: str) -> str:
@@ -6697,11 +5593,7 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
             warnings.append("Commercial scope detected, but the primary permit name is AHJ-specific or not in the commercial allow-list; verify exact AHJ naming before quoting.")
 
         companion_text = " ".join(str(x) for x in (result.get("companion_permits") or result.get("permits_required") or [])).lower()
-        vehicle_lift_scope = is_vehicle_lift_scope(job_type)
-        if vehicle_lift_scope:
-            required_companions = ["electrical"] if re.search(r"\b(?:electrical|wiring|circuits?|receptacles?|disconnects?|power)\b", job_type or "", re.I) else []
-        else:
-            required_companions = ["electrical", "mechanical", "plumbing"]
+        required_companions = ["electrical", "mechanical", "plumbing"]
         companion_scope = _commercial_companion_scope(job_type, result)
         scope_text = f"{job_type or ''} {(result or {}).get('_primary_scope', '')}".lower()
         if companion_scope == "restaurant":
@@ -6729,7 +5621,7 @@ def apply_permitiq_quality_gate(result: dict, job_type: str, city: str, state: s
         for w in warnings:
             if w and w not in deduped:
                 deduped.append(w)
-        result["quality_warnings"] = filter_scope_contradicted_companion_warnings(deduped, job_type)
+        result["quality_warnings"] = deduped
         result["needs_review"] = True
 
     _filter_negated_surface_lists(result, job_type)
@@ -8385,14 +7277,6 @@ def create_share(job_type: str, city: str, state: str, result: dict) -> str:
     # Store only the public customer ViewModel; old internal/debug fields never
     # enter shared JSON, report HTML, or embedded report data.
     clean = build_customer_permit_view_model(result, job_type, city, state)
-    if isinstance(result, dict) and isinstance(clean, dict) and result.get("permit_kind"):
-        # Preserve the customer's display category through the DB/share/report
-        # round-trip. The locked packet may use canonical families internally,
-        # but public saved reports should not collapse a label such as
-        # "Commercial Building / Tenant Improvement" to "Building".
-        clean["permit_kind"] = result.get("permit_kind")
-        if str(clean.get("permit_decision") or "").upper() == "REQUIRED":
-            clean["customer_headline"] = result.get("customer_headline") or f"Permit required: {clean.get('permit_kind')}"
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
@@ -8479,104 +7363,59 @@ def _checklist_dict_text(value: dict, *keys: str) -> str:
     return ""
 
 
-def _checklist_inspection_text(value) -> str:
-    if isinstance(value, dict):
-        label = _checklist_dict_text(value, "label", "name", "inspection", "stage", "type", "description")
-        timing = _checklist_dict_text(value, "timing", "when", "phase")
-        if label and timing:
-            return f"{label} — {timing}"
-        return label or timing
-    return _checklist_text(value)
-
-
 def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
-    """Build report checklist strictly from the locked public packet.
-
-    Older saved results may carry contaminated top-level `what_to_bring`,
-    `requirements`, `inspections`, `pro_tips`, or `common_mistakes`.  The
-    customer report/checklist path must not re-read those fields; they are
-    serialized only after the packet projection has rewritten them from packet
-    rows.
-    """
-    result = result if isinstance(result, dict) else {}
-    packet = result.get("public_packet") if isinstance(result.get("public_packet"), dict) else {}
-    packet_rows = _checklist_list(packet.get("rows") or result.get("public_packet_rows"))
-    required_rows = [row for row in packet_rows if isinstance(row, dict) and row.get("decision") == "REQUIRED"]
-    conditional_rows = [row for row in packet_rows if isinstance(row, dict) and row.get("decision") == "CONDITIONAL"]
-    packet_decision = str(packet.get("decision") or result.get("permit_decision") or "").upper().strip()
-    is_no_permit = packet_decision == "NOT_REQUIRED" or result.get("permit_required") is False
-    first_required = required_rows[0] if required_rows and isinstance(required_rows[0], dict) else {}
-    permit_name = _checklist_text(first_required.get("permit_name") or result.get("permit_name"))
-    if not permit_name:
-        permit_name = "No permit required" if is_no_permit else "Permit"
-    fee = ""
-    fees = packet.get("fees") if isinstance(packet.get("fees"), list) else []
-    if fees:
-        fee = _checklist_text(fees[0])
-    elif not is_no_permit:
-        fee = _checklist_text(result.get("fee_range") or result.get("fee")) or "Confirm fee with the building department"
+    permits = _checklist_list(result.get("permits_required"))
+    first_permit = permits[0] if permits else {}
+    permit_name = result.get("permit_name")
+    if not permit_name and isinstance(first_permit, dict):
+        permit_name = first_permit.get("permit_type")
+    elif not permit_name:
+        permit_name = _checklist_text(first_permit)
+    permit_name = permit_name or "Permit"
+    fee = result.get("fee_range") or result.get("fee") or "Confirm fee with the building department"
     timeline_obj = result.get("approval_timeline") or {}
     if isinstance(timeline_obj, dict):
         timeline = timeline_obj.get("simple") or timeline_obj.get("complex") or "Varies by jurisdiction"
     else:
         timeline = _checklist_text(timeline_obj) or "Varies by jurisdiction"
-    docs = _checklist_list(packet.get("documents")) if isinstance(packet, dict) else []
-    inspections = _checklist_list(packet.get("inspections")) if isinstance(packet, dict) else []
-    # Prefer sealed packet detail. If the packet only has generic family defaults
-    # and sanitized legacy inspections are richer, use the legacy list. Never
-    # re-merge unsanitized top-level fields over explicit non-generic packet detail.
-    generic_inspection_defaults = {
-        "building final inspection",
-        "electrical final inspection",
-        "mechanical final inspection",
-        "plumbing final inspection",
-        "refrigeration final inspection",
-        "gas pressure test",
-        "final gas inspection",
-        "fire/life-safety final inspection",
-        "fire department co2 / hazardous-gas system inspection",
-        "structural inspection",
-    }
-    legacy_inspections = _checklist_list(result.get("_legacy_inspections"))
-    if legacy_inspections:
-        packet_only_generic = (not inspections) or all(
-            str(_checklist_inspection_text(item) or "").strip().lower() in generic_inspection_defaults
-            for item in inspections
-        )
-        if packet_only_generic:
-            inspections = legacy_inspections
-    if not inspections and not (packet if isinstance(packet, dict) else {}).get("schema_version"):
-        inspections = _checklist_list(result.get("inspections") or result.get("inspection_requirements") or result.get("inspection_checklist"))
-    packet_checklist = _checklist_list(packet.get("checklist")) if isinstance(packet, dict) else []
-    items = []
-    if is_no_permit:
-        items.append({"label": "No permit is required for this scope — keep this report with the job record and verify before expanding the scope.", "category": "permit", "required": False})
-    else:
-        for label in packet_checklist:
-            text = _checklist_text(label)
-            if text and text.lower().startswith("pull "):
-                items.append({"label": text, "category": "permit", "required": True})
-        if not any(item.get("category") == "permit" for item in items):
-            items.append({"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True})
-    for note in _checklist_list(result.get("_legacy_customer_notes"))[:3]:
-        note_text = _checklist_text(note)
-        if note_text:
-            items.append({"label": note_text, "category": "coordination", "required": False})
-    for conditional in conditional_rows[:6]:
-        cond_name = conditional.get("permit_name") or conditional.get("permit_type") or "conditional permit"
-        cond_text = conditional.get("conditional_text") or conditional.get("required_if") or conditional.get("trigger") or "Only if the stated condition is triggered"
-        items.append({"label": f"{cond_text} — if triggered, pull {cond_name}", "category": "conditional", "required": False})
-    items.append({"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True})
-    if is_no_permit:
-        items.append({"label": "No permit fee applies for this resolved no-permit scope", "category": "fees", "required": False})
-    else:
-        items.append({"label": f"Pay permit fee: {fee}", "category": "fees", "required": True})
-    items.append({"label": f"Plan for approval timeline: {timeline}", "category": "timeline", "required": False})
+    docs = list(dict.fromkeys(
+        text for text in (
+            _checklist_text(item)
+            for item in (
+                _checklist_list(result.get("what_to_bring"))
+                + _checklist_list(result.get("requirements"))
+                + _checklist_list(result.get("documents_needed"))
+            )
+        ) if text
+    ))
+    inspections = _checklist_list(result.get("inspections"))
+    special_notes = list(dict.fromkeys(
+        text for text in (
+            _checklist_text(item)
+            for item in (
+                _checklist_list(result.get("pro_tips"))[:2]
+                + _checklist_list(result.get("common_mistakes"))[:2]
+            )
+        ) if text
+    ))
+    items = [
+        {"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True},
+        {"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True},
+        {"label": f"Pay permit fee: {fee}", "category": "fees", "required": True},
+        {"label": f"Plan for approval timeline: {timeline}", "category": "timeline", "required": False},
+    ]
     if docs:
-        items.append({"label": f"Required documents: {', '.join(_checklist_text(item) for item in docs[:6] if _checklist_text(item))}", "category": "documents", "required": True})
+        items.append({"label": f"Required documents: {', '.join(docs[:6])}", "category": "documents", "required": True})
     for inspection in inspections[:6]:
-        label = _checklist_inspection_text(inspection) or "Inspection step"
-        items.append({"label": f"Schedule inspection: {label}", "category": "inspection", "required": False})
+        if isinstance(inspection, dict):
+            label = _checklist_dict_text(inspection, "stage", "title", "name", "label") or "Inspection step"
+            timing = _checklist_dict_text(inspection, "timing", "description", "notes")
+        else:
+            label = _checklist_text(inspection) or "Inspection step"
+            timing = ""
+        items.append({"label": f"Schedule inspection: {label}{' — ' + timing if timing else ''}", "category": "inspection", "required": False})
+    for note in special_notes[:4]:
+        items.append({"label": note, "category": "special", "required": False})
     return {
         "title": "Pre-Construction Compliance Checklist",
         "summary": f"Action checklist for {job_type or permit_name} in {city}, {state}",
@@ -8623,9 +7462,12 @@ def generate_checklist(result: dict, job_type: str = "", city: str = "", state: 
 def _sanitize_customer_result_for_request_scope(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     """Apply canonical public ViewModel plus request-scope firebreak."""
     public = build_customer_permit_view_model(result, job_type, city, state)
-    # Do not restore saved top-level inspections here.  Report/share/checklist
-    # rendering must be a pure function of the locked public packet, not of
-    # stale saved renderer fields from an older lookup artifact.
+    # Saved report/share artifacts may carry already-customer-visible inspection
+    # checklist strings. The customer ViewModel may regenerate permit-family
+    # inspection defaults; keep explicit saved inspection steps so report/share
+    # text stays faithful to the original lookup artifact.
+    if isinstance(result, dict) and isinstance(result.get("inspections"), list) and result.get("inspections"):
+        public["inspections"] = copy.deepcopy(result.get("inspections"))
     return public
 
 
@@ -8754,11 +7596,6 @@ PUBLIC_REPORT_RESULT_FIELDS = frozenset({
     "permit_type",
     "primary_permit",
     "permits_required",
-    "conditional_permits",
-    "related_permits",
-    "public_packet",
-    "canonical_public_packet",
-    "public_packet_rows",
     "companion_permits",
     "companion_reviews",
     "companion_permits_or_reviews",
@@ -8790,9 +7627,6 @@ PUBLIC_REPORT_RESULT_FIELDS = frozenset({
     "apply_phone",
     "source_urls",
     "sources",
-    "ahj_resolution",
-    "sealed_schema",
-    "sealed_public_packet_hash",
 })
 PUBLIC_CHECKLIST_FIELDS = frozenset({"title", "summary", "items"})
 PUBLIC_REPORT_INTERNAL_FIELDS = frozenset({
@@ -8854,13 +7688,12 @@ def to_public_share_payload(share: dict, checklist: dict | None = None) -> dict:
     public_share = _public_allowlist(share, PUBLIC_SHARE_FIELDS)
     public_share["data"] = _public_allowlist(share.get("data") or {}, PUBLIC_REPORT_RESULT_FIELDS)
     public_checklist = _public_allowlist(checklist or {}, PUBLIC_CHECKLIST_FIELDS)
-    payload = {
+    return {
         "share": public_share,
         "app_base_url": APP_BASE_URL,
         "generated_at": utc_now().isoformat(),
         "checklist": public_checklist,
     }
-    return payload
 
 
 def html_safe_json_dumps(value: object) -> str:
@@ -8878,38 +7711,14 @@ def html_safe_json_dumps(value: object) -> str:
 def render_share_page(share: dict) -> str:
     template = load_report_template()
     safe_share = dict(share or {})
-    if isinstance(safe_share.get("job_type"), str):
-        safe_share["job_type"] = re.sub(r"\bno\s+new\s+circuits?\b", "existing circuits only", safe_share["job_type"], flags=re.I)
     raw_share_data = safe_share.get("data")
     original_data = raw_share_data if isinstance(raw_share_data, dict) else {}
-    packet_obj = original_data.get("public_packet")
-    packet_marker = packet_obj if isinstance(packet_obj, dict) else {}
-    if str(packet_marker.get("schema_version") or "").startswith("final_public_permit_packet"):
-        # Already locked by the final public packet boundary; do not rebuild from
-        # stale saved helper fields during report/share rendering.
-        safe_data = copy.deepcopy(original_data)
-    else:
-        safe_data = _sanitize_customer_result_for_request_scope(
-            original_data,
-            safe_share.get("job_type", ""),
-            safe_share.get("city", ""),
-            safe_share.get("state", ""),
-        )
-        if isinstance(original_data.get("inspections"), list):
-            safe_data["_legacy_inspections"] = copy.deepcopy(original_data.get("inspections"))
-        if any(str(tip).strip() for tip in (original_data.get("pro_tips") or []) if isinstance(tip, str)):
-            safe_data["_legacy_customer_notes"] = [str(tip).strip() for tip in (original_data.get("pro_tips") or []) if str(tip).strip()]
-        if str(original_data.get("permit_decision") or original_data.get("permit_verdict") or "").upper() in {"REQUIRED", "YES"} and original_data.get("permits_required"):
-            # Legacy saved report/share payloads that predate the locked packet
-            # already carry a customer-selected permit kind. Keep that display
-            # label stable while still letting the sanitizer/packet boundary
-            # rebuild rows, docs, inspections and fees.
-            if original_data.get("permit_kind"):
-                safe_data["permit_kind"] = original_data.get("permit_kind")
-            safe_data["permit_decision"] = "REQUIRED"
-            safe_data["permit_required"] = True
-            safe_data["permit_verdict"] = "YES"
-            safe_data["customer_headline"] = original_data.get("customer_headline") or f"Permit required: {safe_data.get('permit_kind') or original_data.get('permit_kind') or safe_data.get('permit_name') or 'Permit'}"
+    safe_data = _sanitize_customer_result_for_request_scope(
+        original_data,
+        safe_share.get("job_type", ""),
+        safe_share.get("city", ""),
+        safe_share.get("state", ""),
+    )
     if not any(original_data.get(k) for k in ("sources", "source_urls", "apply_url", "apply_path", "applying_office")):
         def _drop_ahj_fields(value):
             if isinstance(value, dict):
@@ -8917,7 +7726,7 @@ def render_share_page(share: dict) -> str:
             if isinstance(value, list):
                 return [_drop_ahj_fields(v) for v in value]
             if isinstance(value, str):
-                return re.sub(r"ahj", "permit office", value, flags=re.I)
+                return re.sub(r"\bAHJ\b", "building department", value, flags=re.I)
             return value
         safe_data.pop("apply_path", None)
         safe_data = _drop_ahj_fields(safe_data)
@@ -11190,10 +9999,8 @@ class Handler(BaseHTTPRequestHandler):
                 city         = data.get("city", "").strip()
                 state        = data.get("state", "").strip()
                 zip_code     = data.get("zip_code", "").strip()
-                job_address  = _sanitize_job_address(data.get("job_address") or data.get("address") or "")
                 job_category = (data.get("job_category") or "").strip()
                 explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
-                job_category = canonical_request_job_category(job_type, city, state, job_category, explicit_vertical)
 
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
@@ -11332,9 +10139,6 @@ class Handler(BaseHTTPRequestHandler):
                         bypass_lookup_caches=bool(qa_cache_mode),
                     )
                     is_cached = result.get("_cached", False)
-                    if job_address:
-                        result["job_address"] = job_address
-                        result["job_maps_url"] = build_google_maps_url(city, state, address=job_address)
 
                     if not unlimited and not is_sample_demo:
                         used_after = max(*record_lookup_usage(ip, fingerprint))
@@ -11414,17 +10218,12 @@ class Handler(BaseHTTPRequestHandler):
                     city = item.get("city", "")
                     state = item.get("state", "")
                     zip_code = item.get("zip", "") or item.get("zip_code", "")
-                    job_address = _sanitize_job_address(item.get("job_address") or item.get("address") or "")
                     job_value = item.get("job_value")
                     job_category = item.get("job_category", "")
                     explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
-                    job_category = canonical_request_job_category(job_type, city, state, job_category, explicit_vertical)
                     try:
                         evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
                         result = research_permit(job_type, city, state, zip_code, job_category=job_category, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
-                        if job_address:
-                            result["job_address"] = job_address
-                            result["job_maps_url"] = build_google_maps_url(city, state, address=job_address)
                         if evidence_allowed:
                             result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
                             response = dict(result)
@@ -11650,7 +10449,6 @@ class Handler(BaseHTTPRequestHandler):
                 state = data.get("state", "").strip()
                 job_category = (data.get("job_category") or "").strip()
                 explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
-                job_category = canonical_request_job_category(job_type, city, state, job_category, explicit_vertical)
                 if not result:
                     self.send_json(400, {"error": "result is required"})
                     return
@@ -11732,7 +10530,6 @@ class Handler(BaseHTTPRequestHandler):
                 zip_code = data.get("zip_code", "").strip()
                 job_category = (data.get("job_category") or "").strip()
                 explicit_vertical = canonical_request_vertical(data.get("vertical")) or canonical_request_vertical(data.get("evidence_vertical"))
-                job_category = canonical_request_job_category(job_type, city, state, job_category, explicit_vertical)
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return

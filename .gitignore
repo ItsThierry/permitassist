@@ -13,8 +13,6 @@ scripts/__pycache__/
 api/state_packs/drafts/
 
 # Backups created by inplace edits (never commit historical state)
-*.bak
-*.backup
 *.bak-*
 *.bak-pre-*
 
@@ -28,8 +26,7 @@ data/ip_lookups.db
 marketing/lead-registry/
 marketing/ready-to-send/
 marketing/internal-review/
-marketing/*.csv
-# verified_cities.db is the canonical 5,887-AHJ runtime snapshot (cities + counties).
+# verified_cities.db is the canonical 5,260-AHJ snapshot (cities + counties).
 # It IS tracked in git so Railway can serve /api/verified-cities at deploy time.
 # It's regenerated infrequently (when scripts/city-coverage-expander.py runs) so
 # it doesn't churn like cache.db. Backups (verified_cities.db.bak-*) stay ignored.

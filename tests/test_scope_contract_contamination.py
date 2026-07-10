@@ -24,32 +24,6 @@ def _customer_text(value) -> str:
     return json.dumps(value, sort_keys=True).lower()
 
 
-def test_fable5_phase1_scope_facts_family_floors_and_forbids():
-    from scope_contract import build_scope_facts_v2
-
-    cases = {
-        "R-010": ("finish basement with new bedroom bathroom electrical and HVAC, job value 65000", "residential", {"building"}),
-        "C-009": ("change of occupancy from retail store to fitness studio with showers and new mechanical ventilation, job value 175000", "commercial", {"plumbing"}),
-        "C-016": ("brewery tenant improvement adding floor drains gas fired equipment fermentation tanks and electrical, job value 420000", "commercial", {"plumbing"}),
-        "C-018": ("change use from warehouse to indoor pickleball facility with occupant load increase, job value 300000", "commercial", {"fire_suppression", "planning_zoning"}),
-        "C-048": ("commercial school classroom addition with restrooms fire alarm and HVAC, job value 900000", "commercial", {"building", "electrical"}),
-        "C-050": ("commercial metal building addition for auto repair shop with lifts compressed air electrical and radiant heat, job value 480000", "commercial", {"building"}),
-    }
-    for case_id, (job, segment, expected) in cases.items():
-        facts = build_scope_facts_v2(job, job_category=segment)
-        assert expected <= set(facts.mandatory_family_floors), (case_id, facts.as_dict())
-
-    residential_gas = build_scope_facts_v2("install new gas line to outdoor kitchen and grill, job value 6000", job_category="residential")
-    assert {"health_food", "wastewater_pretreatment_fog"} <= set(residential_gas.forbidden_families)
-
-    no_plumbing = build_scope_facts_v2("replace drywall in one bedroom after leak no structural no electrical no plumbing, job value 3500", job_category="residential")
-    assert "plumbing" in no_plumbing.forbidden_families
-    assert no_plumbing.repair_exemption_candidate is True
-
-    fire_rated = build_scope_facts_v2("replace fire-rated drywall in garage ceiling and rewire one circuit", job_category="residential")
-    assert fire_rated.repair_exemption_candidate is False
-
-
 def test_scope_contract_classifies_panel_upgrade_as_residential_single_trade():
     from scope_contract import build_scope_contract
 

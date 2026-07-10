@@ -9,9 +9,6 @@ REQUIRED or NOT_REQUIRED.
 from __future__ import annotations
 
 import re
-import json
-import os
-from urllib.parse import urlparse
 from typing import Any
 
 PERMIT_DECISION_REQUIRED = "REQUIRED"
@@ -61,13 +58,10 @@ _USE_TYPE_LEXICON = (
 def _explicit_change_of_use(job_text: str) -> bool:
     """Return True when the request explicitly describes a use-type change."""
     lowered = (job_text or "").lower()
-    if any(term in lowered for term in _CHANGE_OF_USE_TERMS):
-        return True
-    use_alt = "|".join(re.escape(term) for term in _USE_TYPE_LEXICON)
-    return bool(re.search(rf"\b(?:from|former|existing)\s+(?:{use_alt})\b.{0,80}\b(?:to|into|as)\s+(?:{use_alt})\b", lowered))
+    return any(term in lowered for term in _CHANGE_OF_USE_TERMS) or            any(term in lowered for term in _USE_TYPE_LEXICON)
 
 
-_DEFAULT_SOURCE_ADJUDICATED_NOT_REQUIRED_RULES: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...], str], ...] = (
+_SOURCE_ADJUDICATED_NOT_REQUIRED_RULES: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...], str], ...] = (
     (
         "flagstaff",
         "AZ",
@@ -92,34 +86,11 @@ _DEFAULT_SOURCE_ADJUDICATED_NOT_REQUIRED_RULES: tuple[tuple[str, str, tuple[str,
 )
 
 
-def _source_adjudicated_not_required_rules() -> tuple[tuple[str, str, tuple[str, ...], tuple[str, ...], str], ...]:
-    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "not_required_adjudications.json")
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            payload = json.load(fh)
-        entries = payload.get("not_required_adjudications") if isinstance(payload, dict) else payload
-        rules: list[tuple[str, str, tuple[str, ...], tuple[str, ...], str]] = []
-        if isinstance(entries, list):
-            for item in entries:
-                if not isinstance(item, dict):
-                    continue
-                rules.append((
-                    str(item.get("city") or "").lower().strip(),
-                    str(item.get("state") or "").upper().strip(),
-                    tuple(str(t).lower() for t in (item.get("required_terms") or [])),
-                    tuple(str(t).lower() for t in (item.get("disqualifiers") or [])),
-                    str(item.get("reason") or ""),
-                ))
-        return tuple(rule for rule in rules if rule[0] and rule[1] and rule[2] and rule[4]) or _DEFAULT_SOURCE_ADJUDICATED_NOT_REQUIRED_RULES
-    except Exception:
-        return _DEFAULT_SOURCE_ADJUDICATED_NOT_REQUIRED_RULES
-
-
 def _source_adjudicated_not_required_reason(city: str, state: str, job_text: str) -> str:
     lowered = (job_text or "").lower()
     city_lc = (city or "").lower().strip()
     state_uc = (state or "").upper().strip()
-    for rule_city, rule_state, required_terms, disqualifiers, reason in _source_adjudicated_not_required_rules():
+    for rule_city, rule_state, required_terms, disqualifiers, reason in _SOURCE_ADJUDICATED_NOT_REQUIRED_RULES:
         if city_lc != rule_city or state_uc != rule_state:
             continue
         if not all(term in lowered for term in required_terms):
@@ -265,68 +236,6 @@ def _blob(value: Any) -> str:
     if isinstance(value, list):
         return " ".join(_blob(v) for v in value)
     return str(value or "")
-
-
-_URL_RE = re.compile(r"https?://[^\s\"'<>),]+", re.I)
-
-
-def _urls_from_value(value: Any) -> list[str]:
-    """Extract actual URL values without treating dict keys as evidence."""
-    urls: list[str] = []
-    if isinstance(value, str):
-        urls.extend(match.group(0).rstrip(".,;]") for match in _URL_RE.finditer(value))
-    elif isinstance(value, dict):
-        for nested in value.values():
-            urls.extend(_urls_from_value(nested))
-    elif isinstance(value, (list, tuple, set)):
-        for nested in value:
-            urls.extend(_urls_from_value(nested))
-    return list(dict.fromkeys(url for url in urls if url.startswith(("http://", "https://"))))
-
-
-def _source_urls(result: dict[str, Any]) -> list[str]:
-    payload = {k: result.get(k) for k in ("sources", "source_urls", "claim_citations", "apply_url", "apply_path", "online_application_url")}
-    return _urls_from_value(payload)
-
-
-def _host_has_locality(host: str, city: str, state: str) -> bool:
-    host_lc = (host or "").lower()
-    city_lc = (city or "").lower().strip()
-    state_lc = (state or "").lower().strip()
-    city_tokens = [token for token in re.split(r"[^a-z0-9]+", city_lc) if len(token) >= 3]
-    if city_tokens and all(token in host_lc for token in city_tokens[:2]):
-        return True
-    if state_lc and (host_lc.endswith(f".{state_lc}.gov") or host_lc.endswith(f".{state_lc}.us")):
-        return True
-    return False
-
-
-def _fallback_official_source_check(url: str, city: str, state: str) -> bool:
-    try:
-        parsed = urlparse(url)
-    except Exception:
-        return False
-    host = (parsed.netloc or "").lower().split(":", 1)[0]
-    if not host:
-        return False
-    official_host = host.endswith(".gov") or host.endswith(".us") or host in {"phoenix.gov", "chicago.gov", "denvergov.org"}
-    return bool(official_host and _host_has_locality(host, city, state))
-
-
-def _positive_not_required_evidence(result: dict[str, Any]) -> bool:
-    if result.get("positive_exemption_evidence") or result.get("exemption_evidence"):
-        return True
-    for key in ("not_required_reason", "exemption_reason", "permit_exemption", "no_permit_reason"):
-        if _norm(result.get(key)):
-            return True
-    citation = result.get("code_citation")
-    if isinstance(citation, dict):
-        citation_text = _blob(citation).lower()
-        if any(token in citation_text for token in ("not required", "no permit", "exempt", "exemption")):
-            return True
-    elif isinstance(citation, str) and any(token in citation.lower() for token in ("not required", "no permit", "exempt", "exemption")):
-        return True
-    return False
 
 
 def _keyword_present(text: str, keyword: str) -> bool:
@@ -489,20 +398,10 @@ def _permit_names_for_kinds(kinds: list[str], existing_names: list[str]) -> list
     return list(dict.fromkeys(name for name in names if name))
 
 
-def _has_official_source(result: dict[str, Any], city: str = "", state: str = "") -> bool:
-    urls = _source_urls(result)
-    if not urls:
-        return False
-    for url in urls:
-        try:
-            from source_provenance import has_local_official_source  # type: ignore
-
-            if has_local_official_source({"source_url": url}, city=city, state=state, result=result):
-                return True
-        except Exception:
-            if _fallback_official_source_check(url, city, state):
-                return True
-    return False
+def _has_official_source(result: dict[str, Any]) -> bool:
+    text = _blob({k: result.get(k) for k in ("sources", "source_urls", "claim_citations", "apply_url", "apply_path", "online_application_url")})
+    lowered = text.lower()
+    return any(token in lowered for token in (".gov", ".us", "city", "county", "department", "permit")) and "http" in lowered
 
 
 def _source_backed_required_kinds(result: dict[str, Any]) -> list[str]:
@@ -529,10 +428,7 @@ def _source_backed_required_kinds(result: dict[str, Any]) -> list[str]:
 
 
 def _source_failure_seen(result: dict[str, Any]) -> bool:
-    # Only structured diagnostics should degrade source confidence. Source titles
-    # or quotes can legitimately contain words such as "timeout" and must not
-    # flip the degraded banner by text-blob coincidence.
-    text = _blob({k: result.get(k) for k in ("retrieval_diagnostics", "warnings", "quality_warnings", "source_support")}).lower()
+    text = _blob({k: result.get(k) for k in ("retrieval_diagnostics", "warnings", "quality_warnings", "source_support", "sources", "source_urls")}).lower()
     return any(token in text for token in ("429", "502", "timeout", "timed out", "rate limit", "bad gateway", "temporarily unavailable", "retrieval failed"))
 
 
@@ -600,14 +496,10 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
         and (explicit_no_trade_or_structural or not has_affirmative_trade_or_structural)
         and not has_affirmative_trade_or_structural
     )
-    source_backed_exemption_evidence = bool(result.get("positive_exemption_evidence") or result.get("exemption_evidence")) and _has_official_source(result, city, state)
+    source_backed_exemption_evidence = bool(result.get("positive_exemption_evidence") or result.get("exemption_evidence")) and _has_official_source(result)
     not_required_allowed_for_segment = (not commercial_default) or source_backed_exemption_evidence
     source_adjudicated_not_required_reason = _source_adjudicated_not_required_reason(city, state, job_text)
-    has_positive_no_permit_evidence = _positive_not_required_evidence(result)
-    repaired_json_without_evidence = bool(result.get("_json_repaired")) and not has_positive_no_permit_evidence
-    deliberate_not_required = supplied_decision == PERMIT_DECISION_NOT_REQUIRED or supplied_required is False
-    derived_verdict_not_required = supplied_verdict in {"NO", "NOT_REQUIRED"} and has_positive_no_permit_evidence
-    explicit_not_required = (deliberate_not_required or derived_verdict_not_required) and not repaired_json_without_evidence
+    explicit_not_required = supplied_decision == PERMIT_DECISION_NOT_REQUIRED or supplied_required is False or supplied_verdict in {"NO", "NOT_REQUIRED"}
 
     # Only honor NOT_REQUIRED when the current scope is genuinely trivial/cosmetic
     # or an upstream source/rule explicitly classified it as NOT_REQUIRED. Legacy
@@ -615,16 +507,14 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     # source-backed exemption evidence; cosmetic defaults alone are residential-only.
     if (source_adjudicated_not_required_reason and not_required_allowed_for_segment) or (trivial_not_required and not_required_allowed_for_segment) or (explicit_not_required and not _has_affirmative_structural_or_trade(scope_text) and not_required_allowed_for_segment):
         decision = PERMIT_DECISION_NOT_REQUIRED
-        decision_basis = "source_adjudicated_not_required" if source_adjudicated_not_required_reason else ("scope_trivial_not_required" if trivial_not_required else "explicit_not_required")
         kinds: list[str] = []
         permit_names: list[str] = []
         reason = source_adjudicated_not_required_reason or _not_required_reason(job_type, result)
         headline = "Permit not required for the described scope."
         next_step = "Keep this no-permit rationale with the job file before starting work."
-        confidence_tier = "AHJ_DIRECT" if _has_official_source(result, city, state) else "SCOPE_DEFAULT"
+        confidence_tier = "AHJ_DIRECT" if _has_official_source(result) else "SCOPE_DEFAULT"
     else:
         decision = PERMIT_DECISION_REQUIRED
-        decision_basis = "scope_required_floor"
         existing_names = _existing_required_permit_names(result)
         # P1A — Change-of-use anchor guard (2026-06-09).
         # Force Building/TI anchor for commercial use-type changes, but do not
@@ -643,13 +533,13 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
             headline = "Permit required: Commercial Building / Tenant Improvement."
             department = _norm(result.get("applying_office") or result.get("building_dept_name")) or f"{city} {state} Building Department".strip() or "the local building department"
             next_step = f"File under Commercial Building / Tenant Improvement with {department}; confirm the exact occupancy classification and required plan sets before starting work."
-            confidence_tier = "AHJ_DIRECT" if _has_official_source(result, city, state) else "SCOPE_DEFAULT"
+            confidence_tier = "AHJ_DIRECT" if _has_official_source(result) else "SCOPE_DEFAULT"
             degraded_sources = bool(result.get("degraded_sources") or _source_failure_seen(result))
             source_support = result.get("source_support") if isinstance(result.get("source_support"), dict) else {}
             if not source_support:
                 source_support = {
                     "confidence_tier": confidence_tier,
-                    "has_official_source": _has_official_source(result, city, state),
+                    "has_official_source": _has_official_source(result),
                     "source_count": len(result.get("sources") or []),
                     "has_live_source": bool(result.get("sources") or result.get("source_urls")),
                     "degraded_sources": degraded_sources,
@@ -660,7 +550,6 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
                 "permit_decision": decision,
                 "permit_required": True,
                 "permit_verdict": "YES",
-                "decision_basis": "change_of_use_required_floor",
                 "permit_kind": kinds[0],
                 "permit_kinds": kinds,
                 "permit_name": permit_names[0],
@@ -689,7 +578,7 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
         headline = f"Permit required: {', '.join(permit_names[:3])}."
         department = _norm(result.get("applying_office") or result.get("building_dept_name")) or f"{city} {state} Building Department".strip() or "the local building department"
         next_step = f"File under {permit_names[0]} with {department}; use the local permit portal or counter intake for that permit category before starting work."
-        if _has_official_source(result, city, state):
+        if _has_official_source(result):
             confidence_tier = "AHJ_DIRECT"
         elif state in _US_STATES:
             confidence_tier = "SCOPE_DEFAULT"
@@ -701,7 +590,7 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     if not source_support:
         source_support = {
             "confidence_tier": confidence_tier,
-            "has_official_source": _has_official_source(result, city, state),
+            "has_official_source": _has_official_source(result),
             "degraded_sources": degraded_sources,
             "exact_form_known": bool(_norm(result.get("permit_name")) or _existing_required_permit_names(result)),
             "apply_url_known": bool(_norm(result.get("apply_url") or result.get("online_application_url"))),
@@ -715,7 +604,6 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     return {
         "permit_required": decision == PERMIT_DECISION_REQUIRED,
         "permit_decision": decision,
-        "decision_basis": decision_basis,
         "permit_kind": display_kind,
         "permit_kinds": kinds,
         "permit_name": primary_name if decision == PERMIT_DECISION_REQUIRED else "No permit required",

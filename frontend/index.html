@@ -25,7 +25,6 @@
   <meta name="twitter:description" content="AI-powered permit research for contractors. Exact fees, requirements, and contacts in 30 seconds. $39.99/mo unlimited." />
   <meta name="twitter:image" content="https://permitassist.io/icons/icon-512.png" />
   <link rel="manifest" href="/manifest.json" />
-  <script src="/js/render_result.js" defer></script>
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
   <link rel="shortcut icon" href="/icons/icon-192.png" />
@@ -1837,13 +1836,6 @@ function normalizeCustomerVisibleCopy(value) {
 function esc(s){return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function escCopy(s){return esc(normalizeCustomerVisibleCopy(s))}
 function sourceUrl(src){return typeof src==='string'?src:((src&&src.url)||'')}
-function safeGoogleMapsUrl(url){
-  const u = String(url || '').trim();
-  return u.startsWith('https://www.google.com/maps') ? u : 'https://www.google.com/maps';
-}
-function openSafeMapsUrl(url){
-  window.open(safeGoogleMapsUrl(url), '_blank', 'noopener');
-}
 function sourceTitle(src){return (src&&typeof src==='object'&&(src.title||src.name))||'Source'}
 function sourceHostname(src){try{return new URL(sourceUrl(src)).hostname}catch(_){return sourceUrl(src)}}
 function sanitizeFallbackJurisdictionCopy(text, level) {
@@ -2807,14 +2799,7 @@ function hasPositiveNoPermitEvidence(d){
   });
   const saysNoPermit = /\b(no permit required|permit (?:is )?not required|does not require a permit|exempt(?:ion|ed)?|no (?:building )?permit)\b/i.test(textEvidence);
   const hasCitation = Boolean(d?.code_citation || /\b(code|ordinance|section|chapter|exemption|official|source)\b/i.test(textEvidence));
-  const packet = (d && typeof d.public_packet === 'object') ? d.public_packet : {};
-  const packetVerdict = String(packet.permit_required_verdict || packet.decision || '').toUpperCase().trim();
-  const backendCertifiedNotRequired = (
-    d?.permit_required === false &&
-    String(d?.permit_decision || '').toUpperCase().trim() === 'NOT_REQUIRED' &&
-    (packetVerdict === 'NOT_REQUIRED' || Boolean(d?.sealed_public_packet_hash || packet.sealed_public_packet_hash))
-  );
-  return backendCertifiedNotRequired || permitEvidence || (saysNoPermit && (hasCitation || hasOfficialSource));
+  return permitEvidence || (saysNoPermit && (hasCitation || hasOfficialSource));
 }
 
 function verdictState(d){
@@ -2844,24 +2829,6 @@ function customerFacingDecisionLabel(rawDecision, d, verdict){
 }
 
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
-function looksLikeRawUrl(value){return /^https?:\/\//i.test(String(value || '').trim());}
-function safePhoneForDisplay(value){return looksLikeRawUrl(value) ? '' : String(value || '').trim();}
-function buildPermitOfficeMapsUrl(city, state, office, address) {
-  const cityText = String(city || '').trim();
-  const stateText = String(state || '').trim();
-  const officeText = String(office || '').trim();
-  const addressText = String(address || '').trim();
-  const query = addressText || [officeText, cityText, stateText, 'building permit office'].filter(Boolean).join(' ');
-  return 'https://www.google.com/maps/search/' + encodeURIComponent(query || 'building permit office');
-}
-function safePermitOfficeMapsUrl(rawUrl, city, state, office, address) {
-  const raw = String(rawUrl || '').trim();
-  if (/^https:\/\/www\.google\.com\/maps(?:\/search\/.+|\/place\/.+|\?q=.+)/i.test(raw)) return raw;
-  return buildPermitOfficeMapsUrl(city, state, office, address);
-}
-function openPermitOfficeMaps(url) {
-  window.open(String(url || '').trim() || buildPermitOfficeMapsUrl('', '', '', ''), '_blank', 'noopener');
-}
 
 // ── Render Results ───────────────────────────────────────────────────────────
 function getPermitDisplayName(d) {
@@ -3176,12 +3143,10 @@ function renderResults(d, job, city, state) {
   const checklist = d.what_to_bring || d.checklist || [];
   const tl = d.approval_timeline || {};
   const office = d.applying_office || d.office_name || '';
-  const phone = safePhoneForDisplay(d.apply_phone || d.office_phone || '');
+  const phone = d.apply_phone || d.office_phone || '';
   const officeAddress = d.apply_address || d.office_address || '';
-  const jobAddress = d.job_address || currentResult?.address || '';
-  const projectMaps = d.job_maps_url || '';
-  const officeMaps = safePermitOfficeMapsUrl(d.apply_google_maps || d.maps_url || '', city, state, office, officeAddress);
-  const maps = officeMaps;
+  const jobAddress = currentResult?.address || '';
+  const maps = d.apply_google_maps || d.maps_url || '';
   const fee = d.fee_range || d.fee || d.cost || '';
   const applyUrl = d.apply_url || '';
   const applyPdf = d.apply_pdf || '';
@@ -3213,10 +3178,6 @@ function renderResults(d, job, city, state) {
   }
 
   html += `<div class="disclaimer-box" style="margin-bottom:14px;border-color:rgba(217,119,6,0.25);background:rgba(217,119,6,0.08);color:#92400e">⚠️ <strong>PermitAssist is guidance only.</strong> Verify exact permit type with the local building department before quoting or starting work.</div>`;
-  const degradedReason = (d.public_packet && d.public_packet.degraded_reason) || d.degraded_reason || '';
-  if (d.degraded_sources === true || (d.public_packet && d.public_packet.degraded === true)) {
-    html += `<div class="degraded-confidence-banner" style="margin-bottom:14px;border:1.5px solid rgba(217,119,6,0.35);background:rgba(217,119,6,0.08);color:#92400e;border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.5">⚠️ <strong>Source confidence is degraded.</strong> Treat this as a permit-office verification packet before quoting or filing.${degradedReason ? ` Reason: ${esc(degradedReason)}` : ''}</div>`;
-  }
 
   const customerSummary = (d.customer_result_summary && typeof d.customer_result_summary === 'object') ? d.customer_result_summary : {};
   const rawCustomerFirstScreen = (d.customer_first_screen_summary && typeof d.customer_first_screen_summary === 'object') ? d.customer_first_screen_summary : {};
@@ -3394,14 +3355,9 @@ function renderResults(d, job, city, state) {
     const requiredPermitNames = (d.required_permit_names && d.required_permit_names.length)
       ? d.required_permit_names
       : requiredPermits.map(p => p.permit_type || p.approval_type || p.portal_selection).filter(Boolean);
-    const sealedFamilyLabels = (d.public_packet && Array.isArray(d.public_packet.required_family_display_labels))
-      ? d.public_packet.required_family_display_labels.filter(Boolean)
-      : [];
-    const requiredPermitFamilies = sealedFamilyLabels.length
-      ? sealedFamilyLabels
-      : ((d.required_permit_families && d.required_permit_families.length)
-        ? d.required_permit_families
-        : requiredPermits.map(p => p.display_family || p.kind || '').filter(Boolean));
+    const requiredPermitFamilies = (d.required_permit_families && d.required_permit_families.length)
+      ? d.required_permit_families
+      : requiredPermits.map(p => p.display_family || p.kind || '').filter(Boolean);
     const isMultiPermit = requiredPermitNames.length > 1;
     const portalSel = !isMultiPermit && requiredPermits.length > 0 ? requiredPermits[0].portal_selection : null;
     const exactPermitName = isMultiPermit
@@ -3815,8 +3771,7 @@ function renderResults(d, job, city, state) {
       <button class="action-btn" onclick="downloadReport()">📄 Print / Save PDF</button>
     </div>
     <div class="action-row">
-      ${projectMaps ? `<button class="action-btn" data-maps-url="${esc(projectMaps)}" onclick="openSafeMapsUrl(this.dataset.mapsUrl)">🏠 Project Address</button>` : ''}
-      <button class="action-btn" data-maps-url="${esc(officeMaps)}" onclick="openPermitOfficeMaps(this.dataset.mapsUrl)">🏛️ Building Department</button>
+      <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
       <button class="action-btn" style="border-color:rgba(59,130,246,.4);color:var(--brand)" onclick="saveJobToTracker()">📁 Save to Job Tracker</button>
     </div>
     <div class="expiry-reminder-card" id="expiry-reminder">
@@ -3875,7 +3830,7 @@ function renderResultAsReport(d, job, city, state) {
 
   const permitName = d.permit_name || d.permit_type || primaryPermit.permit_type || (permits[0] && permits[0].permit_type) || applyPathLabel || '';
   const office = d.applying_office || '';
-  const rawPhone = safePhoneForDisplay(d.apply_phone || '');
+  const rawPhone = d.apply_phone || '';
   const phone = /^https?:\/\//i.test(String(rawPhone || '')) ? '' : rawPhone;
   const address = d.apply_address || '';
   const applyUrl = d.apply_url || applyPath.portal_url || '';
@@ -4197,7 +4152,7 @@ function copyResult() {
   const fee = d.fee_range || 'Contact building dept';
   const timeline = d.approval_timeline?.simple || d.approval_timeline?.complex || 'Varies';
   const office = d.applying_office || '';
-  const phone = safePhoneForDisplay(d.apply_phone || '');
+  const phone = d.apply_phone || '';
   let t = `PERMIT SUMMARY — ${job} in ${city}, ${state}\n`;
   t += `Permit needed: ${permitName}\n`;
   t += `Fee: ${fee}\n`;
@@ -4467,7 +4422,7 @@ function emailResult() {
 function callPermitOffice() {
   if (!currentResult) return;
   const { city, state, data: d } = currentResult;
-  const phone = safePhoneForDisplay(d.apply_phone || '');
+  const phone = d.apply_phone || '';
   // Strip non-digit characters to check if it's a real phone number
   const digits = phone.replace(/\D/g, '');
   if (digits.length >= 10 && !phone.toLowerCase().startsWith('search')) {
@@ -4565,7 +4520,7 @@ function downloadReport() {
   const mistakes = normalizeCustomerWarningItems(d.common_mistakes || [], d.watch_out || []).slice(0, 4);
   const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
   const sources = (d.sources || []).filter(s => sourceUrl(s)).slice(0, 5);
-  const phone = safePhoneForDisplay(d.apply_phone || '');
+  const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
   const offAddr = d.apply_address || '';
@@ -4699,7 +4654,7 @@ function printResult() {
   const tips = (d.pro_tips || []).slice(0, 4);
   const mistakes = normalizeCustomerWarningItems(d.common_mistakes || [], d.watch_out || []).slice(0, 4);
   const inspections = normalizeInspectionItems(d.inspections || []).slice(0, 6);
-  const phone = safePhoneForDisplay(d.apply_phone || '');
+  const phone = d.apply_phone || '';
   const maps = d.apply_google_maps || '';
   const office = d.applying_office || '';
   const offAddr = d.apply_address || '';

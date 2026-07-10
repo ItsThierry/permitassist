@@ -29,15 +29,8 @@ class PermitFamily(StrEnum):
     PLUMBING = "plumbing"
     MECHANICAL = "mechanical"
     REFRIGERATION = "refrigeration"
-    SOLAR = "solar"
-    FENCE = "fence"
-    ROOFING = "roofing"
-    STRUCTURAL = "structural"
-    UTILITY = "utility"
     SIGN = "sign"
     FIRE = "fire"
-    # `zoning` is preserved as a compatibility enum value, but customer
-    # classification canonicalizes zoning/land-use labels to PLANNING.
     ZONING = "zoning"
     PLANNING = "planning"
     HISTORIC = "historic"
@@ -104,11 +97,6 @@ _FAMILY_LABELS: dict[PermitFamily, str] = {
     PermitFamily.PLUMBING: "Plumbing",
     PermitFamily.MECHANICAL: "Mechanical",
     PermitFamily.REFRIGERATION: "Refrigeration",
-    PermitFamily.SOLAR: "Solar / PV",
-    PermitFamily.FENCE: "Fence",
-    PermitFamily.ROOFING: "Roofing",
-    PermitFamily.STRUCTURAL: "Structural",
-    PermitFamily.UTILITY: "Utility",
     PermitFamily.SIGN: "Sign",
     PermitFamily.FIRE: "Fire",
     PermitFamily.ZONING: "Planning/Zoning",
@@ -129,11 +117,6 @@ _FAMILY_DEFAULT_NAMES: dict[PermitFamily, str] = {
     PermitFamily.PLUMBING: "Plumbing Permit",
     PermitFamily.MECHANICAL: "Mechanical Permit",
     PermitFamily.REFRIGERATION: "Refrigeration Permit",
-    PermitFamily.SOLAR: "Solar / PV Permit",
-    PermitFamily.FENCE: "Fence Permit / Planning Review",
-    PermitFamily.ROOFING: "Roofing Permit",
-    PermitFamily.STRUCTURAL: "Structural Permit / Engineering Review",
-    PermitFamily.UTILITY: "Utility Interconnection / Service Approval",
     PermitFamily.SIGN: "Sign Permit",
     PermitFamily.FIRE: "Fire Permit / Fire Prevention Review",
     PermitFamily.ZONING: "Planning/Zoning Verification",
@@ -150,23 +133,18 @@ _FAMILY_DEFAULT_NAMES: dict[PermitFamily, str] = {
 
 _FAMILY_ORDER = [
     PermitFamily.SIGN,
-    PermitFamily.FENCE,
-    PermitFamily.SOLAR,
-    PermitFamily.ROOFING,
-    PermitFamily.STRUCTURAL,
     PermitFamily.BUILDING,
     PermitFamily.PLUMBING,
     PermitFamily.MECHANICAL,
     PermitFamily.REFRIGERATION,
     PermitFamily.ELECTRICAL,
-    PermitFamily.UTILITY,
     PermitFamily.GRADING,
     PermitFamily.WASTEWATER,
     PermitFamily.ENVIRONMENTAL,
     PermitFamily.FIRE,
     PermitFamily.HEALTH,
-    PermitFamily.PLANNING,
     PermitFamily.ZONING,
+    PermitFamily.PLANNING,
     PermitFamily.HISTORIC,
     PermitFamily.OCCUPANCY,
     PermitFamily.LIQUOR,
@@ -206,28 +184,14 @@ def normalize_family(value: PermitFamily | str | None, row: dict[str, Any] | Non
         "plumbing": PermitFamily.PLUMBING,
         "mechanical": PermitFamily.MECHANICAL,
         "refrigeration": PermitFamily.REFRIGERATION,
-        "solar": PermitFamily.SOLAR,
-        "pv": PermitFamily.SOLAR,
-        "photovoltaic": PermitFamily.SOLAR,
-        "fence": PermitFamily.FENCE,
-        "wall_fence": PermitFamily.FENCE,
-        "roofing": PermitFamily.ROOFING,
-        "reroof": PermitFamily.ROOFING,
-        "re_roof": PermitFamily.ROOFING,
-        "structural": PermitFamily.STRUCTURAL,
-        "utility": PermitFamily.UTILITY,
-        "utilities": PermitFamily.UTILITY,
         "sign": PermitFamily.SIGN,
         "fire": PermitFamily.FIRE,
         "planning": PermitFamily.PLANNING,
-        "zoning": PermitFamily.PLANNING,
-        "land_use": PermitFamily.PLANNING,
+        "zoning": PermitFamily.ZONING,
         "historic": PermitFamily.HISTORIC,
         "co": PermitFamily.OCCUPANCY,
         "occupancy": PermitFamily.OCCUPANCY,
         "grading": PermitFamily.GRADING,
-        "right_of_way": PermitFamily.GRADING,
-        "row": PermitFamily.GRADING,
         "wastewater": PermitFamily.WASTEWATER,
         "wastewater_pretreatment_fog": PermitFamily.WASTEWATER,
         "environmental": PermitFamily.ENVIRONMENTAL,
@@ -242,24 +206,19 @@ def normalize_family(value: PermitFamily | str | None, row: dict[str, Any] | Non
     checks: list[tuple[PermitFamily, tuple[str, ...]]] = [
         (PermitFamily.WASTEWATER, ("wastewater", "pretreatment", "fog", "grease interceptor")),
         (PermitFamily.ENVIRONMENTAL, ("environmental", "fuel system", "fuel dispenser", "ust", "underground storage tank")),
-        (PermitFamily.REFRIGERATION, ("refrigeration", "refrigerant", "line set", "line-set")),
-        (PermitFamily.SOLAR, ("solar", "photovoltaic", " pv ", "solarapp", "battery storage", "battery backup")),
-        (PermitFamily.FENCE, ("fence", "fencing", "privacy wall", "fence / wall", "fence/wall")),
-        (PermitFamily.ROOFING, ("roofing", "reroof", "re-roof", " roof ", "shingle", "sheathing")),
-        (PermitFamily.STRUCTURAL, ("structural", "mezzanine", "platform", "structural steel", "load bearing", "load-bearing", "guardrail", "stairs")),
-        (PermitFamily.UTILITY, ("utility interconnection", "permission to operate", "pto", "utility approval", "transformer", "switchgear", "service equipment", "meter main", "meter/main")),
-        (PermitFamily.SIGN, ("sign permit", "signage", "monument sign", "blade sign", "cabinet sign", "sign cabinet", "projecting sign", "wall sign", "exterior sign", "storefront sign", "sign face", "illuminated sign")),
-        (PermitFamily.GRADING, ("right-of-way", "right of way", "row", "encroachment", "driveway", "sidewalk", "site/civil", "site civil", "grading", "drainage", "street cut")),
-        (PermitFamily.OCCUPANCY, ("certificate of occupancy", "change-of-occupancy", "change of occupancy", "co_change", "occupancy")),
-        (PermitFamily.HISTORIC, ("historic", "landmark", "certificate of appropriateness", "design review")),
-        (PermitFamily.PLANNING, ("planning", "zoning", "land use", "setback")),
-        (PermitFamily.HEALTH, ("health", "food establishment", "environmental health")),
+        (PermitFamily.REFRIGERATION, ("refrigeration",)),
+        (PermitFamily.SIGN, ("sign permit", "signage", " sign", "monument sign", "blade sign", "cabinet sign", "sign face")),
+        (PermitFamily.GRADING, ("right-of-way", "right of way", "row", "encroachment", "driveway", "sidewalk", "site/civil", "site civil", "grading", "drainage")),
+        (PermitFamily.OCCUPANCY, ("certificate of occupancy", "change-of-occupancy", "co_change", "occupancy")),
+        (PermitFamily.HISTORIC, ("historic",)),
+        (PermitFamily.PLANNING, ("planning", "zoning", "land use")),
+        (PermitFamily.HEALTH, ("health", "food establishment")),
         (PermitFamily.LIQUOR, ("liquor", "alcohol")),
-        (PermitFamily.FIRE, ("fire", "sprinkler", "alarm", "suppression", "life safety", "hood")),
-        (PermitFamily.PLUMBING, ("plumbing", "water heater", "sewer", "water service", "water line", "repipe", "pex", "backflow", "irrigation", "drain")),
-        (PermitFamily.MECHANICAL, ("mechanical", "hvac", "mini split", "mini-split", "ductless", "wood stove", "solid-fuel", "furnace", "heat pump", "ventilation", "exhaust")),
-        (PermitFamily.ELECTRICAL, ("electrical", "electric", "circuit", "panel", "disconnect", "service upgrade", "switch", "fixture", "lighting", "subpanel")),
-        (PermitFamily.BUILDING, ("building", "tenant improvement", "garage", "deck", "window", "construction", "porch", "stoop", "stairs", "patio cover", "shed")),
+        (PermitFamily.FIRE, ("fire", "sprinkler", "alarm")),
+        (PermitFamily.PLUMBING, ("plumbing", "water heater", "sewer", "water service", "water line", "repipe", "pex")),
+        (PermitFamily.MECHANICAL, ("mechanical", "hvac", "mini split", "mini-split", "ductless", "wood stove", "solid-fuel", "furnace", "heat pump")),
+        (PermitFamily.ELECTRICAL, ("electrical", "circuit", "panel", "disconnect", "service upgrade", "switch", "fixture")),
+        (PermitFamily.BUILDING, ("building", "tenant improvement", "garage", "deck", "window", "roof", "structural", "construction", "porch", "stairs")),
     ]
     for family, needles in checks:
         if any(needle in text for needle in needles):
@@ -389,12 +348,6 @@ _SIGNAL_TO_FAMILY_STATUS: dict[str, tuple[PermitFamily, PermitStatus, str, str]]
     "fire": (PermitFamily.FIRE, PermitStatus.REQUIRED, "Fire Prevention Permit / Review", "Fire alarm, sprinkler, hood suppression, hazardous, or fuel-system scope triggers fire-prevention review."),
     "building_structural": (PermitFamily.BUILDING, PermitStatus.REQUIRED, "Building Permit", "Structural, foundation, exterior, addition, or construction work triggers building review."),
     "wastewater_fog": (PermitFamily.WASTEWATER, PermitStatus.CONDITIONAL, "Wastewater / FOG / Pretreatment Approval", "Verify wastewater/FOG pretreatment approval for grease-interceptor, floor-drain, or FOG-producing scope."),
-    "medical_gas": (PermitFamily.MECHANICAL, PermitStatus.CONDITIONAL, "Medical Gas / Mechanical-Plumbing Coordination", "Medical gas, nitrous, oxygen, or dental gas scope needs first-class med-gas/mechanical/plumbing coordination."),
-    "lab_hazmat": (PermitFamily.MECHANICAL, PermitStatus.REQUIRED, "Mechanical Permit — Lab Exhaust / Fume Hood", "Lab, fume-hood, wet-lab, exhaust, or chemical-storage scope triggers mechanical review."),
-    "daycare_life_safety": (PermitFamily.FIRE, PermitStatus.REQUIRED, "Fire / Life Safety Review", "Daycare, classroom, play-yard, and occupancy-change scope triggers fire/life-safety review."),
-    "retaining_wall": (PermitFamily.BUILDING, PermitStatus.REQUIRED, "Building / Structural Permit — Retaining Wall", "Retaining-wall height/structural scope triggers building/engineering review."),
-    "dryer_outlet": (PermitFamily.ELECTRICAL, PermitStatus.REQUIRED, "Electrical Permit — Dryer Outlet / 240V Circuit", "A 240V/dryer outlet or heat-pump dryer electrical circuit is an electrical permit family."),
-    "hpwh": (PermitFamily.PLUMBING, PermitStatus.REQUIRED, "Plumbing Permit — Heat-Pump Water Heater", "Heat-pump water heater replacement remains a water-heater/plumbing filing family."),
 }
 
 _SPECIAL_TO_REVIEW: dict[str, tuple[PermitFamily, PermitStatus, str, str]] = {
@@ -428,12 +381,10 @@ def _scope_facts(job_type: str, city: str, state: str, scope_contract: dict[str,
         construction_class = "none"
         trade_signals = frozenset()
         special_signals = frozenset()
-        negative_scope_facts = frozenset()
         dominant_family = ""
         vertical = str((scope_contract or {}).get("vertical") or "generic")
-        request_scope_text = job_type or ""
         def as_dict(self) -> dict[str, Any]:
-            return {"segment": self.segment, "construction_class": self.construction_class, "trade_signals": [], "special_signals": [], "negative_scope_facts": [], "dominant_family": self.dominant_family, "vertical": self.vertical, "request_scope_text": self.request_scope_text}
+            return {"segment": self.segment, "construction_class": self.construction_class, "trade_signals": [], "special_signals": [], "dominant_family": self.dominant_family, "vertical": self.vertical}
     return _FallbackFacts()
 
 
@@ -448,23 +399,6 @@ def _source_backed_exemption(public: dict[str, Any]) -> bool:
         return True
     reason = _text(public.get("not_required_reason"), public.get("exemption_reason"), public.get("reason")).lower()
     return decision == "NOT_REQUIRED" and bool(_source_urls(public)) and any(token in reason for token in ("exempt", "not required", "no permit"))
-
-
-def _item_has_direct_source_backing(item: PermitItem) -> bool:
-    """True when a required row carries row-level source evidence, not only synthesized scope logic."""
-    row = item.row if isinstance(item.row, dict) else {}
-    binding = str(row.get("source_binding") or "").lower()
-    if "synthesized" in binding or "scope_facts" in binding:
-        return False
-    for key in ("source_url", "source_urls", "citation_url", "citation_urls", "sources", "source", "evidence_url"):
-        value = row.get(key)
-        if isinstance(value, str) and value.strip():
-            return True
-        if isinstance(value, (list, tuple)) and any(bool(v) for v in value):
-            return True
-        if isinstance(value, dict) and value:
-            return True
-    return False
 
 
 def _row_with_status(family: PermitFamily, name: str, status: PermitStatus, source_support: SourceSupport, rationale: str, segment: PermitSegment | str | None = None, *, synthesized_governing: bool = False) -> PermitItem:
@@ -529,58 +463,10 @@ def _demote_to_status(item: PermitItem, status: PermitStatus, reason: str) -> Pe
     return PermitItem(family=item.family, status=status, segment=item.segment, name=item.name, row=row, rationale=reason, source_support=item.source_support)
 
 
-def _canonicalize_item_name(item: PermitItem, name: str, *, family: PermitFamily | None = None, segment: PermitSegment | None = None) -> PermitItem:
-    row = copy.deepcopy(item.row)
-    fam = family or item.family
-    seg = segment or item.segment
-    row.update({
-        "permit_type": name,
-        "permit_name": name,
-        "approval_type": name,
-        "filing_family": fam.value,
-        "family": fam.value,
-        "kind": family_label(fam),
-        "display_family": family_label(fam),
-        "segment": seg.value,
-    })
-    return PermitItem(family=fam, status=item.status, segment=seg, name=name, row=row, rationale=item.rationale, source_support=item.source_support)
-
-
-def _canonicalize_segment_row_titles(items: Iterable[PermitItem], request_segment: PermitSegment, scope: str = "") -> list[PermitItem]:
-    out: list[PermitItem] = []
-    for item in items:
-        text = item.name.lower()
-        replacement: str | None = None
-        if request_segment == PermitSegment.COMMERCIAL and re.search(r"\b(?:residential|single[-\s]?family|homeowner)\b", text):
-            if item.family == PermitFamily.PLUMBING and "water heater" in text:
-                replacement = "Commercial Plumbing Permit — Water Heater / Fixture Work"
-            elif item.family == PermitFamily.PLUMBING:
-                replacement = "Commercial Plumbing Permit"
-            elif item.family == PermitFamily.ELECTRICAL:
-                replacement = "Commercial Electrical Permit"
-            elif item.family == PermitFamily.MECHANICAL:
-                replacement = "Commercial Mechanical Permit"
-            elif item.family == PermitFamily.BUILDING:
-                replacement = "Commercial Building / Tenant Improvement Permit"
-            else:
-                replacement = default_name(item.family)
-        elif request_segment == PermitSegment.RESIDENTIAL and re.search(r"\b(?:commercial|tenant[-\s]?(?:improvement|finish|buildout)|\bti\b)\b", text):
-            if item.family == PermitFamily.BUILDING:
-                replacement = "Residential Building Permit — Remodel / Alteration"
-            else:
-                replacement = default_name(item.family)
-        if replacement:
-            out.append(_canonicalize_item_name(item, replacement, segment=request_segment))
-        else:
-            out.append(_with_segment(item, request_segment))
-    return out
-
-
 def _apply_universal_invariant_gates(required_items: list[PermitItem], related_items: list[PermitItem], decision: str, source_support: SourceSupport, facts: Any, public: dict[str, Any]) -> tuple[list[PermitItem], list[PermitItem], str, PermitFamily | None]:
     request_segment = normalize_segment(getattr(facts, "segment", ""))
     trade_signals = set(getattr(facts, "trade_signals", frozenset()) or [])
     special_signals = set(getattr(facts, "special_signals", frozenset()) or [])
-    negative_scope_facts = set(getattr(facts, "negative_scope_facts", frozenset()) or [])
     construction_class = str(getattr(facts, "construction_class", "none") or "none")
     exemption_backed = _source_backed_exemption(public)
     if exemption_backed and "mechanical_fuelgas" in trade_signals and _dominant_family_value(getattr(facts, "dominant_family", "")) == PermitFamily.MECHANICAL:
@@ -667,9 +553,7 @@ def _apply_universal_invariant_gates(required_items: list[PermitItem], related_i
         if not spec:
             continue
         family, default_status, name, rationale = spec
-        if default_status == PermitStatus.REQUIRED and _has_required_family(required_items, family):
-            continue
-        if default_status != PermitStatus.REQUIRED and _has_visible_family(visible, family):
+        if _has_visible_family(visible, family):
             continue
         status = PermitStatus.CONDITIONAL if (exemption_backed or intentional_safe_downgrade or (signal == "mechanical_fuelgas" and _dominant_family_value(getattr(facts, "dominant_family", "")) == PermitFamily.PLUMBING)) else default_status
         item = _row_with_status(family, name, status, source_support, rationale, request_segment)
@@ -689,101 +573,6 @@ def _apply_universal_invariant_gates(required_items: list[PermitItem], related_i
             "Verify electrical filing if the mechanical/HVAC equipment includes a new or altered circuit, disconnect, receptacle, wiring, or service work.",
             request_segment,
         ))
-
-    # Scope-noun family union + targeted negative-scope suppression. This runs before special-review floors.
-    scope_text = _text(getattr(facts, "request_scope_text", ""), public.get("job_type"), public.get("job_summary"), public.get("summary")).lower()
-    # `public` may not carry job_type; facts were derived from the request, so signals are authoritative here.
-    if "pool_spa" in trade_signals:
-        decision = "REQUIRED"
-        _add_or_replace_required(required_items, PermitFamily.BUILDING, "Building Permit — Pool / Spa", source_support, "In-ground pool/spa scope triggers building/pool permit review.", first=True, segment=request_segment)
-        if not _has_visible_family(required_items + related_items, PermitFamily.ELECTRICAL):
-            related_items.append(_row_with_status(PermitFamily.ELECTRICAL, "Electrical Permit — Pool Equipment / Bonding Verification", PermitStatus.VERIFY, source_support, "Verify electrical permit/bonding requirements for pool/spa equipment, pumps, bonding, or lighting.", request_segment))
-    if "hpwh" in trade_signals:
-        decision = "REQUIRED"
-        required_items = [item for item in required_items if item.family != PermitFamily.MECHANICAL]
-        _add_or_replace_required(required_items, PermitFamily.PLUMBING, "Plumbing Permit — Heat-Pump Water Heater", source_support, "Heat-pump water heater replacement is a plumbing/water-heater permit family.", first=True, segment=request_segment)
-        hpwh_electrical_status = PermitStatus.REQUIRED if source_support.jurisdiction == ("San Jose", "CA") else PermitStatus.CONDITIONAL
-        hpwh_electrical = _row_with_status(PermitFamily.ELECTRICAL, "Electrical Permit — Heat-Pump Water Heater Circuit / Connection", hpwh_electrical_status, source_support, "Heat-pump water heaters require electrical circuit/disconnect review; San Jose HPWH overlay treats plumbing and electrical as required.", request_segment)
-        if hpwh_electrical_status == PermitStatus.REQUIRED:
-            if not _has_required_family(required_items, PermitFamily.ELECTRICAL):
-                required_items.append(hpwh_electrical)
-        elif not _has_visible_family(required_items + related_items, PermitFamily.ELECTRICAL):
-            related_items.append(hpwh_electrical)
-    if "medical_gas" in trade_signals and not _has_visible_family(required_items + related_items, PermitFamily.MECHANICAL):
-        related_items.append(_row_with_status(PermitFamily.MECHANICAL, "Medical Gas / Mechanical-Plumbing Coordination", PermitStatus.VERIFY, source_support, "Verify first-class med-gas/mechanical/plumbing coordination for nitrous, oxygen, dental, or medical-gas lines.", request_segment))
-    if "lab_hazmat" in trade_signals:
-        _add_or_replace_required(required_items, PermitFamily.MECHANICAL, "Mechanical Permit — Lab Exhaust / Fume Hood", source_support, "Lab/fume-hood/chemical-storage scope triggers mechanical exhaust/ventilation review.", segment=request_segment)
-        if not _has_visible_family(required_items + related_items, PermitFamily.FIRE):
-            related_items.append(_row_with_status(PermitFamily.FIRE, "Fire / Hazmat Review", PermitStatus.VERIFY, source_support, "Verify fire/hazmat review for chemical storage, hazardous materials, and lab operations.", request_segment))
-    if "daycare_life_safety" in trade_signals:
-        _add_or_replace_required(required_items, PermitFamily.FIRE, "Fire / Life Safety Review", source_support, "Daycare/classroom/occupancy-change scope triggers fire and life-safety review.", segment=request_segment)
-    if "retaining_wall" in trade_signals:
-        decision = "REQUIRED"
-        related_items.extend(_demote_to_status(item, PermitStatus.VERIFY, "Verify ROW/site-civil review only if the retaining wall encroaches into ROW, drainage, driveway, or site-civil scope.") for item in required_items if item.family == PermitFamily.GRADING)
-        required_items = [item for item in required_items if item.family != PermitFamily.GRADING]
-        _force_required(required_items, PermitFamily.BUILDING, "Building / Structural Permit — Retaining Wall", source_support, "Retaining-wall structural scope triggers building/engineering permit review.", first=True, segment=request_segment)
-        primary_hint = PermitFamily.BUILDING
-    if "dryer_outlet" in trade_signals:
-        decision = "REQUIRED"
-        related_items.extend(_demote_to_status(item, PermitStatus.VERIFY, "Excluded from heat-pump dryer 240V outlet scope unless the customer also adds gas/plumbing/mechanical dryer work.") for item in required_items if item.family in {PermitFamily.BUILDING, PermitFamily.PLUMBING, PermitFamily.MECHANICAL})
-        required_items = [item for item in required_items if item.family not in {PermitFamily.BUILDING, PermitFamily.PLUMBING, PermitFamily.MECHANICAL}]
-        _force_required(required_items, PermitFamily.ELECTRICAL, "Electrical Permit — Dryer Outlet / 240V Circuit", source_support, "A 240V outlet for a heat-pump dryer is an electrical scope, not a gas/plumbing/mechanical dryer package.", first=True, segment=request_segment)
-        primary_hint = PermitFamily.ELECTRICAL
-    if "grease_interceptor_only" in trade_signals or "grease_interceptor_only" in negative_scope_facts:
-        decision = "REQUIRED"
-        related_items.extend(_demote_to_status(item, PermitStatus.VERIFY, "Verify this companion only if the grease-interceptor-only scope expands to building, mechanical, or electrical work.") for item in required_items if item.family in {PermitFamily.BUILDING, PermitFamily.MECHANICAL, PermitFamily.ELECTRICAL})
-        required_items = [item for item in required_items if item.family not in {PermitFamily.BUILDING, PermitFamily.MECHANICAL, PermitFamily.ELECTRICAL}]
-        _force_required(required_items, PermitFamily.PLUMBING, "Plumbing / FOG Permit — Grease Interceptor", source_support, "Grease-interceptor-only work is a plumbing/FOG primary scope.", first=True, segment=request_segment)
-        primary_hint = PermitFamily.PLUMBING
-    if "rtu_same_capacity" in trade_signals or ("same_capacity" in negative_scope_facts and "mechanical_fuelgas" in trade_signals):
-        decision = "REQUIRED"
-        related_items.extend(_demote_to_status(item, PermitStatus.VERIFY, "Verify building/TI only if same-capacity RTU replacement changes structure, curb, occupancy, walls, or use.") for item in required_items if item.family == PermitFamily.BUILDING)
-        required_items = [item for item in required_items if item.family != PermitFamily.BUILDING]
-        for item in list(required_items):
-            if item.family == PermitFamily.ELECTRICAL and "no_electrical" not in negative_scope_facts:
-                required_items.remove(item)
-                related_items.append(_demote_to_status(item, PermitStatus.VERIFY, "Verify electrical filing only if the same-capacity RTU replacement includes new/altered circuit, disconnect, wiring, or service work."))
-        _force_required(required_items, PermitFamily.MECHANICAL, "Mechanical Permit — Rooftop Unit Replacement", source_support, "Same-capacity RTU/rooftop-unit replacement is mechanically primary.", first=True, segment=request_segment)
-        primary_hint = PermitFamily.MECHANICAL
-    if "existing_circuits" in negative_scope_facts:
-        related_items.extend(_demote_to_status(item, PermitStatus.VERIFY, "Existing-circuit lighting scope does not support a hard plumbing/mechanical companion row.") for item in required_items if item.family in {PermitFamily.PLUMBING, PermitFamily.MECHANICAL})
-        required_items = [item for item in required_items if item.family not in {PermitFamily.PLUMBING, PermitFamily.MECHANICAL}]
-        _add_or_replace_required(required_items, PermitFamily.ELECTRICAL, "Electrical Permit / Lighting-Fixture Replacement Verification", source_support, "Lighting/fixture work on existing circuits stays in the electrical family; verify local exemption before treating as no-permit.", first=True, segment=request_segment)
-        primary_hint = PermitFamily.ELECTRICAL
-    no_mepish = "no_mep" in negative_scope_facts or {"no_electrical", "no_plumbing", "no_mechanical"}.issubset(negative_scope_facts)
-    if request_segment == PermitSegment.COMMERCIAL and ("no_walls" in negative_scope_facts) and no_mepish and ("no_occupancy_change" in negative_scope_facts) and ("cosmetic_only" in negative_scope_facts or "only_scope" in negative_scope_facts or re.search(r"\bonly\b", scope_text, re.I) or "repaint" in scope_text or "carpet" in scope_text):
-        reason = "Commercial repaint/carpet/cosmetic-only scope states no walls, MEP, or occupancy change; hard Building/TI rows are suppressed unless the scope expands."
-        demote_families = {PermitFamily.BUILDING, PermitFamily.OCCUPANCY, PermitFamily.PLANNING, PermitFamily.ZONING, PermitFamily.FIRE, PermitFamily.HEALTH}
-        safety_families = {PermitFamily.FIRE, PermitFamily.HEALTH}
-        demoted_cosmetic: list[PermitItem] = []
-        kept_cosmetic: list[PermitItem] = []
-        for item in required_items:
-            if item.family not in demote_families:
-                kept_cosmetic.append(item)
-                continue
-            if item.family in safety_families and _item_has_direct_source_backing(item):
-                kept_cosmetic.append(item)
-                continue
-            demoted_cosmetic.append(_demote_to_status(item, PermitStatus.VERIFY, reason))
-        related_items.extend(demoted_cosmetic)
-        required_items = kept_cosmetic
-        if not required_items:
-            decision = "NOT_REQUIRED"
-            primary_hint = None
-
-    # Special-review false-negative floor. exterior_alteration is inert unless paired with a special-review signal.
-    physical_exterior = "exterior_alteration" in special_signals
-    paint_only = ("cosmetic_only" in negative_scope_facts or re.search(r"\b(?:paint|repaint)\b", scope_text, re.I)) and not re.search(r"\b(?:replace|replacement|shutter|window|door|sign|awning)\b", scope_text, re.I)
-    if "historic" in special_signals and physical_exterior and not paint_only:
-        decision = "REQUIRED"
-        _force_required(required_items, PermitFamily.HISTORIC, "Historic / HDLC Certificate of Appropriateness Review", source_support, "Explicit historic/French Quarter/HDLC district plus physical exterior alteration requires historic design review / Certificate of Appropriateness handling.", first=not required_items, segment=request_segment)
-        if re.search(r"\b(?:window|windows|door|doors|facade|façade|shutter|shutters|storefront)\b", scope_text, re.I) and not _has_visible_family(required_items + related_items, PermitFamily.BUILDING):
-            related_items.append(_row_with_status(PermitFamily.BUILDING, "Building Permit / Exterior Window-Facade Companion Verification", PermitStatus.VERIFY, source_support, "Verify the building/window/facade companion filing for exterior work in addition to the historic/COA review.", request_segment))
-        if re.search(r"\bsign(?:age)?\b", scope_text, re.I) and not _has_visible_family(required_items + related_items, PermitFamily.SIGN):
-            related_items.append(_row_with_status(PermitFamily.SIGN, "Sign Permit / Historic Sign Companion Verification", PermitStatus.VERIFY, source_support, "Verify sign-permit routing for exterior sign work in addition to historic/COA review.", request_segment))
-        primary_hint = primary_hint or PermitFamily.HISTORIC
-    elif "historic" in special_signals and not _has_visible_family(required_items + related_items, PermitFamily.HISTORIC):
-        related_items.append(_row_with_status(PermitFamily.HISTORIC, "Historic Preservation / COA Verification", PermitStatus.VERIFY, source_support, "Verify historic/COA applicability because the request includes a historic-district cue, but the physical exterior trigger may be paint-only or address-dependent.", request_segment))
 
     # Positive special_signals -> review row. This can upgrade a NOT_REQUIRED package with a visible VERIFY/CONDITIONAL review.
     for signal in sorted(special_signals):
@@ -812,9 +601,6 @@ def _apply_universal_invariant_gates(required_items: list[PermitItem], related_i
     calibrated_required: list[PermitItem] = []
     for item in required_items:
         if item.family in _ANCILLARY_FAMILIES and item.family not in hard_special_families:
-            if item.family in {PermitFamily.FIRE, PermitFamily.HEALTH} and _item_has_direct_source_backing(item):
-                calibrated_required.append(item)
-                continue
             related_items.append(_demote_to_status(item, PermitStatus.CONDITIONAL, "Verify only if address, parcel overlay, occupancy/use, health/fire, ROW, environmental, or special review conditions independently trigger this ancillary approval."))
             continue
         calibrated_required.append(item)
@@ -828,8 +614,8 @@ def _apply_universal_invariant_gates(required_items: list[PermitItem], related_i
         primary_hint = (related_items[0].family if related_items else _dominant_family_value(getattr(facts, "dominant_family", "")) or PermitFamily.BUILDING)
         required_items.append(_row_with_status(primary_hint, related_items[0].name if related_items else default_name(primary_hint), PermitStatus.REQUIRED, source_support, "Permit/review applicability must be verified before proceeding because deterministic scope trade signals found a required review trigger.", request_segment))
 
-    required_items = _canonicalize_segment_row_titles(_unique_items(required_items), request_segment)
-    related_items = _canonicalize_segment_row_titles(_unique_items(related_items), request_segment)
+    required_items = list(_unique_items(required_items))
+    related_items = list(_unique_items(related_items))
     if primary_hint and any(item.family == primary_hint and item.required for item in required_items):
         required_items.sort(key=lambda item: (0 if item.family == primary_hint else 1, _ORDER_INDEX.get(item.family, 999), item.name.lower()))
     return required_items, related_items, decision, primary_hint
@@ -856,20 +642,6 @@ def _has_illumination(scope: str) -> bool:
 
 def _expected_primary_from_scope(scope: str, current: PermitFamily | None = None) -> PermitFamily | None:
     s = scope or ""
-    if re.search(r"\b(?:dryer\s+outlet|240\s*volt\s+outlet|240v\s+outlet|220\s*volt\s+outlet|heat\s+pump\s+dryer)\b", s, re.I):
-        return PermitFamily.ELECTRICAL
-    if re.search(r"\b(?:grease\s+interceptor\s+only|interceptor\s+only)\b", s, re.I):
-        return PermitFamily.PLUMBING
-    if re.search(r"\bretaining\s+wall\b", s, re.I):
-        return PermitFamily.BUILDING
-    if re.search(r"\bstorm\s+shelter\b", s, re.I):
-        return PermitFamily.BUILDING
-    if re.search(r"\b(?:garage\s+conversion|convert\s+(?:attached\s+)?garage|garage\s+into)\b", s, re.I):
-        return PermitFamily.BUILDING
-    if re.search(r"\b(?:rtu|rooftop\s+unit|rooftop\s+package)\b", s, re.I):
-        return PermitFamily.MECHANICAL
-    if re.search(r"\b(?:pool|spa|swimming\s+pool)\b", s, re.I):
-        return PermitFamily.BUILDING
     if _is_sign_scope(s):
         return PermitFamily.SIGN
     if re.search(r"\b(?:driveway|sidewalk|apron|curb|right[- ]of[- ]way|row|encroachment)\b", s, re.I):
@@ -940,14 +712,6 @@ def _wrong_jurisdiction_url(url: str, city: str, state: str) -> bool:
     state_up = (state or "").upper()
     city_lc = (city or "").lower()
     if state_up == "KS" and "kansas city" in city_lc and ("kcmo" in u or "missouri" in u or "mo.gov" in u):
-        return True
-    if state_up == "FL" and city_lc.strip() == "miami" and (
-        "ecobuilt.miamidade.gov" in u
-        or "miamidade.gov/buildingpermit" in u
-        or "miamidade.gov/global/economy/building/building-permit-fees" in u
-        or "solicitationdetails" in u
-        or "stratproc" in u
-    ):
         return True
     if state_up and re.search(r"\b(?:ca|tx|fl|wa|or|pa|ny|nc|mt|ks|mo)\.gov\b", u):
         # Keep only the specific known false-positive hard block for now; broad

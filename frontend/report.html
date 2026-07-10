@@ -50,70 +50,19 @@
       if (value === null || value === undefined) return fallback;
       return String(value);
     };
-    function specificDisplayPermitKind(...candidates) {
-      const genericPermitKinds = new Set([
-        'building',
-        'electrical',
-        'mechanical',
-        'plumbing',
-        'fire',
-        'fire/life safety',
-        'refrigeration',
-        'sign',
-        'planning',
-        'zoning',
-        'mep / trade',
-        'permit required',
-        'permits required',
-        'permit package',
-        'not required',
-        'other',
-      ]);
-      for (const candidate of candidates) {
-        const value = String(candidate || '').trim();
-        const lower = value.toLowerCase();
-        const normalizedGeneric = lower.replace(/\s+permit$/, '').trim();
-        const terminalPermitFamily = /\s+permit$/i.test(value) && normalizedGeneric.split(/\s+/).filter(Boolean).length <= 3;
-        if (!value || genericPermitKinds.has(lower) || genericPermitKinds.has(normalizedGeneric) || terminalPermitFamily) continue;
-        if (/^permits?\s+(?:package|required)\b/i.test(value)) continue;
-        if (/^(?:verify|check|confirm)\b/i.test(value)) continue;
-        if (/(?:\bunknown\b|\blikely\b|\brequired\?)/i.test(value)) continue;
-        return value;
-      }
-      return '';
-    }
     const safeArray = (value) => Array.isArray(value) ? value : [];
-    const packetRows = safeArray(d.public_packet_rows || (d.public_packet && d.public_packet.rows));
-    const requiredPacketRows = packetRows.filter(r => r && r.decision === 'REQUIRED');
-    const conditionalPacketRows = packetRows.filter(r => r && r.decision === 'CONDITIONAL');
-    const packetDocs = [...new Set(safeArray(d.public_packet && d.public_packet.documents).map(x => textValue(x)).filter(Boolean))];
-    const packetInspections = [...new Set(safeArray(d.public_packet && d.public_packet.inspections).map(x => textValue(x)).filter(Boolean))];
-    const legacyPermitCandidates = [
-      ...requiredPacketRows.map(row => row && (row.permit_name || row.permit_type)),
-      d.permit_name,
-      d.permit_type,
-      primaryPermit.permit_type,
-      firstPermit.permit_type,
-    ];
-    const orderedPermitCandidates = [
-      d.public_packet && d.public_packet.display_permit_kind,
-      d.permit_kind,
-      ...legacyPermitCandidates
-    ];
-    const leadPermitName = orderedPermitCandidates.find(value => textValue(value).trim());
-    const specificPermitKind = specificDisplayPermitKind(...orderedPermitCandidates);
-    const permitName = textValue(specificPermitKind || leadPermitName, 'Permit details');
+    const permitName = textValue(d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type, 'Permit details');
     const rawVerdict = textValue(d.permit_verdict).toUpperCase();
     const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'VERIFY');
     const verdictLabel = verdict === 'YES' ? 'Permit required: Yes' : (verdict === 'NO' ? 'Permit required: No' : 'Permit status: Verify');
     const timeline = textValue((d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || d.timeline, 'Varies by jurisdiction');
-    const docs = packetDocs;
+    const docs = [...new Set([...safeArray(d.what_to_bring), ...safeArray(d.requirements), ...safeArray(d.documents_needed), ...safeArray(d.checklist)].map(x => textValue(x)).filter(Boolean))];
     const inspectionLabel = (item) => {
       if (typeof item === 'string') return item;
       if (!item || typeof item !== 'object') return '';
       return textValue(item.stage || item.title || item.name || item.description);
     };
-    const inspections = packetInspections;
+    const inspections = safeArray(d.inspections || d.inspections_required || d.inspection_checklist).map(inspectionLabel).filter(Boolean);
     const sources = safeArray(d.sources);
     const sourceUrl = (src) => typeof src === 'string' ? src : ((src && src.url) || '');
     const safeExternalUrl = (url, fallback = '') => {
@@ -206,19 +155,13 @@
     addText(summaryCard, 'div', {
       className: 'sub',
       style: 'color:#334155',
-      text: (d.public_packet && d.public_packet.summary) || d.customer_result_summary || d.summary || d.job_summary || d.permit_summary || 'Permit requirements generated from PermitAssist research.'
+      text: d.job_summary || d.permit_summary || 'Permit requirements generated from PermitAssist research.'
     });
 
     grid.appendChild(listCard('Required documents', docs, 'Scope of work'));
-    const conditionalItems = conditionalPacketRows.map(r => `${textValue(r.conditional_text || 'Only if triggered')} — ${textValue(r.permit_name)}`).filter(Boolean);
-    if (conditionalItems.length) grid.appendChild(listCard('Conditional guidance', conditionalItems, 'No conditional permits identified.'));
-    const inspectionFallback = [];
+    const inspectionFallback = safeArray(checklist.items).filter(i => i && i.category === 'inspection').map(i => i.label).filter(Boolean).slice(0, 8);
     grid.appendChild(listCard('Inspection checklist', inspections.length ? inspections : inspectionFallback, 'Confirm inspection phases with the jurisdiction.'));
-    const preconstructionItems = safeArray(checklist.items).map(item => item && item.label).filter(Boolean);
-    const preconstructionFallback = verdict === 'NO'
-      ? 'Keep this no-permit report with the job record and verify before expanding the scope.'
-      : 'Pull permit before starting work';
-    grid.appendChild(listCard('Pre-construction checklist', preconstructionItems, preconstructionFallback));
+    grid.appendChild(listCard('Pre-construction checklist', safeArray(checklist.items).map(item => item && item.label).filter(Boolean), 'Pull permit before starting work'));
 
     const sourceRows = sources.map(src => ({ src, url: safeExternalUrl(sourceUrl(src)) })).filter(row => row.url);
     if (sourceRows.length) {

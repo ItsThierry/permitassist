@@ -1,8 +1,0 @@
-{
-  "baseline_conditional_family_multiset": [],
-  "baseline_required_count": 0,
-  "baseline_required_family_multiset": [],
-  "case_id": "R-050",
-  "expected_decision": "NOT_REQUIRED",
-  "protection": true
-}

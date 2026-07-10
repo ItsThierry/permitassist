@@ -18,7 +18,7 @@ import hashlib
 import io
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
 from copy import deepcopy
-from urllib.parse import quote_plus, urljoin, urlparse
+from urllib.parse import urljoin, urlparse
 import requests
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
@@ -4470,14 +4470,6 @@ def _get_cached_serper_source(city: str, state: str, claim_type: str, query: str
         if source_class == SOURCE_CLASS_EXCLUDED:
             print(f"[trust] Serper cache ignored excluded source: {url}")
             return None
-        authority = classify_source_authority(url, city, state)
-        cache_domain = _normalized_source_domain(url)
-        wrong_reason = str(authority.get("reason") or "")
-        wrong_official_host = wrong_reason == "no_requested_locality_match" and cache_domain.endswith(".gov") and "county" not in cache_domain
-        allowed_county_publichealth_context = cache_domain == "publichealth.lacounty.gov" and _cache_norm(city) == "los angeles" and _cache_norm(state) == "ca" and _cache_norm(claim_type) in {"code_section", "health_food"}
-        if authority.get("tier") == SOURCE_TIER_WRONG and not allowed_county_publichealth_context and (wrong_reason in {"explicit_locality_exclusion", "vendor_without_requested_locality_token", "wrong_state_official"} or wrong_official_host):
-            print(f"[trust] Serper cache ignored wrong-locality source: {url}")
-            return None
         cached = {
             "url": url,
             "title": title or url,
@@ -4500,13 +4492,6 @@ def _set_cached_serper_source(city: str, state: str, claim_type: str, query: str
     if not source or not source.get("url"):
         return
     if classify_source_url(source.get("url") or "") == SOURCE_CLASS_EXCLUDED:
-        return
-    authority = classify_source_authority(source.get("url") or "", city, state)
-    cache_domain = _normalized_source_domain(source.get("url") or "")
-    wrong_reason = str(authority.get("reason") or "")
-    wrong_official_host = wrong_reason == "no_requested_locality_match" and cache_domain.endswith(".gov") and "county" not in cache_domain
-    allowed_county_publichealth_context = cache_domain == "publichealth.lacounty.gov" and _cache_norm(city) == "los angeles" and _cache_norm(state) == "ca" and _cache_norm(claim_type) in {"code_section", "health_food"}
-    if authority.get("tier") == SOURCE_TIER_WRONG and not allowed_county_publichealth_context and (wrong_reason in {"explicit_locality_exclusion", "vendor_without_requested_locality_token", "wrong_state_official"} or wrong_official_host):
         return
     try:
         conn = _serper_cache_conn()
@@ -4724,8 +4709,7 @@ def _best_serper_source_from_results(results: list[dict], city: str, state: str,
     if not allowed:
         return None
     ranked = _rank_search_results(allowed, limit=min(len(allowed), 5), city=city, state=state)
-    if not ranked:
-        return None
+    ranked = ranked or allowed
     ranked.sort(key=lambda item: (_source_trust_rank(item.get("source_class", SOURCE_CLASS_EXCLUDED)),))
     best = ranked[0]
     url = best.get("url") or best.get("link") or ""
@@ -7003,26 +6987,7 @@ def apply_fee_verify_caveat(result: dict) -> dict:
         return result
 
     def _fee_verify_caveat(source_url: str = "") -> str:
-        source_url = str(source_url or "").strip()
         return f" — verify in {source_url} before quoting" if source_url else " — verify with the building department before quoting"
-
-    def _dedupe_fee_caveats(text: str) -> str:
-        if not text:
-            return text
-        value = re.sub(r"\s+", " ", text).strip()
-        value = re.sub(r"\s+—\s+verify\s+in\s+before\s+quoting\b", " — verify with the building department before quoting", value, flags=re.I)
-        value = re.sub(r"\s+—\s+verify\s+(?:in|at)\s+([^—]+?)\s+before\s+quoting\b", lambda m: f" — verify in {m.group(1).strip()} before quoting", value, flags=re.I)
-        value = re.sub(r"\s+—\s+verify\s+current\s+fees\s+at\s+([^—]+?)\s+before\s+quoting\b", lambda m: f" — verify in {m.group(1).strip()} before quoting", value, flags=re.I)
-        value = re.sub(r"\s+—\s+verify\s+current\s+fees\s+with\s+the\s+issuing\s+office\s+before\s+quoting\b", " — verify with the building department before quoting", value, flags=re.I)
-        caveat_re = re.compile(r"\s+—\s+(?:verify\s+in\s+[^—]+?|verify\s+with\s+the\s+building\s+department)\s+before\s+quoting", re.I)
-        seen = False
-        def repl(match):
-            nonlocal seen
-            if seen:
-                return ""
-            seen = True
-            return match.group(0)
-        return caveat_re.sub(repl, value)
 
     verify_caveat = _fee_verify_caveat()
 
@@ -7035,17 +7000,17 @@ def apply_fee_verify_caveat(result: dict) -> dict:
         if source_url:
             verify_caveat = _fee_verify_caveat(source_url)
         if source_url and "verify in" not in formula_text.lower():
-            result["fee_range"] = _dedupe_fee_caveats(f"{formula_text}{verify_caveat}")
+            result["fee_range"] = f"{formula_text}{verify_caveat}"
         elif source_url and "verify in" in formula_text.lower():
             # Replace any existing verify URL
-            result["fee_range"] = _dedupe_fee_caveats(re.sub(
+            result["fee_range"] = re.sub(
                 r"\s+—\s+verify\s+(?:in|at)\s+.+?(?:\s+before quoting)?$",
                 verify_caveat,
                 formula_text,
                 flags=re.I,
-            ))
+            )
         else:
-            result["fee_range"] = _dedupe_fee_caveats(f"{formula_text}{verify_caveat}")
+            result["fee_range"] = f"{formula_text}{verify_caveat}"
         return result
 
     def _strip_fee_markdown(text: str) -> str:
@@ -7079,17 +7044,17 @@ def apply_fee_verify_caveat(result: dict) -> dict:
             updated_fee_text,
             flags=re.I,
         )
-        result["fee_range"] = _dedupe_fee_caveats(updated_fee_text)
+        result["fee_range"] = updated_fee_text
         return result
     fee_lower = fee_text.lower()
     if verify_caveat.lower() in fee_lower:
-        result["fee_range"] = _strip_fee_markdown(_dedupe_fee_caveats(fee_text))
+        result["fee_range"] = _strip_fee_markdown(fee_text)
         return result
     if fee_lower.startswith("fee estimate:") or fee_lower.startswith("fee planning estimate:"):
         base = fee_text
     else:
         base = f"Fee Estimate: {fee_text}"
-    result["fee_range"] = _dedupe_fee_caveats(f"{base}{verify_caveat}")
+    result["fee_range"] = f"{base}{verify_caveat}"
     result["fee_range"] = _strip_fee_markdown(result["fee_range"])
     return result
 
@@ -8161,27 +8126,20 @@ def strip_pdf_from_result(result: dict) -> dict:
 
 
 def build_google_maps_url(city: str, state: str, address: str = "", office: str = "") -> str:
-    """Build a Google Maps URL with encoded query text and a fixed Google prefix.
-
-    `address` is for the project/building address when the caller is building a
-    project-location map. `office` is for AHJ/building-department maps. The two
-    are intentionally separate so a customer job address cannot contaminate AHJ
-    office fields.
-    """
-    city_text = str(city or "").strip()
-    state_text = str(state or "").strip()
-    address_text = str(address or "").strip()
-    office_text = str(office or "").strip()
-    if address_text:
-        q = address_text
-        if city_text and city_text.lower() not in q.lower():
-            q = f"{q}, {city_text}, {state_text}".strip(", ")
-        return "https://www.google.com/maps?q=" + quote_plus(q)
-    if office_text:
-        q = f"{office_text}, {city_text}, {state_text}".strip(", ")
+    """Build the best possible Google Maps URL — pinned address if available, else office+city search."""
+    # If we have a real street address, use maps?q= for a pin
+    if address and address.strip():
+        q = address.strip()
+        # Append city/state if not already present
+        if city.lower() not in q.lower():
+            q = f"{q}, {city}, {state}"
+        return f"https://www.google.com/maps?q={q.replace(' ', '+')}"
+    # Otherwise use a more targeted search: office name + city
+    if office and office.strip():
+        query = f"{office}, {city}, {state}".replace(" ", "+")
     else:
-        q = f"{city_text} {state_text} building permit office".strip()
-    return "https://www.google.com/maps/search/" + quote_plus(q)
+        query = f"{city}+{state}+building+permit+office".replace(" ", "+")
+    return f"https://www.google.com/maps/search/{query}"
 
 # ─── System Prompt ────────────────────────────────────────────────────────────
 
@@ -8192,8 +8150,8 @@ You have deep, SPECIFIC expertise in building codes and permits across all 50 US
 CORE MISSION — BE MORE USEFUL THAN GOOGLE OR CHATGPT:
 Google gives links. ChatGPT gives generic answers. PermitAssist gives contractor-ready specifics:
 - The EXACT permit type name used in that city's portal dropdown
-- The source-backed phone number for the building department when it is present in provided sources
-- The fee only when the current provided official sources support it; otherwise say verification is needed
+- The REAL phone number for the building department
+- The ACTUAL fee in dollars, not "varies"
 - The SPECIFIC things an inspector will look for (not "rough-in inspection")
 - What to bring to the permit counter, item by item
 - The local gotchas nobody else mentions (license number format, required plan set size, etc.)
@@ -8254,7 +8212,10 @@ CRITICAL RULES:
    - Generator installation → "Electrical Permit - Generator Installation"
    Always adapt these to the specific city's portal naming if you know it.
 
-3. APPLY_PHONE must be a real phone number only when current provided official sources include one. If not found, return null/empty for apply_phone and put the office-search guidance in apply_google_maps or customer_next_step instead. Never put a URL or Google Maps search string in apply_phone.
+3. ALWAYS include the phone number in apply_phone. If not in KB:
+   - Search web results for the actual number
+   - If not found, provide the format: "Search Google Maps: [city] [state] building permit office"
+   Never return null for apply_phone — always return something actionable.
 
 4. APPLY_URL must be a real WEB PORTAL URL (not a PDF) and must come from an official/source-backed route. Examples of valid apply_url format:
    - "https://abc.austintexas.gov" ✅
@@ -8267,7 +8228,7 @@ CRITICAL RULES:
    b. Return whatever phone/address you found from web search
    c. Note in the result that it's from web search and should be verified
    d. If no web results, return the county or state-level fallback office
-   e. If no official phone is found, return null/empty for apply_phone and include a Google Maps office-search link in apply_google_maps.
+   e. NEVER return null for apply_phone — return Google Maps search link if nothing else
 
 6. ADVICE DEPTH — for each inspection, be specific:
    - Not: "Rough-in inspection"
@@ -8473,46 +8434,6 @@ def _try_repair_truncated_json(text: str):
                 pass
 
     return None
-
-
-def _has_positive_no_permit_evidence_for_verdict(result: dict) -> bool:
-    """True only when a NO verdict has affirmative no-permit/exemption support."""
-    if not isinstance(result, dict):
-        return False
-    if result.get("permit_required") is False:
-        return True
-    if str(result.get("permit_decision") or "").upper() == "NOT_REQUIRED":
-        return True
-    if result.get("positive_exemption_evidence") or result.get("exemption_evidence"):
-        return True
-    for key in ("not_required_reason", "exemption_reason", "permit_exemption", "no_permit_reason"):
-        if str(result.get(key) or "").strip():
-            return True
-    citation = result.get("code_citation")
-    citation_text = json.dumps(citation, default=str).lower() if isinstance(citation, (dict, list)) else str(citation or "").lower()
-    if any(token in citation_text for token in ("not required", "no permit", "exempt", "exemption")):
-        return True
-    return False
-
-
-def _derive_permit_verdict_from_result(result: dict) -> str:
-    """Derive frontend permit_verdict without treating omission as NO."""
-    permits = result.get("permits_required", []) if isinstance(result, dict) else []
-    if not permits:
-        return "NO" if _has_positive_no_permit_evidence_for_verdict(result) and not result.get("_json_repaired") else "MAYBE"
-    first = permits[0] if isinstance(permits, list) and permits else {}
-    first_req = first.get("required") if isinstance(first, dict) else None
-    if first_req is True:
-        return "YES"
-    if first_req is False:
-        return "NO" if _has_positive_no_permit_evidence_for_verdict(result) and not result.get("_json_repaired") else "MAYBE"
-    if first_req == "maybe":
-        return "MAYBE"
-    fee = str(result.get("fee_range", "")).lower()
-    summary = str(result.get("job_summary", "") + result.get("permit_summary", "")).lower()
-    if ("no permit" in fee or "no permit" in summary or "not required" in summary) and _has_positive_no_permit_evidence_for_verdict(result) and not result.get("_json_repaired"):
-        return "NO"
-    return "MAYBE"
 
 
 def _retry_with_minimal_prompt(user_prompt: str, _openai_call_fn=None):
@@ -9373,8 +9294,6 @@ Return ONLY the JSON object."""
             # data than a 500.
             result = _try_repair_truncated_json(cleaned)
             if result is not None:
-                if isinstance(result, dict):
-                    result["_json_repaired"] = True
                 print(f"[engine] Repaired truncated/malformed JSON after model failure ({e2})")
             else:
                 # Last resort: ask the model to retry with a shorter, stricter prompt.
@@ -9507,11 +9426,28 @@ Return ONLY the JSON object."""
             )
 
     # Derive top-level permit_verdict from permits_required array
-    # Frontend verdictState() reads this field. Absence of permit rows is not
-    # affirmative no-permit evidence; leave it MAYBE so the customer resolver can
-    # apply the REQUIRED floor unless an explicit/source-backed exemption exists.
+    # Frontend verdictState() reads this field
     if not result.get("permit_verdict"):
-        result["permit_verdict"] = _derive_permit_verdict_from_result(result)
+        permits = result.get("permits_required", [])
+        if not permits:
+            # Empty array = GPT said no permit needed
+            result["permit_verdict"] = "NO"
+        else:
+            first_req = permits[0].get("required")
+            if first_req is True:
+                result["permit_verdict"] = "YES"
+            elif first_req is False:
+                result["permit_verdict"] = "NO"
+            elif first_req == "maybe":
+                result["permit_verdict"] = "MAYBE"
+            else:
+                # required field missing or unknown value — check fee/summary for hints
+                fee = str(result.get("fee_range", "")).lower()
+                summary = str(result.get("job_summary", "") + result.get("permit_summary", "")).lower()
+                if "no permit" in fee or "no permit" in summary or "not required" in summary:
+                    result["permit_verdict"] = "NO"
+                else:
+                    result["permit_verdict"] = "MAYBE"
 
     # ── City Database Fallbacks for Missing Fields ──
     if city_match_level == "city":
@@ -9754,16 +9690,8 @@ Return ONLY the JSON object."""
     try:
         apply_source_locality_hard_block(result, city, state, job_type)
     except Exception as _e:
-        print(f"[locality_filter] fail-closed: {_e}")
-        result["sources"] = []
-        result["source_urls"] = []
-        result["apply_url"] = None
-        result["online_application_url"] = None
-        if isinstance(result.get("apply_path"), dict):
-            result["apply_path"]["portal_url"] = ""
-            result["apply_path"]["status"] = "VERIFY_WITH_PERMIT_OFFICE"
-        result["degraded_sources"] = True
-        result["_source_locality_filter_failed_closed"] = str(_e)
+        # Defensive — never let the filter break the engine
+        print(f"[locality_filter] failed: {_e}")
 
     apply_residential_stress_quality_floor(result, job_type, city, state)
 

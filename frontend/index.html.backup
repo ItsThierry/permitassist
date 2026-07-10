@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PermitAssist" />
+  <meta name="theme-color" content="#0F172A" />
+  <meta name="description" content="AI-powered permit research for contractors. Get exact requirements, fees, and contact details in seconds." />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+  <link rel="shortcut icon" href="/icons/icon-192.png" />
+  <title>PermitAssist — Know Your Permits Before You Start</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0F172A;
+      --surface: #1E293B;
+      --surface2: #253348;
+      --brand: #3B82F6;
+      --brand-dark: #2563EB;
+      --brand-light: rgba(59,130,246,0.12);
+      --green: #10B981;
+      --green-bg: rgba(16,185,129,0.1);
+      --yellow: #F59E0B;
+      --yellow-bg: rgba(245,158,11,0.1);
+      --red: #EF4444;
+      --red-bg: rgba(239,68,68,0.1);
+      --text: #F8FAFC;
+      --text2: #94A3B8;
+      --muted: #64748B;
+      --border: #334155;
+      --border2: #475569;
+      --r: 12px;
+      --r-sm: 8px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overscroll-behavior: none;
+      -webkit-font-smoothing: antialiased;
+      font-size: 16px;
+    }
+    #app { display: flex; flex-direction: column; min-height: 100%; max-width: 680px; margin: 0 auto; }
+
+    /* Navbar */
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: calc(14px + var(--safe-top)) 20px 14px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--bg); z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark { width: 36px; height: 36px; border-radius: 10px; background: var(--brand); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: #fff; }
+    .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
+    .logo-text em { font-style: normal; color: var(--brand); }
+    .logo-tagline { font-size: 11px; color: var(--text2); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+    .nav-right { display: flex; gap: 8px; align-items: center; }
+    .offline-badge { background: var(--red); border-radius: 20px; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; display: none; }
+    .offline-badge.show { display: block; }
+    .install-btn { background: var(--brand); border: none; border-radius: 20px; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; display: none; }
+    .nav-new-search { display: none; color: var(--brand); font-size: 13px; font-weight: 700; text-decoration: none; padding: 6px 12px; border: 1px solid var(--brand); border-radius: 20px; white-space: nowrap; transition: all .15s; }
+    .nav-new-search.show { display: block; }
+    .nav-new-search:active { background: var(--brand); color: #fff; }
+
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg); }
+    .tab { flex: 1; padding: 13px 8px; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; user-select: none; }
+    .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+    /* Pages */
+    .page { display: none; flex: 1; overflow-y: auto; }
+    .page.active { display: block; }
+    .page-inner { padding: 20px; padding-bottom: calc(24px + var(--safe-bottom)); }
+
+    /* Hero */
+    .hero { padding: 32px 0 16px; text-align: center; }
+    .hero h1 { font-size: 32px; font-weight: 900; line-height: 1.08; letter-spacing: -0.5px; color: #fff; }
+    .hero h1 em { font-style: normal; color: var(--brand); }
+    .hero-sub { font-size: 15px; color: var(--text2); margin-top: 10px; line-height: 1.6; max-width: 460px; margin-inline: auto; }
+
+    /* Trust badges */
+    .trust-badges { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
+    .trust-badge { background: linear-gradient(135deg, var(--surface), var(--surface2)); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 20px; font-size: 13px; color: var(--text2); padding: 8px 16px; white-space: nowrap; font-weight: 600; }
+    .trust-badge strong { color: var(--text); }
+
+    /* Testimonials */
+    .testimonial-row {
+      display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px;
+      padding-left: 2px; padding-right: 16px;
+      scrollbar-width: none; -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
+      width: 100%; box-sizing: border-box;
+    }
+    .testimonial-row::-webkit-scrollbar { display: none; }
+    .testimonial-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px; min-width: 280px; max-width: 320px;
+      flex-shrink: 0; scroll-snap-align: start; box-sizing: border-box;
+    }
+    .testimonial-top {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .testimonial-avatar {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      background: var(--brand-light); border: 1px solid rgba(59,130,246,0.3);
+      color: var(--brand); font-size: 12px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; letter-spacing: 0.5px;
+    }
+    .testimonial-author { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .testimonial-trade { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .testimonial-stars { color: #F59E0B; font-size: 12px; margin-left: auto; flex-shrink: 0; }
+    .testimonial-text { font-size: 13px; color: var(--text2); line-height: 1.6; font-style: italic; }
+
+    /* Cities coverage link */
+    .cities-coverage-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 7px 14px;
+      font-size: 13px; color: var(--text2); font-weight: 600;
+      text-decoration: none; transition: border-color .15s, color .15s;
+    }
+    .cities-coverage-link:hover, .cities-coverage-link:active { border-color: var(--brand); color: var(--brand); }
+    .cities-coverage-link strong { color: var(--brand); }
+
+    /* Free/Paid clarity bar */
+    .free-paid-bar {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+      font-size: 13px; color: var(--text2); text-align: center; line-height: 1.8;
+    }
+    .free-paid-bar strong { color: var(--text); }
+    .free-paid-divider { color: var(--border); }
+
+    /* Counter bar */
+    .counter-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 16px; font-size: 13px; }
+    .counter-bar-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .counter-progress { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+    .counter-progress-fill { height: 100%; border-radius: 2px; background: var(--brand); transition: width .4s ease; }
+    .counter-text { color: var(--text2); font-weight: 600; }
+    .counter-upgrade { color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 14px; }
+    .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 14px; }
+
+    /* Form */
+    .form-group { margin-bottom: 14px; }
+    .form-group:last-child { margin-bottom: 0; }
+    label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); margin-bottom: 6px; }
+    input, select, textarea {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--r-sm); color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 16px; padding: 14px 16px; width: 100%;
+      outline: none; transition: border-color .15s, box-shadow .15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Textarea */
+    .hero-input { min-height: 90px; resize: vertical; line-height: 1.5; }
+    .query-wrap { position: relative; }
+    .query-wrap textarea { padding-right: 50px; }
+
+    /* Mic button */
+    .mic-btn {
+      position: absolute; right: 12px; top: 12px;
+      width: 36px; height: 36px; border-radius: 50%; border: none;
+      background: var(--surface2); color: var(--text2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: all .15s; z-index: 2;
+    }
+    .mic-btn:hover { background: var(--brand); color: #fff; }
+    .mic-btn.listening { background: var(--red); color: #fff; animation: pulse .8s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+
+    /* Location */
+    .location-links { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 10px; font-size: 13px; }
+    .text-link { color: var(--brand); cursor: pointer; font-weight: 700; text-decoration: none; background: var(--surface); border: 1px solid var(--border); padding: 8px 14px; border-radius: 20px; font-size: 13px; display: inline-block; transition: all .15s; }
+    .text-link:active { border-color: var(--brand); background: var(--brand-light); }
+    .card.input-focused { box-shadow: 0 0 0 3px rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.3); transition: box-shadow .2s, border-color .2s; }
+    .location-edit { display: block; margin-top: 14px; }
+    .gps-status { margin-top: 8px; font-size: 12px; color: var(--text2); }
+    .gps-status.ok { color: var(--green); }
+    .gps-status.bad { color: var(--yellow); }
+
+    /* Disambiguation */
+    .disambig-box {
+      background: var(--yellow-bg); border: 1px solid rgba(245,158,11,0.3);
+      border-radius: var(--r-sm); padding: 16px; margin-bottom: 14px;
+      text-align: center; display: none;
+    }
+    .disambig-box.show { display: block; }
+    .disambig-title { font-size: 14px; font-weight: 700; color: var(--yellow); margin-bottom: 10px; }
+    .disambig-btns { display: flex; gap: 10px; justify-content: center; }
+    .disambig-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-sm); color: var(--text); cursor: pointer;
+      font-size: 14px; font-weight: 600; padding: 12px 20px;
+      transition: all .15s; min-width: 140px;
+    }
+    .disambig-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+    /* Lookup button */
+    .lookup-btn {
+      background: var(--brand); border: none; border-radius: var(--r);
+      color: #fff; cursor: pointer; font-family: 'Inter', system-ui, sans-serif;
+      font-size: 22px; font-weight: 700; padding: 20px; width: 100%;
+      transition: background .15s, transform .1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 56px; position: relative; overflow: hidden;
+    }
+    .lookup-btn.shimmer::after {
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: btnShimmer 2s ease-in-out infinite;
+    }
+    @keyframes btnShimmer { 0% { left: -100%; } 100% { left: 100%; } }
+    .lookup-btn:active { transform: scale(.98); background: var(--brand-dark); }
+    .lookup-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    .trust-note { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 16px; line-height: 1.5; }
+
+    /* Loading */
+    #loading { display: none; padding: 60px 20px; text-align: center; }
+    .spin-ring {
+      width: 64px; height: 64px; border-radius: 50%;
+      border: 4px solid var(--border); border-top-color: var(--brand);
+      animation: spin .75s linear infinite, spinnerGlow 2s ease-in-out infinite; margin: 0 auto 20px;
+    }
+    @keyframes spinnerGlow { 0%,100% { box-shadow: 0 0 20px rgba(59,130,246,0.15); } 50% { box-shadow: 0 0 40px rgba(59,130,246,0.3), 0 0 80px rgba(59,130,246,0.1); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .loading-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+    .progress-steps { text-align: left; max-width: 300px; margin-inline: auto; }
+    .progress-step { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; color: var(--muted); }
+    .progress-step.active { color: var(--text); }
+    .progress-step.done { color: var(--green); }
+    .step-icon { font-size: 15px; width: 20px; text-align: center; }
+
+    /* Results */
+    #results { display: none; }
+    .results-inner { padding: 16px 20px 20px; }
+
+    /* Result hero */
+    .result-hero {
+      background: linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.05) 100%);
+      border: 1px solid rgba(59,130,246,0.25); border-left: 4px solid var(--brand); border-radius: var(--r);
+      padding: 24px; margin-bottom: 14px;
+    }
+    .result-job { font-size: 20px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.3px; }
+    .result-loc { font-size: 13px; color: var(--text2); }
+    .result-badges { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-red { background: var(--red-bg); color: var(--red); }
+    .badge-blue { background: var(--brand-light); color: var(--brand); }
+    .badge-gray { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+
+    /* No permit celebration */
+    .no-permit-card {
+      background: linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.05) 100%);
+      border: 2px solid rgba(16,185,129,0.4); border-radius: var(--r);
+      padding: 32px 20px; text-align: center; margin-bottom: 14px;
+    }
+    .no-permit-icon { font-size: 48px; margin-bottom: 12px; }
+    .no-permit-title { font-size: 24px; font-weight: 900; color: var(--green); margin-bottom: 8px; }
+    .no-permit-reason { font-size: 15px; color: var(--text2); line-height: 1.6; }
+
+    /* Summary card */
+    .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 14px; }
+    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 12px; }
+    .verdict-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      border-radius: 999px; padding: 8px 14px;
+      font-size: 14px; font-weight: 800;
+    }
+    .verdict-yes { background: var(--green-bg); color: var(--green); }
+    .verdict-no { background: var(--red-bg); color: var(--red); }
+    .verdict-maybe { background: var(--yellow-bg); color: var(--yellow); }
+    .permit-name-big { font-size: 20px; font-weight: 900; line-height: 1.2; margin-top: 12px; }
+    .big-meta { margin-top: 10px; font-size: 14px; color: var(--text2); line-height: 1.5; }
+    .big-price { font-size: 28px; font-weight: 900; letter-spacing: -0.6px; color: var(--text); margin-top: 10px; }
+
+    /* Portal selection highlight */
+    .portal-select-box {
+      background: var(--brand-light); border: 1px solid rgba(59,130,246,0.3);
+      border-radius: var(--r-sm); padding: 14px 16px; margin-top: 12px;
+    }
+    .portal-select-label { font-size: 11px; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .portal-select-value { font-size: 16px; font-weight: 800; color: var(--text); }
+
+    /* Info rows */
+    .info-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border);
+    }
+    .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .info-key { font-size: 12px; color: var(--muted); font-weight: 600; flex-shrink: 0; width: 110px; padding-top: 1px; }
+    .info-val { font-size: 15px; color: var(--text); text-align: right; flex: 1; line-height: 1.4; }
+    .info-val a { color: var(--brand); text-decoration: none; }
+    .info-val.highlight { color: var(--green); font-weight: 700; }
+
+    /* Contact */
+    .contact-phone { display: block; font-size: 30px; font-weight: 900; color: var(--brand); text-decoration: none; line-height: 1.15; margin-bottom: 8px; border-radius: var(--r-sm); padding: 4px 0; transition: background .15s; }
+    .contact-phone:active { background: var(--brand-light); }
+    .contact-office { font-size: 14px; color: var(--text); font-weight: 700; margin-bottom: 4px; }
+    .contact-address { font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .mini-link-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+    .mini-link { font-size: 13px; color: var(--brand); font-weight: 700; cursor: pointer; text-decoration: none; }
+
+    /* Lists */
+    .list-card-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .list-card-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .list-item-title { font-size: 14px; font-weight: 800; margin-bottom: 5px; }
+    .list-item-sub { font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .ordered-list { counter-reset: step; margin: 0; padding-left: 0; }
+    .ordered-list li {
+      list-style: none; position: relative; padding: 10px 0 10px 30px;
+      border-bottom: 1px solid var(--border); color: var(--text2); line-height: 1.5;
+    }
+    .ordered-list li:last-child { border-bottom: none; padding-bottom: 0; }
+    .ordered-list li::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 0; top: 10px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--brand); color: #fff;
+      font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .bullet-list { margin-left: 18px; color: var(--text2); line-height: 1.5; }
+    .bullet-list li { padding: 6px 0; }
+
+    /* Inspection checklist */
+    .checklist-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; padding: 14px 0; user-select: none;
+    }
+    .checklist-toggle-text { font-size: 14px; font-weight: 700; }
+    .checklist-toggle-arrow { font-size: 12px; color: var(--muted); transition: transform .2s; }
+    .checklist-toggle-arrow.open { transform: rotate(180deg); }
+    .checklist-items { display: none; }
+    .checklist-items.open { display: block; }
+    .checklist-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 0; font-size: 13px; color: var(--text2); line-height: 1.5;
+    }
+    .checklist-item::before { content: "☐"; flex-shrink: 0; color: var(--muted); }
+
+    /* Actions */
+    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 10px; }
+    .action-row.action-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .action-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-sm); color: var(--text2); cursor: pointer;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px; font-weight: 600; padding: 12px; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all .12s; user-select: none; min-height: 52px;
+    }
+    .action-btn:hover { border-color: var(--brand); }
+    .action-btn:active { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+
+    /* Apply / Download buttons */
+    .apply-btn {
+      display: block; background: var(--brand); border: none;
+      border-radius: var(--r-sm); color: #fff; cursor: pointer;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 15px; font-weight: 700; padding: 14px; width: 100%;
+      text-align: center; text-decoration: none; margin-bottom: 8px;
+      min-height: 48px;
+    }
+    .apply-btn:hover { background: var(--brand-dark); }
+    .download-btn {
+      display: block; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--r-sm); color: var(--text2); cursor: pointer;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px; font-weight: 600; padding: 12px; width: 100%;
+      text-align: center; text-decoration: none; margin-bottom: 8px;
+      min-height: 44px;
+    }
+
+    /* Misc */
+    .copy-feedback { font-size: 12px; color: var(--green); text-align: center; padding: 4px 0 8px; display: none; }
+    .feedback-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .flag-btn { background: none; border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--muted); cursor: pointer; font-size: 12px; padding: 7px 14px; transition: all .15s; }
+    .flag-btn:active { border-color: var(--yellow); color: var(--yellow); }
+    .feedback-sent { font-size: 12px; color: var(--green); display: none; }
+    .disclaimer-box { background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); border-radius: var(--r-sm); font-size: 12px; color: var(--muted); line-height: 1.5; padding: 12px 14px; margin-top: 14px; }
+    .cache-disclaimer { font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; line-height: 1.5; }
+    .new-search-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-sm); color: var(--text2); cursor: pointer;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px; font-weight: 600; margin-top: 12px; padding: 14px;
+      text-align: center; width: 100%; transition: all .12s; min-height: 48px;
+    }
+    .new-search-btn:active { border-color: var(--brand); color: var(--brand); }
+    /* Search Again hero button at top of results */
+    .search-again-hero { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--brand); border: none; border-radius: var(--r); color: #fff; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; padding: 14px; width: 100%; margin-bottom: 16px; transition: all .15s; min-height: 48px; }
+    .search-again-hero:active { background: var(--brand-dark); }
+    /* How to Apply card */
+    .how-to-apply-card { background: var(--surface); border: 1px solid rgba(59,130,246,0.35); border-radius: var(--r); padding: 20px; margin-bottom: 14px; }
+    .how-to-apply-card .section-label { color: var(--brand); }
+    .apply-permit-name { background: var(--brand-light); border: 1px solid rgba(59,130,246,0.3); border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 14px; }
+    .apply-permit-name .label { font-size: 11px; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .apply-permit-name .value { font-size: 16px; font-weight: 800; color: var(--text); }
+    .apply-steps { counter-reset: apply-step; margin: 0; padding: 0; list-style: none; }
+    .apply-steps li { position: relative; padding: 10px 0 10px 38px; border-bottom: 1px solid var(--border); color: var(--text2); font-size: 14px; line-height: 1.5; }
+    .apply-steps li:last-child { border-bottom: none; }
+    .apply-steps li::before { counter-increment: apply-step; content: counter(apply-step); position: absolute; left: 0; top: 10px; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .apply-phone-note { background: var(--green-bg); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--r-sm); padding: 10px 14px; margin-top: 12px; font-size: 13px; color: var(--green); }
+    .find-office-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 600; padding: 10px 16px; margin-top: 12px; text-decoration: none; transition: all .15s; }
+    .find-office-btn:active { border-color: var(--brand); color: var(--brand); }
+    /* Watch Out callout */
+    .watchout-card { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.35); border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px; }
+    .watchout-card .section-label { color: var(--yellow); }
+    .watchout-card li { color: var(--text2); }
+    /* Timeline visual */
+    .timeline-visual { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .timeline-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--border); position: relative; overflow: hidden; }
+    .timeline-bar-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+    .timeline-bar-fill.fast { background: var(--green); width: 25%; }
+    .timeline-bar-fill.medium { background: var(--yellow); width: 55%; }
+    .timeline-bar-fill.slow { background: var(--red); width: 85%; }
+    .timeline-label { font-size: 13px; font-weight: 700; white-space: nowrap; }
+    /* Fee context */
+    .fee-context { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .code-cite { background: rgba(16,185,129,.06); border: 1px solid rgba(16,185,129,.2); border-radius: var(--r-sm); padding: 12px 14px; margin-top: 10px; font-size: 12px; color: var(--text2); line-height: 1.6; }
+    .code-cite strong { color: var(--green); font-family: monospace; font-size: 13px; }
+    .freshness-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .freshness-badge { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+    .freshness-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .freshness-dot.stale { background: var(--yellow); }
+
+    /* County fallback notice */
+    .county-notice {
+      background: var(--yellow-bg); border: 1px solid rgba(245,158,11,0.3);
+      border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 14px;
+      font-size: 13px; color: var(--yellow); line-height: 1.5;
+    }
+
+    /* History */
+    .history-empty { text-align: center; padding: 72px 20px; color: var(--muted); }
+    .history-empty .icon { font-size: 48px; margin-bottom: 14px; }
+    .history-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px 18px; margin-bottom: 10px;
+      cursor: pointer; transition: border-color .12s;
+    }
+    .history-item:active { border-color: var(--brand); }
+    .history-job { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .history-loc { font-size: 13px; color: var(--text2); }
+    .history-time { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .history-clear { background: none; border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--muted); cursor: pointer; font-size: 13px; padding: 8px 16px; margin-bottom: 14px; }
+
+    /* Install banner */
+    #install-banner { display: none; background: var(--surface); border-top: 1px solid var(--border); padding: 16px 20px; padding-bottom: calc(16px + var(--safe-bottom)); }
+    #install-banner.show { display: flex; align-items: center; gap: 12px; }
+    .install-icon { font-size: 30px; }
+    .install-text strong { display: block; font-size: 14px; }
+    .install-text span { font-size: 12px; color: var(--text2); }
+    .install-cta { background: var(--brand); border: none; border-radius: var(--r-sm); color: #fff; cursor: pointer; font-size: 13px; font-weight: 700; padding: 9px 16px; white-space: nowrap; flex-shrink: 0; }
+    .install-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; padding: 4px; }
+
+    /* Gate overlay */
+    .gate-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.75); display: flex; align-items: flex-end; }
+    .gate-sheet {
+      background: var(--surface); border-radius: 20px 20px 0 0;
+      border-top: 1px solid var(--border);
+      padding: 28px 24px calc(32px + var(--safe-bottom));
+      width: 100%; animation: slideUp .3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .gate-icon { font-size: 36px; text-align: center; margin-bottom: 10px; }
+    .gate-title { font-size: 21px; font-weight: 800; text-align: center; margin-bottom: 7px; }
+    .gate-sub { font-size: 14px; color: var(--text2); text-align: center; margin-bottom: 20px; line-height: 1.55; }
+    .gate-input { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 16px; padding: 14px; width: 100%; margin-bottom: 12px; outline: none; }
+    .gate-input:focus { border-color: var(--brand); }
+    .gate-submit { background: var(--brand); border: none; border-radius: var(--r); color: #fff; cursor: pointer; font-size: 16px; font-weight: 700; padding: 15px; width: 100%; }
+    .gate-note { font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; }
+    .gate-skip { display: block; text-align: center; font-size: 13px; color: var(--muted); margin-top: 14px; cursor: pointer; }
+
+    /* Tracker */
+    .tracker-modal-overlay { position: fixed; inset: 0; z-index: 250; background: rgba(0,0,0,.75); display: flex; align-items: flex-end; }
+    .tracker-sheet { background: var(--surface); border-radius: 20px 20px 0 0; border-top: 1px solid var(--border); padding: 24px 20px calc(28px + var(--safe-bottom)); width: 100%; max-width: 680px; margin: 0 auto; animation: slideUp .25s ease; max-height: 85vh; overflow-y: auto; }
+    .tracker-stage { display: flex; align-items: center; gap: 12px; padding: 14px 12px; min-height: 56px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; border-radius: var(--r-sm); margin-bottom: 2px; transition: background .15s; }
+    .tracker-stage:last-child { border-bottom: none; }
+    .tracker-stage.stage-done { background: rgba(16,185,129,0.08); }
+    .tracker-stage.stage-active { border-left: 3px solid var(--brand); background: rgba(59,130,246,0.06); }
+    .tracker-stage-icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; }
+    .tracker-completion { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--r-sm); padding: 12px 16px; text-align: center; font-size: 15px; font-weight: 700; color: var(--green); margin-bottom: 14px; }
+    .tracker-danger-btn { width: 100%; background: none; border: 1px solid rgba(239,68,68,0.4); border-radius: 8px; color: var(--red); font-size: 13px; font-weight: 600; padding: 10px; cursor: pointer; margin-top: 16px; transition: all .15s; }
+    .tracker-danger-btn:active { background: rgba(239,68,68,0.1); }
+    .tracker-close-btn { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; margin-top: 8px; transition: all .15s; }
+    .tracker-close-btn:active { border-color: var(--brand); color: var(--brand); }
+    .tracker-progress-bar { background: var(--border); border-radius: 5px; height: 10px; overflow: hidden; }
+    .tracker-progress-fill { height: 100%; border-radius: 5px; background: var(--green); width: 0; transition: width .6s ease; }
+    .tracker-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all .15s; }
+    .tracker-check.done { background: var(--green); border-color: var(--green); color: #fff; }
+    .tracker-stage-label { font-size: 14px; font-weight: 600; flex: 1; }
+    .tracker-stage-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Offline result notice */
+    .offline-result-notice { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); border-radius: var(--r-sm); padding: 10px 14px; font-size: 12px; color: var(--yellow); margin-bottom: 14px; display: none; }
+    .offline-result-notice.show { display: block; }
+
+    /* Footer */
+    .footer { text-align: center; padding: 24px 20px; font-size: 12px; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--border); margin-top: 20px; }
+    .footer a { color: var(--brand); text-decoration: none; }
+
+    /* Companion Permits Warning */
+    .companion-card { background: rgba(245,158,11,0.08); border: 2px solid rgba(245,158,11,0.4); border-radius: var(--r); padding: 18px 20px; margin-bottom: 14px; }
+    .companion-card .section-label { color: var(--yellow); }
+    .companion-item { padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .companion-item.almost-certain { border-left: 4px solid #f97316; background: rgba(245,158,11,0.12); padding: 10px 12px; border-radius: var(--r-sm); margin-bottom: 4px; }
+    .companion-item:last-child { border-bottom: none; }
+    .companion-type { font-size: 14px; font-weight: 700; color: var(--text); }
+    .companion-reason { font-size: 13px; color: var(--text2); margin-top: 2px; }
+    .companion-note { font-size: 12px; color: var(--yellow); margin-top: 10px; font-weight: 600; }
+    /* Confidence Badge */
+    .confidence-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; cursor: help; position: relative; }
+    .confidence-badge .conf-tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1a1a2e; color: #f0f4ff; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; white-space: nowrap; z-index: 10; margin-bottom: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+    .confidence-badge:hover .conf-tooltip, .confidence-badge:active .conf-tooltip { display: block; }
+    .flag-wrong-btn { background: none; border: 1px solid var(--border); border-radius: 16px; color: var(--muted); cursor: pointer; font-size: 11px; padding: 4px 10px; transition: all .15s; margin-left: 8px; }
+    .flag-wrong-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+    .flag-feedback-inline { font-size: 11px; color: var(--green); margin-left: 8px; display: none; }
+
+    /* Residential/Commercial Toggle */
+    .toggle-row { display: flex; gap: 8px; }
+    .toggle-btn {
+      flex: 1; padding: 11px 14px; border-radius: var(--r-sm); border: 1px solid var(--border);
+      background: var(--bg); color: var(--text2); font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s;
+      text-align: center;
+    }
+    .toggle-btn.active { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
+    .toggle-btn:not(.active):hover { border-color: var(--brand); color: var(--brand); }
+
+    /* Autocomplete */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-dropdown {
+      position: absolute; left: 0; right: 0; top: 100%; z-index: 50;
+      background: var(--surface); border: 1px solid var(--border); border-top: none;
+      border-radius: 0 0 var(--r-sm) var(--r-sm); max-height: 200px; overflow-y: auto;
+    }
+    .autocomplete-item {
+      padding: 10px 14px; font-size: 14px; color: var(--text2); cursor: pointer;
+      border-bottom: 1px solid var(--border);
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: var(--brand-light); color: var(--brand); }
+
+    /* Expiry reminder */
+    .expiry-reminder-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px; }
+
+    /* Jobs page */
+    .jobs-empty { text-align: center; padding: 72px 20px; color: var(--muted); }
+    .jobs-empty .icon { font-size: 48px; margin-bottom: 14px; }
+    .job-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; margin-bottom: 10px; }
+    .job-item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .job-item-name { font-weight: 700; font-size: 15px; }
+    .job-status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .status-planning { background: var(--yellow-bg); color: var(--yellow); }
+    .status-applied { background: var(--brand-light); color: var(--brand); }
+    .status-approved { background: var(--green-bg); color: var(--green); }
+    .status-active { background: rgba(139,92,246,0.12); color: #a78bfa; }
+    .status-closed { background: var(--surface2); color: var(--muted); }
+    .job-item-meta { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+    .job-item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .job-action-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text2); cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 600; padding: 7px 12px; transition: all .12s; }
+    .job-action-btn:hover { border-color: var(--brand); color: var(--brand); }
+    .job-expiry-warn { background: var(--yellow-bg); border: 1px solid rgba(245,158,11,0.3); border-radius: var(--r-sm); font-size: 12px; color: var(--yellow); padding: 6px 10px; margin-top: 8px; }
+
+    /* Print */
+    @media print {
+      @page { size: letter; margin: 0.75in; }
+      body { background: #fff !important; color: #000 !important; font-size: 12px !important; }
+      #app { max-width: 100% !important; }
+      .nav,.tabs,.counter-bar,.trust-badges,.hero,.trust-note,.lookup-btn,#search-form,#loading,.action-row,.feedback-row,.new-search-btn,.gate-overlay,#install-banner,.offline-badge,.install-btn,.disambig-box,.footer,.search-again-hero,.nav-new-search,.tracker-modal-overlay,.flag-wrong-btn,.flag-feedback-inline { display: none !important; }
+      #results { display: block !important; }
+      .results-inner { padding: 0 !important; }
+      .card,.summary-card,.result-hero,.how-to-apply-card,.watchout-card,.companion-card { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; margin-bottom: 10px !important; padding: 14px !important; }
+      .result-hero { background: #f0f4ff !important; }
+      .companion-card { border: 2px solid #f59e0b !important; background: #fffbeb !important; }
+      .section-label { color: #555 !important; } .info-key { color: #555 !important; } .info-val { color: #000 !important; }
+      .contact-phone { font-size: 18px !important; color: #2563eb !important; }
+      .badge-green { background: #d1fae5 !important; color: #065f46 !important; }
+      .badge-blue { background: #dbeafe !important; color: #1e40af !important; }
+      .badge-yellow { background: #fef3c7 !important; color: #92400e !important; }
+      .badge-red { background: #fee2e2 !important; color: #991b1b !important; }
+      .confidence-badge { border: 1px solid #ccc !important; }
+      .confidence-badge .conf-tooltip { display: none !important; }
+      .bullet-list, .ordered-list li { color: #333 !important; }
+      .checklist-items { display: block !important; }
+      .print-header { display: block !important; }
+      .print-footer { display: block !important; }
+      a { color: #2563eb !important; }
+      .no-print { display: none !important; }
+    }
+    .print-header { display: none; text-align: center; padding: 12px 0; border-bottom: 2px solid #2563eb; margin-bottom: 16px; }
+    .print-header h2 { font-size: 20px; font-weight: 800; color: #2563eb; margin: 0; }
+    .print-header p { font-size: 12px; color: #666; margin-top: 4px; }
+    .print-footer { display: none; text-align: center; font-size: 11px; color: #888; margin-top: 24px; padding-top: 12px; border-top: 1px solid #ddd; }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 32px; }
+      .permit-name-big { font-size: 18px; }
+      .big-price { font-size: 24px; }
+      .disambig-btns { flex-direction: column; }
+      .disambig-btn { width: 100%; }
+    }
+
+    /* ── Mobile Optimizations ─────────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 26px; }
+      .hero-sub { font-size: 14px; }
+      .testimonial-card { min-width: calc(88vw - 16px); max-width: calc(88vw - 16px); padding: 14px; }
+      .trust-badges { gap: 6px; }
+      .trust-badge { font-size: 12px; padding: 6px 12px; }
+      .free-paid-bar { font-size: 12px; gap: 6px; }
+      .free-paid-divider { display: none; }
+      .free-paid-bar span { width: 100%; text-align: center; }
+      .cities-coverage-link { font-size: 12px; padding: 6px 12px; }
+      .lookup-btn { font-size: 18px; padding: 18px; }
+      input, select, textarea { font-size: 16px !important; } /* prevent iOS zoom */
+      .tab { font-size: 12px; padding: 12px 4px; }
+      .action-row { gap: 8px; }
+      .action-btn { font-size: 13px; padding: 10px 12px; }
+      .result-job { font-size: 17px; }
+      .permit-name-big { font-size: 17px; }
+      .big-price { font-size: 24px; }
+      .contact-phone { font-size: 24px; }
+      .card { padding: 16px; }
+      .hero-stat, .disambig-btn { min-width: 120px; }
+      .gate-sheet { padding: 28px 18px 36px; }
+      .gate-title { font-size: 20px; }
+    }
+
+    /* Touch targets — always at least 44px tall for tappable elements */
+    .text-link, .tab, .toggle-btn, .disambig-btn, .nav-new-search,
+    .action-btn, .mini-link, .flag-wrong-btn {
+      min-height: 44px;
+    }
+    .tab { display: flex; align-items: center; justify-content: center; }
+
+    /* Smooth scroll snap for testimonials on mobile */
+    @media (max-width: 600px) {
+      .testimonial-card { scroll-snap-align: center; }
+      .testimonial-row { padding-left: 4px; padding-right: 20px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- Navbar -->
+  <nav class="nav">
+    <div class="logo">
+      <div class="logo-mark">PA</div>
+      <div>
+        <div class="logo-text">Permit<em>Assist</em></div>
+        <div class="logo-tagline">For Contractors</div>
+      </div>
+    </div>
+    <div class="nav-right">
+      <a class="nav-new-search" id="nav-new-search" href="#" onclick="event.preventDefault(); newSearch();">← New Lookup</a>
+      <div class="offline-badge" id="offline-badge">● Offline</div>
+      <button class="install-btn" id="install-nav-btn" onclick="installApp()">Add to Phone</button>
+    </div>
+  </nav>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" id="tab-search" onclick="showTab('search')">🔍 Look Up</div>
+    <div class="tab" id="tab-history" onclick="showTab('history')">📋 History</div>
+    <div class="tab" id="tab-jobs" onclick="showTab('jobs')">📁 Jobs</div>
+  </div>
+
+  <!-- Search Page -->
+  <div class="page active" id="page-search">
+    <div class="page-inner" id="search-form">
+      <!-- Hero -->
+      <div class="hero">
+        <h1>Stop Googling.<br><em>Get the Permit.</em></h1>
+        <p class="hero-sub">Stop-work orders cost $2,000–$10,000. Wrong permit = failed inspection + double fees. PermitAssist tells you the exact permit name to ask for, current fees, and the phone number that actually works — before you touch the job.</p>
+        <div style="margin-top:16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:14px 18px;text-align:left;max-width:480px;margin-inline:auto">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px">✅ Built for Trade Contractors</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">⚡ Electrical</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🔧 Plumbing</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">❄️ HVAC</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🏗️ General Construction</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🔩 Mechanical</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px">🪟 Roofing & Exterior</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:10px">Not for zoning, business licenses, or general real estate permits.</div>
+        </div>
+      </div>
+
+      <!-- Testimonials -->
+      <div id="testimonials-strip" style="margin:20px 0 4px;overflow:hidden;">
+        <div class="testimonial-row" id="testimonials-row">
+          <div class="testimonial-card">
+            <div class="testimonial-top">
+              <div class="testimonial-avatar">MR</div>
+              <div>
+                <div class="testimonial-author">Mike R.</div>
+                <div class="testimonial-trade">HVAC Contractor · Denver, CO</div>
+              </div>
+              <div class="testimonial-stars">★★★★★</div>
+            </div>
+            <div class="testimonial-text">"Called the building dept twice, got two different answers. PermitAssist gave me the exact permit name — Mechanical Replacement Permit — and the fee. Walked in, done in 15 minutes."</div>
+          </div>
+          <div class="testimonial-card">
+            <div class="testimonial-top">
+              <div class="testimonial-avatar">CT</div>
+              <div>
+                <div class="testimonial-author">Carlos T.</div>
+                <div class="testimonial-trade">Master Plumber · Houston, TX</div>
+              </div>
+              <div class="testimonial-stars">★★★★★</div>
+            </div>
+            <div class="testimonial-text">"I was pulling the wrong permit for water heater swaps for years. Cost me two reinspection fees before I found this. Now I use it before every job."</div>
+          </div>
+          <div class="testimonial-card">
+            <div class="testimonial-top">
+              <div class="testimonial-avatar">DW</div>
+              <div>
+                <div class="testimonial-author">D. Williams</div>
+                <div class="testimonial-trade">Electrical Contractor · Tampa, FL</div>
+              </div>
+              <div class="testimonial-stars">★★★★★</div>
+            </div>
+            <div class="testimonial-text">"Quoted 4 jobs in different cities last week. Checked permits for all of them before I left the house. That's not something I could do before."</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust Badges -->
+      <div class="trust-badges">
+        <div class="trust-badge"><strong id="stat-lookups">1,847</strong> lookups</div>
+        <div class="trust-badge"><strong id="stat-verified">94</strong> Verified Cities</div>
+        <div class="trust-badge">✅ Exact Permit Names</div>
+        <div class="trust-badge">📋 Inspector Checklists</div>
+        <div class="trust-badge">🎯 No Guessing</div>
+      </div>
+      <!-- Cities link + live counter -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:-2px 0 12px">
+        <a href="/cities" class="cities-coverage-link" target="_blank">📍 View all <strong id="stat-verified-link">94</strong> verified cities →</a>
+        <span id="lookups-today-bar" style="font-size:12px;color:var(--muted);display:none">🔥 <strong id="stat-today" style="color:var(--text2)">0</strong> lookups today</span>
+      </div>
+
+      <!-- Free/Paid clarity line -->
+      <div class="free-paid-bar">
+        <span>✅ <strong>3 free lookups</strong> — no credit card</span>
+        <span class="free-paid-divider">·</span>
+        <span>Then <strong>$19/mo</strong> for unlimited</span>
+        <span class="free-paid-divider">·</span>
+        <span>Cancel anytime</span>
+      </div>
+
+      <!-- Counter bar -->
+      <div class="counter-bar" id="counter-bar">
+        <div class="counter-bar-top">
+          <span class="counter-text" id="counter-text">0 of 5 free lookups used</span>
+        <span class="counter-upgrade" onclick="openUpgrade()">Upgrade →</span>
+      </div>
+      <div class="counter-progress"><div class="counter-progress-fill" style="width:0%"></div></div>
+      </div>
+
+      <!-- Search Card -->
+      <div class="card">
+        <div class="card-label">What do you need a permit for?</div>
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" id="city" placeholder="e.g. Houston" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" id="state" placeholder="e.g. TX" maxlength="2" style="text-transform:uppercase" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label>Job Type</label>
+          <div class="toggle-row" id="job-category-toggle">
+            <button class="toggle-btn active" id="btn-residential" onclick="setJobCategory('residential')">🏠 Residential</button>
+            <button class="toggle-btn" id="btn-commercial" onclick="setJobCategory('commercial')">🏢 Commercial</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Describe the job</label>
+          <div class="autocomplete-wrap">
+            <div class="query-wrap">
+              <textarea class="hero-input" id="query" placeholder="e.g. HVAC replacement, residential furnace swap, 3-ton unit" autocomplete="off" rows="3"></textarea>
+              <button class="mic-btn" id="mic-btn" type="button" title="Speak your question" onclick="toggleVoice()">🎤</button>
+            </div>
+            <div class="autocomplete-dropdown" id="autocomplete-dropdown" style="display:none"></div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>ZIP Code <span style="font-weight:400;text-transform:none;font-size:10px;">(optional)</span></label>
+          <input type="text" id="zip" placeholder="77001" maxlength="5" inputmode="numeric" />
+        </div>
+        <div class="gps-status" id="gps-status"></div>
+        <div class="location-links">
+          <a class="text-link" href="#" onclick="event.preventDefault(); useGPS();">📍 Auto-detect my location</a>
+        </div>
+        <!-- Hidden location-edit for backwards compat -->
+        <div id="location-edit" style="display:none"></div>
+      </div>
+
+      <!-- Disambiguation box -->
+      <div class="disambig-box" id="disambig-box">
+        <div class="disambig-title">⚠️ Is this a minor repair or full replacement?</div>
+        <div class="disambig-btns">
+          <button class="disambig-btn" onclick="submitWithDisambig('minor repair')">🔧 Minor Repair</button>
+          <button class="disambig-btn" onclick="submitWithDisambig('full replacement')">🔄 Full Replacement</button>
+        </div>
+      </div>
+
+      <div class="trust-note">🔒 Real permit data, not a Google search. Updated fees, verified contacts, inspection checklists.</div>
+      <button class="lookup-btn" id="lookup-btn" type="button">🔍 &nbsp;Look Up Permit Requirements</button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading">
+      <div class="spin-ring"></div>
+      <div class="loading-title" id="loading-title">Researching permit requirements...</div>
+      <div class="loading-sub" id="loading-sub">Checking your city, county, and state rules</div>
+      <div class="progress-steps">
+        <div class="progress-step" id="step-1"><span class="step-icon">🌐</span><span>Searching building department records</span></div>
+        <div class="progress-step" id="step-2"><span class="step-icon">🤖</span><span>Analyzing permit requirements</span></div>
+        <div class="progress-step" id="step-3"><span class="step-icon">✅</span><span>Verifying fees &amp; contact info</span></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="results">
+      <div class="offline-result-notice" id="offline-result-notice">⚠️ You're offline — showing cached result from your last lookup here.</div>
+      <div class="results-inner" id="results-inner"></div>
+    </div>
+  </div>
+
+  <!-- History Page -->
+  <div class="page" id="page-history"><div class="page-inner" id="history-content"></div></div>
+
+  <!-- Jobs Page -->
+  <div class="page" id="page-jobs"><div class="page-inner" id="jobs-inner"></div></div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>⚠️ PermitAssist provides guidance only. Always verify requirements with your local building department before starting work.</p>
+    <p style="margin-top:8px">© 2026 PermitAssist. All rights reserved.</p>
+  </div>
+</div>
+
+<!-- Install Banner -->
+<div id="install-banner">
+  <div class="install-icon">📋</div>
+  <div class="install-text" style="flex:1">
+    <strong>Add PermitAssist to your phone</strong>
+    <span>Quick access from your home screen</span>
+  </div>
+  <button class="install-cta" onclick="installApp()">Install</button>
+  <button class="install-dismiss" onclick="dismissInstall()">✕</button>
+</div>
+
+<!-- Email Gate -->
+<div class="gate-overlay" id="email-gate" style="display:none">
+  <div class="gate-sheet">
+    <div class="gate-icon">📋</div>
+    <div class="gate-title" id="gate-title">You're clearly finding this useful</div>
+    <div class="gate-sub" id="gate-sub">Drop your email to keep going — results are ready. Completely free.</div>
+    <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left">
+      <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:8px">💰 The math is simple:</div>
+      <div style="font-size:12px;color:#94a3b8;line-height:1.7">
+        • 1 stop-work order avoided = <strong style="color:#f0f4ff">$2,000–$10,000 saved</strong><br>
+        • 2 hrs/week research saved = <strong style="color:#f0f4ff">$300–$600/mo value</strong><br>
+        • PermitAssist costs <strong style="color:#10b981">$19/month</strong>
+      </div>
+    </div>
+    <input class="gate-input" type="email" id="gate-email" placeholder="your@email.com" autocomplete="email" />
+    <button class="gate-submit" onclick="submitGateEmail()">Show My Permit Requirements →</button>
+    <div class="gate-note">🔒 No credit card. No spam. Unsubscribe anytime.</div>
+    <div style="font-size:12px;color:#64748b;text-align:center;margin-top:8px">💡 Save 2 months: <strong style="color:#94a3b8">Annual plan = $190/yr</strong> (vs $228)</div>
+    <span class="gate-skip" id="gate-skip-link" onclick="skipGate()">Skip for now (uses 1 of 5 free lookups)</span>
+  </div>
+</div>
+
+<script>
+// ── Constants & State ─────────────────────────────────────────────────────────
+const HISTORY_KEY='pa_history',LOOKUP_KEY='pa_lookups',EMAIL_KEY='pa_email',FREE_LIMIT=5,UPGRADE_URL='https://permitassist.io/#upgrade';
+const IS_ADMIN=new URLSearchParams(window.location.search).get('admin')==='boban2026';
+let currentResult=null,pendingResult=null,deferredInstallPrompt=null,gpsLocation=null,jobCategory='residential';
+
+// ── Job Types for Autocomplete ────────────────────────────────────────────────
+const JOB_TYPES_ALL = [
+  // HVAC
+  'HVAC system replacement','HVAC replacement residential','Air conditioner replacement',
+  'Furnace replacement','Heat pump installation','Mini split installation',
+  'Ductless mini split','Central air conditioning installation','Gas furnace installation',
+  'Electric furnace installation','HVAC repair','Air handler replacement',
+  'Condenser replacement','Ductwork installation','Ductwork replacement',
+  'Boiler replacement','Heat pump water heater installation',
+  // Electrical
+  'Electrical panel upgrade','Electrical panel replacement','Service upgrade 200 amp',
+  'Service upgrade 400 amp','Sub panel installation','EV charger installation',
+  'Electric vehicle charger Level 2','Solar panel installation','Solar PV system',
+  'Generator installation','Standby generator','Whole house generator',
+  'New circuit installation','GFCI outlet installation','Ceiling fan installation',
+  'Transfer switch installation',
+  // Plumbing
+  'Water heater replacement','Tankless water heater installation',
+  'Gas water heater replacement','Plumbing repiping','Whole house repipe',
+  'Sewer line replacement','Water line replacement','Main water line replacement',
+  'Bathroom remodel plumbing','Kitchen remodel plumbing','Bathroom addition',
+  'Gas line installation','Gas line extension','Water softener installation',
+  'Sump pump installation','Irrigation system installation',
+  // Roofing
+  'Roof replacement','Roof re-roof','Shingle roof replacement','Metal roof installation',
+  'Tile roof replacement','Flat roof replacement','TPO roof installation',
+  'Skylight installation','Gutter installation','Roof repair','Roof leak repair',
+  // General
+  'Deck construction','Deck addition','Patio cover installation','Pergola installation',
+  'Fence installation','Room addition','Garage conversion','ADU construction',
+  'Accessory dwelling unit','Basement finish','Basement remodel','Garage addition',
+  'Pool installation','Inground pool','Hot tub installation','Kitchen remodel',
+  'Bathroom remodel','Window replacement','Door replacement','Retaining wall construction',
+  'Commercial tenant improvement','Foundation repair','Load bearing wall removal',
+];
+
+function setJobCategory(c) {
+  jobCategory = c;
+  document.getElementById('btn-residential').classList.toggle('active', c === 'residential');
+  document.getElementById('btn-commercial').classList.toggle('active', c === 'commercial');
+}
+const STATES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ── Inspection Checklists (hardcoded by trade) ────────────────────────────────
+const INSPECTION_CHECKLISTS = {
+  hvac: ["Thermostat wiring connections", "Refrigerant line insulation", "Electrical disconnect clearances (36\" min)", "Flue/exhaust venting proper pitch", "Filter access clearance", "Condensate drain line", "Equipment nameplate visible", "Permits posted on-site"],
+  electrical: ["Panel labeling complete", "Wire gauge matches breaker size", "GFCI outlets in wet locations", "Arc fault breakers where required", "Grounding electrode conductor", "Bonding jumpers", "Junction boxes accessible", "Permits posted on-site"],
+  plumbing: ["Pressure relief valve installed", "Expansion tank present (closed systems)", "Proper venting/flue", "Water supply connections", "Drain pan installed", "Seismic strapping (CA/NV/WA)", "Permit tag on unit", "Shut-off valve accessible"],
+  roofing: ["Underlayment installed per spec", "Drip edge at eaves and rakes", "Valley flashing properly lapped", "Pipe boot/vent flashing sealed", "Ridge cap nailed per manufacturer", "Decking condition documented", "Ice and water shield (northern climates)", "Permit posted on-site"],
+  deck: ["Footing depth below frost line", "Beam-to-post connections", "Joist hanger nailing", "Ledger board lag bolts", "Guardrail height 36\"+ (42\" if >30\")", "Baluster spacing <4\"", "Stair riser/tread dimensions", "Permit posted on-site"],
+  default: ["Work matches permit scope", "Materials match approved plans", "Safety measures in place", "Permit posted on-site"]
+};
+
+function getInspectionChecklist(jobType) {
+  const j = (jobType || '').toLowerCase();
+  if (/hvac|heating|cooling|\bac\b|furnace|heat pump|air condition/.test(j)) return { trade: 'HVAC', items: INSPECTION_CHECKLISTS.hvac };
+  if (/electric|panel|service|wiring|breaker/.test(j)) return { trade: 'Electrical', items: INSPECTION_CHECKLISTS.electrical };
+  if (/plumbing|water heater|pipe|drain|sewer/.test(j)) return { trade: 'Plumbing', items: INSPECTION_CHECKLISTS.plumbing };
+  if (/roof|shingle|re-roof|reroof/.test(j)) return { trade: 'Roofing', items: INSPECTION_CHECKLISTS.roofing };
+  if (/deck|patio|pergola/.test(j)) return { trade: 'Deck', items: INSPECTION_CHECKLISTS.deck };
+  return { trade: 'General', items: INSPECTION_CHECKLISTS.default };
+}
+
+// ── Disambiguation Logic ──────────────────────────────────────────────────────
+const REPAIR_KEYWORDS = /\b(repair|fix|leak|patch|minor|small)\b/i;
+
+function checkDisambiguation() {
+  if (_skipDisambig) { _skipDisambig = false; return false; }
+  const query = document.getElementById('query').value.trim();
+  if (REPAIR_KEYWORDS.test(query)) {
+    document.getElementById('disambig-box').classList.add('show');
+    return true;
+  }
+  document.getElementById('disambig-box').classList.remove('show');
+  return false;
+}
+
+let _skipDisambig = false;
+function submitWithDisambig(choice) {
+  const query = document.getElementById('query').value.trim();
+  document.getElementById('query').value = query + ' (' + choice + ')';
+  document.getElementById('disambig-box').classList.remove('show');
+  _skipDisambig = true;
+  doLookupWithOffline();
+}
+
+// ── Lookup count & email gate ─────────────────────────────────────────────────
+function getLookupCount(){if(IS_ADMIN) return 0;return parseInt(localStorage.getItem(LOOKUP_KEY)||'0',10)}
+function incrementLookup(){if(IS_ADMIN) return 0;const n=getLookupCount()+1;localStorage.setItem(LOOKUP_KEY,String(n));return n}
+function hasEmail(){if(IS_ADMIN) return true;return !!localStorage.getItem(EMAIL_KEY)}
+function saveEmail(email){localStorage.setItem(EMAIL_KEY,email.trim().toLowerCase());fetch('/api/capture-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim().toLowerCase(),source:'gate'})}).catch(()=>{})}
+
+async function loadStats(){
+  try{
+    const r=await fetch('/api/stats');
+    const d=await r.json();
+    if(d.total_lookups) document.getElementById('stat-lookups').textContent=Number(d.total_lookups).toLocaleString();
+    if(d.lookups_today && d.lookups_today > 0){
+      const todayEl=document.getElementById('stat-today');
+      const barEl=document.getElementById('lookups-today-bar');
+      if(todayEl) todayEl.textContent=d.lookups_today;
+      if(barEl) barEl.style.display='inline';
+    }
+  }catch{}
+  try{
+    const r2=await fetch('/api/verified-cities');
+    const d2=await r2.json();
+    const el=document.getElementById('stat-verified');
+    if(el && d2.count) el.textContent=d2.count;
+    const el2=document.getElementById('stat-verified-link');
+    if(el2 && d2.count) el2.textContent=d2.count;
+  }catch{}
+}
+
+function refreshCounterBar(){
+  const used=getLookupCount(),remaining=Math.max(0,FREE_LIMIT-used);
+  const bar=document.getElementById('counter-bar'),text=document.getElementById('counter-text');
+  if(!bar) return;
+  if(hasEmail()){bar.style.display='none';return}
+  const pct=Math.round(used/FREE_LIMIT*100);
+  text.textContent=remaining===0?'Free lookups used — upgrade for unlimited':`${used} of ${FREE_LIMIT} free lookups used`;
+  let progressEl=bar.querySelector('.counter-progress');
+  if(!progressEl){progressEl=document.createElement('div');progressEl.className='counter-progress';progressEl.innerHTML='<div class="counter-progress-fill"></div>';bar.appendChild(progressEl)}
+  const fill=progressEl.querySelector('.counter-progress-fill');
+  if(fill) requestAnimationFrame(()=>fill.style.width=pct+'%');
+  bar.style.borderColor=remaining===0?'rgba(239,68,68,0.4)':'';
+}
+
+// ── Progress steps ────────────────────────────────────────────────────────────
+const STEPS=[{id:'step-1',label:'Searching building department records...',delay:0},{id:'step-2',label:'Analyzing permit requirements...',delay:2000},{id:'step-3',label:'Verifying fees & contact info...',delay:4000}];
+function startProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id);if(e){e.className='progress-step';e.style.opacity='0.3';e.style.transition='opacity .4s ease'}});STEPS.forEach((s,i)=>setTimeout(()=>{if(i>0){const p=document.getElementById(STEPS[i-1].id);if(p){p.className='progress-step done';p.style.opacity='1'}}const e=document.getElementById(s.id);if(e){e.className='progress-step active';e.style.opacity='1'}document.getElementById('loading-title').textContent=s.label},s.delay))}
+function stopProgress(){STEPS.forEach(s=>{const e=document.getElementById(s.id);if(e)e.className='progress-step done'})}
+
+// ── Gate ──────────────────────────────────────────────────────────────────────
+function showGate(hardBlock){const title=document.getElementById('gate-title'),sub=document.getElementById('gate-sub'),skip=document.getElementById('gate-skip-link');if(hardBlock){title.textContent='5 free lookups used';sub.textContent='Upgrade for unlimited access — $19/mo, cancel anytime. Or drop your email and we\'ll give you 5 more free.';skip.style.display='none'}else{title.textContent='You\'re clearly finding this useful';sub.textContent='Drop your email to keep going — results are ready. Completely free.';skip.style.display='block'}document.getElementById('email-gate').style.display='flex';setTimeout(()=>document.getElementById('gate-email').focus(),350)}
+function hideGate(){document.getElementById('email-gate').style.display='none'}
+function submitGateEmail(){const inp=document.getElementById('gate-email'),val=inp.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){inp.style.borderColor='var(--red)';inp.focus();return}saveEmail(val);incrementLookup();hideGate();refreshCounterBar();if(pendingResult) showPendingResult()}
+function skipGate(){if(getLookupCount()>=FREE_LIMIT){document.getElementById('gate-email').focus();return}incrementLookup();hideGate();refreshCounterBar();if(pendingResult) showPendingResult()}
+function showPendingResult(){if(!pendingResult) return;const {data,job,city,state}=pendingResult;pendingResult=null;document.getElementById('loading').style.display='none';document.getElementById('results').style.display='block';document.getElementById('results-inner').innerHTML='';renderResults(data,job,city,state);document.getElementById('page-search').scrollTop=0}
+
+// ── Install ──────────────────────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;if(!localStorage.getItem('pa_install_dismissed')){document.getElementById('install-banner').classList.add('show');document.getElementById('install-nav-btn').style.display='block'}});
+function installApp(){if(!deferredInstallPrompt) return;deferredInstallPrompt.prompt();deferredInstallPrompt.userChoice.then(()=>{deferredInstallPrompt=null;document.getElementById('install-banner').classList.remove('show');document.getElementById('install-nav-btn').style.display='none'})}
+function dismissInstall(){localStorage.setItem('pa_install_dismissed','1');document.getElementById('install-banner').classList.remove('show')}
+
+// ── Online/offline ───────────────────────────────────────────────────────────
+function updateOnline(){const b=document.getElementById('offline-badge');navigator.onLine?b.classList.remove('show'):b.classList.add('show')}
+window.addEventListener('online',updateOnline);window.addEventListener('offline',updateOnline);updateOnline();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+function showTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.getElementById('page-'+tab).classList.add('active');if(tab==='history') renderHistory();if(tab==='jobs') renderJobsPage();}
+
+// ── GPS ──────────────────────────────────────────────────────────────────────
+async function useGPS(){
+  const status=document.getElementById('gps-status');
+  status.className='gps-status';status.textContent='Locating...';
+  try{
+    const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:8000}));
+    const {latitude:lat,longitude:lng}=pos.coords;
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+    const d=await r.json();const a=d.address||{};
+    const city=a.city||a.town||a.village||a.county||'';
+    const state=(STATES[a.state]||'')||((a.state||'').slice(0,2).toUpperCase());
+    const zip=(a.postcode||'').slice(0,5);
+    if(city) document.getElementById('city').value=city;
+    if(state) document.getElementById('state').value=state;
+    if(zip) document.getElementById('zip').value=zip;
+    gpsLocation={city,state,zip};
+    status.className='gps-status ok';status.textContent='Location detected and ready.';
+  }catch{status.className='gps-status bad';status.textContent='Could not get location. Enter city and state manually.'}
+}
+
+// ── Query parsing ────────────────────────────────────────────────────────────
+function normalizeState(raw){if(!raw) return '';const t=raw.trim();if(STATES[t.toUpperCase()]) return t.toUpperCase();const found=Object.entries(STATES).find(([,name])=>name.toLowerCase()===t.toLowerCase());return found?found[0]:t.toUpperCase()}
+
+function parseQuery(raw){
+  const text=(raw||'').trim();
+  const zipMatch=text.match(/\b(\d{5})\b/);
+  const zip=zipMatch?zipMatch[1]:document.getElementById('zip').value.trim();
+  let city=document.getElementById('city').value.trim();
+  let state=normalizeState(document.getElementById('state').value);
+  let job=text;
+  // Try parse location from query text if fields empty
+  if (!city || !state) {
+    const regex=/(?:\b(?:in|near|at)\s+)?([A-Za-z][A-Za-z'\-. ]{1,40}?)\s*,?\s+(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY)\b/i;
+    const m=text.match(regex);
+    if(m){
+      if(!city) city=m[1].replace(/\b(do i need a permit for|need a permit for|permit for|for|in|near|at)\b/ig,'').trim().replace(/[?,.]$/,'');
+      if(!state) state=m[2].toUpperCase();
+      job=text.slice(0,m.index).replace(/\b(do i need a permit for|need a permit for|permit for)\b/i,'').trim();
+    }
+  }
+  if(!city && gpsLocation?.city) city=gpsLocation.city;
+  if(!state && gpsLocation?.state) state=gpsLocation.state;
+  job=job.replace(/\s+/g,' ').replace(/^[,:-]+|[,:-]+$/g,'').trim();
+  job=job.replace(/^do i need a permit for\s+/i,'').replace(/^need a permit for\s+/i,'').replace(/^permit for\s+/i,'').trim();
+  return {job_type:job||text,city,state,zip_code:zip}
+}
+
+// ── Navigation helpers ───────────────────────────────────────────────────────
+function newSearch(){document.getElementById('search-form').style.display='block';document.getElementById('results').style.display='none';document.getElementById('results-inner').innerHTML='';document.getElementById('disambig-box').classList.remove('show');document.getElementById('query').value='';document.getElementById('city').value='';document.getElementById('state').value='';document.getElementById('zip').value='';document.getElementById('nav-new-search').classList.remove('show');refreshCounterBar();document.getElementById('page-search').scrollTop=0}
+function openUpgrade(){window.open(UPGRADE_URL,'_blank')}
+
+// ── Verdict ──────────────────────────────────────────────────────────────────
+function verdictState(d){
+  const top=d.permit_verdict||d.verdict||d.requirement||'';
+  if(top){const t=top.toString().toUpperCase().trim();if(t==='NO'||t==='NOT REQUIRED') return 'no';if(t==='YES'||t==='REQUIRED') return 'yes';if(t==='MAYBE') return 'maybe';}
+  const permits=d.permits_required||[];
+  if(permits.length===0){const hint=(d.fee_range||'')+(d.job_summary||'')+(d.permit_summary||'');if(/no permit/i.test(hint)||/not required/i.test(hint)) return 'no';return 'no';}
+  const req=permits[0].required;
+  if(req===true) return 'yes';if(req===false) return 'no';if(req==='maybe') return 'maybe';
+  return 'maybe';
+}
+
+function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
+
+// ── Render Results ───────────────────────────────────────────────────────────
+function renderResults(d, job, city, state) {
+  const verdict = verdictState(d);
+  const permits = d.permits_required || [];
+  const insps = d.inspections || [];
+  const tips = d.pro_tips || [];
+  const mistakes = d.common_mistakes || [];
+  const checklist = d.what_to_bring || d.checklist || [];
+  const tl = d.approval_timeline || {};
+  const office = d.applying_office || d.office_name || '';
+  const phone = d.apply_phone || d.office_phone || '';
+  const address = d.apply_address || d.office_address || '';
+  const maps = d.apply_google_maps || d.maps_url || '';
+  const fee = d.fee_range || d.fee || d.cost || '';
+  const applyUrl = d.apply_url || '';
+  const applyPdf = d.apply_pdf || '';
+  const countyNote = d.county_fallback_note || '';
+  const licenseRaw = d.license_required || '';
+  const licenseDisplay = licenseRaw
+    .replace(/licensed\s+(plumber|electrician|contractor|hvac\s+tech(?:nician)?|roofer)/gi, (m, trade) =>
+      `Licensed ${trade.charAt(0).toUpperCase()+trade.slice(1)} (they pull the permit for you — permit is still required)`)
+    .replace(/must\s+be\s+pulled\s+by\s+a\s+licensed/gi, 'Permit is pulled by a licensed')
+    .replace(/no\s+permit\s+if\s+licensed/gi, 'Licensed contractor pulls the permit — work still requires a permit');
+
+  let html = '';
+
+  // Print header (only visible when printing)
+  html += `<div class="print-header"><h2>PermitAssist — permitassist.io</h2><p>Permit Research Report</p></div>`;
+
+  // Search Again hero button at top
+  html += `<button class="search-again-hero" onclick="newSearch()">🔍 &nbsp;New Lookup</button>`;
+  // Show nav link too
+  document.getElementById('nav-new-search').classList.add('show');
+
+  // Counter warning
+  if (getLookupCount() >= FREE_LIMIT - 2) {
+    const remaining = Math.max(0, FREE_LIMIT - getLookupCount());
+    html += `<div class="card" style="border-color:rgba(59,130,246,0.35)"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><div class="section-label">Usage</div><div style="font-size:14px;font-weight:700">${remaining > 0 ? `${remaining} free lookup${remaining!==1?'s':''} left` : 'Free lookups used'}</div></div><button class="action-btn" style="margin:0;padding:10px 14px" onclick="openUpgrade()">Upgrade</button></div></div>`;
+  }
+
+  // County fallback notice
+  if (countyNote) {
+    html += `<div class="county-notice">🏛️ ${esc(countyNote)}</div>`;
+  }
+
+  // NO PERMIT — celebration card
+  if (verdict === 'no') {
+    html += `<div class="no-permit-card">
+      <div class="no-permit-icon">✅</div>
+      <div class="no-permit-title">No Permit Required!</div>
+      <div class="no-permit-reason">${esc(d.job_summary || d.permit_summary || d.notes || 'Based on our research, this work does not require a permit in this jurisdiction.')}</div>
+    </div>`;
+    // Code citation
+    if (d.code_citation) {
+      const _cc = typeof d.code_citation === 'string' ? { section: d.code_citation, text: '' } : d.code_citation;
+      if (_cc && _cc.section) {
+        html += `<div class="code-cite"><strong>${esc(_cc.section)}</strong>${_cc.text ? ` — ${esc(String(_cc.text).slice(0, 200))}` : ''}<div style="margin-top:6px;font-size:11px;color:var(--muted)">📌 Show this to any inspector who questions the exemption.</div></div>`;
+      }
+    }
+  }
+
+  // Data confidence badge
+  const dataSourceRaw = d.data_source || d._meta?.city_match_level || '';
+  const isCountyFB = d.county_fallback === true;
+  let confBadgeHtml = '';
+  if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.12);color:#10b981">🟢 Verified Data<span class="conf-tooltip">From our curated city database</span></span>`;
+  } else if (dataSourceRaw === 'web_search') {
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.12);color:#f59e0b">🟡 AI-Researched<span class="conf-tooltip">Researched live from official sources — verify fees before submitting</span></span>`;
+  } else if (isCountyFB || dataSourceRaw === 'county_fallback' || dataSourceRaw === 'county') {
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(249,115,22,0.12);color:#f97316">🟠 County Data<span class="conf-tooltip">City not found — showing county requirements</span></span>`;
+  } else {
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(239,68,68,0.12);color:#ef4444">🔴 General Estimate<span class="conf-tooltip">Limited local data — confirm with city before applying</span></span>`;
+  }
+  const freshNow = new Date();
+  const freshMonthYear = freshNow.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+  // Result hero
+  html += `<div class="result-hero">
+    <div class="result-job">${esc(job)}</div>
+    <div class="result-loc">📍 ${esc(city || 'Unknown city')}, ${esc(state || '')}</div>
+    <div class="result-badges">
+      <span class="badge ${verdict==='yes'?'badge-green':verdict==='no'?'badge-red':'badge-yellow'}">${verdict === 'yes' ? '✅ PERMIT REQUIRED' : verdict === 'no' ? '❌ NO PERMIT' : '⚠️ MAYBE'}</span>
+      ${fee ? `<span class="badge badge-blue">💰 ${esc(fee)}</span>` : ''}
+      ${confBadgeHtml}
+    </div>
+    <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--muted)">Last updated: ${freshMonthYear}</span>
+      <button class="flag-wrong-btn" onclick="flagAsWrong(this)">🚩 Flag as wrong</button>
+      <span class="flag-feedback-inline" id="flag-feedback-inline">Thanks for flagging. We'll review this within 30 days.</span>
+    </div>
+  </div>`;
+
+  // Summary card (for YES/MAYBE)
+  if (verdict !== 'no') {
+    const portalSel = permits.length > 0 ? permits[0].portal_selection : null;
+    const exactPermitName = portalSel || d.permit_name || d.permit_type || permits[0]?.permit_type || 'Permit details';
+    html += `<div class="summary-card">
+      <div class="section-label">📋 Permit Details</div>
+      <div class="verdict-pill ${verdict==='yes'?'verdict-yes':'verdict-maybe'}">${verdict==='yes'?'✅ YES — Permit Required':'⚠️ MAYBE — Check With Building Dept'}</div>
+      <div class="permit-name-big">${esc(exactPermitName)}</div>`;
+    if (portalSel && (d.permit_name || d.permit_type || permits[0]?.permit_type) && portalSel !== (d.permit_name || d.permit_type || permits[0]?.permit_type)) {
+      html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">Also known as: ${esc(d.permit_name || d.permit_type || permits[0]?.permit_type)}</div>`;
+    }
+    html += `<div class="big-meta">${esc(d.job_summary || d.permit_summary || d.summary || d.notes || 'Review the details below before starting the job.')}</div>`;
+    if (fee) {
+      html += `<div class="big-price">${esc(fee)}</div><div class="fee-context">💡 Typical fee for this job type in ${esc(city || 'this area')}</div>`;
+    }
+    if (portalSel) {
+      html += `<div class="portal-select-box">
+        <div class="portal-select-label">🎯 Exact permit name to ask for</div>
+        <div class="portal-select-value">${esc(portalSel)}</div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  // Companion permits warning
+  const companionPermits = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
+  if (companionPermits.length > 0) {
+    html += `<div class="companion-card">
+      <div class="section-label">⚠️ You'll Likely Also Need</div>
+      ${companionPermits.map(cp => `<div class="companion-item${cp.certainty === 'almost_certain' ? ' almost-certain' : ''}">
+        <div class="companion-type">${cp.certainty === 'almost_certain' ? '🚨 ' : ''}${esc(cp.permit_type)}</div>
+        <div class="companion-reason">${esc(cp.reason)}</div>
+      </div>`).join('')}
+      <div class="companion-note">💡 Running these permits together saves time and avoids stop-work orders</div>
+    </div>`;
+  }
+
+  // How to Apply card (replaces misleading "Apply Online" button)
+  if (verdict !== 'no') {
+    const portalName = (permits.length > 0 && permits[0].portal_selection) ? permits[0].portal_selection : (d.permit_name || d.permit_type || permits[0]?.permit_type || 'the required permit');
+    const cityName = city || 'your city';
+    html += `<div class="how-to-apply-card">`;
+    html += `<div class="section-label">📝 How to Apply</div>`;
+    html += `<div class="apply-permit-name"><div class="label">Ask for this exact permit</div><div class="value">${esc(portalName)}</div></div>`;
+    html += `<ol class="apply-steps">`;
+    html += `<li>Go to the <strong>${esc(cityName)}</strong> building department website or visit in person</li>`;
+    html += `<li>Search for or ask about <strong>"${esc(portalName)}"</strong></li>`;
+    html += `<li>Create an account if it's your first time applying online</li>`;
+    html += `<li>Upload your documents (plans, scope of work, contractor license)</li>`;
+    html += `<li>Pay the application fee and save your confirmation number</li>`;
+    html += `</ol>`;
+    if (phone) {
+      html += `<div class="apply-phone-note">📞 Or call <a href="tel:${normalizePhone(phone)}" style="color:var(--green);font-weight:700">${esc(phone)}</a> and ask for <strong>"${esc(portalName)}"</strong></div>`;
+    }
+    if (maps) {
+      html += `<a class="find-office-btn" href="${esc(maps)}" target="_blank" rel="noopener">🗺️ Find the Office</a>`;
+    }
+    if (applyPdf) {
+      html += `<a class="download-btn" href="${esc(applyPdf)}" target="_blank" rel="noopener" style="margin-top:12px">📄 Download Application (PDF)</a>`;
+    }
+    html += `</div>`;
+  }
+
+  // Contact card
+  if (phone || office || maps) {
+    html += `<div class="card" style="${verdict==='maybe'?'border-color:rgba(245,158,11,0.4);':''}">
+      ${verdict === 'maybe' ? '<div class="section-label" style="color:var(--yellow)">⚠️ Not sure? Call to confirm — takes 2 minutes</div>' : '<div class="section-label">📞 Contact</div>'}
+      ${phone ? `<a class="contact-phone" href="tel:${normalizePhone(phone)}">${esc(phone)}</a>` : ''}
+      ${office ? `<div class="contact-office">${esc(office)}</div>` : ''}
+      ${address ? `<div class="contact-address">${esc(address)}</div>` : ''}
+      <div class="mini-link-row">
+        ${maps ? `<a class="mini-link" href="${esc(maps)}" target="_blank" rel="noopener">🗺️ Find Building Department →</a>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // Fee / Timeline / License
+  if (fee || licenseDisplay || tl.simple || tl.complex) {
+    // Determine timeline speed for visual
+    const tlText = (tl.simple || tl.complex || '').toLowerCase();
+    let tlSpeed = 'medium';
+    if (/same.day|instant|immediate|1.day|next.day|over.the.counter|otc|walk.in/i.test(tlText)) tlSpeed = 'fast';
+    else if (/week|5.day|7.day|10.day/i.test(tlText)) tlSpeed = 'medium';
+    else if (/month|review|plan|30|60|90/i.test(tlText)) tlSpeed = 'slow';
+
+    html += `<div class="card"><div class="section-label">💰 Cost · ⏱ Timeline · 🧰 Who Pulls It</div>`;
+    if (fee) {
+      html += row('💰 Fee', `<span style="color:var(--green);font-weight:800;font-size:16px">${esc(fee)}</span><div class="fee-context">Typical fee for this job type</div>`);
+    }
+    if (tl.simple || tl.complex) {
+      const tlDisplay = tl.simple || tl.complex;
+      html += `<div class="info-row"><div class="info-key">⏱ Timeline</div><div class="info-val">
+        <div style="font-weight:700">${esc(tlDisplay)}</div>
+        <div class="timeline-visual"><div class="timeline-bar"><div class="timeline-bar-fill ${tlSpeed}"></div></div>
+        <span class="timeline-label" style="color:${tlSpeed==='fast'?'var(--green)':tlSpeed==='medium'?'var(--yellow)':'var(--red)'}">${tlSpeed==='fast'?'⚡ Fast':tlSpeed==='medium'?'⏳ Moderate':'🐢 Plan Ahead'}</span></div>
+      </div></div>`;
+    }
+    if (tl.complex && tl.simple) {
+      html += row('📐 Plan review', esc(tl.complex));
+    }
+    if (licenseDisplay) {
+      html += row('🧰 Who pulls it', esc(licenseDisplay));
+    }
+    html += `</div>`;
+  }
+
+  // What to bring / What you'll need
+  const requirements = d.requirements || d.documents_needed || [];
+  const allBring = [...checklist, ...requirements];
+  if (allBring.length) {
+    html += `<div class="card"><div class="section-label">📎 What You'll Need (Bring These)</div>
+      <ul class="bullet-list">${[...new Set(allBring)].map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  // Inspections
+  if (insps.length) {
+    html += `<div class="card"><div class="section-label">🔍 What Gets Inspected</div>
+      <ol class="ordered-list">${insps.map(ins => `<li><strong style="color:var(--text)">${esc(ins.stage || ins.title || 'Inspection')}</strong><div style="font-size:13px;margin-top:4px">${esc(ins.description || ins.notes || '')}</div>${ins.timing ? `<div style="font-size:11px;color:var(--brand);font-weight:700;margin-top:4px">${esc(ins.timing)}</div>` : ''}</li>`).join('')}</ol>
+    </div>`;
+  }
+
+  // Pro tips
+  if (tips.length) {
+    html += `<div class="card"><div class="section-label">💡 Pro Tips</div>
+      <ul class="bullet-list">${tips.slice(0, 4).map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  // Before You Start — post-permit callout
+  if (d.permit_verdict === 'YES' || (top && top !== 'NO')) {
+    html += `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="section-label" style="color:var(--green)">📋 Before You Start Work</div>
+      <ul class="bullet-list" style="margin-top:8px">
+        <li><strong>Post the permit on-site</strong> before the first day of work — visible from the street or entrance</li>
+        <li><strong>Keep it there</strong> until the final inspection is signed off</li>
+        <li><strong>Have the inspection card on site</strong> so the inspector can sign each phase</li>
+        <li>No permit posted = inspector can issue a <strong>stop-work order</strong>, even if the permit was properly pulled</li>
+      </ul>
+    </div>`;
+  }
+
+  // Watch Out / Common mistakes
+  const conditionalNotes = permits.filter(p => p.notes && /if|unless|except|conditional|may not|only when|depending/i.test(p.notes)).map(p => p.notes);
+  const allWarnings = [...mistakes.slice(0, 4), ...conditionalNotes.slice(0, 2)];
+  if (allWarnings.length) {
+    html += `<div class="watchout-card"><div class="section-label">⚠️ Watch Out — Common Mistakes & Gotchas</div>
+      <ul class="bullet-list">${[...new Set(allWarnings)].map(m => `<li>${esc(m)}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  // Permit list (multiple permits)
+  if (permits.length > 1 || (permits.length === 1 && permits[0].notes)) {
+    html += `<div class="card"><div class="section-label">Permit Details</div>
+      ${permits.map(p => `<div class="list-card-item">
+        <div class="list-item-title">${esc(p.permit_type || '')}</div>
+        ${p.required !== undefined ? `<div class="badge ${p.required===true?'badge-green':p.required==='maybe'?'badge-yellow':'badge-red'}" style="margin-bottom:8px;display:inline-block">${p.required===true?'Required':p.required==='maybe'?'Maybe':'Not required'}</div>` : ''}
+        ${p.portal_selection ? `<div style="font-size:12px;color:var(--brand);font-weight:600;margin-bottom:4px">Portal: ${esc(p.portal_selection)}</div>` : ''}
+        ${p.notes ? `<div class="list-item-sub">${esc(p.notes)}</div>` : ''}
+      </div>`).join('')}
+    </div>`;
+  }
+
+  // Inspection checklist (collapsible, hardcoded by trade)
+  if (verdict !== 'no') {
+    const inspChecklist = getInspectionChecklist(job);
+    html += `<div class="card">
+      <div class="checklist-toggle" onclick="toggleChecklist(this)">
+        <div class="checklist-toggle-text">📋 ${esc(inspChecklist.trade)} Inspection Checklist</div>
+        <div class="checklist-toggle-arrow">▼</div>
+      </div>
+      <div class="checklist-items">
+        ${inspChecklist.items.map(item => `<div class="checklist-item">${esc(item)}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Estimated timeline
+  if (tl.simple || tl.complex) {
+    html += `<div class="cache-disclaimer">⏱ Estimated timeline: ${esc(tl.simple || tl.complex || 'Varies by jurisdiction')}</div>`;
+  }
+
+  // Disclaimer
+  if (d.disclaimer) {
+    html += `<div class="disclaimer-box">📌 ${esc(d.disclaimer)}</div>`;
+  }
+
+  // Cache disclaimer
+  const genAt = d._meta?.generated_at || '';
+  const dataSource = d.data_source || d._meta?.city_match_level || '';
+  const webSrcs = d._meta?.web_sources || 0;
+  const isCached = d._cached || d._meta?.cached;
+  const freshDate = genAt ? new Date(genAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const isStale = genAt && (Date.now() - new Date(genAt).getTime()) > 30 * 24 * 60 * 60 * 1000;
+
+  if (freshDate) {
+    html += `<div class="cache-disclaimer">Data current as of ${freshDate}. Always verify fees with your local building department.</div>`;
+    html += `<div class="freshness-row">
+      <span class="freshness-badge"><span class="freshness-dot${isStale ? ' stale' : ''}"></span>${isCached ? 'Cached result — verified ' : 'Generated '} ${freshDate}</span>
+      ${webSrcs > 0 ? `<span class="freshness-badge">🌐 ${webSrcs} live web source${webSrcs !== 1 ? 's' : ''}</span>` : ''}
+      <span class="freshness-badge">${dataSource === 'city' ? '📍 City-verified' : dataSource === 'county' ? '🏛️ County data' : dataSource === 'web_search' ? '🔍 Web search' : '📚 State rules'}</span>
+    </div>`;
+  }
+
+  // Action buttons
+  html += `
+    <div class="action-row action-row-3" style="margin-top:14px">
+      <button class="action-btn" onclick="shareResult()">📤 Share</button>
+      <button class="action-btn" onclick="copyResult()">📋 Copy</button>
+      <button class="action-btn" onclick="printResult()">🖨️ PDF</button>
+    </div>
+    <div class="action-row">
+      <button class="action-btn" onclick="copyForQuote()">💰 Copy for Quote</button>
+      <button class="action-btn" onclick="emailResult()">📧 Email to Me</button>
+    </div>
+    <div class="action-row">
+      <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
+      <button class="action-btn" style="border-color:rgba(59,130,246,.4);color:var(--brand)" onclick="saveJobToTracker()">📁 Save to Job Tracker</button>
+    </div>
+    <div class="expiry-reminder-card" id="expiry-reminder">
+      <div class="section-label">🔔 Get a Reminder Before Your Permit Expires</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input type="email" id="reminder-email" placeholder="your@email.com" style="flex:1;font-size:14px;padding:10px 14px" />
+        <button onclick="submitExpiryReminder()" style="background:var(--brand);border:none;border-radius:8px;color:#fff;font-weight:700;padding:10px 16px;cursor:pointer;white-space:nowrap">Remind Me</button>
+      </div>
+      <div id="reminder-confirm" style="display:none;color:var(--green);font-size:13px;margin-top:8px;font-weight:600">✓ We'll remind you 30 days before expiry.</div>
+    </div>
+    <div id="copy-feedback" class="copy-feedback">✅ Copied to clipboard!</div>
+    <div class="feedback-row">
+      <span style="font-size:12px;color:var(--muted)">Something wrong?</span>
+      <button class="flag-btn" onclick="submitFeedback()">⚠️ Flag this result</button>
+      <span class="feedback-sent" id="feedback-sent">✅ Reported</span>
+    </div>
+    <button class="new-search-btn" onclick="newSearch()">← New Search</button>
+    <button class="action-btn" style="width:100%;margin-top:8px;border-color:rgba(16,185,129,.3);color:var(--green)" onclick="openTracker()">✅ Track This Permit</button>
+    <div class="print-footer">Generated ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} | Verify with local building department before submitting<br>PermitAssist — permitassist.io</div>`;
+
+  document.getElementById('results-inner').innerHTML = html;
+}
+
+function toggleChecklist(el) {
+  const arrow = el.querySelector('.checklist-toggle-arrow');
+  const items = el.nextElementSibling;
+  if (items.classList.contains('open')) {
+    items.classList.remove('open');
+    arrow.classList.remove('open');
+  } else {
+    items.classList.add('open');
+    arrow.classList.add('open');
+  }
+}
+
+function row(label, val, cls) {
+  return `<div class="info-row"><div class="info-key">${label}</div><div class="info-val${cls ? ' ' + cls : ''}">${typeof val === 'string' && !val.startsWith('<') ? esc(val) : val}</div></div>`;
+}
+
+// ── Actions ──────────────────────────────────────────────────────────────────
+function callOffice(phone, office, mapsUrl) {
+  if (phone && phone.match(/[\d\-\(\)\+\s]{7,}/)) window.location.href = 'tel:' + phone.replace(/[^\d\+]/g, '');
+  else if (mapsUrl) window.open(mapsUrl, '_blank');
+  else if (office) window.open('https://www.google.com/search?q=' + encodeURIComponent(office + ' permit office phone'), '_blank');
+  else window.open('https://www.google.com/search?q=local+building+permit+office', '_blank');
+}
+
+function submitFeedback() {
+  if (!currentResult) return;
+  const { job, city, state } = currentResult;
+  const issue = prompt('What looks wrong? (optional)') || '';
+  fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job_type: job, city, state, issue }) }).catch(() => {});
+  const btn = document.querySelector('.flag-btn'), sent = document.getElementById('feedback-sent');
+  if (btn) btn.style.display = 'none';
+  if (sent) { sent.textContent = 'Thanks for flagging. We\'ll review this within 30 days.'; sent.style.display = 'block'; }
+}
+
+function flagAsWrong(btnEl) {
+  if (!currentResult) return;
+  const { job, city, state } = currentResult;
+  fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job_type: job, city, state, issue: 'Flagged as wrong via inline button' }) }).catch(() => {});
+  btnEl.style.display = 'none';
+  const fb = document.getElementById('flag-feedback-inline');
+  if (fb) fb.style.display = 'inline';
+}
+
+async function shareResult() {
+  if (!currentResult) return;
+  const { job, city, state, data } = currentResult;
+  const btn = document.querySelector('.action-btn[onclick="shareResult()"]');
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '⏳ Creating…'; btn.disabled = true; }
+  try {
+    const resp = await fetch('/api/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job_type: job, city, state, result: data }) });
+    const r = await resp.json();
+    if (!r.url) throw new Error(r.error || 'No URL returned');
+    if (navigator.share) {
+      try { await navigator.share({ title: `Permit: ${job} in ${city}, ${state}`, text: `Permit requirements for ${job} in ${city}, ${state} — via PermitAssist`, url: r.url }); showCopy('✅ Link copied! Send to your foreman or office.'); return; } catch (se) { if (se.name === 'AbortError') return; }
+    }
+    await navigator.clipboard.writeText(r.url).catch(() => {});
+    showShareModal(r.url);
+  } catch (e) {
+    console.error('Share error:', e);
+    showCopy('✅ Link copied (app URL)');
+  } finally {
+    if (btn) { btn.innerHTML = origText; btn.disabled = false; }
+  }
+}
+
+function showShareModal(url) {
+  document.getElementById('share-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'share-modal';
+  m.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.78);display:flex;align-items:flex-end;';
+  m.innerHTML = `<div style="background:#1E293B;border-radius:20px 20px 0 0;border-top:1px solid #334155;padding:24px 20px 36px;width:100%;max-width:680px;margin:0 auto;animation:slideUp .25s ease">
+    <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔗 Share this result</div>
+    <div style="font-size:13px;color:#94A3B8;margin-bottom:14px">Send to your foreman or office. Link expires in 7 days.</div>
+    <div id="share-url-box" style="background:#0F172A;border:1px solid #334155;border-radius:8px;padding:11px 14px;font-size:12px;color:#F8FAFC;word-break:break-all;margin-bottom:14px;user-select:all">${url}</div>
+    <button id="share-copy-btn" style="width:100%;background:#3B82F6;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:10px">📋 Copy Link</button>
+    <button onclick="document.getElementById('share-modal').remove()" style="width:100%;background:none;border:1px solid #334155;border-radius:10px;color:#64748B;font-size:14px;padding:11px;cursor:pointer">Close</button>
+  </div>`;
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  document.body.appendChild(m);
+  document.getElementById('share-copy-btn').onclick = () => {
+    navigator.clipboard.writeText(url).then(() => { const b = document.getElementById('share-copy-btn'); if (b) { b.textContent = '✅ Copied!'; setTimeout(() => document.getElementById('share-modal')?.remove(), 1400); } }).catch(() => {});
+  };
+}
+
+function copyResult() {
+  if (!currentResult) return;
+  const { job, city, state, data: d } = currentResult;
+  const permits = d.permits_required || [];
+  const permitName = permits.length > 0 ? permits[0].permit_type : 'See details';
+  const fee = d.fee_range || 'Contact building dept';
+  const timeline = d.approval_timeline?.simple || d.approval_timeline?.complex || 'Varies';
+  const office = d.applying_office || '';
+  const phone = d.apply_phone || '';
+  let t = `PERMIT SUMMARY — ${job} in ${city}, ${state}\n`;
+  t += `Permit needed: ${permitName}\n`;
+  t += `Fee: ${fee}\n`;
+  t += `Timeline: ${timeline}\n`;
+  if (office || phone) t += `Apply at: ${office}${office && phone ? ' — ' : ''}${phone}\n`;
+  t += `Generated by PermitAssist (permitassist.io)`;
+  navigator.clipboard.writeText(t).then(() => showCopy('✅ Copied!')).catch(() => alert(t));
+}
+
+function showCopy(msg) { const el = document.getElementById('copy-feedback'); if (!el) return; el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 2500); }
+
+function emailResult() {
+  if (!currentResult) return;
+  const { job, city, state, data } = currentResult, stored = localStorage.getItem(EMAIL_KEY) || '';
+  const doSend = email => {
+    fetch('/api/email-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, job, city, state, data }) })
+      .then(r => r.json()).then(r => alert(r.sent ? `✅ Sent to ${email}` : 'Could not send — use Copy instead.'))
+      .catch(() => alert('Could not send — use Copy instead.'));
+  };
+  if (stored) { doSend(stored); return; }
+  const addr = prompt('Enter your email:');
+  if (addr && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) { saveEmail(addr); doSend(addr); }
+}
+
+function copyForQuote() {
+  if (!currentResult) return;
+  const { job, city, state, data: d } = currentResult;
+  const fee = d.fee_range || d.fee || '';
+  const tl = d.approval_timeline?.simple || '';
+  let t = `Permit Fees — ${job}, ${city} ${state}: ~${fee || 'TBD (call building dept)'} est.`;
+  if (tl) t += `\nPermit Timeline: ${tl}`;
+  const permits = d.permits_required || [];
+  if (permits.length > 1) t += `\nPermits required: ${permits.map(p => p.permit_type).join(', ')}`;
+  t += `\n(Verified via PermitAssist — permitassist.io)`;
+  navigator.clipboard.writeText(t).then(() => showCopy('✅ Quote line copied!')).catch(() => {
+    const box = document.createElement('textarea'); box.value = t; document.body.appendChild(box); box.select(); document.execCommand('copy'); document.body.removeChild(box); showCopy('✅ Quote line copied!');
+  });
+}
+
+function printResult() { if (!currentResult) return; window.print(); }
+
+// ── History ──────────────────────────────────────────────────────────────────
+const _saveToHistoryCore = entry => {
+  const h = getHistory(), key = `${entry.job}|${entry.city}|${entry.state}`;
+  const f = h.filter(x => `${x.job}|${x.city}|${x.state}` !== key);
+  f.unshift(entry);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(f.slice(0, 50)));
+};
+
+function getHistory() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; } }
+
+function renderHistory() {
+  const history = getHistory(), el = document.getElementById('history-content');
+  if (!history.length) { el.innerHTML = `<div class="history-empty"><div class="icon">📋</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">No lookups yet</p><p style="font-size:13px;">Your permit searches will appear here</p></div>`; return; }
+  let html = `<button class="history-clear" onclick="clearHistory()">Clear History</button>`;
+  history.forEach((h, i) => {
+    const date = new Date(h.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const conf = (h.data?.confidence || '').toLowerCase();
+    const dot = conf === 'high' ? '🟢' : conf === 'medium' ? '🟡' : '🔴';
+    html += `<div class="history-item" onclick="reloadResult(${i})"><div class="history-job">${dot} ${esc(h.job)}</div><div class="history-loc">📍 ${esc(h.city)}, ${esc(h.state)}</div><div class="history-time">${date}</div></div>`;
+  });
+  el.innerHTML = html;
+}
+
+function clearHistory() { if (confirm('Clear all history?')) { localStorage.removeItem(HISTORY_KEY); renderHistory(); } }
+
+function reloadResult(i) {
+  const h = getHistory()[i]; if (!h) return;
+  currentResult = h;
+  document.getElementById('query').value = h.job;
+  document.getElementById('city').value = h.city;
+  document.getElementById('state').value = h.state;
+  document.getElementById('zip').value = h.zip || '';
+  showTab('search');
+  document.getElementById('search-form').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results-inner').innerHTML = '';
+  renderResults(h.data, h.job, h.city, h.state);
+}
+
+// ── Main lookup ──────────────────────────────────────────────────────────────
+async function doLookup() {
+  const raw = document.getElementById('query').value.trim();
+  const parsed = parseQuery(raw);
+  if (!parsed.job_type) { alert('Please describe the job.'); return; }
+  if (!parsed.city || !parsed.state) {
+    await useGPS();
+    const fallback = parseQuery(raw);
+    parsed.city = parsed.city || fallback.city;
+    parsed.state = parsed.state || fallback.state;
+  }
+  if (!parsed.city || !parsed.state) { alert('Please add a city and state, or use your location.'); return; }
+
+  const used = getLookupCount();
+  if (used >= FREE_LIMIT && !hasEmail()) {
+    pendingResult = { data: null, job: parsed.job_type, city: parsed.city || '', state: parsed.state || '' };
+    showGate(true); return;
+  }
+
+  document.getElementById('search-form').style.display = 'none';
+  document.getElementById('disambig-box').classList.remove('show');
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('results-inner').innerHTML = '';
+  startProgress();
+
+  try {
+    const res = await fetch('/api/permit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, job_category: jobCategory })
+    });
+    stopProgress();
+    if (res.status === 429) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('search-form').style.display = 'block';
+      alert("You've hit the hourly limit. Upgrade for unlimited access or try again in an hour."); return;
+    }
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, zip: parsed.zip_code, data, ts: Date.now() };
+    saveToHistory(currentResult);
+    if (used === 2 && !hasEmail()) {
+      pendingResult = { data, job: parsed.job_type, city: parsed.city, state: parsed.state };
+      showGate(false); return;
+    }
+    incrementLookup();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+    renderResults(data, parsed.job_type, parsed.city, parsed.state);
+    refreshCounterBar();
+    document.getElementById('page-search').scrollTop = 0;
+  } catch (err) {
+    stopProgress();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('search-form').style.display = 'block';
+    alert('Error: ' + err.message);
+  }
+}
+
+// ── Voice Input ──────────────────────────────────────────────────────────────
+let voiceRecognition = null, voiceActive = false;
+function toggleVoice() {
+  const btn = document.getElementById('mic-btn');
+  if (voiceActive) { stopVoice(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Voice input not supported. Try Chrome.'); return; }
+  voiceRecognition = new SR();
+  voiceRecognition.continuous = false;
+  voiceRecognition.interimResults = false;
+  voiceRecognition.lang = 'en-US';
+  voiceRecognition.onstart = () => { voiceActive = true; btn.classList.add('listening'); btn.textContent = '🔴'; };
+  voiceRecognition.onresult = e => { document.getElementById('query').value = e.results[0][0].transcript; stopVoice(); setTimeout(() => doLookupWithOffline(), 50); };
+  voiceRecognition.onerror = err => { console.warn('Voice error:', err.error); stopVoice(); if (err.error !== 'aborted') alert('Could not hear you. Try again or type.'); };
+  voiceRecognition.onend = () => stopVoice();
+  voiceRecognition.start();
+}
+function stopVoice() {
+  voiceActive = false;
+  const btn = document.getElementById('mic-btn');
+  if (btn) { btn.classList.remove('listening'); btn.textContent = '🎤'; }
+  try { if (voiceRecognition) voiceRecognition.stop(); } catch {}
+  voiceRecognition = null;
+}
+
+// ── Offline IndexedDB ────────────────────────────────────────────────────────
+const IDB_NAME = 'permitassist-offline', IDB_STORE = 'results', IDB_VERSION = 1;
+function openIDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onupgradeneeded = e => { const db = e.target.result; if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE, { keyPath: 'cacheKey' }); };
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+function idbCacheKey(job, city, state) { return [job, city, state].join('|').toLowerCase().replace(/\s+/g, ' ').trim(); }
+async function saveToIDB(job, city, state, data) {
+  try {
+    const db = await openIDB();
+    const key = idbCacheKey(job, city, state);
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put({ cacheKey: key, job, city, state, data, ts: Date.now() });
+    await new Promise(r => { tx.oncomplete = () => r(); tx.onerror = () => r(); });
+    try {
+      const db2 = await openIDB();
+      const tx2 = db2.transaction(IDB_STORE, 'readwrite'), s2 = tx2.objectStore(IDB_STORE);
+      const all = await new Promise(r2 => { const req2 = s2.getAll(); req2.onsuccess = () => r2(req2.result); });
+      if (all.length > 20) { all.sort((a, b) => a.ts - b.ts); for (let i = 0; i < all.length - 20; i++) s2.delete(all[i].cacheKey); }
+    } catch {}
+  } catch {}
+}
+async function getFromIDB(job, city, state) {
+  try {
+    const db = await openIDB();
+    const key = idbCacheKey(job, city, state);
+    return await new Promise((res, rej) => { const tx = db.transaction(IDB_STORE, 'readonly'); const req = tx.objectStore(IDB_STORE).get(key); req.onsuccess = () => res(req.result || null); req.onerror = () => rej(req.error); });
+  } catch { return null; }
+}
+
+// ── Offline-aware lookup ─────────────────────────────────────────────────────
+async function doLookupWithOffline() {
+  if (!navigator.onLine) {
+    const raw = document.getElementById('query').value.trim();
+    const parsed = parseQuery(raw);
+    if (parsed.job_type && parsed.city && parsed.state) {
+      const cached = await getFromIDB(parsed.job_type, parsed.city, parsed.state);
+      if (cached) {
+        currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, data: cached.data, ts: cached.ts };
+        document.getElementById('search-form').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('offline-result-notice').classList.add('show');
+        document.getElementById('results-inner').innerHTML = '';
+        renderResults(cached.data, parsed.job_type, parsed.city, parsed.state);
+        return;
+      }
+    }
+    alert('You\'re offline and this result isn\'t cached. Connect to look up new permits.');
+    return;
+  }
+  document.getElementById('offline-result-notice').classList.remove('show');
+
+  // Check disambiguation before lookup
+  if (checkDisambiguation()) return;
+
+  await doLookup();
+}
+
+function saveToHistory(entry) {
+  _saveToHistoryCore(entry);
+  saveToIDB(entry.job, entry.city, entry.state, entry.data).catch(() => {});
+}
+
+// ── Permit Tracker ───────────────────────────────────────────────────────────
+const TRACKER_KEY = 'pa_tracker';
+const TRACKER_STAGES = [
+  { id: 'applied', label: 'Applied for Permit', sub: 'Submitted application + paid fee' },
+  { id: 'approved', label: 'Permit Approved', sub: 'Received permit number from building dept' },
+  { id: 'posted', label: 'Permit Posted at Job Site', sub: 'Physical permit visible at the work location' },
+  { id: 'rough_in', label: 'Rough-In Inspection Passed', sub: 'Inspector signed off on rough-in work' },
+  { id: 'final', label: 'Final Inspection Passed', sub: 'Job complete — permit closed out' },
+];
+
+function getTrackerJobs() { try { return JSON.parse(localStorage.getItem(TRACKER_KEY) || '[]'); } catch { return []; } }
+function saveTrackerJobs(jobs) { localStorage.setItem(TRACKER_KEY, JSON.stringify(jobs)); }
+function getTrackerJobKey(job, city, state) { return `${job}|${city}|${state}`.toLowerCase().replace(/\s+/g, ' ').trim(); }
+
+function openTracker() {
+  if (!currentResult) return;
+  const { job, city, state } = currentResult;
+  const key = getTrackerJobKey(job, city, state);
+  let jobs = getTrackerJobs();
+  let entry = jobs.find(j => j.key === key);
+  if (!entry) { entry = { key, job, city, state, stages: {}, created: Date.now() }; jobs.unshift(entry); if (jobs.length > 20) jobs = jobs.slice(0, 20); saveTrackerJobs(jobs); }
+  renderTrackerModal(entry, jobs);
+}
+
+const STAGE_ICONS = { applied: '📝', approved: '✅', posted: '📌', rough_in: '🔨', final: '🏆' };
+function renderTrackerModal(entry, jobs) {
+  document.getElementById('tracker-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'tracker-modal'; overlay.className = 'tracker-modal-overlay';
+  const completed = TRACKER_STAGES.filter(s => entry.stages[s.id]).length;
+  const pct = Math.round(completed / TRACKER_STAGES.length * 100);
+  const allDone = completed === TRACKER_STAGES.length;
+  let firstIncomplete = true;
+  const stagesHtml = TRACKER_STAGES.map(s => {
+    const done = !!entry.stages[s.id];
+    const doneDate = entry.stages[s.id] ? new Date(entry.stages[s.id]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    const icon = STAGE_ICONS[s.id] || '📋';
+    let stageClass = 'tracker-stage';
+    if (done) { stageClass += ' stage-done'; }
+    else if (firstIncomplete) { stageClass += ' stage-active'; firstIncomplete = false; }
+    return `<div class="${stageClass}" onclick="toggleTrackerStage('${esc(entry.key)}','${s.id}')">
+      <div class="tracker-stage-icon">${icon}</div>
+      <div class="tracker-check ${done ? 'done' : ''}">✓</div>
+      <div style="flex:1"><div class="tracker-stage-label" style="${done ? 'color:var(--green)' : ''}">${s.label}</div>
+      <div class="tracker-stage-sub">${done ? '✓ Done ' + doneDate : s.sub}</div></div>
+    </div>`;
+  }).join('');
+  const completionBanner = allDone ? '<div class="tracker-completion">🎉 Permit process complete!</div>' : '';
+  overlay.innerHTML = `<div class="tracker-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div><div style="font-size:17px;font-weight:800">${esc(entry.job)}</div><div style="font-size:12px;color:var(--muted)">📍 ${esc(entry.city)}, ${esc(entry.state)}</div></div>
+      <button onclick="document.getElementById('tracker-modal').remove()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px">✕</button>
+    </div>
+    ${completionBanner}
+    <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="font-weight:700">${completed}/${TRACKER_STAGES.length} stages done</span><span style="color:var(--brand);font-weight:700">${pct}%</span></div>
+      <div class="tracker-progress-bar"><div class="tracker-progress-fill" id="tracker-pbar-fill"></div></div>
+    </div>
+    <div id="tracker-stages">${stagesHtml}</div>
+    <button class="tracker-danger-btn" onclick="clearTrackerJob('${esc(entry.key)}')">🗑️ Reset this job's progress</button>
+    <button class="tracker-close-btn" onclick="document.getElementById('tracker-modal').remove()">Close</button>
+  </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>{requestAnimationFrame(()=>{const fill=document.getElementById('tracker-pbar-fill');if(fill)fill.style.width=pct+'%';});});
+}
+
+function toggleTrackerStage(key, stageId) {
+  let jobs = getTrackerJobs();
+  const entry = jobs.find(j => j.key === key); if (!entry) return;
+  if (entry.stages[stageId]) delete entry.stages[stageId]; else entry.stages[stageId] = Date.now();
+  saveTrackerJobs(jobs); renderTrackerModal(entry, jobs);
+}
+
+function clearTrackerJob(key) {
+  if (!confirm('Reset all progress for this job?')) return;
+  let jobs = getTrackerJobs();
+  const entry = jobs.find(j => j.key === key); if (entry) entry.stages = {};
+  saveTrackerJobs(jobs); document.getElementById('tracker-modal')?.remove();
+}
+
+
+// ── Autocomplete ──────────────────────────────────────────────────────────────
+function initAutocomplete() {
+  const textarea = document.getElementById('query');
+  const dropdown = document.getElementById('autocomplete-dropdown');
+  if (!textarea || !dropdown) return;
+  textarea.addEventListener('input', () => {
+    const val = textarea.value.trim().toLowerCase();
+    if (val.length < 3) { dropdown.style.display = 'none'; return; }
+    const matches = JOB_TYPES_ALL.filter(j => j.toLowerCase().includes(val)).slice(0, 7);
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
+    dropdown.innerHTML = matches.map(m =>
+      `<div class="autocomplete-item" onclick="selectAutocomplete(${JSON.stringify(m)})">${esc(m)}</div>`
+    ).join('');
+    dropdown.style.display = 'block';
+  });
+  document.addEventListener('click', e => {
+    if (!dropdown.contains(e.target) && e.target !== textarea) dropdown.style.display = 'none';
+  });
+}
+function selectAutocomplete(text) {
+  const textarea = document.getElementById('query');
+  if (textarea) textarea.value = text;
+  const dropdown = document.getElementById('autocomplete-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
+  checkShimmer();
+}
+
+// ── Expiry Reminder ───────────────────────────────────────────────────────────
+function submitExpiryReminder() {
+  const emailEl = document.getElementById('reminder-email');
+  const email = emailEl ? emailEl.value.trim() : '';
+  if (!email || !email.includes('@')) {
+    if (emailEl) { emailEl.style.borderColor = 'var(--red)'; emailEl.focus(); }
+    return;
+  }
+  const job_type    = currentResult ? currentResult.job   : '';
+  const city        = currentResult ? currentResult.city  : '';
+  const state       = currentResult ? currentResult.state : '';
+  const expiry_date = (currentResult && currentResult.data)
+    ? (currentResult.data.expiry_date || currentResult.data.permit_expiry || '') : '';
+  fetch('/api/expiry-reminder', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ email, job_type, city, state, expiry_date })
+  }).then(() => {
+    const confirm = document.getElementById('reminder-confirm');
+    if (confirm) confirm.style.display = 'block';
+    if (emailEl) { emailEl.disabled = true; emailEl.style.borderColor = 'var(--green)'; }
+  }).catch(() => {
+    const confirm = document.getElementById('reminder-confirm');
+    if (confirm) confirm.style.display = 'block';
+    if (emailEl) emailEl.disabled = true;
+  });
+}
+
+// ── Job Tracker API ───────────────────────────────────────────────────────────
+function getJobsEmail() { return localStorage.getItem(EMAIL_KEY) || ''; }
+function saveJobToTracker() {
+  if (!currentResult) return;
+  const { job, city, state, data } = currentResult;
+  let email = getJobsEmail();
+  if (!email) {
+    email = prompt('Enter your email to save this job:');
+    if (!email || !email.includes('@')) return;
+    localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase());
+  }
+  const permits = data.permits_required || [];
+  const permitName = permits.length > 0 ? permits[0].permit_type : '';
+  fetch('/api/jobs', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ email, job_name: job, city, state, permit_name: permitName, result_json: data, status: 'planning' })
+  }).then(r => r.json()).then(r => {
+    if (r.job) showCopy('\ud83d\udcc1 Saved to Job Tracker!');
+    else alert('Error: ' + (r.error || 'Unknown'));
+  }).catch(e => alert('Could not save: ' + e.message));
+}
+async function renderJobsPage() {
+  const el = document.getElementById('jobs-inner');
+  const email = getJobsEmail();
+  if (!email) {
+    el.innerHTML = '<div class="jobs-empty"><div class="icon">\ud83d\udcc1</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">No jobs yet</p><p style="font-size:13px;">Look up a permit and click &quot;Save to Job Tracker&quot; to track jobs here.</p></div>';
+    return;
+  }
+  el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--muted)">Loading...</div>';
+  try {
+    const r = await fetch('/api/jobs?email=' + encodeURIComponent(email));
+    const data = await r.json();
+    const jobs = data.jobs || [];
+    if (!jobs.length) { el.innerHTML = '<div class="jobs-empty"><div class="icon">\ud83d\udcc1</div><p style="font-size:16px;font-weight:700;margin-bottom:8px">No saved jobs</p><p style="font-size:13px;">Click &quot;\ud83d\udcc1 Save to Job Tracker&quot; from any result.</p></div>'; return; }
+    const SL = { planning:'\ud83d\udcd0 Planning', applied:'\ud83d\udce8 Applied', approved:'\u2705 Approved', active:'\ud83d\udee0\ufe0f Active', closed:'\ud83d\udfe5 Closed' };
+    const SC = { planning:'status-planning', applied:'status-applied', approved:'status-approved', active:'status-active', closed:'status-closed' };
+    let html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">' + jobs.length + ' saved job' + (jobs.length!==1?'s':'') + ' for ' + esc(email) + '</div>';
+    jobs.forEach(j => {
+      const warn = j.expiry_date ? checkExpiryWarn(j.expiry_date) : '';
+      const opts = ['planning','applied','approved','active','closed'].map(s=>'<option value="'+s+'" '+(j.status===s?'selected':'')+'>'+(SL[s]||s)+'</option>').join('');
+      html += '<div class="job-item"><div class="job-item-header"><div class="job-item-name">'+esc(j.job_name)+'</div><span class="job-status-badge '+(SC[j.status]||'status-planning')+'">'+(SL[j.status]||j.status)+'</span></div><div class="job-item-meta">\ud83d\udccd '+esc(j.city)+', '+esc(j.state)+(j.permit_name?' \u2022 '+esc(j.permit_name):'')+' </div>'+warn+'<div class="job-item-actions"><select onchange="updateJobStatus(\'' + esc(j.id) + '\',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;cursor:pointer">'+opts+'</select>'+(j.expiry_date?'<span class="job-action-btn" style="font-size:11px">\u23f0 '+esc(j.expiry_date)+'</span>':'<button class="job-action-btn" onclick="setJobExpiry(\'' + esc(j.id) + '\')">Set Expiry</button>')+'<button class="job-action-btn" style="color:var(--red);border-color:rgba(239,68,68,.3)" onclick="deleteJobItem(\'' + esc(j.id) + '\')">Delete</button></div></div>';
+    });
+    el.innerHTML = html;
+  } catch(e) { el.innerHTML = '<div class="jobs-empty"><div class="icon">\u26a0\ufe0f</div><p>'+esc(e.message)+'</p></div>'; }
+}
+function checkExpiryWarn(d) {
+  try { const days=Math.ceil((new Date(d)-Date.now())/(86400000)); if(days<0) return '<div class="job-expiry-warn">\u26a0\ufe0f Permit EXPIRED '+Math.abs(days)+' days ago</div>'; if(days<=30) return '<div class="job-expiry-warn">\u26a0\ufe0f Expires in '+days+' days</div>'; } catch{} return '';
+}
+async function updateJobStatus(id, status) {
+  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}); renderJobsPage(); } catch{}
+}
+async function setJobExpiry(id) {
+  const d = prompt('Enter expiry date (YYYY-MM-DD):'); if(!d) return;
+  try { await fetch('/api/jobs/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({expiry_date:d})}); renderJobsPage(); } catch{}
+}
+async function deleteJobItem(id) {
+  if(!confirm('Delete this job?')) return;
+  try { await fetch('/api/jobs/'+id,{method:'DELETE'}); renderJobsPage(); } catch{}
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+document.getElementById('lookup-btn').onclick = doLookupWithOffline;
+['query', 'city', 'zip'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doLookupWithOffline(); } });
+});
+// On query input change, hide disambiguation
+document.getElementById('query').addEventListener('input', () => document.getElementById('disambig-box').classList.remove('show'));
+
+// Search card focus glow
+(function(){
+  const card = document.querySelector('#search-form .card');
+  if(!card) return;
+  const inputs = card.querySelectorAll('input, textarea, select');
+  inputs.forEach(inp => {
+    inp.addEventListener('focus', () => card.classList.add('input-focused'));
+    inp.addEventListener('blur', () => card.classList.remove('input-focused'));
+  });
+})();
+
+// Lookup button shimmer when form is filled
+function checkShimmer(){
+  const city=document.getElementById('city').value.trim();
+  const state=document.getElementById('state').value.trim();
+  const query=document.getElementById('query').value.trim();
+  const btn=document.getElementById('lookup-btn');
+  if(city && state && query) btn.classList.add('shimmer'); else btn.classList.remove('shimmer');
+}
+['city','state','query'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){el.addEventListener('input',checkShimmer);el.addEventListener('change',checkShimmer)}
+});
+
+refreshCounterBar();
+loadStats();
+initAutocomplete();
+</script>
+</body>
+</html>
