@@ -77,7 +77,9 @@ class PublicPacketDTO:
     inspections: list[str] = field(default_factory=list)
     fees: list[str] = field(default_factory=list)
     required_families: list[str] = field(default_factory=list)
+    required_family_display_labels: list[str] = field(default_factory=list)
     conditional_families: list[str] = field(default_factory=list)
+    display_permit_kind: str = ""
     degraded: bool = False
     degraded_reason: str = ""
     scope_facts: dict[str, Any] = field(default_factory=dict)
@@ -327,9 +329,184 @@ def _family(row: dict[str, Any]) -> str:
     return str(family_from_row(row) or "building")
 
 
+_GENERIC_DOCUMENT_DEFAULTS: frozenset[str] = frozenset(
+    str(item).strip().lower()
+    for values in FAMILY_DEFAULT_DOCUMENTS.values()
+    for item in values
+    if str(item).strip()
+)
+_GENERIC_INSPECTION_DEFAULTS: frozenset[str] = frozenset(
+    str(item).strip().lower()
+    for values in FAMILY_DEFAULT_INSPECTIONS.values()
+    for item in values
+    if str(item).strip()
+)
+_GENERIC_PERMIT_KINDS: frozenset[str] = frozenset(
+    {
+        "building",
+        "electrical",
+        "mechanical",
+        "plumbing",
+        "fire",
+        "refrigeration",
+        "sign",
+        "planning",
+        "zoning",
+        "permit package",
+        "not required",
+        "permit required",
+        "other",
+        "verify with permit office",
+    }
+)
+
+
+def _normalize_detail_text(value: Any) -> str:
+    if isinstance(value, dict):
+        stage = str(
+            value.get("stage")
+            or value.get("label")
+            or value.get("name")
+            or value.get("inspection")
+            or value.get("type")
+            or value.get("description")
+            or ""
+        ).strip()
+        timing = str(value.get("timing") or value.get("when") or value.get("phase") or "").strip()
+        if stage and timing:
+            return f"{stage} — {timing}"
+        return stage or timing
+    return str(value or "").strip()
+
+
+def _normalize_detail_list(values: Any) -> list[str]:
+    if not isinstance(values, list):
+        return []
+    cleaned: list[str] = []
+    for item in values:
+        text = _normalize_detail_text(item)
+        if not text:
+            continue
+        # Drop control characters / internal debug markers from untrusted saved input.
+        if re.search(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", text):
+            continue
+        if re.search(r"\b(?:internal debug|engine flagged|needs_review|provenance|hidden triggers)\b", text, re.I):
+            continue
+        cleaned.append(text)
+    return _dedupe_text(cleaned)
+
+
+def _is_generic_detail_list(values: list[str], generic_set: frozenset[str]) -> bool:
+    if not values:
+        return True
+    return all(str(item or "").strip().lower() in generic_set for item in values)
+
+
+
+def _saved_detail_compatible_with_scope(values: list[str], *, segment: str, request_text: str = "") -> list[str]:
+    """Drop saved detail that clearly conflicts with the request segment/scope.
+
+    Saved documents/inspections may improve customer detail, but they must not
+    reintroduce residential owner-builder/ADU copy into commercial packets (or the
+    reverse). Rejection degrades only that detail dimension.
+    """
+    segment = str(segment or "").lower().strip()
+    request = str(request_text or "").lower()
+    out: list[str] = []
+    residential_markers = re.compile(
+        r"\b(?:homeowner|owner[- ]?builder|adu|accessory\s+dwelling|residential\s+(?:kitchen|solar|remodel)|single[- ]family)\b",
+        re.I,
+    )
+    commercial_markers = re.compile(
+        r"\b(?:commercial\s+tenant|tenant\s+improvement|type\s*i\s+hood|grease\s+interceptor|restaurant\s+ti)\b",
+        re.I,
+    )
+    for item in values:
+        text_item = str(item or "")
+        lower = text_item.lower()
+        if segment == "commercial" and residential_markers.search(lower) and not residential_markers.search(request):
+            continue
+        if segment == "residential" and commercial_markers.search(lower) and not commercial_markers.search(request):
+            continue
+        # Drop pure control/debug remnants that escaped earlier filters.
+        if re.search(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", text_item):
+            continue
+        out.append(text_item)
+    return out
+
+
+def resolve_detail_precedence(
+    *,
+    source_backed: list[str] | None = None,
+    saved: list[str] | None = None,
+    generic: list[str] | None = None,
+    generic_set: frozenset[str] | None = None,
+) -> list[str]:
+    """Resolve customer detail strings with source-backed > sanitized-saved > generic."""
+    source_vals = _normalize_detail_list(source_backed or [])
+    saved_vals = _normalize_detail_list(saved or [])
+    generic_vals = _normalize_detail_list(generic or [])
+    known_generic = generic_set or frozenset()
+    source_non_generic = [item for item in source_vals if item.lower() not in known_generic]
+    if source_non_generic:
+        # Keep any explicit floors that accompany non-generic source-backed detail.
+        return _dedupe_text([*source_non_generic, *[item for item in source_vals if item.lower() in known_generic and item not in source_non_generic]])
+    if source_vals and not _is_generic_detail_list(source_vals, known_generic):
+        return source_vals
+    if saved_vals and not _is_generic_detail_list(saved_vals, known_generic):
+        return saved_vals
+    if source_vals:
+        return source_vals
+    if saved_vals:
+        return saved_vals
+    return generic_vals
+
+
+def _saved_detail_from_data(data: dict[str, Any], *keys: str) -> list[str]:
+    for key in keys:
+        if key in data:
+            values = _normalize_detail_list(data.get(key))
+            if values:
+                return values
+    apply_path_raw = data.get("apply_path")
+    apply_path = apply_path_raw if isinstance(apply_path_raw, dict) else {}
+    for key in keys:
+        if key in apply_path:
+            values = _normalize_detail_list(apply_path.get(key))
+            if values:
+                return values
+    return []
+
+
+def _specific_display_permit_kind(candidate: str, *, segment: str, package_name: str = "") -> str:
+    value = str(candidate or "").strip()
+    if not value:
+        return ""
+    if re.search(r"\b(?:unknown|likely|required\?)\b", value, re.I):
+        return ""
+    lower = value.lower().strip()
+    if lower in _GENERIC_PERMIT_KINDS:
+        return ""
+    if package_name and lower in _GENERIC_PERMIT_KINDS:
+        return ""
+    segment = str(segment or "").lower().strip()
+    if segment == "commercial" and "residential" in lower:
+        return ""
+    if segment == "residential" and ("commercial" in lower or "tenant improvement" in lower):
+        return ""
+    return value
+
+
 def _row_docs(row: dict[str, Any], family: str) -> list[str]:
-    docs = _dedupe_text(list(row.get("documents") or [])) if isinstance(row.get("documents"), list) else []
-    return docs or list(FAMILY_DEFAULT_DOCUMENTS.get(family, ()))
+    docs = _normalize_detail_list(list(row.get("documents") or [])) if isinstance(row.get("documents"), list) else []
+    generic = list(FAMILY_DEFAULT_DOCUMENTS.get(family, ()))
+    # Keep explicit non-generic row documents; otherwise leave empty so packet-level
+    # precedence can prefer sanitized saved documents over family defaults.
+    if docs and not _is_generic_detail_list(docs, _GENERIC_DOCUMENT_DEFAULTS):
+        return docs
+    if docs:
+        return docs
+    return []
 
 
 def _strip_structural_docs_when_unsupported(docs: list[str], facts: Any | None = None) -> list[str]:
@@ -351,8 +528,12 @@ def _strip_structural_docs_when_unsupported(docs: list[str], facts: Any | None =
 
 
 def _row_inspections(row: dict[str, Any], family: str) -> list[str]:
-    inspections = _dedupe_text(list(row.get("inspections") or [])) if isinstance(row.get("inspections"), list) else []
-    return inspections or list(FAMILY_DEFAULT_INSPECTIONS.get(family, ()))
+    inspections = _normalize_detail_list(list(row.get("inspections") or [])) if isinstance(row.get("inspections"), list) else []
+    # Do not auto-fill family defaults here. Defaults are applied only after the
+    # packet-level precedence resolver considers sanitized saved detail.
+    if inspections and not _is_generic_detail_list(inspections, _GENERIC_INSPECTION_DEFAULTS):
+        return inspections
+    return inspections
 
 
 def _row_fee_text(row: dict[str, Any], data: dict[str, Any]) -> str:
@@ -1250,6 +1431,79 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         documents = []
         inspections = []
         fees = []
+    else:
+        request_text_for_saved = str(
+            getattr(facts, "request_scope_text", "")
+            or scope_facts.get("request_scope_text")
+            or data.get("_request_job_type")
+            or data.get("job_type")
+            or data.get("job_summary")
+            or data.get("summary")
+            or ""
+        )
+        saved_docs = _saved_detail_compatible_with_scope(
+            _saved_detail_from_data(
+                data,
+                "_legacy_apply_documents",
+                "documents_to_prepare",
+                "what_to_bring",
+                "documents_needed",
+                "requirements",
+                "likely_documents",
+            ),
+            segment=segment,
+            request_text=request_text_for_saved,
+        )
+        saved_inspections = _saved_detail_compatible_with_scope(
+            _saved_detail_from_data(
+                data,
+                "_legacy_inspections",
+                "inspections",
+                "inspection_requirements",
+                "inspection_checklist",
+                "inspect_checklist",
+            ),
+            segment=segment,
+            request_text=request_text_for_saved,
+        )
+        generic_docs: list[str] = []
+        generic_inspections: list[str] = []
+        for fam in required_families:
+            generic_docs.extend(list(FAMILY_DEFAULT_DOCUMENTS.get(fam, ())))
+            generic_inspections.extend(list(FAMILY_DEFAULT_INSPECTIONS.get(fam, ())))
+        documents = resolve_detail_precedence(
+            source_backed=documents,
+            saved=saved_docs,
+            generic=_dedupe_text(generic_docs),
+            generic_set=_GENERIC_DOCUMENT_DEFAULTS,
+        )
+        inspections = resolve_detail_precedence(
+            source_backed=inspections,
+            saved=saved_inspections,
+            generic=_dedupe_text(generic_inspections),
+            generic_set=_GENERIC_INSPECTION_DEFAULTS,
+        )
+        # Fill empty per-row lists with family-local defaults only when the row
+        # itself has no explicit detail. Do not broadcast the package union onto
+        # every row (that pollutes family-specific row text and customer contracts).
+        for row in rows:
+            if row.decision != "REQUIRED":
+                continue
+            if not row.documents:
+                fam_docs = list(FAMILY_DEFAULT_DOCUMENTS.get(row.family, ()))
+                # Prefer package-resolved non-generic docs only when this family
+                # contributed them or no family default exists.
+                if documents and not _is_generic_detail_list(list(documents), _GENERIC_DOCUMENT_DEFAULTS):
+                    # Leave row docs empty; package-level documents carry the detail.
+                    row.documents = []
+                else:
+                    row.documents = list(fam_docs)
+            if not row.inspections:
+                fam_insp = list(FAMILY_DEFAULT_INSPECTIONS.get(row.family, ()))
+                if inspections and not _is_generic_detail_list(list(inspections), _GENERIC_INSPECTION_DEFAULTS):
+                    row.inspections = []
+                else:
+                    row.inspections = list(fam_insp)
 
     checklist: list[str] = []
     if decision == "NOT_REQUIRED":
@@ -1264,6 +1518,20 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
     runtime_degraded = data.get("_runtime_degraded_fallback") if isinstance(data.get("_runtime_degraded_fallback"), dict) else {}
     degraded = bool(data.get("degraded_sources") or runtime_degraded or data.get("source_degraded_input"))
     degraded_reason = str(runtime_degraded.get("reason") or data.get("degraded_reason") or data.get("source_degraded_reason") or "").strip()
+    display_labels = list(dict.fromkeys(_kind_for_family(str(fam)) for fam in required_families if str(fam or "").strip()))
+    original_kind_candidates = [
+        str(data.get("_original_display_permit_kind") or "").strip(),
+        str(data.get("permit_kind") or "").strip(),
+        str((data.get("customer_result_summary") or {}).get("permit_kind") or "").strip() if isinstance(data.get("customer_result_summary"), dict) else "",
+        str((data.get("public_packet") or {}).get("display_permit_kind") or "").strip() if isinstance(data.get("public_packet"), dict) else "",
+    ]
+    sealed_display_kind = ""
+    for candidate in original_kind_candidates:
+        sealed_display_kind = _specific_display_permit_kind(candidate, segment=segment)
+        if sealed_display_kind:
+            break
+    if not sealed_display_kind and required_families:
+        sealed_display_kind = "Permit package" if len(required_families) > 1 else _kind_for_family(str(required_families[0]))
     packet = PublicPacketDTO(
         segment=segment,
         authority=_authority(data, segment),
@@ -1279,7 +1547,9 @@ def build_public_packet(result: dict[str, Any], facts: Any | None = None) -> Pub
         inspections=inspections,
         fees=fees,
         required_families=required_families,
+        required_family_display_labels=display_labels,
         conditional_families=conditional_families,
+        display_permit_kind=sealed_display_kind if decision == "REQUIRED" else ("Not Required" if decision == "NOT_REQUIRED" else "Verify with permit office"),
         degraded=degraded,
         degraded_reason=degraded_reason,
         scope_facts=scope_facts,
@@ -1392,7 +1662,17 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     if isinstance(out.get("_runtime_degraded_fallback"), dict):
         original_degraded_reason = str(out["_runtime_degraded_fallback"].get("reason") or "")
     original_degraded_reason = original_degraded_reason or str(out.get("degraded_reason") or out.get("source_degraded_reason") or "")
-    original_permit_kind = str(out.get("permit_kind") or "").strip()
+    original_permit_kind = str(
+        out.get("_original_display_permit_kind")
+        or (out.get("public_packet") or {}).get("display_permit_kind")
+        or out.get("permit_kind")
+        or ""
+    ).strip()
+    if isinstance(out.get("public_packet"), dict) and not out.get("_original_display_permit_kind"):
+        # Keep sealed display kind available across repeated projections.
+        sealed = str((out.get("public_packet") or {}).get("display_permit_kind") or "").strip()
+        if sealed:
+            out["_original_display_permit_kind"] = sealed
     legacy_apply_path_obj = out.get("apply_path")
     legacy_apply_path = legacy_apply_path_obj if isinstance(legacy_apply_path_obj, dict) else {}
     input_apply_url = str(out.get("apply_url") or out.get("online_application_url") or "").strip()
@@ -1438,8 +1718,12 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
     out["companion_permits"] = []
     out["trade_permits"] = []
     packet_family_names = list(public_packet.get("required_families") or [])
-    display_family_names = [_kind_for_family(str(fam)) for fam in packet_family_names]
-    out["required_permit_families"] = list(dict.fromkeys(packet_family_names + display_family_names))
+    display_family_names = list(public_packet.get("required_family_display_labels") or [])
+    if not display_family_names:
+        display_family_names = list(dict.fromkeys(_kind_for_family(str(fam)) for fam in packet_family_names if str(fam or "").strip()))
+        public_packet["required_family_display_labels"] = display_family_names
+    # Canonical top-level families stay lower-case IDs only; display labels live on the packet.
+    out["required_permit_families"] = list(dict.fromkeys(str(fam) for fam in packet_family_names if str(fam or "").strip()))
     out["required_permit_names"] = [str(row.get("permit_name")) for row in required_public_rows if row.get("permit_name")]
     out["permits_required_logic"] = [
         {"filing_family": row.get("family"), "permit_type": row.get("permit_name"), "scope_trigger": "Project scope", "included_because": "The locked public packet includes this required permit family."}
@@ -1468,14 +1752,21 @@ def apply_public_packet_projection(result: dict[str, Any], facts: Any | None = N
         out["permit_name"] = package_name or lead.get("permit_name")
         out["permit_type"] = package_name or lead.get("permit_name")
         computed_kind = "Permit package" if package_name else _kind_for_family(str(lead.get("family") or ""))
-        generic_kinds = {"building", "electrical", "mechanical", "plumbing", "fire", "refrigeration", "sign", "planning", "zoning", "permit package", "not required"}
-        candidate_kind = original_permit_kind if original_permit_kind and not re.search(r"\b(?:unknown|likely|required\?)\b", original_permit_kind, re.I) else ""
-        if package_name and candidate_kind.lower().strip() in generic_kinds:
-            candidate_kind = ""
-        if candidate_kind and not ((packet.segment == "commercial" and "residential" in candidate_kind.lower()) or (packet.segment == "residential" and ("commercial" in candidate_kind.lower() or "tenant improvement" in candidate_kind.lower()))):
+        sealed_kind = str(public_packet.get("display_permit_kind") or "").strip()
+        original_kind_input = original_permit_kind or str(out.get("_original_display_permit_kind") or "") or sealed_kind
+        candidate_kind = _specific_display_permit_kind(
+            original_kind_input,
+            segment=packet.segment,
+            package_name=package_name,
+        )
+        if not candidate_kind:
+            candidate_kind = _specific_display_permit_kind(sealed_kind, segment=packet.segment, package_name=package_name)
+        if candidate_kind:
             out["permit_kind"] = candidate_kind
+            public_packet["display_permit_kind"] = candidate_kind
         else:
             out["permit_kind"] = computed_kind
+            public_packet["display_permit_kind"] = computed_kind
         if packet.authority.apply_url:
             out["customer_next_step"] = f"File the required permit categories with {authority_name}: {', '.join(out['required_permit_names'])}. Confirm exact portal subcategories before final submission."
         else:

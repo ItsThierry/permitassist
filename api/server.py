@@ -5097,10 +5097,22 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     original_display_permit_kind = str(working.get("permit_kind") or "").strip()
     original_apply_path_source = working.get("apply_path")
     original_apply_path_obj = original_apply_path_source if isinstance(original_apply_path_source, dict) else {}
-    original_legacy_documents = original_apply_path_obj.get("likely_documents") or []
+    original_legacy_documents = (
+        original_apply_path_obj.get("likely_documents")
+        or original_apply_path_obj.get("documents_to_prepare")
+        or working.get("documents_to_prepare")
+        or working.get("what_to_bring")
+        or working.get("documents_needed")
+        or working.get("requirements")
+        or []
+    )
     if not isinstance(original_legacy_documents, list):
         original_legacy_documents = []
     original_legacy_documents = [str(item).strip() for item in original_legacy_documents if str(item or "").strip()]
+    original_legacy_inspections = working.get("inspections") or working.get("inspection_requirements") or working.get("inspection_checklist") or []
+    if not isinstance(original_legacy_inspections, list):
+        original_legacy_inspections = []
+    original_legacy_inspections = copy.deepcopy(original_legacy_inspections)
     original_companion_rows_for_legacy_contract = [copy.deepcopy(row) for row in (working.get("companion_permits") or []) if isinstance(row, dict)]
     original_required_rows_for_companion_contract = [
         copy.deepcopy(row)
@@ -5523,6 +5535,12 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                         final_public["_request_state"] = state
                         if original_legacy_documents:
                             final_public["_legacy_apply_documents"] = list(original_legacy_documents)
+                        if original_legacy_inspections:
+                            final_public["_legacy_inspections"] = copy.deepcopy(original_legacy_inspections)
+                        if original_display_permit_kind:
+                            final_public["_original_display_permit_kind"] = original_display_permit_kind
+                            # Prefer sealed original display kind before terminal packet projection.
+                            final_public["permit_kind"] = original_display_permit_kind
                     final_public = run_pipeline_through_projection(
                         final_public if isinstance(final_public, dict) else {},
                         CustomerPipelineContext(
@@ -5579,8 +5597,39 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 )
                 final_public = _live100_core_truth_recovery_guard(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
                 if final_scope_facts_for_packet is not None:
+                    if isinstance(final_public, dict):
+                        if original_legacy_documents:
+                            final_public["_legacy_apply_documents"] = list(original_legacy_documents)
+                        if original_legacy_inspections:
+                            final_public["_legacy_inspections"] = copy.deepcopy(original_legacy_inspections)
+                        if original_display_permit_kind:
+                            final_public["_original_display_permit_kind"] = original_display_permit_kind
+                            final_public["permit_kind"] = original_display_permit_kind
                     final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts_for_packet)
                 if isinstance(final_public, dict):
+                    # Final sealed display-kind restore after the last packet projection.
+                    specific_kind = original_display_permit_kind and original_display_permit_kind.lower() not in {
+                        "building", "electrical", "mechanical", "plumbing", "fire", "refrigeration",
+                        "sign", "planning", "zoning", "permit package", "not required",
+                    }
+                    segment_value = str(final_public.get("segment") or "").lower()
+                    kind_lc = str(original_display_permit_kind or "").lower()
+                    segment_kind_safe = not (
+                        (segment_value == "residential" and ("commercial" in kind_lc or "tenant improvement" in kind_lc))
+                        or (segment_value == "commercial" and "residential" in kind_lc)
+                    )
+                    if specific_kind and segment_kind_safe and str(final_public.get("permit_decision") or "").upper() == "REQUIRED":
+                        final_public["permit_kind"] = original_display_permit_kind
+                        if isinstance(final_public.get("apply_path"), dict):
+                            final_public["apply_path"]["permit_category"] = original_display_permit_kind
+                        if isinstance(final_public.get("customer_result_summary"), dict):
+                            final_public["customer_result_summary"]["permit_kind"] = original_display_permit_kind
+                        if isinstance(final_public.get("public_packet"), dict):
+                            final_public["public_packet"]["display_permit_kind"] = original_display_permit_kind
+                    # Projection clears companion rows; restore the original customer-visible
+                    # companion contract without letting it alter sealed required families.
+                    if original_companion_rows_for_legacy_contract and not final_public.get("companion_permits"):
+                        final_public["companion_permits"] = copy.deepcopy(original_companion_rows_for_legacy_contract)
                     if original_apply_address and not final_public.get("apply_address"):
                         final_public["apply_address"] = original_apply_address
                     if original_apply_google_maps and not final_public.get("apply_google_maps"):
@@ -5594,6 +5643,14 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     if isinstance(warnings, list) and not any("source support is degraded" in str(w).lower() for w in warnings):
                         warnings.append("Exact local source support is degraded; the customer permit decision remains resolved.")
                     if final_scope_facts_for_packet is not None:
+                        if isinstance(final_public, dict):
+                            if original_legacy_documents:
+                                final_public["_legacy_apply_documents"] = list(original_legacy_documents)
+                            if original_legacy_inspections:
+                                final_public["_legacy_inspections"] = copy.deepcopy(original_legacy_inspections)
+                            if original_display_permit_kind:
+                                final_public["_original_display_permit_kind"] = original_display_permit_kind
+                                final_public["permit_kind"] = original_display_permit_kind
                         final_public = apply_public_packet_projection(final_public if isinstance(final_public, dict) else {}, final_scope_facts_for_packet)
                 if isinstance(final_public, dict):
                     for _phone_key in ("apply_phone", "building_dept_phone", "office_phone"):
@@ -5616,6 +5673,16 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                             pass
                         final_public = _build_degraded_lookup_fallback(job_type, city, state, reason="render_seal_failed")
         if isinstance(final_public, dict):
+            for _internal_key in (
+                "_legacy_apply_documents",
+                "_legacy_inspections",
+                "_legacy_customer_notes",
+                "_original_display_permit_kind",
+                "_original_permits_required_for_companion_contract",
+                "_request_city",
+                "_request_state",
+            ):
+                final_public.pop(_internal_key, None)
             if str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED":
                 final_public.pop("package_header", None)
             if (
@@ -8431,12 +8498,29 @@ def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", s
         timeline = _checklist_text(timeline_obj) or "Varies by jurisdiction"
     docs = _checklist_list(packet.get("documents")) if isinstance(packet, dict) else []
     inspections = _checklist_list(packet.get("inspections")) if isinstance(packet, dict) else []
-    # Legacy saved results created before final public packets carried customer-
-    # visible inspection strings only at top level. Preserve that backward
-    # compatibility when no locked packet inspection list exists; do not merge
-    # stale top-level inspections over a real packet.
-    if not inspections and result.get("_legacy_inspections"):
-        inspections = _checklist_list(result.get("_legacy_inspections"))
+    # Prefer sealed packet detail. If the packet only has generic family defaults
+    # and sanitized legacy inspections are richer, use the legacy list. Never
+    # re-merge unsanitized top-level fields over explicit non-generic packet detail.
+    generic_inspection_defaults = {
+        "building final inspection",
+        "electrical final inspection",
+        "mechanical final inspection",
+        "plumbing final inspection",
+        "refrigeration final inspection",
+        "gas pressure test",
+        "final gas inspection",
+        "fire/life-safety final inspection",
+        "fire department co2 / hazardous-gas system inspection",
+        "structural inspection",
+    }
+    legacy_inspections = _checklist_list(result.get("_legacy_inspections"))
+    if legacy_inspections:
+        packet_only_generic = (not inspections) or all(
+            str(_checklist_inspection_text(item) or "").strip().lower() in generic_inspection_defaults
+            for item in inspections
+        )
+        if packet_only_generic:
+            inspections = legacy_inspections
     if not inspections and not (packet if isinstance(packet, dict) else {}).get("schema_version"):
         inspections = _checklist_list(result.get("inspections") or result.get("inspection_requirements") or result.get("inspection_checklist"))
     packet_checklist = _checklist_list(packet.get("checklist")) if isinstance(packet, dict) else []

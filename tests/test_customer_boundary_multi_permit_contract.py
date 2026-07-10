@@ -81,7 +81,13 @@ def test_seattle_mini_split_customer_boundary_lists_all_required_permits_and_scr
     blob = json.dumps(public, sort_keys=True).lower()
 
     assert public["permit_decision"] == "REQUIRED"
-    assert set(public.get("required_permit_families") or []) >= {"Electrical", "Mechanical", "Refrigeration"}
+    # Canonical top-level / packet family fields stay lower-case IDs.
+    canonical_ids = {str(x).lower() for x in (public.get("required_permit_families") or [])}
+    packet = public.get("public_packet") if isinstance(public.get("public_packet"), dict) else {}
+    packet_ids = {str(x).lower() for x in (packet.get("required_families") or [])}
+    display_labels = set(packet.get("required_family_display_labels") or [])
+    assert {"electrical", "mechanical", "refrigeration"} <= (canonical_ids | packet_ids)
+    assert {"Electrical", "Mechanical", "Refrigeration"} <= display_labels
     assert "permit package" in (public.get("permit_name") or "").lower()
     assert not (public.get("permit_name") or "").lower().startswith("multiple permits required:")
     assert "permit package" in (public.get("customer_result_summary") or {}).get("permit_kind", "").lower() or "permit package" in (public.get("permit_kind") or "").lower()
