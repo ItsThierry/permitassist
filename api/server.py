@@ -73,8 +73,11 @@ from filing_packet_reconciler import ensure_required_filing_rows
 from residential_universal_gate import apply_residential_universal_gate
 from permit_model import build_permit_package, project_permit_package, validate_customer_view
 from openai import OpenAI as _OpenAI
-import google.generativeai as _genai
 import requests as _requests
+from model_config import (
+    PERMITASSIST_AI_MODEL,
+    create_permitassist_chat_completion,
+)
 
 
 def _canonical_primary_scope_label(detected) -> str:
@@ -100,13 +103,9 @@ def detect_primary_scope(job_type: str) -> str:
     """Canonical server-facing wrapper around research_engine.detect_primary_scope."""
     return _canonical_primary_scope_label(_detect_primary_scope_raw(job_type or ""))
 
-# Module-level AI clients for /api/chat. Keep import/test/runtime startup safe
-# in environments where only Gemini or deterministic fallbacks are configured.
+# Module-level client for PermitAssist AI features. Keep import/test/runtime
+# startup safe in environments where only deterministic fallbacks are used.
 _chat_openai_client = _OpenAI() if os.environ.get("OPENAI_API_KEY") else None
-_GEMINI_API_KEY_SERVER = os.environ.get("GEMINI_API_KEY", "")
-if _GEMINI_API_KEY_SERVER:
-    _genai.configure(api_key=_GEMINI_API_KEY_SERVER)
-_CHAT_MODEL = "gemini-2.5-flash"  # Gemini 2.5 Flash with thinking disabled (fastest, cheapest)
 
 FRONTEND_DIR   = os.path.join(os.path.dirname(__file__), "..", "frontend")
 SEO_DIR        = os.path.join(os.path.dirname(__file__), "..", "seo", "seo_pages")
@@ -7439,14 +7438,13 @@ def generate_checklist(result: dict, job_type: str = "", city: str = "", state: 
     try:
         if _chat_openai_client is None:
             raise RuntimeError("OpenAI chat client unavailable")
-        resp = _chat_openai_client.chat.completions.create(
-            model="gpt-5.4-mini",
+        resp = create_permitassist_chat_completion(
+            _chat_openai_client,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
             response_format={"type": "json_object"},
-            temperature=0.2,
             max_completion_tokens=700,
         )
         parsed = json.loads(resp.choices[0].message.content)
@@ -8630,31 +8628,17 @@ City: {city or 'not specified'}, {state or 'not specified'}
 Analyze this rejection and generate a complete response letter and fix plan."""
 
     result_text = ''
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=_GEMINI_API_KEY_SERVER)
-        model = genai.GenerativeModel(
-            'gemini-2.5-flash',
-            generation_config=genai.types.GenerationConfig(
-                response_mime_type='application/json',
-                temperature=0.3
-            )
-        )
-        resp = model.generate_content(f"{system_prompt}\n\n{user_prompt}")
-        result_text = resp.text
-    except Exception:
-        oai = _OpenAI()
-        resp = oai.chat.completions.create(
-            model='gpt-5.4-mini',
-            messages=[
-                {'role': 'system', 'content': system_prompt},
-                {'role': 'user', 'content': user_prompt}
-            ],
-            response_format={'type': 'json_object'},
-            temperature=0.3,
-            max_completion_tokens=2000
-        )
-        result_text = resp.choices[0].message.content
+    oai = _OpenAI()
+    resp = create_permitassist_chat_completion(
+        oai,
+        messages=[
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': user_prompt}
+        ],
+        response_format={'type': 'json_object'},
+        max_completion_tokens=2000,
+    )
+    result_text = resp.choices[0].message.content
 
     parsed = json.loads(result_text)
     result = {
@@ -10012,12 +9996,11 @@ class Handler(BaseHTTPRequestHandler):
                 # ── Sample demo flag — skip all counting/rate-limiting ──────────
                 is_sample_demo = self.headers.get("X-Sample-Demo") == "1"
 
-                # 2026-04-26: Benchmark bypass. If env BENCHMARK_SECRET is set
+                # 2026-07-11: Benchmark bypass. If env BENCHMARK_SECRET is set
                 # AND the request carries a matching X-PermitIQ-Benchmark-Secret
-                # header, skip rate limit + free-3 limit so we can A/B both
-                # engines through the FULL PermitIQ pipeline. Optional engine
-                # override via X-PermitIQ-Engine: "gemini-3-flash-preview" or
-                # "gpt-5.4-mini" forces a specific engine (no fallback).
+                # header, skip rate limit + free-3 limit for full-pipeline tests.
+                # X-PermitIQ-Engine may name GPT-5.6 Luna by an approved alias,
+                # but cannot select any other provider or model.
                 _BENCHMARK_SECRET = os.environ.get("BENCHMARK_SECRET", "")
                 _benchmark_token = self.headers.get("X-PermitIQ-Benchmark-Secret", "")
                 is_benchmark = bool(
@@ -11124,40 +11107,21 @@ class Handler(BaseHTTPRequestHandler):
                     f"Answer the user's follow-up question concisely and accurately. "
                     f"If you're unsure, say so. Keep answers under 200 words."
                 )
-                answer = None
-                # Use Gemini 2.5 Flash (thinking disabled) — faster and cleaner for simple Q&A
-                if _GEMINI_API_KEY_SERVER:
-                    try:
-                        _chat_gemini = _genai.GenerativeModel(
-                            model_name=_CHAT_MODEL,
-                            generation_config=_genai.GenerationConfig(
-                                temperature=0.3,
-                                max_output_tokens=350,
-                                thinking_config=_genai.types.ThinkingConfig(thinking_budget=0),
-                            ),
-                            system_instruction=system_msg,
-                        )
-                        gemini_resp = _chat_gemini.generate_content(question)
-                        answer = gemini_resp.text.strip()
-                        print(f"[chat] Gemini 2.5 Flash answered ({len(answer)} chars)")
-                    except Exception as ge:
-                        print(f"[chat] Gemini failed ({ge}), falling back to OpenAI")
-                        answer = None
-                if answer is None:
-                    # Fallback to GPT-4o-mini if Gemini unavailable
-                    if _chat_openai_client is None:
-                        raise RuntimeError("No chat AI provider configured")
-                    resp = _chat_openai_client.chat.completions.create(
-                        model="gpt-5.4-mini",
-                        messages=[
-                            {"role": "system", "content": system_msg},
-                            {"role": "user", "content": question}
-                        ],
-                        max_completion_tokens=300,
-                        temperature=0.3
-                    )
-                    answer = resp.choices[0].message.content.strip()
-                    print(f"[chat] GPT-4o-mini fallback answered ({len(answer)} chars)")
+                if _chat_openai_client is None:
+                    raise RuntimeError("PermitAssist AI client is not configured")
+                resp = create_permitassist_chat_completion(
+                    _chat_openai_client,
+                    messages=[
+                        {"role": "system", "content": system_msg},
+                        {"role": "user", "content": question}
+                    ],
+                    max_completion_tokens=300,
+                )
+                answer = resp.choices[0].message.content.strip()
+                print(
+                    f"[chat] {PERMITASSIST_AI_MODEL} answered "
+                    f"({len(answer)} chars)"
+                )
                 self.send_json(200, {"answer": answer})
             except Exception as e:
                 print(f"[chat] Error: {e}")

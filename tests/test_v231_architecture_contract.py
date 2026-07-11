@@ -42,7 +42,7 @@ def test_v231_early_context_is_optional_grounding_not_short_circuit():
     research_src = src[src.index("def research_permit"): src.index("# ─── Display Helper")]
     context_call_pos = research_src.index("v231_prompt_context = build_v231_prompt_context(v231_resolution)")
     context_append_pos = research_src.index("kb_context_parts.append(v231_prompt_context)")
-    model_call_pos = research_src.index("def _call_gemini")
+    model_call_pos = research_src.index("def _call_luna")
     fresh_reconcile = research_src.index("reconcile_v231_result(result")
     assert context_call_pos < context_append_pos < model_call_pos < fresh_reconcile
     assert "return resolve_v231_cell" not in src

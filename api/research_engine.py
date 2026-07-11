@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""
-PermitAssist — AI Research Engine v5
-Improvements over v4:
-  - Added Gemini 3 Pro as fallback if OpenAI is unavailable
-  - Fallback uses Gemini JSON mode (response_mime_type: application/json)
-  - Fallback is transparent — same result structure, same post-processing
+"""PermitAssist AI research engine.
+
+All runtime AI synthesis is pinned to OpenAI GPT-5.6 Luna. Deterministic
+decision-cell recovery remains available as a non-AI safety path.
 """
 
 from __future__ import annotations
@@ -23,8 +21,22 @@ import requests
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 from openai import OpenAI
-import google.generativeai as genai
 import pdfplumber
+
+try:
+    from .model_config import (
+        PERMITASSIST_AI_CACHE_NAMESPACE,
+        PERMITASSIST_AI_MODEL,
+        create_permitassist_chat_completion,
+        require_permitassist_model_override,
+    )
+except ImportError:  # server.py imports research_engine as a top-level module
+    from model_config import (
+        PERMITASSIST_AI_CACHE_NAMESPACE,
+        PERMITASSIST_AI_MODEL,
+        create_permitassist_chat_completion,
+        require_permitassist_model_override,
+    )
 
 try:
     from .state_packs import get_state_expert_notes
@@ -99,11 +111,11 @@ client = None
 
 
 def _get_openai_client() -> OpenAI:
-    """Create the OpenAI fallback client lazily so importing tests never needs a key."""
+    """Create the sole PermitAssist AI client lazily for import-safe tests."""
     global client
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        raise RuntimeError("OPENAI_API_KEY not set — OpenAI fallback unavailable")
+        raise RuntimeError("OPENAI_API_KEY not set — PermitAssist AI unavailable")
     if client is None or getattr(client, "api_key", None) != api_key:
         client = OpenAI(api_key=api_key)
     return client
@@ -119,25 +131,9 @@ def get_cache_hit_rate() -> dict:
         "hit_rate_pct": round(h / total * 100, 1) if total else 0
     }
 
-# 2026-04-26: Engine swap based on 100-city × 5-trade benchmark (1,000 reqs):
-#   gemini-3-flash-preview: 9.53/10  ($69/mo @ 50k lookups)
-#   gpt-5.4-mini:            8.01/10  ($123/mo @ 50k lookups)
-# Gemini won the synthetic benchmark with a +1.52 delta and was 44% cheaper.
-#
-# 2026-04-28 OVERRIDE: real-world Opus 4.7 reviews graded the engine 75%
-# (residential ADU) and 30% (commercial restaurant TI) while running on
-# Gemini-3-Flash-Preview as primary. The 9.53/10 internal benchmark didn't
-# include commercial restaurant / office TI scenarios — exactly where
-# Gemini-3-Flash falls apart. Swap: OpenAI gpt-5.4-mini becomes PRIMARY,
-# Gemini-3-Flash drops to fallback. (gpt-5.5 / gpt-5.5-mini are not yet
-# available via the OpenAI API as of 2026-04-28; bump when they ship.)
-# Variable names retained for backwards-compat across the file; the
-# *_fallback_model name now refers to the PRIMARY model. Rename pending.
-_GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-if _GEMINI_API_KEY:
-    genai.configure(api_key=_GEMINI_API_KEY)
-_gemini_primary_model = "gemini-3-flash-preview"
-_openai_fallback_model = "gpt-5.4-mini"
+# 2026-07-11: GPT-5.6 Luna won the frozen 100-case paired PermitAssist
+# benchmark and is the product's single AI model. Do not add per-feature model
+# routes or provider fallbacks here; model policy lives in model_config.py.
 
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY", "")
@@ -156,10 +152,9 @@ _PERMIT_CACHE_TTL_HIGH_HITS_DAYS = 30
 _PERMIT_CACHE_TTL_FRESH_REVERIFY_DAYS = 7
 # How often to revalidate cached entries via HEAD/If-None-Match
 _PERMIT_CACHE_ETAG_CHECK_FRACTION = 0.50  # at 50% of TTL, check ETag
-# OpenAI / Gemini per-request timeouts (seconds). Was unset → defaulted to
+# OpenAI per-request timeout (seconds). Was unset → defaulted to
 # requests' 5-minute timeout, which would freeze the whole pipeline.
 _OPENAI_REQUEST_TIMEOUT_S = 30
-_GEMINI_REQUEST_TIMEOUT_S = 30
 ACCELA_BASE_URL = "https://apis.accela.com"
 ACCELA_DOCS_BASE_URL = "https://developer.accela.com/docs/api_reference"
 _accela_token = ""
@@ -3779,6 +3774,8 @@ def init_cache():
     conn.close()
 
 def cache_key(job_type: str, city: str, state: str, job_category: str | None = None) -> str:
+    # v5 (2026-07-11): model-scoped namespace prevents pre-Luna synthesis from
+    # being served after the single-model cutover.
     # v4 (2026-06-26): universal filing-packet reconciler/schema bump so stale
     # cached rows cannot bypass scope→family→structured-row reconciliation.
     # v3 (2026-05-26): include the canonical scope family/vertical/occupancy
@@ -3794,7 +3791,7 @@ def cache_key(job_type: str, city: str, state: str, job_category: str | None = N
     canonical_category = str(scope_contract.get("category") or "").lower().strip()
     if canonical_category not in ("residential", "commercial"):
         canonical_category = raw_category or "residential"
-    raw = f"v4|{FILING_PACKET_CACHE_SCHEMA_VERSION}|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{canonical_category}|{scope_bits}"
+    raw = f"{PERMITASSIST_AI_CACHE_NAMESPACE}|{FILING_PACKET_CACHE_SCHEMA_VERSION}|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{canonical_category}|{scope_bits}"
     return hashlib.md5(raw.encode()).hexdigest()
 
 def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
@@ -7381,14 +7378,13 @@ def expand_permit_query(job_type: str, city: str, state: str) -> list[str]:
     """Generate 3 alternative search queries for the job type."""
     raw = ""
     try:
-        resp = client.chat.completions.create(
-            model="gpt-5.4-mini",
+        resp = create_permitassist_chat_completion(
+            _get_openai_client(),
             messages=[{
                 "role": "user",
                 "content": f"List 3 alternative official permit names for '{job_type}' used by US building departments. Return only a JSON array of strings, no explanation. Example: [\"mechanical permit\", \"HVAC permit\", \"cooling system permit\"]"
             }],
             max_completion_tokens=80,
-            temperature=0.2
         )
         raw = resp.choices[0].message.content or ""
         raw = re.sub(r'```json?\s*|\s*```', '', raw).strip()
@@ -8388,7 +8384,7 @@ COMPANION PERMIT TRADE MATRIX (use ONLY when the stated scope includes or plausi
 def _try_repair_truncated_json(text: str):
     """Best-effort recovery of structurally broken JSON from LLM output.
 
-    Production hits this when gpt-5.4-mini occasionally produces a JSON body
+    Production can hit this when an AI response contains a JSON body
     with a missing comma or unterminated string mid-document on long prompts
     (ADU conversions, multi-permit scopes). Returns parsed dict on success,
     None if no repair strategy worked. Never raises.
@@ -8441,7 +8437,7 @@ def _retry_with_minimal_prompt(user_prompt: str, _openai_call_fn=None):
     minimal JSON shape. Used when the full prompt repeatedly produces
     malformed JSON. The `_openai_call_fn` arg is a closure passed for
     signature compatibility with the call site; we re-issue the request
-    against the fallback model directly so we control the system prompt.
+    against the approved model directly so we control the system prompt.
     """
     minimal_system = (
         "You are a permit research assistant. Return ONLY a valid, parseable "
@@ -8454,13 +8450,12 @@ def _retry_with_minimal_prompt(user_prompt: str, _openai_call_fn=None):
         "Keep the response under 3000 tokens. Be concise and accurate."
     )
     openai_client = _get_openai_client()
-    response = openai_client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S).chat.completions.create(
-        model=_openai_fallback_model,
+    response = create_permitassist_chat_completion(
+        openai_client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S),
         messages=[
             {"role": "system", "content": minimal_system},
             {"role": "user", "content": user_prompt},
         ],
-        temperature=0.0,
         max_completion_tokens=4000,
         response_format={"type": "json_object"},
     )
@@ -9188,92 +9183,65 @@ Return ONLY the JSON object."""
 
     start = time.time()
     raw = None
-    _model_used = _gemini_primary_model  # set by whichever engine answered
+    _model_used = PERMITASSIST_AI_MODEL
 
-    # 2026-04-26: force_model override for benchmarking.
-    # If set, only that engine is called (no fallback). Used by the
-    # /api/permit benchmark bypass header so we can A/B both engines
-    # through the FULL PermitIQ pipeline. None (default) = production
-    # behavior (Gemini primary, gpt fallback).
-    _gemini_aliases = {"gemini", "gemini-3-flash", _gemini_primary_model}
-    _openai_aliases = {"openai", "gpt", "gpt-5.4-mini", _openai_fallback_model}
-    _force = (force_model or "").strip().lower() if force_model else None
+    # The benchmark header may request the approved model by alias, but it can
+    # no longer select another provider or model.
+    require_permitassist_model_override(force_model)
 
-    def _call_gemini():
-        if not _GEMINI_API_KEY:
-            raise RuntimeError("GEMINI_API_KEY not set — Gemini is now the primary engine; configure it in env")
-        gemini_model = genai.GenerativeModel(
-            model_name=_gemini_primary_model,
-            generation_config=genai.GenerationConfig(
-                temperature=0.1,
-                max_output_tokens=3000,
-                response_mime_type="application/json",
-            )
-        )
-        gemini_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
-        gemini_resp = gemini_model.generate_content(
-            gemini_prompt,
-            request_options={"timeout": _GEMINI_REQUEST_TIMEOUT_S},
-        )
-        return gemini_resp.text
-
-    def _call_openai():
+    def _call_luna():
         openai_client = _get_openai_client()
-        response = openai_client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S).chat.completions.create(
-            model=_openai_fallback_model,
+        response = create_permitassist_chat_completion(
+            openai_client.with_options(timeout=_OPENAI_REQUEST_TIMEOUT_S),
             messages=[
-                {"role": "system",  "content": SYSTEM_PROMPT},
-                {"role": "user",    "content": user_prompt},
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
             ],
-            temperature=0.1,
-            # 2026-04-27 evening: bumped 8000→16000 after Boban hit "Lookup failed"
-            # on complex ADU/basement-conversion payloads. The model was producing
-            # valid-but-truncated JSON when output approached the cap.
+            # Kept high for complex ADU/basement-conversion payloads that can
+            # otherwise produce valid-but-truncated JSON.
             max_completion_tokens=16000,
             response_format={"type": "json_object"},
         )
         return response.choices[0].message.content
 
-
-    if _force in _gemini_aliases:
-        # Forced Gemini — no fallback.
-        raw = _call_gemini()
-        _model_used = _gemini_primary_model
-        print(f"[engine] FORCED Gemini ({_gemini_primary_model}) responded in {round((time.time()-start)*1000)}ms")
-    elif _force in _openai_aliases:
-        # Forced OpenAI — no fallback.
-        raw = _call_openai()
-        _model_used = _openai_fallback_model
-        print(f"[engine] FORCED OpenAI ({_openai_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
-    else:
-        # Default production path: OpenAI primary, Gemini fallback.
-        # 2026-04-28: swapped from Gemini primary after Opus 4.7 reviews
-        # graded the engine 30% on commercial restaurant TI scenarios.
-        try:
-            raw = _call_openai()
-            _model_used = _openai_fallback_model
-            print(f"[engine] OpenAI primary ({_openai_fallback_model}) responded in {round((time.time()-start)*1000)}ms")
-        except Exception as openai_err:
-            print(f"[engine] OpenAI failed ({openai_err}), trying Gemini fallback ({_gemini_primary_model})...")
-            try:
-                raw = _call_gemini()
-                _model_used = _gemini_primary_model
-                print(f"[engine] Gemini fallback ({_gemini_primary_model}) responded in {round((time.time()-start)*1000)}ms")
-            except Exception as gemini_err:
-                v24_fallback = _deterministic_v24_result_from_resolution(v24_resolution, job_type, city, state)
-                v231_fallback = None if v24_fallback is not None else _deterministic_v231_result_from_resolution(v231_resolution, job_type, city, state)
-                deterministic_fallback = v24_fallback or v231_fallback
-                if deterministic_fallback is None:
-                    raise RuntimeError(f"Both OpenAI and Gemini failed. OpenAI: {openai_err} | Gemini: {gemini_err}")
-                raw = json.dumps(deterministic_fallback)
-                _model_used = "permitassist_v24_deterministic_fallback" if v24_fallback is not None else "permitassist_v231_deterministic_fallback"
-                print(f"[engine] AI providers unavailable; using deterministic exact-cell fallback ({_model_used})")
+    try:
+        raw = _call_luna()
+        print(
+            f"[engine] OpenAI {PERMITASSIST_AI_MODEL} responded in "
+            f"{round((time.time()-start)*1000)}ms"
+        )
+    except Exception as luna_err:
+        v24_fallback = _deterministic_v24_result_from_resolution(
+            v24_resolution, job_type, city, state
+        )
+        v231_fallback = (
+            None
+            if v24_fallback is not None
+            else _deterministic_v231_result_from_resolution(
+                v231_resolution, job_type, city, state
+            )
+        )
+        deterministic_fallback = v24_fallback or v231_fallback
+        if deterministic_fallback is None:
+            raise RuntimeError(
+                f"PermitAssist AI model {PERMITASSIST_AI_MODEL} failed: {luna_err}"
+            ) from luna_err
+        raw = json.dumps(deterministic_fallback)
+        _model_used = (
+            "permitassist_v24_deterministic_fallback"
+            if v24_fallback is not None
+            else "permitassist_v231_deterministic_fallback"
+        )
+        print(
+            f"[engine] {PERMITASSIST_AI_MODEL} unavailable; using deterministic "
+            f"exact-cell fallback ({_model_used})"
+        )
 
     elapsed = round((time.time() - start) * 1000)
     try:
         result = json.loads(raw)
     except (json.JSONDecodeError, TypeError):
-        # Gemini sometimes wraps JSON in markdown code fences — strip and retry
+        # Strip an occasional markdown code fence and retry parsing.
         import re as _re
         cleaned = raw.strip() if raw else ""
         fence_match = _re.search(r'```(?:json)?\s*([\s\S]+?)\s*```', cleaned)
@@ -9288,8 +9256,8 @@ Return ONLY the JSON object."""
             print(f"[engine] Stripped markdown wrapper from AI response successfully")
         except (json.JSONDecodeError, TypeError) as e2:
             # 2026-04-27: Aggressive repair pass for the intermittent
-            # "Expecting ',' delimiter" / "Unterminated string" failures from
-            # gpt-5.4-mini on long prompts. We progressively trim the response
+            # "Expecting ',' delimiter" / "Unterminated string" failures on
+            # long prompts. We progressively trim the response
             # until it parses, recovering whatever fields fit. Better partial
             # data than a 500.
             result = _try_repair_truncated_json(cleaned)
@@ -9298,14 +9266,14 @@ Return ONLY the JSON object."""
             else:
                 # Last resort: ask the model to retry with a shorter, stricter prompt.
                 try:
-                    result = _retry_with_minimal_prompt(user_prompt, _call_openai)
+                    result = _retry_with_minimal_prompt(user_prompt, _call_luna)
                     print(f"[engine] Recovered via minimal-prompt retry after JSON failure")
                 except Exception as retry_err:
                     print(f"[engine] AI returned non-JSON response: {repr((raw or '')[:300])}")
                     print(f"[engine] Minimal-prompt retry also failed: {retry_err}")
                     raise RuntimeError(f"AI returned non-JSON output: {e2}")
 
-    # 2026-04-26: Gemini sometimes returns a top-level JSON ARRAY instead of
+    # A model can occasionally return a top-level JSON ARRAY instead of
     # an OBJECT (e.g. `[ {...} ]`). All downstream code assumes `result` is a
     # dict. If we got a list, unwrap the first object element; if there's no
     # dict in it, that's a real model failure and should error explicitly.
