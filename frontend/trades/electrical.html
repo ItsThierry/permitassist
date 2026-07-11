@@ -2312,6 +2312,22 @@ function verdictState(d){
 }
 
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
+function buildPermitOfficeMapsUrl(city, state, office, address) {
+  const cityText = String(city || '').trim();
+  const stateText = String(state || '').trim();
+  const officeText = String(office || '').trim();
+  const addressText = String(address || '').trim();
+  const query = addressText || [officeText, cityText, stateText, 'building permit office'].filter(Boolean).join(' ');
+  return 'https://www.google.com/maps/search/' + encodeURIComponent(query || 'building permit office');
+}
+function safePermitOfficeMapsUrl(rawUrl, city, state, office, address) {
+  const raw = String(rawUrl || '').trim();
+  if (/^https:\/\/www\.google\.com\/maps(?:\/search\/.+|\/place\/.+|\?q=.+)/i.test(raw)) return raw;
+  return buildPermitOfficeMapsUrl(city, state, office, address);
+}
+function openPermitOfficeMaps(url) {
+  window.open(String(url || '').trim() || buildPermitOfficeMapsUrl('', '', '', ''), '_blank', 'noopener');
+}
 
 // ── Render Results ───────────────────────────────────────────────────────────
 function getPermitDisplayName(d) {
@@ -2387,7 +2403,7 @@ function renderResults(d, job, city, state) {
   const phone = d.apply_phone || d.office_phone || '';
   const officeAddress = d.apply_address || d.office_address || '';
   const jobAddress = currentResult?.address || '';
-  const maps = d.apply_google_maps || d.maps_url || '';
+  const maps = safePermitOfficeMapsUrl(d.apply_google_maps || d.maps_url || '', city, state, office, officeAddress);
   const fee = d.fee_range || d.fee || d.cost || '';
   const applyUrl = d.apply_url || '';
   const applyPdf = d.apply_pdf || '';
@@ -2614,8 +2630,8 @@ function renderResults(d, job, city, state) {
     html += `<div class="card" style="${verdict==='maybe'?'border-color:rgba(245,158,11,0.4);':''}">
       ${verdict === 'maybe' ? '<div class="section-label" style="color:var(--yellow)">⚠️ Not sure? Call to confirm — takes 2 minutes</div>' : '<div class="section-label">📞 Contact</div>'}
       ${phone ? `<a class="contact-phone" href="tel:${normalizePhone(phone)}">${esc(phone)}</a>` : ''}
-      ${office ? `<div class="contact-office">${esc(office)}</div>` : ''}
-      ${officeAddress ? `<div class="contact-address">${esc(officeAddress)}</div>` : ''}
+      ${office ? `<a class="contact-office-link" href="${esc(maps)}" target="_blank" rel="noopener" title="Open department location in Google Maps" style="text-decoration:none;color:inherit"><div class="contact-office">${esc(office)}</div></a>` : ''}
+      ${officeAddress ? `<a class="contact-address-link" href="${esc(maps)}" target="_blank" rel="noopener" title="Open department location in Google Maps" style="text-decoration:none;color:inherit"><div class="contact-address">${esc(officeAddress)}</div></a>` : ''}
       <div class="mini-link-row">
         ${maps ? `<a class="mini-link" href="${esc(maps)}" target="_blank" rel="noopener">🗺️ Find Building Department →</a>` : ''}
       </div>
@@ -2843,7 +2859,7 @@ function renderResults(d, job, city, state) {
       <button class="action-btn" onclick="downloadReport()">📄 Print / Save PDF</button>
     </div>
     <div class="action-row">
-      <button class="action-btn" onclick="window.open('${esc(maps || 'https://www.google.com/maps')}','_blank')">🗺️ Maps</button>
+      <button class="action-btn" data-maps-url="${esc(maps)}" onclick="openPermitOfficeMaps(this.dataset.mapsUrl)">🗺️ Maps</button>
       <button class="action-btn" style="border-color:rgba(59,130,246,.4);color:var(--brand)" onclick="saveJobToTracker()">📁 Save to Job Tracker</button>
     </div>
     <div class="expiry-reminder-card" id="expiry-reminder">
@@ -3222,8 +3238,10 @@ function callPermitOffice() {
     window.location.href = 'tel:' + digits;
   } else {
     // No phone — open Google Maps search for building dept
-    const maps = d.apply_google_maps || `https://www.google.com/maps/search/${encodeURIComponent(city + ' ' + state + ' building permit office')}`;
-    window.open(maps, '_blank');
+    const office = d.applying_office || d.office || d.authority_name || '';
+    const officeAddress = d.apply_address || d.office_address || d.department_address || '';
+    const maps = safePermitOfficeMapsUrl(d.apply_google_maps || d.maps_url || '', city, state, office, officeAddress);
+    window.open(maps, '_blank', 'noopener');
     showCopy('📍 No direct number found — opening Maps to find the office');
   }
 }
