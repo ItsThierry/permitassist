@@ -1,0 +1,7 @@
+{
+  "contract_state": "RED",
+  "exit_code": 1,
+  "reason": "expected missing Part 3 implementation symbols and projection fields",
+  "amendment": "removed only impossible zero-count Counter key",
+  "behavior_changes_present_when_amended": false
+}

@@ -21,8 +21,7 @@
     "exact_complete": 36,
     "exact_partial": 2082,
     "fail_closed": 34,
-    "jurisdiction_hold": 10,
-    "unsupported_scope": 0
+    "jurisdiction_hold": 10
   },
   "observed_exact_permit_families": [
     "building",
