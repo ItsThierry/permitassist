@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from api import permit_rule_engine as pre
 from api import research_engine
-from api.v24_decision_cells import load_v24_index
+from api.v24_decision_cells import V24Resolution, V24ResolutionStatus, load_v24_index
 
 
 def test_pre_activation_family_audit_preserves_every_binary_family_and_route() -> None:
@@ -49,6 +49,64 @@ def test_factory_promotion_requires_local_authority_evidence() -> None:
     source["tier1"]["permits_required"][0]["applying_office"] = ""
     source["tier1"]["permits_required"][0]["apply_url"] = ""
     assert pre.promote_factory_seed(candidate, source_cell=source).classification is pre.SeedClassification.FAIL_CLOSED
+
+
+def test_factory_promotion_composes_identity_hold_after_overlay_evidence_passes() -> None:
+    index = load_v24_index() or {}
+    key = "WI|eau_claire|commercial_tenant_improvement"
+    source = index[key]
+    held_seed = pre.migrate_v24_seed_index(index=index)[key]
+    overlay_ok, overlay_issues = pre._overlay_promotion_gate(held_seed, source)
+    assert overlay_ok is True
+    assert overlay_issues == ()
+
+    candidate = pre.build_fail_closed_factory_seed(
+        jurisdiction_id=str(source["jurisdiction_id"]),
+        ahj_name=str(source["ahj"]),
+        state=str(source["state"]),
+        project_family=str(source["project_family"]),
+        source_index_key=key,
+    )
+    promoted = pre.promote_factory_seed(candidate, source_cell=source)
+    assert promoted.classification is pre.SeedClassification.FAIL_CLOSED
+    assert promoted.binary_families == ()
+
+
+def test_verified_partial_next_step_requires_verification_before_application() -> None:
+    index = load_v24_index() or {}
+    migrated = pre.migrate_v24_seed_index(index=index)
+    key = next(
+        key
+        for key in sorted(index)
+        if migrated[key].classification is pre.SeedClassification.EXACT_PARTIAL
+        and any(
+            route.authority.application_authority
+            for route in pre.build_family_authority_routes(index[key])
+        )
+    )
+    cell = index[key]
+    job_type, job_category = {
+        "commercial_tenant_improvement": ("commercial tenant improvement", "commercial"),
+        "residential_remodel": ("residential remodel", "residential"),
+        "reroof": ("residential reroof", "residential"),
+    }[str(cell["project_family"])]
+    envelope = pre.build_core_decision_envelope(
+        V24Resolution(
+            V24ResolutionStatus.EXACT_CELL_PUBLISHABLE,
+            cell=cell,
+            key=key,
+            reason="Part 3 verified-partial next-step integration",
+        ),
+        job_type=job_type,
+        city=str(cell["ahj"]),
+        state=str(cell["state"]),
+        job_category=job_category,
+    )
+    projection = json.loads(envelope.sealed_projection.payload_json)
+    assert projection["seed_classification"] == "exact_partial"
+    assert projection["verification_tasks"]
+    assert projection["customer_next_step"].startswith("Verify unresolved permit families")
+    assert "then apply" in projection["customer_next_step"]
 
 
 def test_active_non_cached_research_path_writes_and_serves_validated_sealed_projection(

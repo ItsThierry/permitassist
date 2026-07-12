@@ -1911,11 +1911,21 @@ def build_sealed_projection_payload(
     )
     verdict_text = "YES" if permit_required is True else "NO" if permit_required is False else "VERIFY"
     decision_text = main_decision.verdict.value if main_binary else "UNKNOWN"
-    next_step = (
-        f"Apply with {main_route.authority.application_authority}."
-        if main_route and main_route.authority.application_authority
-        else "Verify the listed family decisions with the official permit authority before filing."
-    )
+    unresolved_family_rows = [
+        row for row in family_rows if row["verdict"] in {"CONDITIONAL", "VERIFY", "ABSTAIN"}
+    ]
+    if seed_classification_value == SeedClassification.EXACT_PARTIAL.value and unresolved_family_rows:
+        next_step = (
+            f"Verify unresolved permit families, then apply with {main_route.authority.application_authority}."
+            if main_route and main_route.authority.application_authority
+            else "Verify unresolved permit families with the official permit authority before filing."
+        )
+    else:
+        next_step = (
+            f"Apply with {main_route.authority.application_authority}."
+            if main_route and main_route.authority.application_authority
+            else "Verify the listed family decisions with the official permit authority before filing."
+        )
     return {
         "projection_schema_version": CORE_PROJECTION_SCHEMA_VERSION,
         "decision_source": "sealed_permit_rule_engine_envelope",
@@ -2724,6 +2734,12 @@ def _overlay_promotion_gate(seed: MigratedSeed, cell: Mapping[str, Any]) -> tupl
 def promote_factory_seed(candidate: MigratedSeed, *, source_cell: Mapping[str, Any]) -> MigratedSeed:
     """Promote only after source, adoption, administration, and authority gates."""
     if not source_cell:
+        return candidate
+    identity = resolve_jurisdiction_identity(
+        _normalize_text(source_cell.get("ahj")),
+        _normalize_text(source_cell.get("state")),
+    )
+    if identity.status is not JurisdictionResolutionStatus.EXACT:
         return candidate
     migrated = safe_factory_migrate_seed(candidate.source_index_key, source_cell)
     if migrated.classification not in {
