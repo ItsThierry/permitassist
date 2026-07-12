@@ -1601,6 +1601,7 @@ def _publishable_provenance(record: ProvenanceRecord) -> bool:
         and record.source_url
         and record.source_quote
         and re.fullmatch(r"[0-9a-f]{64}", record.snapshot_hash or "")
+        and record.snapshot_hash.lower() != "0" * 64
         and record.snapshot_path
     )
 

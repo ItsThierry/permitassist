@@ -32,6 +32,15 @@ def test_sourced_predicates_fail_unknown_and_evaluate_only_with_fact_and_source(
     ) is False
 
 
+def test_family_binary_rejects_placeholder_provenance_hash() -> None:
+    index = load_v24_index() or {}
+    row = copy.deepcopy(index["AZ|buckeye|reroof"]["tier1"]["permits_required"][0])
+    row["provenance"]["snapshot_hash"] = "0" * 64
+    decision = pre.normalize_family_decision(row)
+    assert decision.verdict is pre.FamilyVerdict.VERIFY
+    assert "binary_without_publishable_provenance" in decision.validation_issue_codes
+
+
 def test_factory_promotion_requires_local_authority_evidence() -> None:
     index = load_v24_index() or {}
     source = copy.deepcopy(index["AZ|buckeye|reroof"])
