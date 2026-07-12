@@ -1,0 +1,172 @@
+{
+  "fixture_version": "permitassist.rule-engine-part3-red.v1",
+  "fixture_kind": "synthetic_and_immutable_corpus_contract",
+  "frozen_before_behavior_edits": true,
+  "source_tag": "permit-rule-engine-part2-20260712",
+  "source_commit": "c3a05b10eb3876d15e97e1484ecdd84b616e20cb",
+  "legacy_cell_count": 2162,
+  "legacy_project_family_counts": {
+    "commercial_tenant_improvement": 1938,
+    "residential_remodel": 199,
+    "reroof": 25
+  },
+  "required_seed_classifications": [
+    "exact_complete",
+    "exact_partial",
+    "fail_closed",
+    "jurisdiction_hold",
+    "unsupported_scope"
+  ],
+  "expected_real_corpus_classification_counts": {
+    "exact_complete": 36,
+    "exact_partial": 2082,
+    "fail_closed": 34,
+    "jurisdiction_hold": 10,
+    "unsupported_scope": 0
+  },
+  "observed_exact_permit_families": [
+    "building",
+    "building_construction",
+    "building_trade",
+    "demolition",
+    "electrical",
+    "fire",
+    "gas",
+    "manufactured_structure_installation",
+    "mechanical",
+    "moving",
+    "occupancy",
+    "plumbing",
+    "pool",
+    "septic_oss_health",
+    "sign",
+    "zoning"
+  ],
+  "w4_ten_lane_families": [
+    "building",
+    "electrical",
+    "plumbing",
+    "mechanical",
+    "fire",
+    "health",
+    "liquor",
+    "wastewater",
+    "occupancy",
+    "zoning"
+  ],
+  "scope_ontology_nodes": [
+    "commercial_tenant_improvement",
+    "residential_remodel",
+    "roof_covering_replacement",
+    "structural_alteration",
+    "electrical_work",
+    "plumbing_work",
+    "mechanical_work",
+    "gas_work",
+    "fire_life_safety_work",
+    "food_health_work",
+    "liquor_service_work",
+    "wastewater_work",
+    "occupancy_change",
+    "zoning_review",
+    "demolition_work",
+    "pool_work",
+    "sign_work",
+    "structure_moving",
+    "manufactured_structure_installation",
+    "septic_oss_work"
+  ],
+  "required_predicate_fields": [
+    "predicate_id",
+    "ontology_node",
+    "family",
+    "operator",
+    "fact_key",
+    "expected_value",
+    "provenance",
+    "template_id"
+  ],
+  "required_template_fields": [
+    "template_id",
+    "code_family",
+    "adoption_basis",
+    "predicate_ids",
+    "provenance"
+  ],
+  "required_overlay_fields": [
+    "jurisdiction_id",
+    "template_ids",
+    "predicate_overrides",
+    "provenance"
+  ],
+  "authority_scope_canaries": [
+    {
+      "index_key": "AZ|buckeye|reroof",
+      "job_type": "residential reroof replace asphalt shingles",
+      "job_category": "residential",
+      "expected_primary_family": "building"
+    },
+    {
+      "index_key": "AL|albertville|residential_remodel",
+      "job_type": "residential remodel with electrical plumbing mechanical gas and demolition work",
+      "job_category": "residential",
+      "expected_exact_families": ["building", "demolition", "electrical", "gas", "mechanical", "plumbing"]
+    },
+    {
+      "index_key": "AK|matanuska_susitna_borough|commercial_tenant_improvement",
+      "job_type": "commercial tenant improvement with occupancy electrical fire mechanical plumbing and zoning scope",
+      "job_category": "commercial",
+      "expected_exact_families": ["building", "electrical", "fire", "mechanical", "occupancy", "plumbing", "zoning"]
+    }
+  ],
+  "jurisdiction_hold_canary": {
+    "index_key": "WI|eau_claire|commercial_tenant_improvement",
+    "expected_classification": "jurisdiction_hold"
+  },
+  "random_validation": {
+    "algorithm": "sha256-ranked-index-key",
+    "seed": "permit-rule-engine-part3-20260712",
+    "sample_size": 128
+  },
+  "counterfactuals": [
+    {
+      "name": "unknown_scope",
+      "job_type": "install quantum flux widget",
+      "expected_classification": "unsupported_scope",
+      "expected_binary": false
+    },
+    {
+      "name": "negated_scope",
+      "job_type": "no roof replacement and no structural alteration; inspection only",
+      "expected_classification": "unsupported_scope",
+      "expected_binary": false
+    },
+    {
+      "name": "ambiguous_jurisdiction",
+      "city": "Eau Claire",
+      "state": "WI",
+      "expected_classification": "jurisdiction_hold",
+      "expected_binary": false
+    },
+    {
+      "name": "tampered_provenance",
+      "expected_classification": "fail_closed",
+      "expected_binary": false
+    },
+    {
+      "name": "factory_exception",
+      "expected_classification": "fail_closed",
+      "expected_binary": false
+    }
+  ],
+  "customer_partial_contract": {
+    "preserve_source_backed_binary": true,
+    "preserve_every_source_family": true,
+    "weak_dimensions_visible": true,
+    "weak_dimensions_statuses": ["CONDITIONAL", "VERIFY", "ABSTAIN"],
+    "required_next_step_fields": ["family", "action", "authority", "apply_url"],
+    "forbidden_bare_maps_url": "https://www.google.com/maps",
+    "fail_closed_sources_empty": true,
+    "fail_closed_claim_citations_empty": true
+  }
+}

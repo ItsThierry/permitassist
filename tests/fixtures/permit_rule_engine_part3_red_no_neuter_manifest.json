@@ -1,0 +1,10 @@
+{
+  "fixture_version": "permitassist.rule-engine-part3-red-manifest.v1",
+  "frozen_before_behavior_edits": true,
+  "source_tag": "permit-rule-engine-part2-20260712",
+  "source_commit": "c3a05b10eb3876d15e97e1484ecdd84b616e20cb",
+  "files": {
+    "tests/fixtures/permit_rule_engine_part3_red_no_neuter.json": "2117559f6764cf8abf3a2351e46f798762d412ea7dc6e4fb8478cd86682057b9",
+    "tests/test_permit_rule_engine_part3.py": "37e1f3b8f3e2005acd13e981e295482dc07b781d857e9b6143ee3bdad5275142"
+  }
+}

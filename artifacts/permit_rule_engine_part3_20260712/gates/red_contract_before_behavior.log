@@ -1,0 +1,203 @@
+FEEEEFFFEFEEF.                                                           [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_every_legacy_cell_is_migrated_once_with_immutable_source_hash _
+
+index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
+
+    @pytest.fixture(scope="module")
+    def migrated(index: dict) -> dict:
+>       return pre.migrate_v24_seed_index(index=index)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
+
+tests/test_permit_rule_engine_part3.py:36: AttributeError
+_ ERROR at setup of test_real_corpus_has_exact_locked_honest_classification_counts _
+
+index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
+
+    @pytest.fixture(scope="module")
+    def migrated(index: dict) -> dict:
+>       return pre.migrate_v24_seed_index(index=index)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
+
+tests/test_permit_rule_engine_part3.py:36: AttributeError
+_ ERROR at setup of test_migration_preserves_every_observed_exact_permit_family _
+
+index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
+
+    @pytest.fixture(scope="module")
+    def migrated(index: dict) -> dict:
+>       return pre.migrate_v24_seed_index(index=index)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
+
+tests/test_permit_rule_engine_part3.py:36: AttributeError
+_ ERROR at setup of test_ambiguous_identity_cells_become_jurisdiction_holds_not_binary _
+
+index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
+
+    @pytest.fixture(scope="module")
+    def migrated(index: dict) -> dict:
+>       return pre.migrate_v24_seed_index(index=index)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
+
+tests/test_permit_rule_engine_part3.py:36: AttributeError
+_ ERROR at setup of test_verified_partial_customer_projection_is_useful_and_preserves_proven_families _
+
+index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
+
+    @pytest.fixture(scope="module")
+    def migrated(index: dict) -> dict:
+>       return pre.migrate_v24_seed_index(index=index)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
+
+tests/test_permit_rule_engine_part3.py:36: AttributeError
+__ ERROR at setup of test_authority_scope_canaries_preserve_exact_family_rows __
+
+index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
+
+    @pytest.fixture(scope="module")
+    def migrated(index: dict) -> dict:
+>       return pre.migrate_v24_seed_index(index=index)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
+
+tests/test_permit_rule_engine_part3.py:36: AttributeError
+_ ERROR at setup of test_seeded_random_validation_is_deterministic_and_counterfactuals_fail_closed _
+
+index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
+
+    @pytest.fixture(scope="module")
+    def migrated(index: dict) -> dict:
+>       return pre.migrate_v24_seed_index(index=index)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
+
+tests/test_permit_rule_engine_part3.py:36: AttributeError
+=================================== FAILURES ===================================
+___________ test_part3_contract_versions_and_closed_classifications ____________
+
+frozen_contract = {'fixture_version': 'permitassist.rule-engine-part3-red.v1', 'fixture_kind': 'synthetic_and_immutable_corpus_contract', 'frozen_before_behavior_edits': True, 'source_tag': 'permit-rule-engine-part2-20260712', ...}
+
+    def test_part3_contract_versions_and_closed_classifications(frozen_contract: dict) -> None:
+>       assert pre.PART3_MIGRATION_SCHEMA_VERSION == "permitassist.rule-engine-seed-migration.v1"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'PART3_MIGRATION_SCHEMA_VERSION'
+
+tests/test_permit_rule_engine_part3.py:57: AttributeError
+_ test_minimum_ontology_predicates_templates_and_overlay_are_closed_and_sourced _
+
+frozen_contract = {'fixture_version': 'permitassist.rule-engine-part3-red.v1', 'fixture_kind': 'synthetic_and_immutable_corpus_contract', 'frozen_before_behavior_edits': True, 'source_tag': 'permit-rule-engine-part2-20260712', ...}
+index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
+
+    def test_minimum_ontology_predicates_templates_and_overlay_are_closed_and_sourced(
+        frozen_contract: dict, index: dict
+    ) -> None:
+>       ontology = pre.minimum_scope_ontology()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'minimum_scope_ontology'
+
+tests/test_permit_rule_engine_part3.py:108: AttributeError
+_____ test_factory_is_born_fail_closed_and_only_evidence_gate_can_promote ______
+
+index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
+
+    def test_factory_is_born_fail_closed_and_only_evidence_gate_can_promote(index: dict) -> None:
+>       candidate = pre.build_fail_closed_factory_seed(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            jurisdiction_id="us-ex-exampleville",
+            ahj_name="Exampleville",
+            state="EX",
+            project_family="reroof",
+            source_index_key="EX|exampleville|reroof",
+        )
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'build_fail_closed_factory_seed'
+
+tests/test_permit_rule_engine_part3.py:129: AttributeError
+______________ test_factory_exception_is_fail_closed_not_partial _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x728518508450>
+
+    def test_factory_exception_is_fail_closed_not_partial(monkeypatch: pytest.MonkeyPatch) -> None:
+>       monkeypatch.setattr(pre, "classify_v24_seed", lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("boom")))
+E       AttributeError: <module 'api.permit_rule_engine' from '/home/boban/projects/permitassist-rule-engine-part3-20260712/api/permit_rule_engine.py'> has no attribute 'classify_v24_seed'
+
+tests/test_permit_rule_engine_part3.py:147: AttributeError
+_____ test_fail_closed_customer_projection_clears_claims_routes_and_binary _____
+
+index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
+
+    def test_fail_closed_customer_projection_clears_claims_routes_and_binary(index: dict) -> None:
+        key, cell = next((key, cell) for key, cell in sorted(index.items()) if cell.get("status") == "FAIL_CLOSED")
+        job_type, category = _family_scope(cell["project_family"])
+        envelope = pre.build_core_decision_envelope(
+            _resolution(key, cell),
+            job_type=job_type,
+            city=cell["ahj"],
+            state=cell["state"],
+            job_category=category,
+        )
+        payload = json.loads(envelope.sealed_projection.payload_json)
+>       assert payload["seed_classification"] == "fail_closed"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'seed_classification'
+
+tests/test_permit_rule_engine_part3.py:188: KeyError
+___________ test_no_neuter_ten_lane_projection_keeps_all_weak_lanes ____________
+
+frozen_contract = {'fixture_version': 'permitassist.rule-engine-part3-red.v1', 'fixture_kind': 'synthetic_and_immutable_corpus_contract', 'frozen_before_behavior_edits': True, 'source_tag': 'permit-rule-engine-part2-20260712', ...}
+
+    def test_no_neuter_ten_lane_projection_keeps_all_weak_lanes(frozen_contract: dict) -> None:
+        families = frozen_contract["w4_ten_lane_families"]
+        decisions = tuple(
+            pre.normalize_family_decision(
+                {
+                    "family": family,
+                    "verdict": "REQUIRED" if family == "building" else "VERIFY",
+                    "trigger": f"{family} review",
+                    "provenance": [{
+                        "source_url": "https://example.gov/rules",
+                        "source_quote": "A building permit is required for construction work.",
+                        "snapshot_hash": "a" * 64,
+                        "snapshot_path": "synthetic://part3",
+                        "publishable": True,
+                    }] if family == "building" else [],
+                }
+            )
+            for family in families
+        )
+        payload = pre.build_sealed_projection_payload(
+            jurisdiction_id="us-ex-exampleville",
+            jurisdiction_name="Exampleville",
+            state="EX",
+            project_family="commercial_tenant_improvement",
+            main_decision=decisions[0],
+            family_decisions=decisions,
+            family_routes=(),
+            coverage_status="validated_exact_partial",
+            coverage_reason="verified building decision; remaining lanes require verification",
+            source_cell_id="synthetic-part3-ten-lane",
+>           seed_classification=pre.SeedClassification.EXACT_PARTIAL,
+                                ^^^^^^^^^^^^^^^^^^^^^^
+        )
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'SeedClassification'
+
+tests/test_permit_rule_engine_part3.py:268: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_permit_rule_engine_part3.py::test_part3_contract_versions_and_closed_classifications
+FAILED tests/test_permit_rule_engine_part3.py::test_minimum_ontology_predicates_templates_and_overlay_are_closed_and_sourced
+FAILED tests/test_permit_rule_engine_part3.py::test_factory_is_born_fail_closed_and_only_evidence_gate_can_promote
+FAILED tests/test_permit_rule_engine_part3.py::test_factory_exception_is_fail_closed_not_partial
+FAILED tests/test_permit_rule_engine_part3.py::test_fail_closed_customer_projection_clears_claims_routes_and_binary
+FAILED tests/test_permit_rule_engine_part3.py::test_no_neuter_ten_lane_projection_keeps_all_weak_lanes
+ERROR tests/test_permit_rule_engine_part3.py::test_every_legacy_cell_is_migrated_once_with_immutable_source_hash
+ERROR tests/test_permit_rule_engine_part3.py::test_real_corpus_has_exact_locked_honest_classification_counts
+ERROR tests/test_permit_rule_engine_part3.py::test_migration_preserves_every_observed_exact_permit_family
+ERROR tests/test_permit_rule_engine_part3.py::test_ambiguous_identity_cells_become_jurisdiction_holds_not_binary
+ERROR tests/test_permit_rule_engine_part3.py::test_verified_partial_customer_projection_is_useful_and_preserves_proven_families
+ERROR tests/test_permit_rule_engine_part3.py::test_authority_scope_canaries_preserve_exact_family_rows
+ERROR tests/test_permit_rule_engine_part3.py::test_seeded_random_validation_is_deterministic_and_counterfactuals_fail_closed
+6 failed, 1 passed, 7 errors in 0.33s
