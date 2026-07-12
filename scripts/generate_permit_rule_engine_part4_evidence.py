@@ -218,6 +218,29 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
                     "embedded_share_equals_default_deny_projection": embedded == expected_embedded,
                     "checklist_families_equal_projection": checklist_families == families,
                     "report_contains_every_permit_lane": all(label in report_html for label in permit_labels),
+                    "share_template_renders_family_decision_matrix": all(
+                        marker in share_html
+                        for marker in (
+                            "safeArray(d.family_decisions)",
+                            "Permit decision matrix",
+                            "decision-matrix",
+                            "decision-row",
+                        )
+                    ),
+                    "share_template_rejects_empty_application_routes": all(
+                        marker in share_html
+                        for marker in (
+                            "const raw = String(url || '').trim()",
+                            "if (!raw) return fallback",
+                        )
+                    ),
+                    "share_template_uses_actionable_verification_tasks": all(
+                        marker in share_html
+                        for marker in (
+                            "safeArray(d.verification_tasks)",
+                            "task.action",
+                        )
+                    ),
                 }
                 row["passed"] = all(
                     value is True
@@ -225,6 +248,7 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
                     if key.endswith("sealed")
                     or key.endswith("projection")
                     or key.startswith("report_contains")
+                    or key.startswith("share_template_")
                 ) and row["checklist_families_equal_projection"]
                 assert_no_poison(
                     {
